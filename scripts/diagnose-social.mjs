@@ -13,7 +13,8 @@ const IG_MSG_TOKEN = process.env.INSTAGRAM_MESSAGING_TOKEN;
 const IG_ACCOUNT_ID = process.env.INSTAGRAM_MESSAGING_ACCOUNT_ID;
 const FB_MSG_TOKEN = process.env.FACEBOOK_MESSAGING_TOKEN || process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
 const FB_PAGE_ID = process.env.FACEBOOK_MESSAGING_PAGE_ID || process.env.FACEBOOK_PAGE_ID;
-const GRAPH_BASE = process.env.FACEBOOK_GRAPH_BASE || process.env.FACEBOOK_MESSAGING_API_BASE;
+const GRAPH_BASE = (process.env.FACEBOOK_GRAPH_BASE || process.env.FACEBOOK_MESSAGING_API_BASE || '')
+  .trim().replace(/\/+$/, '');
 
 
 // Never echo configured credentials, including provider metadata that reflects

@@ -114,3 +114,12 @@ test('missing account ID fails without probing an undefined account', () => {
   assert.match(result.output, /INSTAGRAM_MESSAGING_ACCOUNT_ID configured: not set/);
   assert.ok(result.calls.every(call => !call.path.includes('undefined') && !call.path.endsWith('/fixture-instagram')));
 });
+
+
+test('backend-normalized Graph bases retain the reviewed host and version', () => {
+  for (const value of [' https://graph.facebook.com/v25.0/ ', 'https://graph.facebook.com/v25.0///']) {
+    const result = run('valid', { FACEBOOK_GRAPH_BASE: value });
+    assert.equal(result.status, 0, result.output);
+    assert.ok(result.calls.every(call => call.path.startsWith('/v25.0/')));
+  }
+});

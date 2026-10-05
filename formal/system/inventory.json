@@ -2709,7 +2709,7 @@
     {
       "id": "SURFACE-f80037fcad0addf2",
       "path": "scripts/__tests__/diagnose-social.test.mjs",
-      "sha256": "6f7325bb55beaf903e717f128022cdefdba4d97502912e7bd9d83fddd19aebd7",
+      "sha256": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3297,7 +3297,7 @@
     {
       "id": "SURFACE-c3c045b2c7be6d1e",
       "path": "scripts/diagnose-social.mjs",
-      "sha256": "e591f5cac5bd67f39df631097c1311ea7ef4110645775febf6067d07f053e44c",
+      "sha256": "c0f03f43a928ef24c5609e2f67731444341d42dc70fbc35b7171aa2d6adf109b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15915,14 +15915,14 @@
     },
     {
       "path": "SERVICE_STOREFRONT_DEPLOYMENT.md",
-      "sha256": "b0b17e5eaed5f179dcd9eef464b5d9431b22dbb66618a656396cee1d63c82b0d",
+      "sha256": "fccbd65b4447b4ff46d1bb6881910ade8a3ecba1a52e16230729462837636e8e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "STRIPE_DEPLOYMENT_GUIDE.md",
-      "sha256": "4378d3b91fbbeb6a45808cee5bcda44d97024f3da163777ef0943c07cc532ca4",
+      "sha256": "ada9dde2da7e77b97530e564e2c74ea6caa99225b6da26a40b5f6c1cfa10529d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
