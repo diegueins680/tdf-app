@@ -12485,7 +12485,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "d4dc496967728a6a6850d653f81a1e846b085aad3afa5e5c4dbb9d051cfc8347",
+      "sha256": "35e75dc494e4a73bad79b989eeb11efcc1a250f3aa5c121be5f62216fd8a37d7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
