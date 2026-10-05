@@ -357,6 +357,15 @@ jobs:
           bash scripts/test-ticket-admission.sh
           node --test scripts/__tests__/ticket-admission-model.test.mjs
 
+      - name: Verify durable ticket confirmations and concurrent workers
+        env:
+          PGPASSWORD: postgres
+          TICKET_CONFIRMATION_TEST_DSN: postgresql://postgres:postgres@postgres:5432/tdf_ticket_confirmation_worker_test
+        run: |
+          createdb -h postgres -U postgres tdf_ticket_confirmation_worker_test
+          bash scripts/test-ticket-confirmation.sh
+          python3 scripts/test-ticket-confirmation-smtp.py
+
       - name: Verify automatic migrations against the production schema
         env:
           TDF_AUTOMIG_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test

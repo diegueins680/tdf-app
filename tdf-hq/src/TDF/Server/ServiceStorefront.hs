@@ -867,7 +867,7 @@ processPaypalWebhookEventIO
   -> PaypalWebhookEnvelope
   -> UTCTime
   -> IO PaypalEventProcessResult
-processPaypalWebhookEventIO env@Env{envPool = pool} environment merchantRef envelope now =
+processPaypalWebhookEventIO Env{envPool = pool} environment merchantRef envelope now =
   case pweEventType envelope of
     "PAYMENT.CAPTURE.COMPLETED" -> processCompletedCapture
     "PAYMENT.CAPTURE.REFUNDED" -> processExternalCaptureChange
@@ -989,14 +989,9 @@ processPaypalWebhookEventIO env@Env{envPool = pool} environment merchantRef enve
                               confirmation)
         case result of
           Left _ -> pure (PaypalEventRetry "PayPal capture event database processing failed")
-          Right (outcome, mConfirmation) -> do
-            case mConfirmation of
-              Just (order, ticketCodes) -> do
-                _ <- tryAny $
-                  SocialEvents.sendTicketConfirmationForOrderIO env order ticketCodes
-                pure ()
-              Nothing -> pure ()
-            pure outcome
+          -- finalizePaidTicketOrder records a durable confirmation in the same
+          -- transaction. A webhook retry must not invoke SMTP a second time.
+          Right (outcome, _mConfirmation) -> pure outcome
 
     processExternalCaptureChange exceptionType =
       case parsePaypalWebhookCapture envelope of
