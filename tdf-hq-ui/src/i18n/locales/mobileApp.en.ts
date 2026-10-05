@@ -48,6 +48,8 @@ export default {
   "stepIos": "Once access is available, open TestFlight, accept the invitation and install TDF. Then sign in with your TDF account.",
   "stepAndroid": "Once access is available, opt in with your Google account on Play Testing and install TDF from Google Play.",
   "stepClosed": "This channel requires prior admission. Join the authorized group with the same Google account you use in Play, then open the test.",
+  "stepClosedEmail": "This beta requires prior admission. Request access with the Google account you use in Play. If you already received access, open the test with that same account.",
+  "alreadyAdmitted": "I already have access: open Google Play",
   "group": "Join the tester group",
   "stepUse": "Use the app in real situations. Return to this page to send feedback whenever you want.",
   "noInstall": "A click to Apple or Google does not confirm installation. TDF measures first use only when the app can send that event.",

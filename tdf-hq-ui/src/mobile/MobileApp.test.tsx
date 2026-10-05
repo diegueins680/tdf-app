@@ -102,3 +102,50 @@ it('uses public store instructions without a beta capacity or opt-in requirement
   expect(screen.getByText('Abre Google Play, instala TDF e inicia sesión con tu cuenta de TDF.')).toBeTruthy();
   expect(screen.queryByText(/acepta participar con tu cuenta/)).toBeNull();
 });
+
+function closedConfig(overrides = {}) {
+  return { ...config, android: { ...config.ios, status: 'closed_testing', admission: 'approval_required', url: 'https://play.google.com/apps/testing/com.tdf.records', ...overrides } };
+}
+it('lets admitted Android testers open Play without another request, in both languages', async () => {
+  global.fetch = jest.fn<typeof fetch>().mockResolvedValue({ ok: true, json: async () => closedConfig() } as Response);
+  const view = mount(<Page />);
+  const link = await screen.findByRole('link', { name: 'Ya tengo acceso: abrir Google Play' });
+  expect(link.getAttribute('href')).toBe('https://play.google.com/apps/testing/com.tdf.records');
+  expect(screen.getByText(/Solicita acceso con la cuenta de Google/)).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Solicitar acceso' })).toBeTruthy();
+  expect(screen.queryByRole('textbox', { name: /Correo/ })).toBeNull();
+  link.addEventListener('click', event => event.preventDefault(), { once: true }); // JSDOM has no external navigation.
+  fireEvent.click(link);
+  expect(capture).toHaveBeenCalledWith('mobile_testing_join_clicked', expect.objectContaining({ platform: 'android', distribution_status: 'closed_testing', destination: 'testing' }));
+  expect(capture.mock.calls.some(([event]) => /installed|request_submitted/.test(String(event)))).toBe(false);
+  fireEvent.click(screen.getByRole('button', { name: 'English' }));
+  expect(await screen.findByRole('link', { name: 'I already have access: open Google Play' })).toBeTruthy();
+  await expectNoSeriousAccessibilityViolations(view.container);
+});
+it.each([
+  { capacity: 'full' }, { capacity: 'unknown' }, { validUntil: new Date(Date.now() - 1).toISOString() },
+])('hides admitted tester links when access is not verified: %j', async overrides => {
+  global.fetch = jest.fn<typeof fetch>().mockResolvedValue({ ok: true, json: async () => closedConfig(overrides) } as Response);
+  mount(<Page />);
+  expect(await screen.findByRole('button', { name: 'Solicitar acceso' })).toBeTruthy();
+  expect(screen.queryByRole('link', { name: 'Ya tengo acceso: abrir Google Play' })).toBeNull();
+});
+it('keeps Google Group enrollment distinct from manual email admission', async () => {
+  global.fetch = jest.fn<typeof fetch>().mockResolvedValue({ ok: true, json: async () => closedConfig({ enrollmentUrl: 'https://groups.google.com/g/tdf-testers' }) } as Response);
+  mount(<Page />);
+  expect(await screen.findByRole('link', { name: 'Unirme al grupo de testers' })).toBeTruthy();
+  expect(screen.getByRole('link', { name: 'Probar beta en Google Play' })).toBeTruthy();
+  expect(screen.queryByRole('link', { name: 'Ya tengo acceso: abrir Google Play' })).toBeNull();
+});
+
+it('rechecks expiry at click time before sending an admitted tester away', async () => {
+  global.fetch = jest.fn<typeof fetch>().mockResolvedValue({ ok: true, json: async () => closedConfig() } as Response);
+  mount(<Page />);
+  const link = await screen.findByRole('link', { name: 'Ya tengo acceso: abrir Google Play' });
+  const now = jest.spyOn(Date, 'now').mockReturnValue(Date.parse(config.ios.validUntil));
+  try {
+    expect(fireEvent.click(link)).toBe(false);
+    expect(capture.mock.calls.some(([event]) => event === 'mobile_testing_join_clicked')).toBe(false);
+    expect(await screen.findByRole('textbox', { name: /Correo para coordinar/ })).toBeTruthy();
+  } finally { now.mockRestore(); }
+});

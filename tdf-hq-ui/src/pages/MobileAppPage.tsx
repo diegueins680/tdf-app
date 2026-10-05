@@ -40,7 +40,7 @@ export default function MobileAppPage() {
     <Typography variant="h5" component="p">{t('app.invite')}</Typography>
     <Typography>{t('app.intro')}</Typography>
     {beta && <Typography>{t('app.beta')}</Typography>}
-    <ToggleButtonGroup exclusive value={platform} aria-label={t('app.choose')} onChange={(_, value: MobilePlatform | null) => {
+    <ToggleButtonGroup sx={{ '& .MuiToggleButton-root': { color: 'text.primary' } }} exclusive value={platform} aria-label={t('app.choose')} onChange={(_, value: MobilePlatform | null) => {
       if (value) { setPlatform(value); setForm(null); track('mobile_platform_selected', { platform: value }); }
     }}>
       <ToggleButton value="android">{t('app.android')}</ToggleButton>
@@ -50,10 +50,16 @@ export default function MobileAppPage() {
       <Typography component="h2" variant="h5">{t(`app.${platform}`)}</Typography>
       {distribution.isPending ? <Typography role="status" aria-live="polite">{t('app.loading')}</Typography> : active ? <>
         <Chip sx={{ alignSelf: 'flex-start' }} label={t(channel.status === 'store_preorder' ? 'app.preorder' : beta ? 'app.betaStatus' : 'app.publicStatus')} />
-        {channel.status === 'closed_testing' && channel.admission === 'approval_required' && <Alert severity="info">{t('app.stepClosed')}</Alert>}
+        {channel.status === 'closed_testing' && channel.admission === 'approval_required' && <Alert severity="info">{t(channel.enrollmentUrl ? 'app.stepClosed' : 'app.stepClosedEmail')}</Alert>}
         {channel.enrollmentUrl && <Button component="a" href={channel.enrollmentUrl} referrerPolicy="no-referrer" onClick={() => track('mobile_testing_join_clicked', { platform, distribution_status: channel.status, destination: 'tester_group' })}>{t('app.group')}</Button>}
         {channel.status === 'closed_testing' && channel.admission === 'approval_required' && !channel.enrollmentUrl
-          ? <Button variant="contained" onClick={() => { setForm('request'); track('mobile_testing_interest_clicked', { platform, distribution_status: channel.status }); }}>{t('app.request')}</Button>
+          ? <>
+            <Button variant="contained" onClick={() => { setForm('request'); track('mobile_testing_interest_clicked', { platform, distribution_status: channel.status }); }}>{t('app.request')}</Button>
+            <Button component="a" variant="outlined" href={channel.url} referrerPolicy="no-referrer" onClick={event => {
+              if (!availableChannel(channel)) { event.preventDefault(); setForm('request'); return; }
+              track('mobile_testing_join_clicked', { platform, distribution_status: channel.status, destination: 'testing' });
+            }}>{t('app.alreadyAdmitted')}</Button>
+          </>
           : <Button component="a" variant="contained" href={channel.url} referrerPolicy="no-referrer" onClick={event => {
             if (!availableChannel(channel)) { event.preventDefault(); setForm('request'); return; }
             track(beta ? 'mobile_testing_join_clicked' : 'mobile_store_clicked', { platform, distribution_status: channel.status, destination: beta ? 'testing' : 'store' });
