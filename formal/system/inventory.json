@@ -20906,7 +20906,7 @@
     },
     {
       "path": "formal/interactions/README.md",
-      "sha256": "83021b52a334e912e0a32f19e05697b3fd7f5b95a65faa56d5492341d1e79cda",
+      "sha256": "9608db1c42268b2cc12b5d126aa4b0dbd20d4977d42036eccc52bcd00f03e39d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21536,7 +21536,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "ab96f3e45c338688dbad7935cabebee9880091a788d9c8616bfc6c5227692b21",
+      "sha256": "df90f86b106339c2fc53b0c0865ff1e73607de98963c7af7c17aa9dfeb03dde1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

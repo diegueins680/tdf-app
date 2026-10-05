@@ -5909,6 +5909,65 @@
       },
       "verification": "Actual controller tests inject changed head/base/queue/draft/closure, revocation failure and duplicate heads; protected-main enforcement is re-observed during bootstrap.",
       "evidence": "Current-head unit and hosted repository gates plus source-bound metadata/protection receipts; no universal concurrency proof."
+    },
+    {
+      "id": "SOC-ABUSE-001",
+      "title": "Rejected interaction writes consume the exact per-account minute budget",
+      "statement": "Authenticated interaction write attempts, including domain authorization denials, consume a durable per-account calendar-minute counter; increment 91 returns HTTP 429.",
+      "authority": "Existing canonical interaction_integrity SQL limiter and routed HTTP behavior; CI regression preserves the existing threshold.",
+      "domain": "SOC",
+      "actors": [
+        "Authenticated interaction actor"
+      ],
+      "preconditions": [
+        "Installed canonical interaction schema and live authenticated account"
+      ],
+      "inputs": [
+        "Write command and current database time"
+      ],
+      "state": {
+        "boundary": "directory_rate_limit interaction:write scope and HTTP queryWith"
+      },
+      "allowedTransitions": [
+        "Increment budget before domain command; return HTTP 429 when the minute counter exceeds 90"
+      ],
+      "forbiddenTransitions": [
+        "Rejected domain writes roll back their consumed budget",
+        "Allow increment 91 within a minute",
+        "Treat a fixed-minute rollover as a missing budget"
+      ],
+      "effects": [
+        "Durable per-account counter independent of denied domain mutation"
+      ],
+      "authorization": "Current HTTP session remains required; rate limiting never grants domain authority.",
+      "privacy": "Budget key is the existing hashed account identifier; no new PII collection.",
+      "concurrency": "Atomic PostgreSQL upsert serializes increments for the same account and minute.",
+      "idempotency": "Repeated write attempts consume the budget even if the domain command is a replay.",
+      "failure": "Domain rejection preserves the committed budget; quota exhaustion returns 429.",
+      "recovery": "The next database calendar-minute bucket has its own budget.",
+      "observability": "Actual HTTP responses and persisted isolated-test counter, without bearer tokens.",
+      "source": "tdf-hq/sql/2026-09-28_interaction_integrity.sql; scripts/interactions/test-api.py",
+      "property": "HTTP rejection at exactly counter 91, including unauthorized commands; regression spans at most two calendar windows.",
+      "contract": "formal/interactions/README.md",
+      "implementation": [
+        "tdf-hq/sql/2026-09-28_interaction_integrity.sql",
+        "tdf-hq/src/TDF/Interactions/Server.hs"
+      ],
+      "tests": [
+        "scripts/interactions/test-api.py",
+        "scripts/interactions/test-http.sh"
+      ],
+      "formalModels": [],
+      "verification": "Isolated real HTTP/PostgreSQL test checks 429 and exact persisted counter; no simulated payment or production evidence.",
+      "evidence": "CI run 37380322736 crossed 22:22 to 22:23 UTC during the old single-window assertion; corrected HTTP regression awaits execution.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Actual SQL and HTTP boundary inspected; revised runtime test pending.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Existing implementation unchanged; current revised HTTP test must execute."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -6041,6 +6100,8 @@
     "scripts/get-instagram-token.mjs": "0b00f6cc1ad6793f029339bc006ed520245af87ea55e285658faf48ba978e592",
     "scripts/inspect-compiled-api.mjs": "2b65b93d80950b7c3cb650dafc247cfd49f6575e8a6653fc083223741da47e70",
     "scripts/inspect-hetzner-production.mjs": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
+    "scripts/interactions/test-api.py": "585bea6f29fe51db5f460d60ae24e5b91f625ddaf1c8aeb3c1a2e7f2ce064dd4",
+    "scripts/interactions/test-http.sh": "087ac80166a5381eff9e60417685428c462721533324a7dd7c96cf6b7968a41a",
     "scripts/lib/compiled-api-surface.mjs": "6416e603ceb8f55faf42b04658b837a8d076b9f26eaf5d54f26343794e197b72",
     "scripts/lib/disposable-postgres-url.mjs": "49cdbc947485d89de6be08f23c888c686c4255de9cb73a331fc573352738fdb4",
     "scripts/lib/formal-result-summary.mjs": "fa378d768a1c4e8ff6fe67e8d18d61367cd1b272339107e71c497798fb657167",
@@ -6167,6 +6228,7 @@
     "tdf-hq/sql/2026-09-15_social_v2_chat_api.sql": "faa8026e41a293c01656120e360590d793ea575af0e12a68c67b916deb86dc52",
     "tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.sql": "8f86bc3c25209d6f56987dd3f84123e2be4fd78e3a9ee9876075ca1077a1864c",
     "tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql": "e70e67606e1ff1451ee6cf0404a7cad28b2ede0b72ffa92c16aab9cea9d72cca",
+    "tdf-hq/sql/2026-09-28_interaction_integrity.sql": "4bddd12c17e189286b4fa468ede50e27a471f370ced44224118e46fef3e1b019",
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql": "9d6236c8bf0a2f593cf54cf445d24adfe9e765cc91f000cf45dcd3b8bb86e4fd",
     "tdf-hq/sql/2026-10-04_merch_commission_exact.sql": "36a4432d9e20442107f570228e4477cb93072433f5752f9dd7d32106d60c4b1d",
@@ -6214,6 +6276,7 @@
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/Directory/Policy.hs": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
     "tdf-hq/src/TDF/Email.hs": "045f374e94fa4804a4e60f7bdb0dfca792c44cec5cd70813dba84bb22caabece",
+    "tdf-hq/src/TDF/Interactions/Server.hs": "80cdc51d0b6668457f083d06d3aec809d4c39891824ea97c69767e2b72dc1db0",
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
     "tdf-hq/src/TDF/Operations/API.hs": "747cadac15423971a9516d9d30f542d2c7124213debbefb0c09d9ca196dd1bdb",
     "tdf-hq/src/TDF/Operations/Model.hs": "4a969e669fe0335f36ce78a0409364550fc0bf9f3ade682f81b36f0715c846cd",
@@ -9684,6 +9747,30 @@
         "requirement": "OPS-INTEGRATION-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq/sql/2026-09-28_interaction_integrity.sql": [
+      {
+        "requirement": "SOC-ABUSE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Interactions/Server.hs": [
+      {
+        "requirement": "SOC-ABUSE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/interactions/test-api.py": [
+      {
+        "requirement": "SOC-ABUSE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/interactions/test-http.sh": [
+      {
+        "requirement": "SOC-ABUSE-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -11501,7 +11588,12 @@
       "path": "scripts/interactions/test-api.py",
       "sha256": "585bea6f29fe51db5f460d60ae24e5b91f625ddaf1c8aeb3c1a2e7f2ce064dd4",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SOC-ABUSE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-997e028a6a9a38c3",
@@ -11529,7 +11621,12 @@
       "path": "scripts/interactions/test-http.sh",
       "sha256": "087ac80166a5381eff9e60417685428c462721533324a7dd7c96cf6b7968a41a",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SOC-ABUSE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-f7cfb7f13090b47a",
@@ -21366,7 +21463,12 @@
       "path": "tdf-hq/sql/2026-09-28_interaction_integrity.sql",
       "sha256": "4bddd12c17e189286b4fa468ede50e27a471f370ced44224118e46fef3e1b019",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SOC-ABUSE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-2df92b383bb2165c",
@@ -22995,7 +23097,12 @@
       "path": "tdf-hq/src/TDF/Interactions/Server.hs",
       "sha256": "80cdc51d0b6668457f083d06d3aec809d4c39891824ea97c69767e2b72dc1db0",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SOC-ABUSE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-9ff459c664205d62",
@@ -28099,11 +28206,9 @@
     "SURFACE-14082aef6c304d37",
     "SURFACE-865e33190c6c6efa",
     "SURFACE-8ae2a3dbc74bbcd0",
-    "SURFACE-c6b247cfc6b5135b",
     "SURFACE-997e028a6a9a38c3",
     "SURFACE-82a0269472e8ef0e",
     "SURFACE-837e02c297524cce",
-    "SURFACE-2a70e54239ebf0c1",
     "SURFACE-f7cfb7f13090b47a",
     "SURFACE-b7108336da7c8a87",
     "SURFACE-4738d9e01ae03383",
@@ -29254,7 +29359,6 @@
     "SURFACE-c3b2661a522a349e",
     "SURFACE-f77dd8256eb59e76",
     "SURFACE-93a0914067a29a94",
-    "SURFACE-84cba7ef270c5a54",
     "SURFACE-2df92b383bb2165c",
     "SURFACE-c9888142d2a310ea",
     "SURFACE-6623c03c473714bc",
@@ -29397,7 +29501,6 @@
     "SURFACE-bda51e050e7f3792",
     "SURFACE-5dc54f64fc1fc3e9",
     "SURFACE-cf5eaa02e907e90b",
-    "SURFACE-f944f6a148e07793",
     "SURFACE-9ff459c664205d62",
     "SURFACE-6c4cebdeba931f44",
     "SURFACE-dd73bca7a3d77f4e",
@@ -29897,7 +30000,8 @@
     "SYS-CI-001",
     "EVT-PRESENTATION-001",
     "PRIV-ERROR-001",
-    "OPS-INTEGRATION-001"
+    "OPS-INTEGRATION-001",
+    "SOC-ABUSE-001"
   ],
   "stateMachines": [
     {
@@ -52670,7 +52774,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 78,
+    "PARTIAL": 79,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
