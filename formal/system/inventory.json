@@ -125,6 +125,7 @@
       "scripts/__tests__/music-directory-visual-artifacts.test.mjs",
       "scripts/__tests__/navigation-http-runtime.mjs",
       "scripts/__tests__/onboarding-real-browser.mjs",
+      "scripts/__tests__/operations-api-schema.test.mjs",
       "scripts/__tests__/payment-query-report-contract.test.mjs",
       "scripts/__tests__/payment-staging-inspection.test.mjs",
       "scripts/__tests__/persistent-uploads.test.mjs",
@@ -2541,13 +2542,13 @@
     {
       "id": "SURFACE-053150b640a7ce75",
       "path": "package-lock.json",
-      "sha256": "b2663069d0f1901b4d5b76dde885fa0ff107089cf661819ed3500be6443bace4",
+      "sha256": "591c111bb4548a3f3ce23ae313030d5dcee05f54c10f2161464e789cf2221f4c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "f5113b4d00775becd6433276b1e2cc1e04c6dfc652e0445c0390d2efa99da61d",
+      "sha256": "36c9b835467a0f1c99ecf843e5e00a860ba535c676a2cdc605229db441c4a8cb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2866,6 +2867,12 @@
       "id": "SURFACE-2661bcd3e8c66ae8",
       "path": "scripts/__tests__/onboarding-real-browser.mjs",
       "sha256": "9dd4f77f163a5a99957ca533978a60a7c375f3ac33197d47621b1bb1bc5296a7",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-fd328f1caf2cf339",
+      "path": "scripts/__tests__/operations-api-schema.test.mjs",
+      "sha256": "42d3f42f1ac5d5e33892499b29b429bab8319294d2b8543994b894077dda7365",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3471,7 +3478,7 @@
     {
       "id": "SURFACE-3239206d050f7bd9",
       "path": "scripts/lib/operations_conformance.py",
-      "sha256": "a820fd5c346f4ae5d21f9933397c361e22cbfe0daa1c6f475f6dae9d6f6e0081",
+      "sha256": "eb9de19cc5731d22746a5ca0df6560261031cc3bfbc1d54d3f6dee92ecbfa522",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3645,7 +3652,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "9d3d3e1554090a48361c6e9b925372c9b048d6afc8ed627fc6c600da479d7ce2",
+      "sha256": "ee40658ae0f57f43fe65d02723ae235e4bfa62fe1376324e13016527efa1f2cf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9081,7 +9088,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "86b9203b6712847625434a901c11340295a07021cf5519b4836b6eba5f5dac8c",
+      "sha256": "282e4d9afec01177ae86348b800d278f102a428eb0021fc1196065aa7a52554b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12075,7 +12082,7 @@
     {
       "id": "SURFACE-c2d996c338d294aa",
       "path": "tdf-hq/src/TDF/Operations/Server.hs",
-      "sha256": "dc9294978b41138e488bc8a14e13447088d614dbee141388eb3dee55f02d0b7b",
+      "sha256": "d9bab1f3910e2e3b84dd9880ffa75225cbea09a5316b584caad1c019093baac2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21067,7 +21074,7 @@
     },
     {
       "path": "formal/system/operations-command-boundary.md",
-      "sha256": "1b37c35e50ff41108b0ddc93269879549044a357df19ebeaff407d8bef91704c",
+      "sha256": "fb9bd86683dd7a76ad043831f9551fc032f5a7775d7abfd768eabf75bf9040eb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21095,7 +21102,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "e7ece3a058a1114b758c4faf0c89760357ad9872072fd1e6e85bc9effcc52975",
+      "sha256": "b3aa5762ec312a268a718d62ecc6fc2a7d172ca6e995416e2d6ec755df8f33fa",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -21389,7 +21396,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "86b9203b6712847625434a901c11340295a07021cf5519b4836b6eba5f5dac8c",
+      "sha256": "282e4d9afec01177ae86348b800d278f102a428eb0021fc1196065aa7a52554b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"

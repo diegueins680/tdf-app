@@ -4421,7 +4421,8 @@
       ],
       "tests": [
         "scripts/lib/operations_conformance.py",
-        "scripts/test-booking-conformance.py"
+        "scripts/test-booking-conformance.py",
+        "scripts/__tests__/operations-api-schema.test.mjs"
       ],
       "formalModels": [
         "formal/event-operations/OperationsCommandFence.tla"
@@ -4490,7 +4491,8 @@
       ],
       "tests": [
         "scripts/lib/operations_conformance.py",
-        "scripts/test-booking-conformance.py"
+        "scripts/test-booking-conformance.py",
+        "scripts/__tests__/operations-api-schema.test.mjs"
       ],
       "formalModels": [
         "formal/event-operations/OperationsApproval.tla"
@@ -4576,7 +4578,7 @@
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
     ".github/workflows/ci.yml": "021541980348669b01cbb19bb7448b948ba0ce09f0017e431272d18e3ea12a46",
     ".github/workflows/event-operations-formal.yml": "8cdbbb59f539a8394fde147ba38dc4f27260b9ac2c371c731da5b342401077d1",
-    "docs/catalog-persistence/catalog-list-decisions.json": "1bd1d353b72ba5c095f33f81b008fba6e3c3eb7fd799c1978280f9963a5c89d6",
+    "docs/catalog-persistence/catalog-list-decisions.json": "9ae8d8e5ba384fceadc2b326dea510d25f9b1e668138719c4529438b75ab7ca9",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
     "formal/event-operations/CatalogReorder.tla": "ab228ae812143f050feac4035e9724fb647a1072cb7816d500894ea1ba335c5d",
@@ -4639,8 +4641,8 @@
     "ops/hetzner/inspect-runtime.py": "9e83d408bcc97c4978854c3b3d137eb4dae384c919e9b57cf96a0abbd825a524",
     "ops/hetzner/rehearse-postgres-restore.py": "4794f49c34ed9042fc58450020ea844dc1dae57852c6a2607c4f8d5d23a0176e",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
-    "package-lock.json": "b2663069d0f1901b4d5b76dde885fa0ff107089cf661819ed3500be6443bace4",
-    "package.json": "f5113b4d00775becd6433276b1e2cc1e04c6dfc652e0445c0390d2efa99da61d",
+    "package-lock.json": "591c111bb4548a3f3ce23ae313030d5dcee05f54c10f2161464e789cf2221f4c",
+    "package.json": "36c9b835467a0f1c99ecf843e5e00a860ba535c676a2cdc605229db441c4a8cb",
     "scripts/__tests__/artist-enrichment.test.mjs": "180ce22aca9d7d991b98e563f922749037f79a4ab1ce258e813feb1888aa167d",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/catalog-list-audit.test.mjs": "a792f74cdd4497a9c44907d394884012728cbbdfd8c1793e079619344605fb94",
@@ -4662,6 +4664,7 @@
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
     "scripts/__tests__/merch-commission-postgres.mjs": "91dd370bf08dfe2ab871c6a617d4e2871717c9f5ff27676e692c6d776c9721c3",
     "scripts/__tests__/merch-runtime-safety.test.mjs": "7e8b8f27e40d6b1d2f329aac504096451783587ee12a827f9d3e03da64aedcfa",
+    "scripts/__tests__/operations-api-schema.test.mjs": "42d3f42f1ac5d5e33892499b29b429bab8319294d2b8543994b894077dda7365",
     "scripts/__tests__/persistent-uploads.test.mjs": "0dc864d08b90d8731f0ddcb056dad5c7990c5e07dab80084396e87f62ee76df6",
     "scripts/__tests__/production-entrypoint.test.mjs": "c4e1d14cc296c80c9724b1ec4d4c3a4986e9be3f732b615813ad4d5af8e2de53",
     "scripts/__tests__/production-release.test.mjs": "5735fff347586aa3a4968a4d3d0c3a36225bf8438993980f50c2ca065dfde797",
@@ -4685,7 +4688,7 @@
     "scripts/lib/hetzner-migration-rehearsal.mjs": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a",
     "scripts/lib/hetzner-preparation.mjs": "c0e96de12b4949cea0115e8d8ea8fe85dad2dfdd1f8496fb8b110f9e5240abc0",
     "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
-    "scripts/lib/operations_conformance.py": "a820fd5c346f4ae5d21f9933397c361e22cbfe0daa1c6f475f6dae9d6f6e0081",
+    "scripts/lib/operations_conformance.py": "eb9de19cc5731d22746a5ca0df6560261031cc3bfbc1d54d3f6dee92ecbfa522",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
     "scripts/lib/production-release.mjs": "d7ae6bd22a1863de06d0925eca7d0a48fe8e27512a06700928b89b0d3066fbf6",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
@@ -4696,7 +4699,7 @@
     "scripts/production-release.mjs": "1643997b7b3ac422214725f4078b7b4db25f09d1df6ae5cebe8285cd257e0d59",
     "scripts/quality-backend.sh": "7be0e6a87e50b625239a70858d53d9d3340a409000ea9f1dc475c96585b495d7",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "9d3d3e1554090a48361c6e9b925372c9b048d6afc8ed627fc6c600da479d7ce2",
+    "scripts/quality-repo.sh": "ee40658ae0f57f43fe65d02723ae235e4bfa62fe1376324e13016527efa1f2cf",
     "scripts/rehearse-hetzner-restore.mjs": "eba3bfe18eafcbd4e5f84e71bd817d8b8ede458658c447a060b7af2c9fe559b7",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
@@ -4769,7 +4772,7 @@
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/assets/feature-registry.json": "7388f163749d305fb7bc12b0ada9c4f7f988c878a1db006437db835555cbe3af",
-    "tdf-hq/docs/openapi/api.yaml": "86b9203b6712847625434a901c11340295a07021cf5519b4836b6eba5f5dac8c",
+    "tdf-hq/docs/openapi/api.yaml": "282e4d9afec01177ae86348b800d278f102a428eb0021fc1196065aa7a52554b",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/persistent-uploads.sh": "89c251d96be949d638941d45d4a8994f09c8157a04bea786ee93aefde90cbd44",
     "tdf-hq/production-entrypoint.sh": "9cf124a277a19e2d5c0d7769cfc8a2d16dc2d21f09e93406b3ebfa293e0416b4",
@@ -4809,7 +4812,7 @@
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
     "tdf-hq/src/TDF/Operations/API.hs": "747cadac15423971a9516d9d30f542d2c7124213debbefb0c09d9ca196dd1bdb",
     "tdf-hq/src/TDF/Operations/Model.hs": "d5245e42f9ab4ee1cf2926eb4f0343032a92cfaa6e9c720ed6527a97abb9ba69",
-    "tdf-hq/src/TDF/Operations/Server.hs": "dc9294978b41138e488bc8a14e13447088d614dbee141388eb3dee55f02d0b7b",
+    "tdf-hq/src/TDF/Operations/Server.hs": "d9bab1f3910e2e3b84dd9880ffa75225cbea09a5316b584caad1c019093baac2",
     "tdf-hq/src/TDF/Operations/Types.hs": "58208ae55c81f29ca48073762e766661784a6e956ca54cb3869fb5b039d5fc6f",
     "tdf-hq/src/TDF/Operations/Worker.hs": "1a72f95139a6a7f8d016599660c568eb0d1d99c9a5e32fd5936a52f7cc676019",
     "tdf-hq/src/TDF/RagStore.hs": "80b5f523542cb71119551dbb64bd5e0c0e3e880622997a496e496e4d7fbeb912",
@@ -7288,6 +7291,16 @@
         "relationship": "tests"
       }
     ],
+    "scripts/__tests__/operations-api-schema.test.mjs": [
+      {
+        "requirement": "OPS-COMMAND-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-APPROVAL-001",
+        "relationship": "tests"
+      }
+    ],
     "formal/event-operations/OperationsCommandFence.tla": [
       {
         "requirement": "OPS-COMMAND-001",
@@ -7744,7 +7757,7 @@
     {
       "id": "SURFACE-053150b640a7ce75",
       "path": "package-lock.json",
-      "sha256": "b2663069d0f1901b4d5b76dde885fa0ff107089cf661819ed3500be6443bace4",
+      "sha256": "591c111bb4548a3f3ce23ae313030d5dcee05f54c10f2161464e789cf2221f4c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -7756,7 +7769,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "f5113b4d00775becd6433276b1e2cc1e04c6dfc652e0445c0390d2efa99da61d",
+      "sha256": "36c9b835467a0f1c99ecf843e5e00a860ba535c676a2cdc605229db441c4a8cb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -8296,6 +8309,22 @@
       "sha256": "9dd4f77f163a5a99957ca533978a60a7c375f3ac33197d47621b1bb1bc5296a7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-fd328f1caf2cf339",
+      "path": "scripts/__tests__/operations-api-schema.test.mjs",
+      "sha256": "42d3f42f1ac5d5e33892499b29b429bab8319294d2b8543994b894077dda7365",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "OPS-COMMAND-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-APPROVAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-69900817facd771e",
@@ -9151,7 +9180,7 @@
     {
       "id": "SURFACE-3239206d050f7bd9",
       "path": "scripts/lib/operations_conformance.py",
-      "sha256": "a820fd5c346f4ae5d21f9933397c361e22cbfe0daa1c6f475f6dae9d6f6e0081",
+      "sha256": "eb9de19cc5731d22746a5ca0df6560261031cc3bfbc1d54d3f6dee92ecbfa522",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -9449,7 +9478,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "9d3d3e1554090a48361c6e9b925372c9b048d6afc8ed627fc6c600da479d7ce2",
+      "sha256": "ee40658ae0f57f43fe65d02723ae235e4bfa62fe1376324e13016527efa1f2cf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16332,7 +16361,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "86b9203b6712847625434a901c11340295a07021cf5519b4836b6eba5f5dac8c",
+      "sha256": "282e4d9afec01177ae86348b800d278f102a428eb0021fc1196065aa7a52554b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20093,7 +20122,7 @@
     {
       "id": "SURFACE-c2d996c338d294aa",
       "path": "tdf-hq/src/TDF/Operations/Server.hs",
-      "sha256": "dc9294978b41138e488bc8a14e13447088d614dbee141388eb3dee55f02d0b7b",
+      "sha256": "d9bab1f3910e2e3b84dd9880ffa75225cbea09a5316b584caad1c019093baac2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
