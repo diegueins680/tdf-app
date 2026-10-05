@@ -75,6 +75,7 @@ const SENSITIVE_PROPERTY_NAMES = new Set([
   'holderemail',
   'recipientemail',
   'orderid',
+  'ordernumber',
   'ticketid',
   'paypalorderid',
   'providerorderid',
@@ -94,13 +95,13 @@ const isSensitivePropertyName = (key: string): boolean =>
 // Private order/credential paths also reach SDK-generated URL properties. Keep
 // public event IDs for funnel analysis, but never export private resource IDs.
 const privatePath = (pathname: string): string => pathname.replace(
-  /(\/(?:orden|orders|ticket-orders|ticket-transfers|tickets|checkouts|cotizaciones)\/)[^/]+/gi,
+  /(\/(?:orden|pedido|orders|ticket-orders|ticket-transfers|tickets|checkouts|cotizaciones)\/)[^/]+/gi,
   '$1[REDACTED]',
 );
 
 export function redactSensitiveQueryValues(value: string, depth = 0): string {
   const isAbsolute = /^[a-z][a-z\d+.-]*:/i.test(value);
-  if (!isAbsolute && !value.startsWith('/') && !value.startsWith('#') && !value.includes('?')) return value;
+  if (!isAbsolute && !value.startsWith('/') && !value.includes('?')) return value;
 
   try {
     const parsed = new URL(value, 'https://analytics.invalid');

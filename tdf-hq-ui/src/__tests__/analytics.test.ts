@@ -203,10 +203,18 @@ describe('analytics/posthog (web)', () => {
     for (const path of ['/marketplace/pago-datafast', '/mezcla-mastering/pago-datafast',
       '/pagos/retorno/', '/PAGOS/RETORNO', '/marketplace/%70ago-datafast',
       '/eventos/141/%6Frden/92', '/domo-del-pululahua/cotizaciones/92',
-      '/curso/produccion/orden/92', '/live-sessions/registro']) {
+      '/curso/produccion/orden/92', '/live-sessions/registro',
+      '/mezcla-mastering/pedido/PRIVATE-PROVIDER-RESOURCE']) {
       expect(redactSensitiveQueryValues(`https://tdf.test${path}?id=${sentinel}&reference=${sentinel}&t=${sentinel}`))
         .not.toContain(sentinel);
     }
+  });
+
+  test('preserves ordinary fragment-like campaign names outside URL values', () => {
+    expect(sanitizeAnalyticsProperties({ attribution_campaign: '#release' }))
+      .toEqual({ attribution_campaign: '#release' });
+    expect(redactSensitiveQueryValues('https://tdf.test/eventos/141#private-token'))
+      .not.toContain('private-token');
   });
 
   test('logs PostHog failures through the app logger', () => {
