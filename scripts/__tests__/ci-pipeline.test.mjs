@@ -354,3 +354,30 @@ test('repository image conformance installs and probes FFmpeg before running act
   assert.match(job.steps[setup].run, /ffprobe -version/);
   assert.doesNotMatch(job.steps[setup].run, /allow-unauthenticated|trusted=yes|\|\| true/);
 });
+
+test('pinned Mobile main and release validation and configured synthetics fail closed', async () => {
+  const validation = parseYaml(await source('tdf-mobile/.github/workflows/mobile-validate.yml'));
+  for (const event of ['push', 'pull_request']) {
+    assert.ok(validation.on[event].branches.includes('main'));
+    assert.ok(validation.on[event].branches.includes('release/**'));
+  }
+  const steps = validation.jobs.validate.steps;
+  for (const command of ['npm run release:check', 'npm test -- --watch=false', 'npm run doctor']) {
+    assert.ok(steps.some((step) => step.run === command && !step['continue-on-error']));
+  }
+  assert.ok(steps.some((step) => step.run?.includes('unittest discover')));
+  const workflow = parseYaml(await source('tdf-mobile/.github/workflows/datadog-synthetics.yml'));
+  for (const event of ['push', 'pull_request']) {
+    assert.ok(workflow.on[event].branches.includes('release/tdf-shipped-*'));
+  }
+  const job = workflow.jobs.synthetics;
+  assert.match(job.if, /head\.repo\.fork/);
+  const provider = job.steps.find((step) => step.uses?.startsWith('DataDog/'));
+  assert.equal(provider.with['fail-on-critical-errors'], true);
+  assert.equal(provider.with['fail-on-missing-tests'], true);
+  assert.equal(provider['continue-on-error'], undefined);
+  assert.equal(job['continue-on-error'], undefined);
+  assert.match(provider.if, /DD_API_KEY != ''/);
+  assert.match(provider.if, /DD_APP_KEY != ''/);
+  assert.ok(job.steps.some((step) => step.run?.includes('Skipping Datadog synthetics')));
+});

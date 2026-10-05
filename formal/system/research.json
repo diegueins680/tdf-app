@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 \u00a79.2.2",
+      "title": "RFC 9110 §9.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -480,6 +480,17 @@
       "applicability": "Operations command and approval admission",
       "decision": "adopted within handler boundary",
       "rationale": "Decision uses clock_timestamp rather than transaction-start now(); timeout and host clock correctness remain environment assumptions."
+    },
+    {
+      "id": "RES-NOTIF-001",
+      "source": "https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html",
+      "title": "Transactional outbox pattern",
+      "recommendation": "Persist notification intent with business mutation; tolerate duplicate delivery across the external acknowledgement boundary.",
+      "applicability": "Newly shipped ticket-confirmation worker",
+      "decision": "adopted",
+      "rationale": "A unique order intent and fenced retry preserve local authority; SMTP cannot participate in the transaction. No exactly-once inbox claim or AWS infrastructure dependency.",
+      "verifiedAt": "2026-10-05",
+      "supportingSource": "https://www.postgresql.org/docs/17/sql-select.html#SQL-FOR-UPDATE-SHARE"
     }
   ]
 }

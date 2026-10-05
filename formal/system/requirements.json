@@ -5438,6 +5438,196 @@
         "Downstream failure replay execution and actual push delivery are not established.",
         "Note success replay, cross-owner token rotation and deletion remain separate obligations; not formally covered."
       ]
+    },
+    {
+      "authority": "Current shipped source reconciled under the requested consolidated audit",
+      "contract": "formal/system/mobile-ci-boundary.md",
+      "critical": true,
+      "source": "formal/system/mobile-ci-boundary.md",
+      "status": "specified and implemented",
+      "confidence": "Source-derived boundary; no universal proof or production completion claim",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Current consolidated validation and deployed correspondence remain outstanding."
+      },
+      "observability": "Record SHA, workflow/run/attempt and whether the provider step actually ran.",
+      "recovery": "Repair configuration/source and run a fresh attempt; preserve failed evidence.",
+      "verification": "Parsed pinned workflow assertions and real hosted run evidence; provider service is external.",
+      "id": "SYS-CI-001",
+      "title": "Shipped Mobile validation and conditional external synthetic evidence",
+      "domain": "SYS",
+      "statement": "Main and shipped release branches must run Mobile validation; configured synthetic checks must fail on critical provider errors or missing tests. Missing credentials and fork exclusions must be explicit and do not count as executed synthetic evidence.",
+      "actors": [
+        "Repository contributors",
+        "GitHub Actions",
+        "Configured synthetic provider"
+      ],
+      "preconditions": [
+        "Exact Mobile gitlink exists; workflow event is within main or shipped release scope."
+      ],
+      "inputs": [
+        "Git revision",
+        "Pull request or push event",
+        "Repository secret availability"
+      ],
+      "state": {
+        "validation": [
+          "queued",
+          "running",
+          "passed",
+          "failed",
+          "cancelled"
+        ],
+        "synthetics": [
+          "excluded_fork",
+          "unconfigured",
+          "running",
+          "passed",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Triggered validation runs release checks, tests, artifact guards and Expo doctor.",
+        "Configured provider execution fails closed on missing tests or critical errors."
+      ],
+      "forbiddenTransitions": [
+        "Represent missing credentials or excluded forks as an executed provider test.",
+        "Suppress a configured provider failure."
+      ],
+      "effects": [
+        "Revision-bound CI results and explicit skip logs"
+      ],
+      "authorization": "Fork workflows do not receive provider secrets; repository credentials remain in CI secret context.",
+      "privacy": "Never log credential values; do not place private fixture data in artifacts.",
+      "concurrency": "Superseded runs may be cancelled; cancellation is not passing evidence.",
+      "idempotency": "Reruns are separate attempts with retained original result.",
+      "failure": "Failed validation blocks its quality gate. Unconfigured optional provider execution remains unverified.",
+      "property": "Validation selected for main and release; configured provider failures cannot be green.",
+      "implementation": [
+        "tdf-mobile/.github/workflows/mobile-validate.yml",
+        "tdf-mobile/.github/workflows/datadog-synthetics.yml"
+      ],
+      "tests": [
+        "scripts/__tests__/ci-pipeline.test.mjs"
+      ],
+      "formalModels": [],
+      "ambiguity": [],
+      "evidence": "Pinned workflow regression tests plus revision-bound hosted Mobile workflow/step results; unconfigured provider steps are not executed synthetic evidence."
+    },
+    {
+      "authority": "Current shipped source reconciled under the requested consolidated audit",
+      "contract": "formal/ticket-admission/confirmation-delivery.md",
+      "critical": true,
+      "source": "formal/ticket-admission/confirmation-delivery.md",
+      "status": "specified and implemented",
+      "confidence": "Source-derived boundary; no universal proof or production completion claim",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Current consolidated validation and deployed correspondence remain outstanding."
+      },
+      "observability": "Restricted counts by state, due age, expired leases, attempts and fixed last_error_code; no credentials in logs.",
+      "recovery": "Expired leases can be reclaimed; guarded rollback rejects any queue history. Operator repair requires retaining original intent.",
+      "verification": "PostgreSQL transition tests, eight concurrent actual Haskell consumers, synthetic loopback SMTP failure/retry, header tests; no external inbox or real-money evidence.",
+      "id": "NOTIF-TICKET-001",
+      "title": "Durable ticket purchase confirmation with fenced delivery attempts",
+      "domain": "NOTIF",
+      "statement": "Canonical paid ticket issuance must atomically enqueue at most one retained confirmation intent per order. Opt-in workers claim with bounded leases, resolve currently eligible buyer-held credentials, bound SMTP work, fence acknowledgements and retain exhausted failures. SMTP acceptance is not inbox delivery and duplicate email after ambiguous acceptance remains possible.",
+      "actors": [
+        "Public ticket buyer",
+        "Payment finalizer",
+        "Opt-in SMTP worker",
+        "Restricted operations staff"
+      ],
+      "preconditions": [
+        "Canonical paid and issued order",
+        "Reviewed migrations applied",
+        "Worker explicitly enabled with configured SMTP"
+      ],
+      "inputs": [
+        "Canonical order ID",
+        "Fresh random lease UUID",
+        "Current canonical ticket ownership",
+        "SMTP outcome"
+      ],
+      "state": {
+        "initial": "pending",
+        "states": [
+          "pending",
+          "processing",
+          "accepted",
+          "cancelled",
+          "dead_letter"
+        ],
+        "terminal": [
+          "accepted",
+          "cancelled",
+          "dead_letter"
+        ],
+        "attemptBound": 8,
+        "leaseSeconds": 120,
+        "sendTimeoutSeconds": 30
+      },
+      "allowedTransitions": [
+        "Absent -> pending within canonical issuance transaction",
+        "Due pending -> processing with exclusive claim and fresh lease",
+        "Current unexpired processing -> accepted on SMTP acknowledgement",
+        "Current unexpired processing -> cancelled when no eligible tickets remain",
+        "Failed processing -> pending with exponential backoff or dead_letter at eight attempts",
+        "Expired processing -> pending or dead_letter at attempt bound"
+      ],
+      "forbiddenTransitions": [
+        "Queue for an unpaid/unissued order",
+        "Foreign or expired lease acknowledges a delivery",
+        "SMTP call inside issuance transaction",
+        "Migration backfills old purchases",
+        "Rollback discards retained queue history"
+      ],
+      "effects": [
+        "One deduplicated intent per order",
+        "Potential duplicate SMTP submission after ambiguous crash, without new charge or ticket"
+      ],
+      "authorization": "Internal worker and database authority only; no public queue administration route. Delivery eligibility derives from current paid order and buyer-retained tickets.",
+      "privacy": "Queue stores operational metadata and order reference only. Resolve PII and ticket codes at processing time, keep them out of error logs; concurrent revocation versus external send requires review.",
+      "concurrency": "SKIP LOCKED claim and lease-fenced completion; SMTP and database cannot atomically commit.",
+      "idempotency": "Order primary key deduplicates enqueue; lease fences acknowledgement; external SMTP is at-least-once under retry, bounded by attempt budget.",
+      "failure": "Sanitized failure codes; retry/backoff to eight attempts then retained dead letter. Missing config leaves queue intact.",
+      "property": "Unique intent, canonical issuance authority, current lease completion, bounded attempts, no implicit production enablement.",
+      "implementation": [
+        "tdf-hq/src/TDF/Ticketing/Confirmation.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/src/TDF/Email.hs",
+        "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql",
+        "tdf-hq/sql/2026-10-05_ticket_confirmation_delivery_rollback.sql",
+        "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index.sql",
+        "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index_rollback.sql",
+        "tdf-hq/config/default.env.example",
+        "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_clock.sql"
+      ],
+      "tests": [
+        "scripts/test-ticket-confirmation.sh",
+        "scripts/test-ticket-confirmation-smtp.py",
+        "tdf-hq/test/TDF/TicketConfirmationSpec.hs",
+        "tdf-hq/test/TicketConfirmationMain.hs",
+        "tdf-hq/test/TicketConfirmationSmtpMain.hs",
+        "tdf-hq/test/integration/ticket_confirmation_delivery.sql",
+        "tdf-hq/test/integration/ticket_confirmation_worker_fixture.sql",
+        "scripts/test-public-ticket-checkout-runtime-migration.sh",
+        "scripts/test-ticket-confirmation-lease.py",
+        "tdf-hq/test/TDF/DisposableTicketDatabase.hs",
+        "tdf-hq/test/TicketDatabaseRoutingMain.hs",
+        "scripts/__tests__/disposable-postgres-url.test.mjs"
+      ],
+      "formalModels": [
+        "formal/event-operations/NotificationLease.tla"
+      ],
+      "ambiguity": [
+        "External SMTP cannot retract a receipt after concurrent ownership change; delivery snapshot may be stale and admission must enforce current credentials.",
+        "Default-disabled production worker has no verified sender/inbox receipt in this audit."
+      ],
+      "evidence": "Actual synthetic PostgreSQL concurrent workers, loopback SMTP, observed lock-wait expiry positive/negative controls and bounded NotificationLease results; consolidated candidate rerun and production verification pending."
     }
   ]
 }

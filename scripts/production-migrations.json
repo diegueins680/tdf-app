@@ -910,6 +910,11 @@
       "id": "2026-10-05_operations_scoped_projection",
       "path": "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql",
       "introducedBy": "53e4011a7c86046abb96350681aa105ac565c6c1"
+    },
+    {
+      "id": "2026-10-05_ticket_confirmation_lease_clock",
+      "path": "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_clock.sql",
+      "introducedBy": "7e1ea290626cce735b642f33b79bcedd631e0327"
     }
   ]
 }
