@@ -382,7 +382,8 @@
       "contract": "scripts/test-specification-inventory.py",
       "implementation": [
         "scripts/specification-inventory.py",
-        ".github/workflows/event-operations-formal.yml"
+        ".github/workflows/event-operations-formal.yml",
+        "scripts/lib/requirement_declarations.py"
       ],
       "verification": "Three executable discovery regression checks including current actual backend documents; deterministic full index drift check. This does not establish semantic completeness of every implicit rule.",
       "evidence": "specification-contracts CI job; formal/system/inventory.json",
@@ -421,12 +422,14 @@
       "recovery": "Preserve existing evidence; correct the input or recover through a reviewed compatible implementation.",
       "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs.",
       "tests": [
-        "scripts/test-specification-inventory.py"
+        "scripts/test-specification-inventory.py",
+        "scripts/test-requirement-declarations.py"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",
       "ambiguity": [
-        "Full cross-system refinement and current deployed correspondence remain unverified."
+        "Full cross-system refinement and current deployed correspondence remain unverified.",
+        "Authored domain table declarations retain source authority and historical claims; extraction does not approve them or establish current conformance."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -840,10 +843,12 @@
       "contract": "formal/system/README.md",
       "implementation": [
         "scripts/specification-inventory.py",
-        ".github/workflows/event-operations-formal.yml"
+        ".github/workflows/event-operations-formal.yml",
+        "scripts/lib/requirement_declarations.py"
       ],
       "tests": [
-        "scripts/test-specification-inventory.py"
+        "scripts/test-specification-inventory.py",
+        "scripts/test-requirement-declarations.py"
       ],
       "formalModels": [],
       "verification": "Executable conformance and mutation tests; not a whole-program proof.",
@@ -852,7 +857,8 @@
       "critical": true,
       "confidence": "high for tooling boundary; domain semantics require separate correspondence",
       "ambiguity": [
-        "Discovery coverage is not exhaustive semantic extraction of each implicit business rule."
+        "Discovery coverage is not exhaustive semantic extraction of each implicit business rule.",
+        "Authored domain table declarations retain source authority and historical claims; extraction does not approve them or establish current conformance."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -2583,7 +2589,7 @@
   ],
   "sourceFingerprints": {
     ".github/workflows/ci.yml": "973900ec5b05196fd223818aa834641088b5758164a6225563001d7c95c11378",
-    ".github/workflows/event-operations-formal.yml": "210f59ede61c720ebd87399246c98dc9e58903e856dd01356c8336384d70feed",
+    ".github/workflows/event-operations-formal.yml": "8cdbbb59f539a8394fde147ba38dc4f27260b9ac2c371c731da5b342401077d1",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
     "formal/event-operations/ChatMutationBoundary.cfg": "dc76bf1caa1a43de6891a51256da9efc4264ac45b882fef969bc15895068e0fa",
     "formal/event-operations/ChatMutationBoundary.tla": "21f20bc7d01648705472982b37d9dad6d7cf9711eb83d0f1b2202ed31497d74a",
@@ -2646,12 +2652,13 @@
     "scripts/lib/hetzner-preparation.mjs": "c6bbfb4aa25013264a4fbbeb5122f0b709ff48b9105a26b4645e8c022014a0c1",
     "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
     "scripts/lib/production-release.mjs": "0e02e1bcf6f8a451860ad5c1f52ac8461effc88659bce690f9ce222875878f71",
+    "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
     "scripts/production-migrations.json": "d1b45b55ebb0b86987fcb2c628de2edc1ada2c7abbb046f0f6009325538bdfe3",
     "scripts/production-release.mjs": "1643997b7b3ac422214725f4078b7b4db25f09d1df6ae5cebe8285cd257e0d59",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "29380b8bce52cee82c8f3670bda4c126e932bd48a677e2558e68117fe2177aba",
+    "scripts/quality-repo.sh": "c0326c60ccd34d3f9dde263cabb5889f76e025d59857a691b17fc2ba77aa794b",
     "scripts/rehearse-hetzner-restore.mjs": "eba3bfe18eafcbd4e5f84e71bd817d8b8ede458658c447a060b7af2c9fe559b7",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
@@ -2659,7 +2666,7 @@
     "scripts/social/dm-read-refinement.sql": "067a8f255ee74ed589bd4a97b94ab918335c07e6a4dc69ee0a39c23a48d4dcea",
     "scripts/social/test-dm-writes.sh": "2f216b4a6d7537959a0ddc6aa4da52afc5a11828d852dc6a3c5d469702e9122a",
     "scripts/specification-conformance.py": "7e0d9aa01c62362482a60b409bb57d7b07c3863d393a4d606af81148158ab2d2",
-    "scripts/specification-inventory.py": "d6850908ea05cde2d57c16e6d6899593c3d28675db58ec1aca3766bc5c0075e7",
+    "scripts/specification-inventory.py": "d2fd062de80b6aacf832714799d7596f13cabf101d2d7073192b2cd6ec6ff275",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
@@ -2667,6 +2674,7 @@
     "scripts/test-hetzner-restore.py": "efabb3a66192aceb1929c7aeb1722ae99027ebf372919454ea68451217e8c44f",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
+    "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
     "scripts/test-specification-conformance.py": "edd2d8b6b8d46603144d9fb02af2f43850dbf2791f8266a1dd109a1e9e9e19b9",
     "scripts/test-specification-inventory.py": "429bfd7c6ee6600e4010394f476c1247597d3c6c1a88f1fbd5e738c96b221df8",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
@@ -2926,7 +2934,27 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/lib/requirement_declarations.py": [
+      {
+        "requirement": "SYS-VERIFY-003",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-INVENTORY-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-specification-inventory.py": [
+      {
+        "requirement": "SYS-VERIFY-003",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-INVENTORY-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-requirement-declarations.py": [
       {
         "requirement": "SYS-VERIFY-003",
         "relationship": "tests"
@@ -3973,7 +4001,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "210f59ede61c720ebd87399246c98dc9e58903e856dd01356c8336384d70feed",
+      "sha256": "8cdbbb59f539a8394fde147ba38dc4f27260b9ac2c371c731da5b342401077d1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -5540,6 +5568,22 @@
       ]
     },
     {
+      "id": "SURFACE-6f461a25225ca648",
+      "path": "scripts/lib/requirement_declarations.py",
+      "sha256": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-003",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-INVENTORY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-f19f1cdea9599922",
       "path": "scripts/lib/sri-invoice.mjs",
       "sha256": "65a8a6b212b429393912a7a4be3fd338903e24deb4a90a159bf8fb12eb53fa88",
@@ -5744,7 +5788,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "29380b8bce52cee82c8f3670bda4c126e932bd48a677e2558e68117fe2177aba",
+      "sha256": "c0326c60ccd34d3f9dde263cabb5889f76e025d59857a691b17fc2ba77aa794b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -6299,7 +6343,7 @@
     {
       "id": "SURFACE-d18ca1829df72762",
       "path": "scripts/specification-inventory.py",
-      "sha256": "d6850908ea05cde2d57c16e6d6899593c3d28675db58ec1aca3766bc5c0075e7",
+      "sha256": "d2fd062de80b6aacf832714799d7596f13cabf101d2d7073192b2cd6ec6ff275",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -6834,6 +6878,22 @@
       "sha256": "58c82bb399ac31f59ed80624f39fa07b0bc6e1541655b3ccedd74fdafb67b21c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-674ff0cbe7311bec",
+      "path": "scripts/test-requirement-declarations.py",
+      "sha256": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-003",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-INVENTORY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-b888f3a6579f797c",

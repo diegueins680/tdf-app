@@ -131,6 +131,23 @@ history, identity recovery floors, database ownership and verified backups.
 Canonical routine-release correspondence remains a delivery obligation; never
 release to a historical host to obtain a green receipt.
 
+## Authored domain requirement declarations
+
+The discovery inventory additionally indexes explicitly identified Markdown-table
+clauses from domain contracts. Authored IDs such as `TC01`, `FH-01` and `PROFILE-01`
+remain in `declaredId`; a source-qualified discovery ID remains stable across
+wording and line-number edits. Source hashes, line locations, original columns and
+every repeated declaration are retained. Different statements under one source ID
+are surfaced for reconciliation, not overwritten or automatically called a logical
+contradiction. Fenced examples, test-result tables and requirement ranges are not
+new declarations. Archived documents remain historical.
+
+These are **unreviewed source declarations**, separate from the explicitly
+reviewed cross-system requirement register. Their neighboring implementation/test claims
+are provenance, not current-head evidence. Extraction does not promote historical
+status, roadmap scope or a claimed PASS to current authority. Inline prose, implicit
+code rules and semantic reconciliation remain open; this index is not exhaustive.
+
 ## Reproduction
 
 ```sh

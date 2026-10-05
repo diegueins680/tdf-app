@@ -381,7 +381,8 @@
       "contract": "scripts/test-specification-inventory.py",
       "implementation": [
         "scripts/specification-inventory.py",
-        ".github/workflows/event-operations-formal.yml"
+        ".github/workflows/event-operations-formal.yml",
+        "scripts/lib/requirement_declarations.py"
       ],
       "verification": "Three executable discovery regression checks including current actual backend documents; deterministic full index drift check. This does not establish semantic completeness of every implicit rule.",
       "evidence": "specification-contracts CI job; formal/system/inventory.json",
@@ -420,12 +421,14 @@
       "recovery": "Preserve existing evidence; correct the input or recover through a reviewed compatible implementation.",
       "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs.",
       "tests": [
-        "scripts/test-specification-inventory.py"
+        "scripts/test-specification-inventory.py",
+        "scripts/test-requirement-declarations.py"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",
       "ambiguity": [
-        "Full cross-system refinement and current deployed correspondence remain unverified."
+        "Full cross-system refinement and current deployed correspondence remain unverified.",
+        "Authored domain table declarations retain source authority and historical claims; extraction does not approve them or establish current conformance."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -839,10 +842,12 @@
       "contract": "formal/system/README.md",
       "implementation": [
         "scripts/specification-inventory.py",
-        ".github/workflows/event-operations-formal.yml"
+        ".github/workflows/event-operations-formal.yml",
+        "scripts/lib/requirement_declarations.py"
       ],
       "tests": [
-        "scripts/test-specification-inventory.py"
+        "scripts/test-specification-inventory.py",
+        "scripts/test-requirement-declarations.py"
       ],
       "formalModels": [],
       "verification": "Executable conformance and mutation tests; not a whole-program proof.",
@@ -851,7 +856,8 @@
       "critical": true,
       "confidence": "high for tooling boundary; domain semantics require separate correspondence",
       "ambiguity": [
-        "Discovery coverage is not exhaustive semantic extraction of each implicit business rule."
+        "Discovery coverage is not exhaustive semantic extraction of each implicit business rule.",
+        "Authored domain table declarations retain source authority and historical claims; extraction does not approve them or establish current conformance."
       ],
       "conformance": {
         "classification": "PARTIAL",

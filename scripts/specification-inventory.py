@@ -6,6 +6,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+from lib.requirement_declarations import extract_declarations
 
 ROOT = Path(__file__).resolve().parent.parent
 OUTPUT = ROOT / "formal/system/inventory.json"
@@ -95,7 +96,7 @@ def generate():
         source = data.decode()
         declaration = re.search(r"(?im)^(?:Status|Estado):\s*(.+)$", source)
         status = "inferred"
-        if relative == "specs.yaml" or (declaration and declaration[1].lower().startswith("historical")):
+        if relative.startswith("docs/archive/") or relative == "specs.yaml" or (declaration and declaration[1].lower().startswith("historical")):
             status = "historical"
         if relative.startswith("docs/adr/") and declaration:
             value = declaration[1].lower()
@@ -112,6 +113,10 @@ def generate():
         if path.suffix == ".cfg":
             models.append({"configuration": relative, "declarations": source.splitlines(),
                            "result": "not-revalidated-by-inventory", "correspondence": "See domain traceability; discovery establishes no refinement"})
+        if path.suffix == '.md' and relative != 'docs/event-operations/gap-matrix.md':
+            # Preserve authored contract identifiers independently of their line
+            # number/text. This is discovery, not approval or current evidence.
+            requirements.extend(extract_declarations(source, relative, status))
         if relative.startswith("docs/adr/"):
             match = re.search(r"(?ms)^## Decisi[oó]n\s*\n(.*?)(?=^## |\Z)", source)
             if match:

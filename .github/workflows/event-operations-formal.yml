@@ -42,6 +42,7 @@ jobs:
           python -m pip install -r formal/system/requirements-verification.txt
           python scripts/specification-inventory.py --check
           python scripts/test-specification-inventory.py
+          python scripts/test-requirement-declarations.py
           python scripts/specification-conformance.py --check
           python scripts/test-specification-conformance.py
           node --test scripts/__tests__/verification-evidence.test.mjs scripts/__tests__/legacy-escrow-contract.test.mjs
