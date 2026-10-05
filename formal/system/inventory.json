@@ -3755,7 +3755,7 @@
     },
     {
       "path": "docs/mobile-program/README.md",
-      "sha256": "e0a0d355f4600f145a3a00776beca1dd3bed30effd86fae5a71a8c97f4f27e5e",
+      "sha256": "df0a067dd63abe59f013bae91b465e106ca0daf343b9aace825d5c28d99ceacd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
