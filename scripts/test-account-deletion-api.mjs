@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 
 /** Called only by the existing disposable, loopback API harness. No real deletion. */
-export async function verifyAccountDeletion({ request, admin, account, categoryId, severityId }) {
+export async function verifyAccountDeletion({ request, requestStatus, admin, account, categoryId, severityId }) {
   const form = (index = 0) => {
     const body = new FormData();
     body.append('title', `Synthetic account deletion ${index}`);
@@ -57,5 +57,12 @@ export async function verifyAccountDeletion({ request, admin, account, categoryI
   assert.equal(history[0].adaActor, admin.partyId);
   const rejected = await request(`/feedback/internal/account-deletion/${accepted[1]}`, { token: admin.token, method: 'POST', json: { adrOutcome: 'rejected', adrNote: 'Synthetic invalid ownership evidence.' } });
   assert.equal(rejected.adaOutcome, 'rejected');
+  const racePath = `/feedback/internal/account-deletion/${accepted[2]}`;
+  const raced = await Promise.all([
+    requestStatus(racePath, { token: admin.token, method: 'POST', json: resolution }),
+    requestStatus(racePath, { token: admin.token, method: 'POST', json: { ...resolution, adrOutcome: 'rejected' } }),
+  ]);
+  assert.deepEqual(raced.sort(), [200, 409], 'Concurrent operators may append exactly one terminal outcome');
+
 
 }
