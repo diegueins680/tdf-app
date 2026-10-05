@@ -26,12 +26,12 @@
 
 ### Step 2: Configure Webhook (5 mins)
 - [ ] Go to https://dashboard.stripe.com/test/webhooks
-- [ ] Click **+ Add endpoint**
-- [ ] Enter URL: `https://api.tdfrecords.net/social-events/stripe/webhook`
-- [ ] Select events:
+- [ ] Select the existing TDF endpoint in the matching account/environment and record its ID; do not add a duplicate.
+- [ ] Verify or edit its URL: `https://api.tdfrecords.net/social-events/stripe/webhook`
+- [ ] Preserve the approved event subscriptions, including:
   - [ ] `payment_intent.succeeded`
   - [ ] `payment_intent.payment_failed`
-- [ ] Save and copy **Signing secret** (starts with `whsec_`)
+- [ ] Save the existing endpoint; preserve its ID and configured signing secret, then verify delivery status. Stop if the recorded endpoint is missing.
 
 ### Step 3: Apply the reviewed backend configuration
 

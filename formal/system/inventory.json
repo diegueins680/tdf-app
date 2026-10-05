@@ -2044,14 +2044,14 @@
     },
     {
       "path": "STRIPE_DEPLOYMENT_GUIDE.md",
-      "sha256": "f7bd810863d4872dd09e0380dd61b275eb12a872ec02af96532c66fbea936a9c",
+      "sha256": "4378d3b91fbbeb6a45808cee5bcda44d97024f3da163777ef0943c07cc532ca4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "STRIPE_TICKETING_CHECKLIST.md",
-      "sha256": "1eb933bc63fe39e9b80e135ff722387cd009c0e30d53619c0cca5beafcffa505",
+      "sha256": "c23863b22f3f125e1a722cc6ab23c2f823c469ff281a62e52cb7be79135de934",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -2142,7 +2142,7 @@
     },
     {
       "path": "docs/DATADOG_SYNTHETICS.md",
-      "sha256": "f99ea8c30c3bc9aca834d048225ff64985d70dec2c04d8878c862c4dfd1f405b",
+      "sha256": "0973c0b1c40082a5b34d1ada1504d8c8e361337b165379cd36fd9e124aa61941",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

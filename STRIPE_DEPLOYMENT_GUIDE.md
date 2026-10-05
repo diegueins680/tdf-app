@@ -32,18 +32,15 @@ This guide covers deploying the TDF Stripe Ticketing System to production.
 
 ### 1.2 Configure Webhook Endpoint
 
-1. Go to **Developers** → **Webhooks**
-2. Click **+ Add endpoint**
-3. Enter endpoint URL:
+1. Select the existing TDF webhook in the correct Stripe account and environment; record its endpoint ID before editing.
+2. Verify or edit that existing endpoint's URL to:
    ```
    https://api.tdfrecords.net/social-events/stripe/webhook
    ```
-4. Select events to listen to:
-   - ✅ `payment_intent.succeeded`
-   - ✅ `payment_intent.payment_failed`
-   - ✅ `charge.refunded` (optional, for refund tracking)
-5. Click **Add endpoint**
-6. Copy the **Signing secret** (`whsec_...`)
+3. Preserve the existing endpoint ID, signing secret and approved event subscriptions. The ticketing integration expects `payment_intent.succeeded` and `payment_intent.payment_failed`; retain any separately approved refund subscriptions.
+4. Save the existing endpoint and verify its delivery status. Do not add a duplicate, rotate its secret, or disable another endpoint as part of a hostname correction. If no matching endpoint exists, stop and reconcile the recorded cutover with the provider configuration before provisioning anything.
+
+Stripe supports [updating an existing webhook endpoint URL](https://docs.stripe.com/api/webhook_endpoints/update). These instructions make no provider change themselves.
 
 ## Step 2: Deploy Backend
 
@@ -93,7 +90,7 @@ curl https://api.tdfrecords.net/version
 
 ### 4.2 Test Payment Flow
 
-1. Open frontend: https://tdf-app.pages.dev
+1. Use the approved isolated Stripe test environment; the canonical public web is https://www.tdfrecords.net, but live production is not a test-card target.
 2. Create a test event (or use existing)
 3. Click **Buy Tickets**
 4. Use test card: `4242 4242 4242 4242`

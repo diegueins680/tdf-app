@@ -8,13 +8,28 @@ The `Run Datadog Synthetic tests` workflow selects `tag:e2e-tests`:
 
 | Test | Public endpoint | Datadog ID |
 | --- | --- | --- |
-| TDF production API health contract | `https://tdf-hq.fly.dev/health` | `r2d-i82-3jy` |
-| TDF production web entry contract | `https://tdf-app.pages.dev/` | `rv2-x2n-epx` |
+| TDF production API health contract | `https://api.tdfrecords.net/health` | `r2d-i82-3jy` |
+| Legacy Pages web entry (not the canonical www surface) | `https://tdf-app.pages.dev/` | `rv2-x2n-epx` |
 
-Both tests executed successfully from São Paulo (AWS) in
-[the verified CI batch](https://app.datadoghq.com/synthetics/explorer/ci?batchResultId=c8fa5520-15b2-40f6-b779-498005f82e5b).
-These are production smoke checks, not a substitute for the PR's local/preview
-persona, integration, migration, or contract tests. They do not deploy PR code.
+The latest inspected root-main run on `fdac8e76523befee1603f49f6c7cf7d00762931b`
+executed both tests from São Paulo (AWS) at 2026-10-04 23:58 UTC:
+[GitHub run37245608548](https://github.com/diegueins680/tdf-app/actions/runs/37245608548),
+[Datadog batch](https://app.datadoghq.com/synthetics/explorer/ci?batchResultId=ff538291-8a58-4f01-bf1f-11b04f9328de).
+The logs report two passes and zero critical errors, failures, skips, missing tests or timeouts.
+The API request targets the canonical Hetzner host. The web test still requests
+`tdf-app.pages.dev`; its success does **not** verify `https://www.tdfrecords.net`,
+Google login or authenticated upload. Updating that organization-managed web target
+and checking its assertions remains outstanding; no external test was modified by
+this documentation repair. Older September batches are historical evidence only.
+
+These tests probe the deployed endpoints, not the candidate PR code. They do not
+replace preview/persona, migration, contract or authenticated production checks.
+
+The separate Mobile repository currently rejects its Datadog credentials with
+HTTP403. Its old action suppressed critical errors; Mobile #125 and consolidation
+#71 make that failure visible. An old green Mobile job is not evidence of executed
+synthetics. Correct the Mobile repository's organization/site credentials and rerun
+its actual tests; do not copy root credentials into logs or source.
 
 ## Credentials and verification
 
