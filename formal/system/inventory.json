@@ -4600,7 +4600,7 @@
     {
       "id": "SURFACE-58b1b762b88c9b8e",
       "path": "tdf-hq-ui/public/mobile-distribution.json",
-      "sha256": "efc81392ebe14a5651c848c0590666024a4bf4ce57f8a37b2bc119cae84b2695",
+      "sha256": "edebce0b337da6b5d37e8a468d126f060c7701c1d3bfb048cf7709cd9303cd91",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16944,7 +16944,7 @@
     },
     {
       "path": "docs/mobile-program/README.md",
-      "sha256": "202d81961437817f42f0c68d0e901237c19fe5a6133506efadb28ec4a6d7c78b",
+      "sha256": "d1c2089350b9775dd02fd529bd8f3d3e875ffc870d928f769a7cb867ef6a38ea",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20255,7 +20255,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "8bc417761f5816c21173569265470d3959a649fdfb357fe0400c9e15d75d2823",
+      "sha256": "87498d884915219f94d17dc8e8f49d41133ccfb7be690177a148cf87e6b92172",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"

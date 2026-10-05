@@ -87,6 +87,12 @@ The additive booking-calendar repair brings the current manifest to170 entries.
 AUTHORITY-020 records this baseline supersession; the original starting SHA
 and its evidence remain unchanged.
 
+The next consolidated checkpoint is root
+`259148d2af3b511dd7d011534e024014c90dfb15` (PR#481). It updates Mobile
+distribution evidence while retaining the same147ec8bc shipped gitlink. Those
+changes are preserved in this audit; distribution receipts do not establish
+application conformance.
+
 The frontend observation at the fdac8e checkpoint identified that root SHA; it
 is historical observation, not a claim about the latest frontend deployment.
 Public `/version` and

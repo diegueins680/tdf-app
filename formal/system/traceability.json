@@ -7940,7 +7940,7 @@
     {
       "id": "SURFACE-58b1b762b88c9b8e",
       "path": "tdf-hq-ui/public/mobile-distribution.json",
-      "sha256": "efc81392ebe14a5651c848c0590666024a4bf4ce57f8a37b2bc119cae84b2695",
+      "sha256": "edebce0b337da6b5d37e8a468d126f060c7701c1d3bfb048cf7709cd9303cd91",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
