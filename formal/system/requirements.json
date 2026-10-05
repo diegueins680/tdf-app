@@ -2515,7 +2515,9 @@
       "preconditions": [
         "Clean reviewed source, pinned SSH trust and local Docker daemon",
         "Root-private archive directory; sufficient host resources; production database <=128MiB",
-        "No concurrent role/schema changes; this rehearsal lock excludes only another rehearsal"
+        "No concurrent role/schema changes; this rehearsal lock excludes only another rehearsal",
+        "No running or stopped labelled rehearsal container may remain when admitting a new run under the host lock.",
+        "No unresolved durable create-attempt marker may exist, even if Docker inventory is currently empty."
       ],
       "inputs": [
         "Exact production container/image identities",
@@ -2540,7 +2542,8 @@
         "Write to or restore over source database",
         "Restore through host networking, production mounts, unknown image or changed ownership",
         "Emit passing receipt before cleanup or after source drift",
-        "Do not accept missing/changed/unknown applied history, incomplete candidate ledger, rewritten history or unstable second-application controls."
+        "Do not accept missing/changed/unknown applied history, incomplete candidate ledger, rewritten history or unstable second-application controls.",
+        "Crash releases process lock -> admit another isolate while the prior labelled container remains."
       ],
       "effects": [
         "Create private host archives and a temporary resource-bounded isolate; remove only that admitted isolate",
@@ -2548,14 +2551,22 @@
       ],
       "authorization": "Explicit audit and restore verification authorization; pinned dedicated SSH identity. This operation does not bypass merge/deployment approval.",
       "privacy": "No customer rows, role passwords, credentials or raw SQL/Docker errors leave the host; archive directories0700, files0600.",
-      "concurrency": "Nonblocking host flock persists through cleanup. Counts and database archive share one exported read-only repeatable-read snapshot. Roles/assets are not snapshot-coordinated; source writes continue.",
+      "concurrency": "Nonblocking host flock persists through cleanup. Counts and database archive share one exported read-only repeatable-read snapshot. Roles/assets are not snapshot-coordinated; source writes continue. Under the lock, all-container label discovery rejects unresolved orphans before source inspection; labels alone never authorize deletion. Persist and fsync a nonce/image marker before external creation; retain it on unknown completion. Clear only after fully admitted target removal.",
       "idempotency": "Each attempt has a unique nonce/private archive directory and exclusive receipt; retries never overwrite an existing receipt or restore production.",
       "failure": "Reject before starting for wrong source/resources/lock; on later failure retain stage-only private evidence and attempt bounded cleanup. Hard host/daemon failure may leave an explicitly unverified orphan.",
-      "recovery": "Recover lost create response by nonce name then full identity/isolation validation. Inspect any crash orphan before removing only its verified ID. Retain source database and archives.",
+      "recovery": "Recover lost create response by nonce name then full identity/isolation validation. Inspect any crash orphan before removing only its verified ID. Retain source database and archives. For an unresolved marker, an empty inventory is insufficient: establish no creation remains in flight, then resolve the exact nonce/image attempt. Operator recovery is not automated.",
       "observability": "Bind exact clean revision and source hashes before/after, timestamps, snapshot relation counts, archive hashes, migration count and confirmed cleanup. Explicitly retain exclusions.",
-      "formalModels": [],
-      "verification": "Executable target/command contracts, concurrent lock test, hostile environment tests, controlled restore-stage failures and real isolated PostgreSQL restore; no whole-system proof.",
-      "evidence": "Exact-source local gate logs; real isolated restoration passed on4f64fa50b with652relations/159migrations. Candidate migration rehearsal remains to be executed on its exact source.",
+      "formalModels": [
+        "formal/event-operations/RestoreIsolation.tla",
+        "formal/event-operations/RestoreIsolation.cfg",
+        "formal/event-operations/RestoreIsolationNoLock.cfg",
+        "formal/event-operations/RestoreIsolationOrphanRetry.cfg",
+        "formal/event-operations/RestoreIsolationSourceTarget.cfg",
+        "formal/event-operations/RestoreIsolationEarlyReceipt.cfg",
+        "formal/event-operations/RestoreIsolationLateCreate.cfg"
+      ],
+      "verification": "Executable target/command contracts, concurrent lock test, hostile environment tests, controlled restore-stage failures and real isolated PostgreSQL restore; no whole-system proof. Two-run scheduling model with five named-invariant negative controls; no fairness/liveness or executable refinement proof.",
+      "evidence": "formal/system/evidence/2026-10-05-restore/: exact9b restore passed652 relations,159 historical migrations and10 candidate migrations applied twice. These are historical source-qualified receipts; changes require fresh evidence.",
       "status": "specified and implemented",
       "confidence": "High for tested isolation contracts; actual restore and complete coordinated recovery require separate current evidence.",
       "ambiguity": [
@@ -2581,7 +2592,8 @@
         "scripts/test-hetzner-restore.py",
         "scripts/__tests__/hetzner-restore.test.mjs",
         "scripts/test-hetzner-inspection.py",
-        "scripts/__tests__/hetzner-migration-rehearsal.test.mjs"
+        "scripts/__tests__/hetzner-migration-rehearsal.test.mjs",
+        "scripts/verify-event-operations-formal.sh"
       ],
       "critical": true
     }

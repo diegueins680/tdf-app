@@ -149,6 +149,36 @@ class RestoreBoundaryTests(unittest.TestCase):
 
 
 class RestoreOrchestrationTests(unittest.TestCase):
+    def test_uncertain_creation_blocks_even_with_no_visible_container(self):
+        runtime = MagicMock()
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            restore.reserve_creation(directory, NONCE, IMAGE)
+            self.assertEqual((directory / restore.PENDING_NAME).stat().st_mode & 0o777, 0o600)
+            with patch.object(restore, 'Path', return_value=directory), patch.object(restore, 'execute') as run:
+                with self.assertRaises(ValueError): restore.rehearse_locked(runtime)
+                runtime.inspect.assert_not_called()
+                run.assert_not_called()
+            with self.assertRaises(FileExistsError): restore.reserve_creation(directory, 'f'*32, IMAGE)
+            with self.assertRaises(ValueError): restore.release_creation(directory, 'f'*32, IMAGE)
+            restore.release_creation(directory, NONCE, IMAGE)
+            self.assertFalse((directory / restore.PENDING_NAME).exists())
+            (directory / restore.PENDING_NAME).symlink_to(directory / 'missing')
+            with patch.object(restore, 'Path', return_value=directory), patch.object(restore, 'execute') as run:
+                with self.assertRaises(ValueError): restore.rehearse_locked(runtime)
+                run.assert_not_called()
+
+    def test_orphan_blocks_before_source_inspection_or_backup(self):
+        runtime = MagicMock()
+        for observed in [TARGET + '\n', 'unexpected-output']:
+            with self.subTest(observed=observed), patch.object(restore, 'execute', return_value=observed) as run, \
+                    patch.object(restore, 'HeldSnapshot') as held, patch.object(restore, 'IsolatedRestore') as target:
+                with self.assertRaises(ValueError): restore.rehearse_locked(runtime)
+                run.assert_called_once_with(restore.DOCKER + ['ps', '--all', '--quiet', '--filter', 'label=' + restore.LABEL], timeout=10)
+                runtime.inspect.assert_not_called()
+                held.assert_not_called()
+                target.assert_not_called()
+
     def exercise(self, failure=None):
         with tempfile.TemporaryDirectory() as temporary, ExitStack() as stack:
             base = Path(temporary)
@@ -161,6 +191,8 @@ class RestoreOrchestrationTests(unittest.TestCase):
             held = MagicMock()
             held.query.side_effect = ['00000001-00000002-1', '{"public.fixture":2}']
             target = MagicMock()
+            target.creation_attempted = False
+            target.cleanup.side_effect = lambda: setattr(target, 'creation_attempted', False)
             target.create_command.return_value = ['synthetic-create']
             target.write_command.side_effect = lambda program, args: ['synthetic-write', program, *args]
             real_path = Path
@@ -184,8 +216,12 @@ class RestoreOrchestrationTests(unittest.TestCase):
                 destination.write_bytes(b'CREATE ROLE postgres;\n' if destination.name == 'roles.sql' else b'synthetic archive')
             stack.enter_context(patch.object(restore, 'bounded_archive', side_effect=archive))
             def execute(command, **kw):
+                if command == restore.DOCKER + ['ps', '--all', '--quiet', '--filter', 'label=' + restore.LABEL]: return ''
                 if kw.get('input') == restore.CAPACITY_SQL: return '100'
-                if command == ['synthetic-create']: return TARGET
+                if command == ['synthetic-create']:
+                    self.assertTrue((base / restore.PENDING_NAME).is_file())
+                    if failure == 'uncertain-create': raise RuntimeError('injected uncertain create')
+                    return TARGET
                 if command[:2] == ['synthetic-write', 'psql']:
                     if failure == 'roles': raise RuntimeError('injected role failure')
                     self.assertNotIn('CREATE ROLE postgres;', kw['input'])
@@ -197,21 +233,24 @@ class RestoreOrchestrationTests(unittest.TestCase):
             run = stack.enter_context(patch.object(restore.subprocess, 'run'))
             run.side_effect = [type('Ready', (), {'returncode': 0})(), RuntimeError('Rehearsal interrupted') if failure == 'interrupt' else type('Restore', (), {'returncode': 1 if failure == 'restore' else 0})()]
             if failure == 'cleanup': target.cleanup.side_effect = RuntimeError('injected cleanup failure')
+            if failure == 'uncertain-create': target.cleanup.side_effect = RuntimeError('no visible container yet')
             if failure == 'ledger': runtime.summarize_database.return_value = {'migrations': ['changed-ledger']}
             if failure:
                 with self.assertRaises((ValueError, RuntimeError)): restore.rehearse_locked(runtime)
                 self.assertEqual(list(base.glob('*/receipt.json')), [])
                 self.assertEqual(len(list(base.glob('*/failure.json'))), 1)
+                self.assertEqual((base / restore.PENDING_NAME).exists(), failure in ('cleanup', 'uncertain-create'))
             else:
                 result = restore.rehearse_locked(runtime)
                 self.assertEqual(result['status'], 'isolated-database-restore-passed')
                 self.assertTrue(result['isolateRemoved'])
                 self.assertFalse(result['productionDatabaseWritten'])
+                self.assertFalse((base / restore.PENDING_NAME).exists())
             held.close.assert_called_once()
             self.assertGreaterEqual(target.cleanup.call_count, 1)
 
     def test_success_and_injected_failures_never_skip_cleanup_or_emit_false_pass(self):
-        for failure in [None, 'dump', 'roles', 'restore', 'counts', 'ledger', 'cleanup', 'interrupt']:
+        for failure in [None, 'dump', 'roles', 'restore', 'counts', 'ledger', 'cleanup', 'interrupt', 'uncertain-create']:
             with self.subTest(failure=failure): self.exercise(failure)
 
 

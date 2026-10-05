@@ -93,9 +93,19 @@ The 540-second operation deadline reserves another 90 seconds for bounded cleanu
 A lost create response is recovered using the unique name, then full identity and
 isolation validation. On failure, partial archives and a stage-only failure record
 remain private. A host crash, daemon outage or forced process kill can still leave
-an isolate: inspect the `net.tdf.restore-rehearsal` label, nonce name, immutable image
+an isolate. A new rehearsal checks all labelled containers, including stopped ones,
+under the exclusive lock. It also rejects any `restore-rehearsal.pending.json`
+marker: this root-private nonce/image record is fsynced before Docker creation and
+cleared only after identity-checked removal. A delayed create can finish after the
+helper dies, so an empty inventory does not authorize clearing a pending marker.
+Recovery must establish no request is in flight, then inspect/remove the admitted
+nonce target before clearing its matching marker. The helper rejects before source inspection if any remain. This
+prevents overlapping resource reservations after process death. Inspect the
+`net.tdf.restore-rehearsal` label, nonce name, immutable image
 and isolation before removing that specific container. Never prune unrelated
-containers or remove the permanent lock inode. A failure is never a passing receipt.
+containers or remove the permanent lock inode. A failure is never a passing receipt. The [bounded scheduling model and its five
+negative controls](../../formal/system/restore-isolation.md) state the assumptions
+and exclusions explicitly.
 
 To rehearse this exact candidate's migrations on the restored isolate, add
 `--with-candidate-migrations`. The launcher loads the manifest and recursively

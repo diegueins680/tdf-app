@@ -2433,7 +2433,7 @@
     {
       "id": "SURFACE-60310758bd18e31e",
       "path": "ops/hetzner/rehearse-postgres-restore.py",
-      "sha256": "0ee39c5cf23c5893109b5e5e8613caeba817390690c58c7ee6b70d497e5c492a",
+      "sha256": "9d35791e9c215de5252ca1bd9637e8d1ae69387c72b420df34ee60e7ff8d49cf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4173,7 +4173,7 @@
     {
       "id": "SURFACE-1ecc6d6a29d831c9",
       "path": "scripts/test-hetzner-restore.py",
-      "sha256": "efabb3a66192aceb1929c7aeb1722ae99027ebf372919454ea68451217e8c44f",
+      "sha256": "29c865489be16fb0510927b5fe6815498dde82dc74197365ac37bfbe28c79cf4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4461,7 +4461,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "cb3fd3cc7fc4f23b7d86d758ff4423dfa896797de2d1fe3a5ac9cea258d59bfe",
+      "sha256": "c5240a877fd83dd769b2d8e59ac6cc9406b45b0093e8b9c19d99aa6cac264da6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19078,6 +19078,55 @@
       "kind": "formal-model"
     },
     {
+      "path": "formal/event-operations/RestoreIsolation.cfg",
+      "sha256": "6f9c62a5027891b6bf9aad2bc2f6befb7ddfb2b20a4b12f2fe748d4a402ff0e2",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RestoreIsolation.tla",
+      "sha256": "6d085e9d9b02161dea1cd711f645e703536d99eb6d305d5a7cc1cf62b93f162f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/RestoreIsolationEarlyReceipt.cfg",
+      "sha256": "8bd39dcd11c09edee26cc41af1fe0b7814876aab7ccd99bea5608dbbc1e7d6fd",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RestoreIsolationLateCreate.cfg",
+      "sha256": "745bd1a96a3c843230937ed912c7512b684a3bd248a13a8f3af62a645617a1a7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RestoreIsolationNoLock.cfg",
+      "sha256": "31837374a28551c5aa52ce6a5289a9eb3f588d2574cc7b36c9d4e027a3b4d678",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RestoreIsolationOrphanRetry.cfg",
+      "sha256": "4e0b0c9f842bdf6d7ecdbe2c8f68ac3898446ec632c1cb15dd76383e26b87168",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RestoreIsolationSourceTarget.cfg",
+      "sha256": "2855814fc67299069d73cf6430c98a2ed486c3ffd265676e315d3843fa90e1c5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/SessionFence.cfg",
       "sha256": "35110db7a0007b753f31e7fc8002a588eb9258f580b3f24d0ceebb15d3afe8d8",
       "authority": "inferred",
@@ -20052,21 +20101,28 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "1c8fb4992073c77328acc8ebd4c9274c3c15e85512c0e75a089c3b1eedd22b31",
+      "sha256": "de63585ce1ea49ae72aee942a23f7dd82d0d66814a2811ff6b9de2e6b84f11d3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "67b88398d157d388b7432205ab1bc74365c13a142b060df20c510b3c01778f5b",
+      "sha256": "f83100cda125b79f20c32680d07088d0b791751dce39c06e94574b249b7421f5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/restore-isolation.md",
+      "sha256": "f16c6741ef62f22ebca597c45c8269765f9e2453206479a5d870fefe6e451b60",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "ops/hetzner/README.md",
-      "sha256": "96b36910a87ca6110edf9cc21fe850749e2a93ab589f016216f82f98a53c8b61",
+      "sha256": "9dc2e45200aae863435ca164e8948e002587352be938ed905eeab0a4c5f56f04",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28859,6 +28915,108 @@
         "  NoUnjustifiedExclusiveConflict",
         "  EveryOverrideIsAudited",
         "  OneSideEffectPerCommand"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RestoreIsolation.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Runs = {r1, r2}",
+        "  ExclusiveLock = TRUE",
+        "  RejectOrphans = TRUE",
+        "  HonorPending = TRUE",
+        "  IsolatedTarget = TRUE",
+        "  VerifiedReceipt = TRUE",
+        "INVARIANTS TypeOK ExclusiveOwners NoSourceMutation AtMostOneIsolate ReceiptSound"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RestoreIsolationEarlyReceipt.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Runs = {r1, r2}",
+        "  ExclusiveLock = TRUE",
+        "  RejectOrphans = TRUE",
+        "  HonorPending = TRUE",
+        "  IsolatedTarget = TRUE",
+        "  VerifiedReceipt = FALSE",
+        "INVARIANTS TypeOK ExclusiveOwners NoSourceMutation AtMostOneIsolate ReceiptSound"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RestoreIsolationLateCreate.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Runs = {r1, r2}",
+        "  ExclusiveLock = TRUE",
+        "  RejectOrphans = TRUE",
+        "  HonorPending = FALSE",
+        "  IsolatedTarget = TRUE",
+        "  VerifiedReceipt = TRUE",
+        "INVARIANTS TypeOK ExclusiveOwners NoSourceMutation AtMostOneIsolate ReceiptSound"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RestoreIsolationNoLock.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Runs = {r1, r2}",
+        "  ExclusiveLock = FALSE",
+        "  RejectOrphans = TRUE",
+        "  HonorPending = TRUE",
+        "  IsolatedTarget = TRUE",
+        "  VerifiedReceipt = TRUE",
+        "INVARIANTS TypeOK ExclusiveOwners NoSourceMutation AtMostOneIsolate ReceiptSound"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RestoreIsolationOrphanRetry.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Runs = {r1, r2}",
+        "  ExclusiveLock = TRUE",
+        "  RejectOrphans = FALSE",
+        "  HonorPending = FALSE",
+        "  IsolatedTarget = TRUE",
+        "  VerifiedReceipt = TRUE",
+        "INVARIANTS TypeOK ExclusiveOwners NoSourceMutation AtMostOneIsolate ReceiptSound"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RestoreIsolationSourceTarget.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  Runs = {r1, r2}",
+        "  ExclusiveLock = TRUE",
+        "  RejectOrphans = TRUE",
+        "  HonorPending = TRUE",
+        "  IsolatedTarget = FALSE",
+        "  VerifiedReceipt = TRUE",
+        "INVARIANTS TypeOK ExclusiveOwners NoSourceMutation AtMostOneIsolate ReceiptSound"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

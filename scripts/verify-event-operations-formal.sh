@@ -92,6 +92,12 @@ run_negative_tlc() {
   fi
   printf 'TDF_TLC_RESULT negative %s %s\n' "${module}" "${config}"
 }
+run_tlc RestoreIsolation.tla RestoreIsolation.cfg restore-isolation
+run_negative_tlc RestoreIsolationNoLock.cfg restore-nolock 'Invariant ExclusiveOwners is violated' RestoreIsolation.tla
+run_negative_tlc RestoreIsolationOrphanRetry.cfg restore-orphanretry 'Invariant AtMostOneIsolate is violated' RestoreIsolation.tla
+run_negative_tlc RestoreIsolationSourceTarget.cfg restore-sourcetarget 'Invariant NoSourceMutation is violated' RestoreIsolation.tla
+run_negative_tlc RestoreIsolationEarlyReceipt.cfg restore-earlyreceipt 'Invariant ReceiptSound is violated' RestoreIsolation.tla
+run_negative_tlc RestoreIsolationLateCreate.cfg restore-late-create 'Invariant AtMostOneIsolate is violated' RestoreIsolation.tla
 run_tlc RecoveryExpiry.tla RecoveryExpiry.cfg recovery-expiry
 run_negative_tlc RecoveryExpiryNoExpiry.cfg recovery-no-expiry 'Invariant UnexpiredAtConsumption is violated' RecoveryExpiry.tla
 run_negative_tlc RecoveryExpiryStaleClock.cfg recovery-stale-clock 'Invariant UnexpiredAtConsumption is violated' RecoveryExpiry.tla

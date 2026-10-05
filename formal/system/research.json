@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 \u00a79.2.2",
+      "title": "RFC 9110 §9.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -254,6 +254,26 @@
       "applicability": "Isolated PostgreSQL17 full production-schema restoration",
       "decision": "adopted bounded lock capacity",
       "rationale": "Actual restore with ten connections/default64 locks failed with out-of-shared-memory and the max_locks_per_transaction hint. Retain atomic restore with1024 locks per transaction while preserving the384MiB cgroup limit; do not change production configuration."
+    },
+    {
+      "id": "RES-RESTORE-001",
+      "source": "https://www.man7.org/linux/man-pages/man2/flock.2.html",
+      "title": "Linux flock(2)",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "Locks belong to open file descriptions and release when all associated descriptors close.",
+      "applicability": "Rehearsal helper process crash with a surviving Docker isolate",
+      "decision": "adopted",
+      "rationale": "Use flock for live mutual exclusion and separately reject existing labelled isolates; a released process lock cannot prove container cleanup."
+    },
+    {
+      "id": "RES-RESTORE-002",
+      "source": "https://docs.docker.com/reference/cli/docker/container/ls/",
+      "title": "Docker container ls",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "Use all-container listing and a label-presence filter to include stopped containers.",
+      "applicability": "Crash orphan admission guard",
+      "decision": "adopted",
+      "rationale": "Reject any labelled residue under the lock before new work; do not use label presence as deletion authority."
     }
   ]
 }

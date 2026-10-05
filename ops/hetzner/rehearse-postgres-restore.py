@@ -23,6 +23,7 @@ DOCKER = ['env', '-u', 'DOCKER_HOST', '-u', 'DOCKER_CONTEXT', '-u', 'DOCKER_TLS_
           '-u', 'DOCKER_CERT_PATH', 'docker', '--host', 'unix:///var/run/docker.sock']
 
 LABEL = 'net.tdf.restore-rehearsal'
+PENDING_NAME = 'restore-rehearsal.pending.json'
 DATA = '/var/lib/postgresql/data'
 MAX_DATABASE = 128 * 1024 * 1024
 MAX_ARCHIVE = 256 * 1024 * 1024
@@ -276,7 +277,42 @@ def rehearse(runtime, candidate=None):
         return rehearse_locked(runtime, candidate)
 
 
+def sync_directory(directory):
+    descriptor = os.open(directory, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
+def reserve_creation(directory, nonce, image):
+    # Persist uncertainty before sending any external create request. Docker can
+    # finish a request after the client/process dies and its flock is released.
+    marker = directory / PENDING_NAME
+    descriptor = os.open(marker, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(descriptor, 'w') as output:
+        json.dump({'nonce': nonce, 'image': image}, output)
+        output.flush()
+        os.fsync(output.fileno())
+    sync_directory(directory)
+
+
+def release_creation(directory, nonce, image):
+    marker = directory / PENDING_NAME
+    info = marker.lstat()
+    require(stat.S_ISREG(info.st_mode) and info.st_nlink == 1 and
+            info.st_uid == os.geteuid() and info.st_mode & 0o077 == 0)
+    require(json.loads(marker.read_text()) == {'nonce': nonce, 'image': image})
+    marker.unlink()
+    sync_directory(directory)
+
+
 def rehearse_locked(runtime, candidate=None):
+    # flock is released by process death, but Docker containers survive it.
+    # Inspect stopped containers too; never stack another memory reservation on
+    # an unresolved run or automatically delete a target without its admission.
+    require(not os.path.lexists(Path('/opt/tdf/backups') / PENDING_NAME))
+    require(execute(DOCKER + ['ps', '--all', '--quiet', '--filter', 'label=' + LABEL], timeout=10).strip() == '')
     # runtime is the reviewed read-only collector bundled by the launcher.
     snapshot = runtime.inspect()
     db = snapshot['containers']['db']
@@ -297,6 +333,14 @@ def rehearse_locked(runtime, candidate=None):
     target = IsolatedRestore(db['containerId'], db['image'], db['imageId'], nonce)
     held = HeldSnapshot(db['containerId'])
     stage = 'snapshot'
+    reservation = False
+    def cleanup():
+        nonlocal reservation
+        target.cleanup()
+        if reservation:
+            require(not target.creation_attempted)
+            release_creation(directory.parent, nonce, db['image'])
+            reservation = False
     try:
         exported = held.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY; SELECT pg_export_snapshot();')
         require(re.fullmatch(r'[A-Fa-f0-9]+-[A-Fa-f0-9]+-[0-9]+', exported))
@@ -310,6 +354,8 @@ def rehearse_locked(runtime, candidate=None):
         bounded_archive(local_database(db['containerId'], 'pg_dumpall',
                         ['--roles-only', '--no-role-passwords'], read_only=True), roles)
         stage = 'create-isolate'
+        reserve_creation(directory.parent, nonce, db['image'])
+        reservation = True
         target.creation_attempted = True
         target.target = execute(target.create_command()).strip()
         target.inspect()
@@ -366,7 +412,7 @@ def rehearse_locked(runtime, candidate=None):
                        'No deployment, restore over production, payment, worker, or API canary was executed.',
                        'Role credentials excluded; secret recovery and off-host recovery are separate obligations.',
                        'Counts and successful archive replay are not byte-for-byte logical data equivalence.']}
-        target.cleanup()
+        cleanup()
         target.target = None
         receipt['isolateRemoved'] = True
         (directory / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
@@ -380,4 +426,4 @@ def rehearse_locked(runtime, candidate=None):
             if held is not None:
                 held.close()
         finally:
-            target.cleanup()
+            cleanup()
