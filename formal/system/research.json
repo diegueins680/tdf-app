@@ -435,6 +435,24 @@
       "applicability": "Native radio and event WHIP integration",
       "decision": "adopted for admission boundary; secure provider adapter remains unimplemented",
       "rationale": "Endpoint URLs and shared public stream keys do not establish publisher authorization. Fail closed rather than claim configuration or SDP exchange proves secure live media."
+    },
+    {
+      "id": "RES-PRIV-OPS-001",
+      "source": "https://www.sqlite.org/lang_transaction.html",
+      "title": "SQLite transaction control",
+      "recommendation": "Use an explicit write transaction to serialize competing updates; handle rollback and busy outcomes.",
+      "applicability": "Single-host private deletion case ledger",
+      "decision": "adopted",
+      "rationale": "BEGIN IMMEDIATE encloses replay lookup, version admission and event append. This is an operator ledger, not a replacement for production PostgreSQL or cross-host consensus."
+    },
+    {
+      "id": "RES-PRIV-OPS-002",
+      "source": "https://www.sqlite.org/backup.html",
+      "title": "SQLite Online Backup API",
+      "recommendation": "Use a coherent database snapshot for live backup rather than an uncoordinated file copy.",
+      "applicability": "Private ledger restoration test and operational backup procedure",
+      "decision": "adopted",
+      "rationale": "Synthetic restore uses SQLite backup and rechecks chain/policy/retry binding; production backups/evidence-store durability still require activation."
     }
   ]
 }

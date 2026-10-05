@@ -4201,6 +4201,82 @@
         "classification": "PARTIAL",
         "reason": "Containment is implemented; full provider authorization, historical reconciliation, media lifecycle and deployed verification remain open."
       }
+    },
+    {
+      "id": "PRIV-DELETE-001",
+      "title": "Operate evidence-backed deletion requests without hiding unfinished work",
+      "statement": "Each deletion request must retain its original receipt deadline, verified identity, complete scoped dispositions, observed effects and delivered completion evidence before closure; stale or conflicting retries must not advance the ledger.",
+      "authority": "Product owner requested discovery or creation on 2026-10-05; published deletion commitments; AUTHORITY-035",
+      "domain": "PRIV",
+      "actors": [
+        "Requester",
+        "Authorized privacy operator OS account",
+        "Service/provider operator"
+      ],
+      "preconditions": [
+        "Operator owns private ledger and evidence store; actual inbox delivery and individual operator access must be verified before production operation."
+      ],
+      "inputs": [
+        "Opaque intake/action keys",
+        "Original received UTC timestamp",
+        "Case-bound private receipt digests",
+        "Complete data-surface dispositions"
+      ],
+      "state": {
+        "boundary": "Private operational case ledger, not production customer database",
+        "machine": "ops/privacy/request-workflow.json"
+      },
+      "allowedTransitions": [
+        "Transitions admitted by the canonical policy with case-bound evidence and current version",
+        "Identical actor/request/receipt retry returns the original event result"
+      ],
+      "forbiddenTransitions": [
+        "Closure before identity, plan, execution effects and delivered notice",
+        "Identity delay or failure resets original deadline",
+        "Stale version commits",
+        "Conflicting key replay commits",
+        "Uninspected data surface silently omitted"
+      ],
+      "effects": [
+        "Append one immutable event in a serialized SQLite transaction; preserve data minimization and outstanding retention review."
+      ],
+      "authorization": "Authorized invoking OS UID and private filesystem boundary; no caller-selected actor and no public API. Root/shared-account trust is explicit.",
+      "privacy": "No customer identifiers or request bodies in ledger; opaque case IDs, proof hashes and enum dispositions only. Evidence remains in private storage.",
+      "concurrency": "BEGIN IMMEDIATE serializes local SQLite writers; expectedVersion enforces current case revision. No cross-host/shared-network-filesystem guarantee.",
+      "idempotency": "Global opaque action key bound to OS UID, exact request and receipt SHA256; identical retry returns original event, conflicts reject.",
+      "failure": "Transaction rollback; failure is nonterminal; report exits2 for deadlines/retention attention and1 for validation/storage failure. No completion claim on failed execution.",
+      "recovery": "Restore ledger/evidence coherently to isolated private storage, verify chain/policy and replay binding; privileged truncation requires external checkpoints.",
+      "observability": "Daily report and external heartbeat required; exact current production monitoring/inbox coverage not yet established.",
+      "source": "Shipped data-deletion HTML, owner instruction2026-10-05, absent current runbook in scoped discovery, AUTHORITY-035",
+      "property": "ClosureEvidence; FixedDeadline; NoStaleCommit within bounded model assumptions",
+      "contract": "formal/system/deletion-workflow.md",
+      "implementation": [
+        "ops/privacy/request-workflow.json",
+        "scripts/privacy-request-ledger.py",
+        "scripts/quality-repo.sh",
+        "scripts/verify-event-operations-formal.sh",
+        "tdf-hq-ui/public/data-deletion.html",
+        "tdf-hq-ui/public/mobile-app/data-deletion.html"
+      ],
+      "tests": [
+        "scripts/test-privacy-request-ledger.py"
+      ],
+      "formalModels": [
+        "formal/event-operations/PrivacyDeletionWorkflow.tla"
+      ],
+      "verification": "Synthetic SQLite/CLI concurrency, recovery and failure checks plus bounded TLA safety and three negative controls; no real deletion/mailbox/deployment proof.",
+      "evidence": "Exact final commands and receipts pending; no customer data or outbound messages used.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Scoped ledger implementation verified locally; production fulfillment and service-specific erasure remain unverified.",
+      "ambiguity": [
+        "Published aliases delivery and operator/backup assignment need current operational evidence.",
+        "Service-specific deletion, provider revocation and legal retention rationales need case-specific verified scope."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Executable operational lifecycle exists; production intake, monitoring and actual deletion fulfillment remain open."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -4225,6 +4301,7 @@
     "formal/event-operations/PaymentRecoveryCompleted.cfg": "6098dc9a9461b295d2e546b932ef710099f2a45e5ea502630c646206f81e0b7d",
     "formal/event-operations/PaymentRecoveryOverwrite.cfg": "ceb606c1e65996f2b72bcfc367255e149b22e42c2cc9ef72c2e6a9cd881b205c",
     "formal/event-operations/PaymentRecoveryReturn.cfg": "ac3bcb7094ab0c465b34347bc6282ec4038ac40dc6f464579ed069690a145643",
+    "formal/event-operations/PrivacyDeletionWorkflow.tla": "c0b5f2c3352e39d1f9b4f8ece2af8b609ff074f2b815b40f57485ebb4282f477",
     "formal/event-operations/ProviderRetryAdmission.cfg": "f7a4f67154c28cc9a89c8abdf798a5f229cdf80cfeebfc21e1de199cf67ecae9",
     "formal/event-operations/ProviderRetryAdmission.tla": "5ec995de10c0d6b4d786da5d9b92ac177bf4dfc2958e103f41dab4457488c29f",
     "formal/event-operations/ProviderRetryAdmissionAmbiguous.cfg": "21ebf3d2cc3576bd811adecf5acde3f34bd836a07b8620230452bc4309da15cb",
@@ -4264,6 +4341,7 @@
     "ops/hetzner/compose.production.yaml": "1191a5773dc83807be2364340f8cb9f0feb33af4ed45d6e0bfbefe9f3bc42db8",
     "ops/hetzner/inspect-runtime.py": "9e83d408bcc97c4978854c3b3d137eb4dae384c919e9b57cf96a0abbd825a524",
     "ops/hetzner/rehearse-postgres-restore.py": "4794f49c34ed9042fc58450020ea844dc1dae57852c6a2607c4f8d5d23a0176e",
+    "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
     "package-lock.json": "b2663069d0f1901b4d5b76dde885fa0ff107089cf661819ed3500be6443bace4",
     "package.json": "f5113b4d00775becd6433276b1e2cc1e04c6dfc652e0445c0390d2efa99da61d",
     "scripts/__tests__/artist-enrichment.test.mjs": "180ce22aca9d7d991b98e563f922749037f79a4ab1ce258e813feb1888aa167d",
@@ -4313,11 +4391,12 @@
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
+    "scripts/privacy-request-ledger.py": "9274444f82bef45844d492c296b6a5ca9410e6000867331adb6d624ddc5af960",
     "scripts/production-migrations.json": "0fcdffeb47b73c7cad3be0c72de7586b6ebdf1ce29015dd6c7e84d4af8b4a718",
     "scripts/production-release.mjs": "1643997b7b3ac422214725f4078b7b4db25f09d1df6ae5cebe8285cd257e0d59",
     "scripts/quality-backend.sh": "7be0e6a87e50b625239a70858d53d9d3340a409000ea9f1dc475c96585b495d7",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "9adef283f9208adaea66e3c12e058c9469d87b59396ba81ba1e6631a22c61003",
+    "scripts/quality-repo.sh": "9d3d3e1554090a48361c6e9b925372c9b048d6afc8ed627fc6c600da479d7ce2",
     "scripts/rehearse-hetzner-restore.mjs": "eba3bfe18eafcbd4e5f84e71bd817d8b8ede458658c447a060b7af2c9fe559b7",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
@@ -4336,18 +4415,21 @@
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
+    "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
     "scripts/test-specification-conformance.py": "b7da3648e4d776ba472ca337f974c7ace5a0aa9980c584a48cbefee8d750174b",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "836906067ac620b64214922f9390c012848abf5bc1c4ca6f15a02757986bcddd",
-    "scripts/verify-event-operations-formal.sh": "c96fdf3e940694b8172242fd38a2fec799b1cfdba5e60a291084f1d6c587a66a",
+    "scripts/verify-event-operations-formal.sh": "a408a0cf428ae03807a594e04d6dc4e979894000b6e662bb72dc3ce66a28f668",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
     "scripts/verify-system-evidence.mjs": "7aa7ac054cebe9a16f39a21afce1b36588c889493716baf3c7629880565e3e3f",
     "streaming/docker-compose.streaming.yml": "27a418566cfbaf8d10fd9da948aecc6bae2b3279b14e67013aae26492e33e249",
     "streaming/mediamtx.yml": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
+    "tdf-hq-ui/public/data-deletion.html": "fe759cb4af0642f024ef31d61f55cb890c8d52e1e05c9e00b409d020f3fc1c13",
+    "tdf-hq-ui/public/mobile-app/data-deletion.html": "0e149f6fdb4e81761d1fd0f3f217ac1b9c5138d4987d935ed103ccbbd7ca1a0d",
     "tdf-hq-ui/src/api/bookings.ts": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
     "tdf-hq-ui/src/api/client.test.ts": "eaec88fe099c62f7d68c2c350eb1b3493a71e132b7324e25e588b34ec76aed56",
     "tdf-hq-ui/src/api/client.ts": "3cbd9d209c184f0892451f4957721be0a55f65e922df33090c4a8b1e00ccfd13",
@@ -4565,6 +4647,10 @@
       {
         "requirement": "BOOK-CALENDAR-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "PRIV-DELETE-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/__tests__/event-operations-pluscal.test.mjs": [
@@ -5847,6 +5933,10 @@
       {
         "requirement": "MKT-REPUTATION-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PRIV-DELETE-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/quality-mobile.sh": [
@@ -6670,6 +6760,42 @@
         "requirement": "MEDIA-STREAM-001",
         "relationship": "tests"
       }
+    ],
+    "ops/privacy/request-workflow.json": [
+      {
+        "requirement": "PRIV-DELETE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/privacy-request-ledger.py": [
+      {
+        "requirement": "PRIV-DELETE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/public/data-deletion.html": [
+      {
+        "requirement": "PRIV-DELETE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/public/mobile-app/data-deletion.html": [
+      {
+        "requirement": "PRIV-DELETE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-privacy-request-ledger.py": [
+      {
+        "requirement": "PRIV-DELETE-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/PrivacyDeletionWorkflow.tla": [
+      {
+        "requirement": "PRIV-DELETE-001",
+        "relationship": "formalModels"
+      }
     ]
   },
   "surfaces": [
@@ -7065,6 +7191,18 @@
       "requirements": [
         {
           "requirement": "DEPLOY-RESTORE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-9c4c4880c3a2f1b4",
+      "path": "ops/privacy/request-workflow.json",
+      "sha256": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PRIV-DELETE-001",
           "relationship": "implementation"
         }
       ]
@@ -8623,6 +8761,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-91e7369b50937852",
+      "path": "scripts/privacy-request-ledger.py",
+      "sha256": "9274444f82bef45844d492c296b6a5ca9410e6000867331adb6d624ddc5af960",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PRIV-DELETE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-5d3cb3a8a35fced1",
       "path": "scripts/production-catalog-inventory.mjs",
       "sha256": "9fd0c396fa18492b21e3e8d32a8645a7984bb8522192ee82ded67eaf86954d8a",
@@ -8707,7 +8857,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "9adef283f9208adaea66e3c12e058c9469d87b59396ba81ba1e6631a22c61003",
+      "sha256": "9d3d3e1554090a48361c6e9b925372c9b048d6afc8ed627fc6c600da479d7ce2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -8716,6 +8866,10 @@
         },
         {
           "requirement": "MKT-REPUTATION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PRIV-DELETE-001",
           "relationship": "implementation"
         }
       ]
@@ -9828,6 +9982,18 @@
       ]
     },
     {
+      "id": "SURFACE-17287b59b5e37160",
+      "path": "scripts/test-privacy-request-ledger.py",
+      "sha256": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PRIV-DELETE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-3c9e2b2fae1ee373",
       "path": "scripts/test-provider-event-operations-migration.sh",
       "sha256": "62d337f21e58ec877346901403ae3690d0e9365e69c78d60049d9a72d4f624f1",
@@ -10112,7 +10278,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "c96fdf3e940694b8172242fd38a2fec799b1cfdba5e60a291084f1d6c587a66a",
+      "sha256": "a408a0cf428ae03807a594e04d6dc4e979894000b6e662bb72dc3ce66a28f668",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -10146,6 +10312,10 @@
         {
           "requirement": "BOOK-CALENDAR-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "PRIV-DELETE-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -10302,7 +10472,12 @@
       "path": "tdf-hq-ui/public/data-deletion.html",
       "sha256": "fe759cb4af0642f024ef31d61f55cb890c8d52e1e05c9e00b409d020f3fc1c13",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-DELETE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-16fd6a7d303023ea",
@@ -10323,7 +10498,12 @@
       "path": "tdf-hq-ui/public/mobile-app/data-deletion.html",
       "sha256": "0e149f6fdb4e81761d1fd0f3f217ac1b9c5138d4987d935ed103ccbbd7ca1a0d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-DELETE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-4c56dddf990a5626",
@@ -23881,10 +24061,8 @@
     "SURFACE-bf83998210f0bb9e",
     "SURFACE-eaa9b5372d91a318",
     "SURFACE-ee14fa660066a784",
-    "SURFACE-3104f3d9aa895aea",
     "SURFACE-16fd6a7d303023ea",
     "SURFACE-a2ada5ea1a6d219a",
-    "SURFACE-6bf3e8831a095bee",
     "SURFACE-4c56dddf990a5626",
     "SURFACE-1656aae22ee2e9e0",
     "SURFACE-9ab2dcf023458604",
@@ -47968,7 +48146,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 57,
+    "PARTIAL": 58,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

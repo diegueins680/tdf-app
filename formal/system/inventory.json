@@ -60,7 +60,8 @@
       "ops/hetzner/compose.restore.yaml",
       "ops/hetzner/inspect-runtime.py",
       "ops/hetzner/migrate-owned-urls.sql",
-      "ops/hetzner/rehearse-postgres-restore.py"
+      "ops/hetzner/rehearse-postgres-restore.py",
+      "ops/privacy/request-workflow.json"
     ],
     "package-lock.json": [
       "package-lock.json"
@@ -239,6 +240,7 @@
       "scripts/prepare-hetzner-release.mjs",
       "scripts/prepare-portable-restore.mjs",
       "scripts/prepare-studio-audit-draft.mjs",
+      "scripts/privacy-request-ledger.py",
       "scripts/production-catalog-inventory.mjs",
       "scripts/production-migrations.json",
       "scripts/production-release.mjs",
@@ -381,6 +383,7 @@
       "scripts/test-payment-arithmetic-verifier.py",
       "scripts/test-payment-audit-runtime.sh",
       "scripts/test-persistent-uploads-container.py",
+      "scripts/test-privacy-request-ledger.py",
       "scripts/test-provider-event-operations-migration.sh",
       "scripts/test-provider-execution-runtime-migration.sh",
       "scripts/test-provider-identity.sh",
@@ -2498,6 +2501,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-9c4c4880c3a2f1b4",
+      "path": "ops/privacy/request-workflow.json",
+      "sha256": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-053150b640a7ce75",
       "path": "package-lock.json",
       "sha256": "b2663069d0f1901b4d5b76dde885fa0ff107089cf661819ed3500be6443bace4",
@@ -3530,6 +3539,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-91e7369b50937852",
+      "path": "scripts/privacy-request-ledger.py",
+      "sha256": "9274444f82bef45844d492c296b6a5ca9410e6000867331adb6d624ddc5af960",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-5d3cb3a8a35fced1",
       "path": "scripts/production-catalog-inventory.mjs",
       "sha256": "9fd0c396fa18492b21e3e8d32a8645a7984bb8522192ee82ded67eaf86954d8a",
@@ -3568,7 +3583,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "9adef283f9208adaea66e3c12e058c9469d87b59396ba81ba1e6631a22c61003",
+      "sha256": "9d3d3e1554090a48361c6e9b925372c9b048d6afc8ed627fc6c600da479d7ce2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4382,6 +4397,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-17287b59b5e37160",
+      "path": "scripts/test-privacy-request-ledger.py",
+      "sha256": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-3c9e2b2fae1ee373",
       "path": "scripts/test-provider-event-operations-migration.sh",
       "sha256": "62d337f21e58ec877346901403ae3690d0e9365e69c78d60049d9a72d4f624f1",
@@ -4576,7 +4597,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "c96fdf3e940694b8172242fd38a2fec799b1cfdba5e60a291084f1d6c587a66a",
+      "sha256": "a408a0cf428ae03807a594e04d6dc4e979894000b6e662bb72dc3ce66a28f668",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19183,6 +19204,41 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/PrivacyDeletionDeadlineReset.cfg",
+      "sha256": "3d1c35871bcf7026093658312dc3ebc7c05e05f5627adb74370355f5155540ca",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PrivacyDeletionEarlyClose.cfg",
+      "sha256": "8fb72b8464abd30ca327e759ed5dae00697ed015fb3727ce8fb69b5b66b6737f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PrivacyDeletionStaleWrite.cfg",
+      "sha256": "fa6360c670f06ebd9614d13025852c0b82de811ee0b4d11c4cc1176c91c9e028",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PrivacyDeletionWorkflow.cfg",
+      "sha256": "47e037d51fd62b11959215406921ca96076f10769e632b44da16b6d827e69bd2",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PrivacyDeletionWorkflow.tla",
+      "sha256": "c0b5f2c3352e39d1f9b4f8ece2af8b609ff074f2b815b40f57485ebb4282f477",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
       "path": "formal/event-operations/ProviderRetryAdmission.cfg",
       "sha256": "f7a4f67154c28cc9a89c8abdf798a5f229cdf80cfeebfc21e1de199cf67ecae9",
       "authority": "inferred",
@@ -20619,14 +20675,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "c1c0fb13333951d51e1352887dfb84b37f8ae5d4ab4be6ec795e3a7cbe32686c",
+      "sha256": "1078a65d0b0a6d4836e48a6d25992284fd1698575634f48af0396a7f36a6931b",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "36696e857c318e0cba5c30fc5c1ab2c954a29d73f9b8e5eb63d591ebb261c02c",
+      "sha256": "d1353d4ecc3aabacaa03a1b918b6705093159dc2e2c04796cb4c7ce73c532fb2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20676,6 +20732,13 @@
     {
       "path": "formal/system/ddex-validation.md",
       "sha256": "557a52a933d3db67de345c5558edbd88914b63cc1d907249b5cb226ee9919949",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/deletion-workflow.md",
+      "sha256": "f203bc84831c34aed3e403d0d346c448bd72fcfd6c213eb837ada71e4b63fd36",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20787,14 +20850,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "74e87000cbbd0cbe761031d00e3b2d3f42bac126b89e29e72cf90cbf75c19bd5",
+      "sha256": "a67d96507131cf807af6568db2cc3ad3dcb680f437a651f36fd10b3de6e36a17",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "081c8065eaaab606cac7726275b4107ddbc6b9f0a4540bd3951aec0280685ffa",
+      "sha256": "bed07e1c156d6a3f2e2cb1dbcede463a3528dc6762542581950ef6f545ad5819",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20872,6 +20935,13 @@
     {
       "path": "ops/hetzner/validation-2026-09-28.md",
       "sha256": "50a90394e4a20564d187a13205f8682918c24ca7fa3d877bd944d8136d31a706",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "ops/privacy/README.md",
+      "sha256": "15dd5ffaece32e4a0743de8af92c34e3d899643b250df7dc4385b123549eb3a6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29246,6 +29316,62 @@
         "CHECK_DEADLOCK FALSE",
         "INVARIANTS",
         "  CorrectReturn"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PrivacyDeletionDeadlineReset.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  AllowEarlyClose = FALSE",
+        "  ResetDeadline = TRUE",
+        "  AllowStaleWrite = FALSE",
+        "INVARIANTS ClosureEvidence FixedDeadline NoStaleCommit",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PrivacyDeletionEarlyClose.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  AllowEarlyClose = TRUE",
+        "  ResetDeadline = FALSE",
+        "  AllowStaleWrite = FALSE",
+        "INVARIANTS ClosureEvidence FixedDeadline NoStaleCommit",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PrivacyDeletionStaleWrite.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  AllowEarlyClose = FALSE",
+        "  ResetDeadline = FALSE",
+        "  AllowStaleWrite = TRUE",
+        "INVARIANTS ClosureEvidence FixedDeadline NoStaleCommit",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PrivacyDeletionWorkflow.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  AllowEarlyClose = FALSE",
+        "  ResetDeadline = FALSE",
+        "  AllowStaleWrite = FALSE",
+        "INVARIANTS ClosureEvidence FixedDeadline NoStaleCommit",
+        "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

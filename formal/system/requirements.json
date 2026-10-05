@@ -4200,6 +4200,82 @@
         "classification": "PARTIAL",
         "reason": "Containment is implemented; full provider authorization, historical reconciliation, media lifecycle and deployed verification remain open."
       }
+    },
+    {
+      "id": "PRIV-DELETE-001",
+      "title": "Operate evidence-backed deletion requests without hiding unfinished work",
+      "statement": "Each deletion request must retain its original receipt deadline, verified identity, complete scoped dispositions, observed effects and delivered completion evidence before closure; stale or conflicting retries must not advance the ledger.",
+      "authority": "Product owner requested discovery or creation on 2026-10-05; published deletion commitments; AUTHORITY-035",
+      "domain": "PRIV",
+      "actors": [
+        "Requester",
+        "Authorized privacy operator OS account",
+        "Service/provider operator"
+      ],
+      "preconditions": [
+        "Operator owns private ledger and evidence store; actual inbox delivery and individual operator access must be verified before production operation."
+      ],
+      "inputs": [
+        "Opaque intake/action keys",
+        "Original received UTC timestamp",
+        "Case-bound private receipt digests",
+        "Complete data-surface dispositions"
+      ],
+      "state": {
+        "boundary": "Private operational case ledger, not production customer database",
+        "machine": "ops/privacy/request-workflow.json"
+      },
+      "allowedTransitions": [
+        "Transitions admitted by the canonical policy with case-bound evidence and current version",
+        "Identical actor/request/receipt retry returns the original event result"
+      ],
+      "forbiddenTransitions": [
+        "Closure before identity, plan, execution effects and delivered notice",
+        "Identity delay or failure resets original deadline",
+        "Stale version commits",
+        "Conflicting key replay commits",
+        "Uninspected data surface silently omitted"
+      ],
+      "effects": [
+        "Append one immutable event in a serialized SQLite transaction; preserve data minimization and outstanding retention review."
+      ],
+      "authorization": "Authorized invoking OS UID and private filesystem boundary; no caller-selected actor and no public API. Root/shared-account trust is explicit.",
+      "privacy": "No customer identifiers or request bodies in ledger; opaque case IDs, proof hashes and enum dispositions only. Evidence remains in private storage.",
+      "concurrency": "BEGIN IMMEDIATE serializes local SQLite writers; expectedVersion enforces current case revision. No cross-host/shared-network-filesystem guarantee.",
+      "idempotency": "Global opaque action key bound to OS UID, exact request and receipt SHA256; identical retry returns original event, conflicts reject.",
+      "failure": "Transaction rollback; failure is nonterminal; report exits2 for deadlines/retention attention and1 for validation/storage failure. No completion claim on failed execution.",
+      "recovery": "Restore ledger/evidence coherently to isolated private storage, verify chain/policy and replay binding; privileged truncation requires external checkpoints.",
+      "observability": "Daily report and external heartbeat required; exact current production monitoring/inbox coverage not yet established.",
+      "source": "Shipped data-deletion HTML, owner instruction2026-10-05, absent current runbook in scoped discovery, AUTHORITY-035",
+      "property": "ClosureEvidence; FixedDeadline; NoStaleCommit within bounded model assumptions",
+      "contract": "formal/system/deletion-workflow.md",
+      "implementation": [
+        "ops/privacy/request-workflow.json",
+        "scripts/privacy-request-ledger.py",
+        "scripts/quality-repo.sh",
+        "scripts/verify-event-operations-formal.sh",
+        "tdf-hq-ui/public/data-deletion.html",
+        "tdf-hq-ui/public/mobile-app/data-deletion.html"
+      ],
+      "tests": [
+        "scripts/test-privacy-request-ledger.py"
+      ],
+      "formalModels": [
+        "formal/event-operations/PrivacyDeletionWorkflow.tla"
+      ],
+      "verification": "Synthetic SQLite/CLI concurrency, recovery and failure checks plus bounded TLA safety and three negative controls; no real deletion/mailbox/deployment proof.",
+      "evidence": "Exact final commands and receipts pending; no customer data or outbound messages used.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Scoped ledger implementation verified locally; production fulfillment and service-specific erasure remain unverified.",
+      "ambiguity": [
+        "Published aliases delivery and operator/backup assignment need current operational evidence.",
+        "Service-specific deletion, provider revocation and legal retention rationales need case-specific verified scope."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Executable operational lifecycle exists; production intake, monitoring and actual deletion fulfillment remain open."
+      }
     }
   ]
 }
