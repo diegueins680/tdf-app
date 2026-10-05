@@ -26,6 +26,16 @@ SOURCE = backup.runtime.summarize_container('db', fixtures.container('db'))
 
 
 class BackupTests(unittest.TestCase):
+    def only_run_directory(self, root):
+        # The durable pending marker also starts with logical-. Directory
+        # enumeration order differs across filesystems; never select that file.
+        runs = [path for path in root.glob('logical-*') if path.is_dir()]
+        self.assertEqual(len(runs), 1)
+        pending = root/backup.PENDING
+        if pending.exists():
+            self.assertEqual(json.loads(pending.read_text())['run'], runs[0].name)
+        return runs[0]
+
     def fixture(self, failure=None):
         directory = tempfile.TemporaryDirectory(); self.addCleanup(directory.cleanup)
         root = Path(directory.name)
@@ -46,7 +56,7 @@ class BackupTests(unittest.TestCase):
                 with self.assertRaises((RuntimeError, ValueError)): backup.backup(root)
             else:
                 backup.backup(root)
-        run_dir = next(root.glob('logical-*'))
+        run_dir = self.only_run_directory(root)
         self.assertTrue((root/'backup.lock').is_file())
         self.assertEqual(run_dir.stat().st_mode & 0o777, 0o700)
         for path in run_dir.iterdir(): self.assertEqual(path.stat().st_mode & 0o777, 0o600)
@@ -171,7 +181,7 @@ class BackupTests(unittest.TestCase):
                  patch.object(isolated.subprocess, 'run', return_value=SimpleNamespace(returncode=0)), \
                  self.assertRaises(ValueError):
                 isolated.backup(root)
-            run = next(root.glob('logical-*'))
+            run = self.only_run_directory(root)
             self.assertFalse((run/'complete.json').exists())
             self.assertEqual(json.loads((run/'failure.json').read_text())['stage'], 'receipt')
 
