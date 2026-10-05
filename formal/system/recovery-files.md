@@ -85,6 +85,42 @@ The fixture checks identity before every lifecycle mutation and retains the
 durable reservation if cleanup cannot be verified. CI runs this fixture; production
 container shutdown and production data recovery are separate evidence.
 
+## One bound recovery bundle
+
+`coordinated-recovery-bundle.py` packages exactly six caller-admitted trees:
+`database`, `production`, `edge-data`, `edge-config`, `host-units` and
+`legacy-uploads`. The production tree includes its assets, persistent uploads and
+protected configuration/secrets. Host units are staged by the coordinator with
+original metadata and source evidence; missing legacy uploads require an explicit
+empty staged tree and separately retained absence evidence. The bundle helper
+cannot establish that caller-supplied roots are the actual production roots.
+
+All components share a source revision, Mobile revision, runtime-observation hash,
+migration-manifest hash, release nonce and PostgreSQL system identifier. The helper
+holds all source directory descriptors while capturing and rechecks every tree
+and named root identity before sealing. Overlapping or identical roots, output
+inside any source/workspace, missing roles and unexpected roles reject capture.
+These checks complement the caller's full-duration writer fence and mount
+admission; sampled rechecks do not establish an atomic snapshot.
+
+The exclusive private outer archive contains exact inner archives and one canonical
+private index with their full manifests/digests. The complete outer manifest and
+digest must be retained as trusted evidence alongside the encryption receipt.
+Replay requires that trusted receipt plus an independently expected binding. It
+first checks/restores the outer bytes, then validates all six inner manifests and
+digests before replaying any component into new destinations. No overwrite or
+partial-success receipt is supported. Failed private output remains for diagnosis.
+The existing2GiB aggregate archive bound also applies to the assembled bundle;
+exceeding it rejects instead of silently dropping a component.
+
+`test-coordinated-recovery-bundle.py` exercises exact six-tree metadata replay,
+release-binding mismatch, source changes across component captures, pathname
+replacement, missing/extra/overlapping roots, changed bytes and invalid inner
+indices. The return value expressly does not establish database recovery, usable
+secrets, encryption or off-host recovery. Those checks must consume the same bundle
+through the coordinator before release. This is executable file correspondence,
+not a filesystem refinement proof or an operational release command.
+
 ## Remaining coordinated recovery sequence
 
 The first release executor should use one permanent lock and durable pending

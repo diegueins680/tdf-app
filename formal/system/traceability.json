@@ -5779,7 +5779,8 @@
       "allowedTransitions": [
         "Admit paths -> capture contents/metadata -> recheck -> return private manifest",
         "Validate manifest/archive -> create new private target -> replay exact members -> apply metadata -> rehash -> verified",
-        "Bind live container/process/root/mount namespace -> caller stops and fences writers -> require same cleanly exited instance -> capture actual uploads through retained descriptors"
+        "Bind live container/process/root/mount namespace -> caller stops and fences writers -> require same cleanly exited instance -> capture actual uploads through retained descriptors",
+        "Capture all six caller-fenced component trees under one release/runtime/manifest/PG identity -> seal private outer archive -> verify trusted outer and every inner manifest -> replay to fresh targets"
       ],
       "forbiddenTransitions": [
         "Follow symlink components or restore outside new target",
@@ -5787,7 +5788,8 @@
         "Accept links, special files, unsupported metadata or missing/extra/duplicate members",
         "Return success after changed source, incorrect bytes or metadata",
         "Infer database coordination or off-host recovery from file replay",
-        "Capture legacy uploads from a running, restarted, mounted-over or unadmitted container"
+        "Capture legacy uploads from a running, restarted, mounted-over or unadmitted container",
+        "Replay a bundle with mismatched release binding, missing/extra component, changed bytes or an invalid inner manifest"
       ],
       "effects": [
         "Private exclusive archive",
@@ -5798,18 +5800,20 @@
       "privacy": "Archive, manifest paths and diagnostics remain private. Public evidence contains only aggregate counts/hashes. No credential or customer content logging.",
       "concurrency": "Caller-held writer fence required. Descriptor-relative no-follow opens, before/after inode checks and second full scan detect sampled mutation; do not prove atomic snapshots or resistance to same-UID/privileged concurrent replacement. Legacy helper holds pidfd, root and mount namespace descriptors across caller-owned shutdown; checks actual namespace topology and same container start identity before and after capture. Privileged host tampering is excluded.",
       "idempotency": "Exclusive creation rejects retries using an existing archive or restore destination; independent attempts require new paths.",
-      "failure": "Raise without success; retain private partial output for diagnosis. Unsupported metadata fails instead of silently degrading restored semantics.",
+      "failure": "Raise without success; retain private partial output for diagnosis. Unsupported metadata fails instead of silently degrading restored semantics. Bundle replay validates all inner components before replaying any; a failed outer or partial inner restore stays private and never reports complete recovery.",
       "recovery": "Inspect failed output under ownership boundary; independently retry into new paths. Never overwrite production or infer successful restore from archive existence.",
       "observability": "Return private exact manifest and aggregate file-tree-restored result with coordinatedDatabase=false and offHost=false. Caller supplies durable authenticated bundle receipt.",
       "implementation": [
         "ops/hetzner/recovery-files.py",
-        "ops/hetzner/stopped-application-storage.py"
+        "ops/hetzner/stopped-application-storage.py",
+        "ops/hetzner/coordinated-recovery-bundle.py"
       ],
       "tests": [
         "scripts/test-recovery-files.py",
         "scripts/quality-repo.sh",
         "scripts/test-stopped-application-storage.py",
-        "scripts/test-stopped-application-docker.py"
+        "scripts/test-stopped-application-docker.py",
+        "scripts/test-coordinated-recovery-bundle.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -6756,6 +6760,7 @@
     "ops/hetzner/backup-postgres.sh": "71682273cf6e2efec4644369af577f3ee6c0ee015c5d45d5998c9a43ea3f23a7",
     "ops/hetzner/catalog-readonly-role.sql": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
     "ops/hetzner/compose.production.yaml": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
+    "ops/hetzner/coordinated-recovery-bundle.py": "ea572234df275cf7d557cbac56f3410a9cb7ed8f560f63ffd6754f46d476fbff",
     "ops/hetzner/inspect-runtime.py": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
     "ops/hetzner/isolated-application-canary.py": "cc7eb51b395416ce621aec2241e5b52dab0bf02c176c5294e7d96423364915e1",
     "ops/hetzner/physical-postgres-recovery.py": "f9020c48d99f43097708bdd1c9376240d938ca6804c828d01ef70bedbe86f3f4",
@@ -6846,7 +6851,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "c5ddc8ca3fe00a7c66d6ac5d8a09ad929c629f4dd59abec568dc209ca3cf800e",
+    "scripts/quality-repo.sh": "168244718be8431bdbb717d5c6297c9dfdae78a58403c72d43c604c9cdf88e20",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
@@ -6859,6 +6864,7 @@
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-booking-conformance.py": "30ca94cf5cdc286cdabd8511ad5b971b5c0b26fec14ab49973718ab51a5fd97d",
+    "scripts/test-coordinated-recovery-bundle.py": "eb95fc17e1487074d0cdbe1573c41078575a69ededa0e36d539156fe9be020b5",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-backup.py": "5fd8da9c46206c18d7793a2139a491aec8be3646e4ff9c889a6ac8a8a8fabf29",
     "scripts/test-hetzner-inspection.py": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
@@ -10397,6 +10403,12 @@
         "relationship": "implementation"
       }
     ],
+    "ops/hetzner/coordinated-recovery-bundle.py": [
+      {
+        "requirement": "DEPLOY-FILES-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-recovery-files.py": [
       {
         "requirement": "DEPLOY-FILES-001",
@@ -10410,6 +10422,12 @@
       }
     ],
     "scripts/test-stopped-application-docker.py": [
+      {
+        "requirement": "DEPLOY-FILES-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-coordinated-recovery-bundle.py": [
       {
         "requirement": "DEPLOY-FILES-001",
         "relationship": "tests"
@@ -11430,6 +11448,18 @@
       "sha256": "d73e899c86d0012d274f2cefd261562f44f3c42542ece2c604a7e0ca1b8d8b06",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-e2cca7d2630a1f7b",
+      "path": "ops/hetzner/coordinated-recovery-bundle.py",
+      "sha256": "ea572234df275cf7d557cbac56f3410a9cb7ed8f560f63ffd6754f46d476fbff",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-FILES-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
@@ -13547,7 +13577,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "c5ddc8ca3fe00a7c66d6ac5d8a09ad929c629f4dd59abec568dc209ca3cf800e",
+      "sha256": "168244718be8431bdbb717d5c6297c9dfdae78a58403c72d43c604c9cdf88e20",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14373,6 +14403,18 @@
       "sha256": "2e8b71b4f9773e9271351c105c2158a3e255264c924eba039e2c2023cc63aa95",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-26ea9f6d8b902fdd",
+      "path": "scripts/test-coordinated-recovery-bundle.py",
+      "sha256": "eb95fc17e1487074d0cdbe1573c41078575a69ededa0e36d539156fe9be020b5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-FILES-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-35b0a9f4734279f1",
@@ -32858,7 +32900,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "57de5847fcd4a6bdf1a39d1f3fb35cf610590bc10bc4ab802bfbe87342700204",
+      "sourceSha256": "0093cb13615784017197b3fc443e598f022e48d2bec7f37e4efff0e8c6578462",
       "definition": {
         "states": [
           "absent",
