@@ -5004,43 +5004,64 @@
     },
     {
       "id": "PRIV-ANALYTICS-001",
-      "title": "Exclude private credentials from analytics",
-      "statement": "Analytics must redact ticket/buyer/capability values and private resource identifiers before delivery, strip URL credentials/fragments, bound nested URL sanitization and omit SDK exception payloads. URL query values are denied by default except reviewed public attribution fields. Apply the same sanitization to SDK top-level initial/identify person-property envelopes; distinguish ordinary scalar campaign labels from relative URL properties.",
-      "property": "Analytics must redact ticket/buyer/capability values and private resource identifiers before delivery, strip URL credentials/fragments, bound nested URL sanitization and omit SDK exception payloads. URL query values are denied by default except reviewed public attribution fields.",
+      "title": "Private navigation and credentials are excluded at analytics serialization",
       "domain": "PRIV",
-      "authority": "Reviewed source changes preserved from root #468/#485/#486/#484; final consolidated correspondence requires current independent review",
+      "statement": "Web analytics must strip the named sensitive properties recursively and redact private path identifiers, fragments, URL credentials and non-attribution query values before SDK transmission, including SDK-generated person-property envelopes. A missing project key must produce a no-op client. Ordinary scalar campaign labels remain intact; recognized URL properties and HTTP(S)/tdf URLs retain URL sanitization.",
+      "authority": "AUTHORITY-042; accepted main PR487 privacy consolidation and docs/analytics.md; preserved #468/#485 correspondence",
       "source": "docs/analytics.md; #485 reviewed privacy corrections",
       "contract": "formal/system/web-cutover-correspondence.md",
       "actors": [
         "Web visitor",
-        "Analytics adapter"
+        "Authenticated web actor",
+        "PostHog SDK"
       ],
       "preconditions": [
+        "Web analytics configured with a public project token, or explicitly unavailable when unconfigured.",
         "Analytics enabled only by explicit configured rollout; existing authorization unchanged."
       ],
       "inputs": [
-        "Event properties",
-        "SDK URL properties",
-        "Nested redirects",
-        "SDK error"
+        "Explicit event/identify/page properties",
+        "SDK-generated event.properties, $set and $set_once",
+        "Current/referrer URLs",
+        "Project configuration"
       ],
       "state": {
-        "fields": [
-          "unsanitized event",
-          "sanitized event",
-          "disabled client"
+        "client": [
+          "uninitialized",
+          "disabled",
+          "ready"
+        ],
+        "payload": [
+          "raw",
+          "sanitized",
+          "discarded"
         ]
       },
       "allowedTransitions": [
-        "Sanitized allowed properties -> configured analytics transport"
+        "uninitialized + missing key/window -> disabled no-op",
+        "uninitialized + configured browser -> ready with before_send sanitization",
+        "raw named payload -> sanitized SDK event",
+        "SDK failure -> fixed operation-class warning"
       ],
       "forbiddenTransitions": [
+        "Transmit a named sensitive field in nested event or person-property envelopes",
+        "Transmit credentials, fragments, private resource identifiers or unapproved query values from recognized URL properties",
+        "Log arbitrary SDK exception payloads",
+        "Treat an unconfigured client as provider receipt evidence",
         "Private code, buyer details, URL credential or SDK exception payload -> telemetry/log",
         "Unknown URL query key -> unredacted value"
       ],
       "effects": [
-        "Preserve reviewed public event and campaign attribution without granting access."
+        "Sanitized optional telemetry; core user action remains separate",
+        "Public project token retained only when equal to configured token"
       ],
+      "authorization": "Telemetry cannot grant access; distinct identity and consent/enablement decisions remain separate application obligations.",
+      "privacy": "Named sensitive fields and recognized URL surfaces are removed/redacted recursively; this is not a classifier for arbitrary personal information inside otherwise allowed free text.",
+      "concurrency": "Singleton configuration is memoized per module instance; no cross-tab ordering or provider exactly-once guarantee.",
+      "idempotency": "Provider acceptance and deduplication are not guaranteed by client capture calls.",
+      "failure": "Explicit capture/identify/reset/page calls catch SDK errors and emit fixed diagnostics. Automatic SDK callback failure and initialization lifecycle require separate validation.",
+      "recovery": "Do not replay customer payloads through logs. Change configuration only through the supported release/consent workflow.",
+      "observability": "Tests inspect synthetic serialized payloads and fixed warnings; production receipt requires separately verified provider evidence.",
       "implementation": [
         "tdf-hq-ui/src/analytics/posthog.ts"
       ],
@@ -5048,25 +5069,19 @@
         "tdf-hq-ui/src/__tests__/analytics.test.ts"
       ],
       "formalModels": [],
-      "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
-      "evidence": "Current candidate gate receipts must be retained separately; historical source checks are not a current integration pass.",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Scoped implementation and regression correspondence; production acceptance remains separate.",
+      "confidence": "High for inspected finite sanitizer boundary; complete consent/runtime provider verification remains open.",
       "ambiguity": [
-        "No whole-program refinement or external provider/device acceptance is asserted."
+        "No complete free-text PII detection or whole-provider retention proof."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Source contracts and scoped regressions preserved; current combined verification and applicable production acceptance remain required."
+        "reason": "Incoming reviewed main implementation has mapped deterministic examples; fresh combined-candidate execution and deployed analytics configuration/consent correspondence remain required."
       },
-      "authorization": "Telemetry configuration does not authorize payments, access to private records or activation of experimental features.",
-      "privacy": "Apply sanitizer to automatic pageviews and explicit captures; mask all query values on private pages.",
-      "concurrency": "Sanitization occurs independently before each event delivery.",
-      "idempotency": "Repeated sanitization preserves redaction; this does not deduplicate provider events.",
-      "failure": "SDK failure logs omit raw exception payloads; missing configuration leaves analytics disabled.",
-      "recovery": "Repair configuration or sanitizer under review; do not replay raw sensitive payloads.",
-      "observability": "Sentinel-value regression assertions; actual provider receipt is a separate rollout check."
+      "property": "Named sensitive payloads do not survive recognized serializer boundaries; public attribution and configured project token remain usable.",
+      "verification": "Actual sanitizer and configured before_send callback tests with nested synthetic secrets and private URLs; not a universal privacy proof.",
+      "evidence": "Exact-candidate UI gate; original main PR487 validation is historical for subsequent merged trees."
     },
     {
       "id": "MEDIA-INVENTORY-001",
@@ -5633,80 +5648,93 @@
       "evidence": "Actual synthetic PostgreSQL concurrent workers, loopback SMTP, observed lock-wait expiry positive/negative controls and bounded NotificationLease results; consolidated candidate rerun and production verification pending."
     },
     {
-      "id": "EVT-PUBLIC-001",
-      "title": "Canonical public event metadata and private transaction responses",
-      "statement": "The public event is the canonical discovery surface. Checkout/receipt responses suppress indexing, caching and referrer forwarding; incomplete stock/face-value data must not be advertised as a purchasable offer.",
-      "property": "Private transaction responses carry noindex/private-no-store/no-referrer; invalid numeric route identifiers reject before app-shell access.",
+      "id": "EVT-PRESENTATION-001",
+      "title": "Transactional ticket pages do not advertise misleading public offers",
       "domain": "EVT",
-      "authority": "Root487 preserved current implementation and docs/events/ticket-page-metadata.md; current independent integration review required",
-      "source": "Root487 and existing canonical event route declarations",
+      "statement": "Ticket checkout and receipt pages must use the public event as their canonical discovery URL, decline indexing and shared caching, and suppress referrer leakage. They must not publish an independent Offer inferred only from inventory or face value. Public event previews retain escaped Event metadata and safe fallback imagery.",
+      "authority": "AUTHORITY-042; accepted main PR487 and docs/events/ticket-page-metadata.md",
+      "source": "docs/events/ticket-page-metadata.md",
       "contract": "docs/events/ticket-page-metadata.md",
       "actors": [
-        "Public event visitor",
+        "Visitor",
         "Ticket buyer",
-        "Search crawler"
+        "Search crawler",
+        "Cloudflare Pages runtime"
       ],
       "preconditions": [
-        "Existing Cloudflare Functions and React metadata boundary; backend order authorization remains independent."
+        "Request to a mounted event checkout or receipt route, or public event preview."
       ],
       "inputs": [
-        "Event/order route identifiers",
-        "Initial edge response",
-        "Public event metadata and optional preview image"
+        "Route event/order IDs",
+        "Application shell response",
+        "Current public event metadata"
       ],
       "state": {
-        "fields": [
-          "public canonical event",
-          "private transaction route",
-          "valid or invalid route identifier"
+        "route": [
+          "public_event",
+          "transactional_checkout",
+          "transactional_receipt",
+          "invalid_route"
+        ],
+        "render": [
+          "initial_response",
+          "hydrated_document"
         ]
       },
       "allowedTransitions": [
-        "Valid transaction route -> app shell with private/noindex/no-referrer headers",
-        "Public event -> generic Event metadata with actual preview fallback"
+        "valid transactional request -> original app shell with noindex, private/no-store and no-referrer headers",
+        "invalid event/order identifier -> 404 with the same protective headers",
+        "hydrated transaction page -> canonical public event metadata without independent Offer",
+        "public event -> escaped Event preview with safe missing-image fallback"
       ],
       "forbiddenTransitions": [
-        "Disabled checkout or incomplete price -> purchasable structured offer",
-        "Invalid identifier -> invoke app-shell response",
-        "Order route -> independent indexed event listing"
+        "Infer payment availability from remaining inventory alone",
+        "Publish face value as a verified complete buyer offer",
+        "Expose a private event preview",
+        "Treat noindex or cache directives as backend authorization"
       ],
       "effects": [
-        "Public metadata and HTTP privacy headers; no payment or event publication."
+        "Metadata and initial HTTP response directives; business checkout state remains backend-authoritative"
       ],
+      "authorization": "Order retrieval still requires its server-side capability; metadata does not confer access.",
+      "privacy": "Transaction responses carry private/no-store and no-referrer; provider/browser caches and historical crawls require separate observation.",
+      "concurrency": "Each request derives headers from its current route; no database mutation or ordering guarantee.",
+      "idempotency": "Repeated reads have no additional mutation effects.",
+      "failure": "Malformed route identifiers produce 404; underlying app-shell failures retain their status with protective headers.",
+      "recovery": "Revert through a reviewed web release preserving capability authorization and private-response handling.",
+      "observability": "Deterministic edge response/body tests and actual React metadata tests; safe preview smoke validates installed edge headers.",
       "implementation": [
-        "functions/_shared/event-preview.mjs",
         "functions/_shared/ticket-page.mjs",
         "functions/eventos/[eventId]/entradas.js",
         "functions/eventos/[eventId]/orden/[orderId].js",
+        "functions/_shared/event-preview.mjs",
         "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx"
       ],
       "tests": [
-        "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/ticket-page-preview.test.mjs",
-        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx"
+        "scripts/__tests__/event-preview.test.mjs",
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx"
       ],
       "formalModels": [],
-      "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
-      "evidence": "Current candidate gate receipts must be retained separately; historical source checks are not a current integration pass.",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Scoped implementation and regression correspondence; production acceptance remains separate.",
+      "confidence": "High for stated response/metadata boundary; canonical offer publication and final deployed correspondence remain separate.",
       "ambiguity": [
-        "No whole-program refinement or external provider/device acceptance is asserted."
+        "Verified complete-price offers on public event pages remain deferred; no rich-result eligibility assertion."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Source contracts and scoped regressions preserved; current combined verification and applicable production acceptance remain required."
+        "reason": "Accepted incoming main change is structurally mapped; fresh combined-source tests and deployed response checks remain necessary."
       },
-      "authorization": "Headers are defense in depth and do not replace server order or ticket authorization.",
-      "privacy": "Initial and hydrated metadata must avoid indexing private transaction surfaces; no-store/no-referrer reduce capability propagation.",
-      "concurrency": "Each response sets its own headers; deployment identity determines which edge source is active.",
-      "idempotency": "Repeated metadata reads do not create purchases or orders.",
-      "failure": "Invalid identifiers return404 with privacy headers; unavailable preview uses the existing image fallback.",
-      "recovery": "Repair metadata source under review; complete server-authoritative event offers remain separate work.",
-      "observability": "Actual Response/header and React metadata regression tests; production edge identity and behavior require separate smoke evidence."
+      "property": "Transactional pages do not become misleading independent search offers or shared-cache/referrer sources.",
+      "verification": "Actual edge Response and React component tests; not search-engine or cache-vendor proof.",
+      "evidence": "Exact combined repository/UI gates and source-bound deployed safe smoke.",
+      "supersedes": {
+        "id": "EVT-PUBLIC-001",
+        "sourceRevision": "ce422263309d85ce7001e7dfe0f8c27f35e8c409",
+        "reason": "Same implemented event/transaction metadata boundary consolidated into the more detailed source-backed contract; no requirement or test removed."
+      }
     },
     {
       "id": "PRIV-ERROR-001",
@@ -6015,7 +6043,6 @@
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "aad862427b31bb0777586ae09589055043f9346e4eaaa9bf14a521e3d4fed129",
-    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx": "d22caea8f3a06163d28b328922ac84286b93629d5ecb11a95f2397a74f372d14",
     "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "3144381852a748f77c009fc398c513672cd908192bc390fb2aad499a5cb0a174",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
     "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx": "e48405433f70c9a163131f753453005460341e242be28c4f28e4afa49628d56a",
@@ -8661,7 +8688,7 @@
         "relationship": "implementation"
       },
       {
-        "requirement": "EVT-PUBLIC-001",
+        "requirement": "EVT-PRESENTATION-001",
         "relationship": "implementation"
       }
     ],
@@ -8711,7 +8738,7 @@
         "relationship": "tests"
       },
       {
-        "requirement": "EVT-PUBLIC-001",
+        "requirement": "EVT-PRESENTATION-001",
         "relationship": "tests"
       }
     ],
@@ -9453,51 +9480,45 @@
         "relationship": "formalModels"
       }
     ],
-    "functions/_shared/event-preview.mjs": [
-      {
-        "requirement": "EVT-PUBLIC-001",
-        "relationship": "implementation"
-      }
-    ],
     "functions/_shared/ticket-page.mjs": [
       {
-        "requirement": "EVT-PUBLIC-001",
+        "requirement": "EVT-PRESENTATION-001",
         "relationship": "implementation"
       }
     ],
     "functions/eventos/[eventId]/entradas.js": [
       {
-        "requirement": "EVT-PUBLIC-001",
+        "requirement": "EVT-PRESENTATION-001",
         "relationship": "implementation"
       }
     ],
     "functions/eventos/[eventId]/orden/[orderId].js": [
       {
-        "requirement": "EVT-PUBLIC-001",
+        "requirement": "EVT-PRESENTATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "functions/_shared/event-preview.mjs": [
+      {
+        "requirement": "EVT-PRESENTATION-001",
         "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": [
       {
-        "requirement": "EVT-PUBLIC-001",
+        "requirement": "EVT-PRESENTATION-001",
         "relationship": "implementation"
-      }
-    ],
-    "scripts/__tests__/event-preview.test.mjs": [
-      {
-        "requirement": "EVT-PUBLIC-001",
-        "relationship": "tests"
       }
     ],
     "scripts/__tests__/ticket-page-preview.test.mjs": [
       {
-        "requirement": "EVT-PUBLIC-001",
+        "requirement": "EVT-PRESENTATION-001",
         "relationship": "tests"
       }
     ],
-    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx": [
+    "scripts/__tests__/event-preview.test.mjs": [
       {
-        "requirement": "EVT-PUBLIC-001",
+        "requirement": "EVT-PRESENTATION-001",
         "relationship": "tests"
       }
     ],
@@ -9858,7 +9879,7 @@
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
-          "requirement": "EVT-PUBLIC-001",
+          "requirement": "EVT-PRESENTATION-001",
           "relationship": "implementation"
         }
       ]
@@ -9870,7 +9891,7 @@
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
-          "requirement": "EVT-PUBLIC-001",
+          "requirement": "EVT-PRESENTATION-001",
           "relationship": "implementation"
         }
       ]
@@ -9889,7 +9910,7 @@
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
-          "requirement": "EVT-PUBLIC-001",
+          "requirement": "EVT-PRESENTATION-001",
           "relationship": "implementation"
         }
       ]
@@ -9901,7 +9922,7 @@
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
-          "requirement": "EVT-PUBLIC-001",
+          "requirement": "EVT-PRESENTATION-001",
           "relationship": "implementation"
         }
       ]
@@ -10258,7 +10279,7 @@
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
-          "requirement": "EVT-PUBLIC-001",
+          "requirement": "EVT-PRESENTATION-001",
           "relationship": "tests"
         }
       ]
@@ -10777,7 +10798,7 @@
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
-          "requirement": "EVT-PUBLIC-001",
+          "requirement": "EVT-PRESENTATION-001",
           "relationship": "tests"
         }
       ]
@@ -13816,7 +13837,7 @@
           "relationship": "tests"
         },
         {
-          "requirement": "EVT-PUBLIC-001",
+          "requirement": "EVT-PRESENTATION-001",
           "relationship": "tests"
         }
       ]
@@ -16626,12 +16647,7 @@
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
       "sha256": "d22caea8f3a06163d28b328922ac84286b93629d5ecb11a95f2397a74f372d14",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "EVT-PUBLIC-001",
-          "relationship": "tests"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-3d4d10b4fbba7c54",
@@ -16640,7 +16656,7 @@
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
-          "requirement": "EVT-PUBLIC-001",
+          "requirement": "EVT-PRESENTATION-001",
           "relationship": "implementation"
         }
       ]
@@ -17399,7 +17415,7 @@
           "relationship": "implementation"
         },
         {
-          "requirement": "EVT-PUBLIC-001",
+          "requirement": "EVT-PRESENTATION-001",
           "relationship": "implementation"
         }
       ]
@@ -28418,6 +28434,7 @@
     "SURFACE-8bf82e65fbe7190d",
     "SURFACE-ac24f384b7949bc7",
     "SURFACE-b1d115adebe79a56",
+    "SURFACE-814a4782598cab3d",
     "SURFACE-5fd31c626962ad2f",
     "SURFACE-932153a167d40c81",
     "SURFACE-857a51643aefc9ce",
@@ -29649,7 +29666,7 @@
     "AUTH-OPS-READ-001",
     "OPS-AUX-WRITE-001",
     "SYS-CI-001",
-    "EVT-PUBLIC-001",
+    "EVT-PRESENTATION-001",
     "PRIV-ERROR-001"
   ],
   "stateMachines": [

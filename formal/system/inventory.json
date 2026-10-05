@@ -21263,14 +21263,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "224ba01b658bc949872eb2ad1fac0b12ef6aa4435ff4a11d352df08a586e4317",
+      "sha256": "d0bf9d72ef113d86fca04ad299c0e5d24f1af8350ea12c3026f6cf0e4eb3f891",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "ab8eee78c899073dad98f363f8b287d3e851e61d3b8bef1df8891318eeb91ecc",
+      "sha256": "c7400080eb126d2d6848842a5aa9a3d40e17b43d27b4ce077f23590b56cb68f3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21473,7 +21473,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "219cb1eedd50c37a3b7695a134a5ea46dff94086efcb587fd7af69a4286e624d",
+      "sha256": "a72c480e02a867192fa3f08c1ec34ae4bfe4e9cef11f6a1afe2da7a8bd1f96f1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -21515,7 +21515,7 @@
     },
     {
       "path": "formal/system/web-cutover-correspondence.md",
-      "sha256": "9eae7eb89270f36c6bdb7804b92bf18401536f9bca02451f89a64bb6c663720e",
+      "sha256": "d43c55e0f89d19f0c0b0f6b97a644fc334bdd712ac88e164b7b7ca2b6a2b605b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

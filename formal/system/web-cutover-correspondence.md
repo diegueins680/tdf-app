@@ -5,3 +5,7 @@ These mappings preserve the current reviewed cutover, privacy, inventory and pub
 Existing source and unit tests do not establish production Google sign-in/upload, provider telemetry receipt, official payment qualification, store admission or complete guarded backend deployment. Each requires its own actual evidence. Inventory pagination is sequential and not a transactional snapshot; uploads are not exactly once. Messaging checks do not authorize credential rotation. Read-only mail monitoring sends no messages.
 
 The reviewed ticket confirmation contract remains formal/ticket-admission/confirmation-delivery.md: SMTP acceptance is not inbox delivery; retries can duplicate messages, never authorize a second charge. The worker remains disabled until explicitly qualified and enabled. No migration or feature activation follows merely from this mapping.
+
+## Event presentation requirement identity
+
+`EVT-PRESENTATION-001` is the canonical combined event/transaction metadata requirement. It incorporates the earlier `EVT-PUBLIC-001` scope from ce4222633, preserving its implementation paths, regression tests and privacy obligations. The requirement register records that predecessor; source ancestry retains the complete original declaration. This identifier reconciliation adds no runtime guarantee.
