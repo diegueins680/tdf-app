@@ -67,7 +67,7 @@ with socketserver.ThreadingTCPServer(("127.0.0.1", 0), Sink) as server:
     thread.start()
     env = dict(os.environ, TICKET_CONFIRMATION_SMTP_PORT=str(server.server_address[1]))
     try:
-        result = subprocess.run(["stack", "exec", "--", "runghc", "-Wall", "-isrc", "test/TicketConfirmationSmtpMain.hs"],
+        result = subprocess.run(["stack", "exec", "--", "runghc", "-Wall", "-isrc", "-itest", "test/TicketConfirmationSmtpMain.hs"],
                                 cwd=root / "tdf-hq", env=env, capture_output=True, text=True, timeout=900)
         if result.returncode:
             print(result.stdout, result.stderr)

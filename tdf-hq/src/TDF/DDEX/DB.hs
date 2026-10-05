@@ -152,17 +152,16 @@ completeValidationRun
   :: DdexValidationRunId
   -> Catalog.WorkflowStateId
   -> DdexValidationResultId
-  -> ValidationResultEnum
   -> Int
   -> Int
   -> SqlPersistT IO ()
-completeValidationRun runId workflowStateId resultId result errorCount warningCount = do
+completeValidationRun runId workflowStateId resultId errorCount warningCount = do
   now <- liftIO getCurrentTime
   update runId
     [ DdexValidationRunWorkflowStateId =. Just workflowStateId
     , DdexValidationRunValidationResultId =. Just resultId
     , DdexValidationRunFinishedAt =. Just now
-    , DdexValidationRunResult =. Just result
+    , DdexValidationRunResult =. Nothing
     , DdexValidationRunErrorCount =. errorCount
     , DdexValidationRunWarningCount =. warningCount
     ]

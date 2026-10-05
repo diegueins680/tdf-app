@@ -1,221 +1,182 @@
-# TDF portable deployment and recovery
+# TDF production operations on Hetzner
 
-The live TDF web API moved to Hetzner on 2026-09-28; see the
-[cutover evidence and outstanding validation](validation-2026-09-28.md). Trader and its shared Fly
-database remain running. Older mobile builds require a new release.
-Google interactive login passed on 2026-10-05. Cutover validation remains
-incomplete until the authenticated-upload client repair is deployed and passes
-without browser instrumentation; see the validation record.
+The observed production target is the dedicated Hetzner host, Compose project
+`tdf-production`, directory `/opt/tdf/production`, private PostgreSQL17 database
+`tdf_hq`, and volume `tdf_production_postgres_data`. The public backend is
+`https://api.tdfrecords.net`. These identities must be re-observed before any
+production operation. The authoritative system index is
+[formal/system/README.md](../../formal/system/README.md).
 
-The rehearsal configuration deploys a quarantined copy and does not switch
-production writers or traffic. Never promote that rehearsal database: take a
-fresh consistent export after quiescing every production writer. Production is
-already accepting writes on Hetzner; never restore service from the stale Fly
-copy without a new freeze and reverse migration.
+Google interactive login and ordinary inventory-photo upload passed on October5
+against production web merge `c0a154cd4cbfcd3a5dc5167634be30b7691803cc`.
+The deployed entry asset matched the immutable Cloudflare deployment; both
+99-byte synthetic PNG uploads returned HTTP200 and downloaded with matching
+hashes. The form was cancelled without creating an inventory record. These
+checks used the existing backend, not a rollout of this candidate. See also
+[the cutover validation record](validation-2026-09-28.md). Repository integration
+does not activate experimental event, payment or ticket-email flags.
 
-The old `release:backend`, `release:backend:plan` and
-`release:backend:preflight` npm commands are retired. Direct invocation of
-`scripts/production-release.mjs` also exits before contacting any provider or
-database. Its imported source/artifact validation helpers remain in use by
+## Read-only inspection
+
+Run from the repository root with the operator's dedicated SSH identity:
+
+```sh
+node scripts/inspect-hetzner-production.mjs --identity-file /absolute/private/key --output /absolute/private/new-runtime.json
+```
+
+The command pins the host, requires existing SSH host trust and a specific key,
+checks Compose identity, immutable image references, private database networking
+and the expected volume. It reads the ledger and production capability flags
+through the existing `tdf_catalog_inventory` role in read-only transactions. The nine merchandise-reputation database flags are observed separately, with
+missing rows listed as unknown rather than disabled. Interaction runtime/entity-kind
+switches and the optional event-operations API flag are also recorded. An absent
+event-operations flag table is represented as null; it is not inferred disabled. Social
+observations contain only runtime enablement and activation history, never pair,
+consent or message data. A missing singleton remains unknown rather than inferred
+disabled. Only the container's pinned Unix socket and port are used; inherited libpq routing
+overrides are cleared and SQL verifies that the connection is local. Only
+allowlisted identity/configuration facts leave the host. Credentials and raw
+Docker/SQL errors are not printed. Output creation is exclusive with mode0600;
+receipts record collector hashes and whether its source checkout was dirty.
+Source provenance is captured before the remote read and checked afterward;
+changed sources invalidate the observation rather than receiving a passing receipt.
+Observations are sequential, not an atomic fleet snapshot. Missing flags retain
+unknown effective defaults. A successful observation is **not release readiness**.
+
+## Source and migration preparation
+
+After a clean commit, use a runtime receipt from the same collector implementation,
+begun within the last fifteen minutes:
+
+```sh
+node scripts/prepare-hetzner-release.mjs --runtime /absolute/private/recent-runtime.json --output /absolute/private/new-plan.json
+```
+
+This local command reads immutable Git blobs, including SQL includes, checks each
+migration introduction's ancestry and compares the observed ledger against the
+exact manifest. Unknown/duplicate entries and unapproved checksum differences
+reject preparation. Pending entries retain manifest order, including holes in the
+observed ledger. Historical compatible checksums remain explicit in the manifest.
+The plan records current flags, the required coordinated CORS configuration repair,
+and outstanding release gates. It always reports `executionAllowed: false`.
+It does not invoke SSH, Docker, a database, or a deployment service. Receipts are
+local evidence, not signed attestations or approval; an executor must re-observe
+runtime state under its release lock.
+
+## Isolated online database restore rehearsal
+
+From a clean reviewed source revision:
+
+```sh
+node scripts/rehearse-hetzner-restore.mjs --identity-file /absolute/private/key --output /absolute/private/new-restore.json
+```
+
+The collector and rehearsal pin the host's local Docker Unix socket and discard
+Docker context/TLS routing overrides. The helper holds a nonblocking exclusive
+host lock for its entire operation, verifies available memory/disk and the source
+identity, then exports a read-only PostgreSQL snapshot. Table counts and the custom
+archive use that same snapshot. Source queries are read-only, use the explicit
+local database socket, and have database and in-container process timeouts.
+
+Database and password-free role archives remain in a new root-private directory
+under `/opt/tdf/backups`. Only hashes, relation counts, migration identities and
+operational metadata leave the host. Ownership and ACL definitions are restored;
+role credentials remain a separate recovery obligation. The existing `postgres`
+role is retained from initdb, then its dumped attributes are applied.
+
+Restoration targets a unique nonce-owned container running the exact production
+PostgreSQL image. It has no external network, published ports, host mounts or
+production credentials, a read-only root filesystem, 256MiB tmpfs data, 384MiB
+memory with no extra swap allowance, half a CPU and 64-process limit. PostgreSQL
+uses ten connections and `max_locks_per_transaction=1024`: a real restore with
+the default64 exhausted its shared lock table. The memory ceiling stays384MiB. Rehearsal
+requires at least 1GiB available memory, 2GiB disk and a source database no larger
+than 128MiB. These conservative bounds deliberately reject growth; do not silently
+raise them on a production host. Archives are each capped at 256MiB.
+
+A pass requires successful role/archive replay, matching snapshot relation counts,
+matching migration identities, a stable production database identity/ledger, and
+confirmed removal of the fully inspected isolate. No count-only or archive-listing
+shortcut can pass. Local tests inject dump, role, restore, count, ledger, interruption
+and cleanup failures; invalid target controls and source/receipt drift must reject.
+This is empirical conformance of this boundary, not a formal proof of recovery.
+
+The 540-second operation deadline reserves another 90 seconds for bounded cleanup.
+A lost create response is recovered using the unique name, then full identity and
+isolation validation. On failure, partial archives and a stage-only failure record
+remain private. A host crash, daemon outage or forced process kill can still leave
+an isolate. A new rehearsal checks all labelled containers, including stopped ones,
+under the exclusive lock. It also rejects any `restore-rehearsal.pending.json`
+marker: this root-private nonce/image record is fsynced before Docker creation and
+cleared only after identity-checked removal. A delayed create can finish after the
+helper dies, so an empty inventory does not authorize clearing a pending marker.
+Recovery must establish no request is in flight, then inspect/remove the admitted
+nonce target before clearing its matching marker. The helper rejects before source inspection if any remain. This
+prevents overlapping resource reservations after process death. Inspect the
+`net.tdf.restore-rehearsal` label, nonce name, immutable image
+and isolation before removing that specific container. Never prune unrelated
+containers or remove the permanent lock inode. A failure is never a passing receipt. The [bounded scheduling model and its five
+negative controls](../../formal/system/restore-isolation.md) state the assumptions
+and exclusions explicitly.
+
+To rehearse this exact candidate's migrations on the restored isolate, add
+`--with-candidate-migrations`. The launcher loads the manifest and recursively
+included SQL from immutable Git blobs with introduction-ancestry validation. It
+uses the existing canonical migration-batch generator, including its schema
+verifier, and binds the manifest and SQL hashes to the receipt. The helper first
+rejects unknown or changed applied history, applies the batch twice on the admitted
+isolate, and requires complete ledger correspondence, preserved historical entries
+and stable second-application results. Any provider/revenue/social, merchandise-reputation, interaction or optional event-operation control changes
+are reported explicitly; their presence is not authorization to activate them in
+production. No application or worker is started against the restored data. SQL and
+migration diagnostics stay inside the root-private archive directory.
+
+**This does not establish release readiness.** The online database snapshot is not
+coordinated with assets or cluster-global role/schema changes; the rehearsal lock
+only excludes other rehearsals. No provider action, application canary, production
+restore or deployment occurs. Counts do not establish bytewise logical equality.
+Keep provider flags disabled and production writes intact. A release still needs
+writer drainage, a coordinated database/assets/private-uploads backup, tested secret/off-host
+recovery, migration rehearsal and compatible application recovery.
+
+## Private upload storage
+
+The [private upload contract](../../formal/system/private-upload-persistence.md)
+requires a pre-provisioned, private host `uploads` directory bound to `/app/uploads`.
+The production entrypoint refuses missing, unwritable or known ephemeral storage.
+Before replacing the old API, drain writers and preserve any files still in its
+writable layer; an earlier empty observation is not permission to discard new
+files. Verify image-user ownership and coordinated database/assets/uploads restore.
+The inspector reports the canonical bind separately from release eligibility.
+Both `api` and the historical shared-database `canary` mount that same
+pre-provisioned private directory so production startup checks apply consistently.
+That `canary` can access live data and uploads: it is not an isolated release canary
+and cannot satisfy these obligations or authorize running a candidate before
+writer fencing and recovery qualification.
+
+## Routine release status
+
+The guarded routine Hetzner release executor remains an open implementation and
+verification obligation. Direct invocation of `scripts/production-release.mjs`
+is retired and rejects before any provider or database action. The former
+`release:backend`, `release:backend:plan` and `release:backend:preflight` commands
+are removed. Its reviewed importable source/artifact helpers remain available to
 `npm run release:backend:prepare -- FULL_RELEASE_SHA FULL_RECOVERY_SHA NEW_PRIVATE_DIRECTORY`.
-That preparation command does not deploy; follow the guarded procedure below
-and preserve the live Hetzner database for application recovery.
+That command only prepares portable artifacts; it is not the canonical current-ledger
+plan described above and does not deploy or authorize database changes.
 
-## Host selection and cost
+A production executor must re-observe identity, flags, approved manifest/checksums,
+backups and recovery eligibility under its release lock. It must fence writers,
+apply only reviewed pending migrations and verify health, release identity and
+critical authenticated flows before reopening traffic. Never restore an old backup
+over newer financial, audit, identity or user data to reverse an application release.
 
-On 2026-09-28 the authenticated Hetzner project reported CX23/CX33/CAX11/CAX21
-unavailable. CPX12 was available in Nuremberg: one shared x86 CPU, 2 GB RAM,
-40 GB local storage, USD 13.49/month. Daily server backups add 20% and IPv4
-adds USD 0.60, giving USD 16.788/month before usage beyond included traffic.
-No yearly commitment is required. These are account-specific prices; check
-the pricing API and capacity again before provisioning.
+## Historical material
 
-The observed Fly production baseline is approximately USD 23.56/month:
-two shared-CPU 256 MB APIs in ORD/LAX, one 2 GB database in GRU, 5 GB database
-storage, and 11 GB of API asset volumes. Staging adds at least USD 8.45.
-The source audit also found active Trader databases on the same Fly database
-server (about 3 GB combined). Its compute/storage cost is shared and cannot be
-removed by migrating TDF alone. Leave that server and Trader connections running
-unless a separate Trader migration is explicitly authorized and verified; do not
-count shared database retirement as realized TDF savings. These estimates exclude
-additional traffic, snapshots, taxes, and other account charges. Savings occur only after the corresponding Fly resources
-are retired; stopping a VM does not remove all storage charges. Outstanding
-Fly invoices are unaffected by migration.
-
-A single host loses the existing API's regional redundancy. Server backups
-do not provide database failover or replace a tested logical backup. An
-initial read workload demonstrated memory headroom, not peak-load capacity
-or equivalent availability. A temporary 256 MB ORD forwarder for clients
-using `tdf-hq.fly.dev` would add approximately USD 1.94/month.
-
-Pricing references: [Hetzner billing](https://docs.hetzner.com/cloud/billing/faq/),
-[Hetzner API](https://docs.hetzner.cloud/reference/cloud),
-[Fly pricing](https://docs.fly.io/about/pricing/).
-
-## Prepare and isolate
-
-1. Provision a dedicated server with `cloud-init.yaml`, daily backups,
-   deletion/rebuild protection, a dedicated SSH key, and a firewall allowing
-   SSH only from the operator's address. Never reuse unrelated servers or
-   keys. Keep PostgreSQL private. Apply firewall updates sequentially and
-   re-read the resulting rules.
-2. Prepare artifacts from the reviewed full commit and its reviewed recovery
-   ancestor:
-
-   ```sh
-   node scripts/prepare-portable-restore.mjs FULL_RELEASE_SHA FULL_RECOVERY_SHA /private/tmp/new-restore-bundle
-   ```
-
-   The command reuses the existing release source, migration ancestry,
-   checksum, image metadata, identity, and disabled financial-write checks.
-   It requires identical migration manifests for release and recovery. It
-   emits SQL and an immutable-image report into a new private directory;
-   it neither contacts a database nor authorizes production cutover.
-3. Export a custom-format `pg_dump` over authenticated SSH and preserve both
-   API asset volumes. Keep dumps, archives, role metadata, and credentials in
-   mode-0700 directories outside the repository. Hash every transferred file.
-   Detect conflicting asset paths by content hash before combining them.
-   Preserve the source archives. Seed the generated `feature-registry.json`
-   from the exact release image instead of either stale regional copy.
-4. Production uses PostgreSQL **17**, with `vector` **0.8.1**, `btree_gist`,
-   `pg_trgm`, `pgcrypto`, and `unaccent`. Do not restore into PostgreSQL 16
-   or an image lacking those extensions. Use a compatible patched PG17 image
-   and pin its digest; verify extension versions after restore.
-5. In `/opt/tdf/restore`, install `compose.restore.yaml` as `compose.yaml` and
-   `Caddyfile.restore` as `Caddyfile`. Set `POSTGRES_IMAGE`, `TDF_IMAGE`, and
-   `CADDY_IMAGE` to verified immutable digests in `.env`. Store a newly
-   generated database password in mode-0600 `postgres_password`. Do not copy
-   production provider, SMTP, OAuth, payment, or encryption secrets.
-6. Start only `db`, confirm it is empty, and restore with
-   `pg_restore --exit-on-error --no-owner --no-privileges`. Run the prepared
-   `preflight.sql`, then `migrations.sql`, then `verify.sql`, each with
-   `psql -X -v ON_ERROR_STOP=1`. Record the ledger and extension versions.
-7. Create a dedicated rehearsal login with `SELECT` on public tables and
-   sequences, plus `UPDATE (usage_count)` on `content_reaction_type` and
-   `creator_badge_type`. Startup refreshes those two counters, so a wholly
-   read-only transaction setting prevents boot. Other worker writes remain
-   denied; their permission-error logs are expected in this rehearsal.
-   Populate `api.restore.env` with this login, the private `db` hostname,
-   and regional settings read from the restored deployment-reference tables.
-   Make the asset directory writable by container UID 1000.
-8. Start the `smoke` profile. Confirm API and database attach only to the
-   `internal: true` quarantine network. Prove external egress fails from the
-   API's network namespace. Probe health, exact version, canonical-origin
-   CORS, and public feed responses from the host over SSH.
-9. Add an unused API hostname only after backing up DNS and comparing every
-   existing record. Preserve the website and mail records. Allow TCP 80/443
-   and start the `edge` profile. During rehearsal the edge serves only
-   `/health` and `/version`; all other routes return 503. Verify trusted TLS
-   without disabling certificate validation.
-10. Rehearse recovery to the compatible immutable image, verify its health
-    and version, then restore and verify the target image. Preserve the
-    reports outside the secret bundle.
-
-## Original cutover gates and outstanding validation
-
-The operator explicitly chose a web-first cutover on 2026-09-28 and accepted
-downtime for older installed mobile clients until updated. Preserve this
-decision: no temporary Fly forwarding service is required. The following is the
-original cutover checklist, retained for recovery and evidence. Production now
-accepts writes on Hetzner; these historical instructions do not authorize moving
-traffic back to Fly. Google login and authenticated upload validation remain
-outstanding, as stated above. Subsequent releases must preserve the current
-database and use reviewed immutable images, canonical migration checks, backups,
-the release lease and a compatible recovery image.
-
-- Preserve the existing release lease and security-emergency readiness
-  checks. Capture old machine configurations, runtime gates, immutable
-  images, database roles, ownership, grants, and all asset volumes.
-- Fly's overdue-invoice block rejected release creation and a supported
-  staging Machine update on 2026-09-28. The rejected update left staging
-  unchanged. Fence the old backend from further writes; installed clients
-  using the old hostname must not keep writing to a divergent database.
-- Prepare a separate production database and assets directory, private
-  credentials, application grants, HTTPS configuration, and logical backup
-  schedule. Retain tested recovery images. Do not give the production app
-  the rehearsal role or expose the database publicly.
-- Quiesce all old writers and scheduled jobs, acquire the release lease,
-  take the final consistent export and asset copy, and verify restore counts,
-  financial/audit invariants, schema checksums, and security readiness. Keep
-  event discovery and automatic publication disabled through the cutover.
-- Apply `migrate-owned-urls.sql` with `psql -X -v ON_ERROR_STOP=1` to the
-  final restored database before starting any application. Repeat it to prove
-  idempotence; confirm no active asset, event-image (including its directory
-  view projection), or radio URL retains the Fly prefix. Preserve historical
-  cutover metadata. Verify every referenced local asset exists in the final
-  merged assets directory.
-- Run only the isolated `canary` profile against the final database first.
-  Create the restricted reader role and fresh `api.canary.env` exactly as in
-  rehearsal step 7: SELECT plus the two startup-counter column grants, no
-  production provider credentials. Its only network is the internal database
-  network. Prove outbound access and business writes fail, then probe health,
-  exact version, public reads, asset availability, and canonical CORS from
-  the host. Background loops may log denied writes but cannot execute them.
-  Stop the canary and revoke its login after validation. Only then start the
-  `serve` profile; this explicitly enables production workers and writes on
-  the new database. Switch callbacks and frontend while the old database stays
-  fenced, so there is only one writable database.
-  Preserve payment webhook IDs/signature secrets and verify callbacks without
-  creating a real charge. Verify Google authentication and uploads before
-  reopening writes. Prepare native builds using the new hostname separately.
-- Cloudflare Pages has two independent backend settings: browser
-  `VITE_API_BASE` and event-preview function `PUBLIC_API_BASE`. Before deploying
-  this hostname change, pin both production settings to the current Fly base.
-  At cutover change both to `https://api.tdfrecords.net`, preserving all other
-  bindings, and rebuild production. Verify an actual public event page as
-  well as browser API calls; the preview function runs before the SPA.
-- Once new writes are accepted, recovery must preserve them. Roll back the
-  application to the compatible image on the new database; never switch
-  traffic back to a stale pre-cutover Fly database. A provider reversal needs
-  another write freeze and fresh reverse migration.
-- After successful verification and the retention window, retire the
-  superseded Fly compute and volumes deliberately. Retain the forwarding
-  endpoint only if provider access is later restored and forwarding is wanted.
-
-`compose.production.yaml` uses a separate external volume named
-`tdf_production_postgres_data`; create it only for the final production restore.
-Install it as `/opt/tdf/production/compose.yaml` with a root-only raw `api.env`,
-new database credentials, the verified image `.env`, and merged final assets.
-Copy `Caddyfile.production` as `Caddyfile`. The production edge reuses the
-validated certificate volumes. Stop the rehearsal edge before starting the
-production `serve` profile to avoid port conflicts. The database has no
-published ports; the production API has outbound access for its configured
-providers. Do not start that profile against an unfenced production clone.
-
-Install `backup-postgres.sh` as executable in the production directory and
-the service/timer under `/etc/systemd/system`. The daily 02:30 UTC logical
-backup precedes the host's 10:00–14:00 UTC snapshot window. Run and restore
-the first logical backup before declaring cutover complete. Backup retention
-is deliberate; monitor free space and preserve an off-host verified copy.
-
-Event ingestion changes originally tracked in PRs #460, #463 and #464 have
-entered main through their reviewed successors, including #475 and #465.
-Repository integration does not establish their production rollout or authorize
-enabling ingestion or event operations flags.
-
-## Remaining operational follow-up
-
-Daily artist enrichment and the course publisher target `https://api.tdfrecords.net`.
-The hourly messaging workflow now performs the existing read-only token check:
-missing, invalid, expired, or soon-expiring credentials still fail and notify.
-It cannot exchange credentials or update the retired Fly app. Automatic token
-rotation for Hetzner is pending a reviewed integration with the current secret
-store. Until then, an authorized operator must rotate credentials in the current
-Hetzner deployment and synchronize the GitHub health-check credentials; a check
-of GitHub credentials alone does not verify the running service's credentials.
-Do not use the legacy no-argument Fly refresh command after this cutover.
-
-Datadog API synthetic test `r2d-i82-3jy` now targets
-`https://api.tdfrecords.net/health`: root workflow run `37209188359` on
-2026-10-04 passed that request and web test `rv2-x2n-epx`, with zero critical
-errors. The web test still targets `https://tdf-app.pages.dev/`; its owner must
-verify coverage of the canonical `https://www.tdfrecords.net` surface as well.
-Mobile's separate Datadog credentials were rejected with HTTP 403 in run
-`37184643181`; its green status was caused by disabled critical-error failure,
-not successful synthetic tests. Correct those credentials and require critical
-errors to fail before treating Mobile's synthetic result as release evidence.
-These repository changes do not deploy, rotate production credentials, or
-claim that the pending authentication/upload gates have been performed.
+The [September28 restore/cutover plan](../../docs/archive/hetzner-restore-rehearsal-2026-09-28.md)
+records the original Fly-to-Hetzner transition. It is not current release
+instruction. The Compose, Caddy and backup files here remain implementation
+inputs; installed configuration must be compared with them before execution.
 
 ## Read-only operational tools after cutover
 

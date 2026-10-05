@@ -1,0 +1,7 @@
+
+credential-lifecycle-postgresql
+  revalidates a bound Google credential after disable wins the lock [✔]
+  revokes a Google session when disable follows committed issuance [✔]
+
+Finished in 0.3862 seconds
+2 examples, 0 failures

@@ -25,6 +25,16 @@ import           TDF.Internationalization
   , normalizeTimeZone
   )
 
+productionRuntimeKeys :: [String]
+productionRuntimeKeys = ["APP_ENV", "ENVIRONMENT", "NODE_ENV", "RUNTIME_ENV"]
+
+isProductionRuntime :: [(String, Maybe String)] -> Bool
+isProductionRuntime runtimeEnv = any productionSetting runtimeEnv
+  where
+    productionSetting (key, value) =
+      key `elem` productionRuntimeKeys
+        && maybe False (\raw -> T.toLower (T.strip (T.pack raw)) `elem` ["prod", "production", "live"]) value
+
 data EmailConfig = EmailConfig
   { emailFromName    :: Text
   , emailFromAddress :: Text
@@ -1188,11 +1198,7 @@ loadConfig = do
       , "VERCEL"
       , "CF_PAGES"
       , "K_SERVICE"
-      , "APP_ENV"
-      , "ENVIRONMENT"
-      , "NODE_ENV"
-      , "RUNTIME_ENV"
-      ]
+      ] ++ productionRuntimeKeys
     seedTriggerAllowedInRuntime runtimeEnv =
       not (hasHostedRuntimeEnv || hasProductionEnv)
       where
@@ -1207,21 +1213,12 @@ loadConfig = do
             , "CF_PAGES"
             , "K_SERVICE"
             ]
-        hasProductionEnv =
-          any
-            (maybe False isProductionValue . lookupNonEmptyEnv)
-            [ "APP_ENV"
-            , "ENVIRONMENT"
-            , "NODE_ENV"
-            , "RUNTIME_ENV"
-            ]
+        hasProductionEnv = isProductionRuntime runtimeEnv
         hasNonEmptyEnv key = maybe False (const True) (lookupNonEmptyEnv key)
         lookupNonEmptyEnv key =
           case lookup key runtimeEnv of
             Just (Just raw) | not (T.null (T.strip (T.pack raw))) -> Just raw
             _ -> Nothing
-        isProductionValue raw =
-          T.toLower (T.strip (T.pack raw)) `elem` ["prod", "production", "live"]
     validateSeedTriggerToken runtimeEnv mVal =
       case fmap (T.strip . T.pack) mVal of
         Nothing  -> pure Nothing

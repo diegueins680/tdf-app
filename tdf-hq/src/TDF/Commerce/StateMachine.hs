@@ -119,6 +119,9 @@ data PaymentEvent
   | PaymentChargebackObserved
   deriving (Eq, Show)
 
+-- Reference helper only: production checkout mutations use CheckoutStore and
+-- PaymentRuntimeStore. This table is not runtime refinement evidence.
+-- See formal/system/payment-retry.md and AUTHORITY-021.
 transitionCheckout :: CheckoutState -> CheckoutEvent -> Either Text CheckoutState
 transitionCheckout current event = case (current, event) of
   (CheckoutDraft, CheckoutValidationPassed) -> Right CheckoutValidated

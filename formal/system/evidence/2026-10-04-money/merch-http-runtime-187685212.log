@@ -1,0 +1,6 @@
+
+artist-merch-runtime PostgreSQL handlers and HTTP API
+  enforces buyer, seller, administrator, idempotency, payment, and tenant boundaries [✔]
+
+Finished in 2.4753 seconds
+1 example, 0 failures

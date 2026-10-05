@@ -32,7 +32,7 @@ const {
   postForm,
   subscribeToApiActivity,
 } = await import('./client');
-const { AUTH_SESSION_EXPIRED_EVENT } = await import('../session/authEvents');
+const { advanceAuthSessionEpoch, AUTH_SESSION_EXPIRED_EVENT } = await import('../session/authEvents');
 
 interface MockResponseOptions {
   ok?: boolean;
@@ -301,4 +301,24 @@ describe('api client', () => {
       window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, listener);
     }
   });
+  it('does not expire a later session when an earlier request returns an auth failure', async () => {
+    const listener = jest.fn();
+    window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, listener);
+    let finish: ((response: Response) => void) | undefined;
+    fetchMock.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+    const pending = get('/old-protected');
+    const denied = expect(pending).rejects.toThrow('Missing or invalid auth token');
+    // A -> B -> A: the same bearer value is deliberately retained. Occurrence,
+    // rather than identity/token equality, must govern expiration authority.
+    advanceAuthSessionEpoch();
+    advanceAuthSessionEpoch();
+    try {
+      finish?.(buildResponse({ ok: false, status: 401, body: 'Missing or invalid auth token' }));
+      await denied;
+      expect(listener).not.toHaveBeenCalled();
+    } finally {
+      window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, listener);
+    }
+  });
+
 });

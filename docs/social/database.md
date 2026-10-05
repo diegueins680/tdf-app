@@ -31,7 +31,10 @@ mutations; a mismatched key payload conflicts. Replays revalidate current eligib
 and return current state, so a replay cannot present an old connection as current.
 Old expected revisions conflict. Rate limit is 60 accepted new commands per actor
 per minute. Shared ordered actor/credential locks also fence credential disable.
-Account token revocation and managed-entity context are **not yet refined**.
+Exact-token revocation is transaction-fenced at the scoped Social boundary; see
+[session-boundary.md](session-boundary.md). Credential lifecycle issuance/revocation
+has the separate [identity contract](../../formal/system/identity-lifecycle.md).
+Managed-entity context and universal revocation across all handlers remain unrefined.
 
 `social_v2_close` closes social participation, retains a tombstone and clears edges;
 it is not account erasure, is not exposed in the HTTP pilot and does not implement

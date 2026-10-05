@@ -1,0 +1,457 @@
+{
+  "schemaVersion": 1,
+  "decisions": [
+    {
+      "id": "AUTHORITY-001",
+      "sources": [
+        "specs.yaml",
+        "formal/system/README.md"
+      ],
+      "conflict": "Legacy v1 platform/provider/runtime declarations compete with shipped web, Mobile and Hetzner.",
+      "authority": "formal/system/README.md",
+      "resolution": "Mark specs.yaml historical; retain original content as provenance. Domain source applicability still needs reconciliation."
+    },
+    {
+      "id": "AUTHORITY-002",
+      "sources": [
+        "README.md",
+        "tdf-mobile/src/lib/queryClient.ts",
+        "tdf-mobile/src/api/bookings.ts"
+      ],
+      "conflict": "README promises durable offline booking synchronization not established by pinned Mobile implementation.",
+      "authority": "formal/system/README.md",
+      "resolution": "Remove unsupported promise; current in-memory query caching is not booking acceptance. No offline queue was silently added."
+    },
+    {
+      "id": "AUTHORITY-003",
+      "sources": [
+        "formal/system/README.md",
+        "formal/system/history-2026-09-20.md"
+      ],
+      "conflict": "Historical verification receipts could be mistaken for current-main evidence.",
+      "authority": "formal/system/README.md",
+      "resolution": "Archive the previous audit and preserve its scope; current results require exact candidate execution."
+    },
+    {
+      "id": "AUTHORITY-004",
+      "sources": [
+        "tdf-mobile/AGENTS.md",
+        "tdf-mobile/package.json"
+      ],
+      "conflict": "Mobile guidance says no automated tests despite configured Jest suite.",
+      "authority": "tdf-mobile/package.json",
+      "resolution": "Correct guidance; require actual Mobile quality gate and exact gitlink."
+    },
+    {
+      "id": "AUTHORITY-005",
+      "sources": [
+        "tdf-hq/AGENTS.md",
+        "tdf-hq/stack.yaml",
+        "ops/hetzner/compose.production.yaml"
+      ],
+      "conflict": "Old backend guidance describes obsolete runtime/deployment and test assumptions.",
+      "authority": "tdf-hq/stack.yaml",
+      "resolution": "Retain Stack-pinned compiler as build authority; observed deployment identity overrides obsolete provider prose. Canonical routine-release completion remains open."
+    },
+    {
+      "id": "AUTHORITY-006",
+      "sources": [
+        "tdf-hq/src/TDF/Cors.hs",
+        "ops/hetzner/compose.production.yaml",
+        "formal/system/cors-boundary.md"
+      ],
+      "conflict": "Observed production reflects arbitrary origins with credentials, contrary to the intended authentication/privacy boundary.",
+      "authority": "formal/system/cors-boundary.md",
+      "resolution": "Fix middleware and production configuration; do not redefine arbitrary credentialed sharing as intended behavior."
+    },
+    {
+      "id": "AUTHORITY-007",
+      "sources": [
+        "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+        "tdf-hq/assets/feature-registry.json"
+      ],
+      "conflict": "Video-source settings route lacks an entry in the canonical feature registry.",
+      "authority": "tdf-hq/assets/feature-registry.json",
+      "resolution": "Add admin.video-sources using inspected backend strict-admin/module guard and explicit Mobile concealment."
+    },
+    {
+      "id": "AUTHORITY-008",
+      "sources": [
+        "formal/system/README.md",
+        "tdf-mobile/src/api/generated/types.ts"
+      ],
+      "conflict": "Mobile main d2fd9399126e3b456c310497fb7d9edba09f981d contains newer payment flows and contract additions not shipped by root baseline b07f67c3ebe2022d5f70e94578944b6401616696.",
+      "authority": "formal/system/README.md",
+      "resolution": "Explicit user decision 2026-10-04: keep shipped Mobile lineage. Audit and compatibility patch descend from ede1f2a0ccf75f3794c7892f291e1751b279d19e; do not integrate unrelated newer Mobile payment flows."
+    },
+    {
+      "id": "AUTHORITY-009",
+      "sources": [
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/pages/LoginPage.tsx"
+      ],
+      "conflict": "Legacy signup treated supplied matching or absent artist email as verified ownership; session helper committed outer credential mutations before issuing tokens.",
+      "authority": "formal/system/identity-lifecycle.md",
+      "resolution": "Reject anonymous artist adoption; route independent accounts to reviewed management. Serialize credential transitions and remove the read-only token-reuse/early-commit behavior. This is a security repair, not specification approval of existing bugs."
+    },
+    {
+      "id": "AUTHORITY-010",
+      "sources": [
+        "docs/music-directory/permissions.md",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "docs/music-directory/formal-model.yaml",
+        "tdf-hq/src/TDF/Directory/Policy.hs"
+      ],
+      "conflict": "Backend directory administration accepted module-only actors; claims allowed self-review, separate transaction status checks and approval replay that restored revoked grants.",
+      "authority": "formal/system/identity-lifecycle.md",
+      "resolution": "Enforce the declared Admin role plus module and reviewer separation. Preserve multi-role Admin composition. Serialize review, grant, audit and response; identical-state retries are read-only. Do not redefine concurrent rejected/approved mismatches as valid product behavior. Implement the existing full claim transition graph, including evidence requests; keep every review edge Admin-only and same-state retries observational. Exhaust the declared graph through HTTP."
+    },
+    {
+      "id": "AUTHORITY-011",
+      "sources": [
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/stack.yaml",
+        "docs/archive/backend-package-legacy.yaml",
+        "tdf-hq/Dockerfile"
+      ],
+      "conflict": "Ignored Hpack input declared version 1.0.0, a library and executable tdf-hq; actual Stack and image builds use hand-maintained Cabal version 0.1.0.0, executable tdf-hq-exe and test suite.",
+      "authority": "tdf-hq/tdf-hq.cabal",
+      "resolution": "Archive the stale Hpack description outside the active package. Stack snapshot remains toolchain authority. No switch to a Cabal CLI build and no regeneration from the retired input."
+    },
+    {
+      "id": "AUTHORITY-012",
+      "sources": [
+        "tdf-hq/Dockerfile",
+        "tdf-hq/Dockerfile.runtime",
+        "formal/system/build-trust.md"
+      ],
+      "conflict": "Image recipes disabled Debian package authentication and metadata freshness to tolerate network failures, allowing untrusted build/runtime inputs.",
+      "authority": "formal/system/build-trust.md",
+      "resolution": "Remove the bypasses and require fail-closed APT verification in both image recipes. Diagnose proxy/mirror trust failures instead of weakening package trust."
+    },
+    {
+      "id": "AUTHORITY-013",
+      "sources": [
+        "docs/revenue-platform/formal-model.yaml",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "formal/system/checkout-arithmetic.md"
+      ],
+      "conflict": "Fixed-width products and sums can wrap to a positive value accepted as a parent total despite the declared exact line-total invariant. Per-line PostgreSQL checks do not enforce the cross-line aggregate.",
+      "authority": "formal/system/checkout-arithmetic.md",
+      "resolution": "Repair application calculations with exact arithmetic and explicit narrowing checks; retain cross-line database enforcement as an open additive-migration obligation. Do not redefine wrapped amounts as valid."
+    },
+    {
+      "id": "AUTHORITY-014",
+      "sources": [
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Server/Merch.hs",
+        "formal/system/checkout-arithmetic.md"
+      ],
+      "conflict": "Generic parent-subtotal equality would reject shipped merchandise shipping represented as both header fee and payable line. Fixed-width arithmetic can disagree with exact monetary equations.",
+      "authority": "formal/system/checkout-arithmetic.md",
+      "resolution": "Require exact payable-total equality at the database boundary; preserve existing shipping representation and floor commission while repairing unchecked intermediates. Historical applied SQL remains unchanged; use additive migrations."
+    },
+    {
+      "id": "AUTHORITY-016",
+      "sources": [
+        "formal/system/README.md",
+        "tdf-mobile/src/api/generated/types.ts",
+        "scripts/production-migrations.json"
+      ],
+      "conflict": "Consolidated main fdac8e765 adds provider payment behavior and a Mobile gitlink that competes with the explicit shipped-lineage decision. Prior audit evidence describes the pre-consolidation tree.",
+      "authority": "formal/system/README.md",
+      "resolution": "Integrate current root main and retain all six added payment migrations with historical introduction SHAs; append the three audit migrations. Keep Mobile descended from ede1f2a and regenerate compatible API and feature metadata only. Preserve prior receipts as historical evidence and rerun candidate checks; do not infer native payment parity or enable providers."
+    },
+    {
+      "id": "AUTHORITY-017",
+      "sources": [
+        "ops/hetzner/README.md",
+        "docs/archive/hetzner-restore-rehearsal-2026-09-28.md",
+        "scripts/production-release.mjs"
+      ],
+      "conflict": "Historical cutover instructions still describe keeping production on Fly, while live identity and database are on Hetzner and the routine release command still executes Fly.",
+      "authority": "ops/hetzner/README.md",
+      "resolution": "Archive the original cutover plan as historical evidence. Reject Fly preflight/release execution before remote operations; preserve source-only planning and shared validators. Add a repository-owned read-only Hetzner collector with fixed target, secret-safe output and negative controls. A complete guarded Hetzner release executor remains an explicit open obligation."
+    },
+    {
+      "id": "AUTHORITY-018",
+      "sources": [
+        "tdf-hq/src/TDF/Social/Chat.hs",
+        "docs/social/dm-read-boundary.md",
+        "formal/system/messaging.md"
+      ],
+      "conflict": "The chat adapter reports rejection after its database transaction has already committed. A real malformed-result regression retained a message and changed thread timestamp despite an HTTP error.",
+      "authority": "formal/system/messaging.md",
+      "resolution": "Keep session, SQL effects and response validation in one transaction; roll back rejected envelopes. Preserve existing non-idempotent transport-loss semantics and never-governed legacy compatibility. Add runtime negative controls and a bounded sequential model; do not redefine committed error outcomes as intended behavior."
+    },
+    {
+      "id": "AUTHORITY-019",
+      "sources": [
+        "formal/system/bookings.md",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/docs/openapi/api.yaml"
+      ],
+      "conflict": "Broad Scheduling module access allowed private foreign bookings despite own-booking persona intent; legacy edits bypassed the authoritative exclusion calendar and checkout snapshot.",
+      "authority": "Product owner explicitly selected four studio-wide roles on 2026-10-04; formal/system/bookings.md",
+      "resolution": "Require backend object scope; preserve four-role staff operations and own/assigned access, row-lock edits, repair allocation projection additively and reject checkout evidence drift. Document three previously missing authenticated API operations and regenerate both shipped clients."
+    },
+    {
+      "id": "AUTHORITY-020",
+      "sources": [
+        "formal/system/README.md",
+        ".gitmodules",
+        "formal/system/inventory.json"
+      ],
+      "conflict": "The initial shipped-Mobile decision and its documentation referred to ede1f2a, but concurrent consolidated-main PR479 shipped Mobile147ec8bc with additional functionality.",
+      "authority": "Product owner explicitly selected Use newly shipped Mobile pin after being shown root5efd7ff and Mobile147ec8bc.",
+      "resolution": "Preserve root5efd7ff and Mobile147ec8bc ancestry; apply reviewed compatibility fixes at ff107462. Supersede the earlier lineage restriction only for this newly shipped pin, retain original-baseline evidence, and do not infer authorization to follow unrelated later Mobile-main changes or activate providers."
+    },
+    {
+      "id": "AUTHORITY-021",
+      "sources": [
+        "docs/revenue-platform/formal-model.yaml",
+        "tdf-hq/src/TDF/Commerce/StateMachine.hs",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+      ],
+      "conflict": "The historical checkout table declares failed terminal and draft initial; runtime explicitly supports no-charge retry and begins accepted checkouts awaiting_payment. The pure checkout helper differs and has no production caller.",
+      "authority": "formal/system/payment-retry.md; user payment reliability requirements corroborated by existing runtime guards and PostgreSQL retry tests",
+      "resolution": "Retire the old checkout table to historical_state_machines, label the pure helper as non-runtime reference, and formalize scoped retry admission with negative controls. Do not redefine every existing SQL transition as approved or claim the full checkout state machine is reconciled."
+    },
+    {
+      "id": "AUTHORITY-022",
+      "sources": [
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/Meta.hs",
+        "tdf-hq/src/TDF/Version.hs",
+        "tdf-hq/docs/openapi/api.yaml"
+      ],
+      "conflict": "Compiled CombinedAPI declares GET /version twice with incompatible DTOs. The later unreachable Meta.BuildInfo omits commit identity and computes builtAt from request time.",
+      "authority": "Current public OpenAPI Version schema, first served VersionAPI and canonical production identity verification",
+      "resolution": "Remove only the shadowed Meta version route/type and stale mounting example; preserve the existing first-served VersionInfo handler and its source/build metadata validation. The generated compiled snapshot must confirm one version declaration; other competing routes remain open."
+    },
+    {
+      "id": "AUTHORITY-023",
+      "sources": [
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/API/Radio.hs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "formal/system/routed-read-boundaries.md"
+      ],
+      "conflict": "A second public radio-presence declaration contradicts the published inherited bearer requirement and cannot be reached behind the protected route.",
+      "authority": "Published bearer security and verified current HTTP denial, preserving the existing privacy boundary.",
+      "resolution": "Remove the unreachable public declaration/handler. Keep authenticated cross-party presence behavior. Do not broaden access by reordering branches. Add anonymous, invalid-token and authenticated HTTP controls."
+    },
+    {
+      "id": "AUTHORITY-024",
+      "sources": [
+        "tdf-hq/src/TDF/Trials/API.hs",
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "formal/system/routed-read-boundaries.md"
+      ],
+      "conflict": "The public subjects GET shadows the private includeInactive GET; even an administrator receives only active subjects.",
+      "authority": "Distinct public active visibility and explicitly guarded ensureSchoolAccess management behavior.",
+      "resolution": "Keep the current public route and make managed listing reachable at /trials/v1/subjects/catalog using the same existing school guard. Document both operations and regenerate both clients. Do not move private auth ahead of the public route or expose inactive subjects anonymously."
+    },
+    {
+      "id": "AUTHORITY-025",
+      "sources": [
+        "scripts/artist-enrichment.mjs",
+        ".github/workflows/artist-enrichment-daily.yml",
+        "docs/artist-enrichment-runbook.md",
+        "ops/hetzner/README.md"
+      ],
+      "conflict": "Artist worker and schedule target retired Fly; old runbook directs Fly release/rollback. The worker marks a batch with a sub-threshold failed item completed.",
+      "authority": "Verified canonical backend identity and explicit user requirement that failed workers cannot report success.",
+      "resolution": "Use canonical API default/schedule, retire obsolete operational commands in favor of current Hetzner procedure, and separate early-stop threshold from failed-run completion. Preserve schedule and publication opt-in, add actual worker regression and scoped bounded model. No production dispatch or feature activation is performed."
+    },
+    {
+      "id": "AUTHORITY-026",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs",
+        "formal/system/api-availability.json"
+      ],
+      "conflict": "OpenAPI publishes25 merchandise-reputation operations whose Haskell types and handlers exist but are not in CombinedAPI; interpreting every documented route as currently shipped contradicts the explicit local-only rollout scope.",
+      "authority": "Existing explicit synthetic-local-only domain scope, corroborated by compiled routing and current production nine flags observed disabled. Observation alone does not authorize intent.",
+      "resolution": "Enumerate the25 deferred operations in canonical availability policy, require their continued absence and flag any other missing documented route. Preserve raw discrepancy counts; no feature or route is activated. Future mounting needs a reviewed scope decision and relevant domain gates."
+    },
+    {
+      "id": "AUTHORITY-027",
+      "sources": [
+        "tdf-hq/docs/openapi/api.yaml",
+        "docs/social/fan-effects-boundary.md",
+        "tdf-hq/src/TDF/Server/DDEX.hs",
+        "tdf-hq/src/TDF/API/DDEX.hs",
+        "tdf-mobile/src/api/ddex.ts"
+      ],
+      "conflict": "Eleven empty responses were incorrectly documented204; nine DDEX operations still documented501 despite four implementedhandlers and five deliberately disabled503 paths. Shipped Mobile duplicated removed DTO fields. Canonical SQL issue guards conflict with core-era legacy NOT NULL; completion still wrote legacy result.",
+      "authority": "formal/system/ddex-validation.md; formal/system/api-response-status.json",
+      "resolution": "Preserve established200 empty-body acknowledgements and accepted client behavior. Document real JSON success schemas for four DDEX handlers; retain503 for five unavailable DDEX handlers plus legacyStripe. Fix actual validation SQL/transaction defects, canonical result reads and shipped Mobile adapters. Do not fabricate successful import/export availability or official profile validation."
+    },
+    {
+      "id": "AUTHORITY-028",
+      "sources": [
+        "tdf-hq/src/TDF/Server/Catalog.hs",
+        "tdf-hq/src/TDF/API/Catalog.hs"
+      ],
+      "conflict": "A reorder returns409 for an invalid later item but earlier per-item transactions already committed; revision and audit remain unchanged.",
+      "authority": "formal/system/catalog-reorder.md",
+      "resolution": "Repair transaction atomicity and locked revision admission. Apply the existing OpenAPI incomplete-set rejection as the working authority; product-owner clarification was initially pending because the old implementation accepted subsets. Require every current item exactly once. Product owner explicitly confirmed the complete catalog item list on 2026-10-05; that policy ambiguity is resolved."
+    },
+    {
+      "id": "AUTHORITY-029",
+      "sources": [
+        "tdf-hq/src/TDF/ServerExtra.hs"
+      ],
+      "conflict": "Authenticated Facebook/Instagram private payloads are copied verbatim into stderr operational logs.",
+      "authority": "formal/system/webhook-log-privacy.md",
+      "resolution": "Remove raw payload receipts; retain only fixed channel and event count after persistence. Preserve governed message records and mark historical log retention/remediation as unresolved, not silently repaired."
+    },
+    {
+      "id": "AUTHORITY-030",
+      "sources": [
+        "tdf-hq/src/TDF/API/Types.hs",
+        "tdf-hq/test/TDF/APITypesSpec.hs",
+        "tdf-hq/src/TDF/Config.hs"
+      ],
+      "conflict": "A development-motivated comment and test permit absent optional secret configuration to bypass authentication in every environment.",
+      "authority": "formal/system/meta-webhook-admission.md",
+      "resolution": "Absent or blank secret makes all four POST aliases unavailable503. Configured signature checks remain401 on invalid proof. Explicit synthetic keys replace implicit development bypass; no production key values or changes."
+    },
+    {
+      "id": "AUTHORITY-031",
+      "sources": [
+        "tdf-hq/src/TDF/Server.hs",
+        "scripts/artist-enrichment.mjs"
+      ],
+      "conflict": "Existing Drive key/folder lookup silently returns a prior file for different bytes, name, MIME or actor and then attempts public sharing.",
+      "authority": "formal/system/drive-replay.md",
+      "resolution": "Treat conflicting success as a request-integrity bug. Bind newly created entries to actor and request; preserve legacy objects but reject their implicit adoption. Retain worker key format and explicit provider-concurrency exclusions."
+    },
+    {
+      "id": "AUTHORITY-032",
+      "sources": [
+        "tdf-hq-ui/src/main.tsx",
+        "tdf-hq-ui/src/session/SessionContext.tsx",
+        "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx"
+      ],
+      "conflict": "Long-lived actor-independent query cache survives logout; actual component reproduction displays prior Party private response under next Party.",
+      "authority": "formal/system/session-query-isolation.md",
+      "resolution": "Replace and remount cache per security-scope occurrence. Preserve current query defaults but retire old client state. Bind auth expiration to request epoch; do not convert cached disclosure into intentional offline behavior."
+    },
+    {
+      "id": "AUTHORITY-033",
+      "sources": [
+        "tdf-mobile/src/providers/AuthProvider.tsx",
+        "tdf-mobile/app/(tabs)/more.tsx",
+        "tdf-mobile/src/providers/AppProviders.tsx"
+      ],
+      "conflict": "Token changes clear a shared client, but old favorite/visit callbacks repopulate it and expose personal metadata to the next account.",
+      "authority": "formal/system/mobile-query-isolation.md",
+      "resolution": "Use per-occurrence clients and remount query consumers; keep the exact shipped lineage and existing retry semantics. Clearing a shared cache is insufficient isolation. No offline or provider exactly-once guarantee is inferred."
+    },
+    {
+      "id": "AUTHORITY-034",
+      "sources": [
+        "tdf-hq/src/TDF/ServerRadio.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-mobile/src/lib/liveBroadcastsRepository.ts",
+        "streaming/README.md"
+      ],
+      "conflict": "Fallback endpoints and shared playback/publish keys imply usable broadcasting without a provider authorization contract; Mobile error fallback fabricates local acceptance.",
+      "authority": "formal/system/streaming-admission.md",
+      "resolution": "Contain native creation with unconditional503, withhold legacy event endpoints, quarantine UUID-path radio projections, retain cleanup and external listening, propagate remote mutation failures. Historical example is explicitly unverified. Provider re-enablement and prior-key revocation remain separate work. Product owner explicitly approved keeping broadcasting unavailable during repair on 2026-10-05."
+    },
+    {
+      "id": "AUTHORITY-035",
+      "sources": [
+        "tdf-hq-ui/public/data-deletion.html",
+        "tdf-hq-ui/public/mobile-app/data-deletion.html",
+        "tdf-mobile/docs/data-deletion.md"
+      ],
+      "conflict": "Published email/30-day commitments lack current operational workflow/completion evidence; historical mobile docs and release sign-off are not fulfillment evidence.",
+      "authority": "formal/system/deletion-workflow.md",
+      "resolution": "Owner explicitly requested discovery or creation. Establish machine-readable operator lifecycle, guarded private ledger and runbook; retain original deadlines, record retention honestly, require effect and delivered-notice evidence before closure. Do not infer inbox monitoring, legal adequacy or executed deletion from a passing synthetic test."
+    },
+    {
+      "id": "AUTHORITY-036",
+      "sources": [
+        "docs/operations-control-center/architecture.md",
+        "docs/operations-control-center/formal-model.yaml",
+        "tdf-hq/src/TDF/Operations/Server.hs"
+      ],
+      "conflict": "Actual concurrent HTTP accepted eight same-version writes and emitted eight audit rows for one update; approval conflict lookup was unbound and terminal decisions could reopen.",
+      "authority": "formal/system/operations-command-boundary.md",
+      "resolution": "Retain intended version/current-scope/dual-approval requirements and repair transactional handlers. Historical abbreviated lifecycle and broad invariants are incomplete obligations, not proof. Request IDs remain diagnostic; approval keys require full semantic binding."
+    },
+    {
+      "id": "AUTHORITY-037",
+      "sources": [
+        "docs/operations-control-center/architecture.md",
+        "tdf-hq/src/TDF/Operations/Server.hs"
+      ],
+      "conflict": "Teacher list hides a synthetic payment and detail returns404, while metrics returns its12345 minor-unit amount and unassigned count.",
+      "authority": "formal/system/operations-command-boundary.md",
+      "resolution": "Treat totals/counts as protected projections, reuse list scope/role filter, and restrict integration-failure aggregate to the selected branch and its manager actors. Preserve supported assigned-specialist workflow; no feature activation."
+    },
+    {
+      "id": "AUTHORITY-038",
+      "sources": [
+        "docs/operations-control-center/architecture.md",
+        "tdf-hq/src/TDF/Operations/Server.hs",
+        "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql"
+      ],
+      "conflict": "Synthetic Teacher manual creation returned201 with hidden other-branch payment amount and changed its operational title/status; arbitrary client correlation and metadata entered the trusted projector.",
+      "authority": "formal/system/operations-projection-boundary.md",
+      "resolution": "Separate client receipt keys from server projection keys, bind actor/scope/payload, reject control metadata and unassigned specialist creation, target one event, verify successful projection before commit. Preserve explicitly trusted same-thread WhatsApp identity progression and historical SQL."
+    },
+    {
+      "id": "AUTHORITY-039",
+      "sources": [
+        "docs/operations-control-center/rbac.md",
+        "tdf-hq/src/TDF/Operations/Model.hs",
+        "tdf-hq/src/TDF/Operations/Server.hs"
+      ],
+      "conflict": "ReadOnly list and detail disagree; incidental producer fallback and role precedence differ across reads; failure list leaks other branches and notes/retries use stale admission.",
+      "authority": "formal/system/operations-projection-boundary.md",
+      "resolution": "Use one explicit read-domain policy with action-specific union, preserve documented ReadOnly read but not write authority, default unknown producer domain grants to deny, and revalidate auxiliary command scope/current roles in the atomic transaction."
+    },
+    {
+      "id": "AUTHORITY-040",
+      "sources": [
+        "formal/ticket-admission/confirmation-delivery.md",
+        "tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql"
+      ],
+      "conflict": "The shipped lease contract requires current unexpired authority, but transaction-stable time accepts completion after expiry during a lock wait. New fixture entrypoints also admit remote databases with the expected name.",
+      "authority": "formal/ticket-admission/confirmation-delivery.md",
+      "resolution": "Preserve historical SQL and append a lock-before-real-clock completion correction, verified by actual PostgreSQL negative control; require pre-connection destination and override guards on every direct fixture entrypoint."
+    },
+    {
+      "id": "AUTHORITY-041",
+      "sources": [
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/ServerRadio.hs"
+      ],
+      "conflict": "The request fallback renders arbitrary exceptions, catches cancellation and can call the response callback twice; authentication activity also renders arbitrary persistence errors into admin diagnostics. Warp fallback invents wildcard CORS outside configured policy.",
+      "authority": "formal/system/request-failure-boundary.md",
+      "resolution": "Use a cancellation-preserving fixed-diagnostic boundary, track response start, propagate after callback admission, and leave error-origin grants to request-aware CORS. Radio raw exception strings are discarded today, not a proven public disclosure, but cancellation and fixed internal failure values follow the same boundary."
+    },
+    {
+      "id": "AUTHORITY-042",
+      "sources": [
+        "docs/analytics.md",
+        "docs/events/ticket-page-metadata.md",
+        "tdf-hq-ui/src/analytics/posthog.ts",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx"
+      ],
+      "conflict": "Consolidated main182fe6a introduces reviewed analytics credential containment and retires transactional Offer metadata, while the audit register predates those changes.",
+      "authority": "Approved main PR487 and explicit privacy/truthful-state audit requirements",
+      "resolution": "Preserve main by normal merge and map PRIV-ANALYTICS-001/EVT-PRESENTATION-001 to current source/tests. Historical analytics and metadata observations are not combined-head or provider conformance evidence."
+    }
+  ]
+}

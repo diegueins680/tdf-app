@@ -1,3 +1,5 @@
+import { parse as parseYaml } from 'yaml';
+import { classifyChangedFiles } from '../ci-change-scope.mjs';
 import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
@@ -34,6 +36,15 @@ test('PostgreSQL runner uses the CI service and deletes only its newly created t
 async function source(relativePath) {
   return readFile(path.join(root, relativePath), 'utf8');
 }
+
+test('API drift gate inspects the pinned Mobile repository rather than a root pathspec', async () => {
+  const workflow = await source('.github/workflows/ci.yml');
+  const job = workflow.split('  api-contract-tests:')[1].split('\n  api-contracts:')[0];
+  assert.match(job, /run: npm run generate:api/);
+  assert.match(job, /run: node scripts\/check-generated-api\.mjs/);
+  assert.doesNotMatch(job, /git diff[^\n]*tdf-mobile\//);
+  assert.match(await source('scripts/quality-repo.sh'), /generated-api-conformance\.test\.mjs/);
+});
 
 test('UI quality keeps the lazy-validation regression and production artifact gate', async () => {
   const quality = await source('scripts/quality-ui.sh');
@@ -274,4 +285,99 @@ with patch('pathlib.Path.read_text',return_value=json.dumps(run)), patch('subpro
   }
   assert.notEqual(invoke(['e2e/interactions/create.yaml'], 'failure').status, 0);
   assert.notEqual(invoke(['e2e/interactions/create.yaml'], 'success', '.github/workflows/untrusted.yml').status, 0);
+});
+
+// The actual identity runner parses its contract, so backend CI needs the
+// declared root parser and supported Node runtime before invoking it.
+test('backend runtime checks install declared parser dependencies on Node 22', async () => {
+  const job = (await source('.github/workflows/ci.yml')).split('  backend-quality:')[1].split('\n  quality:')[0];
+  assert.match(job, /name: Setup backend verification Node[\s\S]*?node-version: 22/);
+  assert.match(job, /name: Install backend verification dependencies\n        run: npm ci --ignore-scripts/);
+  assert.ok(job.indexOf('Install backend verification dependencies') < job.indexOf('node scripts/__tests__/identity-http-runtime.mjs'));
+  assert.match(JSON.parse(await source('package.json')).devDependencies.yaml, /^\d+\.\d+\.\d+$/);
+});
+
+test('native PostgreSQL opt-in owns only successfully created loopback databases', () => {
+  const script = `
+    . "$1"
+    createdb() { echo "createdb $*"; return "$CREATE_RESULT"; }
+    psql() { echo "psql $*"; }
+    dropdb() { echo "dropdb $*"; }
+    docker() { echo unexpected-docker; exit 97; }
+    tdf_test_db_init tdf_owned_test
+    tdf_test_db_cleanup
+  `;
+  const invoke = (createResult, extra = {}) => spawnSync('sh', ['-eu', '-c', script, 'runner', path.join(root, 'scripts/lib/postgres-test-database.sh')], {
+    encoding: 'utf8', env: { PATH: process.env.PATH, TDF_TEST_NATIVE_POSTGRES: '1',
+      TDF_TEST_NATIVE_POSTGRES_USER: 'synthetic', CREATE_RESULT: createResult, ...extra },
+  });
+  const owned = invoke('0');
+  assert.equal(owned.status, 0, owned.stderr);
+  assert.match(owned.stdout, /createdb -h 127\.0\.0\.1 -p 5432 -U synthetic tdf_owned_test/);
+  assert.equal((owned.stdout.match(/dropdb/g) ?? []).length, 1);
+  assert.doesNotMatch(owned.stdout, /unexpected-docker/);
+  const existing = invoke('17');
+  assert.equal(existing.status, 17);
+  assert.doesNotMatch(existing.stdout, /dropdb|unexpected-docker/);
+  for (const extra of [{ PGHOSTADDR: '192.0.2.1' }, { PGSERVICE: 'remote' },
+    { TDF_TEST_NATIVE_POSTGRES_PORT: 'bad' }, { TDF_TEST_NATIVE_POSTGRES_USER: 'bad role' }]) {
+    const rejected = invoke('0', extra);
+    assert.notEqual(rejected.status, 0);
+    assert.doesNotMatch(rejected.stdout, /createdb|dropdb|unexpected-docker/);
+  }
+});
+
+test('every PR reaches specification admission, including previously omitted material roots', async () => {
+  const workflow = parseYaml(await source('.github/workflows/ci.yml'));
+  assert.ok(Object.hasOwn(workflow.on, 'pull_request'));
+  assert.deepEqual(workflow.on.pull_request ?? {}, {},
+    'Workflow-level filters can silently skip the specification admission gate');
+  for (const file of ['ops/new-check.sh', 'functions/new.ts', 'streaming/new.py',
+    'tidal-agent/new.ts', 'e2e/native/new.ts', 'test/contracts/new.json',
+    '.github/new.yml', 'formal/system/requirements.json', '.gitmodules']) {
+    assert.equal(classifyChangedFiles([file]).repo, true, file);
+  }
+});
+
+test('repository lane checks actual API availability policy without a backend build', async () => {
+  const quality = await source('scripts/quality-repo.sh');
+  assert.match(quality, /node "\$ROOT\/scripts\/check-api-availability\.mjs"/);
+});
+
+test('repository image conformance installs and probes FFmpeg before running actual codecs', async () => {
+  const job = parseYaml(await source('.github/workflows/ci.yml')).jobs['repo-quality'];
+  const setup = job.steps.findIndex(step => step.name === 'Install image conformance tools');
+  const checks = job.steps.findIndex(step => step.name === 'Run repository checks');
+  assert.ok(setup >= 0 && setup < checks);
+  assert.match(job.steps[setup].run, /apt-get install -y --no-install-recommends ffmpeg/);
+  assert.match(job.steps[setup].run, /ffmpeg -version/);
+  assert.match(job.steps[setup].run, /ffprobe -version/);
+  assert.doesNotMatch(job.steps[setup].run, /allow-unauthenticated|trusted=yes|\|\| true/);
+});
+
+test('pinned Mobile main and release validation and configured synthetics fail closed', async () => {
+  const validation = parseYaml(await source('tdf-mobile/.github/workflows/mobile-validate.yml'));
+  for (const event of ['push', 'pull_request']) {
+    assert.ok(validation.on[event].branches.includes('main'));
+    assert.ok(validation.on[event].branches.includes('release/**'));
+  }
+  const steps = validation.jobs.validate.steps;
+  for (const command of ['npm run release:check', 'npm test -- --watch=false', 'npm run doctor']) {
+    assert.ok(steps.some((step) => step.run === command && !step['continue-on-error']));
+  }
+  assert.ok(steps.some((step) => step.run?.includes('unittest discover')));
+  const workflow = parseYaml(await source('tdf-mobile/.github/workflows/datadog-synthetics.yml'));
+  for (const event of ['push', 'pull_request']) {
+    assert.ok(workflow.on[event].branches.includes('release/tdf-shipped-*'));
+  }
+  const job = workflow.jobs.synthetics;
+  assert.match(job.if, /head\.repo\.fork/);
+  const provider = job.steps.find((step) => step.uses?.startsWith('DataDog/'));
+  assert.equal(provider.with['fail-on-critical-errors'], true);
+  assert.equal(provider.with['fail-on-missing-tests'], true);
+  assert.equal(provider['continue-on-error'], undefined);
+  assert.equal(job['continue-on-error'], undefined);
+  assert.match(provider.if, /DD_API_KEY != ''/);
+  assert.match(provider.if, /DD_APP_KEY != ''/);
+  assert.ok(job.steps.some((step) => step.run?.includes('Skipping Datadog synthetics')));
 });

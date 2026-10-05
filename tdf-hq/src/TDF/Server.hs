@@ -162,6 +162,7 @@ import           TDF.Auth
   , moduleName
   , modulesForRoles
   , validateModuleAccess
+  , withCurrentAuthSession
   )
 import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceListings)
 import           TDF.ServerAdmin (adminServer)
@@ -195,6 +196,7 @@ import           TDF.Server.ServiceStorefront (serviceStorefrontPublicServer, se
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import           TDF.Commerce.ProviderAdapter.Http (sharedProviderManager)
 import qualified TDF.Commerce.CheckoutStore as Checkout
+import qualified TDF.Commerce.Money as CommerceMoney
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import qualified TDF.Server.CourseCheckout as CourseCheckoutServer
 import qualified TDF.Server.EventTicketCheckout as EventTicketCheckoutServer
@@ -762,7 +764,6 @@ server env =
   :<|> ProviderExecutionServer.providerExecutionServer
   :<|> protectedServer
   :<|> marketplacePublicServer
-  :<|> radioPresencePublicServer
   :<|> roomsPublicServer
   :<|> serviceCatalogPublicServer
   :<|> serviceStorefrontPublicServer
@@ -1677,23 +1678,6 @@ coursesAdminServer user =
     deleteFollowUpH slug regId followUpId = do
       requireCourseAdmin
       deleteCourseRegistrationFollowUp user slug regId followUpId
-
-radioPresencePublicServer :: Int64 -> AppM (Maybe RadioPresenceDTO)
-radioPresencePublicServer partyId = do
-  when (partyId <= 0) $ throwBadRequest "Invalid party id"
-  Env pool _ <- ask
-  liftIO $ flip runSqlPool pool $ do
-    mRow <- selectFirst [PartyRadioPresencePartyId ==. toSqlKey partyId] []
-    pure (fmap presenceToDTO mRow)
-  where
-    presenceToDTO (Entity _ PartyRadioPresence{..}) =
-      RadioPresenceDTO
-        { rpPartyId     = fromIntegral (fromSqlKey partyRadioPresencePartyId)
-        , rpStreamUrl   = partyRadioPresenceStreamUrl
-        , rpStationName = partyRadioPresenceStationName
-        , rpStationId   = partyRadioPresenceStationId
-        , rpUpdatedAt   = partyRadioPresenceUpdatedAt
-        }
 
 listEngineersPublic :: AppM [PublicEngineerDTO]
 listEngineersPublic = do
@@ -3136,12 +3120,13 @@ driveUploadServer user mAccessToken DriveUploadForm{..} = do
   accessToken <- resolveDriveAccessToken manager providedToken
   dtoOrErr <-
     liftIO
-      (try (uploadToDrive manager accessToken duFile mimeType (Just nameOverride) folder duIdempotencyKey) ::
+      (try (uploadToDrive manager (auPartyId user) accessToken duFile mimeType (Just nameOverride) folder duIdempotencyKey) ::
         IO (Either SomeException DriveUploadDTO))
   case dtoOrErr of
     Right dto -> pure dto
-    Left err ->
-      throwError err502
+    Left err -> case fromException err of
+      Just replayError -> throwError (replayError :: ServerError)
+      Nothing -> throwError err502
         { errBody = BL8.pack (formatDriveUploadException (T.pack (displayException err))) }
   where
     resolveDriveAccessToken :: Manager -> Maybe Text -> AppM Text
@@ -9362,8 +9347,8 @@ partyRelated user pidI = do
   now <- liftIO getCurrentTime
 
   (asCustomer, asEngineer) <- runDB $ do
-    customerRows <- selectList [BookingPartyId ==. Just partyKey] [Desc BookingStartsAt, LimitTo 50]
-    engineerRows <- selectList [BookingEngineerPartyId ==. Just partyKey] [Desc BookingStartsAt, LimitTo 50]
+    customerRows <- selectList (bookingScopeFilters user ++ [BookingPartyId ==. Just partyKey]) [Desc BookingStartsAt, LimitTo 50]
+    engineerRows <- selectList (bookingScopeFilters user ++ [BookingEngineerPartyId ==. Just partyKey]) [Desc BookingStartsAt, LimitTo 50]
     pure (customerRows, engineerRows)
 
   (studentSessions, teacherSessions, subjectMap, partyNameMap, bookingMap) <- runDB $ do
@@ -9388,7 +9373,7 @@ partyRelated user pidI = do
 
     bookings <- if null bookingIds
       then pure []
-      else selectList [BookingId <-. bookingIds] []
+      else selectList (bookingScopeFilters user ++ [BookingId <-. bookingIds]) []
     let bookingsById = Map.fromList [ (entityKey e, entityVal e) | e <- bookings ]
 
     pure (studentRows, teacherRows, subjectsById, partyNamesById, bookingsById)
@@ -9437,7 +9422,7 @@ partyRelated user pidI = do
           , prcStartAt        = Trials.classSessionStartAt cs
           , prcEndAt          = Trials.classSessionEndAt cs
           , prcStatus         = classStatusLabel (Trials.classSessionAttended cs) (Trials.classSessionStartAt cs) mBooking
-          , prcBookingId      = fromSqlKey <$> Trials.classSessionBookingId cs
+          , prcBookingId      = if isJust mBooking then fromSqlKey <$> Trials.classSessionBookingId cs else Nothing
           }
 
       toRelatedTrack (Entity key t) =
@@ -10053,6 +10038,40 @@ insertServiceBookingManualReviewAudit context provider reviewerId attemptId evid
     , PersistText evidenceId
     ]
 
+-- Scheduling module admission is not object authority. Product decision2026-10-05:
+-- only these four roles may inspect/operate the complete studio calendar.
+hasStudioBookingAccess :: AuthedUser -> Bool
+hasStudioBookingAccess user = any (`elem` auRoles user) [Admin, Manager, StudioManager, Reception]
+
+canAccessBooking :: AuthedUser -> Booking -> Bool
+canAccessBooking user booking = hasStudioBookingAccess user
+  || bookingPartyId booking == Just (auPartyId user)
+  || bookingEngineerPartyId booking == Just (auPartyId user)
+
+bookingScopeFilters :: AuthedUser -> [Filter Booking]
+bookingScopeFilters user
+  | hasStudioBookingAccess user = []
+  | otherwise = [BookingPartyId ==. Just (auPartyId user)]
+      ||. [BookingEngineerPartyId ==. Just (auPartyId user)]
+
+-- Keep current-session validation and every mutation in the same transaction.
+-- Constraint/retry failures are conflicts; raw SQL diagnostics stay private.
+runBookingTransaction :: AuthedUser -> SqlPersistT IO (Either ServerError a) -> AppM a
+runBookingTransaction user action = do
+  Env pool _ <- ask
+  outcome <- liftIO $ try $ flip runSqlPool pool $ do
+    checked <- withCurrentAuthSession user action
+    let result = fromMaybe (Left err401) checked
+    case result of
+      Left _ -> transactionUndo >> pure result
+      Right _ -> pure result
+  case outcome of
+    Left sqlError
+      | sqlState sqlError `elem` ["23P01", "23514", "40001", "40P01"] ->
+          throwError err409 { errBody = "Booking conflicts with the resource calendar or checkout lifecycle" }
+      | otherwise -> liftIO (throwIO (sqlError :: SqlError))
+    Right result -> either throwError pure result
+
 listBookings :: AuthedUser -> Maybe Int64 -> Maybe Int64 -> Maybe Int64 -> AppM [BookingDTO]
 listBookings user mBookingId mPartyId mEngineerPartyId = do
   requireModule user ModuleScheduling
@@ -10068,24 +10087,25 @@ listBookings user mBookingId mPartyId mEngineerPartyId = do
           mBooking <- getEntity bookingKey
           case mBooking of
             Nothing -> pure []
-            Just ent -> buildBookingDTOs [ent]
+            Just ent | canAccessBooking user (entityVal ent) -> buildBookingDTOs [ent]
+                     | otherwise -> pure []
         _ -> do
           let loadByParty pid = do
                 let pidKey = toSqlKey pid :: Key Party
-                selectList [BookingPartyId ==. Just pidKey] [Desc BookingStartsAt, LimitTo 500]
+                selectList (bookingScopeFilters user ++ [BookingPartyId ==. Just pidKey]) [Desc BookingStartsAt, LimitTo 500]
               loadByEngineer pid = do
                 let pidKey = toSqlKey pid :: Key Party
-                selectList [BookingEngineerPartyId ==. Just pidKey] [Desc BookingStartsAt, LimitTo 500]
+                selectList (bookingScopeFilters user ++ [BookingEngineerPartyId ==. Just pidKey]) [Desc BookingStartsAt, LimitTo 500]
           case (partyIdFilter, engineerPartyIdFilter) of
             (Nothing, Nothing) -> do
-              bookings <- selectList [] [Desc BookingId]
+              bookings <- selectList (bookingScopeFilters user) [Desc BookingId]
               buildBookingDTOs bookings
             _ -> do
               byParty <- maybe (pure []) loadByParty partyIdFilter
               byEngineer <- maybe (pure []) loadByEngineer engineerPartyIdFilter
               let merged = dedupeByKey (byParty ++ byEngineer)
               buildBookingDTOs merged
-    if isJust bookingIdFilter || isJust partyIdFilter || isJust engineerPartyIdFilter
+    if not (hasStudioBookingAccess user) || isJust bookingIdFilter || isJust partyIdFilter || isJust engineerPartyIdFilter
       then pure dbBookings
       else do
         courseSessions <- flip runSqlPool pool courseCalendarBookings
@@ -11699,7 +11719,6 @@ createPublicTentativeBookingTransaction
 createBooking :: AuthedUser -> CreateBookingReq -> AppM BookingDTO
 createBooking user req = do
   requireModule user ModuleScheduling
-  Env pool _ <- ask
   now <- liftIO getCurrentTime
 
   titleClean <- either throwError pure (validateRequiredBookingTitle (cbTitle req))
@@ -11714,11 +11733,13 @@ createBooking user req = do
   partyIdClean <-
     either throwError pure $
       validateOptionalPositiveIdField "partyId" (cbPartyId req)
-  mParty <-
-    liftIO (flip runSqlPool pool (resolveOptionalBookingPartyReference "partyId" partyIdClean))
+  unless (hasStudioBookingAccess user || maybe True (== fromSqlKey (auPartyId user)) partyIdClean) $
+    throwError err403 { errBody = "Booking creation requires the customer owner or studio staff" }
+  let effectivePartyId = if hasStudioBookingAccess user then partyIdClean else Just (fromSqlKey (auPartyId user))
+  mParty <- runDB (resolveOptionalBookingPartyReference "partyId" effectivePartyId)
       >>= either throwError pure
   mEngineerParty <-
-    liftIO (flip runSqlPool pool (resolveOptionalBookingEngineerReference engineerIdClean))
+    runDB (resolveOptionalBookingEngineerReference engineerIdClean)
       >>= either throwError pure
   let engineerNameClean = normalizeOptionalInput (cbEngineerName req)
       partyKey         = entityKey <$> mParty
@@ -11746,12 +11767,12 @@ createBooking user req = do
         , bookingStartsAt       = cbStartsAt req
         , bookingEndsAt         = cbEndsAt req
         , bookingStatus         = status'
-        , bookingCreatedBy      = Nothing
+        , bookingCreatedBy      = Just (auPartyId user)
         , bookingNotes          = notesClean
         , bookingCreatedAt      = now
         }
 
-  dtoResult <- liftIO $ flip runSqlPool pool $ do
+  dto <- runBookingTransaction user $ do
     bookingId <- insert bookingRecord
     let uniqueResources = nub resourceKeys
     forM_ (zip [0 :: Int ..] uniqueResources) $ \(idx, key) ->
@@ -11763,7 +11784,6 @@ createBooking user req = do
     created <- getJustEntity bookingId
     dtos <- buildBookingDTOs [created]
     pure (requirePersistedBookingDTO dtos)
-  dto <- either throwError pure dtoResult
   notifyEngineerIfNeeded dto
   pure dto
 
@@ -11772,7 +11792,6 @@ updateBooking user bookingIdI req = do
   requireModule user ModuleScheduling
   bookingIdValid <- either throwError pure (validatePositiveIdField "bookingId" bookingIdI)
   either throwError pure (validateUpdateBookingRequestHasChanges req)
-  Env pool _ <- ask
   now <- liftIO getCurrentTime
   titleUpdate <- either throwError pure (validateOptionalBookingTitleUpdate (ubTitle req))
   notesUpdate <- either throwError pure (validateBookingNotes (ubNotes req))
@@ -11782,10 +11801,15 @@ updateBooking user bookingIdI req = do
     either throwError pure $
       validateOptionalPositiveIdField "engineerPartyId" (ubEngineerPartyId req)
   let bookingId = toSqlKey bookingIdValid :: Key Booking
-  result <- liftIO $ flip runSqlPool pool $ do
+  runBookingTransaction user $ do
+    -- Serialize read/replace so concurrent edits cannot overwrite unrelated fields
+    -- from an older record. The database projection enforces resource exclusion.
+    _ <- (rawSql "SELECT id FROM booking WHERE id = ? FOR UPDATE"
+      [toPersistValue bookingId] :: SqlPersistT IO [Single Int64])
     mBooking <- getEntity bookingId
     case mBooking of
       Nothing -> pure (Left err404)
+      Just (Entity _ current) | not (canAccessBooking user current) -> pure (Left err404)
       Just (Entity _ current) -> do
         existingServiceOffering <-
           case bookingServiceOfferingId current >>= serviceOfferingKeyFromUUID of
@@ -11840,7 +11864,6 @@ updateBooking user bookingIdI req = do
                         replace bookingId updated
                         dtos <- buildBookingDTOs [Entity bookingId updated]
                         pure (maybe (Left err500) Right (listToMaybe dtos))
-  either throwError pure result
 
 resolveOptionalBookingPartyReference
   :: Text
@@ -13181,18 +13204,19 @@ unavailableDefaultResourcesError serviceLabel names =
     }
 
 isResourceAvailableDB :: Key Resource -> UTCTime -> UTCTime -> SqlPersistT IO Bool
+isResourceAvailableDB _ start end | start >= end = pure False
 isResourceAvailableDB resourceKey start end = do
-  bookingResources <- selectList [BookingResourceResourceId ==. resourceKey] []
-  let bookingIds = map (bookingResourceBookingId . entityVal) bookingResources
-  if null bookingIds
-    then pure True
-    else do
-      bookings <- selectList [BookingId <-. bookingIds] []
-      let activeBookings = filter (\(Entity _ b) -> bookingStatus b `notElem` [Cancelled, NoShow]) bookings
-      pure $ all (noOverlap . entityVal) activeBookings
-  where
-    noOverlap booking =
-      bookingEndsAt booking <= start || bookingStartsAt booking >= end
+  -- The exclusion-backed allocation is the authority, including paid runtime
+  -- holds and released/completed history. Booking status alone is insufficient.
+  rows <- (rawSql
+    "SELECT EXISTS (SELECT 1 FROM service_booking_resource_allocation\
+    \ WHERE resource_id = ? AND allocation_status IN ('holding','reserved')\
+    \ AND starts_at < ? AND ends_at > ?)"
+    [toPersistValue resourceKey, PersistUTCTime end, PersistUTCTime start]
+    :: SqlPersistT IO [Single Bool])
+  pure $ case rows of
+    [Single occupied] -> not occupied
+    _ -> False
 
 -- Packages
 packageServer :: AuthedUser -> ServerT PackageAPI AppM
@@ -15889,14 +15913,14 @@ createCart = do
   Env{..} <- ask
   cartId <- liftIO $ flip runSqlPool envPool $ insert $ ME.MarketplaceCart now now
   cartDto <- liftIO $ flip runSqlPool envPool $ loadCartDTO (defaultCurrency envConfig) cartId
-  either throwError pure (requireLoadedMarketplaceWriteResult "Marketplace cart" cartDto)
+  either throwError pure (cartDto >>= requireLoadedMarketplaceWriteResult "Marketplace cart")
 
 getCart :: Text -> AppM MarketplaceCartDTO
 getCart rawId = do
   cartKey <- parseCartId rawId
   Env{..} <- ask
   mCart <- liftIO $ flip runSqlPool envPool $ loadCartDTO (defaultCurrency envConfig) cartKey
-  maybe (throwError marketplaceCartNotFound) pure mCart
+  either throwError (maybe (throwError marketplaceCartNotFound) pure) mCart
 
 upsertCartItem :: Text -> MarketplaceCartItemUpdate -> AppM MarketplaceCartDTO
 upsertCartItem rawId MarketplaceCartItemUpdate{..} = do
@@ -15994,8 +16018,10 @@ upsertCartItem rawId MarketplaceCartItemUpdate{..} = do
                         [PersistText (toPathPiece itemId)]
                       _ -> pure ()
                     update cartKey [ME.MarketplaceCartUpdatedAt =. now]
-                    maybe (Left marketplaceCartNotFound) Right
-                      <$> loadCartDTO (defaultCurrency envConfig) cartKey
+                    loaded <- loadCartDTO (defaultCurrency envConfig) cartKey
+                    case loaded >>= maybe (Left marketplaceCartNotFound) Right of
+                      Left serverErr -> transactionUndo >> pure (Left serverErr)
+                      Right dto -> pure (Right dto)
   either throwError pure result
 
 validateMarketplaceCartSelection
@@ -19254,19 +19280,22 @@ data MarketplaceCartTotalsState a
   | MarketplaceCartEmpty
   | MarketplaceCartInvalidQuantity Int
   | MarketplaceCartInvalidRental Text
+  | MarketplaceCartInvalidAmount Text
   | MarketplaceCartInvalidCurrency Text
   | MarketplaceCartMixedCurrencies [Text]
   | MarketplaceCartTotalsReady a
   deriving (Eq, Show)
 
-loadCartDTO :: Text -> Key ME.MarketplaceCart -> SqlPersistT IO (Maybe MarketplaceCartDTO)
+loadCartDTO :: Text -> Key ME.MarketplaceCart -> SqlPersistT IO (Either ServerError (Maybe MarketplaceCartDTO))
 loadCartDTO configuredDefault cartId = do
   mCart <- get cartId
   case mCart of
-    Nothing -> pure Nothing
+    Nothing -> pure (Right Nothing)
     Just _ -> do
       items <- loadCartLines cartId
-      pure (Just (cartToDTO configuredDefault cartId items))
+      pure $ case cartToDTO configuredDefault cartId items of
+        Left message -> Left err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+        Right dto -> Right (Just dto)
 
 data MarketplaceCartLine = MarketplaceCartLine
   { mclCartItem :: Entity ME.MarketplaceCartItem
@@ -19303,14 +19332,14 @@ loadCartTotals cartId = do
             Nothing | pricingError : _ <- pricingErrors ->
               pure (MarketplaceCartInvalidRental pricingError)
             Nothing -> do
-              let totalCents =
-                    sum (map mclSubtotalCents items)
-                  rawCurrencies =
+              let rawCurrencies =
                     map (ME.marketplaceListingCurrency . entityVal . mclListing) items
-              case resolveMarketplaceCartCurrency rawCurrencies of
-                Left invalidCurrencyState -> pure invalidCurrencyState
-                Right currency ->
-                  pure (MarketplaceCartTotalsReady (items, totalCents, currency))
+              case CommerceMoney.checkedCartTotal (map mclSubtotalCents items) of
+                Left message -> pure (MarketplaceCartInvalidAmount message)
+                Right totalCents -> case resolveMarketplaceCartCurrency rawCurrencies of
+                  Left invalidCurrencyState -> pure invalidCurrencyState
+                  Right currency ->
+                    pure (MarketplaceCartTotalsReady (items, totalCents, currency))
 
 requireMarketplaceCartTotals :: MarketplaceCartTotalsState a -> Either ServerError a
 requireMarketplaceCartTotals MarketplaceCartMissing =
@@ -19319,6 +19348,8 @@ requireMarketplaceCartTotals MarketplaceCartEmpty =
   Left err400 { errBody = "El carrito esta vacio." }
 requireMarketplaceCartTotals (MarketplaceCartInvalidQuantity rawQuantity) =
   Left (marketplaceCartInvalidQuantityError rawQuantity)
+requireMarketplaceCartTotals (MarketplaceCartInvalidAmount message) =
+  Left err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
 requireMarketplaceCartTotals (MarketplaceCartInvalidRental message) =
   Left err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
 requireMarketplaceCartTotals (MarketplaceCartInvalidCurrency _) =
@@ -19428,7 +19459,10 @@ loadCartLines cartId = do
   forM cartItems $ \ent@(Entity _ ci) -> do
     listing <- getJustEntity (ME.marketplaceCartItemListingId ci)
     asset   <- getJustEntity (ME.marketplaceListingAssetId (entityVal listing))
-    let qty = ME.marketplaceCartItemQuantity ci
+    let checkedSubtotal = CommerceMoney.checkedCartSubtotal
+          (ME.marketplaceCartItemQuantity ci) (ME.marketplaceListingPriceUsdCents (entityVal listing))
+        subtotal = either (const 0) (\amount -> amount) checkedSubtotal
+        qty = ME.marketplaceCartItemQuantity ci
         purpose = T.toLower (T.strip (ME.marketplaceListingPurpose (entityVal listing)))
         saleLine = MarketplaceCartLine
           { mclCartItem = ent
@@ -19437,12 +19471,14 @@ loadCartLines cartId = do
           , mclQuantity = qty
           , mclPurpose = purpose
           , mclUnitPriceCents = ME.marketplaceListingPriceUsdCents (entityVal listing)
-          , mclSubtotalCents = ME.marketplaceListingPriceUsdCents (entityVal listing) * qty
+          , mclSubtotalCents = subtotal
           , mclRentalStartDate = Nothing
           , mclRentalEndDate = Nothing
           , mclRentalBreakdown = Nothing
           , mclRentalTerms = Nothing
-          , mclPricingError = if purpose == "sale" then Nothing else Just "Unsupported marketplace cart line"
+          , mclPricingError = case checkedSubtotal of
+              Left message -> Just message
+              Right _ -> if purpose == "sale" then Nothing else Just "Unsupported marketplace cart line"
           }
     if purpose /= "rent"
       then pure saleLine
@@ -19496,11 +19532,14 @@ cartToDTO
   :: Text
   -> Key ME.MarketplaceCart
   -> [MarketplaceCartLine]
-  -> MarketplaceCartDTO
-cartToDTO configuredDefault cartId items =
+  -> Either Text MarketplaceCartDTO
+cartToDTO configuredDefault cartId items = do
+  -- A failed line calculation uses a placeholder only inside the loader; never
+  -- expose it as a successful zero-price cart or use it for payment admission.
+  mapM_ (\line -> CommerceMoney.checkedCartSubtotal (mclQuantity line) (mclUnitPriceCents line)) items
+  subtotal <- CommerceMoney.checkedCartTotal (map mclSubtotalCents items)
   let currency = maybe configuredDefault
         (ME.marketplaceListingCurrency . entityVal . mclListing) (listToMaybe items)
-      subtotal = sum (map mclSubtotalCents items)
       itemDtos = flip map items $ \line ->
         let listingEnt = mclListing line
             assetEnt = mclAsset line
@@ -19533,7 +19572,7 @@ cartToDTO configuredDefault cartId items =
                 (\breakdown -> formatUsd (MarketplaceRentals.rpbSecurityDepositMinor breakdown) currency)
                   <$> mBreakdown
             }
-  in MarketplaceCartDTO
+  pure MarketplaceCartDTO
       { mcCartId          = toPathPiece cartId
       , mcItems           = itemDtos
       , mcCurrency        = currency
@@ -20854,13 +20893,14 @@ data DriveApiResp = DriveApiResp
   , darWebViewLink    :: Maybe Text
   , darWebContentLink :: Maybe Text
   , darResourceKey    :: Maybe Text
+  , darRequestFingerprint :: Maybe Text
   } deriving (Show, Generic)
 
 instance FromJSON DriveApiResp where
   parseJSON = withObject "DriveApiResp" $ \o -> do
     rejectUnexpectedDriveResponseKeys
       "Drive upload response"
-      ["id", "webViewLink", "webContentLink", "resourceKey"]
+      ["id", "webViewLink", "webContentLink", "resourceKey", "appProperties"]
       o
     darId <- (o .: "id") >>= parseDriveApiFileId
     darWebViewLink <-
@@ -20879,6 +20919,10 @@ instance FromJSON DriveApiResp where
           "must be a Google Drive download https link for the uploaded file"
     darResourceKey <-
       (o .:? "resourceKey") >>= traverse (parseDriveApiResourceKey "resourceKey")
+    properties <- o .:? "appProperties"
+    darRequestFingerprint <- case properties of
+      Nothing -> pure Nothing
+      Just value -> withObject "Drive appProperties" (.:? "tdfRequestFingerprint") value
     validateDriveResponseResourceKeyConsistency
       darWebViewLink
       darWebContentLink
@@ -20984,8 +21028,18 @@ rejectUnexpectedDriveResponseKeys responseLabel allowedKeys o =
   where
     allowedKeySet = Set.fromList (map AKey.fromText allowedKeys)
 
+-- Actor and exact request binding; a caller key is not ownership evidence.
+-- Provider lookup/create is not atomic, so this is not an exactly-once guarantee.
+driveUploadFingerprint :: PartyId -> Text -> Text -> Maybe Text -> BL.ByteString -> Text
+driveUploadFingerprint actor name mime folder bytes =
+  digest $ BL.toStrict $ encode
+    ((1 :: Int), fromSqlKey actor, name, mime, folder, digest (BL.toStrict bytes))
+  where
+    digest value = T.pack (show (hash value :: Digest SHA256))
+
 uploadToDrive
   :: Manager
+  -> PartyId         -- ^ Current authenticated principal, never caller-supplied ownership
   -> Text            -- ^ Google access token (user or service)
   -> FileData Tmp    -- ^ Uploaded file from client
   -> Text            -- ^ Normalized file MIME type
@@ -20993,19 +21047,21 @@ uploadToDrive
   -> Maybe Text      -- ^ Optional folder id
   -> Maybe Text      -- ^ Optional deterministic idempotency key
   -> IO DriveUploadDTO
-uploadToDrive manager accessToken file mimeTypeTxt mName mFolder mIdempotencyKey = do
+uploadToDrive manager actor accessToken file mimeTypeTxt mName mFolder mIdempotencyKey = do
+  fileBytes <- BL.readFile (fdPayload file)
   uuid <- nextRandom
   let boundary = "tdf-boundary-" <> T.replace "-" "" (toText uuid)
       dashBoundary = "--" <> boundary
       fileName = fromMaybe (fdFileName file) mName
       mimeTypeBS = TE.encodeUtf8 mimeTypeTxt
+      fingerprint = driveUploadFingerprint actor fileName mimeTypeTxt mFolder fileBytes
       meta = object $
         [ "name" .= fileName
         , "mimeType" .= mimeTypeTxt
         ] <> maybe [] (\f -> ["parents" .= [f]]) mFolder
-          <> maybe [] (\key -> ["appProperties" .= object ["tdfIdempotencyKey" .= key]]) mIdempotencyKey
+          <> maybe [] (\key -> ["appProperties" .= object
+              ["tdfIdempotencyKey" .= key, "tdfRequestFingerprint" .= fingerprint]]) mIdempotencyKey
 
-  fileBytes <- BL.readFile (fdPayload file)
   let metaPart = BL.intercalate "\r\n"
         [ BL.fromStrict (TE.encodeUtf8 dashBoundary)
         , "Content-Type: application/json; charset=UTF-8"
@@ -21037,7 +21093,10 @@ uploadToDrive manager accessToken file mimeTypeTxt mName mFolder mIdempotencyKey
     Nothing -> pure Nothing
     Just key -> findDriveUploadByIdempotencyKey manager accessToken key mFolder
   driveResp <- case existing of
-    Just found -> pure found
+    Just found -> do
+      unless (darRequestFingerprint found == Just fingerprint) $
+        throwIO err409 { errBody = "Drive idempotency key is bound to a different or legacy unverified request" }
+      pure found
     Nothing -> do
       resp <- httpLbs req manager
       let uploadStatus = statusCode (responseStatus resp)
@@ -21105,7 +21164,7 @@ findDriveUploadByIdempotencyKey manager accessToken key mFolder = do
       scopedQuery = maybe baseQuery (\folder -> baseQuery <> " and '" <> folder <> "' in parents") mFolder
       query = renderQuery True
         [ ("q", Just (TE.encodeUtf8 scopedQuery))
-        , ("fields", Just "files(id,webViewLink,webContentLink,resourceKey)")
+        , ("fields", Just "files(id,webViewLink,webContentLink,resourceKey,appProperties)")
         , ("pageSize", Just "2")
         ]
   req0 <- parseRequest ("https://www.googleapis.com/drive/v3/files" <> BS8.unpack query)

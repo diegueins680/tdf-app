@@ -6,12 +6,14 @@ module TDF.Operations.Model
   , allowedTargets
   , validateTransition
   , canViewEntityType
+  , visibleEntityTypes
   , requiresTwoPersonApproval
   , recommendedPriority
   , prioritySlaMinutes
   ) where
 
 import Data.Int (Int64)
+import Data.List (nub)
 import Data.Text (Text)
 import qualified Data.Text as T
 
@@ -68,18 +70,27 @@ canOperate roles = any (`elem` roles)
   , LiveSessionsProducer, Producer, AandR, Maintenance
   ]
 
+-- Union grants for this read action. The wildcard never includes security.
+-- Unknown roles grant nothing; a ReadOnly grant never supplies write authority.
+visibleEntityTypes :: [RoleEnum] -> Bool -> [Text]
+visibleEntityTypes roles assignedToActor = nub (concatMap allowed roles)
+  where
+    allowed Admin = ["*", "security_incident"]
+    allowed Manager = ["*"]
+    allowed StudioManager = ["*"]
+    allowed ReadOnly = ["*"]
+    allowed Accounting = ["invoice", "payment", "marketplace_order", "course_registration"]
+    allowed Reception = ["course_registration", "booking", "party", "invoice", "payment", "manual", "uncorrelated_inbound", "proposal", "social_event"]
+    allowed Teacher | assignedToActor = ["course_registration", "booking", "social_event", "intern_project"]
+    allowed Engineer | assignedToActor = ["booking", "maintenance_ticket", "social_event", "intern_project"]
+    allowed Maintenance = ["maintenance_ticket", "stock_item", "booking", "manual"]
+    allowed _ = []
+
 canViewEntityType :: [RoleEnum] -> Bool -> Text -> Bool
-canViewEntityType roles assignedToActor entityType
-  | entityType == "security_incident" = Admin `elem` roles
-  | Admin `elem` roles || Manager `elem` roles || StudioManager `elem` roles = True
-  | Accounting `elem` roles = entityType `elem`
-      ["invoice", "payment", "marketplace_order", "course_registration"]
-  | Reception `elem` roles = entityType `elem`
-      ["course_registration", "booking", "party", "invoice", "payment", "manual", "uncorrelated_inbound", "proposal", "social_event"]
-  | Teacher `elem` roles || Engineer `elem` roles = assignedToActor && entityType `elem`
-      ["course_registration", "booking", "maintenance_ticket", "manual", "social_event", "intern_project"]
-  | Maintenance `elem` roles = entityType `elem` ["maintenance_ticket", "stock_item", "booking", "manual"]
-  | otherwise = False
+canViewEntityType roles assignedToActor entityType =
+  entityType `elem` allowed || (entityType /= "security_incident" && "*" `elem` allowed)
+  where
+    allowed = visibleEntityTypes roles assignedToActor
 
 requiresTwoPersonApproval :: Text -> Maybe Int64 -> Int64 -> Bool
 requiresTwoPersonApproval rawAction threshold amount =
