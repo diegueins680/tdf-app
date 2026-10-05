@@ -50,3 +50,18 @@ https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/
 La rama conserva la dependencia #406 por merge normal (ancestría de migraciones),
 no por squash ni copia de SQL. Cliente móvil generado y probado efa2555 publicado
 y revisado en #91; requiere páginas españolas publicadas antes de distribución.
+
+### Conformance follow-up, 2026-10-05
+
+Canonical obligation: `SYS-RELEASE-002` in `formal/system/requirements.json`.
+Hosted run37337254975 (candidate53918ca8a, synthetic merge056fa9140 with
+the same tree) failed the English WebKit recovery journey: `fill` completed
+with the email still empty, and Enter produced the required-email message.
+This trace does not identify the focus callback as its cause. Independently,
+controlled delayed-frame component tests reproduce background autofocus
+stealing recovery, signup and password-field focus. The callback now focuses
+the login identifier only while the document body still owns focus and no
+dialog is mounted. An idle-page positive control preserves initial autofocus.
+Browser assertions, time limits, focus-trap checks and axe rules are unchanged.
+Fresh complete browser validation remains a release gate; historical green
+results above do not establish absence of races.

@@ -26,7 +26,7 @@ The reusable pipeline is `scripts/artist-enrichment.mjs`; the complete operating
 backup, deployment, and rollback procedure is in
 `docs/artist-enrichment-runbook.md`.
 
-- Fly performs internal discovery at 04:00 `America/Guayaquil` when
+- The current Hetzner backend performs internal discovery at 04:00 `America/Guayaquil` when
   `ARTIST_ENRICHMENT_ENABLED=true`.
 - `.github/workflows/artist-enrichment-daily.yml` performs external research at
   10:00 UTC (05:00 Ecuador) and prevents overlapping executions. It only ingests
@@ -35,7 +35,8 @@ backup, deployment, and rollback procedure is in
 - Disable internal discovery with `ARTIST_ENRICHMENT_ENABLED=false`; disable the
   GitHub workflow to stop external research.
 - Every run has a durable backend run ID, redacted checkpoint, counters, and
-  error summary. Daily workflow artifacts are retained for 30 days.
+  error summary. Any failed item makes the final run fail even below the early-stop
+  threshold; successful items remain checkpointed. Daily workflow artifacts are retained for 30 days.
 
 Cron example (runs every 6 hours):
 ```

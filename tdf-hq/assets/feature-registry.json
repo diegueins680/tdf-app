@@ -2089,6 +2089,26 @@
       "apiScopes": [{ "pathPrefix": "/ads", "methods": { "GET": "view", "POST": "create", "PATCH": "edit" } }, { "pathPrefix": "/admin/communications", "methods": { "GET": "view", "POST": "publish", "PATCH": "edit" } }]
     },
     {
+      "id": "admin.video-sources",
+      "parentId": null,
+      "webRoute": "/configuracion/fuentes-videos",
+      "routeType": "important-submodule",
+      "classification": "important-submodule",
+      "label": { "es": "Fuentes de videos", "en": "Video sources" },
+      "synonyms": { "es": ["ingesta YouTube"], "en": ["YouTube ingestion"] },
+      "keywords": ["video", "youtube", "ingestion"],
+      "navigationGroup": "admin",
+      "icon": "source",
+      "breadcrumb": [],
+      "requiredRoles": ["Admin"],
+      "requiredModules": ["Admin"],
+      "permissions": { "discover": { "rolesAny": ["Admin"], "modulesAll": ["Admin"], "strictAdmin": true }, "view": { "rolesAny": ["Admin"], "modulesAll": ["Admin"], "strictAdmin": true }, "administer": { "rolesAny": ["Admin"], "modulesAll": ["Admin"], "strictAdmin": true } },
+      "globalMenu": true,
+      "accessRequestEligible": false,
+      "mobilePresentation": { "kind": "security-concealed", "destination": null, "documentedException": "Provider administration is web only." },
+      "apiScopes": [{ "pathPrefix": "/admin/records-ingestion", "methods": { "GET": "view", "POST": "administer", "PUT": "administer" } }]
+    },
+    {
       "id": "admin.event-sources",
       "parentId": "social.discovery",
       "webRoute": "/configuracion/fuentes-eventos",

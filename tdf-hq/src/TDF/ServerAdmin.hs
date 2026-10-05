@@ -136,6 +136,8 @@ import           TDF.DTO                ( ArtistProfileUpsert(..)
 import           TDF.Auth               ( AuthedUser
                                         , ModuleAccess(..)
                                         , auPartyId
+                                        , lockCredentialForSession
+                                        , revokeInteractiveSessions
                                         , hasStrictAdminAccess
                                         , validateModuleAccess
                                         , moduleName
@@ -1223,37 +1225,41 @@ adminServer user =
         Just rawPwd -> do
           passwordValue <- either throwError pure (validateAdminPassword rawPwd)
           Just <$> liftIO (hashPasswordText passwordValue)
-      mCred <- withPool $ getEntity credKey
-      case mCred of
-        Nothing -> throwError err404
-        Just (Entity _ cred) -> do
-          for_ usernameUpdate $ \newUsername ->
-            when (newUsername /= userCredentialUsername cred) $ do
-              conflict <- withPool $ getBy (UniqueCredentialUsername newUsername)
-              case conflict of
-                Just (Entity otherId _) | otherId /= credKey ->
-                  throwError err409 { errBody = "Username already exists" }
-                _ -> pure ()
-          let updates :: [Update UserCredential]
-              updates = concat
-                [ maybe [] (\newUsername -> [UserCredentialUsername =. newUsername]) usernameUpdate
-                , maybe [] (\flag -> [UserCredentialActive =. flag]) uauActive
-                , maybe [] (\hash -> [UserCredentialPasswordHash =. hash]) passwordHash
-                ]
-          when (not (null updates)) $
-            withPool $ update credKey updates
-          account <- withPool $ do
-            fresh <- getJustEntity credKey
-            loadUserAccount fresh
-          recordActivity "user_account" (T.pack (show userIdValid)) "update" $
-            Just (object
-              [ "fields" .= catMaybes
-                [ ("username" :: Text) <$ usernameUpdate
-                , ("active" :: Text) <$ uauActive
-                , ("password" :: Text) <$ passwordHash
-                ]
-              ])
-          pure account
+      result <- withPool $ do
+        mCred <- lockCredentialForSession credKey
+        case mCred of
+          Nothing -> pure (Left err404)
+          Just (Entity _ cred) -> do
+            conflict <- case usernameUpdate of
+              Just newUsername | newUsername /= userCredentialUsername cred ->
+                getBy (UniqueCredentialUsername newUsername)
+              _ -> pure Nothing
+            case conflict of
+              Just (Entity otherId _) | otherId /= credKey ->
+                pure (Left err409 { errBody = "Username already exists" })
+              _ -> do
+                let updates :: [Update UserCredential]
+                    updates = concat
+                      [ maybe [] (\name -> [UserCredentialUsername =. name]) usernameUpdate
+                      , maybe [] (\flag -> [UserCredentialActive =. flag]) uauActive
+                      , maybe [] (\hash -> [UserCredentialPasswordHash =. hash]) passwordHash
+                      ]
+                    mustRevoke = uauActive == Just False || isJust passwordHash
+                      || maybe False (/= userCredentialUsername cred) usernameUpdate
+                unless (null updates) $ update credKey updates
+                when mustRevoke $ revokeInteractiveSessions (userCredentialPartyId cred)
+                fresh <- getJustEntity credKey
+                Right <$> loadUserAccount fresh
+      account <- either throwError pure result
+      recordActivity "user_account" (T.pack (show userIdValid)) "update" $
+        Just (object
+          [ "fields" .= catMaybes
+            [ ("username" :: Text) <$ usernameUpdate
+            , ("active" :: Text) <$ uauActive
+            , ("password" :: Text) <$ passwordHash
+            ]
+          ])
+      pure account
 
     userCommunicationHistoryHandler userId mLimit = do
       ensureStrictAdmin user

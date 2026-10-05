@@ -1,13 +1,19 @@
 # Development Guide
 
+Current specification authority and executable traceability live in
+[formal/system/README.md](formal/system/README.md). Initialize the exact Mobile
+gitlink for inventory and contract checks; Mobile is not a root npm workspace.
+
 ## Getting Started
 
 ### First Time Setup
 
 1. **Install dependencies**
    ```bash
-   # Root level (installs both UI and Mobile)
+   # Root level (installs web workspace)
    npm install
+   git submodule update --init --checkout --recursive
+   npm --prefix tdf-mobile ci
    
    # Backend (Haskell)
    cd tdf-hq

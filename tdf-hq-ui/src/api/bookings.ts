@@ -33,8 +33,6 @@ export interface BookingUpdatePayload {
   ubNotes?: string;
   ubStartsAt?: string;
   ubEndsAt?: string;
-  ubResourceIds?: string[] | null;
-  ubPartyId?: number | null;
   ubEngineerPartyId?: number | null;
   ubEngineerName?: string | null;
 }

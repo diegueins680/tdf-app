@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "scope": "Known-advisory regression floors for reviewed dependency series only; not a complete vulnerability scan or reachability proof. New series require review. Removed dependencies need no exception.",
+  "reviewedOn": "2026-10-05",
+  "packages": {
+    "brace-expansion": {
+      "1": "1.1.21",
+      "2": "2.1.7",
+      "5": "5.0.12"
+    },
+    "fast-uri": {
+      "3": "3.1.8"
+    },
+    "js-yaml": {
+      "3": "3.15.2",
+      "4": "4.3.2"
+    },
+    "moment": {
+      "2": "2.31.0"
+    },
+    "nanoid": {
+      "3": "3.3.18"
+    },
+    "tmp": {
+      "0.2": "0.2.6"
+    },
+    "@humanfs/node": {
+      "0.16": "0.16.8"
+    },
+    "@xmldom/xmldom": {
+      "0.8": "0.8.15"
+    },
+    "axios": {
+      "1": "1.20.0"
+    },
+    "baseline-browser-mapping": {
+      "2": "2.11.0"
+    },
+    "browserslist": {
+      "4": "4.28.7"
+    },
+    "joi": {
+      "17": "17.13.7"
+    },
+    "qs": {
+      "6": "6.16.0"
+    },
+    "undici": {
+      "6": "6.28.1"
+    }
+  },
+  "remaining": [
+    {
+      "package": "braces",
+      "advisory": "GHSA-vfj7-8cjw-p6xm",
+      "status": "Unpatched upstream3.0.3; developer glob input, no known TDF runtime use. Restrict untrusted patterns; build availability remains open."
+    },
+    {
+      "package": "ip",
+      "advisory": "GHSA-2p57-rm9w-gvfp",
+      "status": "Existing dated production audit exception for browser-only WebTorrent path; not a server allowlist."
+    },
+    {
+      "package": "stream-json",
+      "advisory": "GHSA-528h-pc64-c93x",
+      "status": "Detox/Bunyamin development dependency; observed Detox uses JSONL Parser, affected filters not proven unreachable across all tooling."
+    },
+    {
+      "package": "uuid",
+      "advisory": "GHSA-w5hq-g745-h8pq",
+      "status": "Observed cucumber/reporter/xcode call v4, while advisory targets v3/v5/v6 buffers; no universal reachability claim."
+    },
+    {
+      "package": "node-forge",
+      "advisory": "GHSA-86w9-cpqp-85rv",
+      "status": "Latest1.4.0 unpatched. Expo CLI/code-signing dependency does call verification. Do not trust externally supplied signing material; signing-tool exposure remains open."
+    },
+    {
+      "package": "image-size",
+      "advisory": "GHSA-5p2g-fcmc-qvqq;GHSA-w3rx-r6r6-pgpr",
+      "status": "Metro uses1.2.1; patched2.x changes module/API surface. Build-time asset parsing remains open; do not accept unreviewed assets."
+    },
+    {
+      "package": "decode-uri-component",
+      "advisory": "GHSA-vcc3-ghjq-m6fr",
+      "status": "Runtime-reachable through React Navigation/Expo query-string. Patched0.5.0 is ESM; current query-string expects CommonJS callable. Compatibility repair remains open."
+    }
+  ]
+}

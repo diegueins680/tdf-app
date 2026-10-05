@@ -1,0 +1,81 @@
+{
+  "revision": "bea8cd79147254fd41f139a03732155c5a487040",
+  "mobile": "c1d6031b36e52dd365e699163900e65adb0621e0",
+  "restore": {
+    "relations": 652,
+    "rowCountSum": 34887,
+    "migrationBefore": 159,
+    "migrationAfter": 169,
+    "applications": 2,
+    "isolateRemoved": true,
+    "productionDatabaseWritten": false,
+    "controlChanges": {
+      "revenueFlags": {
+        "added": [
+          {
+            "flag": "checkout.payphone.notifications",
+            "enabled": false
+          },
+          {
+            "flag": "checkout.placetopay.webhooks",
+            "enabled": false
+          },
+          {
+            "flag": "checkout.provider_query_recovery",
+            "enabled": false
+          }
+        ],
+        "removed": [],
+        "changed": []
+      },
+      "providerAccounts": {
+        "added": [
+          {
+            "provider": "bank_transfer",
+            "status": "disabled",
+            "contract_status": "unverified",
+            "credential_status": "absent",
+            "enabled": false,
+            "featureFlag": "checkout.bank_transfer"
+          }
+        ],
+        "removed": [],
+        "changed": []
+      }
+    }
+  },
+  "repositoryGate": {
+    "command": "bash scripts/quality-repo.sh",
+    "result": "PASS",
+    "logSha256": "932d2aaf63dd3a9df6c4c9ccbdd7b13116b3b63aded9f36a7cf3652dd9a0c230"
+  },
+  "failedModelRun": {
+    "revision": "123fd60d61bd60b8d0b85c56dce3e0053a1f889b",
+    "control": "RestoreIsolationSourceTarget.cfg",
+    "result": "Rejected: model expression error did not establish the required invariant violation. Fixed at bea8cd791."
+  },
+  "independentReview": {
+    "kind": "read-only exact-source review; not GitHub approval",
+    "pythonTests": 15,
+    "nodeTests": 13,
+    "remainingSourceFindings": 0
+  },
+  "limitations": [
+    "Two-run bounded scheduling model, not Python/Docker/SQL refinement proof.",
+    "Online database snapshot does not coordinate assets, roles, credentials or off-host recovery.",
+    "No application/provider process ran against the restored copy.",
+    "No production application/database mutation, root/Mobile merge or deployment.",
+    "Complete semantic coverage and canonical routine release executor remain open."
+  ],
+  "formal": {
+    "status": "bounded-model-checks-passed",
+    "sourceDigest": "eb97eacd3fdffe2179274887a551fe2a41ce619b862967f2f9b45fb772c2a2b2",
+    "logSha256": "9861de60acb668e3b161140374663141e55570f812aa00153a43b5aa89754547",
+    "positiveTLC": 58,
+    "negativeControls": 130,
+    "pluscalRegenerations": 1,
+    "pluscalIntegrityTests": 13,
+    "alloySAT": 2,
+    "alloyUNSAT": 13
+  }
+}

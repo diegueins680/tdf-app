@@ -3,6 +3,7 @@
 module TDF.Commerce.Merch
   ( MerchMoney(..)
   , calculateMerchMoney
+  , checkedMerchSubtotals
   , validProductTransition
   , validFulfillmentTransition
   , isUnpaidOrderCancellable
@@ -34,6 +35,20 @@ data MerchMoney = MerchMoney
   , merchTotalMinor           :: Int64
   } deriving (Eq, Show)
 
+-- Validate the server-loaded snapshot before using its total in shipping rules
+-- or persisting order/checkout lines. Free lines may accompany a paid product.
+checkedMerchSubtotals :: [(Int64, Int64)] -> Either Text (Int64, [Int64])
+checkedMerchSubtotals rows
+  | null rows = Left "Cart has no purchasable items"
+  | any (\(quantity, price) -> quantity < 1 || quantity > 100 || price < 0) rows =
+      Left "Merchandise quantity or price is invalid"
+  | total <= 0 || total > toInteger (maxBound :: Int64) =
+      Left "Merchandise subtotal exceeds supported storage or is not positive"
+  | otherwise = Right (fromInteger total, map fromInteger amounts)
+  where
+    amounts = [toInteger quantity * toInteger price | (quantity, price) <- rows]
+    total = sum amounts
+
 calculateMerchMoney
   :: Int64 -> Int64 -> Int64 -> Int64 -> Int64 -> Int -> Either Text MerchMoney
 calculateMerchMoney subtotal discount tax shipping processorFee commissionBps
@@ -44,6 +59,8 @@ calculateMerchMoney subtotal discount tax shipping processorFee commissionBps
   | processorFee < 0 = Left "Processor fee cannot be negative"
   | commissionBps < 0 || commissionBps > 10000 = Left "Commission must be between 0 and 10000 basis points"
   | sellerNet < 0 = Left "Seller net cannot be negative"
+  | total <= 0 || total > toInteger (maxBound :: Int64) = Left "Payable total exceeds supported storage or is not positive"
+  | sellerNet > toInteger (maxBound :: Int64) = Left "Seller net exceeds supported storage"
   | otherwise = Right MerchMoney
       { merchProductSubtotalMinor = subtotal
       , merchDiscountMinor = discount
@@ -51,15 +68,15 @@ calculateMerchMoney subtotal discount tax shipping processorFee commissionBps
       , merchShippingMinor = shipping
       , merchProcessorFeeMinor = processorFee
       , merchCommissionBps = commissionBps
-      , merchCommissionMinor = commission
-      , merchSellerNetMinor = sellerNet
-      , merchTotalMinor = total
+      , merchCommissionMinor = fromInteger commission
+      , merchSellerNetMinor = fromInteger sellerNet
+      , merchTotalMinor = fromInteger total
       }
   where
-    commissionBase = subtotal - discount
-    commission = commissionBase * fromIntegral commissionBps `div` 10000
-    total = commissionBase + tax + shipping
-    sellerNet = commissionBase + tax + shipping - commission - processorFee
+    commissionBase = toInteger subtotal - toInteger discount
+    commission = commissionBase * toInteger commissionBps `div` 10000
+    total = commissionBase + toInteger tax + toInteger shipping
+    sellerNet = total - commission - toInteger processorFee
 
 validProductTransition :: Text -> Text -> Bool
 validProductTransition fromStatus toStatus

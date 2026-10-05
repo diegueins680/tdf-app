@@ -338,7 +338,14 @@ paths:
       security: [{ bearerAuth: [] }]
       parameters: [{ name: claimId, in: path, required: true, schema: { type: string, format: uuid } }]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/StatusRequest' } } } }
-      responses: { '200': { description: Reviewed claim; only approval can create a manager grant } }
+      description: Requires Admin role and Admin module with a reviewer distinct from the claimant. Decisions serialize on the current claim; identical-state retries preserve review evidence and cannot reactivate revoked grants.
+      responses:
+        '200': { description: Reviewed claim; only a new approval transition creates a manager grant }
+        '401': { description: Authentication required }
+        '403': { description: Missing Admin role or module or attempted self-review }
+        '404': { description: Claim not found }
+        '409': { description: Current claim state forbids this transition }
+        '500': { description: Transaction failed; decision and grant rolled back }
   /directory/admin/verifications:
     get:
       tags: [Music directory administration]

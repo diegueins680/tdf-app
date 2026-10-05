@@ -14,6 +14,7 @@ import Database.Persist (Entity (..), Key)
 import Database.Persist.Sql (toSqlKey)
 import Servant (ServerError (errBody, errHTTPCode))
 import Test.Hspec
+import Test.QuickCheck (Positive (..), property)
 
 import TDF.Auth
   ( AuthedUser (..)
@@ -28,6 +29,7 @@ import TDF.Models (RoleEnum (..), UserCredential (..), roleFromText, roleToText)
 import TDF.ServerAuth
   ( GoogleIdTokenInfo (..)
   , GoogleProfile (..)
+  , recoveryWindowValid
   , normalizeAuthEmailAddress
   , parsePasswordChangeAuthToken
   , selectUniqueGoogleLoginCredential
@@ -41,7 +43,7 @@ import TDF.ServerAuth
   , validateGoogleTokenExpiry
   , validatePasswordChangeUsernameInput
   , validatePasswordResetToken
-  , validateSignupArtistClaimEmail
+  , validateOptionalSignupClaimArtistId
   , validateSignupDisplayName
   , validateSignupFanArtistIds
   , validateSignupGoogleIdToken
@@ -54,6 +56,7 @@ import TDF.ServerAuth
 
 spec :: Spec
 spec = do
+  recoveryWindowSpec
   authEmailSpec
   moduleAccessSpec
   loginRequestSpec
@@ -68,7 +71,7 @@ spec = do
   googleAccountCreationTermsSpec
   signupPhoneSpec
   signupFanArtistIdsSpec
-  signupArtistClaimEmailSpec
+  signupArtistClaimAuthoritySpec
   onboardingProgressSpec
   passwordResetTokenSpec
   googleIdTokenInputSpec
@@ -484,20 +487,19 @@ signupFanArtistIdsSpec = describe "validateSignupFanArtistIds" $
         expectationFailure
           ("Expected oversized fanArtistIds to be rejected, got " <> show value)
 
-signupArtistClaimEmailSpec :: Spec
-signupArtistClaimEmailSpec = describe "validateSignupArtistClaimEmail" $ do
-  it "allows unclaimed artist profiles with no stored email or the same normalized email" $ do
-    validateSignupArtistClaimEmail "ada@example.com" Nothing `shouldBe` Right ()
-    validateSignupArtistClaimEmail " ada@example.com " (Just "ADA@Example.com")
-      `shouldBe` Right ()
-    validateSignupArtistClaimEmail "ada@example.com" (Just "   ")
-      `shouldBe` Right ()
-
-  it "rejects mismatched or malformed stored emails before binding a signup to an artist profile" $ do
-    validateSignupArtistClaimEmail "ada@example.com" (Just "other@example.com")
-      `shouldBe` Left "Artist profile email does not match signup email"
-    validateSignupArtistClaimEmail "ada@example.com" (Just "not-an-email")
-      `shouldBe` Left "Artist profile email does not match signup email"
+signupArtistClaimAuthoritySpec :: Spec
+signupArtistClaimAuthoritySpec = describe "password signup artist authority" $ do
+  it "permits independent account creation without an artist claim" $
+    validateOptionalSignupClaimArtistId Nothing `shouldBe` Right Nothing
+  it "rejects every positive caller-selected identity across the Int64 domain" $
+    property $ \(Positive artistId) ->
+      case validateOptionalSignupClaimArtistId (Just (artistId :: Int64)) of
+        Left err -> errHTTPCode err == 403
+        Right _ -> False
+  it "retains malformed identifier validation" $
+    mapM_ (\artistId -> case validateOptionalSignupClaimArtistId (Just artistId) of
+      Left err -> errHTTPCode err `shouldBe` 400
+      Right _ -> expectationFailure "Invalid artist identity accepted") [0, -1]
 
 onboardingProgressSpec :: Spec
 onboardingProgressSpec = describe "account-bound onboarding progress" $ do
@@ -810,3 +812,21 @@ selectedGoogleCredentialKey
   -> Either T.Text (Maybe (Key UserCredential))
 selectedGoogleCredentialKey =
   fmap (fmap credentialEntityKey) . selectUniqueGoogleLoginCredential
+
+recoveryWindowSpec :: Spec
+recoveryWindowSpec = describe "ID-SESSION-003 recovery expiry" $ do
+  it "accepts issuance and rejects equality at expiry" $ do
+    recoveryWindowValid 1000 1900 1000 `shouldBe` True
+    recoveryWindowValid 1000 1900 1899 `shouldBe` True
+    recoveryWindowValid 1000 1900 1900 `shouldBe` False
+    recoveryWindowValid 1000 1900 999 `shouldBe` False
+  it "accepts every second inside a translated window, never its deadline" $
+    property $ \(Positive epochSeed) ->
+      let issued = fromInteger ((epochSeed :: Integer) `mod` (toInteger (maxBound :: Int64) - 901))
+          expires = issued + 900
+      in all (recoveryWindowValid issued expires) [issued .. expires - 1]
+          && not (recoveryWindowValid issued expires expires)
+  it "does not accept malformed or overflow-shaped windows" $ do
+    recoveryWindowValid (-1) 899 1 `shouldBe` False
+    recoveryWindowValid 0 901 1 `shouldBe` False
+    recoveryWindowValid (maxBound - 899) minBound maxBound `shouldBe` False

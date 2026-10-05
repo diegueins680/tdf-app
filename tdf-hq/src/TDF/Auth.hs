@@ -19,6 +19,8 @@ module TDF.Auth
   , moduleFromRegistryCode
   , modulesForRoles
   , loadAuthedUser
+  , lockCredentialForSession
+  , revokeInteractiveSessions
   , isAuthenticatableApiTokenLabel
   , withCurrentAuthSession
   , lookupUsernameFromToken
@@ -31,7 +33,7 @@ module TDF.Auth
   ) where
 
 import           Control.Applicative        ((<|>))
-import           Control.Monad              (forM, guard)
+import           Control.Monad              (forM, guard, void)
 import           Control.Monad.IO.Class     (liftIO)
 import           Crypto.Hash               (Digest, SHA256, hash)
 import           Data.ByteArray            (constEq)
@@ -53,11 +55,13 @@ import           Database.Persist
   , SelectOpt(LimitTo)
   , get
   , getBy
+  , getEntity
   , selectList
   , toPersistValue
   , (==.)
   )
-import           Database.Persist.Sql       (Single (..), SqlPersistT, fromSqlKey, rawSql, runSqlPool)
+import           Database.Persist.Sql       (Single (..), SqlPersistT, fromSqlKey, rawSql, rawExecute, runSqlPool)
+import           Database.Persist.SqlBackend (getRDBMS)
 import           Network.Wai                (Request, requestHeaders)
 import           Servant
 import           Servant.Server.Experimental.Auth (AuthHandler, mkAuthHandler, AuthServerData)
@@ -215,6 +219,43 @@ authWithToken env req = do
   where
     throw401 :: Text -> Handler a
     throw401 msg = throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
+
+-- Lifecycle lock order: provider subject (if any), Party, credential, tokens.
+-- NO KEY UPDATE stays compatible with Event operations' Party KEY SHARE locks.
+-- Re-read the credential after waiting; identity relocation invalidates discovery.
+lockCredentialForSession :: UserCredentialId -> SqlPersistT IO (Maybe (Entity UserCredential))
+lockCredentialForSession credentialId = do
+  discovered <- get credentialId
+  case discovered of
+    Nothing -> pure Nothing
+    Just credential -> do
+      backend <- getRDBMS
+      case backend of
+        "postgresql" -> void (rawSql
+          "SELECT id FROM party WHERE id=? FOR NO KEY UPDATE"
+          [toPersistValue (userCredentialPartyId credential)] :: SqlPersistT IO [Single PartyId])
+        -- SQLite's unit-test adapter reserves the database writer without changing
+        -- rows or firing row triggers. It is not PostgreSQL concurrency evidence.
+        "sqlite" -> rawExecute "UPDATE user_credential SET active=active WHERE 1=0" []
+        _ -> liftIO (fail "Unsupported credential lifecycle database")
+      locked <- if backend == "postgresql"
+        then do
+          rows <- rawSql "SELECT ?? FROM user_credential WHERE id=? FOR UPDATE"
+            [toPersistValue credentialId]
+          pure $ case rows of [row] -> Just row; _ -> Nothing
+        else getEntity credentialId
+      pure $ do
+        row@(Entity _ current) <- locked
+        guard (userCredentialPartyId current == userCredentialPartyId credential)
+        pure row
+
+-- ApiToken has no credential FK: revoke existing interactive sessions for this
+-- Party, while preserving independently managed service/custom-label tokens.
+-- Caller holds the Party lifecycle lock through mutation and replacement issuance.
+revokeInteractiveSessions :: PartyId -> SqlPersistT IO ()
+revokeInteractiveSessions partyKey = rawExecute
+  "UPDATE api_token SET active=false WHERE party_id=? AND active=true AND (lower(trim(label)) LIKE 'password-login:%' OR lower(trim(label)) LIKE 'google-login:%' OR lower(trim(label)) LIKE 'password-reset:%')"
+  [toPersistValue partyKey]
 
 loadAuthedUser :: Text -> SqlPersistT IO (Maybe AuthedUser)
 loadAuthedUser token = do

@@ -1,0 +1,78 @@
+{
+  "recordedAt": "2026-10-05T11:43:19.477096+00:00",
+  "scope": "Recorded checkpoints, not a final-candidate or deployed-system acceptance. Later source equivalence must be checked explicitly.",
+  "checks": [
+    {
+      "id": "web-full",
+      "revision": "4cc9942940fc8dbf617e63a4e8b407f39605b0f6",
+      "command": "npm run quality:ui",
+      "result": "FAIL",
+      "logFile": "ui-4cc994294.log",
+      "logSha256": "c071a7c3e95801afcc4e2a6aa976ea6d5d8c7cfbcd8aa5eeada3a4b6c51da286",
+      "detail": "lint/typecheck passed; Jest257suites:255pass2fail;2824tests pass2timeouts; build not reached"
+    },
+    {
+      "id": "web-checkout-recheck",
+      "revision": "4cc9942940fc8dbf617e63a4e8b407f39605b0f6",
+      "command": "cd tdf-hq-ui && npm test -- --runTestsByPath src/pages/MixingMasteringPage.test.tsx",
+      "result": "PASS",
+      "logFile": "ui-4cc994294-checkout-recheck.log",
+      "logSha256": "a41591cff2478f9e213bb9ded426bf939593660e160f58593d435ff89b046614",
+      "detail": "3tests, unchanged source; does not erase prior full-run failure"
+    },
+    {
+      "id": "web-domo-recheck",
+      "revision": "4cc9942940fc8dbf617e63a4e8b407f39605b0f6",
+      "command": "cd tdf-hq-ui && npm test -- --runTestsByPath src/__tests__/DomoQuoteCheckoutPage.test.tsx",
+      "result": "PASS",
+      "logFile": "ui-4cc994294-domo-recheck.log",
+      "logSha256": "6bc5c94b9a3da3567e7bab12e3369e468f0b0907d6d843261ff21fbaf78ea4e0",
+      "detail": "3tests, unchanged source; does not erase prior full-run failure"
+    },
+    {
+      "id": "web-production-build",
+      "revision": "4cc9942940fc8dbf617e63a4e8b407f39605b0f6",
+      "command": "cd tdf-hq-ui && npm run build",
+      "result": "PASS",
+      "logFile": "ui-4cc994294-production-build.log",
+      "logSha256": "6f31b099131759100e2cfdfa1afdaaea20d80b0cda47f1ca6e76accd551c28f8",
+      "detail": "5preloads,319429gzip bytes; bundle gate passed"
+    },
+    {
+      "id": "mobile-quality",
+      "revision": "7a43e78131d66646504e40ed2cc380d2bc5336d1",
+      "command": "cd tdf-mobile && npm run lint && npm run typecheck && npm test",
+      "result": "PASS",
+      "logFile": "mobile-cache-exact-quality.log",
+      "logSha256": "b7c6f0b284f74fd5ec49102c804c3610f53bcee2512febbd1e54796c7a41f615",
+      "detail": "94suites571tests; no native/device claim"
+    },
+    {
+      "id": "repository",
+      "revision": "8301f81ebc61e23d51095b8f8aebb6faa713d497",
+      "command": "npm run quality:repo",
+      "result": "PASS",
+      "logFile": "repo-8301f81eb.log",
+      "logSha256": "2fbb072256bd283f4a6c7f6c1dc5794190bb54392bfe87cc54f7c0637ffcbe6a",
+      "detail": "Earlier Mobile-cache checkpoint, before public HTML discovery/test fixture repair"
+    },
+    {
+      "id": "arithmetic",
+      "revision": "8301f81ebc61e23d51095b8f8aebb6faa713d497",
+      "command": "/private/tmp/tdf-spec-evidence-20261004/venv/bin/python scripts/verify-payment-arithmetic.py && /private/tmp/tdf-spec-evidence-20261004/venv/bin/python scripts/test-payment-arithmetic-verifier.py",
+      "result": "PASS",
+      "logFile": "payment-smt-8301f81eb-v2.log",
+      "logSha256": "612bc54dcc4b5ab60eef5fe991816b3ffb0700bd4a2035e117c1a985e76343bb",
+      "detail": "Two source-derived signedInt64 fragments: safety/admission unsat, non-vacuity sat;3verifier tests; no SQL/program proof"
+    }
+  ],
+  "receiptFiles": {
+    "ci-4cc994294.json": "c9d046119586ed28c9a621a5dc9b074b914062790ed7f93016a8f1729fc6dfcb",
+    "formal-4cc994294.json": "b45df4580d2d571fc4beb168da8c9706c4c60c0a8240ebd5985afe303b187918",
+    "backend-cef33ec46.json": "2094b03f43f4bf9892b5945a5a02cfebc2402ef39c2ea22fb2e84c28eb2886a1",
+    "http-build-provenance.json": "17172a40e77d17529d22acd290bcd9636d3cc3caa5026bf50615242b057376f6",
+    "mobile-ci-7a43e781.json": "85b08003eb56ea2b393bb528a566ad723bdb87af087ab6c3bb88047f12721e19",
+    "mobile-metro-7a43e781.json": "a3577684afd864ff7f3be4c80c5b3977bc591ba648b21d5d3e38755122108150",
+    "http-postgres-4cc994294.json": "46e6b4444622987812c809924620d8a099671320f3246bb920068098d721d29d"
+  }
+}

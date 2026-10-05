@@ -2,6 +2,8 @@
 
 Estado: implementación oscura para datos sintéticos locales. Los nueve flags nacen desactivados en `staging` y `production`. No se importan ratings externos, no se envían mensajes y no se modifica el estado financiero o logístico de una orden.
 
+Contrato de disponibilidad canónico: [MKT-REPUTATION-001](../formal/system/compiled-api-boundary.md#explicit-availability-mkt-reputation-001). Las25 operaciones documentadas se enumeran en `formal/system/api-availability.json`; no están montadas en `CombinedAPI`. Su presencia en OpenAPI no significa disponibilidad en producción.
+
 ## Límites de dominio
 
 El motor usa sujetos tipados y proyecciones distintas. Nunca existe una suma, copia o herencia entre estos dominios:

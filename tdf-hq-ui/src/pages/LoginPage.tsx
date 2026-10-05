@@ -453,7 +453,7 @@ export default function LoginPage() {
       // The Google login contract cannot claim an existing artist. Keep the
       // selected claim in the email signup form, including late popup callbacks.
       if (claimArtistId !== null) {
-        setSignupFeedback({ type: 'info', message: 'Para reclamar el perfil seleccionado, completa este formulario con el correo asociado al artista.' });
+        setSignupFeedback({ type: 'info', message: t('authEntry.claimReviewAfterSignup') });
         return;
       }
       if (servicePreparing) {
@@ -645,7 +645,11 @@ export default function LoginPage() {
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
-      identifierInputRef.current?.focus();
+      // A dialog or user interaction may take focus before this deferred frame.
+      // Do not redirect pending keyboard input into the background login form.
+      if (document.activeElement === document.body && !document.querySelector('[role="dialog"]')) {
+        identifierInputRef.current?.focus();
+      }
     });
     return () => window.cancelAnimationFrame(frame);
   }, []);
@@ -721,15 +725,8 @@ export default function LoginPage() {
       return;
     }
 
-    const claimIsValid = claimArtistId ? claimableArtists.some((artist) => artist.apArtistId === claimArtistId) : true;
-    if (!claimIsValid) {
-      captureGrowthEvent(analytics, 'signup_validation_failed', { route: '/login', reason: 'claim_unavailable', intent: signupIntent ?? 'general' });
-      setSignupFeedback({ type: 'error', message: t('authEntry.claimUnavailable') });
-      return;
-    }
-
     const payload = {
-      ...buildSignupPayload(signupForm, [], claimArtistId ?? undefined),
+      ...buildSignupPayload(signupForm, []),
       marketingOptIn: false,
       termsAccepted: true as const,
       termsVersion: ACCOUNT_TERMS_VERSION,
@@ -765,7 +762,9 @@ export default function LoginPage() {
         modules: response.modules,
         partyId: response.partyId,
       });
-      const targetPath = resolvePostAuthPath(signupIntent, nextSession.roles, nextSession.modules, redirectPath);
+      const targetPath = claimArtistId === null
+        ? resolvePostAuthPath(signupIntent, nextSession.roles, nextSession.modules, redirectPath)
+        : `/artista/crear?claimArtistId=${claimArtistId}`;
       login(nextSession, { remember: rememberDevice });
       captureGrowthEvent(analytics, 'signup_completed', {
         route: '/login',
@@ -1389,7 +1388,7 @@ export default function LoginPage() {
             />
             {claimArtistId !== null && (
               <Alert severity="info">
-                Para reclamar el perfil seleccionado, completa este formulario con el correo asociado al artista.
+                {t('authEntry.claimReviewAfterSignup')}
               </Alert>
             )}
             {googleClientId && termsAccepted && claimArtistId === null && (

@@ -4,6 +4,359 @@
  */
 
 export interface paths {
+    "/operations/work-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List visible scoped work */
+        get: operations["operationsWorkItems"];
+        put?: never;
+        /**
+         * Create a bound manual work item
+         * @description correlationKey is an organization-scoped idempotency key bound to current actor, resolved branch and semantic payload. The returned projection uses a server-generated manual UUID key. Exact authorized replay returns the current item without new effects; changed binding or unbound legacy keys reject. Metadata must be empty. Unassigned specialists cannot create work they may not operate. Receipt, targeted projection, audit and response decoding commit together.
+         */
+        post: operations["operationsManualWorkItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/work-items/{workItemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read one visible work item with history */
+        get: operations["operationsWorkItem"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/work-items/{workItemId}/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Append an authorized note atomically
+         * @description Current session, roles, assignment and active scope are locked through commit, including mentioned memberships. This is an append command without a replay receipt; an ambiguous response requires reconciliation before retry.
+         */
+        post: operations["operationsWorkItemNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/integration-failures": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List manager-visible failures in the selected branch
+         * @description Selects the earliest active scoped membership, as other default-scoped Operations reads. Other branches and unscoped failures are excluded.
+         */
+        get: operations["operationsIntegrationFailures"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/integration-failures/{failureId}/replay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request one retry of an eligible integration failure
+         * @description Current manager grant and active scoped membership are locked. Only retryable open or dead_letter failures enter retrying; resolved or already retrying rows reject409. State and audit commit once. This records retry admission, not provider delivery.
+         */
+        post: operations["operationsReplayFailure"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read visible scoped stream records */
+        get: operations["operationsStreamEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/saved-views": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List own and explicitly shared organization views */
+        get: operations["operationsSavedViews"];
+        put?: never;
+        /**
+         * Save an owned organization view
+         * @description Owner and name identify the replaceable layout. Shared layouts are organization-visible. Stored filters and columns are presentation preferences and never expand source authorization. Each accepted replacement has an audit; no requestId replay deduplication is promised.
+         */
+        post: operations["operationsSaveView"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/push-subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Register an encrypted owned push subscription */
+        post: operations["operationsPushSubscription"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read metrics over visible operational work
+         * @description Uses the same role, assignment, organization and branch filter as the item list. Integration-failure counts are manager-only and branch-scoped. Amounts are dashboard projections, not reconciled accounting evidence.
+         */
+        get: operations["operationsMetrics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/work-items/{workItemId}/seen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Apply an authorized versioned work-item seen command
+         * @description Current token, locked canonical roles, enabled organization and active branch membership are required. The expected version must match the locked item. Item, timer and audit/stream effects commit together. A repeat with the old version returns 409; requestId is diagnostic, not a replay receipt.
+         */
+        patch: operations["operationsWorkItemSeen"];
+        trace?: never;
+    };
+    "/operations/work-items/{workItemId}/transition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Apply an authorized versioned work-item transition command
+         * @description Current token, locked canonical roles, enabled organization and active branch membership are required. The expected version must match the locked item. Item, timer and audit/stream effects commit together. A repeat with the old version returns 409; requestId is diagnostic, not a replay receipt.
+         */
+        patch: operations["operationsWorkItemTransition"];
+        trace?: never;
+    };
+    "/operations/work-items/{workItemId}/assignment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Apply an authorized versioned work-item assignment command
+         * @description Current token, locked canonical roles, enabled organization and active branch membership are required. The expected version must match the locked item. Item, timer and audit/stream effects commit together. A repeat with the old version returns 409; requestId is diagnostic, not a replay receipt.
+         */
+        patch: operations["operationsWorkItemAssignment"];
+        trace?: never;
+    };
+    "/operations/work-items/{workItemId}/priority": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Apply an authorized versioned work-item priority command
+         * @description Current token, locked canonical roles, enabled organization and active branch membership are required. The expected version must match the locked item. Item, timer and audit/stream effects commit together. A repeat with the old version returns 409; requestId is diagnostic, not a replay receipt.
+         */
+        patch: operations["operationsWorkItemPriority"];
+        trace?: never;
+    };
+    "/operations/approvals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create or replay a bound approval request
+         * @description Requires Admin, Manager or Accounting in an enabled organization and active branch. Organization-scoped idempotency keys bind the requester, resolved scope and semantic payload. Exact authorized replay returns the retained request without new audit. This endpoint does not execute the source action.
+         */
+        post: operations["operationsCreateApproval"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/approvals/{approvalId}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Commit a pending unexpired approval decision
+         * @description Requires a different current Admin, Manager or Accounting actor in the same active organization/branch. The pending decision and audit commit together. Expiry is evaluated after lock waits. A terminal replay returns 409; decisions cannot reopen. Approval does not execute a payment or deletion.
+         */
+        patch: operations["operationsDecideApproval"];
+        trace?: never;
+    };
+    "/drive/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload a file through the authorized Google Drive adapter
+         * @description Requires a coherent authenticated operations or persisted artist role admitted by validateDriveAccess. Uses the supplied Google OAuth access token, or configured service credentials and default folder. Files must be nonempty and at most 50 MiB. An optional idempotency key is bound to the authenticated Party, effective filename, MIME, destination folder and exact bytes. A conflicting or legacy unbound entry returns 409 before upload or permission changes. Identical replay reuses the file and retries best-effort public-reader permission. A null duPublicUrl does not attest public access. Provider lookup/create is not atomic; concurrent creation and ambiguous provider outcomes do not have an exactly-once guarantee.
+         */
+        post: operations["uploadDriveFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trials/v1/subjects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List active trial subjects
+         * @description Public active subjects only. The historical includeInactive query never selected the protected handler and grants no access to inactive subjects.
+         */
+        get: operations["listPublicTrialSubjects"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/trials/v1/subjects/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List subjects for authorized school operations
+         * @description Requires current bearer authentication, Scheduling access, and Teacher, Admin, Manager, Studio Manager or Reception role. Uses a distinct path so the public list cannot shadow this handler.
+         */
+        get: operations["listManagedTrialSubjects"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/commerce/payment-capabilities": {
         parameters: {
             query?: never;
@@ -636,6 +989,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/social-events/events/{eventId}/live-broadcasts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description List legacy metadata visible to the broadcaster or artist followers; streaming URLs and keys are null. */
+        get: operations["listEventLiveBroadcasts"];
+        put?: never;
+        /** @description Native creation is unavailable503 after event, lineup, follower and caller-identity checks. No broadcast is persisted. */
+        post: operations["createEventLiveBroadcast"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/events/{eventId}/live-broadcasts/{broadcastId}/heartbeat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Broadcaster or follower updates the legacy viewer count and heartbeat. This is not evidence of provider connection; streaming URLs and keys are null. */
+        post: operations["heartbeatEventLiveBroadcast"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/social-events/events/{eventId}/live-broadcasts/{broadcastId}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Only the broadcaster may end the legacy session. Streaming URLs and keys are null; this does not revoke remote provider credentials. */
+        post: operations["endEventLiveBroadcast"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/social-events/events/{eventId}/rsvp": {
         parameters: {
             query?: never;
@@ -929,6 +1334,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/password-reset/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Consume an unexpired single-use recovery challenge
+         * @description Requires credential-bound metadata and a current database time within the 15-minute challenge lifetime, checked after lock waits. Legacy metadata-free challenges require a fresh request. Atomically replaces the password, consumes the challenge, revokes existing interactive sessions for the Party, and issues one replacement session. Failure rolls back these changes.
+         */
+        post: operations["confirmPasswordReset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/password/change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change a password using the current password
+         * @description Requires current password proof and an explicit username or active bearer token identifying the credential. Atomically revokes the Party's interactive sessions and issues a replacement. Service tokens retain their separate policy.
+         */
+        post: operations["changePassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/password/change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change a password using the current password
+         * @description Requires current password proof and an explicit username or active bearer token identifying the credential. Atomically revokes the Party's interactive sessions and issues a replacement. Service tokens retain their separate policy.
+         */
+        post: operations["changePasswordV1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/login": {
         parameters: {
             query?: never;
@@ -983,6 +1448,26 @@ export interface paths {
          * @description Registers a new party + credential pair, sets a session cookie, and returns a ready-to-use token.
          */
         post: operations["signup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/signup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an account
+         * @description Registers a new party + credential pair, sets a session cookie, and returns a ready-to-use token.
+         */
+        post: operations["signupV1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1379,6 +1864,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/hooks/whatsapp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify WhatsApp webhook
+         * @description Echoes the hub.challenge parameter when the verify token matches.
+         */
+        get: operations["verifyWhatsAppWebhookLegacy"];
+        put?: never;
+        /**
+         * Receive WhatsApp webhook
+         * @description Consumes WhatsApp Cloud API message payloads and triggers keyword-based enrollment.
+         */
+        post: operations["handleWhatsAppWebhookLegacy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/instagram/reply": {
         parameters: {
             query?: never;
@@ -1439,6 +1948,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/instagram/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Verify Instagram webhook
+         * @description Echoes hub.challenge when verify token matches.
+         */
+        get: operations["verifyInstagramWebhook"];
+        put?: never;
+        /**
+         * Receive Instagram webhook
+         * @description Consumes Meta Instagram webhook payloads for Messenger inbox ingestion.
+         */
+        post: operations["handleInstagramWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/facebook/webhook": {
         parameters: {
             query?: never;
@@ -1489,7 +2022,10 @@ export interface paths {
         post: {
             parameters: {
                 query?: never;
-                header?: never;
+                header: {
+                    /** @description HMAC-SHA256 over the exact raw request bytes using the configured Meta app secret; signature presence alone is insufficient. */
+                    "X-Hub-Signature-256": string;
+                };
                 path?: never;
                 cookie?: never;
             };
@@ -1500,7 +2036,28 @@ export interface paths {
             };
             responses: {
                 /** @description Processed */
-                204: {
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid JSON or webhook envelope. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Missing or invalid signature with a configured app secret. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Meta app secret is absent or blank; ingestion is unavailable. */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -3127,7 +3684,7 @@ export interface paths {
         head?: never;
         /**
          * Update user account
-         * @description Update username, active flag, roles, or force a password reset for a specific user.
+         * @description Strict administrator updates one credential's username, active flag or password. Disable, username change or password replacement atomically revokes the Party's existing password, Google and recovery tokens; custom service tokens remain separately managed. Another active credential may authenticate anew.
          */
         patch: operations["adminUpdateUser"];
         trace?: never;
@@ -3269,7 +3826,7 @@ export interface paths {
         };
         /**
          * Search active radio streams
-         * @description Returns active streams. Country and genre filtering use immutable UUIDs of active persisted references.
+         * @description Returns active streams excluding quarantined UUID-path URLs that can contain historical native publishing keys. Country and genre filtering use immutable UUIDs of active persisted references.
          */
         get: operations["searchRadioStreams"];
         put?: never;
@@ -3367,8 +3924,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Create a radio transmission
-         * @description Creates ingest and listening endpoints. The optional genre is referenced only by canonical UUID.
+         * Native radio broadcasting unavailable
+         * @description Returns 503 after normal authentication and request decoding. No stream is persisted. Endpoint configuration cannot override this safety boundary; a verified provider must separate listener identity from publish authority.
          */
         post: operations["createRadioTransmission"];
         delete?: never;
@@ -3384,7 +3941,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get current user's radio presence */
+        /**
+         * Get current user's radio presence
+         * @description Quarantined UUID-path presence is returned as null.
+         */
         get: operations["getRadioPresence"];
         put?: never;
         /** Set current user's radio presence */
@@ -3403,7 +3963,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get a party's radio presence */
+        /**
+         * Get a party's radio presence
+         * @description Quarantined UUID-path presence is returned as null.
+         */
         get: operations["getPartyRadioPresence"];
         put?: never;
         post?: never;
@@ -5150,6 +5713,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/bookings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List bookings within the caller's object scope
+         * @description Scheduling access is required. Admin, Manager, StudioManager and Reception can view the studio calendar; other actors see only bookings where their party is the customer or assigned engineer. Query filters never widen this scope. A foreign or missing bookingId returns an empty list. Only the studio-wide unfiltered calendar includes synthetic course sessions.
+         */
+        get: operations["listBookings"];
+        put?: never;
+        /**
+         * Create an authenticated studio booking
+         * @description Scheduling access is required. Studio-wide roles may choose a customer; other actors may create only for themselves, with an omitted/null partyId resolving to their authenticated party. Resource conflicts roll back the transaction. This compatibility operation does not establish payment.
+         */
+        post: operations["createBooking"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bookings/{bookingId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bookingId: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update an owned, assigned or staff-accessible booking
+         * @description Scheduling access and persisted object scope are checked before mutation; a requested engineer assignment cannot grant access. Updates serialize on the booking row and project interval/status changes atomically into the exclusion-backed calendar. Checkout-bound intervals/offering and lifecycle cannot diverge from their authoritative runtime. Omitted/null fields retain existing values; a blank notes string clears notes. At least one field must be non-null. Resources and customer ownership cannot be reassigned here.
+         */
+        put: operations["updateBooking"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/bookings/public/availability": {
         parameters: {
             query?: never;
@@ -5886,6 +6495,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
+        /** @description Requires Admin role and Admin module with a reviewer distinct from the claimant. Decisions serialize on the current claim; identical-state retries preserve review evidence and cannot reactivate revoked grants. */
         patch: operations["decideDirectoryClaim"];
         trace?: never;
     };
@@ -7915,6 +8525,55 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        EventLiveBroadcastDTO: {
+            elbId: string | null;
+            elbEventId: string | null;
+            elbArtistId: string;
+            elbArtistName: string;
+            elbBroadcasterName: string;
+            elbBroadcasterPartyId: string | null;
+            elbTitle: string;
+            elbDescription: string | null;
+            elbStatus: string;
+            /** @description Always null while native streaming is unavailable */
+            elbPlaybackUrl: string | null;
+            /** @description Always null while native streaming is unavailable */
+            elbIngestUrl: string | null;
+            /** @description Always null while native streaming is unavailable */
+            elbWhipUrl: string | null;
+            /** @description Always null while native streaming is unavailable */
+            elbStreamKey: string | null;
+            elbViewerCount: number;
+            /** Format: date-time */
+            elbStartedAt: string | null;
+            /** Format: date-time */
+            elbEndedAt: string | null;
+            /** Format: date-time */
+            elbLastHeartbeatAt: string | null;
+        };
+        EventLiveBroadcastCreateDTO: {
+            elbCreateArtistId: string;
+            elbCreateArtistName?: string;
+            elbCreateBroadcasterName?: string;
+            elbCreateBroadcasterPartyId?: string;
+            elbCreateTitle?: string;
+            elbCreateDescription?: string;
+            elbCreateQuality?: string;
+        };
+        EventLiveBroadcastHeartbeatDTO: {
+            /** @description Clamped to -1000 through 1000 by the legacy handler */
+            elbhViewerDelta?: number;
+        };
+        EventLiveBroadcastEndDTO: {
+            elbEndBroadcasterPartyId?: string;
+        };
+        TrialSubject: {
+            /** Format: int64 */
+            subjectId: number;
+            name: string;
+            active: boolean;
+            roomIds: string[];
+        };
         /** @enum {string} */
         PaymentCapabilityName: "one_time" | "recurring" | "tokenization" | "three_ds" | "installments" | "authorize" | "capture" | "void" | "full_refund" | "partial_refund" | "disputes" | "chargebacks" | "payment_link" | "signed_webhook" | "server_verification" | "connected_accounts" | "split_settlement" | "seller_payouts";
         PaymentRoute: {
@@ -9459,6 +10118,63 @@ export interface components {
             customerName?: string | null;
             partyDisplayName?: string | null;
             resources: components["schemas"]["BookingResource"][];
+            courseSlug?: string | null;
+            /** Format: double */
+            coursePrice?: number | null;
+            courseCurrency?: string | null;
+            courseCapacity?: number | null;
+            courseRemaining?: number | null;
+            courseLocation?: string | null;
+        };
+        BookingCreate: {
+            cbTitle: string;
+            /** Format: date-time */
+            cbStartsAt: string;
+            /** Format: date-time */
+            cbEndsAt: string;
+            /** @description One of Tentative, Confirmed, InProgress, Completed, Cancelled, NoShow; normalized case and separators accepted */
+            cbStatus: string;
+            cbNotes?: string | null;
+            /** Format: int64 */
+            cbPartyId?: number | null;
+            /** Format: int64 */
+            cbEngineerPartyId?: number | null;
+            cbEngineerName?: string | null;
+            /** Format: uuid */
+            cbServiceOfferingId: string;
+            cbResourceIds?: string[] | null;
+        };
+        /** @description At least one supported field must be non-null; null alone is not an update. */
+        BookingUpdate: {
+            ubTitle?: string | null;
+            /** Format: date-time */
+            ubStartsAt?: string | null;
+            /** Format: date-time */
+            ubEndsAt?: string | null;
+            /** @description One of Tentative, Confirmed, InProgress, Completed, Cancelled, NoShow; normalized case and separators accepted */
+            ubStatus?: string | null;
+            ubNotes?: string | null;
+            /** Format: int64 */
+            ubEngineerPartyId?: number | null;
+            ubEngineerName?: string | null;
+            /** Format: uuid */
+            ubServiceOfferingId?: string | null;
+        } | {
+            ubTitle: string;
+        } | {
+            ubStartsAt: string;
+        } | {
+            ubEndsAt: string;
+        } | {
+            ubStatus: string;
+        } | {
+            ubNotes: string;
+        } | {
+            ubEngineerPartyId: number;
+        } | {
+            ubEngineerName: string;
+        } | {
+            ubServiceOfferingId: string;
         };
         PublicBookingCreate: {
             pbFullName: string;
@@ -10707,6 +11423,13 @@ export interface components {
             resolutionPlanId: number;
             resolutionConflicts: components["schemas"]["DdexConflictResolution"][];
         };
+        DdexPreview: {
+            previewMessageId: string;
+            previewSender: string;
+            previewReleaseCount: number;
+            previewResourceCount: number;
+            previewWarnings: string[];
+        };
         DdexDownloadResponse: {
             downloadFileName: string;
             downloadContentType: string;
@@ -11231,10 +11954,25 @@ export interface components {
             fanArtistIds?: number[];
             /**
              * Format: int64
-             * @description Optional existing artist profile to claim when it is not already assigned to a user. A verified email match applies the persisted artist-claim policy server-side.
+             * @deprecated
+             * @description Unsupported legacy ownership claim. A supplied positive identifier is rejected with 403 before database effects. Create an independent account, then use the authenticated reviewed directory-claim workflow.
              */
             claimArtistId?: number;
             onboardingIntent?: components["schemas"]["OnboardingIntent"];
+        };
+        PasswordResetConfirmRequest: {
+            /** Format: uuid */
+            token: string;
+            /** Format: password */
+            newPassword: string;
+        };
+        ChangePasswordRequest: {
+            /** @description Optional when an active bearer token supplies the identifier */
+            username?: string;
+            /** Format: password */
+            currentPassword: string;
+            /** Format: password */
+            newPassword: string;
         };
         LoginResponse: {
             /** @description Bearer token for authenticated requests when a client is not using cookies. */
@@ -12248,10 +12986,10 @@ export interface components {
             uacActive?: boolean | null;
         };
         UpdateUserAccountRequest: {
-            uauUsername?: string | null;
+            uauUsername?: string;
             /** Format: password */
-            uauPassword?: string | null;
-            uauActive?: boolean | null;
+            uauPassword?: string;
+            uauActive?: boolean;
         };
         ArtistProfile: {
             /** Format: int64 */
@@ -13714,9 +14452,7 @@ export interface components {
             /** Format: int64 */
             amountMinor?: number | null;
             currency?: string | null;
-            metadata: {
-                [key: string]: unknown;
-            };
+            metadata: Record<string, never>;
             requestId: string;
             sourceClient: string;
         };
@@ -14850,6 +15586,1394 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    operationsWorkItems: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+                q?: string;
+                seen?: boolean;
+                entityType?: string;
+                status?: string;
+                priority?: string;
+                slaState?: string;
+                assigneePartyId?: number;
+                customerPartyId?: number;
+                service?: string;
+                from?: string;
+                to?: string;
+                minAmountMinor?: number;
+                maxAmountMinor?: number;
+                paymentState?: string;
+                organizationId?: string;
+                branchId?: string;
+                sourceChannel?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authoritative result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsWorkItemPage"];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflicting replay or state; no command effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command representation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operational data unavailable; command transaction rolled back */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsManualWorkItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationsManualWorkItemCreate"];
+            };
+        };
+        responses: {
+            /** @description Authoritative result */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsWorkItem"];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflicting replay or state; no command effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command representation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operational data unavailable; command transaction rolled back */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsWorkItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workItemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authoritative result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsWorkItemDetail"];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflicting replay or state; no command effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command representation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operational data unavailable; command transaction rolled back */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsWorkItemNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workItemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationsNoteCreate"];
+            };
+        };
+        responses: {
+            /** @description Authoritative result */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsNote"];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflicting replay or state; no command effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command representation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operational data unavailable; command transaction rolled back */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsIntegrationFailures: {
+        parameters: {
+            query?: {
+                organizationId?: string;
+                status?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authoritative result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsIntegrationFailure"][];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflicting replay or state; no command effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command representation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operational data unavailable; command transaction rolled back */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsReplayFailure: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                failureId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationsReplayCommand"];
+            };
+        };
+        responses: {
+            /** @description Authoritative result */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsIntegrationFailure"];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflicting replay or state; no command effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command representation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operational data unavailable; command transaction rolled back */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsStreamEvents: {
+        parameters: {
+            query?: {
+                organizationId?: string;
+                afterId?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authoritative result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsStreamBatch"];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflicting replay or state; no command effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command representation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operational data unavailable; command transaction rolled back */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsSavedViews: {
+        parameters: {
+            query?: {
+                organizationId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authoritative result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsSavedView"][];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflicting replay or state; no command effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command representation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operational data unavailable; command transaction rolled back */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsSaveView: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationsSavedViewCreate"];
+            };
+        };
+        responses: {
+            /** @description Authoritative result */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsSavedView"];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflicting replay or state; no command effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command representation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operational data unavailable; command transaction rolled back */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsPushSubscription: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationsPushSubscriptionCreate"];
+            };
+        };
+        responses: {
+            /** @description Authoritative result */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsPushSubscription"];
+                };
+            };
+            /** @description Malformed input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflicting replay or state; no command effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command representation */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Operational data unavailable; command transaction rolled back */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Push encryption is not configured; no subscription committed */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsMetrics: {
+        parameters: {
+            query?: {
+                organizationId?: string;
+                branchId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Scoped metrics */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsMetrics"];
+                };
+            };
+            /** @description Malformed scope selector */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Metrics unavailable */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsWorkItemSeen: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workItemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationsVersionedCommand"];
+            };
+        };
+        responses: {
+            /** @description Authoritative committed work item */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsWorkItem"];
+                };
+            };
+            /** @description Malformed request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Inactive or invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scoped membership denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Item missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Version changed or transactional conflict; no effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command or transition */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction rolled back; operational data unavailable */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsWorkItemTransition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workItemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationsTransitionCommand"];
+            };
+        };
+        responses: {
+            /** @description Authoritative committed work item */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsWorkItem"];
+                };
+            };
+            /** @description Malformed request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Inactive or invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scoped membership denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Item missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Version changed or transactional conflict; no effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command or transition */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction rolled back; operational data unavailable */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsWorkItemAssignment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workItemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationsAssignmentCommand"];
+            };
+        };
+        responses: {
+            /** @description Authoritative committed work item */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsWorkItem"];
+                };
+            };
+            /** @description Malformed request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Inactive or invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scoped membership denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Item missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Version changed or transactional conflict; no effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command or transition */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction rolled back; operational data unavailable */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsWorkItemPriority: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workItemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationsPriorityCommand"];
+            };
+        };
+        responses: {
+            /** @description Authoritative committed work item */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsWorkItem"];
+                };
+            };
+            /** @description Malformed request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Inactive or invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scoped membership denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Item missing or not visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Version changed or transactional conflict; no effects committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid command or transition */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction rolled back; operational data unavailable */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsCreateApproval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationsApprovalCreate"];
+            };
+        };
+        responses: {
+            /** @description New or identically replayed approval */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsApproval"];
+                };
+            };
+            /** @description Malformed request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Linked item outside visible scope */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency key bound to another request or transaction conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unsupported action */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction rolled back; operational data unavailable */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    operationsDecideApproval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                approvalId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OperationsApprovalDecision"];
+            };
+        };
+        responses: {
+            /** @description Committed approval decision */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsApproval"];
+                };
+            };
+            /** @description Malformed request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid current session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid decision or blank reason */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction rolled back; operational data unavailable */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    uploadDriveFile: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Goog-Access-Token"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                    folderId?: string;
+                    name?: string;
+                    accessToken?: string;
+                    idempotencyKey?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Provider file reference; sharing is separately indicated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        duFileId: string;
+                        duWebViewLink: string | null;
+                        duWebContentLink: string | null;
+                        duPublicUrl: string | null;
+                    };
+                };
+            };
+            /** @description Invalid multipart input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid TDF session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authenticated actor lacks Drive access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Retry key conflicts with the actor or request */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider request or response failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider credentials are not configured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listPublicTrialSubjects: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active subject catalog */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrialSubject"][];
+                };
+            };
+        };
+    };
+    listManagedTrialSubjects: {
+        parameters: {
+            query?: {
+                includeInactive?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active subjects, or all subjects when includeInactive is true */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrialSubject"][];
+                };
+            };
+            /** @description Invalid includeInactive query */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing, invalid or inactive bearer session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Actor lacks school access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listPaymentCapabilities: {
         parameters: {
             query: {
@@ -17291,6 +19415,218 @@ export interface operations {
             };
         };
     };
+    listEventLiveBroadcasts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Legacy broadcast metadata without streaming endpoints or keys */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventLiveBroadcastDTO"][];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid authentication */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Actor is not authorized for this broadcast operation */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event or referenced resource missing or hidden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createEventLiveBroadcast: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventLiveBroadcastCreateDTO"];
+            };
+        };
+        responses: {
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid authentication */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Actor is not authorized for this broadcast operation */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event or referenced resource missing or hidden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Native broadcasting unavailable pending verified publisher authorization */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    heartbeatEventLiveBroadcast: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+                broadcastId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventLiveBroadcastHeartbeatDTO"];
+            };
+        };
+        responses: {
+            /** @description Legacy broadcast metadata without streaming endpoints or keys */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventLiveBroadcastDTO"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid authentication */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Actor is not authorized for this broadcast operation */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event or referenced resource missing or hidden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    endEventLiveBroadcast: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+                broadcastId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventLiveBroadcastEndDTO"];
+            };
+        };
+        responses: {
+            /** @description Legacy broadcast metadata without streaming endpoints or keys */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventLiveBroadcastDTO"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid authentication */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Actor is not authorized for this broadcast operation */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event or referenced resource missing or hidden */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     getMyEventRsvp: {
         parameters: {
             query?: never;
@@ -17998,7 +20334,7 @@ export interface operations {
         };
         responses: {
             /** @description Request processed without revealing whether the account exists or email delivery succeeded. */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -18006,6 +20342,167 @@ export interface operations {
             };
             /** @description Invalid request email. */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirmPasswordReset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordResetConfirmRequest"];
+            };
+        };
+        responses: {
+            /** @description Password replaced and session issued */
+            200: {
+                headers: {
+                    /** @description Replacement browser session */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            /** @description Invalid payload or invalid, expired, revoked, consumed or unbound challenge */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Credential is disabled */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction failed; no credential or session changes committed */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    changePassword: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer token used to resolve the username when omitted from the body; current password proof is still required. */
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Password replaced and session issued */
+            200: {
+                headers: {
+                    /** @description Replacement browser session */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            /** @description Invalid request fields */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current credentials or identifier session are invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Credential is disabled */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction failed; no credential or session changes committed */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    changePasswordV1: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Bearer token used to resolve the username when omitted from the body; current password proof is still required. */
+                Authorization?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Password replaced and session issued */
+            200: {
+                headers: {
+                    /** @description Replacement browser session */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            /** @description Invalid request fields */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current credentials or identifier session are invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Credential is disabled */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction failed; no credential or session changes committed */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -18102,6 +20599,67 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["LoginResponse"];
                 };
+            };
+            /** @description Invalid signup fields or missing terms acceptance */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Public signup cannot claim an existing artist identity */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Email already registered */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    signupV1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SignupRequest"];
+            };
+        };
+        responses: {
+            /** @description Account created */
+            200: {
+                headers: {
+                    /** @description Session cookie for browser-based clients. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            /** @description Invalid signup fields or missing terms acceptance */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Public signup cannot claim an existing artist identity */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Email already registered */
             409: {
@@ -18802,7 +21360,10 @@ export interface operations {
     handleWhatsAppWebhook: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description HMAC-SHA256 over the exact raw request bytes using the configured Meta app secret; signature presence alone is insufficient. */
+                "X-Hub-Signature-256": string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -18813,7 +21374,105 @@ export interface operations {
         };
         responses: {
             /** @description Processed */
-            204: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid JSON or webhook envelope. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid signature with a configured app secret. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Meta app secret is absent or blank; ingestion is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    verifyWhatsAppWebhookLegacy: {
+        parameters: {
+            query?: {
+                "hub.mode"?: string;
+                "hub.verify_token"?: string;
+                "hub.challenge"?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Challenge echoed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            /** @description Verify token mismatch */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    handleWhatsAppWebhookLegacy: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description HMAC-SHA256 over the exact raw request bytes using the configured Meta app secret; signature presence alone is insufficient. */
+                "X-Hub-Signature-256": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WhatsAppWebhook"];
+            };
+        };
+        responses: {
+            /** @description Processed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid JSON or webhook envelope. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid signature with a configured app secret. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Meta app secret is absent or blank; ingestion is unavailable. */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -18900,6 +21559,83 @@ export interface operations {
                 content: {
                     "application/json": Record<string, never>;
                 };
+            };
+        };
+    };
+    verifyInstagramWebhook: {
+        parameters: {
+            query?: {
+                "hub.mode"?: string;
+                "hub.verify_token"?: string;
+                "hub.challenge"?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Verification challenge */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            /** @description Verify token mismatch */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    handleInstagramWebhook: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description HMAC-SHA256 over the exact raw request bytes using the configured Meta app secret; signature presence alone is insufficient. */
+                "X-Hub-Signature-256": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description Processed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid JSON or webhook envelope. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid signature with a configured app secret. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Meta app secret is absent or blank; ingestion is unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -19781,7 +22517,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Follow removed */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -20432,7 +23168,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Draft archived without hard deletion. */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -21382,7 +24118,7 @@ export interface operations {
         };
         responses: {
             /** @description Ordering updated. */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -22225,6 +24961,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description UUID-path URL quarantined pending legacy broadcast reconciliation */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     importRadioStreams: {
@@ -22333,17 +25076,29 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Transmission endpoints */
-            200: {
+            /** @description Invalid request representation */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["RadioTransmissionInfo"];
-                };
+                content?: never;
             };
-            /** @description Invalid metadata, unknown/inactive country UUID, or unknown/inactive/unpublished genre UUID */
-            400: {
+            /** @description Missing or invalid authentication */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Radio access denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Native broadcasting unavailable pending verified publisher authorization */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -22400,6 +25155,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description UUID-path URL quarantined pending legacy broadcast reconciliation */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     clearRadioPresence: {
@@ -22412,7 +25174,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Presence cleared */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -22466,7 +25228,7 @@ export interface operations {
         };
         responses: {
             /** @description Intake created */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -22516,7 +25278,7 @@ export interface operations {
         };
         responses: {
             /** @description Feedback accepted */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -23376,6 +26138,15 @@ export interface operations {
             };
         };
         responses: {
+            /** @description Private document stored or retrieved by content hash */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DdexDocument"];
+                };
+            };
             /** @description Missing persisted `catalog.import` capability */
             403: {
                 headers: {
@@ -23383,8 +26154,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Storage integration is not implemented */
-            501: {
+            /** @description Required private storage or supported runtime profile is unavailable */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -23432,6 +26203,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Private XML encoded in a JSON download envelope */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DdexDownloadResponse"];
+                };
+            };
             /** @description Missing persisted `catalog.read` capability */
             403: {
                 headers: {
@@ -23439,8 +26219,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Private file storage integration is not implemented */
-            501: {
+            /** @description Required private storage or supported runtime profile is unavailable */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -23459,6 +26239,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Completed structural validation run; official XSD and recipient-profile validation have not run */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DdexValidationRun"];
+                };
+            };
             /** @description Missing persisted `catalog.import` capability */
             403: {
                 headers: {
@@ -23473,8 +26262,15 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Governed validation execution is not implemented */
-            501: {
+            /** @description Current document lifecycle or source binding changed; rejected validation makes no changes */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Required private storage or supported runtime profile is unavailable */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -23529,6 +26325,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description ERN 4.3.2 preview only; no import or delivery */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DdexPreview"];
+                };
+            };
             /** @description Missing persisted `catalog.read` capability */
             403: {
                 headers: {
@@ -23536,8 +26341,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Typed import preview generation is not implemented */
-            501: {
+            /** @description Required private storage or supported runtime profile is unavailable */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -23570,8 +26375,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Typed import planning is not implemented */
-            501: {
+            /** @description This capability is deliberately disabled until its verified runtime prerequisites are available */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -23608,8 +26413,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Conflict resolution is not implemented */
-            501: {
+            /** @description This capability is deliberately disabled until its verified runtime prerequisites are available */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -23635,8 +26440,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Import commit execution is not implemented */
-            501: {
+            /** @description This capability is deliberately disabled until its verified runtime prerequisites are available */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -23678,8 +26483,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Export rendering and private storage are not implemented */
-            501: {
+            /** @description This capability is deliberately disabled until its verified runtime prerequisites are available */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -23705,8 +26510,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Export rendering and private storage are not implemented */
-            501: {
+            /** @description This capability is deliberately disabled until its verified runtime prerequisites are available */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -23924,6 +26729,13 @@ export interface operations {
             };
             /** @description Cart not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stored cart quantity or price is invalid */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -26427,6 +29239,178 @@ export interface operations {
             };
         };
     };
+    listBookings: {
+        parameters: {
+            query?: {
+                bookingId?: number;
+                partyId?: number;
+                engineerPartyId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Scoped bookings; party and engineer filters combine by union within object scope */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Booking"][];
+                };
+            };
+            /** @description Invalid positive identifier filter */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Scheduling module access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createBooking: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BookingCreate"];
+            };
+        };
+        responses: {
+            /** @description Persisted booking */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Booking"];
+                };
+            };
+            /** @description Invalid or unknown input field */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Scheduling access or customer scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource conflict or stale concurrent operation; no mutation committed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid referenced party */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateBooking: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bookingId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BookingUpdate"];
+            };
+        };
+        responses: {
+            /** @description Authoritatively accepted booking */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Booking"];
+                };
+            };
+            /** @description Invalid */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Scheduling module access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Booking absent or outside the caller's object scope */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Calendar */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid referenced party or offering */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     getPublicBookingAvailability: {
         parameters: {
             query: {
@@ -27890,8 +30874,43 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Reviewed claim; only approval can create a manager grant */
+            /** @description Reviewed claim; only a new approval transition creates a manager grant */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing Admin role or module or attempted self-review */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Claim not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Current claim state forbids this transition */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction failed; decision and grant rolled back */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -29095,7 +32114,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Read state persisted */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -30571,7 +33590,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Favorite stored */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -30591,7 +33610,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Favorite removed */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

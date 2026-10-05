@@ -20,7 +20,12 @@ That preflight checks:
 
 ## Canonical Sources
 
+- System requirements, authority, traceability and open conformance obligations: `formal/system/README.md`. `specs.yaml` is historical v1 material.
+- Current production operations: `ops/hetzner/README.md`. Use `scripts/inspect-hetzner-production.mjs` for read-only runtime evidence; the historical Fly preflight/release commands are retired. A successful inspection is not release readiness.
+- Inventories require the exact initialized Mobile gitlink: `python3 scripts/specification-inventory.py --check` and `python3 scripts/specification-conformance.py --check`.
+- After API regeneration, run `node scripts/check-generated-api.mjs`; root Git pathspecs cannot detect generated-file drift inside Mobile.
 - Personal/session behavior: `AGENTS.md`, `SOUL.md`, `USER.md`
+- Backend build authority: `tdf-hq/stack.yaml` selects the toolchain and `tdf-hq/tdf-hq.cabal` defines the package. Retired Hpack input is preserved only in `docs/archive/backend-package-legacy.yaml`; do not regenerate the active Cabal file from it.
 - Backend contract used by generated clients: `tdf-hq/docs/openapi/api.yaml`
 - Generated client outputs:
   - `tdf-hq-ui/src/api/generated/types.ts`
