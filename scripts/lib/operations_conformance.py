@@ -82,6 +82,9 @@ def verify_operations(sql, request, check, env, database, output, actors):
     for kind, arguments in [('priority', {}), ('seen', {}), ('assignment', {'assigneePartyId': int(actors['manager'])}),
                             ('transition', {'targetStatus': 'resolved'})]:
         key = item()
+        for invalid in [{'version': 0}, {'requestId': ''}, {'sourceClient': ''}]:
+            check('operations ' + kind + ' rejects invalid ' + next(iter(invalid)),
+                  command(kind, key, **arguments, **invalid)()[0] == 422 and effects(key) == (0, 0, 0))
         responses = race('SELECT id FROM operations_work_item WHERE id=' + q(key) + ' FOR UPDATE',
                          [command(kind, key, **arguments) for _ in range(8)])
         check('operations ' + kind + ' same-version race has one winner', sorted(r[0] for r in responses) == [200] + [409] * 7)
@@ -170,7 +173,7 @@ def verify_operations(sql, request, check, env, database, output, actors):
         check('operations rejects bound approval payload change ' + next(iter(changes)), create({**body, **changes})[0] == 409)
     check('operations rejects key replay by another requester', create(body, 'fixture-manager')[0] == 409)
     check('operations refuses linked item outside branch', create(approval_body(workItemId=item(branches[1])))[0] == 404)
-    for changes in [{'amountMinor': -1}, {'currency': 'usd'}, {'idempotencyKey': ' '}, {'expiresAt': '2000-01-01T00:00:00Z'}]:
+    for changes in [{'requestId': ''}, {'sourceClient': ''}, {'amountMinor': -1}, {'currency': 'usd'}, {'idempotencyKey': ' '}, {'expiresAt': '2000-01-01T00:00:00Z'}]:
         check('operations rejects invalid approval ' + next(iter(changes)), create(approval_body(**changes))[0] == 422)
     check('operations rejected approval creates and replays persist no effects', before_rejections == (count('operations_admin_audit', 'true'), count('operations_approval_request', 'true')))
     self_decision = {'decision': 'approved', 'reason': 'Synthetic', 'expectedDecision': 'pending', 'requestId': 'self', 'sourceClient': 'conformance'}

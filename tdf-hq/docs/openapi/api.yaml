@@ -16450,7 +16450,6 @@ components:
     OperationsVersionedCommand:
       type: object
       required: [expectedVersion, requestId, sourceClient]
-      additionalProperties: false
       properties:
         expectedVersion: { type: integer, format: int64, minimum: 1 }
         reason: { type: string, nullable: true }
@@ -16475,7 +16474,6 @@ components:
     OperationsPriorityCommand:
       type: object
       required: [expectedVersion, priority, reason, requestId, sourceClient]
-      additionalProperties: false
       properties:
         expectedVersion: { type: integer, format: int64, minimum: 1 }
         priority: { $ref: '#/components/schemas/OperationsPriority' }
@@ -16529,8 +16527,8 @@ components:
         reason: { type: string, minLength: 1 }
         idempotencyKey: { type: string, minLength: 1 }
         expiresAt: { type: string, format: date-time, nullable: true }
-        requestId: { type: string }
-        sourceClient: { type: string }
+        requestId: { type: string, minLength: 1 }
+        sourceClient: { type: string, minLength: 1 }
     OperationsApprovalDecision:
       type: object
       required: [decision, reason, expectedDecision, requestId, sourceClient]
@@ -16538,8 +16536,8 @@ components:
         decision: { type: string, enum: [approved, rejected] }
         reason: { type: string, minLength: 1 }
         expectedDecision: { type: string, enum: [pending] }
-        requestId: { type: string }
-        sourceClient: { type: string }
+        requestId: { type: string, minLength: 1 }
+        sourceClient: { type: string, minLength: 1 }
     OperationsApproval:
       type: object
       required: [id, organizationId, actionType, targetEntityType, targetEntityId, requesterPartyId, requesterRole, requestReason, requestedAt, decision, executionStatus]

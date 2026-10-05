@@ -15557,6 +15557,16 @@
         "line": 24
       },
       "reviewBatch": "ticket-admission-2026-10-05"
+    },
+    {
+      "id": "b98a766c7b4ff0a8cb40",
+      "classification": "security-system-registry",
+      "disposition": "retain-static",
+      "specializedModel": "Canonical security roles interpreted by Operations mutation policy",
+      "priority": "P1-security",
+      "risk": "A stale or enlarged static role adapter could admit unauthorized work-item mutations.",
+      "justification": "Extracts the existing Operations mutating-role allowlist without adding roles; grants are resolved from locked canonical assignment and role rows. OPS-COMMAND-001 and real HTTP controls own this policy boundary.",
+      "reviewed": true
     }
   ]
 }

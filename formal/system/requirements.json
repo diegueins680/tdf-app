@@ -4420,7 +4420,8 @@
       ],
       "tests": [
         "scripts/lib/operations_conformance.py",
-        "scripts/test-booking-conformance.py"
+        "scripts/test-booking-conformance.py",
+        "scripts/__tests__/operations-api-schema.test.mjs"
       ],
       "formalModels": [
         "formal/event-operations/OperationsCommandFence.tla"
@@ -4489,7 +4490,8 @@
       ],
       "tests": [
         "scripts/lib/operations_conformance.py",
-        "scripts/test-booking-conformance.py"
+        "scripts/test-booking-conformance.py",
+        "scripts/__tests__/operations-api-schema.test.mjs"
       ],
       "formalModels": [
         "formal/event-operations/OperationsApproval.tla"

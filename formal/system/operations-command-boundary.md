@@ -16,7 +16,9 @@ membership are checked under locks retained through commit. Visibility follows
 Admin, Manager or StudioManager. The other commands require an operations mutating
 role. A frontend control is never this authorization boundary.
 
-A command's `expectedVersion` must equal the locked item version. Exactly one row
+Request/source identifiers must be nonempty; version must be positive. JSON unknown
+fields are ignored for forward compatibility, including derived transition and
+assignment commands. A command's `expectedVersion` must equal the locked item version. Exactly one row
 must change, with version incremented once. The row, SLA timer changes, event,
 stream notification record and audit record commit together, including successful
 response decoding. A stale contender returns409 with no effects. Transaction

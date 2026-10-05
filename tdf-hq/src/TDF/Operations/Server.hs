@@ -109,6 +109,11 @@ runOperationsWrite original action = runOperationsDb $ do
     action original {auRoles = sort (nub roles)}
   maybe (rejectCommand err401) pure admitted
 
+validateCommandMetadata :: Text -> Text -> SqlPersistT IO ()
+validateCommandMetadata requestId sourceClient =
+  when (T.null requestId || T.null sourceClient) $
+    rejectCommand err422 {errBody = "Request and source identifiers must not be empty"}
+
 lockOperationsScope :: AuthedUser -> OperationsScope -> [Int64] -> SqlPersistT IO ()
 lockOperationsScope user scope additional = do
   let organization = uuidValue (scopeOrganizationId scope)
@@ -132,6 +137,7 @@ withWorkItemCommand
   -> OperationsM Ops.WorkItemDTO
 withWorkItemCommand original itemId expected managerOnly additional action =
   runOperationsWrite original $ \user -> do
+    when (expected < 1) $ rejectCommand err422
     let roles = if managerOnly then [Admin, Manager, StudioManager] else operationsMutatingRoles
     unless (any (`elem` auRoles user) roles) $ rejectCommand err403
     locked <- rawSql "SELECT id::text FROM operations_work_item WHERE id=?::uuid FOR UPDATE"
@@ -603,6 +609,7 @@ recordWorkItemEffect user scope itemId action eventType requestId reason previou
 markSeenHandler :: AuthedUser -> UUID -> Ops.VersionedCommand -> OperationsM Ops.WorkItemDTO
 markSeenHandler original itemId command =
   withWorkItemCommand original itemId (command.expectedVersion) False [] $ \user scope before -> do
+    validateCommandMetadata (command.requestId) (command.sourceClient)
     now <- liftIO getCurrentTime
     updateCount <- rawExecuteCount
       "UPDATE operations_work_item SET first_seen_by = COALESCE(first_seen_by, ?), \
@@ -618,6 +625,7 @@ markSeenHandler original itemId command =
 transitionHandler :: AuthedUser -> UUID -> Ops.TransitionCommand -> OperationsM Ops.WorkItemDTO
 transitionHandler original itemId command =
   withWorkItemCommand original itemId (command.expectedVersion) False [] $ \user scope before -> do
+    validateCommandMetadata (command.requestId) (command.sourceClient)
     either (const (rejectCommand err422 {errBody = "Invalid operational transition"})) pure $ validateTransition TransitionContext
       { currentStatus = before.status
       , targetStatus = command.targetStatus
@@ -673,6 +681,7 @@ transitionHandler original itemId command =
 assignmentHandler :: AuthedUser -> UUID -> Ops.AssignmentCommand -> OperationsM Ops.WorkItemDTO
 assignmentHandler original itemId command =
   withWorkItemCommand original itemId (command.expectedVersion) False (maybe [] pure (command.assigneePartyId)) $ \user scope before -> do
+    validateCommandMetadata (command.requestId) (command.sourceClient)
     now <- liftIO getCurrentTime
     updateCount <- rawExecuteCount
       "UPDATE operations_work_item SET assignee_party_id = ?, responsible_team = ?::text, \
@@ -691,6 +700,7 @@ assignmentHandler original itemId command =
 priorityHandler :: AuthedUser -> UUID -> Ops.PriorityCommand -> OperationsM Ops.WorkItemDTO
 priorityHandler original itemId command =
   withWorkItemCommand original itemId (command.expectedVersion) True [] $ \user scope before -> do
+    validateCommandMetadata (command.requestId) (command.sourceClient)
     when (T.null (T.strip (command.reason))) $ rejectCommand err422 {errBody = "Priority override reason is required"}
     now <- liftIO getCurrentTime
     updateCount <- rawExecuteCount
@@ -810,6 +820,7 @@ resolveCommandScope user organization requestedBranch = do
 
 createApprovalHandler :: AuthedUser -> Ops.ApprovalCreate -> OperationsM Ops.ApprovalDTO
 createApprovalHandler original command = runOperationsWrite original $ \user -> do
+  validateCommandMetadata (command.requestId) (command.sourceClient)
   unless (any (`elem` auRoles user) [Admin, Manager, Accounting]) $ rejectCommand err403
   unless (requiresTwoPersonApproval (command.actionType) Nothing (fromMaybe 0 (command.amountMinor))) $
     rejectCommand err422 {errBody = "Action does not require dual approval"}
@@ -883,6 +894,7 @@ createApprovalHandler original command = runOperationsWrite original $ \user -> 
 
 decideApprovalHandler :: AuthedUser -> UUID -> Ops.ApprovalDecision -> OperationsM Ops.ApprovalDTO
 decideApprovalHandler original approvalId command = runOperationsWrite original $ \user -> do
+  validateCommandMetadata (command.requestId) (command.sourceClient)
   unless (any (`elem` auRoles user) [Admin, Manager, Accounting]) $ rejectCommand err403
   let decision = T.toLower (T.strip (command.decision))
   unless (decision `elem` ["approved", "rejected"] && not (T.null (T.strip (command.reason)))) $
