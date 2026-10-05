@@ -5161,10 +5161,11 @@
       "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
       "evidence": "Current candidate gate receipts must be retained separately; historical source checks are not a current integration pass.",
       "status": "specified and implemented",
-      "critical": true,
+      "critical": false,
       "confidence": "Scoped implementation and regression correspondence; production acceptance remains separate.",
       "ambiguity": [
-        "No whole-program refinement or external provider/device acceptance is asserted."
+        "No whole-program refinement or external provider/device acceptance is asserted.",
+        "Informational public-page mapping is noncritical; privacy data handling and deletion enforcement remain independently critical requirements."
       ],
       "conformance": {
         "classification": "PARTIAL",
