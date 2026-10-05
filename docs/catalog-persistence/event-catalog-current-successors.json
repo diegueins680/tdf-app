@@ -94,63 +94,72 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "f77cf115108e384e83a6",
+      "currentId": "cba40e9222e1254a3276",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 169,
+      "valueCount": 170,
       "previousResolution": {
         "historicalReplacementId": "7578a30aa3cc5aa23870",
-        "currentId": "d8e73943d72078a492ae",
+        "currentId": "f77cf115108e384e83a6",
         "file": "scripts/production-migrations.json",
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 168,
+        "valueCount": 169,
         "previousResolution": {
           "historicalReplacementId": "7578a30aa3cc5aa23870",
-          "currentId": "c66b265a7ea297c37542",
+          "currentId": "d8e73943d72078a492ae",
           "file": "scripts/production-migrations.json",
           "kind": "json-array",
           "name": "migrations",
-          "valueCount": 167,
+          "valueCount": 168,
           "previousResolution": {
             "historicalReplacementId": "7578a30aa3cc5aa23870",
-            "currentId": "c6915506d0f7b802519d",
+            "currentId": "c66b265a7ea297c37542",
             "file": "scripts/production-migrations.json",
             "kind": "json-array",
             "name": "migrations",
-            "valueCount": 166,
+            "valueCount": 167,
             "previousResolution": {
               "historicalReplacementId": "7578a30aa3cc5aa23870",
-              "currentId": "dc6d60d733c6eb69ebbf",
+              "currentId": "c6915506d0f7b802519d",
               "file": "scripts/production-migrations.json",
               "kind": "json-array",
               "name": "migrations",
-              "valueCount": 160,
+              "valueCount": 166,
               "previousResolution": {
                 "historicalReplacementId": "7578a30aa3cc5aa23870",
-                "currentId": "7bf93825f1431a6d52d6",
+                "currentId": "dc6d60d733c6eb69ebbf",
                 "file": "scripts/production-migrations.json",
                 "kind": "json-array",
                 "name": "migrations",
-                "valueCount": 159,
+                "valueCount": 160,
                 "previousResolution": {
-                  "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
-                  "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
-                  "currentId": "07da55e81a186d26df37",
-                  "valueCount": 115
+                  "historicalReplacementId": "7578a30aa3cc5aa23870",
+                  "currentId": "7bf93825f1431a6d52d6",
+                  "file": "scripts/production-migrations.json",
+                  "kind": "json-array",
+                  "name": "migrations",
+                  "valueCount": 159,
+                  "previousResolution": {
+                    "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+                    "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+                    "currentId": "07da55e81a186d26df37",
+                    "valueCount": 115
+                  },
+                  "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
                 },
-                "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+                "change": "Main f8925e339 preserves the original 159 migration entries, introduction commits and SQL bytes, then adds the reviewed forward-only discovery ownership metadata boundary. Retain its exact reviewed successor and the full previous mapping."
               },
-              "change": "Main f8925e339 preserves the original 159 migration entries, introduction commits and SQL bytes, then adds the reviewed forward-only discovery ownership metadata boundary. Retain its exact reviewed successor and the full previous mapping."
+              "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
             },
-            "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
+            "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
           },
           "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
         },
         "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
       },
-      "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+      "change": "Ordered 170-entry production migration registry. All 169 preceding entries and introduction commits are unchanged. An additive migration prevents approved/retired policy demotion and commercial edits, and appends explicit legacy quantity-limit corrections while preserving original audit rows. Replays do not duplicate corrections; rollback retains approval and audit evidence. This is governed release authority, not an editable business catalog."
     }
   ]
 }

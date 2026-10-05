@@ -14,7 +14,34 @@ BEGIN
   END;
   IF NOT rejected THEN RAISE EXCEPTION 'Approved limit was mutable'; END IF;
 
+  rejected := FALSE;
+  BEGIN
+    UPDATE event_ticket_checkout_policy SET approval_status='draft',active=FALSE WHERE event_id=1;
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM <> 'Published ticket policies cannot return to an earlier approval state' THEN RAISE; END IF;
+    rejected := TRUE;
+  END;
+  IF NOT rejected THEN RAISE EXCEPTION 'Approved policy could be demoted before changing its limit'; END IF;
+
   UPDATE event_ticket_checkout_policy SET approval_status='retired',active=FALSE WHERE event_id=1;
+  rejected := FALSE;
+  BEGIN
+    UPDATE event_ticket_checkout_policy SET approval_status='approved' WHERE event_id=1;
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM <> 'Published ticket policies cannot return to an earlier approval state' THEN RAISE; END IF;
+    rejected := TRUE;
+  END;
+  IF NOT rejected THEN RAISE EXCEPTION 'Retired policy could be revived'; END IF;
+
+  rejected := FALSE;
+  BEGIN
+    UPDATE event_ticket_checkout_policy SET tax_bps=100 WHERE event_id=1;
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM <> 'Published ticket policy is immutable; create a new version' THEN RAISE; END IF;
+    rejected := TRUE;
+  END;
+  IF NOT rejected THEN RAISE EXCEPTION 'Retired commercial terms could be edited'; END IF;
+
   rejected := FALSE;
   BEGIN
     UPDATE event_ticket_checkout_policy SET max_tickets_per_order=5 WHERE event_id=1;

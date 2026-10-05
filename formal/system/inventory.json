@@ -1522,6 +1522,8 @@
       "tdf-hq/sql/2026-10-05_ticket_admission_audit_rollback.sql",
       "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit.sql",
       "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit_rollback.sql",
+      "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history.sql",
+      "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history_rollback.sql",
       "tdf-hq/sql/2026-10-05_ticket_transfer_deadline.sql",
       "tdf-hq/sql/2026-10-05_ticket_transfer_deadline_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
@@ -3317,7 +3319,7 @@
     },
     {
       "path": "docs/events/patch-culture-vol-1/README.md",
-      "sha256": "b848b4d94531b4ff035e6f1eab7abc8b94f97d435d29e74edf984ef094229a22",
+      "sha256": "b2de7eaeb1a916f752ed8dbc7846ed9c92c3e604d55d0fd9dde256d3bbe532b8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
