@@ -134,7 +134,8 @@
       "implementation": [
         "scripts/lib/verification-evidence.mjs",
         "scripts/verify-system-evidence.mjs",
-        ".github/workflows/event-operations-formal.yml"
+        ".github/workflows/event-operations-formal.yml",
+        "scripts/lib/formal-result-summary.mjs"
       ],
       "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof.",
       "evidence": "formal CI source/result manifests and regression output",
@@ -171,9 +172,10 @@
       "idempotency": "No additional runtime retry permission; repeat checks must bind to their actual inputs.",
       "failure": "Reject the invalid operation or verification result as defined by the mapped contract.",
       "recovery": "Preserve existing evidence; correct the input or recover through a reviewed compatible implementation.",
-      "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs.",
+      "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs. Count admitted positive and negative TLC configurations from both execution helpers; do not derive total negative controls from a single log label.",
       "tests": [
-        "scripts/__tests__/verification-evidence.test.mjs"
+        "scripts/__tests__/verification-evidence.test.mjs",
+        "scripts/__tests__/formal-result-summary.test.mjs"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",
@@ -2489,7 +2491,11 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Version regression checker and negative controls implemented; full scans still have unresolved findings, and final client/release evidence is separate."
-      }
+      },
+      "authority": "approved",
+      "property": "Every present known package, including npm aliases, satisfies its reviewed version floor; unreviewed series and malformed lock/policy inputs reject.",
+      "verification": "Deterministic npm lock/version checks with nested aliases and invalid-data negative controls; fresh advisory scans remain separate.",
+      "evidence": "formal/system/dependency-audit-2026-10-05.json; scripts/__tests__/dependency-security.test.mjs"
     }
   ]
 }

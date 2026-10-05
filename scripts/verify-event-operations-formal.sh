@@ -54,11 +54,16 @@ run_tlc() {
   local module="$1"
   local config="$2"
   local slug="$3"
+  local status=0
   "${JAVA_BIN}" -XX:+UseParallelGC -jar "${TLA2TOOLS_JAR}" \
     -workers 1 \
     -metadir "${run_root}/tlc-${slug}" \
     -config "${config}" \
-    "${module}"
+    "${module}" || status=$?
+  if [[ "${status}" -eq 0 ]]; then
+    printf 'TDF_TLC_RESULT positive %s %s\n' "${module}" "${config}"
+  fi
+  return "${status}"
 }
 
 cd "${MODEL_DIR}"
@@ -85,6 +90,7 @@ run_negative_tlc() {
     echo "Negative control ${slug} did not detect ${expected}." >&2
     exit 1
   fi
+  printf 'TDF_TLC_RESULT negative %s %s\n' "${module}" "${config}"
 }
 run_tlc RecoveryExpiry.tla RecoveryExpiry.cfg recovery-expiry
 run_negative_tlc RecoveryExpiryNoExpiry.cfg recovery-no-expiry 'Invariant UnexpiredAtConsumption is violated' RecoveryExpiry.tla
@@ -148,6 +154,7 @@ expect_counterexample() {
     exit 1
   fi
   echo "Expected mutation counterexample: ${config}: ${invariant}"
+  printf 'TDF_TLC_RESULT negative %s %s\n' "${module}" "${config}"
 }
 run_tlc PaymentRecovery.tla PaymentRecovery.cfg payment-recovery
 expect_counterexample PaymentRecoveryOverwrite.cfg NoLostRecovery payment-recovery-overwrite PaymentRecovery.tla

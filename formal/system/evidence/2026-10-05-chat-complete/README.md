@@ -3,9 +3,12 @@
 Exact clean revision ee745ca41f249952c1ddb3eabdcb11ec736883cc passed the complete
 bounded formal runner and repository quality gate. The formal receipt records
 unchanged source fingerprints, tool hashes and log hash. Its scope is57 positive
-TLC configurations,71 expected mutation counterexamples, one PlusCal regeneration
+TLC configurations,125 expected mutation counterexamples, one PlusCal regeneration
 with13 translator-integrity tests, and Alloy2SAT/13UNSAT within declared bounds.
-This does not establish whole-program refinement or universal correctness.
+The125 count includes69 `expect_counterexample` calls and56 `run_negative_tlc`
+calls. Earlier prose counted only the first helper and underreported the total;
+the earlier raw logs remain unchanged. This does not establish whole-program
+refinement or universal correctness.
 
 Independent read-only exact-revision review found no actionable issue, running
 87Node and7Python checks and verifying the scoped chat runtime evidence hashes.

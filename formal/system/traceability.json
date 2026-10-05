@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "705fd75d3c87a31e8086fd6743398b01057676da",
+  "mobileRevision": "c1d6031b36e52dd365e699163900e65adb0621e0",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -135,7 +135,8 @@
       "implementation": [
         "scripts/lib/verification-evidence.mjs",
         "scripts/verify-system-evidence.mjs",
-        ".github/workflows/event-operations-formal.yml"
+        ".github/workflows/event-operations-formal.yml",
+        "scripts/lib/formal-result-summary.mjs"
       ],
       "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof.",
       "evidence": "formal CI source/result manifests and regression output",
@@ -172,9 +173,10 @@
       "idempotency": "No additional runtime retry permission; repeat checks must bind to their actual inputs.",
       "failure": "Reject the invalid operation or verification result as defined by the mapped contract.",
       "recovery": "Preserve existing evidence; correct the input or recover through a reviewed compatible implementation.",
-      "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs.",
+      "observability": "Retain command, source revision/fingerprints, tool identity, exit result and logs. Count admitted positive and negative TLC configurations from both execution helpers; do not derive total negative controls from a single log label.",
       "tests": [
-        "scripts/__tests__/verification-evidence.test.mjs"
+        "scripts/__tests__/verification-evidence.test.mjs",
+        "scripts/__tests__/formal-result-summary.test.mjs"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",
@@ -2427,6 +2429,74 @@
         "No provider or notification side effects are covered by this model.",
         "DTO decoding validates shape; complete SQL-result identity/value correspondence remains a separate conformance obligation."
       ]
+    },
+    {
+      "id": "SYS-DEPENDENCY-001",
+      "title": "Known dependency security floors cannot regress silently",
+      "statement": "Root and exact pinned Mobile npm lockfiles must reject versions below reviewed security floors; a version-floor pass must not be represented as a complete advisory or runtime exposure clearance.",
+      "domain": "SYS",
+      "critical": false,
+      "actors": [
+        "Maintainer",
+        "CI worker",
+        "Release operator"
+      ],
+      "preconditions": [
+        "Use committed npm v3 lockfiles; initialize the exact Mobile gitlink for Mobile checks."
+      ],
+      "inputs": [
+        "formal/system/dependency-security.json",
+        "package-lock.json",
+        "tdf-mobile/package-lock.json"
+      ],
+      "state": {
+        "boundary": "formal/system/dependency-security.md"
+      },
+      "allowedTransitions": [
+        "Reviewed compatible dependency update followed by applicable client gates."
+      ],
+      "forbiddenTransitions": [
+        "Known floor downgrade",
+        "Unreviewed major or zero-major minor series",
+        "Claiming complete security from the production-only audit or version floors"
+      ],
+      "effects": [
+        "Reject invalid lock before build/test admission."
+      ],
+      "authorization": "Dependency repair does not authorize provider activation, native distribution or importing newer Mobile-main product flows.",
+      "privacy": "Evidence contains dependency metadata only; do not record registry credentials.",
+      "concurrency": "Read immutable candidate lockfiles; installer and verifier must not mutate the same files concurrently.",
+      "idempotency": "Local floor check is deterministic for a fixed policy and locks; remote advisory scan is time-dependent.",
+      "failure": "CI fails on a regressed known version or missing requested Mobile lock. Unresolved advisory exposure is separately recorded.",
+      "recovery": "Restore reviewed compatible versions and rerun affected checks; never force framework downgrades merely to silence audit.",
+      "observability": "Preserve exact lock hashes, scan command, exit result and advisory source.",
+      "source": "User audit sections21,22,24,25; primary upstream advisories linked in formal/system/dependency-audit-2026-10-05.json",
+      "contract": "formal/system/dependency-security.md",
+      "implementation": [
+        "scripts/check-dependency-security.mjs",
+        "scripts/quality-repo.sh",
+        "scripts/quality-mobile.sh",
+        "package-lock.json",
+        "tdf-mobile/package-lock.json"
+      ],
+      "tests": [
+        "scripts/__tests__/dependency-security.test.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "High for scoped deterministic version rejection; partial dependency reachability assessment.",
+      "ambiguity": [
+        "No universal reachability or transitive supply-chain proof.",
+        "Runtime URI decoder compatibility repair and build-tool high-severity advisories remain open."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Version regression checker and negative controls implemented; full scans still have unresolved findings, and final client/release evidence is separate."
+      },
+      "authority": "approved",
+      "property": "Every present known package, including npm aliases, satisfies its reviewed version floor; unreviewed series and malformed lock/policy inputs reject.",
+      "verification": "Deterministic npm lock/version checks with nested aliases and invalid-data negative controls; fresh advisory scans remain separate.",
+      "evidence": "formal/system/dependency-audit-2026-10-05.json; scripts/__tests__/dependency-security.test.mjs"
     }
   ],
   "sourceFingerprints": {
@@ -2462,12 +2532,15 @@
     "formal/social/SessionBoundary.tla": "f52854a744652bc18f0d9f0fb4c3e6453447d26aff88267dff29ac03924e8ee6",
     "ops/hetzner/compose.production.yaml": "961c19190335ac4033d8932598796394b93c13a040ef07c3ac62660c534e45e7",
     "ops/hetzner/inspect-runtime.py": "c0f60f9d182097bbb82c53bb83d2c123a3c402697aa8c37c2053997609430916",
+    "package-lock.json": "b2663069d0f1901b4d5b76dde885fa0ff107089cf661819ed3500be6443bace4",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/checkout-amount-postgres.mjs": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "03fe83c795e80e464e4f0a6dba868723a60c079f6c5631e2b3435732eba649ea",
     "scripts/__tests__/ci-pipeline.test.mjs": "64921de12e4f6ef21a8a65763da451acdf1492ca897c318019c2e835da140114",
+    "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
+    "scripts/__tests__/formal-result-summary.test.mjs": "a3ecce01af25cb49f4b62fc51459ed9b36543f347b8d80cac6d4b1f1abfeca8c",
     "scripts/__tests__/generated-api-conformance.test.mjs": "34ee30eadd4114f8229af92693a01767fa8a7056233758cf0050b38f99e29f6f",
     "scripts/__tests__/hetzner-inspection.test.mjs": "1c9da69782bfe6776f661bd27429eccdf97d46ffe908ff63de415f792006e2dc",
     "scripts/__tests__/hetzner-preparation.test.mjs": "e1b3d4e0b8eb8dca78b04a513dd9b27be539464179f1875f81a99d1bb758e66f",
@@ -2479,9 +2552,11 @@
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
     "scripts/check-build-trust.mjs": "1f1486dd10e0edb906926a3ff419b765fdca8c263d3fa8065e5353d50992e61e",
+    "scripts/check-dependency-security.mjs": "4326c36055405ed802ea31a31fbb54c9843f02fbe3656a7ea43e3a3d60ec3475",
     "scripts/check-generated-api.mjs": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
     "scripts/ci-change-scope.mjs": "6e1bf4833fec7e1e51e230ccc830dca80470c0c2dcad18a2c329ad9defdf1379",
     "scripts/inspect-hetzner-production.mjs": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
+    "scripts/lib/formal-result-summary.mjs": "fa378d768a1c4e8ff6fe67e8d18d61367cd1b272339107e71c497798fb657167",
     "scripts/lib/hetzner-preparation.mjs": "c6bbfb4aa25013264a4fbbeb5122f0b709ff48b9105a26b4645e8c022014a0c1",
     "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
     "scripts/lib/production-release.mjs": "0e02e1bcf6f8a451860ad5c1f52ac8461effc88659bce690f9ce222875878f71",
@@ -2489,13 +2564,15 @@
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
     "scripts/production-migrations.json": "d1b45b55ebb0b86987fcb2c628de2edc1ada2c7abbb046f0f6009325538bdfe3",
     "scripts/production-release.mjs": "1643997b7b3ac422214725f4078b7b4db25f09d1df6ae5cebe8285cd257e0d59",
+    "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
+    "scripts/quality-repo.sh": "3d33dd44ae4dbbe3aaa76d2db03f4a0e78e8732ac0a81c5aa9666ca60720e5a8",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
     "scripts/social/dm-read-model-cases.sql": "f4d2afe041a287e218fec18cd60122ae092842cf43ffc2eab00d79ea42957ebb",
     "scripts/social/dm-read-refinement.sql": "067a8f255ee74ed589bd4a97b94ab918335c07e6a4dc69ee0a39c23a48d4dcea",
     "scripts/social/test-dm-writes.sh": "2f216b4a6d7537959a0ddc6aa4da52afc5a11828d852dc6a3c5d469702e9122a",
     "scripts/specification-conformance.py": "7e0d9aa01c62362482a60b409bb57d7b07c3863d393a4d606af81148158ab2d2",
-    "scripts/specification-inventory.py": "4e7c722e3a04f0bcae857a7f1d280550ee938fc21bd770f3077feb749a6831ae",
+    "scripts/specification-inventory.py": "d6850908ea05cde2d57c16e6d6899593c3d28675db58ec1aca3766bc5c0075e7",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
@@ -2506,10 +2583,10 @@
     "scripts/test-specification-inventory.py": "429bfd7c6ee6600e4010394f476c1247597d3c6c1a88f1fbd5e738c96b221df8",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "836906067ac620b64214922f9390c012848abf5bc1c4ca6f15a02757986bcddd",
-    "scripts/verify-event-operations-formal.sh": "0ffa3215db6642546f40eede7bc9017413dafd85766c18dae77fc9aa5d8acc24",
+    "scripts/verify-event-operations-formal.sh": "cb3fd3cc7fc4f23b7d86d758ff4423dfa896797de2d1fe3a5ac9cea258d59bfe",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
-    "scripts/verify-system-evidence.mjs": "6518277395cc99a25df3ffa5469d5150a5a7cd5c3d10f4409ecb695fb49ca03e",
+    "scripts/verify-system-evidence.mjs": "7aa7ac054cebe9a16f39a21afce1b36588c889493716baf3c7629880565e3e3f",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "fd6674cc3b97424d868e0f77e681c5fea4362a82f8babc71dff15dc345112589",
     "tdf-hq-ui/src/features/featureRegistry.test.ts": "3202fad3806ebb31695ca186727f9163373d6ad6c6f9cfa79089d129bbaf1b6b",
@@ -2569,6 +2646,7 @@
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "39c92770f1830489ecb1c909dfbefa7c1a11857f3f002ce89da5283c06c69a0b",
     "tdf-hq/test/TDF/ServerSpec.hs": "d49ecbf6d6db9bb47b62f89945f1c3a2841ef389758ba6a0719363259aecb470",
+    "tdf-mobile/package-lock.json": "1d669d0ea79f240494299f22c868f79753b921ad6f06656ad71b5942ccd3ac35",
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": "0aa585495694b2954d6db9a667c497f792a272037e9a66cb11ceb0baaa35a400"
   },
   "reverseTraceability": {
@@ -2674,7 +2752,19 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/lib/formal-result-summary.mjs": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/__tests__/verification-evidence.test.mjs": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/formal-result-summary.test.mjs": [
       {
         "requirement": "SYS-VERIFY-002",
         "relationship": "tests"
@@ -3643,6 +3733,42 @@
         "requirement": "MSG-ATOMIC-001",
         "relationship": "formalModels"
       }
+    ],
+    "scripts/check-dependency-security.mjs": [
+      {
+        "requirement": "SYS-DEPENDENCY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/quality-repo.sh": [
+      {
+        "requirement": "SYS-DEPENDENCY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/quality-mobile.sh": [
+      {
+        "requirement": "SYS-DEPENDENCY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "package-lock.json": [
+      {
+        "requirement": "SYS-DEPENDENCY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/package-lock.json": [
+      {
+        "requirement": "SYS-DEPENDENCY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/dependency-security.test.mjs": [
+      {
+        "requirement": "SYS-DEPENDENCY-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -4005,14 +4131,19 @@
     {
       "id": "SURFACE-053150b640a7ce75",
       "path": "package-lock.json",
-      "sha256": "1e6285569815729c77588f6f4a274491b2b599dc0a08efac08f542c02a2ef8c7",
+      "sha256": "b2663069d0f1901b4d5b76dde885fa0ff107089cf661819ed3500be6443bace4",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-DEPENDENCY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "37cd0c75903cbad7b4eb4decfd63781e7d7fab1265bb89e5609173cc5527e760",
+      "sha256": "f5113b4d00775becd6433276b1e2cc1e04c6dfc652e0445c0390d2efa99da61d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -4128,6 +4259,18 @@
       "sha256": "85810f63d296d3086bda76084634371ab1ffc34d2564876c57adbc8b71da289a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-d2b75d1a49667e24",
+      "path": "scripts/__tests__/dependency-security.test.mjs",
+      "sha256": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DEPENDENCY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-df96f3139c1e5e5b",
@@ -4273,6 +4416,18 @@
       "sha256": "8c2234cb42c2d631ef9523eb9d15b52908d28b98a8499c7e3e7a79119a2745bc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-72598558c8c25494",
+      "path": "scripts/__tests__/formal-result-summary.test.mjs",
+      "sha256": "a3ecce01af25cb49f4b62fc51459ed9b36543f347b8d80cac6d4b1f1abfeca8c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-002",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-adc432036f751c55",
@@ -4721,6 +4876,18 @@
       ]
     },
     {
+      "id": "SURFACE-6608974fcedfd777",
+      "path": "scripts/check-dependency-security.mjs",
+      "sha256": "4326c36055405ed802ea31a31fbb54c9843f02fbe3656a7ea43e3a3d60ec3475",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DEPENDENCY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-9306a961784ddefa",
       "path": "scripts/check-generated-api.mjs",
       "sha256": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
@@ -5072,6 +5239,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-a952b047ad5b4bd3",
+      "path": "scripts/lib/formal-result-summary.mjs",
+      "sha256": "fa378d768a1c4e8ff6fe67e8d18d61367cd1b272339107e71c497798fb657167",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-002",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-5ee17ccf3d926503",
       "path": "scripts/lib/hetzner-preparation.mjs",
       "sha256": "c6bbfb4aa25013264a4fbbeb5122f0b709ff48b9105a26b4645e8c022014a0c1",
@@ -5353,16 +5532,26 @@
     {
       "id": "SURFACE-e29d8803c1cbcecc",
       "path": "scripts/quality-mobile.sh",
-      "sha256": "91695bc2b59f53a184b11e0f3a99bbe57b4e1d4b4e47939f7f231b35df6533a5",
+      "sha256": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-DEPENDENCY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "d246bbf51fa86a19cfa4cf0809520656165e26e096ffdfa7d09e9b7bc9b595e1",
+      "sha256": "3d33dd44ae4dbbe3aaa76d2db03f4a0e78e8732ac0a81c5aa9666ca60720e5a8",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-DEPENDENCY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-63149d1c69a3c6a7",
@@ -5898,7 +6087,7 @@
     {
       "id": "SURFACE-d18ca1829df72762",
       "path": "scripts/specification-inventory.py",
-      "sha256": "4e7c722e3a04f0bcae857a7f1d280550ee938fc21bd770f3077feb749a6831ae",
+      "sha256": "d6850908ea05cde2d57c16e6d6899593c3d28675db58ec1aca3766bc5c0075e7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -6603,7 +6792,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "0ffa3215db6642546f40eede7bc9017413dafd85766c18dae77fc9aa5d8acc24",
+      "sha256": "cb3fd3cc7fc4f23b7d86d758ff4423dfa896797de2d1fe3a5ac9cea258d59bfe",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -6673,7 +6862,7 @@
     {
       "id": "SURFACE-df96772a4b1d23c5",
       "path": "scripts/verify-system-evidence.mjs",
-      "sha256": "6518277395cc99a25df3ffa5469d5150a5a7cd5c3d10f4409ecb695fb49ca03e",
+      "sha256": "7aa7ac054cebe9a16f39a21afce1b36588c889493716baf3c7629880565e3e3f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -17954,14 +18143,19 @@
     {
       "id": "SURFACE-6bc7940d7e94ca53",
       "path": "tdf-mobile/package-lock.json",
-      "sha256": "5a301716dcb27fd23c9c953532a5d4173e28653d8a63f35416d1f673ed8d6438",
+      "sha256": "1d669d0ea79f240494299f22c868f79753b921ad6f06656ad71b5942ccd3ac35",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-DEPENDENCY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-74d531fc7e7a3fc1",
       "path": "tdf-mobile/package.json",
-      "sha256": "954941d1ca13e33f60bb1a2c519fcbafe7b9022341251802841b4fef70f4eeed",
+      "sha256": "dd54dacbc0a9ee6304e88db43337b003837007dd802324105d71d1f8dc329b9f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -19272,7 +19466,6 @@
     "SURFACE-f4743034f585d310",
     "SURFACE-c9ca596d51c940f8",
     "SURFACE-b85ac3ceaf40e5fb",
-    "SURFACE-053150b640a7ce75",
     "SURFACE-7ae45ad102eab3b6",
     "SURFACE-0da2aa9657386c51",
     "SURFACE-039bc8d278e3dafc",
@@ -19408,8 +19601,6 @@
     "SURFACE-5d3cb3a8a35fced1",
     "SURFACE-15c410d46c49b739",
     "SURFACE-bac1f41447e33768",
-    "SURFACE-e29d8803c1cbcecc",
-    "SURFACE-9342794dfd2ad228",
     "SURFACE-63149d1c69a3c6a7",
     "SURFACE-0210b80fb6caf081",
     "SURFACE-3c9fe0c437e218da",
@@ -21051,7 +21242,6 @@
     "SURFACE-724d67db609973ab",
     "SURFACE-8254ab3be0263414",
     "SURFACE-635d2beee7db16c2",
-    "SURFACE-6bc7940d7e94ca53",
     "SURFACE-74d531fc7e7a3fc1",
     "SURFACE-d9259f08043bd4f2",
     "SURFACE-49be021610567519",
@@ -43132,7 +43322,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 35,
+    "PARTIAL": 36,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
