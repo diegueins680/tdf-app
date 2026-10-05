@@ -3029,7 +3029,8 @@
       ],
       "effects": [
         "Revision-scoped compiled syntax, route metadata and unresolved correspondence gaps are retained.",
-        "CI rejects compiler declaration drift against the committed snapshot, while retaining known OpenAPI gaps as unresolved obligations."
+        "CI rejects compiler declaration drift against the committed snapshot, while retaining known OpenAPI gaps as unresolved obligations.",
+        "Unreconciled response status drift fails CI; six explicit unavailable handlers retain503 rather than fabricated success."
       ],
       "authorization": "Description is a local executable mode; it performs no request and grants no backend capability. Auth combinators are syntax evidence, not a complete capability matrix.",
       "privacy": "No runtime credentials, database rows, tokens or provider responses are needed or inherited by the inspector.",
@@ -3047,19 +3048,21 @@
         "scripts/lib/compiled-api-surface.mjs",
         "formal/system/compiled-api-surface.json",
         "tdf-hq/src/TDF/Meta.hs",
-        "formal/system/api-availability.json"
+        "formal/system/api-availability.json",
+        "formal/system/api-response-status.json"
       ],
       "tests": [
         "tdf-hq/test/TDF/APITypesSpec.hs",
         "scripts/__tests__/compiled-api-surface.test.mjs",
-        "tdf-hq/test/Spec.hs"
+        "tdf-hq/test/Spec.hs",
+        "scripts/test-booking-conformance.py"
       ],
       "formalModels": [],
       "critical": true,
       "status": "specified and implemented",
       "confidence": "medium",
       "ambiguity": [
-        "Compiled5d9a917ed exports843 typed operations, two Raw mounts,385 undocumented operations,25 explicitly deferred documented operations and21 declared success-status differences. Competing typed route identities are now zero; codec, status and broad semantic reconciliation remain incomplete.",
+        "Compiled5d9a917ed exports843 typed operations, two Raw mounts,385 undocumented operations and25 explicitly deferred declarations. AUTHORITY-027 reconciles21 status differences into15 documented successes and6 deliberate503 handlers. Current compiled/runtime evidence must verify this correction; broad codec and semantic reconciliation remains incomplete.",
         "Raw routing, handler security, middleware, DTO codecs and errors remain separate conformance boundaries."
       ],
       "conformance": {
@@ -3295,7 +3298,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -3553,6 +3556,112 @@
       "property": "Every documented unmounted typed operation is explicitly deferred; no deferred operation is mounted.",
       "verification": "Compiled surface gate, controlled mounting/omission/stale-policy mutations and requirement/provenance checks.",
       "evidence": "Exact-source compiled availability receipt and Node/Python gate logs."
+    },
+    {
+      "id": "REC-DDEX-001",
+      "title": "Canonical DDEX validation and shipped Mobile compatibility",
+      "domain": "REC",
+      "statement": "DDEX shall preserve private document bytes and canonical reference authority; synchronous validation either commits one complete run with its issues and document state or leaves no validation effect. Web and shipped Mobile shall consume canonical workflow/version references. Structural validation shall never imply official XSD or recipient-profile approval.",
+      "actors": [
+        "Authorized catalog reader",
+        "Authorized catalog importer",
+        "Mobile catalog user"
+      ],
+      "preconditions": [
+        "Current bearer identity and persisted catalog.read/import/export capability as appropriate",
+        "Active canonical references and explicitly configured private document storage"
+      ],
+      "inputs": [
+        "Private XML bytes, content hash and canonical document ID",
+        "Current workflow state and canonical reference IDs",
+        "Partner standard-version selections from current governed references"
+      ],
+      "state": {
+        "initial": "received",
+        "validationEligible": [
+          "received",
+          "quarantined",
+          "invalid",
+          "queued",
+          "validating"
+        ],
+        "validationTerminal": [
+          "invalid",
+          "mapping_required"
+        ],
+        "disabled": [
+          "import planning",
+          "import resolution",
+          "import commit",
+          "export",
+          "export download"
+        ]
+      },
+      "allowedTransitions": [
+        "Received, quarantined or invalid document -> queued -> validating -> invalid or mapping_required within one SQL transaction.",
+        "Queued/validating document -> completed structural run and matching document state atomically.",
+        "Read canonical document, raw base64 envelope, validation report and supported ERN4.3.2 preview with required capability."
+      ],
+      "forbiddenTransitions": [
+        "Issue uses legacy severity/layer constructors or missing/inactive canonical references.",
+        "Completed run uses legacy result constructor.",
+        "A rejected synchronous validation leaves a running row, issues or a document transition.",
+        "Structural completion is presented as official profile validity.",
+        "Mobile sends removed partnerAllowedVersions or uses version strings as relationship IDs.",
+        "Disabled import/export handler returns successful acceptance."
+      ],
+      "effects": [
+        "Private source storage and canonical metadata references.",
+        "Completed structural validation run, issues and document state commit together.",
+        "Response timestamps come from the stored run."
+      ],
+      "authorization": "Bearer identity plus ModuleCatalog and active persisted catalog.read/import/export permission predicates. Frontend capability discovery is not backend admission; global concurrent role revocation is not proven by these checks.",
+      "privacy": "Raw XML stays in explicitly configured private storage; authorized raw download is a JSON base64 envelope. Tests use synthetic fixture XML and no external provider.",
+      "concurrency": "Validation locks and reloads the document before checking current lifecycle eligibility; immutable hash/private URI/standard binding must match loaded source. Concurrent invalid revalidation may be legal; a noneligible fresh state returns409. Concurrent registry reconfiguration is not formally covered.",
+      "idempotency": "Upload deduplicates by source SHA with existing unique constraint. Validation creates a new run per accepted request; no request-key replay contract is claimed. Partner creation idempotency is not established.",
+      "failure": "Reject unauthorized/read-invalid inputs; deliberately unavailable capabilities return503. Validation SQL failure rolls back the whole synchronous operation. Ineligible current workflow returns409.",
+      "recovery": "Retain private source and historical evidence; retry only from allowed lifecycle states. Additive migration171 relaxes obsolete legacy NOT NULL fields while canonical integrity triggers remain enforced. No automated repair/deletion of preexisting stranded runs. Forward recovery retains accepted canonical references; restoring legacy NOT NULL is not a supported rollback.",
+      "observability": "Revision-scoped HTTP results, canonical timestamps/result codes, negative SQL controls and failure-injection rollback evidence. Official profile warning remains visible.",
+      "source": "Current DDEX API/DTOs, canonical catalog SQL guards, actual isolated HTTP reproduction of legacy NOT NULL failure, independent review and shipped Mobile consumer inspection.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/DDEX.hs",
+        "tdf-hq/src/TDF/DDEX/DB.hs",
+        "tdf-hq/src/TDF/API/DDEX.hs",
+        "tdf-hq/src/TDF/DDEX/Models.hs",
+        "tdf-hq/sql/2026-10-05_ddex_validation_legacy_nullability.sql",
+        "scripts/production-migrations.json",
+        "scripts/lib/production-release.mjs",
+        "tdf-mobile/src/api/ddex.ts",
+        "tdf-mobile/app/ddex/index.tsx",
+        "tdf-mobile/app/ddex/document/[id].tsx",
+        "tdf-mobile/app/ddex/partners.tsx"
+      ],
+      "tests": [
+        "scripts/test-booking-conformance.py",
+        "tdf-mobile/__tests__/ddexApi.test.ts",
+        "tdf-mobile/__tests__/DdexPartners.test.tsx",
+        "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs",
+        "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs",
+        "tdf-mobile/__tests__/DdexInbox.test.tsx"
+      ],
+      "formalModels": [],
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "medium",
+      "ambiguity": [
+        "Official licensed XSD and recipient-profile validation, transactional import and immutable export are deliberately unavailable.",
+        "Private storage full durability/deletion, provider delivery, concurrent registry reconfiguration and existing stranded-run reconciliation need separate verification.",
+        "Catalog reorder atomicity and legacy webhook raw-payload logging are separately discovered unresolved defects."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Concrete compatibility and atomicity repairs require final candidate runtime, migration, native Mobile and release evidence; no formal DDEX model/refinement proof."
+      },
+      "authority": "AUTHORITY-027 and canonical catalog integrity rules; implementation failures are repaired rather than promoted to policy.",
+      "property": "Canonical references and private source binding survive validation; rejected validation cannot partially commit; Mobile sends current canonical IDs.",
+      "contract": "formal/system/ddex-validation.md",
+      "verification": "Actual PostgreSQL/HTTP fixture, injected transaction failures, concurrent calls, unchanged canonical SQL guard rejections, Mobile adapter and component tests.",
+      "evidence": "Private revision-scoped API/restore/Stack receipts; working reproductions are not final candidate passes."
     }
   ]
 }

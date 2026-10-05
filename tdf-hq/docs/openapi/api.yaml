@@ -1563,7 +1563,7 @@ paths:
             schema:
               $ref: '#/components/schemas/WhatsAppWebhook'
       responses:
-        '204':
+        '200':
           description: Processed
   /instagram/reply:
     post:
@@ -1707,7 +1707,7 @@ paths:
             schema:
               type: object
       responses:
-        '204':
+        '200':
           description: Processed
   /facebook/messages:
     get:
@@ -2455,7 +2455,7 @@ paths:
       security:
         - bearerAuth: [ ]
       responses:
-        '204':
+        '200':
           description: Follow removed
   /fans/me/artist-profile:
     get:
@@ -2928,7 +2928,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/CmsContentId'
       responses:
-        '204':
+        '200':
           description: Draft archived without hard deletion.
         '409':
           description: Published, legacy slug-only, or structured Records content cannot be deleted.
@@ -3731,7 +3731,7 @@ paths:
             schema:
               $ref: '#/components/schemas/CatalogReorder'
       responses:
-        '204':
+        '200':
           description: Ordering updated.
         '409':
           description: Incomplete item set or stale catalog revision.
@@ -4553,7 +4553,7 @@ paths:
       summary: Clear current user's radio presence
       operationId: clearRadioPresence
       responses:
-        '204':
+        '200':
           description: Presence cleared
   /radio/presence/{partyId}:
     get:
@@ -4607,7 +4607,7 @@ paths:
             schema:
               $ref: '#/components/schemas/LiveSessionIntakeMultipart'
       responses:
-        '204':
+        '200':
           description: Intake created
         '400':
           description: Invalid multipart data, canonical reference, or terms acceptance
@@ -4633,7 +4633,7 @@ paths:
             schema:
               $ref: '#/components/schemas/FeedbackMultipart'
       responses:
-        '204':
+        '200':
           description: Feedback accepted
         '400':
           description: Invalid multipart data, catalog reference, consent, or attachment
@@ -4981,7 +4981,12 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/DdexUploadRequest' }
       responses:
-        '501': { description: Storage integration is not implemented }
+        '200':
+          description: Private document stored or retrieved by content hash
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DdexDocument' }
+        '503': { description: Required private storage or supported runtime profile is unavailable }
         '403': { description: Missing persisted `catalog.import` capability }
   /ddex/documents/{documentId}:
     parameters:
@@ -5005,7 +5010,12 @@ paths:
       summary: Download the private source document
       operationId: downloadDdexRawDocument
       responses:
-        '501': { description: Private file storage integration is not implemented }
+        '200':
+          description: Private XML encoded in a JSON download envelope
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DdexDownloadResponse' }
+        '503': { description: Required private storage or supported runtime profile is unavailable }
         '403': { description: Missing persisted `catalog.read` capability }
   /ddex/documents/{documentId}/validation-runs:
     parameters:
@@ -5015,9 +5025,15 @@ paths:
       summary: Start governed validation for a DDEX document
       operationId: validateDdexDocument
       responses:
-        '501': { description: Governed validation execution is not implemented }
+        '200':
+          description: Completed structural validation run; official XSD and recipient-profile validation have not run
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DdexValidationRun' }
+        '503': { description: Required private storage or supported runtime profile is unavailable }
         '403': { description: Missing persisted `catalog.import` capability }
         '404': { description: Document not found }
+        '409': { description: Current document lifecycle or source binding changed; rejected validation makes no changes }
   /ddex/documents/{documentId}/validation-runs/latest:
     parameters:
       - $ref: '#/components/parameters/DdexDocumentId'
@@ -5041,7 +5057,12 @@ paths:
       summary: Preview a DDEX import
       operationId: previewDdexDocument
       responses:
-        '501': { description: Typed import preview generation is not implemented }
+        '200':
+          description: ERN 4.3.2 preview only; no import or delivery
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DdexPreview' }
+        '503': { description: Required private storage or supported runtime profile is unavailable }
         '403': { description: Missing persisted `catalog.read` capability }
   /ddex/documents/{documentId}/import-plans:
     parameters:
@@ -5051,7 +5072,7 @@ paths:
       summary: Create the persisted DDEX import preview
       operationId: createDdexImportPlan
       responses:
-        '501': { description: Typed import planning is not implemented }
+        '503': { description: This capability is deliberately disabled until its verified runtime prerequisites are available }
         '403': { description: Missing persisted `catalog.import` capability }
         '404': { description: Document not found }
   /ddex/import-plans/{importPlanId}:
@@ -5067,7 +5088,7 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/DdexImportPlanResolution' }
       responses:
-        '501': { description: Conflict resolution is not implemented }
+        '503': { description: This capability is deliberately disabled until its verified runtime prerequisites are available }
         '400': { description: Unknown or malformed request properties }
         '403': { description: Missing persisted `catalog.import` capability }
   /ddex/import-plans/{importPlanId}/commit:
@@ -5078,7 +5099,7 @@ paths:
       summary: Commit an approved DDEX import plan
       operationId: commitDdexImportPlan
       responses:
-        '501': { description: Import commit execution is not implemented }
+        '503': { description: This capability is deliberately disabled until its verified runtime prerequisites are available }
         '403': { description: Missing persisted `catalog.import` capability }
   /ddex/exports:
     post:
@@ -5091,7 +5112,7 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/DdexExportRequest' }
       responses:
-        '501': { description: Export rendering and private storage are not implemented }
+        '503': { description: This capability is deliberately disabled until its verified runtime prerequisites are available }
         '400': { description: Unknown properties or malformed canonical UUID }
         '403': { description: Missing persisted `catalog.export` capability }
         '422': { description: Partner is inactive or does not allow the export-enabled version }
@@ -5103,7 +5124,7 @@ paths:
       summary: Download a rendered DDEX export
       operationId: downloadDdexExport
       responses:
-        '501': { description: Export rendering and private storage are not implemented }
+        '503': { description: This capability is deliberately disabled until its verified runtime prerequisites are available }
         '403': { description: Missing persisted `catalog.export` capability }
   /ddex/partners:
     get:
@@ -7163,7 +7184,7 @@ paths:
       parameters:
         - { name: notificationId, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }
       responses:
-        '204': { description: Read state persisted }
+        '200': { description: Read state persisted }
         '401': { description: Authentication required }
   /access-requests/{requestId}:
     get:
@@ -7808,13 +7829,13 @@ paths:
       operationId: addMerchFavorite
       parameters:
         - $ref: '#/components/parameters/MerchProductId'
-      responses: { '204': { description: Favorite stored } }
+      responses: { '200': { description: Favorite stored } }
     delete:
       tags: [Artist merch]
       operationId: deleteMerchFavorite
       parameters:
         - $ref: '#/components/parameters/MerchProductId'
-      responses: { '204': { description: Favorite removed } }
+      responses: { '200': { description: Favorite removed } }
   /merch/seller/stores:
     get:
       tags: [Artist merch seller]
@@ -11171,6 +11192,16 @@ components:
         resolutionConflicts:
           type: array
           items: { $ref: '#/components/schemas/DdexConflictResolution' }
+    DdexPreview:
+      type: object
+      additionalProperties: false
+      required: [previewMessageId, previewSender, previewReleaseCount, previewResourceCount, previewWarnings]
+      properties:
+        previewMessageId: { type: string }
+        previewSender: { type: string }
+        previewReleaseCount: { type: integer, minimum: 0 }
+        previewResourceCount: { type: integer, minimum: 0 }
+        previewWarnings: { type: array, items: { type: string } }
     DdexDownloadResponse:
       type: object
       additionalProperties: false

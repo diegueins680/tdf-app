@@ -5,9 +5,11 @@ Creates and drops only its own nonce database on an explicitly selected loopback
 PostgreSQL test server. Source fixtures and fake actors never contact providers.
 """
 import concurrent.futures
+import base64
 from datetime import datetime, timedelta, timezone
 import getpass
 import hashlib
+import hmac
 import json
 import os
 from pathlib import Path
@@ -67,11 +69,12 @@ def check(name, condition):
     print('PASS ' + name, flush=True)
 
 
-def request(path, payload=None, token='fixture-admin', method=None, idempotency=None):
+def request(path, payload=None, token='fixture-admin', method=None, idempotency=None, signed=False):
     body = None if payload is None else json.dumps(payload).encode()
     req = urllib.request.Request('http://127.0.0.1:' + str(http_port) + path, data=body,
         method=method or ('GET' if body is None else 'PUT'),
-        headers={**({'Authorization': 'Bearer ' + token} if token else {}), 'Content-Type': 'application/json', **({'Idempotency-Key': idempotency} if idempotency else {})})
+        headers={**({'Authorization': 'Bearer ' + token} if token else {}), 'Content-Type': 'application/json', **({'Idempotency-Key': idempotency} if idempotency else {}),
+                 **({'X-Hub-Signature-256': 'sha256=' + hmac.new(b'synthetic-local-webhook-secret', body, hashlib.sha256).hexdigest()} if signed else {})})
     try:
         with urllib.request.urlopen(req, timeout=30) as response:
             return response.status, response.read().decode()
@@ -130,6 +133,8 @@ try:
                  'APP_PORT': str(http_port), 'RESET_DB': 'false', 'RUN_MIGRATIONS': 'false',
                  'AUTO_APPLY_PRODUCTION_MIGRATIONS': 'false', 'SEED_DB': 'false',
                  'HQ_ASSETS_DIR': str(assets), 'DEFAULT_LOCALE': 'es',
+                 'FACEBOOK_APP_SECRET': 'synthetic-local-webhook-secret',
+                 'DDEX_STORAGE_BACKEND': 'local-private', 'DDEX_PRIVATE_STORAGE_ROOT': str(OUTPUT / 'ddex-private'),
                  'EVENT_DISCOVERY_ENABLED': 'false', 'ARTIST_ENRICHMENT_ENABLED': 'false',
                  'EVENT_LOGISTICS_RECHECK_ENABLED': 'false', 'REPUTATION_AGGREGATION_WORKER_ENABLED': 'false'})
     for _ in range(120):
@@ -150,6 +155,80 @@ try:
     status, body = request('/radio/presence/' + owner, token='fixture-artist')
     check('authenticated radio listener presence remains readable', status == 200 and json.loads(body)['rpPartyId'] == int(owner))
     check('invalid radio identity rejected', request('/radio/presence/0', token='fixture-artist')[0] == 400)
+
+    # Real HTTP transport checks: NoContent is an empty payload, not an implicit
+    # 204 override of Servant's declared 200. Empty webhook entries cannot enqueue
+    # messages or trigger a provider call; the only signing key is synthetic.
+    for path, payload in [('/facebook/webhook', {'object': 'page', 'entry': [{}]}),
+                          ('/webhooks/whatsapp', {'entry': []})]:
+        check('webhook rejects unsigned transport ' + path,
+              request(path, payload, token=None, method='POST')[0] == 401)
+        check('signed empty webhook returns 200 with empty body ' + path,
+              request(path, payload, token=None, method='POST', signed=True) == (200, ''))
+    check('radio reset rejects anonymous caller', request('/radio/presence', token=None, method='DELETE')[0] == 401)
+    check('radio reset returns 200 with empty body', request('/radio/presence', token='fixture-owner', method='DELETE') == (200, ''))
+    check('radio reset removes own row', sql('SELECT count(*) FROM party_radio_presence WHERE party_id=' + owner) == '0')
+    check('unfollow returns 200 with empty body', request('/fans/me/follows/' + owner, token='fixture-fan', method='DELETE') == (200, ''))
+    notification = sql("INSERT INTO notification(recipient_party_id,notif_type,title,body,is_read,created_at) VALUES (" + actors['fan'] + ",'directory.invitation','Synthetic','Synthetic',false,now()) RETURNING id")
+    check('mark notification read returns 200 with empty body', request('/fans/me/notifications/' + notification + '/read', {}, token='fixture-fan', method='POST') == (200, ''))
+    check('mark notification read commits own state', sql('SELECT is_read FROM notification WHERE id=' + notification) == 't')
+    check('legacy Stripe remains unavailable', request('/marketplace/cart/synthetic/stripe/payment-intent',
+          {'mcrBuyerName': 'Synthetic', 'mcrBuyerEmail': 'synthetic@example.invalid'}, token=None, method='POST')[0] == 503)
+
+    xml = (ROOT / 'tdf-hq/test/fixtures/ddex/ern-v432/single-valid.xml').read_bytes()
+    upload = {'uploadFileName': 'synthetic-conformance.xml', 'uploadContentType': 'application/xml',
+              'uploadContentBase64': base64.b64encode(xml).decode()}
+    schema_sql = subprocess.check_output(['node', '--input-type=module', '-e',
+        "import {buildSchemaVerificationSql} from './scripts/lib/production-release.mjs'; process.stdout.write(buildSchemaVerificationSql());"], cwd=ROOT, env=ENV, text=True)
+    for legacy in ['severity', 'layer']:
+        probe = subprocess.run(['psql', '-X', '-v', 'ON_ERROR_STOP=1', '-d', NAME], env=ENV,
+            input='BEGIN; ALTER TABLE ddex_validation_issue ALTER COLUMN ' + legacy + ' SET NOT NULL;\n' + schema_sql + '\nROLLBACK;', capture_output=True, text=True)
+        check('schema rejects incompatible DDEX legacy NOT NULL ' + legacy, probe.returncode != 0 and 'nullable retained legacy severity and layer' in probe.stderr)
+    check('DDEX upload denies unprivileged actor', request('/ddex/documents', upload, token='fixture-fan', method='POST')[0] == 403)
+    status, body = request('/ddex/documents', upload, method='POST')
+    check('DDEX upload is implemented with 200 JSON ' + str((status, body[:180])), status == 200)
+    document = json.loads(body); document_id = str(document['ddexDocumentId'])
+    partner = {'partnerName': 'Synthetic contract partner', 'partnerDpid': None,
+               'partnerAllowedStandardVersionIds': [document['ddexDocumentStandardVersionId']]}
+    status, body = request('/ddex/partners', partner, method='POST')
+    check('DDEX partner accepts Mobile canonical version IDs', status == 200 and json.loads(body)['ddexPartnerAllowedStandardVersions'][0]['ddexStandardVersionId'] == document['ddexDocumentStandardVersionId'])
+    check('DDEX partner rejects removed Mobile request field', request('/ddex/partners',
+        {'partnerName': 'Synthetic', 'partnerDpid': None, 'partnerAllowedVersions': ['4.3']}, method='POST')[0] == 400)
+    check('DDEX upload uses canonical workflow references', bool(document['ddexDocumentWorkflowStateId']) and 'ddexDocumentStatus' not in document)
+    status, body = request('/ddex/documents/' + document_id + '/raw')
+    check('DDEX private source uses JSON base64 envelope', status == 200 and base64.b64decode(json.loads(body)['downloadContentBase64']) == xml)
+    status, body = request('/ddex/documents/' + document_id + '/preview')
+    check('DDEX preview is implemented with 200 JSON ' + str((status, body[:180])), status == 200 and bool(json.loads(body)['previewWarnings']))
+    # Faults after each write stage must roll back run, issue and document state.
+    def validation_state():
+        return sql("SELECT (SELECT count(*) FROM ddex_validation_run),(SELECT count(*) FROM ddex_validation_issue),(SELECT workflow_state_id FROM ddex_document WHERE id=" + document_id + ")")
+    before_validation = validation_state()
+    for table, event in [('ddex_validation_run', 'INSERT'), ('ddex_validation_issue', 'INSERT'), ('ddex_validation_run', 'UPDATE')]:
+        sql("CREATE FUNCTION fixture_ddex_reject() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'SYNTHETIC_VALIDATION_REJECTION'; END $$; CREATE TRIGGER fixture_ddex_reject AFTER " + event + " ON " + table + " FOR EACH ROW EXECUTE FUNCTION fixture_ddex_reject()")
+        try:
+            check('DDEX injected failure rejects ' + table + ' ' + event,
+                  request('/ddex/documents/' + document_id + '/validation-runs', {}, method='POST')[0] == 500)
+            check('DDEX rejected validation rolls back every effect ' + table + ' ' + event, validation_state() == before_validation)
+        finally:
+            sql('DROP TRIGGER fixture_ddex_reject ON ' + table + '; DROP FUNCTION fixture_ddex_reject()')
+    status, body = request('/ddex/documents/' + document_id + '/validation-runs', {}, method='POST')
+    check('DDEX structural validation completes with 200 JSON ' + str((status, body[:180])), status == 200 and 'validationRunWorkflowStateId' in json.loads(body))
+    run_response = json.loads(body)
+    stored_times = json.loads(sql("SELECT json_build_object('started',started_at,'finished',finished_at) FROM ddex_validation_run WHERE id=" + str(run_response['validationRunId'])))
+    parse_time = lambda value: datetime.fromisoformat(value.replace('Z', '+00:00'))
+    check('DDEX response timestamps equal committed record', parse_time(run_response['validationRunStartedAt']) == parse_time(stored_times['started']) and parse_time(run_response['validationRunFinishedAt']) == parse_time(stored_times['finished']))
+    status, body = request('/ddex/documents/' + document_id + '/validation-runs/latest')
+    report = json.loads(body)
+    check('DDEX structural completion is not official profile validity', status == 200 and not report['reportIsValid'] and any(x['issueCode'] == 'PROFILE_VALIDATION_REQUIRED' for x in report['reportIssues']))
+    check('DDEX validation result uses canonical reference only', sql('SELECT count(*) FROM ddex_validation_run WHERE result IS NOT NULL OR result_id IS NULL OR finished_at IS NULL') == '0')
+    for mutation in ["severity='error'", "layer='xml'", 'severity_id=NULL', 'layer_id=NULL']:
+        probe = subprocess.run(['psql', '-X', '-v', 'ON_ERROR_STOP=1', '-d', NAME], env=ENV,
+            input='BEGIN; UPDATE ddex_validation_issue SET ' + mutation + '; ROLLBACK;', capture_output=True, text=True)
+        check('DDEX canonical issue guard rejects ' + mutation, probe.returncode != 0 and 'active canonical severity and layer IDs' in probe.stderr)
+    for path, payload, method in [('/ddex/documents/' + document_id + '/import-plans', {}, 'POST'),
+            ('/ddex/import-plans/1', {'resolutionPlanId': 1, 'resolutionConflicts': []}, 'PATCH'),
+            ('/ddex/import-plans/1/commit', {}, 'POST'), ('/ddex/exports/1/download', None, 'GET')]:
+        check('DDEX guarded capability returns 503 ' + path, request(path, payload, method=method)[0] == 503)
 
     sql("INSERT INTO subject(name,active) VALUES ('VISIBLE_SUBJECT',true),('INACTIVE_SUBJECT',false)")
     for suffix in ['', '?includeInactive=true']:
@@ -350,6 +429,20 @@ try:
             input="BEGIN; CREATE FUNCTION booking_control_noop() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RETURN NEW; END $$; DROP TRIGGER trg_service_booking_sync_legacy_allocation ON booking; CREATE TRIGGER trg_service_booking_sync_legacy_allocation " + definition + ';\n' + schema_sql + '\nROLLBACK;', capture_output=True, text=True)
         (OUTPUT / ('schema-control-' + label + '.log')).write_text(probe.stdout + probe.stderr)
         check('schema rejects ineffective booking trigger ' + label, probe.returncode != 0 and 'Booking calendar update and checkout correspondence contract is missing' in probe.stderr)
+    concurrent_xml = xml.replace(b'MSG-20260804-001', b'MSG-CONFORMANCE-CONCURRENT')
+    status, body = request('/ddex/documents', {**upload, 'uploadContentBase64': base64.b64encode(concurrent_xml).decode()}, method='POST')
+    check('DDEX concurrency fixture upload accepted', status == 200)
+    concurrent_id = str(json.loads(body)['ddexDocumentId'])
+    before_runs = int(sql('SELECT count(*) FROM ddex_validation_run'))
+    barrier = threading.Barrier(2)
+    def validate_concurrently(_):
+        barrier.wait(timeout=10)
+        return request('/ddex/documents/' + concurrent_id + '/validation-runs', {}, method='POST')[0]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        statuses = list(executor.map(validate_concurrently, range(2)))
+    check('DDEX concurrent validators serialize with deliberate lifecycle results ' + str(statuses), 200 in statuses and set(statuses) <= {200, 409})
+    check('DDEX creates exactly one completed run per accepted concurrent request', int(sql('SELECT count(*) FROM ddex_validation_run')) == before_runs + statuses.count(200) and sql('SELECT count(*) FROM ddex_validation_run WHERE finished_at IS NULL OR result_id IS NULL') == '0')
+
     # Anonymous assistant retrieval must not treat the internal index as public.
     # No OPENAI_API_KEY is present; local embeddings and fallback reply are used.
     embedding = [0] * 1536

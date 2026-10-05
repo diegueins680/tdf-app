@@ -1620,7 +1620,7 @@ export interface paths {
             };
             responses: {
                 /** @description Processed */
-                204: {
+                200: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -10936,6 +10936,13 @@ export interface components {
             resolutionPlanId: number;
             resolutionConflicts: components["schemas"]["DdexConflictResolution"][];
         };
+        DdexPreview: {
+            previewMessageId: string;
+            previewSender: string;
+            previewReleaseCount: number;
+            previewResourceCount: number;
+            previewWarnings: string[];
+        };
         DdexDownloadResponse: {
             downloadFileName: string;
             downloadContentType: string;
@@ -19342,7 +19349,7 @@ export interface operations {
         };
         responses: {
             /** @description Processed */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -20310,7 +20317,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Follow removed */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -20961,7 +20968,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Draft archived without hard deletion. */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -21911,7 +21918,7 @@ export interface operations {
         };
         responses: {
             /** @description Ordering updated. */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -22941,7 +22948,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Presence cleared */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -22995,7 +23002,7 @@ export interface operations {
         };
         responses: {
             /** @description Intake created */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -23045,7 +23052,7 @@ export interface operations {
         };
         responses: {
             /** @description Feedback accepted */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -23905,6 +23912,15 @@ export interface operations {
             };
         };
         responses: {
+            /** @description Private document stored or retrieved by content hash */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DdexDocument"];
+                };
+            };
             /** @description Missing persisted `catalog.import` capability */
             403: {
                 headers: {
@@ -23912,8 +23928,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Storage integration is not implemented */
-            501: {
+            /** @description Required private storage or supported runtime profile is unavailable */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -23961,6 +23977,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Private XML encoded in a JSON download envelope */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DdexDownloadResponse"];
+                };
+            };
             /** @description Missing persisted `catalog.read` capability */
             403: {
                 headers: {
@@ -23968,8 +23993,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Private file storage integration is not implemented */
-            501: {
+            /** @description Required private storage or supported runtime profile is unavailable */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -23988,6 +24013,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Completed structural validation run; official XSD and recipient-profile validation have not run */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DdexValidationRun"];
+                };
+            };
             /** @description Missing persisted `catalog.import` capability */
             403: {
                 headers: {
@@ -24002,8 +24036,15 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Governed validation execution is not implemented */
-            501: {
+            /** @description Current document lifecycle or source binding changed; rejected validation makes no changes */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Required private storage or supported runtime profile is unavailable */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -24058,6 +24099,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description ERN 4.3.2 preview only; no import or delivery */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DdexPreview"];
+                };
+            };
             /** @description Missing persisted `catalog.read` capability */
             403: {
                 headers: {
@@ -24065,8 +24115,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Typed import preview generation is not implemented */
-            501: {
+            /** @description Required private storage or supported runtime profile is unavailable */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -24099,8 +24149,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Typed import planning is not implemented */
-            501: {
+            /** @description This capability is deliberately disabled until its verified runtime prerequisites are available */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -24137,8 +24187,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Conflict resolution is not implemented */
-            501: {
+            /** @description This capability is deliberately disabled until its verified runtime prerequisites are available */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -24164,8 +24214,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Import commit execution is not implemented */
-            501: {
+            /** @description This capability is deliberately disabled until its verified runtime prerequisites are available */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -24207,8 +24257,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Export rendering and private storage are not implemented */
-            501: {
+            /** @description This capability is deliberately disabled until its verified runtime prerequisites are available */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -24234,8 +24284,8 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Export rendering and private storage are not implemented */
-            501: {
+            /** @description This capability is deliberately disabled until its verified runtime prerequisites are available */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -29838,7 +29888,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Read state persisted */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -31314,7 +31364,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Favorite stored */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -31334,7 +31384,7 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Favorite removed */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

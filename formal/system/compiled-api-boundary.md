@@ -115,3 +115,15 @@ still385 undocumented typed operations and21 declared success-status differences
 Snapshot admission is not a claim that those remaining discrepancies are resolved.
 The full backend suite was still running when this executable was inspected;
 its later test receipt must be checked separately.
+
+## Response-status reconciliation
+
+AUTHORITY-027 corrects the eleven empty successful responses from204 to200 and
+four implemented DDEX operations from historical501 to their actual JSON contracts.
+Five DDEX import/export operations instead deliberately return503; legacy Stripe
+checkout remains503. The six guarded declarations live in api-response-status.json,
+with requirement ownership and source provenance. The always-selected gate and
+compiled inspector reject all other status drift, disappearance or fabricated
+success. See [the DDEX contract](ddex-validation.md) for transactional repairs and
+Mobile compatibility discovered during actual HTTP verification. Historical
+21-difference counts above describe their recorded source, not the corrected tree.

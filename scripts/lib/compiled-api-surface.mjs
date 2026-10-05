@@ -184,3 +184,34 @@ export function verifyApiAvailability(surface, documented, policy) {
   return { deferredOperations: [...deferred].sort(), unexpectedUnmounted: [],
     limitations: 'Explicit typed-route deferrals only; Raw mount behavior, production flags and authorization require separate evidence.' };
 }
+
+// These are explicit unavailable handlers, not waivers for undocumented success.
+export function verifyApiResponseStatus(surface, documented, policy) {
+  if (policy?.schemaVersion !== 1 || typeof policy.authority !== 'string' || !policy.authority.trim()
+    || !Array.isArray(policy.unavailableOperations)) throw new Error('Invalid API response-status policy');
+  const comparison = compareApiSurface(surface, documented);
+  if (comparison.competingCompiledRoutes.length) throw new Error('Competing response-status routes');
+  const differences = new Map(comparison.successStatusDifferences.map(row => [row.id, row]));
+  const admitted = new Set();
+  for (const row of policy.unavailableOperations) {
+    if (!row || typeof row.id !== 'string' || !/^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS|TRACE|CONNECT) \/[^?\s]*$/.test(row.id)
+      || typeof row.requirement !== 'string' || !/^[A-Z]+-[A-Z0-9-]+$/.test(row.requirement)
+      || typeof row.reason !== 'string' || !row.reason.trim()
+      || !Array.isArray(row.sources) || !row.sources.length || row.sources.some(x => typeof x !== 'string' || !x.trim())
+      || !Number.isInteger(row.compiledStatus) || row.compiledStatus < 200 || row.compiledStatus > 299
+      || row.unavailableStatus !== 503) throw new Error('Malformed unavailable API status');
+    const split = row.id.indexOf(' ');
+    if (routeKey(row.id.slice(0, split), row.id.slice(split + 1)) !== row.id || admitted.has(row.id))
+      throw new Error('Duplicate or noncanonical unavailable API status');
+    admitted.add(row.id);
+    const difference = differences.get(row.id);
+    if (!difference || difference.compiled !== row.compiledStatus
+      || !difference.documented.includes(String(row.unavailableStatus))
+      || difference.documented.some(status => /^2[0-9]{2}$/.test(status)))
+      throw new Error(`Unavailable API status contract changed: ${row.id}`);
+  }
+  const unexpected = [...differences.keys()].filter(id => !admitted.has(id));
+  if (unexpected.length) throw new Error(`Unreconciled API response status: ${unexpected.join(', ')}`);
+  return { unavailableOperations: [...admitted].sort(), unexpectedStatusDifferences: [],
+    limitations: 'Declared status correspondence only. Current handler/error, DTO codec and authorization evidence remains required.' };
+}

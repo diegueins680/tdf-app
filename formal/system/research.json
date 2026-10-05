@@ -344,6 +344,26 @@
       "applicability": "Compiler-derived CombinedAPI description and handwritten OpenAPI drift",
       "decision": "adopted with boundary",
       "rationale": "Interpret actual TypeRep from the same CombinedAPI used to serve, reject unknown syntax, and retain Raw mounts. This verifies declarations, not JSON codecs, handler authorization, feature enablement or complete semantic conformance."
+    },
+    {
+      "id": "RES-API-002",
+      "source": "https://www.servant.dev/posts/2016-03-19-servant-0.5-release.html",
+      "title": "Servant NoContent and status-code semantics",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "An empty NoContent body does not choose204; the method declaration chooses the response status.",
+      "applicability": "Eleven documented204 responses whose compiled handlers return200.",
+      "decision": "adopted",
+      "rationale": "Preserve existing acknowledgement semantics and accepting clients, correct OpenAPI, then verify real HTTP responses. Library semantics alone do not establish handler correctness."
+    },
+    {
+      "id": "RES-WEBHOOK-001",
+      "source": "https://whatsapp.github.io/WhatsApp-Nodejs-SDK/receivingMessages/",
+      "title": "Meta-hosted WhatsApp receiving-message example",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "Acknowledge received webhook delivery with HTTP200.",
+      "applicability": "Existing WhatsApp empty-body webhook acknowledgement.",
+      "decision": "adopted with boundary",
+      "rationale": "Retain200; signed synthetic HTTP probes verify acknowledgement and unsigned rejection. This does not prove durable event processing or provider replay semantics."
     }
   ]
 }

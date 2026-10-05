@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import copy
+import json
 import importlib.util
 from pathlib import Path
 import unittest
@@ -90,6 +91,18 @@ class ConformanceControls(unittest.TestCase):
         self.assertIn('GET /social/v2/me', operations)
         self.assertIn('GET /directory/search', operations)
         self.assertEqual(operations['GET /social/v2/me']['source'], 'tdf-hq/docs/openapi/social-v2.yaml')
+
+    def test_unavailable_api_status_requires_ownership_and_guarded_status(self):
+        policy = copy.deepcopy(self.generated['apiResponseStatus'])
+        self.assertEqual(len(policy['unavailableOperations']), 6)
+        requirements = json.loads((conformance.ROOT/'formal/system/requirements.json').read_text())['requirements']
+        conformance.validate_response_status(policy, requirements)
+        for field, value in [('requirement', 'NONEXISTENT-001'), ('sources', ['not-a-source']),
+                             ('compiledStatus', True), ('unavailableStatus', 200), ('reason', '')]:
+            invalid = copy.deepcopy(policy)
+            invalid['unavailableOperations'][0][field] = value
+            with self.assertRaises(ValueError):
+                conformance.validate_response_status(invalid, requirements)
 
     def test_deferred_api_requires_real_requirement_and_provenance(self):
         policy = copy.deepcopy(self.generated['apiAvailability'])

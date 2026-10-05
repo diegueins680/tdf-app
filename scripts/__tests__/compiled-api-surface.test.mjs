@@ -5,7 +5,7 @@ import { mkdtempSync, mkdirSync, copyFileSync, writeFileSync, readFileSync, real
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
-import { compiledApiSurface, compareApiSurface, compiledApiDeclarationSnapshot, verifyCompiledApiDeclarationSnapshot, verifyApiAvailability } from '../lib/compiled-api-surface.mjs';
+import { compiledApiSurface, compareApiSurface, compiledApiDeclarationSnapshot, verifyCompiledApiDeclarationSnapshot, verifyApiAvailability, verifyApiResponseStatus } from '../lib/compiled-api-surface.mjs';
 
 const node = (module, name, ...args) => ({ module, name, args });
 const symbol = text => node('GHC.TypeLits', JSON.stringify(text));
@@ -137,6 +137,7 @@ test('inspection binds captured snapshot bytes and rejects a baseline replacemen
   writeFileSync(baseline, replacement);
   writeFileSync(path.join(root, 'formal/system/traceability.json'), JSON.stringify({ apiOperations: [] }));
   writeFileSync(path.join(root, 'formal/system/api-availability.json'), JSON.stringify({ schemaVersion: 1, authority: 'fixture', deferredOperations: [] }));
+  writeFileSync(path.join(root, 'formal/system/api-response-status.json'), JSON.stringify({ schemaVersion: 1, authority: 'fixture', unavailableOperations: [] }));
   const binary = path.join(root, 'fixture.cjs');
   writeFileSync(binary, `#!${process.execPath}\nprocess.stdout.write(${JSON.stringify(JSON.stringify(description))});\n`, { mode: 0o700 });
   const git = (...args) => execFileSync('git', args, { cwd: root, stdio: 'pipe' });
@@ -206,5 +207,33 @@ test('availability gate admits explicit deferral and rejects missing, mounted, s
   for (const field of ['id', 'requirement', 'reason', 'sources']) {
     const invalid = structuredClone(policy); delete invalid.deferredOperations[0][field];
     assert.throws(() => verifyApiAvailability(surface, documented, invalid), /Malformed/);
+  }
+});
+
+
+test('response-status admission rejects stale, broadened, missing and invented unavailable contracts', () => {
+  const surface = describe(alternative(sub(symbol('available'), verb()), sub(symbol('disabled'), verb('POST'))));
+  const documented = [{ id: 'GET /available', responses: ['200', '401'] }, { id: 'POST /disabled', responses: ['503', '403'] }];
+  const policy = { schemaVersion: 1, authority: 'fixture', unavailableOperations: [
+    { id: 'POST /disabled', requirement: 'SYS-API-003', compiledStatus: 200, unavailableStatus: 503, reason: 'Deliberate guarded capability', sources: ['contract.md'] },
+  ] };
+  assert.deepEqual(verifyApiResponseStatus(surface, documented, policy).unexpectedStatusDifferences, []);
+  for (const mutate of [
+    value => { value.docs[0].responses = ['204']; },
+    value => { value.docs[1].responses = ['501']; },
+    value => { value.docs[1].responses.push('200'); },
+    value => { value.docs[1].responses.push('201'); },
+    value => { value.docs.pop(); },
+    value => { value.surface.operations.pop(); },
+    value => { value.policy.unavailableOperations = []; },
+    value => { value.policy.unavailableOperations.push(value.policy.unavailableOperations[0]); },
+    value => { value.policy.unavailableOperations[0].compiledStatus = 201; },
+    value => { value.policy.unavailableOperations[0].unavailableStatus = 501; },
+    value => { value.policy.unavailableOperations[0].reason = ''; },
+    value => { value.policy.unavailableOperations[0].sources = []; },
+  ]) {
+    const value = structuredClone({ surface, docs: documented, policy });
+    mutate(value);
+    assert.throws(() => verifyApiResponseStatus(value.surface, value.docs, value.policy));
   }
 });

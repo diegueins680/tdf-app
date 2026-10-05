@@ -159,11 +159,21 @@ def validate_availability(policy, requirements, root=ROOT):
     return policy
 
 
+def validate_response_status(policy, requirements, root=ROOT):
+    entries = policy.get('unavailableOperations')
+    validate_availability({**policy, 'deferredOperations': entries}, requirements, root)
+    for row in entries:
+        if type(row.get('compiledStatus')) is not int or not 200 <= row['compiledStatus'] <= 299 or row.get('unavailableStatus') != 503:
+            raise ValueError('Invalid unavailable API status boundary')
+    return policy
+
+
 def generate(root=ROOT):
     inventory = json.loads((root/'formal/system/inventory.json').read_text())
     requirements = json.loads((root/'formal/system/requirements.json').read_text())['requirements']
     validate_requirements(requirements, root)
     availability = validate_availability(json.loads((root/'formal/system/api-availability.json').read_text()), requirements, root)
+    response_status = validate_response_status(json.loads((root/'formal/system/api-response-status.json').read_text()), requirements, root)
     reverse = {}
     for row in requirements:
         for field in ['implementation', 'tests', 'formalModels']:
@@ -223,7 +233,7 @@ def generate(root=ROOT):
             'unmappedSurfaces': [s['id'] for s in surfaces if not s['requirements']],
             'untestedRequirements': [r['id'] for r in requirements if not r['tests']],
             'unmodeledCriticalRequirements': [r['id'] for r in requirements if r.get('critical') and not r['formalModels']],
-            'stateMachines': models, 'apiOperations': operations, 'apiAvailability': availability, 'capabilityMatrix': capabilities,
+            'stateMachines': models, 'apiOperations': operations, 'apiAvailability': availability, 'apiResponseStatus': response_status, 'capabilityMatrix': capabilities,
             'conformanceCounts': counts,
             'limitations': ['Role predicates are preserved, not flattened into unconditional grants.',
                             'OpenAPI operations are not proof of Servant or runtime endpoint coverage.',

@@ -7,6 +7,7 @@ Historical green results are not current-candidate evidence.
 
 ## Canonical package
 
+- [ddex-validation.md](ddex-validation.md): canonical validation, atomic failure, shipped Mobile reference compatibility and explicit unavailable responses.
 - [api-availability.json](api-availability.json): explicit local-only API deferrals; the compiled gate rejects unexpected mounting or missing undeferred declarations.
 - [requirements.json](requirements.json): stable normative obligations, contracts,
   actors, guards, effects, failure/recovery boundaries, implementation, tests,

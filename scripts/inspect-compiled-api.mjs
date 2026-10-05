@@ -4,7 +4,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { sourceManifest } from './lib/verification-evidence.mjs';
-import { compiledApiSurface, compareApiSurface, compiledApiDeclarationSnapshot, verifyCompiledApiDeclarationSnapshot, verifyApiAvailability } from './lib/compiled-api-surface.mjs';
+import { compiledApiSurface, compareApiSurface, compiledApiDeclarationSnapshot, verifyCompiledApiDeclarationSnapshot, verifyApiAvailability, verifyApiResponseStatus } from './lib/compiled-api-surface.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
@@ -37,15 +37,19 @@ const snapshotSha256 = sha256(snapshotBytes);
 const availabilityPath = 'formal/system/api-availability.json';
 const availabilityBytes = readFileSync(path.join(root, availabilityPath));
 const availabilitySha256 = sha256(availabilityBytes);
+const responseStatusPath = 'formal/system/api-response-status.json';
+const responseStatusBytes = readFileSync(path.join(root, responseStatusPath));
+const responseStatusSha256 = sha256(responseStatusBytes);
 if (git('rev-parse', 'HEAD') !== revision || sha256(readFileSync(binary)) !== binarySha256
   || snapshotSha256 !== before.files[snapshotPath]
   || availabilitySha256 !== before.files[availabilityPath]
+  || responseStatusSha256 !== before.files[responseStatusPath]
   || sha256(traceBytes) !== before.files['formal/system/traceability.json']
   || sourceManifest(root).digest !== before.digest) {
   throw new Error('Compiled description provenance changed during inspection');
 }
 const report = { schemaVersion: 1, sourceRevision: revision, sourceTree: tree, sourceWorktreeDirty,
-  binarySha256, sourceDigest: before.digest, snapshotSha256, availabilitySha256, descriptionSha256: sha256(raw), traceabilitySha256: sha256(traceBytes),
+  binarySha256, sourceDigest: before.digest, snapshotSha256, availabilitySha256, responseStatusSha256, descriptionSha256: sha256(raw), traceabilitySha256: sha256(traceBytes),
   observedAt: new Date().toISOString(), ...surface, comparison,
   status: 'observed-not-conformance-approved',
   limitations: 'Compiler syntax from the supplied executable, not attestation that its binary was built from this checkout. CI binds the build separately. Type names are not JSON schema. Discovery gaps are unresolved obligations.',
@@ -66,6 +70,8 @@ if (comparison.competingCompiledRoutes.length) {
 }
 const availability = verifyApiAvailability(surface, trace.apiOperations, JSON.parse(availabilityBytes));
 writeFileSync(path.join(output, 'availability.json'), JSON.stringify(availability, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
+const responseStatus = verifyApiResponseStatus(surface, trace.apiOperations, JSON.parse(responseStatusBytes));
+writeFileSync(path.join(output, 'response-status.json'), JSON.stringify(responseStatus, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
 verifyCompiledApiDeclarationSnapshot(surface,
   JSON.parse(snapshotBytes));
 console.log('Compiled API declaration snapshot matches; documented conformance gaps remain open.');

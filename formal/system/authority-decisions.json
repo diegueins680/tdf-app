@@ -278,6 +278,19 @@
       "conflict": "OpenAPI publishes25 merchandise-reputation operations whose Haskell types and handlers exist but are not in CombinedAPI; interpreting every documented route as currently shipped contradicts the explicit local-only rollout scope.",
       "authority": "Existing explicit synthetic-local-only domain scope, corroborated by compiled routing and current production nine flags observed disabled. Observation alone does not authorize intent.",
       "resolution": "Enumerate the25 deferred operations in canonical availability policy, require their continued absence and flag any other missing documented route. Preserve raw discrepancy counts; no feature or route is activated. Future mounting needs a reviewed scope decision and relevant domain gates."
+    },
+    {
+      "id": "AUTHORITY-027",
+      "sources": [
+        "tdf-hq/docs/openapi/api.yaml",
+        "docs/social/fan-effects-boundary.md",
+        "tdf-hq/src/TDF/Server/DDEX.hs",
+        "tdf-hq/src/TDF/API/DDEX.hs",
+        "tdf-mobile/src/api/ddex.ts"
+      ],
+      "conflict": "Eleven empty responses were incorrectly documented204; nine DDEX operations still documented501 despite four implementedhandlers and five deliberately disabled503 paths. Shipped Mobile duplicated removed DTO fields. Canonical SQL issue guards conflict with core-era legacy NOT NULL; completion still wrote legacy result.",
+      "authority": "formal/system/ddex-validation.md; formal/system/api-response-status.json",
+      "resolution": "Preserve established200 empty-body acknowledgements and accepted client behavior. Document real JSON success schemas for four DDEX handlers; retain503 for five unavailable DDEX handlers plus legacyStripe. Fix actual validation SQL/transaction defects, canonical result reads and shipped Mobile adapters. Do not fabricate successful import/export availability or official profile validation."
     }
   ]
 }

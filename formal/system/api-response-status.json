@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "authority": "AUTHORITY-027; SYS-API-003. Deliberately unavailable handlers do not advertise reachable success.",
+  "unavailableOperations": [
+    {
+      "id": "POST /ddex/documents/{}/import-plans",
+      "requirement": "SYS-API-003",
+      "compiledStatus": 200,
+      "unavailableStatus": 503,
+      "reason": "DDEX import/export requires verified runtime prerequisites.",
+      "sources": [
+        "tdf-hq/src/TDF/Server/DDEX.hs"
+      ]
+    },
+    {
+      "id": "PATCH /ddex/import-plans/{}",
+      "requirement": "SYS-API-003",
+      "compiledStatus": 200,
+      "unavailableStatus": 503,
+      "reason": "DDEX import/export requires verified runtime prerequisites.",
+      "sources": [
+        "tdf-hq/src/TDF/Server/DDEX.hs"
+      ]
+    },
+    {
+      "id": "POST /ddex/import-plans/{}/commit",
+      "requirement": "SYS-API-003",
+      "compiledStatus": 200,
+      "unavailableStatus": 503,
+      "reason": "DDEX import/export requires verified runtime prerequisites.",
+      "sources": [
+        "tdf-hq/src/TDF/Server/DDEX.hs"
+      ]
+    },
+    {
+      "id": "POST /ddex/exports",
+      "requirement": "SYS-API-003",
+      "compiledStatus": 200,
+      "unavailableStatus": 503,
+      "reason": "DDEX import/export requires verified runtime prerequisites.",
+      "sources": [
+        "tdf-hq/src/TDF/Server/DDEX.hs"
+      ]
+    },
+    {
+      "id": "GET /ddex/exports/{}/download",
+      "requirement": "SYS-API-003",
+      "compiledStatus": 200,
+      "unavailableStatus": 503,
+      "reason": "DDEX import/export requires verified runtime prerequisites.",
+      "sources": [
+        "tdf-hq/src/TDF/Server/DDEX.hs"
+      ]
+    },
+    {
+      "id": "POST /marketplace/cart/{}/stripe/payment-intent",
+      "requirement": "SYS-API-003",
+      "compiledStatus": 200,
+      "unavailableStatus": 503,
+      "reason": "Legacy Stripe checkout is disabled pending canonical verified-payment integration.",
+      "sources": [
+        "tdf-hq/src/TDF/Server.hs"
+      ]
+    }
+  ]
+}
