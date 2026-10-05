@@ -8,6 +8,7 @@ module TDF.Operations.Worker
   , operationsMaintenanceTick
   , operationsWorkerIterationWith
   , startOperationsWorker
+  , operationsWorkerEnabled
   ) where
 
 import Control.Concurrent (forkIO, threadDelay)
@@ -19,6 +20,7 @@ import Data.Int (Int64)
 import Data.Text (Text)
 import Database.Persist.Sql (Single(..), SqlPersistT, rawSql, runSqlPool)
 import System.IO (hPutStrLn, stderr)
+import System.Environment (lookupEnv)
 
 import TDF.DB (Env(..))
 
@@ -35,7 +37,18 @@ emptyStats :: OperationsWorkerStats
 emptyStats = OperationsWorkerStats 0 0 0 0 0 0
 
 startOperationsWorker :: Env -> IO ()
-startOperationsWorker env = void (forkIO (workerLoop env))
+startOperationsWorker env = do
+  configured <- lookupEnv "OPERATIONS_WORKER_ENABLED"
+  case operationsWorkerEnabled configured of
+    Right True -> void (forkIO (workerLoop env))
+    Right False -> putStrLn "[operations] worker disabled by configuration"
+    Left message -> fail message
+
+operationsWorkerEnabled :: Maybe String -> Either String Bool
+operationsWorkerEnabled Nothing = Right True
+operationsWorkerEnabled (Just "true") = Right True
+operationsWorkerEnabled (Just "false") = Right False
+operationsWorkerEnabled _ = Left "OPERATIONS_WORKER_ENABLED must be true or false"
 
 workerLoop :: Env -> IO ()
 workerLoop env = forever $ do

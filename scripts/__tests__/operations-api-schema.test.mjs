@@ -61,3 +61,31 @@ test('approval requests and decisions enforce declared representation constraint
   assert.equal(decide(decision), true);
   assert.equal(decide({ ...decision, expectedDecision: 'approved' }), false);
 });
+
+test('manual request separates retry identity from projection-control metadata', () => {
+  const validate = validator('OperationsManualWorkItemCreate');
+  const body = { organizationId: '00000000-0000-0000-0000-000000000001', entityType: 'manual',
+    uncorrelated: true, correlationKey: 'synthetic', titleEs: 'Synthetic', titleEn: 'Synthetic',
+    descriptionEs: 'Synthetic', descriptionEn: 'Synthetic', priority: 'normal', metadata: {},
+    requestId: 'synthetic', sourceClient: 'conformance', amountMinor: 1, currency: 'USD' };
+  assert.equal(validate(body), true, JSON.stringify(validate.errors));
+  for (const invalid of [{ metadata: { terminal: true } }, { metadata: [] }, { amountMinor: -1 },
+                         { currency: 'usd' }, { correlationKey: '' }, { requestId: '' }]) {
+    assert.equal(validate({ ...body, ...invalid }), false, JSON.stringify(invalid));
+  }
+});
+
+test('notes and saved views use the representations admitted by the handlers', () => {
+  const note = validator('OperationsNoteCreate');
+  const body = { body: 'Synthetic', mentionedPartyIds: [], requestId: 'note', sourceClient: 'conformance' };
+  assert.equal(note({ ...body, diagnostic: 'extra' }), true);
+  assert.equal(note({ ...body, sourceClient: '' }), false);
+  const view = validator('OperationsSavedViewCreate');
+  const layout = { organizationId: '00000000-0000-0000-0000-000000000001', name: 'Synthetic',
+    shared: false, filters: {}, columns: ['status'], widgets: [], subscribedEventTypes: [],
+    requestId: 'view', sourceClient: 'conformance' };
+  assert.equal(view(layout), true, JSON.stringify(view.errors));
+  for (const invalid of [{ columns: {} }, { filters: [] }, { widgets: [1] }, { requestId: '' }]) {
+    assert.equal(view({ ...layout, ...invalid }), false);
+  }
+});

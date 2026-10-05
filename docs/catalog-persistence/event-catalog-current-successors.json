@@ -263,82 +263,125 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "2527a9c1e7a4951491dd",
+      "currentId": "b636d62b5bf46beaca97",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 177,
-      "change": "Ordered177-entry release registry preserves current main\u2019s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
+      "valueCount": 178,
+      "change": "Ordered178-entry manifest retains current main172 as an exact prefix, then the five existing conformance migrations and the additive Operations scoped-projector migration. Original SQL and introduction SHAs are unchanged. Both predecessor review records are retained; production apply, rollback/recovery and current combined rehearsal remain separate gates.",
       "previousResolution": {
         "historicalReplacementId": "7578a30aa3cc5aa23870",
-        "currentId": "2be7a048fab31c7e895c",
+        "currentId": "2527a9c1e7a4951491dd",
         "file": "scripts/production-migrations.json",
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 175,
-        "change": "Ordered175-entry release registry preserves current main\u2019s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
+        "valueCount": 177,
+        "change": "Ordered177-entry release registry preserves current main’s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
         "previousResolution": {
           "historicalReplacementId": "7578a30aa3cc5aa23870",
-          "currentId": "0f3d73c6a3dc4bf18f22",
+          "currentId": "2be7a048fab31c7e895c",
           "file": "scripts/production-migrations.json",
           "kind": "json-array",
           "name": "migrations",
-          "valueCount": 173,
-          "change": "Consolidated173-entry registry retains both branch histories: all166 common entries and exact introduction SHAs, five audit compatibility migrations and two newly shipped ticketing migrations. Preserve each branch relative order and immutable SQL bytes; fresh combined migration rehearsal and current applied-ledger reconciliation remain required.",
+          "valueCount": 175,
+          "change": "Ordered175-entry release registry preserves current main’s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
           "previousResolution": {
             "historicalReplacementId": "7578a30aa3cc5aa23870",
-            "currentId": "c6a62c7c7469e8974ff1",
+            "currentId": "0f3d73c6a3dc4bf18f22",
             "file": "scripts/production-migrations.json",
             "kind": "json-array",
             "name": "migrations",
-            "valueCount": 171,
-            "change": "Append only the reviewed DDEX legacy-nullability compatibility migration; retain all170 existing manifest entries and the complete previous review chain. Actual isolated171-entry restoration passed at18a; deployment eligibility remains separate.",
+            "valueCount": 173,
+            "change": "Consolidated173-entry registry retains both branch histories: all166 common entries and exact introduction SHAs, five audit compatibility migrations and two newly shipped ticketing migrations. Preserve each branch relative order and immutable SQL bytes; fresh combined migration rehearsal and current applied-ledger reconciliation remain required.",
             "previousResolution": {
               "historicalReplacementId": "7578a30aa3cc5aa23870",
-              "currentId": "7ec11ef7553c3fae0a80",
+              "currentId": "c6a62c7c7469e8974ff1",
               "file": "scripts/production-migrations.json",
               "kind": "json-array",
               "name": "migrations",
-              "valueCount": 170,
+              "valueCount": 171,
+              "change": "Append only the reviewed DDEX legacy-nullability compatibility migration; retain all170 existing manifest entries and the complete previous review chain. Actual isolated171-entry restoration passed at18a; deployment eligibility remains separate.",
               "previousResolution": {
                 "historicalReplacementId": "7578a30aa3cc5aa23870",
-                "currentId": "0e9db026aa88326fa7fd",
+                "currentId": "7ec11ef7553c3fae0a80",
                 "file": "scripts/production-migrations.json",
                 "kind": "json-array",
                 "name": "migrations",
-                "valueCount": 169,
+                "valueCount": 170,
                 "previousResolution": {
                   "historicalReplacementId": "7578a30aa3cc5aa23870",
-                  "currentId": "057297148d42a39ced43",
+                  "currentId": "0e9db026aa88326fa7fd",
                   "file": "scripts/production-migrations.json",
                   "kind": "json-array",
                   "name": "migrations",
-                  "valueCount": 161,
+                  "valueCount": 169,
                   "previousResolution": {
                     "historicalReplacementId": "7578a30aa3cc5aa23870",
-                    "currentId": "dc6d60d733c6eb69ebbf",
+                    "currentId": "057297148d42a39ced43",
                     "file": "scripts/production-migrations.json",
                     "kind": "json-array",
                     "name": "migrations",
-                    "valueCount": 160,
+                    "valueCount": 161,
                     "previousResolution": {
                       "historicalReplacementId": "7578a30aa3cc5aa23870",
-                      "currentId": "7bf93825f1431a6d52d6",
+                      "currentId": "dc6d60d733c6eb69ebbf",
                       "file": "scripts/production-migrations.json",
                       "kind": "json-array",
                       "name": "migrations",
-                      "valueCount": 159,
+                      "valueCount": 160,
                       "previousResolution": {
-                        "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
-                        "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
-                        "currentId": "07da55e81a186d26df37",
-                        "valueCount": 115
+                        "historicalReplacementId": "7578a30aa3cc5aa23870",
+                        "currentId": "7bf93825f1431a6d52d6",
+                        "file": "scripts/production-migrations.json",
+                        "kind": "json-array",
+                        "name": "migrations",
+                        "valueCount": 159,
+                        "previousResolution": {
+                          "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+                          "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+                          "currentId": "07da55e81a186d26df37",
+                          "valueCount": 115
+                        },
+                        "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
                       },
-                      "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+                      "change": "Main f8925e339 preserves the original 159 migration entries, introduction commits and SQL bytes, then adds the reviewed forward-only discovery ownership metadata boundary. Retain its exact reviewed successor and the full previous mapping."
                     },
-                    "change": "Main f8925e339 preserves the original 159 migration entries, introduction commits and SQL bytes, then adds the reviewed forward-only discovery ownership metadata boundary. Retain its exact reviewed successor and the full previous mapping."
+                    "change": "Append recovery expiry metadata after all160 unchanged migration entries; preserve the complete previous reviewed mapping.",
+                    "consolidatedMainResolution": {
+                      "historicalReplacementId": "7578a30aa3cc5aa23870",
+                      "currentId": "c6915506d0f7b802519d",
+                      "file": "scripts/production-migrations.json",
+                      "kind": "json-array",
+                      "name": "migrations",
+                      "valueCount": 166,
+                      "previousResolution": {
+                        "historicalReplacementId": "7578a30aa3cc5aa23870",
+                        "currentId": "dc6d60d733c6eb69ebbf",
+                        "file": "scripts/production-migrations.json",
+                        "kind": "json-array",
+                        "name": "migrations",
+                        "valueCount": 160,
+                        "previousResolution": {
+                          "historicalReplacementId": "7578a30aa3cc5aa23870",
+                          "currentId": "7bf93825f1431a6d52d6",
+                          "file": "scripts/production-migrations.json",
+                          "kind": "json-array",
+                          "name": "migrations",
+                          "valueCount": 159,
+                          "previousResolution": {
+                            "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+                            "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+                            "currentId": "07da55e81a186d26df37",
+                            "valueCount": 115
+                          },
+                          "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+                        },
+                        "change": "Main f8925e339 preserves the original 159 migration entries, introduction commits and SQL bytes, then adds the reviewed forward-only discovery ownership metadata boundary. Retain its exact reviewed successor and the full previous mapping."
+                      },
+                      "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
+                    }
                   },
-                  "change": "Append recovery expiry metadata after all160 unchanged migration entries; preserve the complete previous reviewed mapping.",
+                  "change": "The 169-entry consolidated manifest preserves all 166 current-main migrations and their introduction SHAs, then appends the three audit compatibility migrations unchanged. No historical SQL is modified. Both parent decisions remain provenance; migration ordering, ledger checksums and new constraint compatibility require execution against this candidate.",
                   "consolidatedMainResolution": {
                     "historicalReplacementId": "7578a30aa3cc5aa23870",
                     "currentId": "c6915506d0f7b802519d",
@@ -373,7 +416,7 @@
                     "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
                   }
                 },
-                "change": "The 169-entry consolidated manifest preserves all 166 current-main migrations and their introduction SHAs, then appends the three audit compatibility migrations unchanged. No historical SQL is modified. Both parent decisions remain provenance; migration ordering, ledger checksums and new constraint compatibility require execution against this candidate.",
+                "change": "Reconcile newly shipped Mobile baseline and170-entry booking projection manifest; preserve both historical review branches.",
                 "consolidatedMainResolution": {
                   "historicalReplacementId": "7578a30aa3cc5aa23870",
                   "currentId": "c6915506d0f7b802519d",
@@ -407,41 +450,58 @@
                   },
                   "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
                 }
-              },
-              "change": "Reconcile newly shipped Mobile baseline and170-entry booking projection manifest; preserve both historical review branches.",
-              "consolidatedMainResolution": {
+              }
+            },
+            "mergedResolution": {
+              "historicalReplacementId": "7578a30aa3cc5aa23870",
+              "currentId": "d8e73943d72078a492ae",
+              "file": "scripts/production-migrations.json",
+              "kind": "json-array",
+              "name": "migrations",
+              "valueCount": 168,
+              "previousResolution": {
                 "historicalReplacementId": "7578a30aa3cc5aa23870",
-                "currentId": "c6915506d0f7b802519d",
+                "currentId": "c66b265a7ea297c37542",
                 "file": "scripts/production-migrations.json",
                 "kind": "json-array",
                 "name": "migrations",
-                "valueCount": 166,
+                "valueCount": 167,
                 "previousResolution": {
                   "historicalReplacementId": "7578a30aa3cc5aa23870",
-                  "currentId": "dc6d60d733c6eb69ebbf",
+                  "currentId": "c6915506d0f7b802519d",
                   "file": "scripts/production-migrations.json",
                   "kind": "json-array",
                   "name": "migrations",
-                  "valueCount": 160,
+                  "valueCount": 166,
                   "previousResolution": {
                     "historicalReplacementId": "7578a30aa3cc5aa23870",
-                    "currentId": "7bf93825f1431a6d52d6",
+                    "currentId": "dc6d60d733c6eb69ebbf",
                     "file": "scripts/production-migrations.json",
                     "kind": "json-array",
                     "name": "migrations",
-                    "valueCount": 159,
+                    "valueCount": 160,
                     "previousResolution": {
-                      "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
-                      "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
-                      "currentId": "07da55e81a186d26df37",
-                      "valueCount": 115
+                      "historicalReplacementId": "7578a30aa3cc5aa23870",
+                      "currentId": "7bf93825f1431a6d52d6",
+                      "file": "scripts/production-migrations.json",
+                      "kind": "json-array",
+                      "name": "migrations",
+                      "valueCount": 159,
+                      "previousResolution": {
+                        "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+                        "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+                        "currentId": "07da55e81a186d26df37",
+                        "valueCount": 115
+                      },
+                      "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
                     },
-                    "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+                    "change": "Main f8925e339 preserves the original 159 migration entries, introduction commits and SQL bytes, then adds the reviewed forward-only discovery ownership metadata boundary. Retain its exact reviewed successor and the full previous mapping."
                   },
-                  "change": "Main f8925e339 preserves the original 159 migration entries, introduction commits and SQL bytes, then adds the reviewed forward-only discovery ownership metadata boundary. Retain its exact reviewed successor and the full previous mapping."
+                  "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
                 },
-                "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
-              }
+                "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+              },
+              "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
             }
           },
           "mergedResolution": {
@@ -494,6 +554,75 @@
               "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
             },
             "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+          },
+          "consolidatedMainResolution": {
+            "historicalReplacementId": "7578a30aa3cc5aa23870",
+            "currentId": "cba40e9222e1254a3276",
+            "file": "scripts/production-migrations.json",
+            "kind": "json-array",
+            "name": "migrations",
+            "valueCount": 170,
+            "previousResolution": {
+              "historicalReplacementId": "7578a30aa3cc5aa23870",
+              "currentId": "f77cf115108e384e83a6",
+              "file": "scripts/production-migrations.json",
+              "kind": "json-array",
+              "name": "migrations",
+              "valueCount": 169,
+              "previousResolution": {
+                "historicalReplacementId": "7578a30aa3cc5aa23870",
+                "currentId": "d8e73943d72078a492ae",
+                "file": "scripts/production-migrations.json",
+                "kind": "json-array",
+                "name": "migrations",
+                "valueCount": 168,
+                "previousResolution": {
+                  "historicalReplacementId": "7578a30aa3cc5aa23870",
+                  "currentId": "c66b265a7ea297c37542",
+                  "file": "scripts/production-migrations.json",
+                  "kind": "json-array",
+                  "name": "migrations",
+                  "valueCount": 167,
+                  "previousResolution": {
+                    "historicalReplacementId": "7578a30aa3cc5aa23870",
+                    "currentId": "c6915506d0f7b802519d",
+                    "file": "scripts/production-migrations.json",
+                    "kind": "json-array",
+                    "name": "migrations",
+                    "valueCount": 166,
+                    "previousResolution": {
+                      "historicalReplacementId": "7578a30aa3cc5aa23870",
+                      "currentId": "dc6d60d733c6eb69ebbf",
+                      "file": "scripts/production-migrations.json",
+                      "kind": "json-array",
+                      "name": "migrations",
+                      "valueCount": 160,
+                      "previousResolution": {
+                        "historicalReplacementId": "7578a30aa3cc5aa23870",
+                        "currentId": "7bf93825f1431a6d52d6",
+                        "file": "scripts/production-migrations.json",
+                        "kind": "json-array",
+                        "name": "migrations",
+                        "valueCount": 159,
+                        "previousResolution": {
+                          "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+                          "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+                          "currentId": "07da55e81a186d26df37",
+                          "valueCount": 115
+                        },
+                        "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+                      },
+                      "change": "Main f8925e339 preserves the original 159 migration entries, introduction commits and SQL bytes, then adds the reviewed forward-only discovery ownership metadata boundary. Retain its exact reviewed successor and the full previous mapping."
+                    },
+                    "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
+                  },
+                  "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+                },
+                "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+              },
+              "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+            },
+            "change": "Ordered 170-entry production migration registry. All 169 preceding entries and introduction commits are unchanged. An additive migration prevents approved/retired policy demotion and commercial edits, and appends explicit legacy quantity-limit corrections while preserving original audit rows. Replays do not duplicate corrections; rollback retains approval and audit evidence. This is governed release authority, not an editable business catalog."
           }
         },
         "mergedResolution": {
@@ -549,72 +678,228 @@
         },
         "consolidatedMainResolution": {
           "historicalReplacementId": "7578a30aa3cc5aa23870",
-          "currentId": "cba40e9222e1254a3276",
+          "currentId": "a6f94215147ae155b3c9",
           "file": "scripts/production-migrations.json",
           "kind": "json-array",
           "name": "migrations",
-          "valueCount": 170,
+          "valueCount": 172,
           "previousResolution": {
             "historicalReplacementId": "7578a30aa3cc5aa23870",
-            "currentId": "f77cf115108e384e83a6",
+            "currentId": "553243452dea3853f5de",
             "file": "scripts/production-migrations.json",
             "kind": "json-array",
             "name": "migrations",
-            "valueCount": 169,
+            "valueCount": 171,
             "previousResolution": {
               "historicalReplacementId": "7578a30aa3cc5aa23870",
-              "currentId": "d8e73943d72078a492ae",
+              "currentId": "cba40e9222e1254a3276",
               "file": "scripts/production-migrations.json",
               "kind": "json-array",
               "name": "migrations",
-              "valueCount": 168,
+              "valueCount": 170,
               "previousResolution": {
                 "historicalReplacementId": "7578a30aa3cc5aa23870",
-                "currentId": "c66b265a7ea297c37542",
+                "currentId": "f77cf115108e384e83a6",
                 "file": "scripts/production-migrations.json",
                 "kind": "json-array",
                 "name": "migrations",
-                "valueCount": 167,
+                "valueCount": 169,
                 "previousResolution": {
                   "historicalReplacementId": "7578a30aa3cc5aa23870",
-                  "currentId": "c6915506d0f7b802519d",
+                  "currentId": "d8e73943d72078a492ae",
                   "file": "scripts/production-migrations.json",
                   "kind": "json-array",
                   "name": "migrations",
-                  "valueCount": 166,
+                  "valueCount": 168,
                   "previousResolution": {
                     "historicalReplacementId": "7578a30aa3cc5aa23870",
-                    "currentId": "dc6d60d733c6eb69ebbf",
+                    "currentId": "c66b265a7ea297c37542",
                     "file": "scripts/production-migrations.json",
                     "kind": "json-array",
                     "name": "migrations",
-                    "valueCount": 160,
+                    "valueCount": 167,
                     "previousResolution": {
                       "historicalReplacementId": "7578a30aa3cc5aa23870",
-                      "currentId": "7bf93825f1431a6d52d6",
+                      "currentId": "c6915506d0f7b802519d",
                       "file": "scripts/production-migrations.json",
                       "kind": "json-array",
                       "name": "migrations",
-                      "valueCount": 159,
+                      "valueCount": 166,
                       "previousResolution": {
-                        "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
-                        "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
-                        "currentId": "07da55e81a186d26df37",
-                        "valueCount": 115
+                        "historicalReplacementId": "7578a30aa3cc5aa23870",
+                        "currentId": "dc6d60d733c6eb69ebbf",
+                        "file": "scripts/production-migrations.json",
+                        "kind": "json-array",
+                        "name": "migrations",
+                        "valueCount": 160,
+                        "previousResolution": {
+                          "historicalReplacementId": "7578a30aa3cc5aa23870",
+                          "currentId": "7bf93825f1431a6d52d6",
+                          "file": "scripts/production-migrations.json",
+                          "kind": "json-array",
+                          "name": "migrations",
+                          "valueCount": 159,
+                          "previousResolution": {
+                            "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+                            "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+                            "currentId": "07da55e81a186d26df37",
+                            "valueCount": 115
+                          },
+                          "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+                        },
+                        "change": "Main f8925e339 preserves the original 159 migration entries, introduction commits and SQL bytes, then adds the reviewed forward-only discovery ownership metadata boundary. Retain its exact reviewed successor and the full previous mapping."
                       },
-                      "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+                      "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
                     },
-                    "change": "Main f8925e339 preserves the original 159 migration entries, introduction commits and SQL bytes, then adds the reviewed forward-only discovery ownership metadata boundary. Retain its exact reviewed successor and the full previous mapping."
+                    "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
                   },
-                  "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
+                  "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+                },
+                "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+              },
+              "change": "Ordered 170-entry production migration registry. All 169 preceding entries and introduction commits are unchanged. An additive migration prevents approved/retired policy demotion and commercial edits, and appends explicit legacy quantity-limit corrections while preserving original audit rows. Replays do not duplicate corrections; rollback retains approval and audit evidence. This is governed release authority, not an editable business catalog."
+            },
+            "change": "Ordered 171-entry production migration registry. The complete 170-entry quantity-limit/lifecycle branch is preserved, followed by the additive durable confirmation delivery migration. Both parent histories retain their original introduction commits and exact SQL bytes. Policy lifecycle, historical corrections, leases, retry fencing and evidence-preserving rollback are enforced and tested. This is deployment authority, not an editable business catalog.",
+            "mergedBranchResolution": {
+              "historicalReplacementId": "7578a30aa3cc5aa23870",
+              "currentId": "a6b1574e562f2cac93e8",
+              "file": "scripts/production-migrations.json",
+              "kind": "json-array",
+              "name": "migrations",
+              "valueCount": 170,
+              "previousResolution": {
+                "historicalReplacementId": "7578a30aa3cc5aa23870",
+                "currentId": "f77cf115108e384e83a6",
+                "file": "scripts/production-migrations.json",
+                "kind": "json-array",
+                "name": "migrations",
+                "valueCount": 169,
+                "previousResolution": {
+                  "historicalReplacementId": "7578a30aa3cc5aa23870",
+                  "currentId": "d8e73943d72078a492ae",
+                  "file": "scripts/production-migrations.json",
+                  "kind": "json-array",
+                  "name": "migrations",
+                  "valueCount": 168,
+                  "previousResolution": {
+                    "historicalReplacementId": "7578a30aa3cc5aa23870",
+                    "currentId": "c66b265a7ea297c37542",
+                    "file": "scripts/production-migrations.json",
+                    "kind": "json-array",
+                    "name": "migrations",
+                    "valueCount": 167,
+                    "previousResolution": {
+                      "historicalReplacementId": "7578a30aa3cc5aa23870",
+                      "currentId": "c6915506d0f7b802519d",
+                      "file": "scripts/production-migrations.json",
+                      "kind": "json-array",
+                      "name": "migrations",
+                      "valueCount": 166,
+                      "previousResolution": {
+                        "historicalReplacementId": "7578a30aa3cc5aa23870",
+                        "currentId": "dc6d60d733c6eb69ebbf",
+                        "file": "scripts/production-migrations.json",
+                        "kind": "json-array",
+                        "name": "migrations",
+                        "valueCount": 160,
+                        "previousResolution": {
+                          "historicalReplacementId": "7578a30aa3cc5aa23870",
+                          "currentId": "7bf93825f1431a6d52d6",
+                          "file": "scripts/production-migrations.json",
+                          "kind": "json-array",
+                          "name": "migrations",
+                          "valueCount": 159,
+                          "previousResolution": {
+                            "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+                            "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+                            "currentId": "07da55e81a186d26df37",
+                            "valueCount": 115
+                          },
+                          "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+                        },
+                        "change": "Main f8925e339 preserves the original 159 migration entries, introduction commits and SQL bytes, then adds the reviewed forward-only discovery ownership metadata boundary. Retain its exact reviewed successor and the full previous mapping."
+                      },
+                      "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
+                    },
+                    "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+                  },
+                  "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+                },
+                "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+              },
+              "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+            }
+          },
+          "change": "Ordered 172-entry production migration registry. All 171 preceding entries, introduction commits and SQL bytes remain unchanged. One additive partial index supports recovery of expired processing leases without scanning retained confirmation history. Its rollback removes only the index, never delivery evidence. This is release authority, not editable business catalog data.",
+          "mergedBranchResolution": {
+            "historicalReplacementId": "7578a30aa3cc5aa23870",
+            "currentId": "a6b1574e562f2cac93e8",
+            "file": "scripts/production-migrations.json",
+            "kind": "json-array",
+            "name": "migrations",
+            "valueCount": 170,
+            "previousResolution": {
+              "historicalReplacementId": "7578a30aa3cc5aa23870",
+              "currentId": "f77cf115108e384e83a6",
+              "file": "scripts/production-migrations.json",
+              "kind": "json-array",
+              "name": "migrations",
+              "valueCount": 169,
+              "previousResolution": {
+                "historicalReplacementId": "7578a30aa3cc5aa23870",
+                "currentId": "d8e73943d72078a492ae",
+                "file": "scripts/production-migrations.json",
+                "kind": "json-array",
+                "name": "migrations",
+                "valueCount": 168,
+                "previousResolution": {
+                  "historicalReplacementId": "7578a30aa3cc5aa23870",
+                  "currentId": "c66b265a7ea297c37542",
+                  "file": "scripts/production-migrations.json",
+                  "kind": "json-array",
+                  "name": "migrations",
+                  "valueCount": 167,
+                  "previousResolution": {
+                    "historicalReplacementId": "7578a30aa3cc5aa23870",
+                    "currentId": "c6915506d0f7b802519d",
+                    "file": "scripts/production-migrations.json",
+                    "kind": "json-array",
+                    "name": "migrations",
+                    "valueCount": 166,
+                    "previousResolution": {
+                      "historicalReplacementId": "7578a30aa3cc5aa23870",
+                      "currentId": "dc6d60d733c6eb69ebbf",
+                      "file": "scripts/production-migrations.json",
+                      "kind": "json-array",
+                      "name": "migrations",
+                      "valueCount": 160,
+                      "previousResolution": {
+                        "historicalReplacementId": "7578a30aa3cc5aa23870",
+                        "currentId": "7bf93825f1431a6d52d6",
+                        "file": "scripts/production-migrations.json",
+                        "kind": "json-array",
+                        "name": "migrations",
+                        "valueCount": 159,
+                        "previousResolution": {
+                          "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+                          "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+                          "currentId": "07da55e81a186d26df37",
+                          "valueCount": 115
+                        },
+                        "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+                      },
+                      "change": "Main f8925e339 preserves the original 159 migration entries, introduction commits and SQL bytes, then adds the reviewed forward-only discovery ownership metadata boundary. Retain its exact reviewed successor and the full previous mapping."
+                    },
+                    "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
+                  },
+                  "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
                 },
                 "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
               },
               "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
             },
             "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
-          },
-          "change": "Ordered 170-entry production migration registry. All 169 preceding entries and introduction commits are unchanged. An additive migration prevents approved/retired policy demotion and commercial edits, and appends explicit legacy quantity-limit corrections while preserving original audit rows. Replays do not duplicate corrections; rollback retains approval and audit evidence. This is governed release authority, not an editable business catalog."
+          }
         }
       },
       "mergedResolution": {
@@ -891,6 +1176,483 @@
             "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
           },
           "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+        }
+      },
+      "operationsConsolidationResolution": {
+        "historicalReplacementId": "7578a30aa3cc5aa23870",
+        "currentId": "01f4698882021ad8bbef",
+        "file": "scripts/production-migrations.json",
+        "kind": "json-array",
+        "name": "migrations",
+        "valueCount": 176,
+        "change": "The 176-entry registry preserves the previous 175 entries and introduction commits and appends the scoped Operations projection migration. It isolates manual receipts, retains trusted WhatsApp identity progression, and redacts stored SQL failure details. Historical applied SQL is unchanged. Current combined migration rehearsal and applied-ledger checks remain required; review does not authorize execution.",
+        "previousResolution": {
+          "historicalReplacementId": "7578a30aa3cc5aa23870",
+          "currentId": "9cb3eff190af8cb02c6f",
+          "file": "scripts/production-migrations.json",
+          "kind": "json-array",
+          "name": "migrations",
+          "valueCount": 175,
+          "change": "Consolidated 175-entry production migration registry preserves all173 audit entries and all170 current-main entries, including their relative order, exact introduction commits and SQL bytes. Two newly shipped ticket quantity and policy lifecycle migrations remain additive. Both prior review chains are retained; current combined migration rehearsal and applied-ledger checks remain required.",
+          "previousResolution": {
+            "historicalReplacementId": "7578a30aa3cc5aa23870",
+            "currentId": "0f3d73c6a3dc4bf18f22",
+            "file": "scripts/production-migrations.json",
+            "kind": "json-array",
+            "name": "migrations",
+            "valueCount": 173,
+            "change": "Consolidated173-entry registry retains both branch histories: all166 common entries and exact introduction SHAs, five audit compatibility migrations and two newly shipped ticketing migrations. Preserve each branch relative order and immutable SQL bytes; fresh combined migration rehearsal and current applied-ledger reconciliation remain required.",
+            "previousResolution": {
+              "historicalReplacementId": "7578a30aa3cc5aa23870",
+              "currentId": "c6a62c7c7469e8974ff1",
+              "file": "scripts/production-migrations.json",
+              "kind": "json-array",
+              "name": "migrations",
+              "valueCount": 171,
+              "change": "Append only the reviewed DDEX legacy-nullability compatibility migration; retain all170 existing manifest entries and the complete previous review chain. Actual isolated171-entry restoration passed at18a; deployment eligibility remains separate.",
+              "previousResolution": {
+                "historicalReplacementId": "7578a30aa3cc5aa23870",
+                "currentId": "7ec11ef7553c3fae0a80",
+                "file": "scripts/production-migrations.json",
+                "kind": "json-array",
+                "name": "migrations",
+                "valueCount": 170,
+                "previousResolution": {
+                  "historicalReplacementId": "7578a30aa3cc5aa23870",
+                  "currentId": "0e9db026aa88326fa7fd",
+                  "file": "scripts/production-migrations.json",
+                  "kind": "json-array",
+                  "name": "migrations",
+                  "valueCount": 169,
+                  "previousResolution": {
+                    "historicalReplacementId": "7578a30aa3cc5aa23870",
+                    "currentId": "057297148d42a39ced43",
+                    "file": "scripts/production-migrations.json",
+                    "kind": "json-array",
+                    "name": "migrations",
+                    "valueCount": 161,
+                    "previousResolution": {
+                      "historicalReplacementId": "7578a30aa3cc5aa23870",
+                      "currentId": "dc6d60d733c6eb69ebbf",
+                      "file": "scripts/production-migrations.json",
+                      "kind": "json-array",
+                      "name": "migrations",
+                      "valueCount": 160,
+                      "previousResolution": {
+                        "historicalReplacementId": "7578a30aa3cc5aa23870",
+                        "currentId": "7bf93825f1431a6d52d6",
+                        "file": "scripts/production-migrations.json",
+                        "kind": "json-array",
+                        "name": "migrations",
+                        "valueCount": 159,
+                        "previousResolution": {
+                          "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+                          "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+                          "currentId": "07da55e81a186d26df37",
+                          "valueCount": 115
+                        },
+                        "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+                      },
+                      "change": "Main f8925e339 preserves the original 159 migration entries, introduction commits and SQL bytes, then adds the reviewed forward-only discovery ownership metadata boundary. Retain its exact reviewed successor and the full previous mapping."
+                    },
+                    "change": "Append recovery expiry metadata after all160 unchanged migration entries; preserve the complete previous reviewed mapping.",
+                    "consolidatedMainResolution": {
+                      "historicalReplacementId": "7578a30aa3cc5aa23870",
+                      "currentId": "c6915506d0f7b802519d",
+                      "file": "scripts/production-migrations.json",
+                      "kind": "json-array",
+                      "name": "migrations",
+                      "valueCount": 166,
+                      "previousResolution": {
+                        "historicalReplacementId": "7578a30aa3cc5aa23870",
+                        "currentId": "dc6d60d733c6eb69ebbf",
+                        "file": "scripts/production-migrations.json",
+                        "kind": "json-array",
+                        "name": "migrations",
+                        "valueCount": 160,
+                        "previousResolution": {
+                          "historicalReplacementId": "7578a30aa3cc5aa23870",
+                          "currentId": "7bf93825f1431a6d52d6",
+                          "file": "scripts/production-migrations.json",
+                          "kind": "json-array",
+                          "name": "migrations",
+                          "valueCount": 159,
+                          "previousResolution": {
+                            "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+                            "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+                            "currentId": "07da55e81a186d26df37",
+                            "valueCount": 115
+                          },
+                          "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+                        },
+                        "change": "Main f8925e339 preserves the original 159 migration entries, introduction commits and SQL bytes, then adds the reviewed forward-only discovery ownership metadata boundary. Retain its exact reviewed successor and the full previous mapping."
+                      },
+                      "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
+                    }
+                  },
+                  "change": "The 169-entry consolidated manifest preserves all 166 current-main migrations and their introduction SHAs, then appends the three audit compatibility migrations unchanged. No historical SQL is modified. Both parent decisions remain provenance; migration ordering, ledger checksums and new constraint compatibility require execution against this candidate.",
+                  "consolidatedMainResolution": {
+                    "historicalReplacementId": "7578a30aa3cc5aa23870",
+                    "currentId": "c6915506d0f7b802519d",
+                    "file": "scripts/production-migrations.json",
+                    "kind": "json-array",
+                    "name": "migrations",
+                    "valueCount": 166,
+                    "previousResolution": {
+                      "historicalReplacementId": "7578a30aa3cc5aa23870",
+                      "currentId": "dc6d60d733c6eb69ebbf",
+                      "file": "scripts/production-migrations.json",
+                      "kind": "json-array",
+                      "name": "migrations",
+                      "valueCount": 160,
+                      "previousResolution": {
+                        "historicalReplacementId": "7578a30aa3cc5aa23870",
+                        "currentId": "7bf93825f1431a6d52d6",
+                        "file": "scripts/production-migrations.json",
+                        "kind": "json-array",
+                        "name": "migrations",
+                        "valueCount": 159,
+                        "previousResolution": {
+                          "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+                          "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+                          "currentId": "07da55e81a186d26df37",
+                          "valueCount": 115
+                        },
+                        "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+                      },
+                      "change": "Main f8925e339 preserves the original 159 migration entries, introduction commits and SQL bytes, then adds the reviewed forward-only discovery ownership metadata boundary. Retain its exact reviewed successor and the full previous mapping."
+                    },
+                    "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
+                  }
+                },
+                "change": "Reconcile newly shipped Mobile baseline and170-entry booking projection manifest; preserve both historical review branches.",
+                "consolidatedMainResolution": {
+                  "historicalReplacementId": "7578a30aa3cc5aa23870",
+                  "currentId": "c6915506d0f7b802519d",
+                  "file": "scripts/production-migrations.json",
+                  "kind": "json-array",
+                  "name": "migrations",
+                  "valueCount": 166,
+                  "previousResolution": {
+                    "historicalReplacementId": "7578a30aa3cc5aa23870",
+                    "currentId": "dc6d60d733c6eb69ebbf",
+                    "file": "scripts/production-migrations.json",
+                    "kind": "json-array",
+                    "name": "migrations",
+                    "valueCount": 160,
+                    "previousResolution": {
+                      "historicalReplacementId": "7578a30aa3cc5aa23870",
+                      "currentId": "7bf93825f1431a6d52d6",
+                      "file": "scripts/production-migrations.json",
+                      "kind": "json-array",
+                      "name": "migrations",
+                      "valueCount": 159,
+                      "previousResolution": {
+                        "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+                        "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+                        "currentId": "07da55e81a186d26df37",
+                        "valueCount": 115
+                      },
+                      "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+                    },
+                    "change": "Main f8925e339 preserves the original 159 migration entries, introduction commits and SQL bytes, then adds the reviewed forward-only discovery ownership metadata boundary. Retain its exact reviewed successor and the full previous mapping."
+                  },
+                  "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
+                }
+              }
+            },
+            "mergedResolution": {
+              "historicalReplacementId": "7578a30aa3cc5aa23870",
+              "currentId": "d8e73943d72078a492ae",
+              "file": "scripts/production-migrations.json",
+              "kind": "json-array",
+              "name": "migrations",
+              "valueCount": 168,
+              "previousResolution": {
+                "historicalReplacementId": "7578a30aa3cc5aa23870",
+                "currentId": "c66b265a7ea297c37542",
+                "file": "scripts/production-migrations.json",
+                "kind": "json-array",
+                "name": "migrations",
+                "valueCount": 167,
+                "previousResolution": {
+                  "historicalReplacementId": "7578a30aa3cc5aa23870",
+                  "currentId": "c6915506d0f7b802519d",
+                  "file": "scripts/production-migrations.json",
+                  "kind": "json-array",
+                  "name": "migrations",
+                  "valueCount": 166,
+                  "previousResolution": {
+                    "historicalReplacementId": "7578a30aa3cc5aa23870",
+                    "currentId": "dc6d60d733c6eb69ebbf",
+                    "file": "scripts/production-migrations.json",
+                    "kind": "json-array",
+                    "name": "migrations",
+                    "valueCount": 160,
+                    "previousResolution": {
+                      "historicalReplacementId": "7578a30aa3cc5aa23870",
+                      "currentId": "7bf93825f1431a6d52d6",
+                      "file": "scripts/production-migrations.json",
+                      "kind": "json-array",
+                      "name": "migrations",
+                      "valueCount": 159,
+                      "previousResolution": {
+                        "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+                        "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+                        "currentId": "07da55e81a186d26df37",
+                        "valueCount": 115
+                      },
+                      "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+                    },
+                    "change": "Main f8925e339 preserves the original 159 migration entries, introduction commits and SQL bytes, then adds the reviewed forward-only discovery ownership metadata boundary. Retain its exact reviewed successor and the full previous mapping."
+                  },
+                  "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
+                },
+                "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+              },
+              "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+            }
+          },
+          "mergedResolution": {
+            "historicalReplacementId": "7578a30aa3cc5aa23870",
+            "currentId": "d8e73943d72078a492ae",
+            "file": "scripts/production-migrations.json",
+            "kind": "json-array",
+            "name": "migrations",
+            "valueCount": 168,
+            "previousResolution": {
+              "historicalReplacementId": "7578a30aa3cc5aa23870",
+              "currentId": "c66b265a7ea297c37542",
+              "file": "scripts/production-migrations.json",
+              "kind": "json-array",
+              "name": "migrations",
+              "valueCount": 167,
+              "previousResolution": {
+                "historicalReplacementId": "7578a30aa3cc5aa23870",
+                "currentId": "c6915506d0f7b802519d",
+                "file": "scripts/production-migrations.json",
+                "kind": "json-array",
+                "name": "migrations",
+                "valueCount": 166,
+                "previousResolution": {
+                  "historicalReplacementId": "7578a30aa3cc5aa23870",
+                  "currentId": "dc6d60d733c6eb69ebbf",
+                  "file": "scripts/production-migrations.json",
+                  "kind": "json-array",
+                  "name": "migrations",
+                  "valueCount": 160,
+                  "previousResolution": {
+                    "historicalReplacementId": "7578a30aa3cc5aa23870",
+                    "currentId": "7bf93825f1431a6d52d6",
+                    "file": "scripts/production-migrations.json",
+                    "kind": "json-array",
+                    "name": "migrations",
+                    "valueCount": 159,
+                    "previousResolution": {
+                      "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+                      "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+                      "currentId": "07da55e81a186d26df37",
+                      "valueCount": 115
+                    },
+                    "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+                  },
+                  "change": "Main f8925e339 preserves the original 159 migration entries, introduction commits and SQL bytes, then adds the reviewed forward-only discovery ownership metadata boundary. Retain its exact reviewed successor and the full previous mapping."
+                },
+                "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
+              },
+              "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+            },
+            "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+          },
+          "consolidatedMainResolution": {
+            "historicalReplacementId": "7578a30aa3cc5aa23870",
+            "currentId": "cba40e9222e1254a3276",
+            "file": "scripts/production-migrations.json",
+            "kind": "json-array",
+            "name": "migrations",
+            "valueCount": 170,
+            "previousResolution": {
+              "historicalReplacementId": "7578a30aa3cc5aa23870",
+              "currentId": "f77cf115108e384e83a6",
+              "file": "scripts/production-migrations.json",
+              "kind": "json-array",
+              "name": "migrations",
+              "valueCount": 169,
+              "previousResolution": {
+                "historicalReplacementId": "7578a30aa3cc5aa23870",
+                "currentId": "d8e73943d72078a492ae",
+                "file": "scripts/production-migrations.json",
+                "kind": "json-array",
+                "name": "migrations",
+                "valueCount": 168,
+                "previousResolution": {
+                  "historicalReplacementId": "7578a30aa3cc5aa23870",
+                  "currentId": "c66b265a7ea297c37542",
+                  "file": "scripts/production-migrations.json",
+                  "kind": "json-array",
+                  "name": "migrations",
+                  "valueCount": 167,
+                  "previousResolution": {
+                    "historicalReplacementId": "7578a30aa3cc5aa23870",
+                    "currentId": "c6915506d0f7b802519d",
+                    "file": "scripts/production-migrations.json",
+                    "kind": "json-array",
+                    "name": "migrations",
+                    "valueCount": 166,
+                    "previousResolution": {
+                      "historicalReplacementId": "7578a30aa3cc5aa23870",
+                      "currentId": "dc6d60d733c6eb69ebbf",
+                      "file": "scripts/production-migrations.json",
+                      "kind": "json-array",
+                      "name": "migrations",
+                      "valueCount": 160,
+                      "previousResolution": {
+                        "historicalReplacementId": "7578a30aa3cc5aa23870",
+                        "currentId": "7bf93825f1431a6d52d6",
+                        "file": "scripts/production-migrations.json",
+                        "kind": "json-array",
+                        "name": "migrations",
+                        "valueCount": 159,
+                        "previousResolution": {
+                          "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+                          "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+                          "currentId": "07da55e81a186d26df37",
+                          "valueCount": 115
+                        },
+                        "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+                      },
+                      "change": "Main f8925e339 preserves the original 159 migration entries, introduction commits and SQL bytes, then adds the reviewed forward-only discovery ownership metadata boundary. Retain its exact reviewed successor and the full previous mapping."
+                    },
+                    "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
+                  },
+                  "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+                },
+                "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+              },
+              "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+            },
+            "change": "Ordered 170-entry production migration registry. All 169 preceding entries and introduction commits are unchanged. An additive migration prevents approved/retired policy demotion and commercial edits, and appends explicit legacy quantity-limit corrections while preserving original audit rows. Replays do not duplicate corrections; rollback retains approval and audit evidence. This is governed release authority, not an editable business catalog."
+          }
+        },
+        "mergedResolution": {
+          "historicalReplacementId": "7578a30aa3cc5aa23870",
+          "currentId": "d8e73943d72078a492ae",
+          "file": "scripts/production-migrations.json",
+          "kind": "json-array",
+          "name": "migrations",
+          "valueCount": 168,
+          "previousResolution": {
+            "historicalReplacementId": "7578a30aa3cc5aa23870",
+            "currentId": "c66b265a7ea297c37542",
+            "file": "scripts/production-migrations.json",
+            "kind": "json-array",
+            "name": "migrations",
+            "valueCount": 167,
+            "previousResolution": {
+              "historicalReplacementId": "7578a30aa3cc5aa23870",
+              "currentId": "c6915506d0f7b802519d",
+              "file": "scripts/production-migrations.json",
+              "kind": "json-array",
+              "name": "migrations",
+              "valueCount": 166,
+              "previousResolution": {
+                "historicalReplacementId": "7578a30aa3cc5aa23870",
+                "currentId": "dc6d60d733c6eb69ebbf",
+                "file": "scripts/production-migrations.json",
+                "kind": "json-array",
+                "name": "migrations",
+                "valueCount": 160,
+                "previousResolution": {
+                  "historicalReplacementId": "7578a30aa3cc5aa23870",
+                  "currentId": "7bf93825f1431a6d52d6",
+                  "file": "scripts/production-migrations.json",
+                  "kind": "json-array",
+                  "name": "migrations",
+                  "valueCount": 159,
+                  "previousResolution": {
+                    "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+                    "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+                    "currentId": "07da55e81a186d26df37",
+                    "valueCount": 115
+                  },
+                  "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+                },
+                "change": "Main f8925e339 preserves the original 159 migration entries, introduction commits and SQL bytes, then adds the reviewed forward-only discovery ownership metadata boundary. Retain its exact reviewed successor and the full previous mapping."
+              },
+              "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
+            },
+            "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+          },
+          "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+        },
+        "consolidatedMainResolution": {
+          "historicalReplacementId": "7578a30aa3cc5aa23870",
+          "currentId": "cba40e9222e1254a3276",
+          "file": "scripts/production-migrations.json",
+          "kind": "json-array",
+          "name": "migrations",
+          "valueCount": 170,
+          "previousResolution": {
+            "historicalReplacementId": "7578a30aa3cc5aa23870",
+            "currentId": "f77cf115108e384e83a6",
+            "file": "scripts/production-migrations.json",
+            "kind": "json-array",
+            "name": "migrations",
+            "valueCount": 169,
+            "previousResolution": {
+              "historicalReplacementId": "7578a30aa3cc5aa23870",
+              "currentId": "d8e73943d72078a492ae",
+              "file": "scripts/production-migrations.json",
+              "kind": "json-array",
+              "name": "migrations",
+              "valueCount": 168,
+              "previousResolution": {
+                "historicalReplacementId": "7578a30aa3cc5aa23870",
+                "currentId": "c66b265a7ea297c37542",
+                "file": "scripts/production-migrations.json",
+                "kind": "json-array",
+                "name": "migrations",
+                "valueCount": 167,
+                "previousResolution": {
+                  "historicalReplacementId": "7578a30aa3cc5aa23870",
+                  "currentId": "c6915506d0f7b802519d",
+                  "file": "scripts/production-migrations.json",
+                  "kind": "json-array",
+                  "name": "migrations",
+                  "valueCount": 166,
+                  "previousResolution": {
+                    "historicalReplacementId": "7578a30aa3cc5aa23870",
+                    "currentId": "dc6d60d733c6eb69ebbf",
+                    "file": "scripts/production-migrations.json",
+                    "kind": "json-array",
+                    "name": "migrations",
+                    "valueCount": 160,
+                    "previousResolution": {
+                      "historicalReplacementId": "7578a30aa3cc5aa23870",
+                      "currentId": "7bf93825f1431a6d52d6",
+                      "file": "scripts/production-migrations.json",
+                      "kind": "json-array",
+                      "name": "migrations",
+                      "valueCount": 159,
+                      "previousResolution": {
+                        "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+                        "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+                        "currentId": "07da55e81a186d26df37",
+                        "valueCount": 115
+                      },
+                      "change": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+                    },
+                    "change": "Main f8925e339 preserves the original 159 migration entries, introduction commits and SQL bytes, then adds the reviewed forward-only discovery ownership metadata boundary. Retain its exact reviewed successor and the full previous mapping."
+                  },
+                  "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
+                },
+                "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+              },
+              "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+            },
+            "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
+          },
+          "change": "Ordered 170-entry production migration registry. All 169 preceding entries and introduction commits are unchanged. An additive migration prevents approved/retired policy demotion and commercial edits, and appends explicit legacy quantity-limit corrections while preserving original audit rows. Replays do not duplicate corrections; rollback retains approval and audit evidence. This is governed release authority, not an editable business catalog."
         }
       }
     }

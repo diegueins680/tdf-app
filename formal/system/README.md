@@ -190,8 +190,9 @@ hashes are material implementation fingerprints and changes enter CI admission.
 Public availability is provenance, not proof of product approval or fulfillment.
 The social-message deletion page promises completion within30days; the Mobile
 page describes identity verification, a30day target and retention exceptions.
-No operational deletion runbook or completion ledger was found in this source
-review. Their location has been requested from the owner. Do not replace those
+No pre-existing operational deletion runbook or completion ledger was found.
+The owner directed creation; the canonical deletion-workflow contract now provides
+a guarded private ledger and operator runbook. Production fulfillment remains unverified. Do not replace those
 commitments merely to match absent automation, or infer completed deletion from
 a signed webhook/tombstone. Per-content execution, exceptions, backups and
 operator evidence remain unresolved. Static text is indexed as a source, not
@@ -269,3 +270,12 @@ paths remain subject to the inventory and requirement orphan checks.
 boundary and the ownership guarantees it does not provide.
 
 Operations transactional command, approval and worker boundaries: [operations-command-boundary.md](operations-command-boundary.md).
+
+Operations projection, read and auxiliary command authority: [operations-projection-boundary.md](operations-projection-boundary.md).
+
+The next consolidated main is `9abd8551b` (PR#482), shipping Mobile `23948ec5`.
+Its approved ticket-order limit and immutable policy-history repairs are retained;
+the compatible Mobile merge also retains reviewed shipped release `925952571c`.
+The combined manifest contains the175 parent entries unchanged, plus the scoped
+Operations projection compatibility migration. Current combined rehearsal is
+required; the previous173-entry receipt is historical evidence only.

@@ -905,6 +905,11 @@
       "id": "2026-10-05_ddex_validation_legacy_nullability",
       "path": "tdf-hq/sql/2026-10-05_ddex_validation_legacy_nullability.sql",
       "introducedBy": "58f095cf863fafed7dcb3232e2bb3f728ac6867b"
+    },
+    {
+      "id": "2026-10-05_operations_scoped_projection",
+      "path": "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql",
+      "introducedBy": "53e4011a7c86046abb96350681aa105ac565c6c1"
     }
   ]
 }

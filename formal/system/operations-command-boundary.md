@@ -67,7 +67,7 @@ payments contribute neither amount nor counts. Authorized managers retain their
 scoped financial totals. Integration failures contribute only in the selected
 branch and only for Admin, Manager or StudioManager. Query snapshots are ordinary
 PostgreSQL read snapshots; cross-request real-time consistency is not promised.
-Other list/detail policy differences are not silently resolved by this repair.
+The shared read policy and auxiliary routes are governed by [operations-projection-boundary.md](operations-projection-boundary.md).
 Actual synthetic HTTP negative and positive controls cover this boundary; there
 is no formal model of aggregate SQL or currency mixing in these dashboard totals.
 
@@ -101,11 +101,12 @@ allow stuttering, assume no fairness and make no liveness guarantee. They abstra
 row-lock scheduling, role composition, JSON/SQL decoding, actual money/provider
 execution and distributed clock errors. No implementation refinement proof is claimed.
 
-## Open boundaries
+## Related boundaries and remaining exclusions
 
-Manual creation, notes, saved views, push subscription, failure replay, read/search
-projection, worker SQL internals and UI/offline command reconciliation still require
-separate transactional and authorization review. Existing broad YAML invariants
-are obligations, not proven guarantees. No production feature flag is activated by
-this repair. Historical applied SQL remains unchanged; no migration is needed for
-these handler transaction changes.
+[operations-projection-boundary.md](operations-projection-boundary.md) governs
+manual creation, shared read policy, notes, failure retries, preferences, push
+registration and scoped worker projection. Its additive SQL migration is required
+before deploying that repair. Existing broad YAML invariants remain obligations,
+not proof. UI/offline reconciliation, actual provider delivery, arbitrary historical
+metadata and deployed correspondence remain separate obligations. No production
+feature flag is activated by these repairs.

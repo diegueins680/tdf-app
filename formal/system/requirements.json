@@ -4294,8 +4294,8 @@
     {
       "id": "EVT-TICKET-001",
       "title": "Consolidate authoritative ticket admission, inventory and transfer boundaries",
-      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection.",
-      "authority": "Current main b06a4d392 merged reviewed PR480; formal/ticket-admission/README.md",
+      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history.",
+      "authority": "Current main b06a4d392 merged reviewed PR480; formal/ticket-admission/README.md; approved PR482 main9abd8551b",
       "domain": "EVT",
       "actors": [
         "Authenticated event organizer",
@@ -4350,14 +4350,21 @@
         "tdf-hq/sql/2026-10-05_ticket_admission_audit.sql",
         "tdf-hq/sql/2026-10-05_ticket_transfer_deadline.sql",
         "tdf-hq-ui/src/components/TicketCredentialQR.tsx",
-        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx"
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "tdf-hq/src/TDF/Routes/EventTickets.hs",
+        "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit.sql",
+        "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit_rollback.sql",
+        "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history.sql",
+        "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history_rollback.sql"
       ],
       "tests": [
         "tdf-hq/test/TicketAdmissionMain.hs",
         "scripts/test-ticket-admission.sh",
         "scripts/__tests__/ticket-admission-model.test.mjs",
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-        "e2e/web/ticket-credential.spec.mjs"
+        "e2e/web/ticket-credential.spec.mjs",
+        "scripts/test-public-ticket-checkout-runtime-migration.sh",
+        "tdf-hq/test/integration/ticket_order_quantity_limit.sql"
       ],
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"
@@ -4527,45 +4534,60 @@
       "contract": "formal/system/operations-command-boundary.md",
       "critical": true,
       "actors": [
-        "current authenticated operations actor",
-        "independently authorized approver",
-        "operations worker"
+        "Operations background worker",
+        "Deployment operator"
       ],
       "preconditions": [
         "Initialized canonical migrations and active organization/branch where applicable"
       ],
       "inputs": [
-        "Typed Operations API command and current token; worker tick SQL results"
+        "OPERATIONS_WORKER_ENABLED strict true/false or absent",
+        "SQL result counters",
+        "Synchronous/asynchronous tick failures"
       ],
       "state": {
-        "boundary": "formal/system/operations-command-boundary.md",
-        "property": "safe fixed error; cancellation propagation; single invocation"
+        "startup": [
+          "enabled",
+          "paused",
+          "invalid"
+        ],
+        "iteration": [
+          "started",
+          "completed",
+          "failed",
+          "cancelled"
+        ]
       },
       "allowedTransitions": [
-        "Work-item transitions in TDF.Operations.Model with locked expected version",
-        "Approval absent -> pending -> approved or rejected"
+        "Absent/true -> enabled",
+        "false -> paused",
+        "Invalid -> startup failure",
+        "One iteration -> counters or fixed failure; cancellation propagates"
       ],
       "forbiddenTransitions": [
-        "Stale or revoked commit",
-        "Unbound key replay",
-        "Terminal/expired/self approval decision",
-        "Partial effect after rollback"
+        "Silent invalid configuration",
+        "Repeated tick after log failure",
+        "Failure reported as zero work",
+        "Raw private exception persisted/logged"
       ],
       "effects": [
-        "Atomic item/timer/event/stream/audit, or retained approval and decision audit; worker safe counters"
+        "One tick invocation and safe completion/failure evidence"
       ],
-      "authorization": "Current locked token, canonical role snapshot, enabled organization, active branch and scoped memberships; distinct decision actor. See scoped contract.",
+      "authorization": "Deployment configuration controls worker startup; synchronous manual commands retain independent actor admission.",
       "privacy": "Never log arbitrary exception/SQL payload or disclose conflicting receipt.",
-      "concurrency": "PostgreSQL row locks held through commit; token then locked role snapshot, then item/receipt and active scope. Deadlock/serialization conflicts abort.",
-      "idempotency": "Work-item version retries conflict; approval exact bound replay has no new effects; worker logging never repeats the tick.",
-      "failure": "401/403/404/409/422 admission, transactional rollback; sanitized500; asynchronous cancellation propagates.",
-      "recovery": "Reload authoritative state after conflict. No downstream provider/deletion execution inferred.",
+      "concurrency": "Existing per-aggregate order and SKIP LOCKED; logging does not retry business work.",
+      "idempotency": "No exactly-once external delivery claim; deterministic test fixtures explicitly pause the background loop.",
+      "failure": "Invalid configuration rejects startup; malformed result fails; async cancellation escapes; SQL projection diagnostics contain SQLSTATE and fixed text.",
+      "recovery": "Operator may resume worker; preserve pending/dead-letter evidence and inspect unbound legacy manual events.",
       "observability": "Atomic audit/stream for accepted mutations; source-bound HTTP/model/property test receipts.",
       "implementation": [
-        "tdf-hq/src/TDF/Operations/Worker.hs"
+        "tdf-hq/src/TDF/Operations/Worker.hs",
+        "tdf-hq/.env.example",
+        "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql"
       ],
       "tests": [
-        "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs"
+        "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
+        "scripts/lib/operations_conformance.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -4620,7 +4642,8 @@
       "recovery": "Reload authoritative state after conflict. No downstream provider/deletion execution inferred.",
       "observability": "Atomic audit/stream for accepted mutations; source-bound HTTP/model/property test receipts.",
       "implementation": [
-        "tdf-hq/src/TDF/Operations/Server.hs"
+        "tdf-hq/src/TDF/Operations/Server.hs",
+        "tdf-hq/src/TDF/Operations/Model.hs"
       ],
       "tests": [
         "scripts/lib/operations_conformance.py",
@@ -4630,11 +4653,11 @@
       "status": "specified and implemented",
       "confidence": "Source reviewed; exact final runtime validation pending",
       "ambiguity": [
-        "Other Operations routes and production enablement remain separate obligations; no complete refinement or delivery proof."
+        "Mixed-currency aggregate semantics, multi-query freshness and production enablement remain separate obligations."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Confirmed synthetic prior-runtime disclosure; implementation repair awaits exact-candidate HTTP validation. Other read-policy discrepancies remain separate obligations."
+        "reason": "Earlier scoped metrics HTTP passed; new shared-policy candidate requires exact combined verification."
       },
       "verification": "Actual HTTP synthetic Teacher/Engineer hidden-payment and assigned-booking controls, plus authorized Admin positive control. Not formally covered.",
       "evidence": "Exact source/binary hashes and HTTP result.json; Stack test log; formal source/config hashes and TLC invariant counterexamples. Working checks are not deployed evidence."
@@ -5178,6 +5201,243 @@
       "failure": "Stale or unavailable distribution must not be presented as verified current availability.",
       "recovery": "Correct source under review and reverify deployed content and links.",
       "observability": "Source review and deployed static-page/browser checks; no dedicated automated assertion covers all legal disclosure wording."
+    },
+    {
+      "authority": "reconciled",
+      "contract": "formal/system/operations-projection-boundary.md",
+      "critical": true,
+      "source": "docs/operations-control-center/rbac.md; architecture.md; synthetic HTTP counterexamples and independent source review on 2026-10-05",
+      "status": "specified and implemented",
+      "confidence": "Source reviewed and scoped working checks executed; final HTTP/full gates and deployment remain pending",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation and executable checks exist; exact combined candidate runtime and deployed correspondence are not yet established."
+      },
+      "evidence": "Source/binary hashes, actual HTTP and PostgreSQL fixture results, named bounded-model controls where mapped",
+      "observability": "Retain exact command, source/binary/tool identity, result, rollback assertions and sanitized operational audit",
+      "recovery": "Preserve receipts/audit and reload current state; do not bypass authorization or replay with a different identity",
+      "verification": "Actual PostgreSQL/HTTP boundary controls; formal coverage is limited to explicitly mapped abstractions",
+      "id": "OPS-MANUAL-001",
+      "title": "Bound manual receipt and isolated source projection",
+      "domain": "OPS",
+      "statement": "Manual creation must bind its retry key to actor, resolved scope and semantic payload, project only its own server-keyed event and commit receipt, item and evidence atomically without modifying a source item.",
+      "actors": [
+        "Current authorized Operations writer",
+        "Trusted source event producer"
+      ],
+      "preconditions": [
+        "Current locked token and canonical grants",
+        "Active organization/branch membership",
+        "Write visibility for an unassigned result",
+        "Scoped projection migration installed"
+      ],
+      "inputs": [
+        "Client receipt key",
+        "Typed manual payload with empty metadata",
+        "Current actor",
+        "Resolved branch"
+      ],
+      "state": {
+        "receipt": [
+          "absent",
+          "committed"
+        ],
+        "projectionKey": "manual:<server UUID>",
+        "trustedSourceNamespace": "Existing source-specific capture prefixes"
+      },
+      "allowedTransitions": [
+        "absent -> committed after successful targeted projection and decode",
+        "committed -> current item on exact authorized replay without additional effects",
+        "Trusted WhatsApp uncorrelated -> Party association in one same-sender branch thread"
+      ],
+      "forbiddenTransitions": [
+        "Cross-actor/branch/payload replay",
+        "Manual reuse of trusted source correlation",
+        "Control metadata injection",
+        "Partial receipt/evidence commit",
+        "Implicit adoption of unbound legacy receipts"
+      ],
+      "effects": [
+        "One domain receipt/outbox/item/projection audit/stream transaction",
+        "Supported manual fields retained",
+        "No source business action or provider transaction"
+      ],
+      "authorization": "Current write grant must authorize the resulting unassigned domain; ReadOnly never enlarges a write grant; Teacher/Engineer alone cannot create unassigned work.",
+      "privacy": "No conflicting receipt is disclosed; manual metadata must be empty; SQL diagnostics omit arbitrary exception text.",
+      "concurrency": "Unique organization/receipt key serializes simultaneous requests; locks retain session/grants/scope; projection keeps predecessor order and targets only its own event.",
+      "idempotency": "Exact binding returns current item and no new effects; changed binding409; diagnostic IDs excluded from semantic equality.",
+      "failure": "Reject malformed or denied commands; projection/ordering conflict409; any exception or deferred constraint failure rolls back; no placeholder success.",
+      "property": "SourceSeparation; BoundReplay; AtomicCreation",
+      "implementation": [
+        "tdf-hq/src/TDF/Operations/Server.hs",
+        "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql"
+      ],
+      "tests": [
+        "scripts/lib/operations_conformance.py",
+        "scripts/test-booking-conformance.py",
+        "scripts/__tests__/operations-api-schema.test.mjs"
+      ],
+      "formalModels": [
+        "formal/event-operations/OperationsManualReceipt.tla"
+      ],
+      "ambiguity": [
+        "No universal SQL namespace permission proof, UUID/hash collision proof, whole-program refinement or production fulfillment claim."
+      ]
+    },
+    {
+      "authority": "reconciled",
+      "contract": "formal/system/operations-projection-boundary.md",
+      "critical": true,
+      "source": "docs/operations-control-center/rbac.md; architecture.md; synthetic HTTP counterexamples and independent source review on 2026-10-05",
+      "status": "specified and implemented",
+      "confidence": "Source reviewed and scoped working checks executed; final HTTP/full gates and deployment remain pending",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation and executable checks exist; exact combined candidate runtime and deployed correspondence are not yet established."
+      },
+      "evidence": "Source/binary hashes, actual HTTP and PostgreSQL fixture results, named bounded-model controls where mapped",
+      "observability": "Retain exact command, source/binary/tool identity, result, rollback assertions and sanitized operational audit",
+      "recovery": "Preserve receipts/audit and reload current state; do not bypass authorization or replay with a different identity",
+      "verification": "Actual PostgreSQL/HTTP boundary controls; formal coverage is limited to explicitly mapped abstractions",
+      "id": "AUTH-OPS-READ-001",
+      "title": "One action-specific Operations read capability policy",
+      "domain": "AUTH",
+      "statement": "Detail, list, stream and aggregate reads must apply the same union of explicit domain grants, assignment restrictions and branch membership; ReadOnly must not grant write visibility.",
+      "actors": [
+        "Scoped Operations reader",
+        "Multi-role actor"
+      ],
+      "preconditions": [
+        "Authenticated reader admitted to an enabled active scope"
+      ],
+      "inputs": [
+        "Current role set",
+        "Assignment",
+        "Entity kind",
+        "Organization/branch selectors"
+      ],
+      "state": {
+        "authority": "TDF.Operations.Model.visibleEntityTypes",
+        "composition": "Union for the read action; exclude ReadOnly from write visibility"
+      },
+      "allowedTransitions": [
+        "Read visible projection",
+        "Combine explicit role grants for the same action"
+      ],
+      "forbiddenTransitions": [
+        "Unknown role fallback grants",
+        "Non-admin security disclosure",
+        "Hidden domain counted or streamed",
+        "ReadOnly plus narrow writer becomes broad writer"
+      ],
+      "effects": [
+        "Read-only projection"
+      ],
+      "authorization": "Canonical explicit domains; security Admin-only; specialists assigned; unknown producer domains deny; active scoped membership required.",
+      "privacy": "Other branches and hidden entities excluded from item/failure projections and totals.",
+      "concurrency": "Individual PostgreSQL snapshots; no linearizable multi-query read or instantaneous cross-device revocation guarantee.",
+      "idempotency": "Read-only; no receipt.",
+      "failure": "Denied detail404 or scope403; malformed/unavailable projection errors rather than invented state.",
+      "property": "List/detail/stream/aggregate agree on action-specific visible domain set",
+      "implementation": [
+        "tdf-hq/src/TDF/Operations/Model.hs",
+        "tdf-hq/src/TDF/Operations/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Operations/ModelSpec.hs",
+        "scripts/lib/operations_conformance.py",
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [],
+      "ambiguity": [
+        "Producer/A&R/live-producer domain policy remains undeclared and defaults to deny; new grants require explicit specification.",
+        "SQL/role conformance is empirical; not formally covered."
+      ]
+    },
+    {
+      "authority": "reconciled",
+      "contract": "formal/system/operations-projection-boundary.md",
+      "critical": true,
+      "source": "docs/operations-control-center/rbac.md; architecture.md; synthetic HTTP counterexamples and independent source review on 2026-10-05",
+      "status": "specified and implemented",
+      "confidence": "Source reviewed and scoped working checks executed; final HTTP/full gates and deployment remain pending",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation and executable checks exist; exact combined candidate runtime and deployed correspondence are not yet established."
+      },
+      "evidence": "Source/binary hashes, actual HTTP and PostgreSQL fixture results, named bounded-model controls where mapped",
+      "observability": "Retain exact command, source/binary/tool identity, result, rollback assertions and sanitized operational audit",
+      "recovery": "Preserve receipts/audit and reload current state; do not bypass authorization or replay with a different identity",
+      "verification": "Actual PostgreSQL/HTTP boundary controls; formal coverage is limited to explicitly mapped abstractions",
+      "id": "OPS-AUX-WRITE-001",
+      "title": "Current authority and atomic evidence for auxiliary Operations mutations",
+      "domain": "OPS",
+      "statement": "Notes, failure retry, saved views and push registration must revalidate current session, role and active scope under transaction locks and commit their result and audit together.",
+      "actors": [
+        "Authorized note author",
+        "Scoped manager",
+        "Preference owner",
+        "Push subscription owner"
+      ],
+      "preconditions": [
+        "Current token/grants",
+        "Active scoped membership",
+        "Current item assignment where applicable",
+        "Configured encryption for push"
+      ],
+      "inputs": [
+        "Typed note/retry/view/subscription payload",
+        "Current actor",
+        "Target item or failure"
+      ],
+      "state": {
+        "failure": [
+          "open",
+          "dead_letter",
+          "retrying",
+          "resolved"
+        ],
+        "note": "append-only creation",
+        "view": "owner/name replacement",
+        "subscription": "owner/token-digest upsert"
+      },
+      "allowedTransitions": [
+        "open or dead_letter -> retrying once",
+        "Append authorized note and mentions",
+        "Replace owned view",
+        "Register/reactivate encrypted owned token"
+      ],
+      "forbiddenTransitions": [
+        "Revoked or disabled-scope commit",
+        "Retry already retrying or resolved",
+        "Note after losing assignment",
+        "Partial audit/state commit",
+        "Unencrypted push token persistence"
+      ],
+      "effects": [
+        "Atomic note/mentions/stream/audit",
+        "Atomic retry count/state/audit with actual previous status",
+        "Atomic owned preference/subscription update and audit"
+      ],
+      "authorization": "Locked current grant and scope; notes require write-domain visibility and active mentioned memberships; failure retry requires manager grant; preference/subscription ownership is actor-bound.",
+      "privacy": "No private exception data or plaintext device token in receipts/logs; shared layouts do not grant data permissions.",
+      "concurrency": "Locks serialize failure retries and retain note assignment; same-owner upsert uniqueness serializes preferences; transaction decode precedes commit.",
+      "idempotency": "Failure retry repeats409 after admission; notes are append commands without receipt; preference/token replacements can produce an additional audit on repeat.",
+      "failure": "Reject invalid, denied or conflicting command with no effects; missing push key503; exception/decode/audit failure rolls back.",
+      "property": "Current authority; atomic result/audit; one retry admission per eligible failure state",
+      "implementation": [
+        "tdf-hq/src/TDF/Operations/Server.hs"
+      ],
+      "tests": [
+        "scripts/lib/operations_conformance.py",
+        "scripts/test-booking-conformance.py",
+        "scripts/__tests__/operations-api-schema.test.mjs"
+      ],
+      "formalModels": [],
+      "ambiguity": [
+        "Downstream failure replay execution and actual push delivery are not established.",
+        "Note success replay, cross-owner token rotation and deletion remain separate obligations; not formally covered."
+      ]
     }
   ]
 }
