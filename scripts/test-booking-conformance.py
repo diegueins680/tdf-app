@@ -141,6 +141,35 @@ try:
         time.sleep(.25)
     else: raise RuntimeError('Fixture backend did not become ready')
 
+    # OpenAPI requires bearer authentication for party radio presence. A removed
+    # shadow public declaration must never turn listener state into anonymous data.
+    sql("INSERT INTO party_radio_presence(party_id,stream_url,station_name,updated_at) VALUES (" + owner + ",'https://example.invalid/synthetic-stream','SYNTHETIC_RADIO_STATION',now())")
+    for token in [None, 'fixture-invalid']:
+        status, body = request('/radio/presence/' + owner, token=token)
+        check('radio presence rejects ' + str(token), status == 401 and 'SYNTHETIC_RADIO_STATION' not in body)
+    status, body = request('/radio/presence/' + owner, token='fixture-artist')
+    check('authenticated radio listener presence remains readable', status == 200 and json.loads(body)['rpPartyId'] == int(owner))
+    check('invalid radio identity rejected', request('/radio/presence/0', token='fixture-artist')[0] == 400)
+
+    sql("INSERT INTO subject(name,active) VALUES ('VISIBLE_SUBJECT',true),('INACTIVE_SUBJECT',false)")
+    for suffix in ['', '?includeInactive=true']:
+        status, body = request('/trials/v1/subjects' + suffix, token=None)
+        check('public subject catalog stays active-only ' + suffix, status == 200 and 'VISIBLE_SUBJECT' in body and 'INACTIVE_SUBJECT' not in body)
+    requirements = json.loads((ROOT / 'formal/system/requirements.json').read_text())['requirements']
+    school_roles = set(next(r for r in requirements if r['id'] == 'COURSE-SUBJECT-001')['state']['managementRoles'])
+    check('school management roles are canonical', school_roles <= set(roles))
+    for role in roles:
+        status, body = request('/trials/v1/subjects/catalog?includeInactive=true', token='fixture-' + role)
+        if role in school_roles:
+            check(role + ' can explicitly list inactive school subjects', status == 200 and 'INACTIVE_SUBJECT' in body)
+        else:
+            check(role + ' cannot list inactive school subjects', status == 403 and 'INACTIVE_SUBJECT' not in body)
+    for token in [None, 'fixture-invalid']:
+        check('protected subject list rejects ' + str(token), request('/trials/v1/subjects/catalog?includeInactive=true', token=token)[0] == 401)
+    status, body = request('/trials/v1/subjects/catalog', token='fixture-admin')
+    check('protected subject list defaults active-only', status == 200 and 'VISIBLE_SUBJECT' in body and 'INACTIVE_SUBJECT' not in body)
+    check('protected subject filter rejects invalid boolean', request('/trials/v1/subjects/catalog?includeInactive=invalid', token='fixture-admin')[0] == 400)
+
     policy = json.loads((ROOT / 'formal/system/booking-policy.json').read_text())
     staff = {role['code'] for role in policy['studioWideRoles']}
     check('all specified staff roles are canonical', staff <= set(roles))

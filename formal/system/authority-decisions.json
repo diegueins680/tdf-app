@@ -232,6 +232,29 @@
       "conflict": "Compiled CombinedAPI declares GET /version twice with incompatible DTOs. The later unreachable Meta.BuildInfo omits commit identity and computes builtAt from request time.",
       "authority": "Current public OpenAPI Version schema, first served VersionAPI and canonical production identity verification",
       "resolution": "Remove only the shadowed Meta version route/type and stale mounting example; preserve the existing first-served VersionInfo handler and its source/build metadata validation. The generated compiled snapshot must confirm one version declaration; other competing routes remain open."
+    },
+    {
+      "id": "AUTHORITY-023",
+      "sources": [
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/API/Radio.hs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "formal/system/routed-read-boundaries.md"
+      ],
+      "conflict": "A second public radio-presence declaration contradicts the published inherited bearer requirement and cannot be reached behind the protected route.",
+      "authority": "Published bearer security and verified current HTTP denial, preserving the existing privacy boundary.",
+      "resolution": "Remove the unreachable public declaration/handler. Keep authenticated cross-party presence behavior. Do not broaden access by reordering branches. Add anonymous, invalid-token and authenticated HTTP controls."
+    },
+    {
+      "id": "AUTHORITY-024",
+      "sources": [
+        "tdf-hq/src/TDF/Trials/API.hs",
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "formal/system/routed-read-boundaries.md"
+      ],
+      "conflict": "The public subjects GET shadows the private includeInactive GET; even an administrator receives only active subjects.",
+      "authority": "Distinct public active visibility and explicitly guarded ensureSchoolAccess management behavior.",
+      "resolution": "Keep the current public route and make managed listing reachable at /trials/v1/subjects/catalog using the same existing school guard. Document both operations and regenerate both clients. Do not move private auth ahead of the public route or expose inactive subjects anonymously."
     }
   ]
 }

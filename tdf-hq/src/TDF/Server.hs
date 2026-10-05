@@ -764,7 +764,6 @@ server env =
   :<|> ProviderExecutionServer.providerExecutionServer
   :<|> protectedServer
   :<|> marketplacePublicServer
-  :<|> radioPresencePublicServer
   :<|> roomsPublicServer
   :<|> serviceCatalogPublicServer
   :<|> serviceStorefrontPublicServer
@@ -1679,23 +1678,6 @@ coursesAdminServer user =
     deleteFollowUpH slug regId followUpId = do
       requireCourseAdmin
       deleteCourseRegistrationFollowUp user slug regId followUpId
-
-radioPresencePublicServer :: Int64 -> AppM (Maybe RadioPresenceDTO)
-radioPresencePublicServer partyId = do
-  when (partyId <= 0) $ throwBadRequest "Invalid party id"
-  Env pool _ <- ask
-  liftIO $ flip runSqlPool pool $ do
-    mRow <- selectFirst [PartyRadioPresencePartyId ==. toSqlKey partyId] []
-    pure (fmap presenceToDTO mRow)
-  where
-    presenceToDTO (Entity _ PartyRadioPresence{..}) =
-      RadioPresenceDTO
-        { rpPartyId     = fromIntegral (fromSqlKey partyRadioPresencePartyId)
-        , rpStreamUrl   = partyRadioPresenceStreamUrl
-        , rpStationName = partyRadioPresenceStationName
-        , rpStationId   = partyRadioPresenceStationId
-        , rpUpdatedAt   = partyRadioPresenceUpdatedAt
-        }
 
 listEngineersPublic :: AppM [PublicEngineerDTO]
 listEngineersPublic = do

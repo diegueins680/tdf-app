@@ -3227,6 +3227,153 @@
         "classification": "PARTIAL",
         "reason": "Bounded admission model and runtime tests exist; exact final-candidate PostgreSQL gate and complete runtime refinement remain required."
       }
+    },
+    {
+      "authority": "Current published API security plus explicit handler guards, reconciled by AUTHORITY-023 and AUTHORITY-024.",
+      "source": "formal/system/routed-read-boundaries.md",
+      "contract": "formal/system/routed-read-boundaries.md",
+      "preconditions": [
+        "A live initialized canonical schema and current bearer-session authentication for protected requests."
+      ],
+      "inputs": [
+        "HTTP method/path, bearer token and route-specific query/capture values."
+      ],
+      "allowedTransitions": [
+        "Read accepted only after the applicable authentication and visibility predicates."
+      ],
+      "forbiddenTransitions": [
+        "Read-only request changes persisted domain state.",
+        "An inactive token authorizes a protected read."
+      ],
+      "effects": [
+        "Return the selected current database projection; no write."
+      ],
+      "privacy": "Never serialize restricted rows through the public branch. Authentication is required by the protected contract.",
+      "concurrency": "Read-committed observation after boundary authentication; no claim of linearizable revocation concurrent with an already admitted read.",
+      "idempotency": "GET is read-only; repeated results may change when authoritative data changes. No mutation idempotency key.",
+      "failure": "Return 400 for invalid protected parameters, 401 for invalid/missing session, 403 for missing required role/capability.",
+      "recovery": "Retry after correcting input or obtaining current authorization. No rejected request writes to recover.",
+      "observability": "Compiled route metadata and owned PostgreSQL HTTP evidence record the candidate, executable hash, positive responses and denial controls.",
+      "implementation": [
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/API/Radio.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/ServerRadio.hs",
+        "tdf-hq/src/TDF/Auth.hs"
+      ],
+      "tests": [
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [],
+      "verification": "Actual mounted CombinedAPI HTTP requests with canonical role fixtures and deliberately invalid authentication/query values.",
+      "evidence": "Exact candidate compiled-API observation and owned PostgreSQL HTTP result; source review alone is insufficient.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "high for the scoped read boundary; full domain and concurrent revocation remain outside this contract",
+      "ambiguity": [
+        "Does not establish complete domain authorization or whole API conformance."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped runtime regression exists; candidate execution and whole-domain reconciliation remain required."
+      },
+      "id": "AUTH-RADIO-001",
+      "title": "Authenticated party radio-presence read",
+      "domain": "AUTH",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
+      "actors": [
+        "Visitor",
+        "Authenticated party"
+      ],
+      "state": {
+        "presence": [
+          "absent",
+          "present"
+        ],
+        "access": [
+          "unauthenticated",
+          "authenticated"
+        ]
+      },
+      "authorization": "Any currently authenticated actor; the existing published endpoint has no relationship/ownership filter."
+    },
+    {
+      "authority": "Current published API security plus explicit handler guards, reconciled by AUTHORITY-023 and AUTHORITY-024.",
+      "source": "formal/system/routed-read-boundaries.md",
+      "contract": "formal/system/routed-read-boundaries.md",
+      "preconditions": [
+        "A live initialized canonical schema and current bearer-session authentication for protected requests."
+      ],
+      "inputs": [
+        "HTTP method/path, bearer token and route-specific query/capture values."
+      ],
+      "allowedTransitions": [
+        "Read accepted only after the applicable authentication and visibility predicates."
+      ],
+      "forbiddenTransitions": [
+        "Read-only request changes persisted domain state.",
+        "An inactive token authorizes a protected read."
+      ],
+      "effects": [
+        "Return the selected current database projection; no write."
+      ],
+      "privacy": "Never serialize restricted rows through the public branch. Authentication is required by the protected contract.",
+      "concurrency": "Read-committed observation after boundary authentication; no claim of linearizable revocation concurrent with an already admitted read.",
+      "idempotency": "GET is read-only; repeated results may change when authoritative data changes. No mutation idempotency key.",
+      "failure": "Return 400 for invalid protected parameters, 401 for invalid/missing session, 403 for missing required role/capability.",
+      "recovery": "Retry after correcting input or obtaining current authorization. No rejected request writes to recover.",
+      "observability": "Compiled route metadata and owned PostgreSQL HTTP evidence record the candidate, executable hash, positive responses and denial controls.",
+      "implementation": [
+        "tdf-hq/src/TDF/Trials/API.hs",
+        "tdf-hq/src/TDF/Trials/Server.hs",
+        "tdf-hq/src/TDF/Trials/Models.hs",
+        "tdf-hq/src/TDF/Auth.hs"
+      ],
+      "tests": [
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [],
+      "verification": "Actual mounted CombinedAPI HTTP requests with canonical role fixtures and deliberately invalid authentication/query values.",
+      "evidence": "Exact candidate compiled-API observation and owned PostgreSQL HTTP result; source review alone is insufficient.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "high for the scoped read boundary; full domain and concurrent revocation remain outside this contract",
+      "ambiguity": [
+        "Does not establish complete domain authorization or whole API conformance."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped runtime regression exists; candidate execution and whole-domain reconciliation remain required."
+      },
+      "id": "COURSE-SUBJECT-001",
+      "title": "Separate public and managed trial subject catalogs",
+      "domain": "COURSE",
+      "statement": "GET /trials/v1/subjects returns only active subjects publicly. GET /trials/v1/subjects/catalog requires current bearer authentication, Scheduling access, and Teacher, Admin, Manager, Studio Manager or Reception; it includes inactive subjects only when includeInactive=true. Distinct routes must prevent the public handler from shadowing the protected listing.",
+      "property": "Public results contain only active subjects; managed inactive results require the explicit school-access predicate.",
+      "actors": [
+        "Visitor",
+        "Teacher",
+        "Admin",
+        "Manager",
+        "Studio Manager",
+        "Reception",
+        "Other authenticated party"
+      ],
+      "state": {
+        "subject": [
+          "active",
+          "inactive"
+        ],
+        "managementRoles": [
+          "teacher",
+          "admin",
+          "manager",
+          "studio-manager",
+          "reception"
+        ]
+      },
+      "authorization": "Public active list is anonymous. Managed listing uses the existing ensureSchoolAccess conjunction of Scheduling admission and school role."
     }
   ]
 }

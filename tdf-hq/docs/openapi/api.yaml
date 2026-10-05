@@ -9,6 +9,43 @@ servers:
     description: Development server
 
 paths:
+  /trials/v1/subjects:
+    get:
+      tags: [Trials]
+      operationId: listPublicTrialSubjects
+      summary: List active trial subjects
+      description: Public active subjects only. The historical includeInactive query never selected the protected handler and grants no access to inactive subjects.
+      security: []
+      responses:
+        '200':
+          description: Active subject catalog
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/TrialSubject' }
+  /trials/v1/subjects/catalog:
+    get:
+      tags: [Trials]
+      operationId: listManagedTrialSubjects
+      summary: List subjects for authorized school operations
+      description: Requires current bearer authentication, Scheduling access, and Teacher, Admin, Manager, Studio Manager or Reception role. Uses a distinct path so the public list cannot shadow this handler.
+      parameters:
+        - name: includeInactive
+          in: query
+          required: false
+          schema: { type: boolean, default: false }
+      responses:
+        '200':
+          description: Active subjects, or all subjects when includeInactive is true
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/TrialSubject' }
+        '400': { description: Invalid includeInactive query }
+        '401': { description: Missing, invalid or inactive bearer session }
+        '403': { description: Actor lacks school access }
   /commerce/payment-capabilities:
     get:
       operationId: listPaymentCapabilities
@@ -8368,6 +8405,16 @@ components:
       description: Stable caller-generated key. Reuse with a different request snapshot is rejected.
       schema: { type: string, minLength: 16, maxLength: 128 }
   schemas:
+    TrialSubject:
+      type: object
+      required: [subjectId, name, active, roomIds]
+      properties:
+        subjectId: { type: integer, format: int64 }
+        name: { type: string }
+        active: { type: boolean }
+        roomIds:
+          type: array
+          items: { type: string }
     PaymentCapabilityName:
       type: string
       enum: [one_time, recurring, tokenization, three_ds, installments, authorize, capture, void, full_refund, partial_refund, disputes, chargebacks, payment_link, signed_webhook, server_verification, connected_accounts, split_settlement, seller_payouts]

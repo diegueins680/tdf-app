@@ -473,9 +473,6 @@ type ArtistPublicAPI =
   :<|> Capture "artistRef" Text :> "public" :> Get '[JSON] ArtistProfileDTO
   :<|> Capture "artistId" Int64 :> Get '[JSON] ArtistProfileDTO
 
-type RadioPublicAPI =
-       "radio" :> "presence" :> Capture "partyId" Int64 :> Get '[JSON] (Maybe RadioPresenceDTO)
-
 type FanSecureAPI =
        "me" :> "profile" :>
          ( Get '[JSON] FanProfileDTO
@@ -687,7 +684,6 @@ type API =
   -- /marketplace/orders is not consumed by the public /marketplace/:id capture.
   :<|> AuthProtect "bearer-token" :> ProtectedAPI
   :<|> "marketplace" :> MarketplaceAPI
-  :<|> RadioPublicAPI
   :<|> RoomsPublicAPI
   :<|> ServiceCatalogPublicAPI
   :<|> ServiceStorefrontPublicAPI
