@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "b970939c862b2a4b80984b49cc301c04413de9bc",
+  "mobileRevision": "58abc5a543ed89b692e3e7bd569bf6db766dd0ac",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -725,7 +725,9 @@
       "contract": "formal/system/README.md",
       "implementation": [
         "scripts/check-generated-api.mjs",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts"
       ],
       "tests": [
         "scripts/__tests__/generated-api-conformance.test.mjs"
@@ -1116,7 +1118,8 @@
       "tests": [
         "tdf-hq/test/TDF/ServerAuthSpec.hs",
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-        "scripts/__tests__/identity-http-runtime.mjs"
+        "scripts/__tests__/identity-http-runtime.mjs",
+        "tdf-hq-ui/src/utils/__tests__/roles.test.ts"
       ],
       "id": "ID-ARTIST-CLAIM-001",
       "title": "Public signup cannot assume an existing artist identity",
@@ -1167,7 +1170,9 @@
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq-ui/src/pages/LoginPage.tsx",
         "tdf-hq-ui/src/utils/roles.ts",
-        "tdf-hq/docs/openapi/api.yaml"
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts"
       ]
     },
     {
@@ -1536,7 +1541,8 @@
       "implementation": [
         "tdf-hq/stack.yaml",
         "tdf-hq/tdf-hq.cabal",
-        "scripts/check-build-trust.mjs"
+        "scripts/check-build-trust.mjs",
+        "scripts/quality-backend.sh"
       ],
       "tests": [
         "scripts/__tests__/build-trust.test.mjs"
@@ -1746,7 +1752,8 @@
         "scripts/lib/production-release.mjs"
       ],
       "tests": [
-        "scripts/__tests__/checkout-amount-postgres.mjs"
+        "scripts/__tests__/checkout-amount-postgres.mjs",
+        "scripts/test-marketplace-contact-identity.sh"
       ],
       "formalModels": [],
       "verification": "Real PostgreSQL commit, rollback, historical preflight, shipping, bounds and six barrier-observed concurrent transactions; five invalid-schema negative controls. Pre-enforcement snapshot regression and structural trigger drift controls.",
@@ -2208,7 +2215,8 @@
       "statement": "The former Fly preflight/release entrypoint must reject before any remote tool because current production is Hetzner; source-only historical planning does not establish deployment eligibility.",
       "property": "Retired Fly commands invoke no git, docker, ssh or flyctl operation before rejecting.",
       "implementation": [
-        "scripts/production-release.mjs"
+        "scripts/production-release.mjs",
+        "scripts/deploy-stripe-ticketing.sh"
       ],
       "tests": [
         "scripts/__tests__/hetzner-inspection.test.mjs",
@@ -2490,7 +2498,9 @@
         "scripts/quality-repo.sh",
         "scripts/quality-mobile.sh",
         "package-lock.json",
-        "tdf-mobile/package-lock.json"
+        "tdf-mobile/package-lock.json",
+        "package.json",
+        "tdf-mobile/package.json"
       ],
       "tests": [
         "scripts/__tests__/dependency-security.test.mjs"
@@ -2668,7 +2678,8 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql",
         "formal/system/booking-policy.json",
-        "tdf-hq/src/TDF/RagStore.hs"
+        "tdf-hq/src/TDF/RagStore.hs",
+        "tdf-hq-ui/src/api/bookings.ts"
       ],
       "tests": [
         "scripts/test-booking-conformance.py",
@@ -3111,11 +3122,13 @@
         "scripts/test-artist-merch-runtime.sh",
         "scripts/test-provider-retry-runtime.sh",
         "scripts/test-auth-recovery-migration.sh",
-        "scripts/test-credential-lifecycle.sh"
+        "scripts/test-credential-lifecycle.sh",
+        "scripts/lib/postgres-test-database.sh"
       ],
       "tests": [
         "scripts/__tests__/disposable-postgres-url.test.mjs",
-        "scripts/__tests__/merch-runtime-safety.test.mjs"
+        "scripts/__tests__/merch-runtime-safety.test.mjs",
+        "scripts/__tests__/ci-pipeline.test.mjs"
       ],
       "formalModels": [],
       "verification": "URL property cases and actual runner SQL-sentinel controls; not proof of database ownership or all-runner isolation.",
@@ -3430,6 +3443,7 @@
     "ops/hetzner/inspect-runtime.py": "87607ff9f1682c901da2ce7c7beeba0237f268ea486a4171ebb295a1d6b93b1f",
     "ops/hetzner/rehearse-postgres-restore.py": "9d35791e9c215de5252ca1bd9637e8d1ae69387c72b420df34ee60e7ff8d49cf",
     "package-lock.json": "b2663069d0f1901b4d5b76dde885fa0ff107089cf661819ed3500be6443bace4",
+    "package.json": "f5113b4d00775becd6433276b1e2cc1e04c6dfc652e0445c0390d2efa99da61d",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/checkout-amount-postgres.mjs": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
@@ -3458,8 +3472,9 @@
     "scripts/check-build-trust.mjs": "1f1486dd10e0edb906926a3ff419b765fdca8c263d3fa8065e5353d50992e61e",
     "scripts/check-dependency-security.mjs": "4326c36055405ed802ea31a31fbb54c9843f02fbe3656a7ea43e3a3d60ec3475",
     "scripts/check-generated-api.mjs": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
-    "scripts/check-new-specification-surfaces.py": "b1ea5a96edaedd17c6b0f3b2795723599291fd8ac260d2d519c12d268313a040",
+    "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/ci-change-scope.mjs": "6e1bf4833fec7e1e51e230ccc830dca80470c0c2dcad18a2c329ad9defdf1379",
+    "scripts/deploy-stripe-ticketing.sh": "33fb7bde438832698cc382e83e1056f0196d1aa18c5753cfc64ba89ca65d5f95",
     "scripts/inspect-compiled-api.mjs": "2c7f0777f3ba6301b0e836fd1c0912ff3390fca2aef861f5b08a7af5c129e32f",
     "scripts/inspect-hetzner-production.mjs": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
     "scripts/lib/compiled-api-surface.mjs": "290aa4e9ca72792e138a1d3192c2d60cb953e8ec1229c2538e8a10f958622c2d",
@@ -3468,12 +3483,14 @@
     "scripts/lib/hetzner-migration-rehearsal.mjs": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a",
     "scripts/lib/hetzner-preparation.mjs": "b3c9f1da219779c1d1d62190569108077112af6695d95bd9ecc3c5da92cf0e5c",
     "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
+    "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
     "scripts/lib/production-release.mjs": "d083e1f7d457610a08e63d4e6b482befc87fd386690cafa538d23ad913118beb",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
     "scripts/production-migrations.json": "78c020063a9657ca07d6021373d3d77b08f89aa9705f0860fcd4a7121d296fd5",
     "scripts/production-release.mjs": "1643997b7b3ac422214725f4078b7b4db25f09d1df6ae5cebe8285cd257e0d59",
+    "scripts/quality-backend.sh": "7be0e6a87e50b625239a70858d53d9d3340a409000ea9f1dc475c96585b495d7",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
     "scripts/quality-repo.sh": "5c9bb5c144b06729f6cc14331a1f329985e7fc0559c0c904c6291c945d8bca2e",
     "scripts/rehearse-hetzner-restore.mjs": "eba3bfe18eafcbd4e5f84e71bd817d8b8ede458658c447a060b7af2c9fe559b7",
@@ -3490,7 +3507,8 @@
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-inspection.py": "65bfd55b856baf7ded66010a5fc809bb762384078fd36f1b28eade998b263bab",
     "scripts/test-hetzner-restore.py": "29c865489be16fb0510927b5fe6815498dde82dc74197365ac37bfbe28c79cf4",
-    "scripts/test-new-specification-surfaces.py": "eaeb84d80d79ac2eee08371df79633d5b5ce8b071c3024378bd447ed8ad2b1ee",
+    "scripts/test-marketplace-contact-identity.sh": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
+    "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
@@ -3503,12 +3521,16 @@
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
     "scripts/verify-system-evidence.mjs": "7aa7ac054cebe9a16f39a21afce1b36588c889493716baf3c7629880565e3e3f",
+    "tdf-hq-ui/src/api/bookings.ts": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
+    "tdf-hq-ui/src/api/generated/types.ts": "2905ff1fe2a51ff500e14fca51d14c75dd706608c6c76c0393ea152c2fa89e4e",
     "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx": "7723dd458079bcad7d7c3f39933b2025de76462f8d0fb40a6c6d4e6bd35deb49",
     "tdf-hq-ui/src/components/LazyPaginatedList.tsx": "8c96fc43fa7096d5bf59e0a724c19bd4b73d1f05582a25d99b633ba95f075d91",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "fd6674cc3b97424d868e0f77e681c5fea4362a82f8babc71dff15dc345112589",
     "tdf-hq-ui/src/features/featureRegistry.test.ts": "3202fad3806ebb31695ca186727f9163373d6ad6c6f9cfa79089d129bbaf1b6b",
     "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx": "a4c38b4329431d311a51ae9d9b0ffb2cc67edbd97a6a6e709aa580c7e15fcef1",
+    "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "83320844622c1c458265cb4e230d9edeae3d495da2a7d6dcb516d444f88f999f",
+    "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "0e4db3d2d183691f42c81fc1bcd0ab6589c8847e04cd0e0e10db3ecc21861ed9",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "aad862427b31bb0777586ae09589055043f9346e4eaaa9bf14a521e3d4fed129",
@@ -3517,6 +3539,7 @@
     "tdf-hq-ui/src/pages/LoginPage.tsx": "78885e7bb418d22f98657a2823effb36743857f0edc8b4fa9849a219e9aa3c3b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
+    "tdf-hq-ui/src/utils/__tests__/roles.test.ts": "f5aa3c92f8f8f71fc7690ef46a1be60b768c4d0ea40a714da39b04c817d272fd",
     "tdf-hq-ui/src/utils/providerPaymentResume.test.ts": "103a2f73519a73ffb088df88e847789b4fc5f6afd07d9c38bdeafd0dbc4039e9",
     "tdf-hq-ui/src/utils/providerPaymentResume.ts": "27f2bbb6169784ba41aa14ddf9e2fade00617452594157fe8c74eed64ce3f0ba",
     "tdf-hq-ui/src/utils/roles.ts": "a6e35fb167641efb11ffadea2d23865d3165e495cd59e0644a49e0a20f87b0da",
@@ -3524,7 +3547,7 @@
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/assets/feature-registry.json": "7388f163749d305fb7bc12b0ada9c4f7f988c878a1db006437db835555cbe3af",
-    "tdf-hq/docs/openapi/api.yaml": "dbec0e808727a0d21e5cffde482e1ebc5fad281267cd381bd3a5075c2c8514fa",
+    "tdf-hq/docs/openapi/api.yaml": "84af6e9b2f544c10cfd1a541c17396af2646b36dae6c06bc5da3e6e10e26a18d",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/persistent-uploads.sh": "89c251d96be949d638941d45d4a8994f09c8157a04bea786ee93aefde90cbd44",
     "tdf-hq/production-entrypoint.sh": "9cf124a277a19e2d5c0d7769cfc8a2d16dc2d21f09e93406b3ebfa293e0416b4",
@@ -3584,6 +3607,8 @@
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "39c92770f1830489ecb1c909dfbefa7c1a11857f3f002ce89da5283c06c69a0b",
     "tdf-hq/test/TDF/ServerSpec.hs": "a205ac4f0400b0972d1fc3280cc6ed7913da633cbed670d919de38bfc96a4f45",
     "tdf-mobile/package-lock.json": "1d669d0ea79f240494299f22c868f79753b921ad6f06656ad71b5942ccd3ac35",
+    "tdf-mobile/package.json": "2df9f211d1bddbe5467021ac6398e3427b5af467262ae5321be224ebe1603612",
+    "tdf-mobile/src/api/generated/types.ts": "2905ff1fe2a51ff500e14fca51d14c75dd706608c6c76c0393ea152c2fa89e4e",
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": "a8111cb6563d7cb08ca568175ed51460de0293db652142a7979e907e256ee2ff"
   },
   "reverseTraceability": {
@@ -3947,6 +3972,18 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/api/generated/types.ts": [
+      {
+        "requirement": "SYS-API-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/api/generated/types.ts": [
+      {
+        "requirement": "SYS-API-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/__tests__/generated-api-conformance.test.mjs": [
       {
         "requirement": "SYS-API-001",
@@ -3972,6 +4009,10 @@
       },
       {
         "requirement": "SYS-TRACE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-VERIFY-004",
         "relationship": "tests"
       }
     ],
@@ -4107,6 +4148,18 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": [
+      {
+        "requirement": "ID-ARTIST-CLAIM-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": [
+      {
+        "requirement": "ID-ARTIST-CLAIM-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/test/TDF/ServerAuthSpec.hs": [
       {
         "requirement": "ID-ARTIST-CLAIM-001",
@@ -4140,6 +4193,12 @@
       },
       {
         "requirement": "PAY-CHECKOUT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/utils/__tests__/roles.test.ts": [
+      {
+        "requirement": "ID-ARTIST-CLAIM-001",
         "relationship": "tests"
       }
     ],
@@ -4285,6 +4344,12 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/quality-backend.sh": [
+      {
+        "requirement": "SYS-BUILD-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/__tests__/build-trust.test.mjs": [
       {
         "requirement": "SYS-BUILD-001",
@@ -4382,6 +4447,12 @@
       }
     ],
     "scripts/__tests__/checkout-amount-postgres.mjs": [
+      {
+        "requirement": "PAY-CHECKOUT-002",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-marketplace-contact-identity.sh": [
       {
         "requirement": "PAY-CHECKOUT-002",
         "relationship": "tests"
@@ -4685,6 +4756,12 @@
         "relationship": "tests"
       }
     ],
+    "scripts/deploy-stripe-ticketing.sh": [
+      {
+        "requirement": "DEPLOY-TARGET-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/__tests__/production-release.test.mjs": [
       {
         "requirement": "DEPLOY-TARGET-001",
@@ -4865,6 +4942,18 @@
         "relationship": "implementation"
       }
     ],
+    "package.json": [
+      {
+        "requirement": "SYS-DEPENDENCY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/package.json": [
+      {
+        "requirement": "SYS-DEPENDENCY-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/__tests__/dependency-security.test.mjs": [
       {
         "requirement": "SYS-DEPENDENCY-001",
@@ -4976,6 +5065,12 @@
       },
       {
         "requirement": "PRIV-RAG-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/bookings.ts": [
+      {
+        "requirement": "AUTH-BOOK-001",
         "relationship": "implementation"
       }
     ],
@@ -5128,6 +5223,12 @@
       }
     ],
     "scripts/lib/disposable-postgres-url.mjs": [
+      {
+        "requirement": "SYS-VERIFY-004",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/lib/postgres-test-database.sh": [
       {
         "requirement": "SYS-VERIFY-004",
         "relationship": "implementation"
@@ -5639,7 +5740,12 @@
       "path": "package.json",
       "sha256": "f5113b4d00775becd6433276b1e2cc1e04c6dfc652e0445c0390d2efa99da61d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-DEPENDENCY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-0da2aa9657386c51",
@@ -5747,6 +5853,10 @@
         },
         {
           "requirement": "SYS-TRACE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-VERIFY-004",
           "relationship": "tests"
         }
       ]
@@ -6474,7 +6584,7 @@
     {
       "id": "SURFACE-04e9e43c20bee09d",
       "path": "scripts/check-new-specification-surfaces.py",
-      "sha256": "b1ea5a96edaedd17c6b0f3b2795723599291fd8ac260d2d519c12d268313a040",
+      "sha256": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -6563,7 +6673,12 @@
       "path": "scripts/deploy-stripe-ticketing.sh",
       "sha256": "33fb7bde438832698cc382e83e1056f0196d1aa18c5753cfc64ba89ca65d5f95",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DEPLOY-TARGET-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-a36895a956e7a0db",
@@ -6947,7 +7062,12 @@
       "path": "scripts/lib/postgres-test-database.sh",
       "sha256": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-004",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-a08b79c3f92a0538",
@@ -7166,7 +7286,12 @@
       "path": "scripts/quality-backend.sh",
       "sha256": "7be0e6a87e50b625239a70858d53d9d3340a409000ea9f1dc475c96585b495d7",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-BUILD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-bac1f41447e33768",
@@ -8165,7 +8290,12 @@
       "path": "scripts/test-marketplace-contact-identity.sh",
       "sha256": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-CHECKOUT-002",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-434ec2aecc0c4dfc",
@@ -8212,7 +8342,7 @@
     {
       "id": "SURFACE-d2e7c2d31e94f861",
       "path": "scripts/test-new-specification-surfaces.py",
-      "sha256": "eaeb84d80d79ac2eee08371df79633d5b5ce8b071c3024378bd447ed8ad2b1ee",
+      "sha256": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -8976,7 +9106,12 @@
       "path": "tdf-hq-ui/src/api/bookings.ts",
       "sha256": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-BOOK-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-6ec1bf12b2a4c28d",
@@ -9261,9 +9396,14 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "4b53e695a09bbf80bcf766107bff0739a2e372559bf73c1f7b3302ced812ed5d",
+      "sha256": "2905ff1fe2a51ff500e14fca51d14c75dd706608c6c76c0393ea152c2fa89e4e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-API-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-e2a16b183617fa6d",
@@ -10994,14 +11134,24 @@
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
       "sha256": "83320844622c1c458265cb4e230d9edeae3d495da2a7d6dcb516d444f88f999f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "ID-ARTIST-CLAIM-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-5f4d9e37c1aca5da",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
       "sha256": "0e4db3d2d183691f42c81fc1bcd0ab6589c8847e04cd0e0e10db3ecc21861ed9",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "ID-ARTIST-CLAIM-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-c15c4de32f8d549b",
@@ -12974,7 +13124,12 @@
       "path": "tdf-hq-ui/src/utils/__tests__/roles.test.ts",
       "sha256": "f5aa3c92f8f8f71fc7690ef46a1be60b768c4d0ea40a714da39b04c817d272fd",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "ID-ARTIST-CLAIM-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-653b480dd4408b31",
@@ -13761,7 +13916,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "dbec0e808727a0d21e5cffde482e1ebc5fad281267cd381bd3a5075c2c8514fa",
+      "sha256": "84af6e9b2f544c10cfd1a541c17396af2646b36dae6c06bc5da3e6e10e26a18d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20223,7 +20378,12 @@
       "path": "tdf-mobile/package.json",
       "sha256": "2df9f211d1bddbe5467021ac6398e3427b5af467262ae5321be224ebe1603612",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-DEPENDENCY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-d9259f08043bd4f2",
@@ -20459,9 +20619,14 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "4b53e695a09bbf80bcf766107bff0739a2e372559bf73c1f7b3302ced812ed5d",
+      "sha256": "2905ff1fe2a51ff500e14fca51d14c75dd706608c6c76c0393ea152c2fa89e4e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-API-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-fd7ca489d7b98e6a",
@@ -21561,7 +21726,6 @@
     "SURFACE-f4743034f585d310",
     "SURFACE-c9ca596d51c940f8",
     "SURFACE-b85ac3ceaf40e5fb",
-    "SURFACE-7ae45ad102eab3b6",
     "SURFACE-0da2aa9657386c51",
     "SURFACE-039bc8d278e3dafc",
     "SURFACE-f6500b8addb3b248",
@@ -21633,7 +21797,6 @@
     "SURFACE-587b06f07bbc17e1",
     "SURFACE-655b9679c92bd422",
     "SURFACE-cb864006a7638836",
-    "SURFACE-45b3849f78ceb2dd",
     "SURFACE-a36895a956e7a0db",
     "SURFACE-c3c045b2c7be6d1e",
     "SURFACE-55c2c32700cda24a",
@@ -21673,7 +21836,6 @@
     "SURFACE-caffec31ff4f3a7f",
     "SURFACE-69f81b4cfc6d7588",
     "SURFACE-0fae219dd0862347",
-    "SURFACE-963aae603c04dcfb",
     "SURFACE-f19f1cdea9599922",
     "SURFACE-4a885036f5208454",
     "SURFACE-f1db2c4adbf5dce0",
@@ -21690,7 +21852,6 @@
     "SURFACE-1ef043656b0c0dd7",
     "SURFACE-6f6080552d114453",
     "SURFACE-5d3cb3a8a35fced1",
-    "SURFACE-15c410d46c49b739",
     "SURFACE-bac1f41447e33768",
     "SURFACE-63149d1c69a3c6a7",
     "SURFACE-0210b80fb6caf081",
@@ -21799,7 +21960,6 @@
     "SURFACE-f86d69da75ef0aa1",
     "SURFACE-180b5ac69cd86e73",
     "SURFACE-6c0e76dafbb5a45f",
-    "SURFACE-bd3f8d48d0c79fce",
     "SURFACE-434ec2aecc0c4dfc",
     "SURFACE-c6081d6e9a7cb4af",
     "SURFACE-dec65d6a251d2e85",
@@ -21884,7 +22044,6 @@
     "SURFACE-2f9585f0caa4cdac",
     "SURFACE-2fee4805089643ea",
     "SURFACE-6aaeb7c1a1b38aee",
-    "SURFACE-5a383ebf9d6c9038",
     "SURFACE-6ec1bf12b2a4c28d",
     "SURFACE-97e97b2046e60f86",
     "SURFACE-77010489d9af2ca8",
@@ -21925,7 +22084,6 @@
     "SURFACE-1466b07a94b92eb2",
     "SURFACE-acc1011eb1c1fb12",
     "SURFACE-5258acdc9275f4b0",
-    "SURFACE-326ca24d8c3dfea6",
     "SURFACE-e2a16b183617fa6d",
     "SURFACE-485cf245408b2210",
     "SURFACE-89ce35a1784c5738",
@@ -22162,8 +22320,6 @@
     "SURFACE-51294f78fb44c49b",
     "SURFACE-23c5b7dd2d415a8c",
     "SURFACE-4349420430226168",
-    "SURFACE-f53988d1fb48e7e5",
-    "SURFACE-5f4d9e37c1aca5da",
     "SURFACE-c15c4de32f8d549b",
     "SURFACE-7e096967d3a00d3b",
     "SURFACE-31dfb712c6445325",
@@ -22430,7 +22586,6 @@
     "SURFACE-62cd0df91e626da5",
     "SURFACE-3ca67f521e3dc4c4",
     "SURFACE-5737a182b3afe136",
-    "SURFACE-073539d499cf3a1e",
     "SURFACE-653b480dd4408b31",
     "SURFACE-a14b7188c2af7d0c",
     "SURFACE-74c667377a8a66f7",
@@ -23329,7 +23484,6 @@
     "SURFACE-724d67db609973ab",
     "SURFACE-8254ab3be0263414",
     "SURFACE-635d2beee7db16c2",
-    "SURFACE-74d531fc7e7a3fc1",
     "SURFACE-d9259f08043bd4f2",
     "SURFACE-49be021610567519",
     "SURFACE-a5513b81233f035b",
@@ -23363,7 +23517,6 @@
     "SURFACE-5cc50673dc611e52",
     "SURFACE-289d16e2dcc9030c",
     "SURFACE-46d6bd0c597127bb",
-    "SURFACE-f915a87195e48eab",
     "SURFACE-fd7ca489d7b98e6a",
     "SURFACE-16eeb226ea729ff2",
     "SURFACE-278d0d6a8005475c",
