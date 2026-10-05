@@ -2553,7 +2553,7 @@
     {
       "id": "SURFACE-336f05a0284b88b9",
       "path": "scripts/__tests__/compiled-api-surface.test.mjs",
-      "sha256": "04d416a02e4cc357dd99ff45d90f55b062ec8390afcf2fe258454d0a18c494f4",
+      "sha256": "d52e9580179da35251719902e0e43dcab33075d522e425309781420b56f44fb1",
       "semanticConformance": "not-established-by-discovery"
     },
     {

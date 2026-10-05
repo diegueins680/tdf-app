@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, copyFileSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, copyFileSync, writeFileSync, readFileSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
@@ -125,7 +125,7 @@ test('compiled declaration gate rejects route, auth, parameter, body, response a
 
 
 test('inspection binds captured snapshot bytes and rejects a baseline replacement during admission', t => {
-  const root = mkdtempSync(path.join(tmpdir(), 'tdf-api-provenance-'));
+  const root = realpathSync(mkdtempSync(path.join(tmpdir(), 'tdf-api-provenance-')));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   for (const dir of ['scripts/lib', 'formal/system']) mkdirSync(path.join(root, dir), { recursive: true });
   for (const file of ['scripts/inspect-compiled-api.mjs', 'scripts/lib/compiled-api-surface.mjs', 'scripts/lib/verification-evidence.mjs']) {
