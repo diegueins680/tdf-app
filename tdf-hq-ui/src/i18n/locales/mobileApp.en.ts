@@ -45,7 +45,7 @@ export default {
   "stepAndroid": "Once access is available, opt in with your Google account on Play Testing and install TDF from Google Play.",
   "stepClosed": "This channel requires prior admission. Join the authorized group with the same Google account you use in Play, then open the test.",
   "group": "Join the tester group",
-  "stepUse": "Use the app in real situations. You can send feedback from your profile whenever you want.",
+  "stepUse": "Use the app in real situations. Return to this page to send feedback whenever you want.",
   "noInstall": "A click to Apple or Google does not confirm installation. TDF measures first use only when the app can send that event.",
   "privacy": "Privacy",
   "back": "Back to TDF Mobile",

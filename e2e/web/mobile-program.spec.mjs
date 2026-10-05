@@ -34,6 +34,12 @@ for (const width of [390, 834, 1280]) {
     await page.getByRole('button',{name:'iPhone / iOS',exact:true}).click();
     await expect(page.getByRole('link',{name:'Probar beta en TestFlight'})).toHaveAttribute('href',config.ios.url);
     await page.getByRole('button',{name:'Ya estoy probando: enviar feedback'}).click();
+    const attachment = page.getByRole('button', {name: /Adjuntar captura/});
+    await attachment.focus();
+    const chooserPromise = page.waitForEvent('filechooser');
+    await page.keyboard.press('Enter');
+    const chooser = await chooserPromise;
+    expect(chooser.isMultiple()).toBe(false);
     await page.getByRole('textbox',{name:'Cuéntanos qué ocurrió'}).fill('Synthetic feedback: hard to find the player.');
     await page.getByRole('checkbox').check();
     await page.getByRole('button',{name:'Enviar',exact:true}).click();

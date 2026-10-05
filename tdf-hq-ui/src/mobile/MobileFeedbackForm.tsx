@@ -19,6 +19,7 @@ export default function MobileFeedbackForm({ platform, request = false }: { plat
   const [attachment, setAttachment] = useState<File | null>(null);
   const [fileError, setFileError] = useState(false);
   const opened = useRef(false);
+  const fileInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (!opened.current && !request) { opened.current = true; track('mobile_feedback_opened', { platform }); }
   }, [platform, request, track]);
@@ -55,12 +56,11 @@ export default function MobileFeedbackForm({ platform, request = false }: { plat
         {['bug', 'ux', 'idea', 'general'].map(k => <MenuItem key={k} value={k}>{t(`app.${k}`)}</MenuItem>)}
       </TextField>
       <TextField required multiline minRows={4} label={t('app.description')} helperText={t('app.descriptionHelp')} inputProps={{ maxLength: 4000 }} value={description} onChange={e => setDescription(e.target.value)} />
-      <Button component="label" variant="outlined" sx={{ minHeight: 44 }}>{t('app.attachment')}
-        <input aria-label={t('app.attachment')} type="file" accept="image/png,image/jpeg" hidden onChange={e => {
+      <Button variant="outlined" onClick={() => fileInput.current?.click()} sx={{ minHeight: 44 }}>{t('app.attachment')}</Button>
+      <input ref={fileInput} aria-label={t('app.attachment')} type="file" accept="image/png,image/jpeg" hidden onChange={e => {
           const file = e.target.files?.[0]; const valid = !file || (['image/png', 'image/jpeg'].includes(file.type) && file.size <= 5 * 1024 * 1024);
           setFileError(!valid); setAttachment(valid ? file ?? null : null);
         }} />
-      </Button>
       {attachment && <Typography>{attachment.name}</Typography>}
       {fileError && <Alert severity="error">{t('app.attachmentInvalid')}</Alert>}
       <Typography variant="body2">{t('app.metadata')}</Typography>
