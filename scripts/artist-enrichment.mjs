@@ -16,7 +16,7 @@ import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
 
 const execFileAsync = promisify(execFile);
-const DEFAULT_API_BASE = 'https://tdf-hq.fly.dev';
+const DEFAULT_API_BASE = 'https://api.tdfrecords.net';
 const DRIVE_API = 'https://www.googleapis.com/drive/v3';
 const DRIVE_UPLOAD_API = 'https://www.googleapis.com/upload/drive/v3';
 const SECRET_KEY_PATTERN = /(token|secret|password|authorization|api[-_]?key)/i;
@@ -1434,7 +1434,7 @@ export async function runPipeline(options) {
   };
   await writeJson(options.report, report);
   await api('PATCH', `/admin/artists/enrichment/runs/${backendRun.aerId}`, {
-    aeruStatus: halted ? 'failed' : 'completed',
+    aeruStatus: halted || checkpoint.errors.length > 0 ? 'failed' : 'completed',
     aeruPhase: 'reporting',
     aeruCheckpoint: JSON.stringify({
       completedArtists: checkpoint.completedArtists,
@@ -1458,9 +1458,11 @@ export async function runPipeline(options) {
       execution: executionError?.message ?? null,
     }),
   });
-  log('info', 'run_completed', { runId: report.runId, artists: report.artists.length, errors: report.errors.length, report: options.report });
+  const failed = halted || report.errors.length > 0;
+  log(failed ? 'error' : 'info', failed ? 'run_failed' : 'run_completed', { runId: report.runId, artists: report.artists.length, errors: report.errors.length, report: options.report });
   if (executionError) throw executionError;
   if (halted) throw new Error('Artist enrichment stopped after reaching the configured safety error threshold');
+  if (report.errors.length > 0) throw new Error(`Artist enrichment finished with ${report.errors.length} failed item(s); inspect the retained report before retrying`);
   return report;
 }
 

@@ -3388,9 +3388,96 @@
         ]
       },
       "authorization": "Public active list is anonymous. Managed listing uses the existing ensureSchoolAccess conjunction of Scheduling admission and school role."
+    },
+    {
+      "id": "OPS-ENRICH-001",
+      "title": "Artist enrichment cannot report success with failed work",
+      "statement": "An artist-enrichment attempt with any failed item or execution interruption must persist failed status and reject successful CLI completion; a successful return requires the final backend completion update to be acknowledged. Preserve reports/checkpoints for recovery. Scheduled and default production API calls target the current canonical backend and retain explicit publication/media authorization.",
+      "domain": "OPS",
+      "authority": "User background-worker failure and canonical deployment requirements; existing run/checkpoint and publication guards.",
+      "source": "formal/system/worker-completion.md; AUTHORITY-025",
+      "property": "Completed has no failed items; successful return has acknowledged completion evidence.",
+      "contract": "formal/system/worker-completion.md",
+      "actors": [
+        "Scheduled external enrichment worker",
+        "Authorized operator",
+        "Strict administrator",
+        "Provider adapter"
+      ],
+      "preconditions": [
+        "Current strict-admin token and canonical provider configuration; synthetic tests use an intercepted transport only."
+      ],
+      "inputs": [
+        "Run mode/scope and current run key",
+        "Selected artist/inventory items",
+        "Provider or persistence outcomes",
+        "Resume checkpoint"
+      ],
+      "state": {
+        "run": [
+          "running",
+          "completed",
+          "failed"
+        ],
+        "item": [
+          "pending",
+          "succeeded",
+          "failed"
+        ],
+        "evidence": [
+          "unacknowledged",
+          "acknowledged"
+        ]
+      },
+      "allowedTransitions": [
+        "Running -> completed only with no current item/execution failures and acknowledged final update.",
+        "Running -> failed when any current item fails, even below the early-stop threshold.",
+        "Failed -> authorized resume retaining completed items and previous attempt errors."
+      ],
+      "forbiddenTransitions": [
+        "Failed item -> completed run merely because the stop threshold was not reached.",
+        "Return success before final API acknowledgment.",
+        "Scheduled research implicitly publishes fields or ingests rights-unconfirmed media."
+      ],
+      "effects": [
+        "Persist redacted checkpoint and report, final backend status/counters/error summary; reject failure so CLI exits nonzero."
+      ],
+      "authorization": "Backend APIs retain strict-admin authorization. Provider/media rights and explicit auto-publish authorization are independent.",
+      "privacy": "No secret values in intended reports; synthetic transport tests make no external/provider request. Complete provider data/log redaction is a separate obligation.",
+      "concurrency": "GitHub concurrency group prevents overlapping scheduled runs; backend external_research_claim enforces a separate lease. The new model covers one run only.",
+      "idempotency": "Existing run key and resume receipts retained. A retry reuses completed items and preserves previous errors; no external exactly-once claim.",
+      "failure": "Persist failed status for any item failure, retain error summary and reject; failure before persistence or process termination may leave running state and is not success.",
+      "recovery": "Operator inspects evidence and uses the existing stale-lease/resume procedure; preserve successful work and audit history.",
+      "observability": "Redacted run_failed event, failed backend status, error counts, retained checkpoint/report and nonzero CLI exit.",
+      "implementation": [
+        "scripts/artist-enrichment.mjs",
+        ".github/workflows/artist-enrichment-daily.yml"
+      ],
+      "tests": [
+        "scripts/__tests__/artist-enrichment.test.mjs"
+      ],
+      "formalModels": [
+        "formal/event-operations/WorkerCompletionEvidence.tla",
+        "formal/event-operations/WorkerCompletionEvidence.cfg",
+        "formal/event-operations/WorkerCompletionEvidenceFailed.cfg",
+        "formal/event-operations/WorkerCompletionEvidenceUnacknowledged.cfg"
+      ],
+      "verification": "Actual intercepted runPipeline failure regression and canonical workflow controls; bounded TLC positive and two named mutation controls.",
+      "evidence": "Exact candidate test and model logs; old single-item false-success reproduction retained.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "high for scoped completion admission; full distributed worker refinement remains unproven",
+      "ambiguity": [
+        "Crash-safe checkpoints, lease recovery, duplicate external effects and all other workers require separate conformance evidence."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped failure repair and tests/model added; full worker lifecycle and deployed behavior remain open."
+      }
     }
   ],
   "sourceFingerprints": {
+    ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
     ".github/workflows/ci.yml": "bac1edf01130d59bc9bb183858ad0b1f4beb3d8e2875515fb9a8339d831cd7e9",
     ".github/workflows/event-operations-formal.yml": "8cdbbb59f539a8394fde147ba38dc4f27260b9ac2c371c731da5b342401077d1",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
@@ -3434,6 +3521,10 @@
     "formal/event-operations/SignupIdentity.tla": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
     "formal/event-operations/StudioBookingProjection.tla": "748b67ec68ef7f53e990adc6a20afff804f739a1acbd02afabf7d221c17a738a",
     "formal/event-operations/StudioBookingScope.tla": "e8bbb4fdbc1a9ba60576bf0f4d211a1717c9de5ac8d4eaa4565e25ab05b5fb40",
+    "formal/event-operations/WorkerCompletionEvidence.cfg": "87d2c50d2acabf44cdd16077f48517a305c08c404a0b3f940974614018b9d970",
+    "formal/event-operations/WorkerCompletionEvidence.tla": "00e7f67a150126775acfa8a55baa9fc9a8b95376e8ceda728f5aa7ec9bbf3de7",
+    "formal/event-operations/WorkerCompletionEvidenceFailed.cfg": "53f9a011039449cffbfe22d6c418d24cbaa589e8d7cf93aec89a82050383b83e",
+    "formal/event-operations/WorkerCompletionEvidenceUnacknowledged.cfg": "ba3fc2fb73be56b89e38433e40dc8fac8689b85330203528ff8b50c9b0575860",
     "formal/social/DmReads.tla": "b322db9a64900980298be4b0ed7f9d8341f8df66a2ed0fa57ebca8868b893eff",
     "formal/social/LegacyDm.tla": "82c7adae30ad9df72df8e288948b3fc7c3bae3bc16cc82766d32ccc665167e16",
     "formal/social/SessionBoundary.tla": "f52854a744652bc18f0d9f0fb4c3e6453447d26aff88267dff29ac03924e8ee6",
@@ -3444,6 +3535,7 @@
     "ops/hetzner/rehearse-postgres-restore.py": "9d35791e9c215de5252ca1bd9637e8d1ae69387c72b420df34ee60e7ff8d49cf",
     "package-lock.json": "b2663069d0f1901b4d5b76dde885fa0ff107089cf661819ed3500be6443bace4",
     "package.json": "f5113b4d00775becd6433276b1e2cc1e04c6dfc652e0445c0390d2efa99da61d",
+    "scripts/__tests__/artist-enrichment.test.mjs": "180ce22aca9d7d991b98e563f922749037f79a4ab1ce258e813feb1888aa167d",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/checkout-amount-postgres.mjs": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
@@ -3468,6 +3560,7 @@
     "scripts/__tests__/production-release.test.mjs": "5735fff347586aa3a4968a4d3d0c3a36225bf8438993980f50c2ca065dfde797",
     "scripts/__tests__/provider-rollback.test.mjs": "383fd368848ee72bd59be7fa5c2d77855754d0c9e58955613239f57c6c65983a",
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
+    "scripts/artist-enrichment.mjs": "4d9f8f5d55a1e2383f44590933f5ea2929bee12107750773892ee770f167099b",
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
     "scripts/check-build-trust.mjs": "1f1486dd10e0edb906926a3ff419b765fdca8c263d3fa8065e5353d50992e61e",
     "scripts/check-dependency-security.mjs": "4326c36055405ed802ea31a31fbb54c9843f02fbe3656a7ea43e3a3d60ec3475",
@@ -3492,7 +3585,7 @@
     "scripts/production-release.mjs": "1643997b7b3ac422214725f4078b7b4db25f09d1df6ae5cebe8285cd257e0d59",
     "scripts/quality-backend.sh": "7be0e6a87e50b625239a70858d53d9d3340a409000ea9f1dc475c96585b495d7",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "5c9bb5c144b06729f6cc14331a1f329985e7fc0559c0c904c6291c945d8bca2e",
+    "scripts/quality-repo.sh": "d026bfc0f118e5c747a618d1de94dd2a71308f89a5f93e3fa33acfef1abd0113",
     "scripts/rehearse-hetzner-restore.mjs": "eba3bfe18eafcbd4e5f84e71bd817d8b8ede458658c447a060b7af2c9fe559b7",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
@@ -3517,7 +3610,7 @@
     "scripts/test-specification-inventory.py": "429bfd7c6ee6600e4010394f476c1247597d3c6c1a88f1fbd5e738c96b221df8",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "836906067ac620b64214922f9390c012848abf5bc1c4ca6f15a02757986bcddd",
-    "scripts/verify-event-operations-formal.sh": "a4839306b08b888807c9005a0d7f5b4960bedb44717598b58023681f61ee6926",
+    "scripts/verify-event-operations-formal.sh": "118a573ddb801774ff25926416e17a06d5b050b2dfc6c1d92caab0a4b534beaf",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
     "scripts/verify-system-evidence.mjs": "7aa7ac054cebe9a16f39a21afce1b36588c889493716baf3c7629880565e3e3f",
@@ -5329,15 +5422,62 @@
         "requirement": "COURSE-SUBJECT-001",
         "relationship": "implementation"
       }
+    ],
+    "scripts/artist-enrichment.mjs": [
+      {
+        "requirement": "OPS-ENRICH-001",
+        "relationship": "implementation"
+      }
+    ],
+    ".github/workflows/artist-enrichment-daily.yml": [
+      {
+        "requirement": "OPS-ENRICH-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/artist-enrichment.test.mjs": [
+      {
+        "requirement": "OPS-ENRICH-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/WorkerCompletionEvidence.tla": [
+      {
+        "requirement": "OPS-ENRICH-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/WorkerCompletionEvidence.cfg": [
+      {
+        "requirement": "OPS-ENRICH-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/WorkerCompletionEvidenceFailed.cfg": [
+      {
+        "requirement": "OPS-ENRICH-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/WorkerCompletionEvidenceUnacknowledged.cfg": [
+      {
+        "requirement": "OPS-ENRICH-001",
+        "relationship": "formalModels"
+      }
     ]
   },
   "surfaces": [
     {
       "id": "SURFACE-11da58f2a3c21d0f",
       "path": ".github/workflows/artist-enrichment-daily.yml",
-      "sha256": "5bd29ca503d888d6e42dd31b716dabf2d584fdd9c8a6de24a2066e67ea304477",
+      "sha256": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-ENRICH-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-5c3fa597431eda03",
@@ -5764,9 +5904,14 @@
     {
       "id": "SURFACE-f6500b8addb3b248",
       "path": "scripts/__tests__/artist-enrichment.test.mjs",
-      "sha256": "d84c55c8df1944ef4eb7846524854749611755718fb886cad5fbf43f0236f8b9",
+      "sha256": "180ce22aca9d7d991b98e563f922749037f79a4ab1ce258e813feb1888aa167d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-ENRICH-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-35a1af26327814c1",
@@ -6469,9 +6614,14 @@
     {
       "id": "SURFACE-ae1fc3f773e478bd",
       "path": "scripts/artist-enrichment.mjs",
-      "sha256": "07affca404a11d2e0190847f53bdbfd195d6fc4b91e58dee32566b60ba98887e",
+      "sha256": "4d9f8f5d55a1e2383f44590933f5ea2929bee12107750773892ee770f167099b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-ENRICH-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-7361de66dab832ec",
@@ -7315,7 +7465,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "5c9bb5c144b06729f6cc14331a1f329985e7fc0559c0c904c6291c945d8bca2e",
+      "sha256": "d026bfc0f118e5c747a618d1de94dd2a71308f89a5f93e3fa33acfef1abd0113",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -8688,7 +8838,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "a4839306b08b888807c9005a0d7f5b4960bedb44717598b58023681f61ee6926",
+      "sha256": "118a573ddb801774ff25926416e17a06d5b050b2dfc6c1d92caab0a4b534beaf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21685,7 +21835,6 @@
     }
   ],
   "unmappedSurfaces": [
-    "SURFACE-11da58f2a3c21d0f",
     "SURFACE-5c3fa597431eda03",
     "SURFACE-e322a9d58d6bbd4b",
     "SURFACE-562c5d7f20f572bc",
@@ -21728,7 +21877,6 @@
     "SURFACE-b85ac3ceaf40e5fb",
     "SURFACE-0da2aa9657386c51",
     "SURFACE-039bc8d278e3dafc",
-    "SURFACE-f6500b8addb3b248",
     "SURFACE-35a1af26327814c1",
     "SURFACE-d96822f506e6f794",
     "SURFACE-d41c5a6a64677381",
@@ -21779,7 +21927,6 @@
     "SURFACE-33fdad1340b42ae6",
     "SURFACE-2685e984e33eb792",
     "SURFACE-33c36559cee9f889",
-    "SURFACE-ae1fc3f773e478bd",
     "SURFACE-d112ef0e073bf0c4",
     "SURFACE-efc90f2c7a0252ce",
     "SURFACE-7bc6beda98cc6e72",
@@ -45641,7 +45788,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 47,
+    "PARTIAL": 48,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

@@ -4,6 +4,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
+import { parse as parseYaml } from 'yaml';
 import { promisify } from 'node:util';
 
 import {
@@ -397,4 +398,63 @@ test('genera WebP y AVIF decodificables dentro de dimensiones y presupuestos', a
   } finally {
     await rm(tempDir, { recursive: true, force: true });
   }
+});
+
+test('a single failed item below the stop threshold records failure and rejects the worker result', async () => {
+  const requests = [];
+  const previousFetch = globalThis.fetch;
+  const names = ['ADMIN_TOKEN', 'TDF_API_BASE', 'API_BASE'];
+  const previousEnv = Object.fromEntries(names.map(name => [name, process.env[name]]));
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), 'tdf-enrichment-failure-'));
+  globalThis.fetch = async (rawUrl, options = {}) => {
+    const url = new URL(rawUrl);
+    assert.equal(url.origin, 'https://api.tdfrecords.net');
+    const request = { method: options.method ?? 'GET', path: url.pathname, body: options.body ? JSON.parse(options.body) : null };
+    requests.push(request);
+    let payload, status = 200;
+    if (request.method === 'POST' && request.path === '/admin/artists/enrichment/runs') {
+      payload = { aerId: 1, aerRunKey: 'synthetic', aerStatus: 'completed' };
+    } else if (request.method === 'PATCH' && request.path === '/admin/artists/enrichment/runs/1') {
+      payload = { aerId: 1, aerRunKey: 'synthetic', aerStatus: request.body.aeruStatus };
+    } else if (request.path === '/admin/artists/profiles') {
+      payload = [{ apArtistId: 7, apDisplayName: 'Synthetic artist', apHeroImageUrl: 'https://example.invalid/rights-unconfirmed.jpg' }];
+    } else if (request.path === '/admin/artists/enrichment/overview') {
+      payload = { aeoProfiles: [], aeoInventory: [], aeoSources: [], aeoSuggestions: [], aeoChanges: [], aeoRuns: [], aeoIdentityCandidates: [], aeoMedia: [] };
+    } else if (request.path === '/admin/artists/enrichment/sources') {
+      status = 400; payload = { error: 'synthetic source persistence rejection' };
+    } else { throw new Error('Unexpected synthetic request: ' + request.path); }
+    return new Response(JSON.stringify(payload), { status, headers: { 'content-type': 'application/json' } });
+  };
+  try {
+    process.env.ADMIN_TOKEN = 'synthetic-never-logged';
+    delete process.env.TDF_API_BASE; delete process.env.API_BASE;
+    await assert.rejects(runPipeline({
+      mode: 'production', scope: 'audit', artistId: null, batchSize: 25,
+      concurrency: 1, autoPublish: false, resume: false,
+      checkpoint: path.join(tempDir, 'checkpoint.json'), report: path.join(tempDir, 'report.json'),
+    }), /failed item/);
+    const report = JSON.parse(await readFile(path.join(tempDir, 'report.json'), 'utf8'));
+    assert.equal(report.errors.length, 1);
+    assert.equal(report.haltedBySafetyThreshold, false);
+    assert.equal(requests.at(-1).body.aeruStatus, 'failed');
+    assert.equal(JSON.parse(requests.at(-1).body.aeruCounters).errors, 1);
+  } finally {
+    globalThis.fetch = previousFetch;
+    for (const name of names) {
+      if (previousEnv[name] == null) delete process.env[name]; else process.env[name] = previousEnv[name];
+    }
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+
+test('scheduled enrichment targets canonical production and retains publication opt-in', async () => {
+  const workflow = parseYaml(await readFile(new URL('../../.github/workflows/artist-enrichment-daily.yml', import.meta.url), 'utf8'));
+  assert.equal(workflow.jobs.enrich.env.TDF_API_BASE, 'https://api.tdfrecords.net');
+  assert.equal(workflow.on.workflow_dispatch.inputs.mode.default, 'dry-run');
+  assert.equal(workflow.on.workflow_dispatch.inputs.auto_publish.default, false);
+  const scheduled = workflow.jobs.enrich.steps.find(step => step.if === "github.event_name == 'schedule'");
+  assert.ok(scheduled);
+  assert.doesNotMatch(scheduled.run, /--auto-publish|--image-source/);
+  assert.equal(workflow.concurrency['cancel-in-progress'], false);
 });

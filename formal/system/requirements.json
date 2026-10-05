@@ -3387,6 +3387,92 @@
         ]
       },
       "authorization": "Public active list is anonymous. Managed listing uses the existing ensureSchoolAccess conjunction of Scheduling admission and school role."
+    },
+    {
+      "id": "OPS-ENRICH-001",
+      "title": "Artist enrichment cannot report success with failed work",
+      "statement": "An artist-enrichment attempt with any failed item or execution interruption must persist failed status and reject successful CLI completion; a successful return requires the final backend completion update to be acknowledged. Preserve reports/checkpoints for recovery. Scheduled and default production API calls target the current canonical backend and retain explicit publication/media authorization.",
+      "domain": "OPS",
+      "authority": "User background-worker failure and canonical deployment requirements; existing run/checkpoint and publication guards.",
+      "source": "formal/system/worker-completion.md; AUTHORITY-025",
+      "property": "Completed has no failed items; successful return has acknowledged completion evidence.",
+      "contract": "formal/system/worker-completion.md",
+      "actors": [
+        "Scheduled external enrichment worker",
+        "Authorized operator",
+        "Strict administrator",
+        "Provider adapter"
+      ],
+      "preconditions": [
+        "Current strict-admin token and canonical provider configuration; synthetic tests use an intercepted transport only."
+      ],
+      "inputs": [
+        "Run mode/scope and current run key",
+        "Selected artist/inventory items",
+        "Provider or persistence outcomes",
+        "Resume checkpoint"
+      ],
+      "state": {
+        "run": [
+          "running",
+          "completed",
+          "failed"
+        ],
+        "item": [
+          "pending",
+          "succeeded",
+          "failed"
+        ],
+        "evidence": [
+          "unacknowledged",
+          "acknowledged"
+        ]
+      },
+      "allowedTransitions": [
+        "Running -> completed only with no current item/execution failures and acknowledged final update.",
+        "Running -> failed when any current item fails, even below the early-stop threshold.",
+        "Failed -> authorized resume retaining completed items and previous attempt errors."
+      ],
+      "forbiddenTransitions": [
+        "Failed item -> completed run merely because the stop threshold was not reached.",
+        "Return success before final API acknowledgment.",
+        "Scheduled research implicitly publishes fields or ingests rights-unconfirmed media."
+      ],
+      "effects": [
+        "Persist redacted checkpoint and report, final backend status/counters/error summary; reject failure so CLI exits nonzero."
+      ],
+      "authorization": "Backend APIs retain strict-admin authorization. Provider/media rights and explicit auto-publish authorization are independent.",
+      "privacy": "No secret values in intended reports; synthetic transport tests make no external/provider request. Complete provider data/log redaction is a separate obligation.",
+      "concurrency": "GitHub concurrency group prevents overlapping scheduled runs; backend external_research_claim enforces a separate lease. The new model covers one run only.",
+      "idempotency": "Existing run key and resume receipts retained. A retry reuses completed items and preserves previous errors; no external exactly-once claim.",
+      "failure": "Persist failed status for any item failure, retain error summary and reject; failure before persistence or process termination may leave running state and is not success.",
+      "recovery": "Operator inspects evidence and uses the existing stale-lease/resume procedure; preserve successful work and audit history.",
+      "observability": "Redacted run_failed event, failed backend status, error counts, retained checkpoint/report and nonzero CLI exit.",
+      "implementation": [
+        "scripts/artist-enrichment.mjs",
+        ".github/workflows/artist-enrichment-daily.yml"
+      ],
+      "tests": [
+        "scripts/__tests__/artist-enrichment.test.mjs"
+      ],
+      "formalModels": [
+        "formal/event-operations/WorkerCompletionEvidence.tla",
+        "formal/event-operations/WorkerCompletionEvidence.cfg",
+        "formal/event-operations/WorkerCompletionEvidenceFailed.cfg",
+        "formal/event-operations/WorkerCompletionEvidenceUnacknowledged.cfg"
+      ],
+      "verification": "Actual intercepted runPipeline failure regression and canonical workflow controls; bounded TLC positive and two named mutation controls.",
+      "evidence": "Exact candidate test and model logs; old single-item false-success reproduction retained.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "high for scoped completion admission; full distributed worker refinement remains unproven",
+      "ambiguity": [
+        "Crash-safe checkpoints, lease recovery, duplicate external effects and all other workers require separate conformance evidence."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped failure repair and tests/model added; full worker lifecycle and deployed behavior remain open."
+      }
     }
   ]
 }

@@ -255,6 +255,18 @@
       "conflict": "The public subjects GET shadows the private includeInactive GET; even an administrator receives only active subjects.",
       "authority": "Distinct public active visibility and explicitly guarded ensureSchoolAccess management behavior.",
       "resolution": "Keep the current public route and make managed listing reachable at /trials/v1/subjects/catalog using the same existing school guard. Document both operations and regenerate both clients. Do not move private auth ahead of the public route or expose inactive subjects anonymously."
+    },
+    {
+      "id": "AUTHORITY-025",
+      "sources": [
+        "scripts/artist-enrichment.mjs",
+        ".github/workflows/artist-enrichment-daily.yml",
+        "docs/artist-enrichment-runbook.md",
+        "ops/hetzner/README.md"
+      ],
+      "conflict": "Artist worker and schedule target retired Fly; old runbook directs Fly release/rollback. The worker marks a batch with a sub-threshold failed item completed.",
+      "authority": "Verified canonical backend identity and explicit user requirement that failed workers cannot report success.",
+      "resolution": "Use canonical API default/schedule, retire obsolete operational commands in favor of current Hetzner procedure, and separate early-stop threshold from failed-run completion. Preserve schedule and publication opt-in, add actual worker regression and scoped bounded model. No production dispatch or feature activation is performed."
     }
   ]
 }

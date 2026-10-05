@@ -2193,7 +2193,7 @@
     {
       "id": "SURFACE-11da58f2a3c21d0f",
       "path": ".github/workflows/artist-enrichment-daily.yml",
-      "sha256": "5bd29ca503d888d6e42dd31b716dabf2d584fdd9c8a6de24a2066e67ea304477",
+      "sha256": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2499,7 +2499,7 @@
     {
       "id": "SURFACE-f6500b8addb3b248",
       "path": "scripts/__tests__/artist-enrichment.test.mjs",
-      "sha256": "d84c55c8df1944ef4eb7846524854749611755718fb886cad5fbf43f0236f8b9",
+      "sha256": "180ce22aca9d7d991b98e563f922749037f79a4ab1ce258e813feb1888aa167d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2949,7 +2949,7 @@
     {
       "id": "SURFACE-ae1fc3f773e478bd",
       "path": "scripts/artist-enrichment.mjs",
-      "sha256": "07affca404a11d2e0190847f53bdbfd195d6fc4b91e58dee32566b60ba98887e",
+      "sha256": "4d9f8f5d55a1e2383f44590933f5ea2929bee12107750773892ee770f167099b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3537,7 +3537,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "5c9bb5c144b06729f6cc14331a1f329985e7fc0559c0c904c6291c945d8bca2e",
+      "sha256": "d026bfc0f118e5c747a618d1de94dd2a71308f89a5f93e3fa33acfef1abd0113",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4545,7 +4545,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "a4839306b08b888807c9005a0d7f5b4960bedb44717598b58023681f61ee6926",
+      "sha256": "118a573ddb801774ff25926416e17a06d5b050b2dfc6c1d92caab0a4b534beaf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15719,7 +15719,7 @@
     },
     {
       "path": "docs/artist-enrichment-runbook.md",
-      "sha256": "c565efa9c0e2c9798339db6895c9c4f406c6a335197ecea8d03331bc399619a2",
+      "sha256": "5a3e42d79754c7aa1239ebffb16b2bc2c5ff0dd82e6156852eb5b2fa8be9bf57",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -19911,6 +19911,34 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/WorkerCompletionEvidence.cfg",
+      "sha256": "87d2c50d2acabf44cdd16077f48517a305c08c404a0b3f940974614018b9d970",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WorkerCompletionEvidence.tla",
+      "sha256": "00e7f67a150126775acfa8a55baa9fc9a8b95376e8ceda728f5aa7ec9bbf3de7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/WorkerCompletionEvidenceFailed.cfg",
+      "sha256": "53f9a011039449cffbfe22d6c418d24cbaa589e8d7cf93aec89a82050383b83e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/WorkerCompletionEvidenceUnacknowledged.cfg",
+      "sha256": "ba3fc2fb73be56b89e38433e40dc8fac8689b85330203528ff8b50c9b0575860",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/refund-recovery-correspondence.md",
       "sha256": "f0943b9df96f724b92825ea5b556ab9babbcece9dc3134368e033a17acb4611d",
       "authority": "inferred",
@@ -20339,14 +20367,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "32840cb51a2044fb54d6e6fb1c0956f65a861b8b4292a026a74e4256deaa25a1",
+      "sha256": "2118794847578cb6d0adbc319eb2e45f0eacae0a6eff009b4d9835313849ff21",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "bb46b5a3612a5f76350b0597e1f7198d300527bc2ad9289ed482e9b0d909ad44",
+      "sha256": "e73993ce4bd0c4ffdc889f9311965fae71ae6726df057e754b63e3c1dc32d602",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20472,7 +20500,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "ea72a3754d166df7ee9850eeaf79702e4eea5f5b9ab1bf535491587aa0a23743",
+      "sha256": "f8aae54e0a864fb74350d6a0768dff31b74cd9a3e075b6f000d6cbc3e2f5e9d0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -20494,6 +20522,13 @@
     {
       "path": "formal/system/routed-read-boundaries.md",
       "sha256": "e104edf8ce9bebda7c241b2c3bc9c7b5f7d6950342f8877886450a1396115352",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/worker-completion.md",
+      "sha256": "549ea0eae3875a5805afb82579508f8d3888beb53e6a53c289f3129e5fe60f7b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30271,6 +30306,48 @@
         "SPECIFICATION Spec",
         "INVARIANTS TypeOK CurrentSessionOnly",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WorkerCompletionEvidence.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Jobs = {one, two}",
+        "  UnsafeIgnoreFailedItem = FALSE",
+        "  UnsafeSkipAcknowledgment = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK CompletedHasNoFailedItems SuccessfulReturnHasEvidence"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WorkerCompletionEvidenceFailed.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Jobs = {one, two}",
+        "  UnsafeIgnoreFailedItem = TRUE",
+        "  UnsafeSkipAcknowledgment = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANT CompletedHasNoFailedItems"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/WorkerCompletionEvidenceUnacknowledged.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Jobs = {one, two}",
+        "  UnsafeIgnoreFailedItem = FALSE",
+        "  UnsafeSkipAcknowledgment = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANT SuccessfulReturnHasEvidence"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
