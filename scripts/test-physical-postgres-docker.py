@@ -17,6 +17,7 @@ spec = importlib.util.spec_from_file_location('physical', Path(__file__).resolve
                                             'ops/hetzner/physical-postgres-recovery.py')
 p = importlib.util.module_from_spec(spec); spec.loader.exec_module(p)
 r = p.restore
+CREATED_FIXTURES = []
 
 
 def require(value):
@@ -27,6 +28,7 @@ def new_directory():
     nonce = uuid.uuid4().hex
     directory = p.HOST_ROOT/('rehearsal-'+nonce)
     with p.files.directory(str(p.HOST_ROOT), private=True): directory.mkdir(mode=0o700)
+    CREATED_FIXTURES.append(directory)
     return nonce, directory
 
 
@@ -159,4 +161,16 @@ def main():
         'ownedContainersRemoved': True, 'productionDataAccessed': False}))
 
 
-if __name__ == '__main__': main()
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception:
+        # Only names of attributes on this invocation's new synthetic roots.
+        # Never print attribute values, database contents or production paths.
+        facts = []
+        for directory in CREATED_FIXTURES:
+            path = directory/'physical-data'
+            if path.is_dir() and not path.is_symlink():
+                facts.append({'syntheticRootAttributeNames': sorted(os.listxattr(path))})
+        print(json.dumps({'syntheticFailureMetadata': facts}), file=sys.stderr)
+        raise

@@ -6838,7 +6838,7 @@
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
-    "scripts/test-physical-postgres-docker.py": "cbb297fcc0f23d205364ef2e05721ee48a21fc6676a711455fb9c1396a6a07b5",
+    "scripts/test-physical-postgres-docker.py": "bfba7cc479be464d192e89d5a07479aee4a4c3ee2f2cdcff99e99b046bd4f9ad",
     "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
@@ -14617,7 +14617,7 @@
     {
       "id": "SURFACE-99a7ddb4ad51eda9",
       "path": "scripts/test-physical-postgres-docker.py",
-      "sha256": "cbb297fcc0f23d205364ef2e05721ee48a21fc6676a711455fb9c1396a6a07b5",
+      "sha256": "bfba7cc479be464d192e89d5a07479aee4a4c3ee2f2cdcff99e99b046bd4f9ad",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

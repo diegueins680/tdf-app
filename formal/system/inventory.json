@@ -4678,7 +4678,7 @@
     {
       "id": "SURFACE-99a7ddb4ad51eda9",
       "path": "scripts/test-physical-postgres-docker.py",
-      "sha256": "cbb297fcc0f23d205364ef2e05721ee48a21fc6676a711455fb9c1396a6a07b5",
+      "sha256": "bfba7cc479be464d192e89d5a07479aee4a4c3ee2f2cdcff99e99b046bd4f9ad",
       "semanticConformance": "not-established-by-discovery"
     },
     {
