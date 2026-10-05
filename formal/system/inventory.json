@@ -1769,6 +1769,7 @@
       "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs",
       "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs",
       "tdf-hq/test/TDF/Directory/PolicySpec.hs",
+      "tdf-hq/test/TDF/DisposableTicketDatabase.hs",
       "tdf-hq/test/TDF/DriveReplaySpec.hs",
       "tdf-hq/test/TDF/EmailHeadersSpec.hs",
       "tdf-hq/test/TDF/EventOperations/DatabaseBoundarySpec.hs",
@@ -1801,6 +1802,7 @@
       "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
       "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs",
       "tdf-hq/test/TicketAdmissionMain.hs",
+      "tdf-hq/test/TicketDatabaseRoutingMain.hs",
       "tdf-hq/test/integration/artist_merch_runtime_fixture.sql",
       "tdf-hq/test/integration/artist_merch_runtime_schema_fixture.sql",
       "tdf-hq/test/integration/artist_self_service_fixture.sql",
@@ -2586,7 +2588,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "2df476811867e2c7b19e3d0dee1b5e015cf82cddf971f8c11270925166dfbf44",
+      "sha256": "a792f74cdd4497a9c44907d394884012728cbbdfd8c1793e079619344605fb94",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2844,7 +2846,7 @@
     {
       "id": "SURFACE-df80d476d03d210a",
       "path": "scripts/__tests__/merch-runtime-safety.test.mjs",
-      "sha256": "c127989f3a5cbd0d7974eaf9ad9a86d747591a6cc9110ffe0b22689aab45ee01",
+      "sha256": "7e8b8f27e40d6b1d2f329aac504096451783587ee12a827f9d3e03da64aedcfa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4578,7 +4580,7 @@
     {
       "id": "SURFACE-6ba093cb83a6b757",
       "path": "scripts/test-ticket-admission.sh",
-      "sha256": "084d060cfdf91099cc877c1c99f730fdd449c814176186f61b696046843382ae",
+      "sha256": "e861b2b98961f0c24ddacd5e67f3622ea665d118ad69979948dc82cb1aa81800",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12694,6 +12696,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-2109051a71e906d5",
+      "path": "tdf-hq/test/TDF/DisposableTicketDatabase.hs",
+      "sha256": "2628a95fd9d158d26ec981c0f3195391d47d9a2a9725a4e43ea20332a4237091",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-93ad4526d09f9815",
       "path": "tdf-hq/test/TDF/DriveReplaySpec.hs",
       "sha256": "d4b897b67a0f57930ebc316016eaec1e68787f0c0eb7a821e181332a89ac3964",
@@ -12882,7 +12890,13 @@
     {
       "id": "SURFACE-0096fb04ca9db3fe",
       "path": "tdf-hq/test/TicketAdmissionMain.hs",
-      "sha256": "398fd601a5829a109d6f3f2402bb53fb744272546b758a0e99e44edd41401ed0",
+      "sha256": "42ca67dad504ceaf6998ec067f3088f0d4cb4f06f8dc9162b8f96de60a8537d2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9fc1887171a6bcfc",
+      "path": "tdf-hq/test/TicketDatabaseRoutingMain.hs",
+      "sha256": "2f389f2ddab6718c96414d96aa86a02d07d20f0303657a385f71443a95b22001",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20906,7 +20920,7 @@
     },
     {
       "path": "formal/system/fixture-routing.md",
-      "sha256": "718bf6972a07a21859e30b22d32edfb3faa519a3e2f1e036e26d03ab8c8444e6",
+      "sha256": "d32d54490e8c2c32235c49367b5a75c054c7aa3f441801d6e7cf7ea72291cfbd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20983,7 +20997,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "7a12a22a20f3acf7f47196aba4d29e8b0b83878019c7beb9f690729f6849a059",
+      "sha256": "fd5618d65e19dd98251f3be5dc17bf0f5641005f7a4d6137e488925419c91ec9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

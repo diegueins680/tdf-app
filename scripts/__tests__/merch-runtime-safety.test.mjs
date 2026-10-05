@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 for (const [label, scriptName, variable, database] of [
+  ['ticket admission', 'test-ticket-admission.sh', 'TICKET_ADMISSION_TEST_DSN', 'tdf_ticket_admission_test'],
   ['merchandise', 'test-artist-merch-runtime.sh', 'TDF_MERCH_RUNTIME_DATABASE_URL', 'merch_runtime_test'],
   ['provider retry', 'test-provider-retry-runtime.sh', 'TDF_PROVIDER_RETRY_DATABASE_URL', 'tdf_provider_retry_test'],
 ]) test(`actual ${label} fixture runner validates routing before its first SQL command`, () => {
@@ -16,7 +17,7 @@ for (const [label, scriptName, variable, database] of [
   // Stop connection retry loops immediately after the SQL sentinel was reached.
   writeFileSync(path.join(directory, 'sleep'), '#!/bin/sh\nexit 97\n', { mode: 0o700 });
   const script = fileURLToPath(new URL(`../${scriptName}`, import.meta.url));
-  const invoke = (url, extra = {}) => spawnSync('sh', [script], {
+  const invoke = (url, extra = {}) => spawnSync('bash', [script], {
     encoding: 'utf8', env: { PATH: `${directory}:${process.env.PATH}`, SQL_MARKER: marker,
       [variable]: url, ...extra },
   });
@@ -31,6 +32,12 @@ for (const [label, scriptName, variable, database] of [
       const r = invoke(url, extra);
       assert.notEqual(r.status, 0);
       assert.equal(existsSync(marker), false, 'invalid routing must never reach psql');
+    }
+    if (label === 'ticket admission') {
+      for (const url of [`postgresql://localhost:5433/${database}`, `postgresql://user@localhost/${database}`]) {
+        assert.notEqual(invoke(url).status, 0);
+        assert.equal(existsSync(marker), false, 'unsupported direct-harness URL must fail before fixture setup');
+      }
     }
     const allowed = invoke(`postgresql://127.0.0.1/${database}`);
     assert.equal(allowed.status, 97, allowed.stderr);

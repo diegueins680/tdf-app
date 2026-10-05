@@ -3128,12 +3128,16 @@
         "scripts/test-provider-retry-runtime.sh",
         "scripts/test-auth-recovery-migration.sh",
         "scripts/test-credential-lifecycle.sh",
-        "scripts/lib/postgres-test-database.sh"
+        "scripts/lib/postgres-test-database.sh",
+        "scripts/test-ticket-admission.sh",
+        "tdf-hq/test/TDF/DisposableTicketDatabase.hs",
+        "tdf-hq/test/TicketAdmissionMain.hs"
       ],
       "tests": [
         "scripts/__tests__/disposable-postgres-url.test.mjs",
         "scripts/__tests__/merch-runtime-safety.test.mjs",
-        "scripts/__tests__/ci-pipeline.test.mjs"
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "tdf-hq/test/TicketDatabaseRoutingMain.hs"
       ],
       "formalModels": [],
       "verification": "URL property cases and actual runner SQL-sentinel controls; not proof of database ownership or all-runner isolation.",
@@ -3143,7 +3147,7 @@
       "confidence": "high for tested URL routing admission; ownership and unintegrated runners remain separate",
       "ambiguity": [
         "A loopback host and _test suffix do not prove database ownership.",
-        "Actual first-SQL sentinel checks cover merchandise/provider-retry runners; other consumers require their own execution evidence."
+        "Actual first-SQL sentinel checks cover merchandise, provider-retry and ticket-admission runners; other consumers require their own execution evidence."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -4448,7 +4452,7 @@
     "scripts/__tests__/identity-http-runtime.mjs": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
     "scripts/__tests__/merch-commission-postgres.mjs": "91dd370bf08dfe2ab871c6a617d4e2871717c9f5ff27676e692c6d776c9721c3",
-    "scripts/__tests__/merch-runtime-safety.test.mjs": "c127989f3a5cbd0d7974eaf9ad9a86d747591a6cc9110ffe0b22689aab45ee01",
+    "scripts/__tests__/merch-runtime-safety.test.mjs": "7e8b8f27e40d6b1d2f329aac504096451783587ee12a827f9d3e03da64aedcfa",
     "scripts/__tests__/persistent-uploads.test.mjs": "0dc864d08b90d8731f0ddcb056dad5c7990c5e07dab80084396e87f62ee76df6",
     "scripts/__tests__/production-entrypoint.test.mjs": "c4e1d14cc296c80c9724b1ec4d4c3a4986e9be3f732b615813ad4d5af8e2de53",
     "scripts/__tests__/production-release.test.mjs": "5735fff347586aa3a4968a4d3d0c3a36225bf8438993980f50c2ca065dfde797",
@@ -4506,7 +4510,7 @@
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
     "scripts/test-specification-conformance.py": "b7da3648e4d776ba472ca337f974c7ace5a0aa9980c584a48cbefee8d750174b",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
-    "scripts/test-ticket-admission.sh": "084d060cfdf91099cc877c1c99f730fdd449c814176186f61b696046843382ae",
+    "scripts/test-ticket-admission.sh": "e861b2b98961f0c24ddacd5e67f3622ea665d118ad69979948dc82cb1aa81800",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "836906067ac620b64214922f9390c012848abf5bc1c4ca6f15a02757986bcddd",
     "scripts/verify-event-operations-formal.sh": "a408a0cf428ae03807a594e04d6dc4e979894000b6e662bb72dc3ce66a28f668",
@@ -4632,12 +4636,14 @@
     "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "e68face714495ad762b3ccb8eec7b38ce6047274c44fd6977dc44abfd56f9439",
     "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs": "dd1168717766515274065c45da50d0f6da23e824ccc7a2e49055e2977fb95ddd",
     "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs": "cdf133bc96409a0c3a56abb7a2023b0d3dc9dd0237bdb50d9a4f46b97f72ab55",
+    "tdf-hq/test/TDF/DisposableTicketDatabase.hs": "2628a95fd9d158d26ec981c0f3195391d47d9a2a9725a4e43ea20332a4237091",
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "d4b897b67a0f57930ebc316016eaec1e68787f0c0eb7a821e181332a89ac3964",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "39c92770f1830489ecb1c909dfbefa7c1a11857f3f002ce89da5283c06c69a0b",
     "tdf-hq/test/TDF/ServerSpec.hs": "a205ac4f0400b0972d1fc3280cc6ed7913da633cbed670d919de38bfc96a4f45",
-    "tdf-hq/test/TicketAdmissionMain.hs": "398fd601a5829a109d6f3f2402bb53fb744272546b758a0e99e44edd41401ed0",
+    "tdf-hq/test/TicketAdmissionMain.hs": "42ca67dad504ceaf6998ec067f3088f0d4cb4f06f8dc9162b8f96de60a8537d2",
+    "tdf-hq/test/TicketDatabaseRoutingMain.hs": "2f389f2ddab6718c96414d96aa86a02d07d20f0303657a385f71443a95b22001",
     "tdf-mobile/__tests__/AuthProvider.test.tsx": "a76d12479c0899214bfd7fb8c2b5eea1e24d81585633c6bf7e835ca21922f474",
     "tdf-mobile/__tests__/AuthQueryProviders.test.tsx": "ba1fca52cdff6c4bd29548ccdb96f40b212a2a6cacf3f6ee08b6698095178f5c",
     "tdf-mobile/__tests__/DdexInbox.test.tsx": "5082fd98e04f9c9d861e8f3fbf7fabab92ac65cdb0e5ba7dd128a62839456656",
@@ -6402,6 +6408,32 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/test-ticket-admission.sh": [
+      {
+        "requirement": "SYS-VERIFY-004",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TDF/DisposableTicketDatabase.hs": [
+      {
+        "requirement": "SYS-VERIFY-004",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TicketAdmissionMain.hs": [
+      {
+        "requirement": "SYS-VERIFY-004",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "tests"
+      }
+    ],
     "scripts/__tests__/disposable-postgres-url.test.mjs": [
       {
         "requirement": "SYS-VERIFY-004",
@@ -6409,6 +6441,12 @@
       }
     ],
     "scripts/__tests__/merch-runtime-safety.test.mjs": [
+      {
+        "requirement": "SYS-VERIFY-004",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TicketDatabaseRoutingMain.hs": [
       {
         "requirement": "SYS-VERIFY-004",
         "relationship": "tests"
@@ -6946,18 +6984,6 @@
         "relationship": "implementation"
       }
     ],
-    "tdf-hq/test/TicketAdmissionMain.hs": [
-      {
-        "requirement": "EVT-TICKET-001",
-        "relationship": "tests"
-      }
-    ],
-    "scripts/test-ticket-admission.sh": [
-      {
-        "requirement": "EVT-TICKET-001",
-        "relationship": "tests"
-      }
-    ],
     "scripts/__tests__/ticket-admission-model.test.mjs": [
       {
         "requirement": "EVT-TICKET-001",
@@ -7492,7 +7518,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "2df476811867e2c7b19e3d0dee1b5e015cf82cddf971f8c11270925166dfbf44",
+      "sha256": "a792f74cdd4497a9c44907d394884012728cbbdfd8c1793e079619344605fb94",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -7930,7 +7956,7 @@
     {
       "id": "SURFACE-df80d476d03d210a",
       "path": "scripts/__tests__/merch-runtime-safety.test.mjs",
-      "sha256": "c127989f3a5cbd0d7974eaf9ad9a86d747591a6cc9110ffe0b22689aab45ee01",
+      "sha256": "7e8b8f27e40d6b1d2f329aac504096451783587ee12a827f9d3e03da64aedcfa",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -10419,9 +10445,13 @@
     {
       "id": "SURFACE-6ba093cb83a6b757",
       "path": "scripts/test-ticket-admission.sh",
-      "sha256": "084d060cfdf91099cc877c1c99f730fdd449c814176186f61b696046843382ae",
+      "sha256": "e861b2b98961f0c24ddacd5e67f3622ea665d118ad69979948dc82cb1aa81800",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "SYS-VERIFY-004",
+          "relationship": "implementation"
+        },
         {
           "requirement": "EVT-TICKET-001",
           "relationship": "tests"
@@ -20750,6 +20780,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-2109051a71e906d5",
+      "path": "tdf-hq/test/TDF/DisposableTicketDatabase.hs",
+      "sha256": "2628a95fd9d158d26ec981c0f3195391d47d9a2a9725a4e43ea20332a4237091",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-004",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-93ad4526d09f9815",
       "path": "tdf-hq/test/TDF/DriveReplaySpec.hs",
       "sha256": "d4b897b67a0f57930ebc316016eaec1e68787f0c0eb7a821e181332a89ac3964",
@@ -21010,11 +21052,27 @@
     {
       "id": "SURFACE-0096fb04ca9db3fe",
       "path": "tdf-hq/test/TicketAdmissionMain.hs",
-      "sha256": "398fd601a5829a109d6f3f2402bb53fb744272546b758a0e99e44edd41401ed0",
+      "sha256": "42ca67dad504ceaf6998ec067f3088f0d4cb4f06f8dc9162b8f96de60a8537d2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
+          "requirement": "SYS-VERIFY-004",
+          "relationship": "implementation"
+        },
+        {
           "requirement": "EVT-TICKET-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-9fc1887171a6bcfc",
+      "path": "tdf-hq/test/TicketDatabaseRoutingMain.hs",
+      "sha256": "2f389f2ddab6718c96414d96aa86a02d07d20f0303657a385f71443a95b22001",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-004",
           "relationship": "tests"
         }
       ]

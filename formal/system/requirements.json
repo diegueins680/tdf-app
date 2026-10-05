@@ -3127,12 +3127,16 @@
         "scripts/test-provider-retry-runtime.sh",
         "scripts/test-auth-recovery-migration.sh",
         "scripts/test-credential-lifecycle.sh",
-        "scripts/lib/postgres-test-database.sh"
+        "scripts/lib/postgres-test-database.sh",
+        "scripts/test-ticket-admission.sh",
+        "tdf-hq/test/TDF/DisposableTicketDatabase.hs",
+        "tdf-hq/test/TicketAdmissionMain.hs"
       ],
       "tests": [
         "scripts/__tests__/disposable-postgres-url.test.mjs",
         "scripts/__tests__/merch-runtime-safety.test.mjs",
-        "scripts/__tests__/ci-pipeline.test.mjs"
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "tdf-hq/test/TicketDatabaseRoutingMain.hs"
       ],
       "formalModels": [],
       "verification": "URL property cases and actual runner SQL-sentinel controls; not proof of database ownership or all-runner isolation.",
@@ -3142,7 +3146,7 @@
       "confidence": "high for tested URL routing admission; ownership and unintegrated runners remain separate",
       "ambiguity": [
         "A loopback host and _test suffix do not prove database ownership.",
-        "Actual first-SQL sentinel checks cover merchandise/provider-retry runners; other consumers require their own execution evidence."
+        "Actual first-SQL sentinel checks cover merchandise, provider-retry and ticket-admission runners; other consumers require their own execution evidence."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -3298,7 +3302,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
