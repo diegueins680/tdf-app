@@ -40,6 +40,10 @@ jest.unstable_mockModule('../hooks/useMetaTags', () => ({
   useMetaTags: jest.fn(),
 }));
 
+const qrCanvasMock = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
+jest.unstable_mockModule('qrcode', () => ({ default: { toCanvas: qrCanvasMock } }));
+jest.unstable_mockModule('../mobile/MobilePromo', () => ({ default: () => null }));
+
 const { default: PublicEventTicketsPage } = await import('../pages/PublicEventTicketsPage');
 
 const storefrontFixture = {
@@ -234,7 +238,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
       tickets: [{
         ticketId: 501,
         ticketCode: 'TICKET-VERIFIED-501',
-        status: 'valid',
+        status: 'issued',
         holderName: 'Comprador',
       }],
     }));
@@ -250,4 +254,16 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(container.textContent).toContain('Pago: paid');
     expect(container.textContent).toContain('Cumplimiento: issued');
   });
+  it.each(['checked_in', 'refunded', 'cancelled'])('never displays a QR for a %s ticket', async (status) => {
+    qrCanvasMock.mockClear();
+    getCheckoutMock.mockResolvedValue(checkoutFixture({
+      paymentStatus: 'paid', fulfillmentStatus: 'issued', paymentMethods: [],
+      tickets: [{ ticketId: 502, ticketCode: 'PRIVATE-REVOKED-CODE', status, holderName: 'Titular' }],
+    }));
+    await renderTracking('/eventos/41/orden/92');
+    await waitForExpectation(() => expect(container.textContent).toContain('Titular'));
+    expect(container.textContent).not.toContain('PRIVATE-REVOKED-CODE');
+    expect(qrCanvasMock).not.toHaveBeenCalled();
+  });
+
 });

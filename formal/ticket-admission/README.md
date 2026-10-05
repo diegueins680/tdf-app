@@ -1,0 +1,15 @@
+# Ticket admission boundary
+
+Scope: `TDF.Ticketing.Admission.admitTicket`, invoked by the existing authenticated event check-in handler.
+
+Precondition: PostgreSQL, the additive admission audit migration, and one `runSqlPool` transaction. The actor comes from server authentication. Event, order and ticket locks remain held through commit. Event ownership must already exist; a scan never claims an unowned event. All ticket identifiers remain scoped to the event.
+
+Invariants: only an issued ticket on a paid order enters; cancellation/refund denies access; only one concurrent caller can consume a ticket; state and audit commit or roll back together. The audit primary key independently prevents a second admission. A cached/downloaded QR is only a bearer credential: screenshots are usable by whoever presents first and cannot be distinguished from the original, but subsequent reuse is rejected online. No offline green-light is introduced.
+
+Credentials: new ticket codes retain the UUID v4 random bits (122 bits), replacing the legacy 12-hex truncation. The parser continues to accept legacy 12-hex codes. QR responses use this opaque code, without holder email, timestamps, or the former hardcoded HMAC key. A QR is not a signed statement of payment; PostgreSQL remains authoritative.
+
+Evidence: `node --test scripts/__tests__/ticket-admission-model.test.mjs` exhausts an eight-state finite abstraction and detects replay, authorization and missing-audit mutants. This is a design check, not a proof of implementation refinement. `test/TicketAdmissionMain.hs` exercises the actual Haskell function on PostgreSQL with eight simultaneous connections, denied states, wrong event/actor, credential rotation and audit-failure rollback. The same harness exercises `Inventory.reserveTicketInventory`, the function used by public checkout, with eight simultaneous buyers for one and two remaining tickets, cross-tier event capacity, and transaction rollback. It does not prove provider payment, full HTTP authentication, staff delegation or offline safety. The production payment and release gates remain separate.
+
+Run `bash scripts/test-ticket-admission.sh` with `TICKET_ADMISSION_TEST_DSN` pointing to a fresh database named exactly `tdf_ticket_admission_test`. The script loads only that disposable fixture and applies the migration twice. CI runs this beside the existing backend tests. Rollback refuses to discard a populated audit; after first admission retain the schema and recover forward.
+
+Remaining transfer boundary: the existing transfer path still requires atomic acceptance, credential rotation and removal of original-buyer access to transferred credentials before it is offered for the event. This change does not claim those obligations are satisfied.

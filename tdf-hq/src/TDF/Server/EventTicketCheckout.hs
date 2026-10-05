@@ -47,6 +47,7 @@ import           TDF.Commerce.ProviderAdapter.Http (sharedProviderManager)
 import qualified TDF.Internationalization as Internationalization
 import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.Routes.EventTickets as Routes
+import qualified TDF.Ticketing.Inventory as Inventory
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import qualified TDF.Server.PaymentAvailability as PaymentAvailability
 import qualified TDF.Server.SocialEventsHandlers as SocialEvents
@@ -587,37 +588,14 @@ createTicketCheckoutTransaction
           | SM.eventTicketTierEventId lockedTier == eventKey
           , SM.eventTicketTierIsActive lockedTier
           , SocialEvents.isTicketTierSaleOpen now lockedTier ->
-              reserveAndCreate lockedTier transactionPromo
+              reserveAndCreate transactionPromo
         (_, _, Left promoError) -> pure (Left promoError)
         _ -> pure (Left (conflict "Ticket tier is no longer available"))
-    reserveAndCreate lockedTier transactionPromo = do
-      eventCapacityRows <- (rawSql
-        "SELECT event.capacity, COALESCE(sum(tier.quantity_sold), 0)::bigint\
-        \ FROM social_event event\
-        \ LEFT JOIN event_ticket_tier tier ON tier.event_id = event.id\
-        \ WHERE event.id = ? GROUP BY event.capacity"
-        [toPersistValue eventKey]
-        :: SqlPersistT IO [(Single (Maybe Int), Single Int64)])
-      let capacityAvailable = case eventCapacityRows of
-            [(Single Nothing, _)] -> True
-            [(Single (Just capacity), Single sold)] ->
-              sold + fromIntegral quantityInt <= fromIntegral capacity
-            _ -> False
-      if not capacityAvailable
-        then pure (Left (conflict "Event capacity is exhausted"))
-        else do
-          reserved <- updateWhereCount
-            [ SM.EventTicketTierId ==. tierKey
-            , SM.EventTicketTierIsActive ==. True
-            , SM.EventTicketTierQuantitySold
-                <=. SM.eventTicketTierQuantityTotal lockedTier - quantityInt
-            ]
-            [ SM.EventTicketTierQuantitySold +=. quantityInt
-            , SM.EventTicketTierUpdatedAt =. now
-            ]
-          if reserved == 0
-            then pure (Left (conflict "Ticket tier inventory is exhausted"))
-            else claimPromoAndCreate transactionPromo
+    reserveAndCreate transactionPromo = do
+      reserved <- Inventory.reserveTicketInventory eventKey tierKey quantityInt now
+      if not reserved
+        then pure (Left (conflict "Event or ticket tier inventory is exhausted"))
+        else claimPromoAndCreate transactionPromo
     claimPromoAndCreate transactionPromo = case transactionPromo of
       Nothing -> createOrder Nothing
       Just (ValidPromo (Entity promoKey promo) _) -> do
