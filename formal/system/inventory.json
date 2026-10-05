@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "88adcf55d706bfdcf3cd7e3a2fe20ac8d915febb",
+  "mobileRevision": "2ebd1f974b8cef43aee8a8589c626643cd82e9c6",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -60,6 +60,7 @@
     ],
     "ops": [
       "ops/hetzner/backup-postgres.sh",
+      "ops/hetzner/catalog-readonly-role.sql",
       "ops/hetzner/cloud-init.yaml",
       "ops/hetzner/compose.production.yaml",
       "ops/hetzner/compose.restore.yaml",
@@ -130,13 +131,16 @@
       "scripts/__tests__/onboarding-real-browser.mjs",
       "scripts/__tests__/operations-api-schema.test.mjs",
       "scripts/__tests__/payment-query-report-contract.test.mjs",
+      "scripts/__tests__/payment-readiness-helper.test.mjs",
       "scripts/__tests__/payment-staging-inspection.test.mjs",
       "scripts/__tests__/persistent-uploads.test.mjs",
       "scripts/__tests__/persona-test-program.test.mjs",
+      "scripts/__tests__/production-catalog-inventory.test.mjs",
       "scripts/__tests__/production-entrypoint.test.mjs",
       "scripts/__tests__/production-release.test.mjs",
       "scripts/__tests__/provider-rollback.test.mjs",
       "scripts/__tests__/public-catalog-http-runtime.mjs",
+      "scripts/__tests__/retired-messaging-refresher.test.mjs",
       "scripts/__tests__/sri-invoice.test.mjs",
       "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
       "scripts/__tests__/studio-internship-audit.test.mjs",
@@ -257,6 +261,7 @@
       "scripts/production-catalog-inventory.mjs",
       "scripts/production-migrations.json",
       "scripts/production-release.mjs",
+      "scripts/production_access.py",
       "scripts/quality-backend.sh",
       "scripts/quality-check.sh",
       "scripts/quality-mobile.sh",
@@ -428,6 +433,7 @@
       "scripts/test-verified-experience-reviews-migration.sh",
       "scripts/test-versioned-revenue-products-migration.sh",
       "scripts/test_mail_deliverability_monitor.py",
+      "scripts/test_production_access.py",
       "scripts/ui-static-audit.mjs",
       "scripts/upsert-course.mjs",
       "scripts/ux-audit-inventory.mjs",
@@ -554,6 +560,7 @@
       "tdf-hq-ui/src/api/internalFeedback.ts",
       "tdf-hq-ui/src/api/internships.ts",
       "tdf-hq-ui/src/api/inventory.ts",
+      "tdf-hq-ui/src/api/inventory.upload.test.ts",
       "tdf-hq-ui/src/api/invoices.ts",
       "tdf-hq-ui/src/api/label.ts",
       "tdf-hq-ui/src/api/liveSessions.test.ts",
@@ -1930,6 +1937,7 @@
       "tdf-mobile/__tests__/EventCardTickets.test.tsx",
       "tdf-mobile/__tests__/EventDetailLiveBroadcastLifecycle.test.tsx",
       "tdf-mobile/__tests__/EventDetailMoments.test.tsx",
+      "tdf-mobile/__tests__/EventMomentCardReaction.test.tsx",
       "tdf-mobile/__tests__/ExperimentProvider.test.tsx",
       "tdf-mobile/__tests__/FirstRunProvider.test.tsx",
       "tdf-mobile/__tests__/IndexRoute.test.tsx",
@@ -2230,6 +2238,7 @@
       "tdf-mobile/src/lib/ticketCheckoutIdempotency.ts",
       "tdf-mobile/src/lib/tickets.ts",
       "tdf-mobile/src/lib/time.ts",
+      "tdf-mobile/src/localization/eventExperienceCopy.ts",
       "tdf-mobile/src/localization/onboardingCopy.ts",
       "tdf-mobile/src/navigation/deepLinks.ts",
       "tdf-mobile/src/navigation/mobileSurface.ts",
@@ -2294,7 +2303,7 @@
     {
       "id": "SURFACE-562c5d7f20f572bc",
       "path": ".github/workflows/check-messaging-token.yml",
-      "sha256": "1b81642d2444a5f0480a466646c8fc46e33a27994dacbad8a4791a02d35f7e80",
+      "sha256": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2550,6 +2559,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-cec43d1d88b9cc40",
+      "path": "ops/hetzner/catalog-readonly-role.sql",
+      "sha256": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f4743034f585d310",
       "path": "ops/hetzner/cloud-init.yaml",
       "sha256": "5cceaef59e51444d9d47b5dbe898acbd22d0c62794440d3b42869998f10b479d",
@@ -2600,7 +2615,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "36c9b835467a0f1c99ecf843e5e00a860ba535c676a2cdc605229db441c4a8cb",
+      "sha256": "f3f77a10e1b8aa74e555d9db534dc2c35b404bded3732abefe1cfc21c83d98ac",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2618,13 +2633,13 @@
     {
       "id": "SURFACE-f6500b8addb3b248",
       "path": "scripts/__tests__/artist-enrichment.test.mjs",
-      "sha256": "180ce22aca9d7d991b98e563f922749037f79a4ab1ce258e813feb1888aa167d",
+      "sha256": "ce91b413a5aad2f3c8d5dfc861d352162d7a1bc14236bc7b56424904f9ed7e40",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-35a1af26327814c1",
       "path": "scripts/__tests__/artist-import-idempotency.test.mjs",
-      "sha256": "9c609808b544c0e00863b2f54e6c41bdd348bf443279c15f4e3dcb291b69ed9c",
+      "sha256": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2864,7 +2879,7 @@
     {
       "id": "SURFACE-ac7679c947f7408b",
       "path": "scripts/__tests__/instagram-token-workflows.test.mjs",
-      "sha256": "c6f681c4c0181a8ab99118855ea028709e8d51fc73240b4c80229527ba90ea99",
+      "sha256": "44ebbb797abd8fe0a08d275620894d15fe38d7e966da4331451f3735055d67d6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2934,6 +2949,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-d6162ffeac44e062",
+      "path": "scripts/__tests__/payment-readiness-helper.test.mjs",
+      "sha256": "bddad0df011362abedc3cb346688ab3beead734f4e3dc787828ffd057f204a03",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-2f21c1c45f5b1cca",
       "path": "scripts/__tests__/payment-staging-inspection.test.mjs",
       "sha256": "acb99cc43fbbdca8d24d3d52b7972b0100c5aa1392959ff5c5b91927677db317",
@@ -2952,6 +2973,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-b587b9996fa32f37",
+      "path": "scripts/__tests__/production-catalog-inventory.test.mjs",
+      "sha256": "364bebeddbef85604ac275967b974b79d6f855e997877c867e491770fdd2ae16",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-bd35aa30f70923f7",
       "path": "scripts/__tests__/production-entrypoint.test.mjs",
       "sha256": "c4e1d14cc296c80c9724b1ec4d4c3a4986e9be3f732b615813ad4d5af8e2de53",
@@ -2960,7 +2987,7 @@
     {
       "id": "SURFACE-73a4c004bae044bb",
       "path": "scripts/__tests__/production-release.test.mjs",
-      "sha256": "5735fff347586aa3a4968a4d3d0c3a36225bf8438993980f50c2ca065dfde797",
+      "sha256": "29c89ae6637f872b56d85928326229bfcfeaa478bf57ef4a542ab4d7a905834e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2973,6 +3000,12 @@
       "id": "SURFACE-3abf163ab83b446e",
       "path": "scripts/__tests__/public-catalog-http-runtime.mjs",
       "sha256": "eb0b3dd3c4965ab15ffa463356297b94254a0c72dd2ca53b9edc74b675655bc5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-adf1756c72e6da05",
+      "path": "scripts/__tests__/retired-messaging-refresher.test.mjs",
+      "sha256": "c7bb7180b1a750099e0744e70b73fac5c46298225744bbc76457d2fe2df2698a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3092,7 +3125,7 @@
     {
       "id": "SURFACE-ae1fc3f773e478bd",
       "path": "scripts/artist-enrichment.mjs",
-      "sha256": "4d9f8f5d55a1e2383f44590933f5ea2929bee12107750773892ee770f167099b",
+      "sha256": "df64d9cdd92fb41e66f1ac33dcc137eab5245a1e0e9a834065a4f363707c383d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3242,19 +3275,19 @@
     {
       "id": "SURFACE-45b3849f78ceb2dd",
       "path": "scripts/deploy-stripe-ticketing.sh",
-      "sha256": "33fb7bde438832698cc382e83e1056f0196d1aa18c5753cfc64ba89ca65d5f95",
+      "sha256": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a36895a956e7a0db",
       "path": "scripts/diagnose-instagram.mjs",
-      "sha256": "0832e2a7ccd950dbfe4f6412f7a606efeb8e3a4c90888eaef6808aa1d0f036e9",
+      "sha256": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-c3c045b2c7be6d1e",
       "path": "scripts/diagnose-social.mjs",
-      "sha256": "03c2f4051027a50028513e9c7732ca82a33273b59ffd94432cded30f4a70aad4",
+      "sha256": "bfa8481a07b3f18fa757fb4c616d0efe3ade8a18191d03a7e98e757a38447caf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3314,13 +3347,13 @@
     {
       "id": "SURFACE-12bd2db7cef49569",
       "path": "scripts/get-admin-token.sh",
-      "sha256": "d81dafea44fabfbd5be8a72b8014df113cc0fafe1397bdcdd6aeef1db8b3a215",
+      "sha256": "168dd8f5ba17d927685a86ac763a03a9aff55736bf4b4426a6d7541817a35110",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-1c7d386a5185ce43",
       "path": "scripts/get-instagram-token.mjs",
-      "sha256": "c2aaab4335225658973800b5e90957bc4d49b878ab5f5717c6afdd353bd16dcd",
+      "sha256": "0b00f6cc1ad6793f029339bc006ed520245af87ea55e285658faf48ba978e592",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3596,7 +3629,7 @@
     {
       "id": "SURFACE-a0fd8416fa83358e",
       "path": "scripts/mail-deliverability-monitor.py",
-      "sha256": "d83d882cd85d5d5489ba4bbed035e991490bfdf87ae22d5567ae93a9816cbaa5",
+      "sha256": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3680,7 +3713,7 @@
     {
       "id": "SURFACE-5d3cb3a8a35fced1",
       "path": "scripts/production-catalog-inventory.mjs",
-      "sha256": "9fd0c396fa18492b21e3e8d32a8645a7984bb8522192ee82ded67eaf86954d8a",
+      "sha256": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3692,7 +3725,13 @@
     {
       "id": "SURFACE-566be2960a2d6029",
       "path": "scripts/production-release.mjs",
-      "sha256": "1643997b7b3ac422214725f4078b7b4db25f09d1df6ae5cebe8285cd257e0d59",
+      "sha256": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9e0e512cb2b2396c",
+      "path": "scripts/production_access.py",
+      "sha256": "e0b2bd25bbc5460877de7379d9396327c1bb94fc8600a7b7544b2055bfa23ead",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3716,7 +3755,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "46c9e60cbb939885bc4368546224219f6742529fedba99d037da5af2865f1a2e",
+      "sha256": "165f0857cb4cb05868b433ee2abe803408cbe4b440b142d50a7e9632e8dcc904",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3734,7 +3773,7 @@
     {
       "id": "SURFACE-3c9fe0c437e218da",
       "path": "scripts/refresh-messaging-token.mjs",
-      "sha256": "93da21c6023a79f8d494f9d79bd1a69bc22aa249edff390c64aed766e0386322",
+      "sha256": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4634,7 +4673,7 @@
     {
       "id": "SURFACE-ea1437d2751ff22e",
       "path": "scripts/test-stripe-integration.sh",
-      "sha256": "5f385de4cd29e37966876ea8becb59edc7da8978f2cddaf73eebdd6186661a05",
+      "sha256": "f3c057e5afea48b657a2eeb35763b49054979cfaf84ec2e48940617a2d64f8df",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4718,7 +4757,13 @@
     {
       "id": "SURFACE-dcfbc3e06e8b9e4f",
       "path": "scripts/test_mail_deliverability_monitor.py",
-      "sha256": "ae25d50a21e501f06a04f628fdace87ed40329ff1e6747e694b5f5d85eabf603",
+      "sha256": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3f433a02bd9aa5ff",
+      "path": "scripts/test_production_access.py",
+      "sha256": "2dd32acc8e3a98450e7930127b477b99795ee8bc0f9cc2a7c712d5b4f0b81e37",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4730,7 +4775,7 @@
     {
       "id": "SURFACE-d71afc2bac6fdf73",
       "path": "scripts/upsert-course.mjs",
-      "sha256": "a15b75a7327d3c01db1c245f2fe7be8af7f1afa8206415668f5197450dffed74",
+      "sha256": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4898,31 +4943,31 @@
     {
       "id": "SURFACE-6bf3e8831a095bee",
       "path": "tdf-hq-ui/public/mobile-app/data-deletion.html",
-      "sha256": "0e149f6fdb4e81761d1fd0f3f217ac1b9c5138d4987d935ed103ccbbd7ca1a0d",
+      "sha256": "32b495f131da0c153d219f8d2fadb0d04fcd2300782a17e75216c2ad5d96f695",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-4c56dddf990a5626",
       "path": "tdf-hq-ui/public/mobile-app/index.html",
-      "sha256": "988ff3d19252f52958f26f014c70532f5aa510ecff62fdd5bbdbdfeb519b90de",
+      "sha256": "4e3e201b1ba1cd62fa22d2c487c759cdc55569f0591fdf1e864c6eefd70731c2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-1656aae22ee2e9e0",
       "path": "tdf-hq-ui/public/mobile-app/privacy.html",
-      "sha256": "0b05c5b884c0c58d9a239c4b8be44cd42b7c8b7c1ad200086f3db280c6e801bf",
+      "sha256": "5aadcfc8e72fe83f6ed58999ee0f1963ca3b1eec031212bc7a3fdf1fc51d4f5b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-9ab2dcf023458604",
       "path": "tdf-hq-ui/public/mobile-app/support.html",
-      "sha256": "82b725aa5da569911df25d4a10ecb44c96da7d9b4720ca347666a47b45ef4061",
+      "sha256": "56a65c45903c596b908bf49416a1e8e073453accbb6186bb19cc22e9d85191c5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-27e00a2c872dcc44",
       "path": "tdf-hq-ui/public/mobile-app/terms.html",
-      "sha256": "2c3ca861931079bdceefbae8ea3afab63bd2938bd31a448f97d746da3923ed03",
+      "sha256": "cd1c821e65f488d4fcc9304714fc358ae13bc72aadf354cbc1a3b7bc89e3374c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5450,7 +5495,13 @@
     {
       "id": "SURFACE-4f584dc31d92ebd7",
       "path": "tdf-hq-ui/src/api/inventory.ts",
-      "sha256": "aaa3bc459de5617e075a7101af2c3cbc860c3d2b7bd77913835a72403c9c0dba",
+      "sha256": "7462c17a811a3e307b8ff551745b76cf7e2ea7691d1193c9076190c77545a07c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4bd49968c033f10e",
+      "path": "tdf-hq-ui/src/api/inventory.upload.test.ts",
+      "sha256": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7616,13 +7667,13 @@
     {
       "id": "SURFACE-e69a77d56fe70d3a",
       "path": "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx",
-      "sha256": "c5b034f2ed6dda1e796f2fcba474d62e3a2bfa4dfc7cb5ef88c7e547e2f25778",
+      "sha256": "e48405433f70c9a163131f753453005460341e242be28c4f28e4afa49628d56a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-44ac4b25200a0ba1",
       "path": "tdf-hq-ui/src/pages/LabelAssetsPage.tsx",
-      "sha256": "945609443d5c4f1b8f6ac451323c4108378dd5855514aa758407f8118d651378",
+      "sha256": "4ba88b3c7f5a9b50feabbd44bb7172e5297866b5e279d60f6329d44e0090978a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9320,7 +9371,7 @@
     {
       "id": "SURFACE-1771e20dc5ad17a4",
       "path": "tdf-hq/scripts/create_artists_from_list.sh",
-      "sha256": "9fc18b25e74584afb9c4b158ce440fe3973be5a96b0b94eca74181dc8d892d5f",
+      "sha256": "eeabe1146bf9ad4cf9baf35d47ad320d6ded90662b56a72014ef9a899a0c814d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12470,7 +12521,7 @@
     {
       "id": "SURFACE-b1e5f7033f3bdc7c",
       "path": "tdf-hq/src/TDF/ServerExtra.hs",
-      "sha256": "8a730148e0a55bb0c1afdc1d0c6d5604d92a5e322e4f7a3e09d8740e1d410796",
+      "sha256": "458d0b1c8390232020691cb1c4ebfd1578c4e4c163e7c45b43a95733fe6457ee",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13562,7 +13613,7 @@
     {
       "id": "SURFACE-cbc4762024e82de2",
       "path": "tdf-mobile/.github/workflows/android-release-build.yml",
-      "sha256": "8eb9d10b80586df9a105317de591a1394ffa40cb66a5b47f3d79010527b90054",
+      "sha256": "4d2938e8c0220ed323b6f8e639c729d97e091afe113509d87fd14140c340df3e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13586,7 +13637,7 @@
     {
       "id": "SURFACE-4d083e586c68746a",
       "path": "tdf-mobile/.github/workflows/ios-release-build.yml",
-      "sha256": "bae4e78b1ef42423cc02a19ddb6023cea921c868cac4d6125d8b996861976f4a",
+      "sha256": "27823e8b817628542e37d318486b3acec9c183989737717675a9d41a26f9d81c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13634,7 +13685,7 @@
     {
       "id": "SURFACE-889f3ed698a5ec59",
       "path": "tdf-mobile/__tests__/AuthScreen.test.tsx",
-      "sha256": "5e21018648e40b329e91ea441d5248017418c38654df64c2f28fcd70d2ae6aee",
+      "sha256": "fde45c5d297594759b86444e697d79f56dd7413865b72528ec1eaedac343fd9b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13670,19 +13721,25 @@
     {
       "id": "SURFACE-a4f08b34347d1281",
       "path": "tdf-mobile/__tests__/EventCardTickets.test.tsx",
-      "sha256": "3fa9f37e0a35698d016f03e3f7c8661247230ced25e441c02b3f515221de690d",
+      "sha256": "d98649ad19fed8b46dadbe20601e3d299ba334d75c6abea5aeb37e2782b6a519",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-547a7176f0a822e5",
       "path": "tdf-mobile/__tests__/EventDetailLiveBroadcastLifecycle.test.tsx",
-      "sha256": "4cbc66b4cbefc8022e1b5ca2f356d78173ce96ef227a7bccad9b0ad1a17bf78d",
+      "sha256": "5fa36d709f29921ac128350ccd07366dde32e309c923a217d6450c5f9018dd32",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-aa9a5dc6fca02108",
       "path": "tdf-mobile/__tests__/EventDetailMoments.test.tsx",
-      "sha256": "7b3c5142714108c192cc450b22e4511eac739ae683ead7099419278a355eaee9",
+      "sha256": "dbeb0867d8ae95ae77e2a1529cd250d066844a04fc4e9d421681f0ae31628840",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-99ea7561d1a327d8",
+      "path": "tdf-mobile/__tests__/EventMomentCardReaction.test.tsx",
+      "sha256": "35c75aa6a37a6f9472abc454e5bd46abc51a6818fc0e93370f4c486e2ef96ac1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13694,7 +13751,7 @@
     {
       "id": "SURFACE-3677524f8992889a",
       "path": "tdf-mobile/__tests__/FirstRunProvider.test.tsx",
-      "sha256": "9b23e8488f0a3f0548b38cacf91c6cded53f74c08f1b412c50edbb5b0f4dabb3",
+      "sha256": "98e59e33e12c6aa88721c9cac49354a11793484b220689ead819b03629e65f72",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13724,7 +13781,7 @@
     {
       "id": "SURFACE-5d346a1514ee4d1a",
       "path": "tdf-mobile/__tests__/NewUserOnboardingGate.test.tsx",
-      "sha256": "c796fa951f6eb337a787efbad7ce80e25cee4866852b2710e3ff49fe24439b0b",
+      "sha256": "0269cfcb7eb5810b04164c968c0ffe237f797bdb50b9eaa7576016e02fd15e98",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13778,7 +13835,7 @@
     {
       "id": "SURFACE-9dcb9db6d3e58c16",
       "path": "tdf-mobile/__tests__/SocialScreen.test.tsx",
-      "sha256": "dcf663dfaffd22a0496548e307531187f62621c65e262356a96596512b081d83",
+      "sha256": "75d5a858f1e96b9848c15c8a2defd07d93fd010747331bc3452b1977a343628e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13814,7 +13871,7 @@
     {
       "id": "SURFACE-f2759dc51ae88b80",
       "path": "tdf-mobile/__tests__/UserProfileRsvpActivity.test.tsx",
-      "sha256": "f8573e8ef01b9cad773248f14e167740258237b787b0c9280ab92cf1af5ecc6e",
+      "sha256": "f09ef80d0a302e5bb6902d1521dc9cf23c2e8b7f447bd000e75d0d0376611ed3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13832,7 +13889,7 @@
     {
       "id": "SURFACE-d17c354d94ccad58",
       "path": "tdf-mobile/__tests__/apiClient.test.ts",
-      "sha256": "8a58a35c29115323719cef26dcbf861848dba138dd1306484082257f2213d734",
+      "sha256": "e675b6948ec62d4163f47e37b5f7fa4cdf93dd40a6a3890ab9b9aa1b5c894ecd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13874,13 +13931,13 @@
     {
       "id": "SURFACE-6dbf00e189d654d9",
       "path": "tdf-mobile/__tests__/directoryApi.test.ts",
-      "sha256": "6fb81589d4e6a96e853a4f82e0ca24c1f77d8f541738426f14a437a677bbe388",
+      "sha256": "477010a59bdff0576ab9cab6f2d79f5fddb9a8e4ed9b63f0ebc8a329adaf39a4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8c291869bc754896",
       "path": "tdf-mobile/__tests__/eventMoments.test.ts",
-      "sha256": "747852eb835eeab3af0fa3a0bfd26ea2f19501a74613d57d4fecb4c375e7bfd9",
+      "sha256": "8d2e690a4253ac3c39a84e54beaa92db2d3cdb6fefe60ef26e77c9e4c532a824",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13958,13 +14015,13 @@
     {
       "id": "SURFACE-732c6140ea2e91b9",
       "path": "tdf-mobile/__tests__/onboardingApi.test.ts",
-      "sha256": "a4607cd2db753a79c6d9a2386844eff9f6c1db84bbb9fd0004422bdbebd352d3",
+      "sha256": "4770fd9508a3a13c6ab0fb701d900b32633bac7b377d3f4fed4498f0b0c08300",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-7f1e3ac93d0c65d1",
       "path": "tdf-mobile/__tests__/onboardingIntent.test.ts",
-      "sha256": "84bae3e40acde1db2eae3a94405903711d65b7d8622304c3e34d6d6ffe1486cb",
+      "sha256": "5598a1deba59da59d8c3c669ad8d77836040bd855776a4108a73639cc3842319",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14024,7 +14081,7 @@
     {
       "id": "SURFACE-1d06c25393cae84a",
       "path": "tdf-mobile/__tests__/savedEvents.test.ts",
-      "sha256": "d986e1c1be34c0bdc9e221f1aaa18a24f4004010f433a028ad102bfd8e77069f",
+      "sha256": "ac739d4a8ad14f77b40ee8f310276b9e0073eae3084bcc671d3be946fd9cdbc8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14036,7 +14093,7 @@
     {
       "id": "SURFACE-550aba7f4c6afb01",
       "path": "tdf-mobile/__tests__/socialApiMapperSanitization.test.ts",
-      "sha256": "72c80633014a21a658e533774d840916a83669ab5273f3c0bbcac1d09882ce9b",
+      "sha256": "fc0cfd4f44e229e61e64320041776ef82ad457e14474206179cfd86351234455",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14066,7 +14123,7 @@
     {
       "id": "SURFACE-578b85ef5c094ecb",
       "path": "tdf-mobile/__tests__/usePartyOwnership.test.tsx",
-      "sha256": "7f46ae28fbb43a06aa4758d43a48f465e0d584c64e1ecd258a2e909c5e27ec5a",
+      "sha256": "ccdd151045745a81c7bd461d8aeddded98cd102a5cfa97e6cd561872cbf438d1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14114,7 +14171,7 @@
     {
       "id": "SURFACE-da3457d3ae8e7eba",
       "path": "tdf-mobile/app/(tabs)/events.tsx",
-      "sha256": "36ad76a613e16502ab2fab691286e4051ac97067a8938e3d6fd82025200efd96",
+      "sha256": "518cc2e2bbde4ffb7d8da49fcccc384d222b2121cb8b7d4799d7023bc4bcd1a1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14150,7 +14207,7 @@
     {
       "id": "SURFACE-8780b23371215b16",
       "path": "tdf-mobile/app/(tabs)/social.tsx",
-      "sha256": "f2a0f3b902c402b0b49d7a802a00533667dc6bab82a751a0694e93eca9ff49a4",
+      "sha256": "7133744ece6db0db256daa2489c9f94bb6deadf69d76c65a09e0d6dde23a7796",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14318,7 +14375,7 @@
     {
       "id": "SURFACE-ab43846a5d628103",
       "path": "tdf-mobile/app/eventDetail.tsx",
-      "sha256": "3d6457bb18f42d5fac7c00590e47f7b250a9b8f739cd6aa2c127be9610b6f36c",
+      "sha256": "81718007671292738d4ac815f1b2e39d1a250ed717d3f99714e28905736bd76b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14408,7 +14465,7 @@
     {
       "id": "SURFACE-16e17f802f72e06c",
       "path": "tdf-mobile/app/userProfile.tsx",
-      "sha256": "0fd0709ccf9692da3fe0f0a66d9619990f8c09748ba793e1eaded10823e562ec",
+      "sha256": "cf1d6d3f9896e2d6ced654cfc0f530bc5d7d7869c228ca95c3250297cde2bfe4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14744,7 +14801,7 @@
     {
       "id": "SURFACE-c2392e7f7f8aefc5",
       "path": "tdf-mobile/src/api/client.ts",
-      "sha256": "e42b09eb09fa9eb17fe83670749aacf3528adb927ee30017628cc49cc9316f6f",
+      "sha256": "aabfd57e21b6301458c11f923c5ec5e5f8429b1bf8d0bbddd27a15cc8ddd50a3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14762,7 +14819,7 @@
     {
       "id": "SURFACE-4084f20f60cc3c6d",
       "path": "tdf-mobile/src/api/directory.ts",
-      "sha256": "7d380f2a99ba1c56fbf681a94af09a740a7f410c27f54d3482c08e7aac22fefa",
+      "sha256": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14774,7 +14831,7 @@
     {
       "id": "SURFACE-5cc50673dc611e52",
       "path": "tdf-mobile/src/api/events.ts",
-      "sha256": "bed0fa1fee13156a4128012568f378229fcfe562cf354bbd49f181472548fca6",
+      "sha256": "a6014149f81240e56023471ea987fc8ac8245fc06d3034fb0382750e818d2b1e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14846,7 +14903,7 @@
     {
       "id": "SURFACE-b35e32b7f76e312b",
       "path": "tdf-mobile/src/api/onboarding.ts",
-      "sha256": "4c1e27682f8beb327ca97a8b30ed40d30a15c6c4df2e7df6ea957a8e3fc93367",
+      "sha256": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14948,7 +15005,7 @@
     {
       "id": "SURFACE-4fb25fdb1fdf7ed8",
       "path": "tdf-mobile/src/components/EventCard.tsx",
-      "sha256": "b5e2f2981ca41d71210ae40fcf16b7183e3682fe557b7bbc103e29099eb4ec10",
+      "sha256": "4eaba1e6a6ac76b67bbc7f5a6a8d24e0e14e81ebb0eb29041da70265dacd21a2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14960,7 +15017,7 @@
     {
       "id": "SURFACE-efc2098b5027a610",
       "path": "tdf-mobile/src/components/EventMomentCard.tsx",
-      "sha256": "ccf8b197426e276d8d3822984b22729cc513cec31b6cb3714e6e1335ee84ae52",
+      "sha256": "d157367b980c01a8425a396971519124105860e6394b5c27d90cc5c2fc7dd9c8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15080,7 +15137,7 @@
     {
       "id": "SURFACE-50a65b66e31dfada",
       "path": "tdf-mobile/src/experiments/NewUserOnboardingGate.tsx",
-      "sha256": "1205d3f66ca0cfdffdde070fdecbf374c5be8df70d82344cd20420c4d66cd72c",
+      "sha256": "80c962ddd011c5b8121d9da53af1ddd4b4c691533d24fd233fbc4e39723f6e19",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15200,7 +15257,7 @@
     {
       "id": "SURFACE-551b9854e1304354",
       "path": "tdf-mobile/src/hooks/usePartyOwnership.ts",
-      "sha256": "3ec15e9118e2a917553a3f3576f60b2143c189ff88c0d7cdc50c2607861e2498",
+      "sha256": "d95a290a5cf31cb69c41b257144118cec54fc1d132ff24971d0283da05405cca",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15266,13 +15323,13 @@
     {
       "id": "SURFACE-15e17b090a435ac7",
       "path": "tdf-mobile/src/lib/eventMoments.ts",
-      "sha256": "954a0f4994b2e104162722a3114e911c176caaa816a670dde32f9f987ada8d2d",
+      "sha256": "4c737b4a82c92dfd89a362caaba5b7d1bae16f06d93ecdb08c104737f24a598d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-d04d238fd7a01a74",
       "path": "tdf-mobile/src/lib/eventMomentsRepository.ts",
-      "sha256": "7722d080f51e06e336e42eb4371560baa74015740ef04bb0b1ad7b52db27172a",
+      "sha256": "3fc6bd9bff601d1b03a311b57a384b385a87a2e3413a5c3452fb3fdb06b17a7e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15290,7 +15347,7 @@
     {
       "id": "SURFACE-e62dc791fa833b13",
       "path": "tdf-mobile/src/lib/eventSharing.test.ts",
-      "sha256": "bf267cfb7ecfa3b0780ac514c9c4730e5131525cd5bf13dfc4f1d7404fde9984",
+      "sha256": "75c1e1b893800063e06315fbb56457c0ee4bee113d8ea45227361be3adcced8b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15308,7 +15365,7 @@
     {
       "id": "SURFACE-475a7b86b3216594",
       "path": "tdf-mobile/src/lib/firstValueCompletion.ts",
-      "sha256": "9d35de9b6a9d20404d0bd1d65a687485828f66b6253b0e289aa2a94da22ac1dc",
+      "sha256": "d5c2580eddea4ea7907eac147bd5b84870aec6409f9c51e1bdf051c57171c7a7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15398,7 +15455,7 @@
     {
       "id": "SURFACE-f827393c335e64d0",
       "path": "tdf-mobile/src/lib/onboardingIntent.ts",
-      "sha256": "5f32fe69a9f424a48df104eddbb624615cb025527c7aa88ea3b0133359b75bb1",
+      "sha256": "cfe60e2d5ce8cc09314d2e8728c5603ceca0dceffbe920c91b9ff7234d1d4f4e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15452,7 +15509,7 @@
     {
       "id": "SURFACE-11982cf68b9f1c66",
       "path": "tdf-mobile/src/lib/savedEvents.ts",
-      "sha256": "be7b078b242c1347d1de6c86562c89ae770db9972c5b086f2dfb0a60154ed6e9",
+      "sha256": "d43e5d39203ce4a1670f3ced2a03e3ebb9ac81b61127cc497ecda8fea69c31a8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15486,9 +15543,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-66eee79ab156a1e2",
+      "path": "tdf-mobile/src/localization/eventExperienceCopy.ts",
+      "sha256": "5ddb85172b79e36a24366b30b573b51462adb0500a94747355d47943d5b238e4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-8706580fc77ee8a5",
       "path": "tdf-mobile/src/localization/onboardingCopy.ts",
-      "sha256": "48b61343314e513995c93e6f2c95e4543e4a82fb3771d153cdd0b27714574753",
+      "sha256": "faf5c64e81e584a3710e17adebc26705fbfad350f5fecc69f99d7dd0628663ee",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15560,7 +15623,7 @@
     {
       "id": "SURFACE-6fe42cbeec86740d",
       "path": "tdf-mobile/src/providers/AppProviders.tsx",
-      "sha256": "5a53c52ab7582cea2457b146a52e913fcf8174a650d2791e21da028ea69efd03",
+      "sha256": "ffd5a5922918be901c68d31503279220aa978775fbd213b5ef186d9502902a0a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15578,7 +15641,7 @@
     {
       "id": "SURFACE-2ba88bec1c5a4d48",
       "path": "tdf-mobile/src/providers/FirstRunProvider.tsx",
-      "sha256": "adf56b391c084c9ad1ee380c524777faeaa5fb9de273bc3bbf6d2675d3cbe41b",
+      "sha256": "b2d91da63d9cb764a8359e5f56100d98d54f93a1443d000952630cb85f0ca56f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15740,7 +15803,7 @@
     },
     {
       "path": "DEPLOYMENT_GUIDE.md",
-      "sha256": "0a1a1fd9462ee37ba234d2eb78a3b394bdefdb7fb37046b724dd87ec97e465b4",
+      "sha256": "9aac1e8f610d96006796aab818cde7c44b86b9f6847fa40e08cb20532fd10ce0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -15782,7 +15845,7 @@
     },
     {
       "path": "HASKELL_BEST_PRACTICES.md",
-      "sha256": "948166b2aaa01b7feed562157d62ae227e4418474620815f30fadf32f428b9ca",
+      "sha256": "04184a5e75336eefa3f82465785489c1a052dead5ea7640518e49a5638b7c1d9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -15803,7 +15866,7 @@
     },
     {
       "path": "INDEX.md",
-      "sha256": "248d1ac3b04f4338e8d225d00c40dfd04c33aa818b8445b042a4c210ab1493b8",
+      "sha256": "ac54b006be68d4c629e6231d4010cadc46481effd0fa782beac465298d5cb41b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -15817,7 +15880,7 @@
     },
     {
       "path": "PAYMENT_AUDIT.md",
-      "sha256": "6f5d108457acab6a3be3dbcd24f285ac8532a503b7a29852b5a7cf5793401374",
+      "sha256": "a6a490897076f5c0fc58ccea5bfd5bebe74d877f769293f5c6e99ae1235611cc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -15845,7 +15908,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "ded7cce7ad4ee389a412a9b3d6b2167a637de92275ba10924a96d5144e973a7e",
+      "sha256": "b55dd35776b160c09b956c310d198f0174eb4da0373c4d4439e8a6a6cf14c648",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -15866,28 +15929,28 @@
     },
     {
       "path": "SERVICE_STOREFRONT_DEPLOYMENT.md",
-      "sha256": "7389913502871d283a8427c4e9e9771eed2eb4ae405fdfff961d2957861c809c",
+      "sha256": "b0b17e5eaed5f179dcd9eef464b5d9431b22dbb66618a656396cee1d63c82b0d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "STRIPE_DEPLOYMENT_GUIDE.md",
-      "sha256": "0e4a55eeabd81cd50724b5ff6796c473158b470fd49dbb884704e5e32698b40d",
+      "sha256": "4378d3b91fbbeb6a45808cee5bcda44d97024f3da163777ef0943c07cc532ca4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "STRIPE_TICKETING_CHECKLIST.md",
-      "sha256": "5e6b745d79276b66ddaec925ecade60e1d83c8cb5db49c7d1629c5dbe3689588",
+      "sha256": "c23863b22f3f125e1a722cc6ab23c2f823c469ff281a62e52cb7be79135de934",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "STRIPE_TICKETING_DEPLOYMENT_SUMMARY.md",
-      "sha256": "233c8f6d7ae87da8a2ca1ecfa3790bf7c35e73847328618c805303cdb6f0217b",
+      "sha256": "3c62e6b167447dd3e960909e650ec4a68c60715096e0df1a841ff6c839a8d2bf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -15943,7 +16006,7 @@
     },
     {
       "path": "VERIFICATION.md",
-      "sha256": "9fb5bedf943d7060f5eb1a80c8792220de83c1062bc291346cc6221801bf370d",
+      "sha256": "b44d6e91c84e4db737c9abe9fdef57e0705d149916d94a56f5f6722edeae8dcf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -15971,21 +16034,21 @@
     },
     {
       "path": "docs/DATADOG_SYNTHETICS.md",
-      "sha256": "f99ea8c30c3bc9aca834d048225ff64985d70dec2c04d8878c862c4dfd1f405b",
+      "sha256": "0973c0b1c40082a5b34d1ada1504d8c8e361337b165379cd36fd9e124aa61941",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/Event_Discovery_Cron.md",
-      "sha256": "e0c829fa968a2d9507c45b99e68afeab28c2f53891852364708457f29ef42830",
+      "sha256": "a83169ccab65669cde0d1bdeae65aa2870bb76c10937df857b0b7ae848ba65e9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/INSTAGRAM_TOKEN_SETUP.md",
-      "sha256": "816807dd76320e18c884c359e39b30811af4b76839c3b99a3e7a31178bde5c9c",
+      "sha256": "96df0fdb94aece332d69b649bc587d58ddbeece255bd13b7f0d22186d162b54c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -16300,7 +16363,7 @@
     },
     {
       "path": "docs/artist-enrichment-runbook.md",
-      "sha256": "5a3e42d79754c7aa1239ebffb16b2bc2c5ff0dd82e6156852eb5b2fa8be9bf57",
+      "sha256": "0741811dbca500023343e926b8e820ee2844bf2ec7a1354c2201f052e8c48b3c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -16398,7 +16461,7 @@
     },
     {
       "path": "docs/catalog-persistence/README.md",
-      "sha256": "3aad94ace40a9a041ecbb3ccb42c5588fa4fe3b9a61ca142dd0504a9d398180c",
+      "sha256": "fa09e2a7297e4032b867298c70728038545359f221e4f34b926ccb65da15747e",
       "authority": "inferred",
       "authorityBasis": "Status: implementation in progress. This directory records the immutable baseline, architecture,",
       "kind": "requirement-candidate"
@@ -16545,7 +16608,7 @@
     },
     {
       "path": "docs/courses/README.md",
-      "sha256": "6a9be3fa06e8d5d611330bdd93576f6d54748233a85fdab29126a6812a1741ff",
+      "sha256": "b1ae3130c896f1f62029896cf158018bea1a2b3c067e22ecd81aada48652712e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -17587,6 +17650,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/mobile-program/analytics-2026-10-05.md",
+      "sha256": "8e6d5502fb3958fc99801d14657ec214a486aa480b7dcaf01421a52fd90b8721",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/music-directory/README.md",
       "sha256": "b86ffbd486213e3681dbaeec04725887d53b17a6304c17fc68e611eed321e06a",
       "authority": "inferred",
@@ -17679,7 +17749,7 @@
     },
     {
       "path": "docs/notifications/navigation-2026-09-17.md",
-      "sha256": "89028c8592f0399128b7921161326af22d466758a25405a2cfaedda64617fe75",
+      "sha256": "1c7ba54511058c50bbe0d32b4804e167c0d28270671415e4a012a42314c0c820",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -17742,7 +17812,7 @@
     },
     {
       "path": "docs/operations/mail-deliverability-2026-09-18.md",
-      "sha256": "c7f2e69803c035f7a55bf51373f976aaef5b2f47f36e783f6591a51b39626ef7",
+      "sha256": "31c34f9de706a0db443f7df0627e1f18c5db259ba4e37e46c6c72fffbc83697f",
       "authority": "inferred",
       "authorityBasis": "Estado: diagnóstico y correcciones verificables, **no resolución completa del spam**.",
       "kind": "requirement-candidate"
@@ -18463,7 +18533,7 @@
     },
     {
       "path": "docs/venue-manager/domo-del-pululahua-financial-plan.md",
-      "sha256": "506a41e377b235bc6a955fc11e095ca406574ebe8a7e1dbc655f27555e448039",
+      "sha256": "2777f6bb06a429331f2febbbdd85c3d1a9b3275ce9239b048328d07a387ea7f4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21396,7 +21466,7 @@
     },
     {
       "path": "formal/system/identity-recovery.md",
-      "sha256": "d15f78faad09acc1900660112ffca7af42659104109e8e5fea84eafc7f1b8156",
+      "sha256": "08ddf5bbeb66849b8383db3df14429d0ea43d8e3d193b25c6d81f0991cddfeea",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21557,7 +21627,7 @@
     },
     {
       "path": "ops/hetzner/README.md",
-      "sha256": "1df18109dfb35e76e59c5e5d89101cf67e4fbfb8dafee1840005e70163f15dc6",
+      "sha256": "89fdc422b787bfa1916cafb5457a1ef6d6ac8e95bf8a6b6b950572315056c414",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21585,7 +21655,7 @@
     },
     {
       "path": "ops/hetzner/validation-2026-09-28.md",
-      "sha256": "50a90394e4a20564d187a13205f8682918c24ca7fa3d877bd944d8136d31a706",
+      "sha256": "949a2c0aed81223dcc9382f76c1d9ef94e223d0d7d2ad432c7825d6f90732d66",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21683,35 +21753,35 @@
     },
     {
       "path": "tdf-hq-ui/public/mobile-app/data-deletion.html",
-      "sha256": "0e149f6fdb4e81761d1fd0f3f217ac1b9c5138d4987d935ed103ccbbd7ca1a0d",
+      "sha256": "32b495f131da0c153d219f8d2fadb0d04fcd2300782a17e75216c2ad5d96f695",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "published-product-page"
     },
     {
       "path": "tdf-hq-ui/public/mobile-app/index.html",
-      "sha256": "988ff3d19252f52958f26f014c70532f5aa510ecff62fdd5bbdbdfeb519b90de",
+      "sha256": "4e3e201b1ba1cd62fa22d2c487c759cdc55569f0591fdf1e864c6eefd70731c2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "published-product-page"
     },
     {
       "path": "tdf-hq-ui/public/mobile-app/privacy.html",
-      "sha256": "0b05c5b884c0c58d9a239c4b8be44cd42b7c8b7c1ad200086f3db280c6e801bf",
+      "sha256": "5aadcfc8e72fe83f6ed58999ee0f1963ca3b1eec031212bc7a3fdf1fc51d4f5b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "published-product-page"
     },
     {
       "path": "tdf-hq-ui/public/mobile-app/support.html",
-      "sha256": "82b725aa5da569911df25d4a10ecb44c96da7d9b4720ca347666a47b45ef4061",
+      "sha256": "56a65c45903c596b908bf49416a1e8e073453accbb6186bb19cc22e9d85191c5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "published-product-page"
     },
     {
       "path": "tdf-hq-ui/public/mobile-app/terms.html",
-      "sha256": "2c3ca861931079bdceefbae8ea3afab63bd2938bd31a448f97d746da3923ed03",
+      "sha256": "cd1c821e65f488d4fcc9304714fc358ae13bc72aadf354cbc1a3b7bc89e3374c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "published-product-page"
@@ -21941,6 +22011,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "tdf-mobile/docs/onboarding-consolidation-2026-10-04.md",
+      "sha256": "04ffcbd1ab6fcf9d1c1ca4ee6c3a0eb10ff3ce6891330054b57fbcd65b9f3a1e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "tdf-mobile/docs/privacy-policy.md",
       "sha256": "f4da4295ae0ad13a9b7b929fabe9e05cea19ea89d0739aa318e738fb64288883",
       "authority": "inferred",
@@ -22054,7 +22131,7 @@
     },
     {
       "path": "tdf-mobile/docs/tester-program.md",
-      "sha256": "e191812013ac19f76c1f18e6e4fce20054ca9dcfb018ddc91a277d4e1201184b",
+      "sha256": "c2f3e3bd1c36df21d5d65e0e425176c59094b68ea400f62d4a5de8096e4821a6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
