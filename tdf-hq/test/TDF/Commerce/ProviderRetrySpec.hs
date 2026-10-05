@@ -3141,8 +3141,8 @@ newCheckoutForDomain domain pool = do
         PersistUTCTime (addUTCTime 1800 now)]
     rawExecute
       "INSERT INTO commerce_checkout_line_item(checkout_id,line_number,product_type,product_id,\
-      \ product_version,description,quantity,unit_amount_minor,subtotal_minor,total_minor)\
-      \ VALUES (?::uuid,1,?,?,'synthetic-v1','Provider retry fixture',1,12515,12515,12515)"
+      \ product_version,description,quantity,unit_amount_minor,subtotal_minor,total_minor,snapshot)\
+      \ VALUES (?::uuid,1,?,?,'synthetic-v1','Provider retry fixture',1,12515,12515,12515,'{}'::jsonb)"
       [PersistText checkoutId, PersistText domain, PersistText checkoutId]
     ) pool
   pure Checkout.PaymentAttemptCreation
