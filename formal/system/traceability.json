@@ -2637,9 +2637,9 @@
     "tdf-hq/test/Spec.hs": "d4bf3f4d36c92125cf54c87d6616e9ea76648a85ea5639b73319eb32fe74487e",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "33be458f0244310300371dafb79a0a3ba18cd1b478cdfb8b5d570128e8836af5",
-    "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "80f70e7556b9aeefcbd1d473e2cd1d1e0b608aaa45964472bc0cb30351295888",
-    "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "3cba6f58f8e10f1bed8e92ec2f9e23d33ed0482ce73ab9e431f4f23851e2a1c6",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "90b0a50e1d7415dc82be95fdf4c985fbb825737d09e0c87d2d185414cb154fd2",
+    "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "6d6019cff6baa80c82fb421c02bddf5e609b88451ad73ef0b31fcd4fb35fe7f6",
+    "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "bc9e5e0920de51b7b8c16d764991911c9eabb087cd024f2405aeb98174c57563",
     "tdf-hq/test/TDF/CorsSpec.hs": "ca283c34c7b4368f59ba7af790950482e527747e95574afbbd22c1ce0e6a4245",
     "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "e68face714495ad762b3ccb8eec7b38ce6047274c44fd6977dc44abfd56f9439",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
@@ -16188,7 +16188,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "33be458f0244310300371dafb79a0a3ba18cd1b478cdfb8b5d570128e8836af5",
+      "sha256": "90b0a50e1d7415dc82be95fdf4c985fbb825737d09e0c87d2d185414cb154fd2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16204,7 +16204,7 @@
     {
       "id": "SURFACE-6581f3b9e8ac5e68",
       "path": "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs",
-      "sha256": "80f70e7556b9aeefcbd1d473e2cd1d1e0b608aaa45964472bc0cb30351295888",
+      "sha256": "6d6019cff6baa80c82fb421c02bddf5e609b88451ad73ef0b31fcd4fb35fe7f6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16216,7 +16216,7 @@
     {
       "id": "SURFACE-c27282be2474402d",
       "path": "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs",
-      "sha256": "3cba6f58f8e10f1bed8e92ec2f9e23d33ed0482ce73ab9e431f4f23851e2a1c6",
+      "sha256": "bc9e5e0920de51b7b8c16d764991911c9eabb087cd024f2405aeb98174c57563",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
