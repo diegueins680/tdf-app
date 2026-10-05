@@ -7,8 +7,12 @@ The observed production target is the dedicated Hetzner host, Compose project
 production operation. The authoritative system index is
 [formal/system/README.md](../../formal/system/README.md).
 
-Google interactive login was observed on October5. The corrective cookie-upload
-client must still be deployed and pass without browser instrumentation; see
+Google interactive login and ordinary inventory-photo upload passed on October5
+against production web merge `c0a154cd4cbfcd3a5dc5167634be30b7691803cc`.
+The deployed entry asset matched the immutable Cloudflare deployment; both
+99-byte synthetic PNG uploads returned HTTP200 and downloaded with matching
+hashes. The form was cancelled without creating an inventory record. These
+checks used the existing backend, not a rollout of this candidate. See also
 [the cutover validation record](validation-2026-09-28.md). Repository integration
 does not activate experimental event, payment or ticket-email flags.
 
@@ -143,8 +147,11 @@ Before replacing the old API, drain writers and preserve any files still in its
 writable layer; an earlier empty observation is not permission to discard new
 files. Verify image-user ownership and coordinated database/assets/uploads restore.
 The inspector reports the canonical bind separately from release eligibility.
-The historical shared-database `canary` service is not an isolated release canary
-and cannot satisfy these obligations.
+Both `api` and the historical shared-database `canary` mount that same
+pre-provisioned private directory so production startup checks apply consistently.
+That `canary` can access live data and uploads: it is not an isolated release canary
+and cannot satisfy these obligations or authorize running a candidate before
+writer fencing and recovery qualification.
 
 ## Routine release status
 

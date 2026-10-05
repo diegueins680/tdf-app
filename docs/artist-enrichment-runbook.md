@@ -66,7 +66,7 @@ database warnings and errors remain enabled.
 
 The command fails closed when the admin token is absent. When the runner does
 not have complete Drive credentials, image ingestion uses the authenticated TDF
-`/drive/upload` proxy so the existing backend Drive integration remains the sole
+`/drive/upload` proxy so the current backend Drive integration remains the sole
 secret holder. It fails closed if neither direct Drive authentication nor that
 backend proxy is available.
 Direct uploads also require Google Drive to confirm the public-reader permission;
@@ -152,7 +152,7 @@ group, preventing a later decision from silently reassigning its references.
 
 Two complementary layers run daily in `America/Guayaquil`:
 
-- Hetzner backend discovery at configurable local hour 04:00. It discovers TDF
+- Backend discovery on the current Hetzner deployment at configurable local hour 04:00. It discovers TDF
   references, checks slugs/staleness, and queues review records without calling
   external providers.
 - GitHub Actions external research at 10:00 UTC (05:00 Ecuador), with concurrency
@@ -178,6 +178,13 @@ Rerun it with `workflow_dispatch`; default manual mode is dry-run. GitHub schedu
 activation requires this workflow to exist on the default branch.
 
 ## Current deployment and recovery authority
+
+Cloudflare Pages must target `https://api.tdfrecords.net`. The UI deliberately
+ignores the retired `https://the-dream-factory.koyeb.app` value when that stale
+value is injected into a `*.tdf-app.pages.dev` build, while retaining other
+explicit API overrides for local or alternate deployments. Remove the retired
+dashboard variable when Cloudflare account access is available; the repository
+fallback prevents it from breaking previews in the meantime.
 
 Production is the canonical Hetzner system described in
 [ops/hetzner/README.md](../ops/hetzner/README.md), with API
