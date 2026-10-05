@@ -14,6 +14,10 @@ read-only rootfs, dropped capabilities and CPU/PID/memory limits. Assets/uploads
 are new private host directories; they are not copies of customer files. The real
 production entrypoint and private-upload mount guard run. Background startup code
 may write the disposable database, but has no route to providers or production.
+The cloned database may itself contain stored credentials or tokens accessible to
+the isolated app. `productionCredentialsProvided=false` means no production
+environment or role secrets were supplied separately; it does not mean the clone
+is credential-free. Its archives and synthetic application state remain private.
 
 Host Python sends only `/health` and `/version` requests through an open namespace
 file descriptor shared with the app, avoiding a reused PID path. Probes have their
@@ -23,7 +27,8 @@ The tool pauses only the fully admitted disposable DB, requires either a recogni
 connection timeout/failure or fixed503 rather than200, then unpauses and requires
 fresh healthy recovery. Malformed HTTP, unexpected status/body, or internal probe
 errors cannot masquerade as transport unavailability. The receipt records whether
-the unavailable probe actually returned503 or timed out; a timeout is not evidence
+the unavailable probe returned503 or encountered a recognized transport failure
+(timeout, refusal or reset); a transport failure is not evidence
 that the handler produced503 within a strict deadline.
 
 The existing durable restore reservation precedes external creation. App cleanup

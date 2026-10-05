@@ -21606,7 +21606,7 @@
     },
     {
       "path": "formal/system/isolated-canary.md",
-      "sha256": "ceb93ed955ee554fafc78030be6ccf2b09f3a2fbff66bad30c04a8ac17cf8041",
+      "sha256": "efcdcd63c0aa0dc3a602869394f150e6321e067b3069d25a8941c7518ffb0b80",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21704,7 +21704,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "d14c9f173850fdae6ad30f69256ac549203a3e1ee5779e493b2ec28f7152bf2e",
+      "sha256": "210d251f182845ad0e4142c513b7b5d4100abd8be451dd103a58a869b974b44d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
