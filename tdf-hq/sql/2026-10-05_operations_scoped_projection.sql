@@ -98,6 +98,9 @@ BEGIN
         COALESCE(queued.payload->'metadata', '{}'::jsonb)
       )
       ON CONFLICT (organization_id, correlation_key) DO UPDATE SET
+        entity_type = CASE WHEN queued.event_type = 'communication.whatsapp.received' AND queued.source_channel = 'whatsapp' AND operations_work_item.source_channel = 'whatsapp' AND queued.correlation_key LIKE 'whatsapp:%' AND operations_work_item.entity_type = 'uncorrelated_inbound' AND EXCLUDED.entity_type = 'party' THEN EXCLUDED.entity_type ELSE operations_work_item.entity_type END,
+        entity_id = CASE WHEN queued.event_type = 'communication.whatsapp.received' AND queued.source_channel = 'whatsapp' AND operations_work_item.source_channel = 'whatsapp' AND queued.correlation_key LIKE 'whatsapp:%' AND operations_work_item.entity_type = 'uncorrelated_inbound' AND EXCLUDED.entity_type = 'party' THEN EXCLUDED.entity_id ELSE operations_work_item.entity_id END,
+        uncorrelated = CASE WHEN queued.event_type = 'communication.whatsapp.received' AND queued.source_channel = 'whatsapp' AND operations_work_item.source_channel = 'whatsapp' AND queued.correlation_key LIKE 'whatsapp:%' AND operations_work_item.entity_type = 'uncorrelated_inbound' AND EXCLUDED.entity_type = 'party' THEN false ELSE operations_work_item.uncorrelated END,
         title_es = EXCLUDED.title_es,
         title_en = EXCLUDED.title_en,
         description_es = EXCLUDED.description_es,
@@ -129,7 +132,10 @@ BEGIN
         updated_at = now(),
         version = operations_work_item.version + 1
       WHERE operations_work_item.branch_id IS NOT DISTINCT FROM EXCLUDED.branch_id
-        AND operations_work_item.entity_type = EXCLUDED.entity_type
+        AND (operations_work_item.entity_type = EXCLUDED.entity_type
+          OR (queued.event_type = 'communication.whatsapp.received' AND queued.source_channel = 'whatsapp' AND operations_work_item.source_channel = 'whatsapp' AND queued.correlation_key LIKE 'whatsapp:%'
+            AND operations_work_item.entity_type IN ('uncorrelated_inbound','party')
+            AND EXCLUDED.entity_type IN ('uncorrelated_inbound','party')))
       RETURNING id INTO work_id;
       IF work_id IS NULL THEN
         RAISE EXCEPTION USING ERRCODE='23514', MESSAGE='Projection key belongs to a different scope or domain';
