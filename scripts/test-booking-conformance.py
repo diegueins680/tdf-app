@@ -475,7 +475,7 @@ try:
     check('catalog rejected reorder rolls back every row, revision and audit', catalog_state() == before)
     foreign_id = str(uuid.uuid4())
     foreign_catalog = sql("SELECT id FROM catalog_definition WHERE id <> '" + catalog_fixture['key'] + "' ORDER BY id LIMIT 1")
-    sql("INSERT INTO genre(id,catalog_id,code,name_es,active,sort_order,version,created_at,updated_at) VALUES ('" + foreign_id + "','" + foreign_catalog + "','fixture-foreign','Fixture foreign',true,900,1,now(),now())")
+    sql("INSERT INTO genre(id,catalog_id,code,name_es,name_en,active,sort_order,version,created_at,updated_at) VALUES ('" + foreign_id + "','" + foreign_catalog + "','fixture-foreign','Fixture foreign','Fixture foreign',true,900,1,now(),now())")
     check('catalog foreign reorder member rejected with 409', request(catalog_path, reorder_payload([catalog_fixture['id'], foreign_id], before['revision']), method='POST')[0] == 409)
     check('catalog foreign-member rejection leaves target unchanged', catalog_state() == before)
     check('catalog foreign member is not updated', sql("SELECT sort_order || ':' || version FROM genre WHERE id='" + foreign_id + "'") == '900:1')

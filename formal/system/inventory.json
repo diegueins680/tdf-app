@@ -4064,7 +4064,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "8ddd81f1b1abc2384773463bfd10611e2fa425a7d6c6e30e97325dcd75989440",
+      "sha256": "a42a6ae98c65f82062b113f3255e2b6ac8e56d11026f9c03f6f80fb45c99b178",
       "semanticConformance": "not-established-by-discovery"
     },
     {
