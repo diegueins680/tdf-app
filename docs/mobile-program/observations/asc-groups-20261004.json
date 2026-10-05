@@ -1,0 +1,89 @@
+{
+  "checkedAt": "2026-10-04T16:32:16.573Z",
+  "source": "App Store Connect API",
+  "responses": [
+    {
+      "path": "/v1/betaGroups/2228d94c-d751-4130-80d7-1a2f53de2347/builds?fields[builds]=version,expired",
+      "status": 200,
+      "data": [
+        {
+          "type": "builds",
+          "id": "da874897-8526-480d-96ae-044cf075d491",
+          "attributes": {
+            "version": "19",
+            "expired": false
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/builds/da874897-8526-480d-96ae-044cf075d491"
+          }
+        },
+        {
+          "type": "builds",
+          "id": "20af42fe-59a6-43a1-8cba-6f0646ce5c59",
+          "attributes": {
+            "version": "17",
+            "expired": true
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/builds/20af42fe-59a6-43a1-8cba-6f0646ce5c59"
+          }
+        }
+      ]
+    },
+    {
+      "path": "/v1/betaGroups/2228d94c-d751-4130-80d7-1a2f53de2347/relationships/betaTesters?limit=1",
+      "status": 200,
+      "data": {
+        "count": 0
+      }
+    },
+    {
+      "path": "/v1/betaGroups/50c112a6-72ff-44e9-80f6-bdf4c961e6df/relationships/betaTesters?limit=1",
+      "status": 200,
+      "data": {
+        "count": 1
+      }
+    },
+    {
+      "path": "/v1/builds/0b1fda64-c760-4b91-9f32-de889b520092/betaAppReviewSubmission",
+      "status": 200,
+      "data": null
+    },
+    {
+      "path": "/v1/apps/6779786470/betaAppReviewDetail?fields[betaAppReviewDetails]=demoAccountRequired",
+      "status": 200,
+      "data": {
+        "type": "betaAppReviewDetails",
+        "id": "6779786470",
+        "attributes": {
+          "demoAccountRequired": true
+        },
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/betaAppReviewDetails/6779786470"
+        }
+      }
+    },
+    {
+      "path": "/v1/apps/6779786470/appAvailabilityV2",
+      "status": 200,
+      "data": {
+        "type": "appAvailabilities",
+        "id": "6779786470",
+        "attributes": {
+          "availableInNewTerritories": true
+        },
+        "relationships": {
+          "territoryAvailabilities": {
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v2/appAvailabilities/6779786470/relationships/territoryAvailabilities",
+              "related": "https://api.appstoreconnect.apple.com/v2/appAvailabilities/6779786470/territoryAvailabilities"
+            }
+          }
+        },
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v2/appAvailabilities/6779786470"
+        }
+      }
+    }
+  ]
+}

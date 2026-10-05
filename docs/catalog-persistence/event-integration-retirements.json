@@ -84,8 +84,8 @@
         "kind": "array",
         "name": "PUBLIC_NAV_ITEMS"
       },
-      "replacementId": "f9819fa4b81bdd8f3f21",
-      "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint."
+      "replacementId": "d24fc428c18f60568996",
+      "reason": "The reviewed public navigation successor now includes the canonical TDF Mobile entry. Its preceding fingerprint f9819fa4b81bdd8f3f21 and exact decision remain archived as previousDecision in catalog-list-decisions.json; this mapping follows the current reviewed successor while preserving the original retirement evidence."
     },
     {
       "originalDecision": {
@@ -288,7 +288,63 @@
             }
           }
         }
-      }
+      },
+      "concurrentReviewHistory": [
+        {
+          "originalDecision": {
+            "id": "ffb84e8fd3972fd0730d",
+            "classification": "security-system-registry",
+            "disposition": "generated-consumer-pending-governance-cutover",
+            "specializedModel": "navigation_item, navigation_item_permission",
+            "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
+            "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
+            "reviewed": true
+          },
+          "originalDecisionSha256": "ca75b1f83031506d03f2f90bf69c9aaa72201004886b2028627448ea7ff5db5f",
+          "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+          "source": {
+            "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+            "kind": "array",
+            "name": "mobileFeatureRegistry"
+          },
+          "replacementId": "44c80a6dd2f154d0d59a",
+          "reason": "The current canonical generated registry preserves every definition from payment main and adds the public tester landing. Previous reviewed successor decisions remain archived unchanged in catalog-list-decisions.json.",
+          "previousReplacementId": "21babc54d68f0c44d55e",
+          "currentResolution": {
+            "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+            "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+            "valueCount": 157,
+            "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+          },
+          "previousResolution": {
+            "originalDecision": {
+              "id": "ffb84e8fd3972fd0730d",
+              "classification": "security-system-registry",
+              "disposition": "generated-consumer-pending-governance-cutover",
+              "specializedModel": "navigation_item, navigation_item_permission",
+              "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
+              "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
+              "reviewed": true
+            },
+            "originalDecisionSha256": "ca75b1f83031506d03f2f90bf69c9aaa72201004886b2028627448ea7ff5db5f",
+            "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+            "source": {
+              "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+              "kind": "array",
+              "name": "mobileFeatureRegistry"
+            },
+            "replacementId": "5147eb2751a01d8b4c73",
+            "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
+            "previousReplacementId": "21babc54d68f0c44d55e",
+            "currentResolution": {
+              "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+              "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+              "valueCount": 157,
+              "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+            }
+          }
+        }
+      ]
     },
     {
       "originalDecision": {

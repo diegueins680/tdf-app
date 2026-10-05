@@ -61,6 +61,8 @@ jest.unstable_mockModule('../utils/logger', () => ({
 
 const { default: LoginPage, isGoogleSignupConsentRequiredError } = await import('./LoginPage');
 
+function RouteStateProbe() { const location = useLocation(); return <output data-testid="route-state">{JSON.stringify(location.state)}</output>; }
+
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 const findButton = (name: string): HTMLButtonElement | null =>
@@ -88,6 +90,7 @@ const renderLoginPage = async (initialEntry = '/login') => {
         <MemoryRouter initialEntries={[initialEntry]}>
           <LoginPage />
           <LocationProbe />
+          <RouteStateProbe />
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -308,6 +311,7 @@ describe('LoginPage Google signup consent flow', () => {
         { remember: true },
       );
       expect(analyticsCaptureMock).toHaveBeenCalledWith('signup_completed', expect.objectContaining({ method: 'google' }));
+      expect(document.querySelector('[data-testid="route-state"]')?.textContent).toContain('"mobileInvitation":true');
       expect(analyticsCaptureMock).not.toHaveBeenCalledWith('onboarding_completed', expect.anything());
     } finally {
       await cleanup();

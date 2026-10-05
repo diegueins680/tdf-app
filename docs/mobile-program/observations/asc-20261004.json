@@ -1,0 +1,269 @@
+{
+  "checkedAt": "2026-10-04T16:30:34.920Z",
+  "source": "App Store Connect API",
+  "responses": [
+    {
+      "path": "/v1/apps/6779786470?fields[apps]=name,bundleId,sku",
+      "status": 200,
+      "data": {
+        "type": "apps",
+        "id": "6779786470",
+        "attributes": {
+          "name": "TDF Records Mobile",
+          "bundleId": "com.tdfrecords.app",
+          "sku": "TDFRECORDS-LLC-001"
+        },
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/apps/6779786470"
+        }
+      }
+    },
+    {
+      "path": "/v1/builds?filter[app]=6779786470&sort=-uploadedDate&limit=10&fields[builds]=version,uploadedDate,processingState,expired,expirationDate",
+      "status": 200,
+      "data": [
+        {
+          "type": "builds",
+          "id": "0b1fda64-c760-4b91-9f32-de889b520092",
+          "attributes": {
+            "version": "29",
+            "uploadedDate": "2026-09-29T19:21:26-07:00",
+            "expirationDate": "2026-12-28T18:21:26-08:00",
+            "expired": false,
+            "processingState": "VALID"
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/builds/0b1fda64-c760-4b91-9f32-de889b520092"
+          }
+        },
+        {
+          "type": "builds",
+          "id": "9fc7948f-c3a3-4e61-a08f-28960ba6e997",
+          "attributes": {
+            "version": "25",
+            "uploadedDate": "2026-09-18T11:09:34-07:00",
+            "expirationDate": "2026-12-17T10:09:34-08:00",
+            "expired": false,
+            "processingState": "VALID"
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/builds/9fc7948f-c3a3-4e61-a08f-28960ba6e997"
+          }
+        },
+        {
+          "type": "builds",
+          "id": "fc7432c8-ee0a-4e14-ac63-2f0f06d820b4",
+          "attributes": {
+            "version": "24",
+            "uploadedDate": "2026-09-18T10:40:20-07:00",
+            "expirationDate": "2026-12-17T09:40:20-08:00",
+            "expired": false,
+            "processingState": "VALID"
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/builds/fc7432c8-ee0a-4e14-ac63-2f0f06d820b4"
+          }
+        },
+        {
+          "type": "builds",
+          "id": "5ebb79bf-8bf0-4802-9dff-42239c97afbb",
+          "attributes": {
+            "version": "21",
+            "uploadedDate": "2026-09-18T00:35:41-07:00",
+            "expirationDate": "2026-12-16T23:35:41-08:00",
+            "expired": false,
+            "processingState": "VALID"
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/builds/5ebb79bf-8bf0-4802-9dff-42239c97afbb"
+          }
+        },
+        {
+          "type": "builds",
+          "id": "e3475df2-5fed-4d28-88ac-f80f3f1363cf",
+          "attributes": {
+            "version": "20",
+            "uploadedDate": "2026-09-17T23:21:32-07:00",
+            "expirationDate": "2026-12-16T22:21:32-08:00",
+            "expired": false,
+            "processingState": "VALID"
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/builds/e3475df2-5fed-4d28-88ac-f80f3f1363cf"
+          }
+        },
+        {
+          "type": "builds",
+          "id": "da874897-8526-480d-96ae-044cf075d491",
+          "attributes": {
+            "version": "19",
+            "uploadedDate": "2026-09-17T20:05:27-07:00",
+            "expirationDate": "2026-12-16T19:05:27-08:00",
+            "expired": false,
+            "processingState": "VALID"
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/builds/da874897-8526-480d-96ae-044cf075d491"
+          }
+        },
+        {
+          "type": "builds",
+          "id": "f72c49ae-2da2-4beb-b0eb-a26bdef674b2",
+          "attributes": {
+            "version": "18",
+            "uploadedDate": "2026-09-17T18:38:07-07:00",
+            "expirationDate": "2026-12-16T17:38:07-08:00",
+            "expired": false,
+            "processingState": "VALID"
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/builds/f72c49ae-2da2-4beb-b0eb-a26bdef674b2"
+          }
+        },
+        {
+          "type": "builds",
+          "id": "20af42fe-59a6-43a1-8cba-6f0646ce5c59",
+          "attributes": {
+            "version": "17",
+            "uploadedDate": "2026-06-12T15:35:05-07:00",
+            "expirationDate": "2026-09-10T15:35:05-07:00",
+            "expired": true,
+            "processingState": "VALID"
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/builds/20af42fe-59a6-43a1-8cba-6f0646ce5c59"
+          }
+        }
+      ]
+    },
+    {
+      "build": "29",
+      "status": 200,
+      "data": {
+        "type": "buildBetaDetails",
+        "id": "0b1fda64-c760-4b91-9f32-de889b520092",
+        "attributes": {
+          "autoNotifyEnabled": true,
+          "internalBuildState": "IN_BETA_TESTING",
+          "externalBuildState": "READY_FOR_BETA_SUBMISSION"
+        },
+        "relationships": {
+          "build": {
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/buildBetaDetails/0b1fda64-c760-4b91-9f32-de889b520092/relationships/build",
+              "related": "https://api.appstoreconnect.apple.com/v1/buildBetaDetails/0b1fda64-c760-4b91-9f32-de889b520092/build"
+            }
+          }
+        },
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/buildBetaDetails/0b1fda64-c760-4b91-9f32-de889b520092"
+        }
+      }
+    },
+    {
+      "build": "25",
+      "status": 200,
+      "data": {
+        "type": "buildBetaDetails",
+        "id": "9fc7948f-c3a3-4e61-a08f-28960ba6e997",
+        "attributes": {
+          "autoNotifyEnabled": true,
+          "internalBuildState": "IN_BETA_TESTING",
+          "externalBuildState": "READY_FOR_BETA_SUBMISSION"
+        },
+        "relationships": {
+          "build": {
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/buildBetaDetails/9fc7948f-c3a3-4e61-a08f-28960ba6e997/relationships/build",
+              "related": "https://api.appstoreconnect.apple.com/v1/buildBetaDetails/9fc7948f-c3a3-4e61-a08f-28960ba6e997/build"
+            }
+          }
+        },
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/buildBetaDetails/9fc7948f-c3a3-4e61-a08f-28960ba6e997"
+        }
+      }
+    },
+    {
+      "build": "24",
+      "status": 200,
+      "data": {
+        "type": "buildBetaDetails",
+        "id": "fc7432c8-ee0a-4e14-ac63-2f0f06d820b4",
+        "attributes": {
+          "autoNotifyEnabled": true,
+          "internalBuildState": "IN_BETA_TESTING",
+          "externalBuildState": "READY_FOR_BETA_SUBMISSION"
+        },
+        "relationships": {
+          "build": {
+            "links": {
+              "self": "https://api.appstoreconnect.apple.com/v1/buildBetaDetails/fc7432c8-ee0a-4e14-ac63-2f0f06d820b4/relationships/build",
+              "related": "https://api.appstoreconnect.apple.com/v1/buildBetaDetails/fc7432c8-ee0a-4e14-ac63-2f0f06d820b4/build"
+            }
+          }
+        },
+        "links": {
+          "self": "https://api.appstoreconnect.apple.com/v1/buildBetaDetails/fc7432c8-ee0a-4e14-ac63-2f0f06d820b4"
+        }
+      }
+    },
+    {
+      "path": "/v1/apps/6779786470/appStoreVersions?fields[appStoreVersions]=versionString,appStoreState,platform,releaseType",
+      "status": 200,
+      "data": [
+        {
+          "type": "appStoreVersions",
+          "id": "df5500ae-e7a2-4b3c-8de9-e06869733bde",
+          "attributes": {
+            "platform": "IOS",
+            "versionString": "1.0.1",
+            "appStoreState": "REJECTED",
+            "releaseType": "MANUAL"
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/appStoreVersions/df5500ae-e7a2-4b3c-8de9-e06869733bde"
+          }
+        }
+      ]
+    },
+    {
+      "path": "/v1/apps/6779786470/betaGroups?fields[betaGroups]=name,isInternalGroup,publicLink,publicLinkEnabled,publicLinkLimit,publicLinkLimitEnabled,hasAccessToAllBuilds",
+      "status": 200,
+      "data": [
+        {
+          "type": "betaGroups",
+          "id": "50c112a6-72ff-44e9-80f6-bdf4c961e6df",
+          "attributes": {
+            "name": "Familia",
+            "isInternalGroup": true,
+            "hasAccessToAllBuilds": true,
+            "publicLinkEnabled": null,
+            "publicLinkLimitEnabled": null,
+            "publicLinkLimit": null,
+            "publicLink": null
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/betaGroups/50c112a6-72ff-44e9-80f6-bdf4c961e6df"
+          }
+        },
+        {
+          "type": "betaGroups",
+          "id": "2228d94c-d751-4130-80d7-1a2f53de2347",
+          "attributes": {
+            "name": "Todos",
+            "isInternalGroup": false,
+            "hasAccessToAllBuilds": null,
+            "publicLinkEnabled": true,
+            "publicLinkLimitEnabled": false,
+            "publicLinkLimit": null,
+            "publicLink": "https://testflight.apple.com/join/7k3VE2JJ"
+          },
+          "links": {
+            "self": "https://api.appstoreconnect.apple.com/v1/betaGroups/2228d94c-d751-4130-80d7-1a2f53de2347"
+          }
+        }
+      ]
+    }
+  ]
+}

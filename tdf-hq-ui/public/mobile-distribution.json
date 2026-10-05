@@ -1,0 +1,17 @@
+{
+  "ios": {
+    "status": "testflight_external",
+    "capacity": "available",
+    "verifiedAt": "2026-10-04T16:41:37Z",
+    "validUntil": "2026-10-11T16:41:37Z",
+    "version": "1.0.1",
+    "build": "19",
+    "url": "https://testflight.apple.com/join/7k3VE2JJ"
+  },
+  "android": {
+    "status": "unavailable",
+    "capacity": "unknown",
+    "verifiedAt": "2026-10-04T16:30:34Z",
+    "validUntil": "2026-10-11T16:30:34Z"
+  }
+}

@@ -1530,16 +1530,6 @@
       "reviewed": true
     },
     {
-      "id": "f9819fa4b81bdd8f3f21",
-      "classification": "dynamic-business-catalog",
-      "disposition": "retain-in-code",
-      "specializedModel": "navigation_item",
-      "priority": "P3-retain",
-      "risk": "Changing UI constants could break rendering or user experience.",
-      "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data. Labels now reference ES/EN translation keys; routes and access behavior are unchanged. This carries forward the existing reviewed disposition.",
-      "reviewed": true
-    },
-    {
       "id": "915967d05f3593fea628",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -12790,16 +12780,6 @@
       "reviewed": true
     },
     {
-      "id": "6e81d64a25c5f15c36e8",
-      "classification": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "service_category, service_offering, booking_type",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
       "id": "66ba1e2114a15aeae0cc",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -15214,6 +15194,136 @@
           }
         }
       ]
+    },
+    {
+      "id": "44c80a6dd2f154d0d59a",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "navigation_item, navigation_item_permission",
+      "priority": "P0-security",
+      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+      "justification": "The 158-entry generated mobile registry preserves all 157 reviewed navigation definitions and adds only the non-discoverable provider-payment return route from the canonical backend feature registry. Authentication, roles, server authorization and disabled payment activation gates remain authoritative; this technical callback is neither a menu item nor an independent grant. The canonical tester landing adds one public discovery destination while retaining all 158 definitions from the merged payment main, with no authorization grants changed.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "mobile-program-current-main-2026-10-04",
+      "evidence": {
+        "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+        "line": 55
+      },
+      "previousDecision": {
+        "id": "0eafdd9f0a8bbebf9a23",
+        "classification": "security-system-registry",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "navigation_item, navigation_item_permission",
+        "priority": "P0-security",
+        "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+        "justification": "The 158-entry generated mobile registry preserves all 157 reviewed navigation definitions and adds only the non-discoverable provider-payment return route from the canonical backend feature registry. Authentication, roles, server authorization and disabled payment activation gates remain authoritative; this technical callback is neither a menu item nor an independent grant.",
+        "reviewed": true,
+        "reviewMethod": "deterministic-policy-v3",
+        "reviewBatch": "universal-interactions-2026-09-28",
+        "evidence": {
+          "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+          "line": 55
+        },
+        "previousDecision": {
+          "id": "5147eb2751a01d8b4c73",
+          "classification": "security-system-registry",
+          "disposition": "migrate-and-remove-authority-from-code",
+          "specializedModel": "navigation_item, navigation_item_permission",
+          "priority": "P0-security",
+          "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+          "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+          "reviewed": true,
+          "reviewMethod": "deterministic-policy-v3",
+          "reviewBatch": "universal-interactions-2026-09-28",
+          "evidence": {
+            "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+            "line": 55
+          }
+        }
+      }
+    },
+    {
+      "id": "d8e94b27a4e5b1e414a3",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-in-code",
+      "specializedModel": "navigation_item",
+      "priority": "P3-retain",
+      "risk": "Incorrect links could prevent users from accessing support or privacy information.",
+      "justification": "Legal and support navigation targets now use the verified canonical TDF domain while preserving the same document paths. This fixed navigation list is not a selectable business offering catalog.",
+      "reviewed": true,
+      "previousDecision": {
+        "id": "6e81d64a25c5f15c36e8",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "service_category, service_offering, booking_type",
+        "priority": "P2-domain",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      },
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "mobile-program-2026-10-04"
+    },
+    {
+      "id": "d24fc428c18f60568996",
+      "classification": "dynamic-business-catalog",
+      "disposition": "retain-in-code",
+      "specializedModel": "navigation_item",
+      "priority": "P3-retain",
+      "risk": "Changing UI constants could break rendering or user experience.",
+      "justification": "Existing reviewed client navigation presentation now also links to the canonical /app route. It contains no tester eligibility or distribution state; those derive from the validated distribution manifest. ES/EN labels remain localized.",
+      "reviewed": true,
+      "previousDecision": {
+        "id": "f9819fa4b81bdd8f3f21",
+        "classification": "dynamic-business-catalog",
+        "disposition": "retain-in-code",
+        "specializedModel": "navigation_item",
+        "priority": "P3-retain",
+        "risk": "Changing UI constants could break rendering or user experience.",
+        "justification": "UI presentation constants and navigation items are client-side mechanics, not governed business catalog data. Labels now reference ES/EN translation keys; routes and access behavior are unchanged. This carries forward the existing reviewed disposition.",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "b04463685b6b720b3ca9",
+      "classification": "governed-reference-data",
+      "disposition": "retain-in-code",
+      "specializedModel": "validated mobile distribution protocol",
+      "priority": "P3-retain",
+      "risk": "Unrecognized platform/channel must fail closed and must never imply public availability.",
+      "justification": "Client protocol vocabulary and supported renderer capability, not operator-managed business catalog values. Current per-platform availability, URL, capacity and evidence freshness are centralized in public/mobile-distribution.json and validated against this finite protocol. Platform selector only chooses supported client renderers; it does not define tester identities, membership or store eligibility. See docs/mobile-program/README.md and distribution tests.",
+      "reviewed": true
+    },
+    {
+      "id": "85ed84f478dc7592506b",
+      "classification": "governed-reference-data",
+      "disposition": "retain-in-code",
+      "specializedModel": "validated mobile distribution protocol",
+      "priority": "P3-retain",
+      "risk": "Unrecognized platform/channel must fail closed and must never imply public availability.",
+      "justification": "Client protocol vocabulary and supported renderer capability, not operator-managed business catalog values. Current per-platform availability, URL, capacity and evidence freshness are centralized in public/mobile-distribution.json and validated against this finite protocol. Platform selector only chooses supported client renderers; it does not define tester identities, membership or store eligibility. See docs/mobile-program/README.md and distribution tests.",
+      "reviewed": true
+    },
+    {
+      "id": "a22ed33458d1ea913570",
+      "classification": "governed-reference-data",
+      "disposition": "retain-in-code",
+      "specializedModel": "validated mobile distribution protocol",
+      "priority": "P3-retain",
+      "risk": "Unrecognized platform/channel must fail closed and must never imply public availability.",
+      "justification": "Client protocol vocabulary and supported renderer capability, not operator-managed business catalog values. Current per-platform availability, URL, capacity and evidence freshness are centralized in public/mobile-distribution.json and validated against this finite protocol. Platform selector only chooses supported client renderers; it does not define tester identities, membership or store eligibility. See docs/mobile-program/README.md and distribution tests.",
+      "reviewed": true
+    },
+    {
+      "id": "023248107107d84ec459",
+      "classification": "governed-reference-data",
+      "disposition": "retain-in-code",
+      "specializedModel": "validated mobile distribution protocol",
+      "priority": "P3-retain",
+      "risk": "Unrecognized platform/channel must fail closed and must never imply public availability.",
+      "justification": "Client protocol vocabulary and supported renderer capability, not operator-managed business catalog values. Current per-platform availability, URL, capacity and evidence freshness are centralized in public/mobile-distribution.json and validated against this finite protocol. Platform selector only chooses supported client renderers; it does not define tester identities, membership or store eligibility. See docs/mobile-program/README.md and distribution tests.",
+      "reviewed": true
     }
   ]
 }

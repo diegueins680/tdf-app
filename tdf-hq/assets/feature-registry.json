@@ -39,6 +39,56 @@
   },
   "features": [
     {
+      "id": "public.mobile",
+      "parentId": null,
+      "webRoute": "/app",
+      "routeType": "primary",
+      "classification": "primary-destination",
+      "label": {
+        "es": "TDF Mobile / Programa de testers",
+        "en": "TDF Mobile / Tester program"
+      },
+      "synonyms": {
+        "es": [
+          "aplicación móvil",
+          "beta",
+          "descargar",
+          "testers"
+        ],
+        "en": [
+          "mobile app",
+          "beta",
+          "download",
+          "testers"
+        ]
+      },
+      "keywords": [
+        "android",
+        "ios",
+        "testflight",
+        "feedback"
+      ],
+      "description": {
+        "es": "Acceso verificado a TDF Mobile y participación voluntaria en el programa de pruebas.",
+        "en": "Verified TDF Mobile access and voluntary participation in the tester program."
+      },
+      "navigationGroup": "people",
+      "icon": "home",
+      "breadcrumb": [],
+      "requiredAuth": "public",
+      "globalMenu": false,
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "recentBehavior": "none",
+      "mobilePresentation": {
+        "kind": "external-web",
+        "destination": "https://www.tdfrecords.net/app",
+        "documentedException": null
+      },
+      "accessRequestEligible": false,
+      "aliases": []
+    },
+    {
       "id": "community.discussion",
       "parentId": null,
       "webRoute": "/conversacion/:destinationKind/:destinationId",
