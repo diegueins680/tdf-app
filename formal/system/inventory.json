@@ -20514,7 +20514,7 @@
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "93e49b5ae2ff672fc9ba9f52d1077a4e7ea7fd8e463ded834f4c76c111615afe",
+      "sha256": "fa4eeed8e31c7a0f32fb879031695641b1789fb05b5d2c638b6a06362411c8e7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

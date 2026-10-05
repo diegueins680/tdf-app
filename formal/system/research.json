@@ -324,6 +324,26 @@
       "applicability": "TDF canonical provider attempt admission and reconciliation",
       "decision": "adopted",
       "rationale": "Local immutable receipts and checkout serialization complement provider idempotency. Reject automatic new-charge fallback while unresolved; bounded model does not prove provider behavior."
+    },
+    {
+      "id": "RES-CI-ADMISSION-001",
+      "source": "https://docs.github.com/en/pull-requests/reference/status-checks",
+      "title": "GitHub status checks and skipped jobs",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "A skipped job can report success; status alone does not prove the intended verification executed.",
+      "applicability": "API availability policy-only changes and component-selective CI",
+      "decision": "adopted",
+      "rationale": "Run actual policy admission in the always-selected repository lane and independently test change wiring; a passing synthetic unit test does not validate current policy data."
+    },
+    {
+      "id": "RES-API-TYPE-001",
+      "source": "https://docs.servant.dev/en/latest/tutorial/ApiType.html",
+      "title": "Servant API type structure and combinators",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "Use the served API type to derive route and parameter structure; combinators encode captures, methods, bodies and response declarations.",
+      "applicability": "Compiler-derived CombinedAPI description and handwritten OpenAPI drift",
+      "decision": "adopted with boundary",
+      "rationale": "Interpret actual TypeRep from the same CombinedAPI used to serve, reject unknown syntax, and retain Raw mounts. This verifies declarations, not JSON codecs, handler authorization, feature enablement or complete semantic conformance."
     }
   ]
 }
