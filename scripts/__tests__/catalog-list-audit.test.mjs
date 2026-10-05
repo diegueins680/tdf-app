@@ -258,3 +258,22 @@ test('decision reconciliation preserves reviewed entries, removes stale IDs, and
     await fs.rm(tempRoot, { recursive: true, force: true });
   }
 });
+
+
+test('ticket main merge retains stale approvals only as provenance', async () => {
+  const document = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+    'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8'));
+  const retired = document.reconciliation.ticketMainMergeRetirements;
+  assert.equal(retired.sourceMain, 'b06a4d3926e03a0b72a23732e454a33c72eb9705');
+  assert.equal(retired.decisions.length, 3);
+  for (const entry of retired.decisions) {
+    assert.equal(createHash('sha256').update(JSON.stringify(entry.originalDecision)).digest('hex'), entry.originalDecisionSha256);
+    assert.ok(!document.decisions.some(item => item.id === entry.originalDecision.id));
+    if (entry.replacementId) {
+      assert.equal(document.decisions.find(item => item.id === entry.replacementId)?.reviewed, true);
+    } else {
+      assert.equal(entry.originalDecision.id, 'ec1a316784aa9992384a');
+      assert.doesNotMatch(await fs.readFile(path.join(workspaceRoot, 'tdf-mobile/app/ddex/index.tsx'), 'utf8'), /const STATUS_LABELS/);
+    }
+  }
+});

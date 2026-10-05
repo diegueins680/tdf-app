@@ -4,6 +4,7 @@
 
 module TDF.Server.DDEX (ddexServer) where
 
+import Control.Exception (throwIO, try)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, ask)
 import Control.Monad (forM, unless, when)
@@ -431,14 +432,6 @@ validateDocumentHandler user docId = do
   env <- ask
   (runningState, failedState, warningState, invalidState, mappingState) <-
     loadValidationStates
-  now <- liftIO getCurrentTime
-  runId <- liftIO $ runSqlPool
-    (DB.insertValidationRun
-      (toSqlKey (fromIntegral docId))
-      (entityKey runningState)
-      (Just "tdf-structural-2")
-      (Just (Catalog.ddexStandardVersionVersionCode standard)))
-    (envPool env)
   let internalIssues = validateStoredErn standard docId content
       profileIssue = InternalValidationIssue
         DDEXTypes.SeverityWarning
@@ -449,23 +442,36 @@ validateDocumentHandler user docId = do
       issues = internalIssues ++ [profileIssue]
       errorCount = length [() | issue <- issues, iviSeverity issue == DDEXTypes.SeverityError]
       warningCount = length [() | issue <- issues, iviSeverity issue == DDEXTypes.SeverityWarning]
-      (resultCode, legacyResult, finalValidationState, finalDocumentState)
-        | errorCount > 0 = ("failure", M.ResultFailure, failedState, invalidState)
-        | otherwise = ("warning", M.ResultWarning, warningState, mappingState)
+      (resultCode, finalValidationState, finalDocumentState)
+        | errorCount > 0 = ("failure", failedState, invalidState)
+        | otherwise = ("warning", warningState, mappingState)
   resultId <- loadValidationResultId resultCode
-  liftIO $ runSqlPool (do
-    prepareDocumentValidation (toSqlKey (fromIntegral docId)) document
-    mapM_ (persistInternalIssue runId) issues
+  outcome <- liftIO (try (runSqlPool (do
+    let documentKey = toSqlKey (fromIntegral docId)
+    locked <- rawSql "SELECT ?? FROM ddex_document WHERE id=? FOR UPDATE"
+      [toPersistValue documentKey]
+    current <- case locked of
+      [Entity _ value]
+        | M.ddexDocumentSha256 value == M.ddexDocumentSha256 document
+        , M.ddexDocumentPrivateUri value == M.ddexDocumentPrivateUri document
+        , M.ddexDocumentStandardVersionId value == M.ddexDocumentStandardVersionId document -> pure value
+      _ -> liftIO $ throwIO err409 { errBody = "DDEX document changed or disappeared during validation" }
+    prepareDocumentValidation documentKey current
+    newRunId <- DB.insertValidationRun documentKey (entityKey runningState)
+      (Just "tdf-structural-2") (Just (Catalog.ddexStandardVersionVersionCode standard))
+    mapM_ (persistInternalIssue newRunId) issues
     DB.completeValidationRun
-      runId
+      newRunId
       (entityKey finalValidationState)
       resultId
-      legacyResult
       errorCount
       warningCount
-    DB.updateDocumentStatus (toSqlKey (fromIntegral docId)) (entityKey finalDocumentState))
-    (envPool env)
-  finished <- liftIO getCurrentTime
+    DB.updateDocumentStatus documentKey (entityKey finalDocumentState)
+    storedRun <- get newRunId >>= maybe
+      (liftIO $ throwIO err500 { errBody = "Completed validation run is missing" }) pure
+    pure (newRunId, storedRun))
+    (envPool env)) :: IO (Either ServerError (M.DdexValidationRunId, M.DdexValidationRun)))
+  (runId, completedRun) <- either throwError pure outcome
   let finalState = entityVal finalValidationState
   pure ValidationRunDTO
     { validationRunId = fromIntegral $ fromSqlKey runId
@@ -474,8 +480,8 @@ validateDocumentHandler user docId = do
     , validationRunWorkflowStateCode = Catalog.workflowStateCode finalState
     , validationRunWorkflowStateNameEs = Catalog.workflowStateNameEs finalState
     , validationRunWorkflowStateNameEn = Catalog.workflowStateNameEn finalState
-    , validationRunStartedAt = now
-    , validationRunFinishedAt = Just finished
+    , validationRunStartedAt = M.ddexValidationRunStartedAt completedRun
+    , validationRunFinishedAt = M.ddexValidationRunFinishedAt completedRun
     }
 
 -- | Get validation report
@@ -490,11 +496,15 @@ getValidationReportHandler user docId = do
   mReport <- liftIO $ runSqlPool (DB.getValidationReport documentId) (envPool env)
   case mReport of
     Nothing -> throwError err404 { errBody = "Validation report not found" }
-    Just (runEntity, issues) -> return ValidationReportDTO
-      { reportRunId = fromIntegral $ fromSqlKey (entityKey runEntity)
-      , reportIssues = map issueToDTO issues
-      , reportIsValid = M.ddexValidationRunResult (entityVal runEntity) == Just M.ResultSuccess
-      }
+    Just (runEntity, issues) -> do
+      canonicalResult <- case M.ddexValidationRunValidationResultId (entityVal runEntity) of
+        Nothing -> pure Nothing
+        Just resultId -> liftIO $ runSqlPool (get resultId) (envPool env)
+      pure ValidationReportDTO
+        { reportRunId = fromIntegral $ fromSqlKey (entityKey runEntity)
+        , reportIssues = map issueToDTO issues
+        , reportIsValid = maybe False ((== "success") . M.ddexValidationResultCode) canonicalResult
+        }
 
 -- | Get document preview
 getPreviewHandler :: AuthedUser -> Int -> AppM DdexPreviewDTO
@@ -720,8 +730,8 @@ prepareDocumentValidation documentId document = do
     "invalid" -> queueThenValidate queued validating
     "queued" -> DB.updateDocumentStatus documentId (entityKey validating)
     "validating" -> pure ()
-    _ -> liftIO . ioError . userError $
-      "DDEX document cannot be revalidated from its current workflow state"
+    _ -> liftIO $ throwIO err409
+      { errBody = "DDEX document cannot be revalidated from its current workflow state" }
   where
     queueThenValidate queued validating = do
       DB.updateDocumentStatus documentId (entityKey queued)

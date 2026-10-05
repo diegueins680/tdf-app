@@ -1,6 +1,9 @@
 # TDF Records Platform - AI Agent Guidelines
 
 See `AI_WORKFLOW.md` for the current repo-wide AI workflow and preflight checks.
+Use `formal/system/README.md` for specification authority and conformance. `specs.yaml`
+is historical v1 material. Inventory and generated-client checks require the exact
+initialized Mobile gitlink; run `node scripts/check-generated-api.mjs` after generation.
 
 ## Architecture Overview
 This is a **monorepo** with three main applications serving TDF Records' business management platform:

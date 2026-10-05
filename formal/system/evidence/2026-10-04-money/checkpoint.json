@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "scope": "Scoped checkpoint, not final system conformance or delivery",
+  "rootCandidate": "187685212f8edabefb29f7a144dd11d773274976",
+  "currentMainObserved": "fa30e358de631e4773d142ec83ca6d75d42047f0",
+  "mobileCandidate": "982ade380e0826dcdad582f8da92023b863b9dfa",
+  "formal": {
+    "receipt": "formal-result.json",
+    "positiveTlcConfigurations": 53,
+    "expectedMutationCounterexamples": 60,
+    "pluscalModelsRegenerated": 1,
+    "pluscalIntegrityTests": 13,
+    "alloySat": 2,
+    "alloyUnsat": 13,
+    "qualification": "Bounded model analysis and translator-integrity tests, not whole-program refinement; mobile identity recorded but mobile source not analyzed by this runner."
+  },
+  "commands": [
+    {
+      "log": "backend-quality-187685212.log",
+      "sha256": "b4ca7a7e710732eadaead400a5d5276825b6758ba6f560ff9d7feee8aa2f0d51",
+      "command": "TDF_TEST_NATIVE_POSTGRES=1 STACK_ROOT=<pinned-Stack-cache> BACKEND_BINARY_OUT=<evidence>/tdf-hq-exe npm run quality:backend",
+      "revision": "187685212f8edabefb29f7a144dd11d773274976",
+      "result": "PASS: 3680 examples,0 failures,7 pending; native invitation visibility1/concurrency15 and relations1 passed; CORS2 and monetary9 source controls detected"
+    },
+    {
+      "log": "repo-quality-187685212.log",
+      "sha256": "00fdd0cd7c18f5ed2091aa18e5a5503c3c3b6f6b2528a048a606975bdec04cd0",
+      "command": "npm run quality:repo",
+      "revision": "187685212f8edabefb29f7a144dd11d773274976",
+      "result": "PASS"
+    },
+    {
+      "log": "merch-http-runtime-187685212.log",
+      "sha256": "87fb247a9288f24dedb1171b616f31c99757d580386ca9edd0224a79182639fe",
+      "command": "TDF_MERCH_RUNTIME_DATABASE_URL=<isolated PG16 URL> DATABASE_URL=<same> APP_ENV=sandbox RUN_MIGRATIONS=false RESET_DB=false SEED_DB=false MERCH_BANK_TRANSFER_INSTRUCTIONS=<synthetic> <Stack-built test binary> --match=artist-merch-runtime --fail-on=empty",
+      "revision": "187685212f8edabefb29f7a144dd11d773274976",
+      "result": "PASS: actual handlers/HTTP, authorization, replay, overflow rejection, row/stock rollback, maximal SQL commission insert; no provider transaction"
+    },
+    {
+      "log": "google-lifecycle-187685212.log",
+      "sha256": "da3edd359cd45a93f2b0fcf675e06f4284479b8e8d57f2c501ed34eea8ae689a",
+      "command": "TDF_IDENTITY_HTTP_DATABASE_URL=<isolated PG16 URL> STACK_ROOT=<pinned cache> sh scripts/test-credential-lifecycle.sh",
+      "revision": "187685212f8edabefb29f7a144dd11d773274976",
+      "result": "PASS: both observed lock orders"
+    },
+    {
+      "log": "identity-money-http-c57-final-schema.log",
+      "sha256": "929093c0553e781a9f82e15a6d478b8c2162ae2f1f256b1fb485103c0cca3610",
+      "command": "TDF_IDENTITY_HTTP_DATABASE_URL=<isolated PG16 URL> TDF_IDENTITY_HTTP_SERVER_BIN=<binary built from c57 Haskell source> node scripts/__tests__/identity-http-runtime.mjs",
+      "revision": "c57fdab05d59b30ce4505e022267b627c18663c6",
+      "result": "PASS on final163-migration fixture: recovery expiry/lock waits,56 directory state pairs, authorization, identity retries/revocation and cart monetary conflicts/rollback"
+    },
+    {
+      "log": "merch-commission-postgres.log",
+      "sha256": "0dcca36eec2a40696cce6f06d1c9fecb67fc2e51226500915c44051a4557c929",
+      "command": "TDF_MERCH_RUNTIME_DATABASE_URL=<isolated PG16 URL> node scripts/__tests__/merch-commission-postgres.mjs",
+      "revision": "f8494a20a11e5b9df7b0a948cddbdfeac4930519",
+      "result": "PASS:30 actual inserts match BigInt oracle; invalid-result denial and3 SQL controls"
+    },
+    {
+      "log": "checkout-amount-postgres-final.log",
+      "sha256": "8380c80d6ae89251eb76cc63c59d08f2b4de4cc9dff653739333cf33908fe26c",
+      "command": "TDF_CHECKOUT_AMOUNT_DATABASE_URL=<isolated PG16 URL> node scripts/__tests__/checkout-amount-postgres.mjs",
+      "revision": "7ecfdace549ab091f2089d393d8a23ef9da048e2",
+      "result": "PASS: actual commit rejection, migration preflight,5 controls,6 barrier-observed concurrent appends, old-snapshot fence, structural drift"
+    },
+    {
+      "log": "mobile-quality-982ade3.log",
+      "sha256": "c880b76a5f5d2c812e7bbdb6236841e653d4ea1671a55fdfeef8d717e3e58025",
+      "command": "REQUIRE_MOBILE_WORKSPACE=1 npm run quality:mobile",
+      "revision": "982ade380e0826dcdad582f8da92023b863b9dfa",
+      "result": "PASS: lint,typecheck,87 suites553 tests"
+    },
+    {
+      "log": "mobile-start-982ade3.log",
+      "sha256": "44de5d56c94e3a24c69faef3e63edbabc5d00a289b6c4b921b872bba575712f8",
+      "command": "CI=1 npm run start -- --offline --port 18087; GET /status",
+      "revision": "982ade380e0826dcdad582f8da92023b863b9dfa",
+      "result": "PASS: packager running; stopped task-owned process; not device QA"
+    },
+    {
+      "log": "money-review-gates-187685212.log",
+      "sha256": "5e766dcc0bb46a95944c3367401c27790a5fd437aa0bf80b59bd2af7d71ad3ef",
+      "command": "node --test scripts/__tests__/merch-runtime-safety.test.mjs scripts/__tests__/production-release.test.mjs scripts/__tests__/ci-pipeline.test.mjs",
+      "revision": "187685212f8edabefb29f7a144dd11d773274976",
+      "result": "PASS:82 tests"
+    }
+  ],
+  "hosted": [
+    {
+      "revision": "7c7fcad00cbfbda940d0339dbb313e9d0fa863a4",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/37226256852",
+      "result": "all CI jobs passed; predates monetary changes"
+    },
+    {
+      "revision": "834fad2aa025f84f3d0e1ceb9fac577c3935988e",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/37228029307",
+      "result": "all CI jobs passed; includes cart arithmetic, predates new SQL/Merch"
+    },
+    {
+      "revision": "7ecfdace549ab091f2089d393d8a23ef9da048e2",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/37229601572",
+      "result": "all CI jobs passed, including PG17 checkout/Merch migrations and actual runtime controls; predates final runner-safety and stock-assertion refinement"
+    },
+    {
+      "revision": "982ade380e0826dcdad582f8da92023b863b9dfa",
+      "url": "https://github.com/diegueins680/TDF-mobile/actions/runs/37230238117",
+      "result": "Mobile Validate passed: release checks,tests,signing/artifact guards and ExpoDoctor"
+    }
+  ],
+  "review": {
+    "kind": "independent agent source review",
+    "revision": "187685212f8edabefb29f7a144dd11d773274976",
+    "result": "No remaining findings after repairing migration-era stale snapshot, trigger metadata restrictions, SQL commission intermediate, runner safety order and stock assertions. Independently ran17 safety tests; not a GitHub approval."
+  },
+  "failedEvidenceRetained": [
+    {
+      "log": "backend-quality-85d9360f8.log",
+      "reason": "Ambiguous Haskell id; repaired before successful builds"
+    },
+    {
+      "receipt": "formal-money-current/result.json",
+      "reason": "Models passed but source changed during execution; stale receipt rejected, rerun at frozen187 passed"
+    }
+  ],
+  "coverage": {
+    "requirements": 27,
+    "classification": {
+      "PARTIAL": 27
+    },
+    "implementationSurfaces": 2053,
+    "unmappedSurfaces": 1974,
+    "unmodeledCriticalRequirements": 18,
+    "apiOperations": 467,
+    "stateMachines": 18,
+    "capabilityRows": 546,
+    "qualification": "These are inventory/scoped requirement counts; zero recorded FAIL is not a system-wide pass."
+  },
+  "delivery": {
+    "rootPr": "https://github.com/diegueins680/tdf-app/pull/478",
+    "mobilePr": "https://github.com/diegueins680/TDF-mobile/pull/129",
+    "mobileBase": "release/tdf-shipped-20261004",
+    "merge": null,
+    "deployment": null,
+    "productionWrites": false,
+    "realMoneyTransactions": false
+  },
+  "remaining": [
+    "Broad domain requirement reconciliation and unmapped surfaces",
+    "Final exact-SHA hosted gates and independent GitHub approval",
+    "Canonical routine Hetzner release execution/recovery lane",
+    "Provider/refund/settlement and JavaScript precision obligations",
+    "Production migration/config rollout and post-deploy verification"
+  ],
+  "migrationPreservation": {
+    "startingRoot": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "result": "git diff --name-status startingRoot..187685212 -- tdf-hq/sql lists only three added files; no historical SQL modified or deleted",
+    "added": [
+      "2026-10-04_auth_recovery_expiry.sql",
+      "2026-10-04_checkout_amount_correspondence.sql",
+      "2026-10-04_merch_commission_exact.sql"
+    ]
+  }
+}

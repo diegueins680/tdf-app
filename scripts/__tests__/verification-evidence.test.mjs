@@ -1,7 +1,27 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { readFileSync } from 'node:fs';
-import { classifyExecution } from '../lib/verification-evidence.mjs';
+import { readFileSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { classifyExecution, sourceManifest } from '../lib/verification-evidence.mjs';
+
+test('operational configuration changes invalidate source evidence even before staging', t => {
+  const root = mkdtempSync(path.join(tmpdir(), 'tdf-ops-evidence-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync('git', ['init', '-q'], { cwd: root });
+  mkdirSync(path.join(root, 'ops/hetzner'), { recursive: true });
+  const config = path.join(root, 'ops/hetzner/compose.production.yaml');
+  writeFileSync(config, 'services: {}\n');
+  const before = sourceManifest(root);
+  assert.ok(before.files['ops/hetzner/compose.production.yaml']);
+  writeFileSync(config, 'services: { changed: {} }\n');
+  const after = sourceManifest(root);
+  assert.notEqual(before.digest, after.digest);
+  mkdirSync(path.join(root, 'formal/system/evidence'), { recursive: true });
+  writeFileSync(path.join(root, 'formal/system/evidence/receipt.json'), '{}\n');
+  assert.equal(sourceManifest(root).digest, after.digest);
+});
 
 test('success requires completed execution, exact source stability and completion evidence', () => {
   const log = 'Event operations formal verification passed within the documented finite bounds.';

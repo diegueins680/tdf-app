@@ -9,15 +9,20 @@ import qualified Data.ByteString.Char8 as BS
 import Data.Text (Text)
 import Database.Persist.Postgresql (withPostgresqlPool)
 import Database.Persist.Sql hiding (loadConfig)
-import System.Environment (getEnv,setEnv)
+import System.Environment (getEnv,setEnv,lookupEnv)
 import Text.Read (readMaybe)
 import TDF.Config (loadConfig,AppConfig(..),EmailConfig(..))
 import TDF.DB (Env(..))
+import TDF.DisposableTicketDatabase (safeConfirmationDatabase)
 import TDF.Ticketing.Confirmation (startTicketConfirmationWorker)
 
 main :: IO ()
 main = do
   dsn <- getEnv "TICKET_CONFIRMATION_TEST_DSN"
+  ci <- (== Just "true") <$> lookupEnv "CI"
+  overrides <- traverse lookupEnv ["PGHOSTADDR", "PGSERVICE", "PGSERVICEFILE"]
+  unless (safeConfirmationDatabase ci overrides dsn) $
+    fail "Refusing non-local confirmation fixture routing or libpq overrides"
   port <- getEnv "TICKET_CONFIRMATION_SMTP_PORT" >>= maybe (fail "Invalid local SMTP port") pure . readMaybe
   unless (port>1024 && port<65536) (fail "Refusing invalid test port")
   cfg <- loadConfig

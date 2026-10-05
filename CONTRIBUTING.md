@@ -7,7 +7,7 @@ Thank you for contributing! This guide will help you get started.
 1. **Read the docs:**
    - [README.md](./README.md) - Project overview
    - [DEVELOPMENT.md](./DEVELOPMENT.md) - Development workflow
-   - [specs.yaml](./specs.yaml) - Business requirements
+   - [System specification](./formal/system/README.md) - Authority, requirements and executable conformance (`specs.yaml` is historical v1 material)
    - [Persona quality program](./docs/persona-testing/README.md) - deterministic fixtures, journeys, evidence labels, and safe seeding
 
 2. **Set up your environment:**

@@ -13,6 +13,7 @@ run_npm() {
 }
 
 if node "$ROOT/scripts/mobile-workspace-ready.mjs" --quiet; then
+  node "$ROOT/scripts/check-dependency-security.mjs" --mobile
   echo "▶ Linting, type-checking and testing tdf-mobile"
   run_npm --prefix "$ROOT/tdf-mobile" run lint
   run_npm --prefix "$ROOT/tdf-mobile" run typecheck

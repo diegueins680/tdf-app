@@ -698,6 +698,39 @@ DECLARE
   ticketing_table TEXT;
   enrichment_table TEXT;
 BEGIN
+  IF EXISTS (
+    SELECT 1 FROM (VALUES
+      ('commerce_checkout_session', 'trg_commerce_checkout_total', 'commerce_check_checkout_line_total', true, 5),
+      ('commerce_checkout_line_item', 'trg_commerce_checkout_line_total', 'commerce_check_checkout_line_total', true, 5),
+      ('commerce_checkout_session', 'trg_commerce_checkout_money_immutable', 'commerce_protect_checkout_money', false, 19)
+    ) expected(table_name, trigger_name, function_name, deferred, trigger_type)
+    WHERE NOT EXISTS (
+      SELECT 1 FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid
+      WHERE t.tgrelid=to_regclass('public.' || expected.table_name)
+        AND t.tgname=expected.trigger_name AND p.proname=expected.function_name
+        AND p.pronamespace='public'::regnamespace
+        AND t.tgenabled IN ('O','A') AND NOT t.tgisinternal
+        AND t.tgtype=expected.trigger_type
+        AND t.tgqual IS NULL AND t.tgattr=''::int2vector
+        AND t.tgdeferrable=expected.deferred AND t.tginitdeferred=expected.deferred
+    )
+  ) THEN
+    RAISE EXCEPTION 'Checkout monetary correspondence triggers are missing or disabled';
+  END IF;
+  IF to_regclass('public.commerce_checkout_amount_boundary') IS NULL THEN
+    RAISE EXCEPTION 'Checkout monetary migration snapshot fence is missing';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.commerce_checkout_amount_boundary WHERE singleton) THEN
+    RAISE EXCEPTION 'Checkout monetary migration snapshot fence is empty';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conrelid=to_regclass('public.merch_order')
+      AND conname='merch_order_commission_exact' AND contype='c' AND convalidated
+      AND pg_get_expr(conbin,conrelid)=
+        '((tdf_commission_minor)::numeric = div((((product_subtotal_minor)::numeric - (discount_minor)::numeric) * (tdf_commission_bps)::numeric), (10000)::numeric))'
+  ) THEN
+    RAISE EXCEPTION 'Exact merchandise commission constraint is missing or changed';
+  END IF;
   IF to_regclass('public.google_calendar_config') IS NULL
      OR to_regclass('public.google_calendar_event') IS NULL THEN
     RAISE EXCEPTION 'Calendar runtime relations are missing';
@@ -1719,6 +1752,12 @@ BEGIN
     END IF;
   END LOOP;
 
+  IF (SELECT count(*) FROM information_schema.columns
+      WHERE table_schema='public' AND table_name='ddex_validation_issue'
+        AND column_name IN ('severity','layer') AND is_nullable='YES') <> 2 THEN
+    RAISE EXCEPTION 'Canonical DDEX issue writes require nullable retained legacy severity and layer';
+  END IF;
+
   IF (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'ddex_document'
@@ -2088,6 +2127,7 @@ BEGIN
       ('service_booking_checkout_runtime', 'trg_service_booking_validate_runtime'),
       ('service_booking_checkout_runtime', 'trg_service_booking_validate_transition'),
       ('service_booking_checkout_runtime', 'trg_service_booking_record_transition'),
+      ('service_booking_checkout_runtime', 'trg_service_booking_sync_domain_booking_status'),
       ('booking_resource', 'trg_service_booking_allocate_resource'),
       ('booking', 'trg_service_booking_sync_legacy_allocation'),
       ('commerce_checkout_session', 'trg_service_booking_require_verified_payment'),
@@ -2100,6 +2140,37 @@ BEGIN
     WHERE actual.oid IS NULL
   ) THEN
     RAISE EXCEPTION 'Service booking invariant triggers are missing or disabled';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger t
+    WHERE t.tgrelid = 'public.booking'::regclass
+      AND t.tgname = 'trg_service_booking_sync_legacy_allocation' AND t.tgenabled = 'O'
+      AND t.tgfoid = to_regprocedure('public.service_booking_sync_legacy_booking_allocation()')
+      AND t.tgtype = 17 AND t.tgqual IS NULL AND NOT t.tgisinternal
+      AND NOT t.tgdeferrable AND NOT t.tginitdeferred
+      AND ARRAY['starts_at','ends_at','status','service_offering_id']::text[] <@ ARRAY(
+        SELECT a.attname::text FROM pg_attribute a
+        WHERE a.attrelid = t.tgrelid AND a.attnum = ANY(t.tgattr))
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_proc WHERE oid = to_regprocedure('public.service_booking_sync_legacy_booking_allocation()')
+      AND strpos(prosrc, 'booking_checkout_snapshot_correspondence') > 0
+      AND strpos(prosrc, 'booking_checkout_lifecycle_correspondence') > 0
+      AND strpos(prosrc, 'starts_at = EXCLUDED.starts_at') > 0
+      AND strpos(prosrc, 'ends_at = EXCLUDED.ends_at') > 0
+      AND strpos(prosrc, 'allocation_status = EXCLUDED.allocation_status') > 0
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_trigger t
+    WHERE t.tgrelid = 'public.service_booking_checkout_runtime'::regclass
+      AND t.tgname = 'trg_service_booking_sync_domain_booking_status' AND t.tgenabled = 'O'
+      AND t.tgfoid = to_regprocedure('public.service_booking_sync_domain_booking_status()')
+      AND t.tgtype = 17 AND t.tgqual IS NULL AND NOT t.tgisinternal
+      AND NOT t.tgdeferrable AND NOT t.tginitdeferred
+      AND ARRAY['fulfillment_status']::text[] <@ ARRAY(
+        SELECT a.attname::text FROM pg_attribute a
+        WHERE a.attrelid = t.tgrelid AND a.attnum = ANY(t.tgattr))
+  ) OR to_regprocedure('public.service_booking_projected_booking_status(text)') IS NULL THEN
+    RAISE EXCEPTION 'Booking calendar update and checkout correspondence contract is missing';
   END IF;
 
   IF NOT EXISTS (

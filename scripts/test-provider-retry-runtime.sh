@@ -5,6 +5,17 @@ TDF_PROVIDER_RETRY_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 TDF_PROVIDER_RETRY_CONTAINER=""
 TDF_PROVIDER_RETRY_URL=${TDF_PROVIDER_RETRY_DATABASE_URL:-}
 
+validate_runtime_url() {
+  node --input-type=module - "$TDF_PROVIDER_RETRY_URL" "$TDF_PROVIDER_RETRY_ROOT/scripts/lib/disposable-postgres-url.mjs" <<'JS'
+import { pathToFileURL } from 'node:url';
+const { disposablePostgresUrl } = await import(pathToFileURL(process.argv[3]));
+disposablePostgresUrl(process.argv[2], { ci: process.env.CI === 'true' });
+JS
+}
+test -z "${PGHOSTADDR:-}${PGSERVICE:-}${PGSERVICEFILE:-}" || {
+  echo 'Unset libpq routing overrides before provider retry fixture setup' >&2; exit 1;
+}
+
 cleanup() {
   if [ -n "$TDF_PROVIDER_RETRY_CONTAINER" ]; then
     docker rm -f "$TDF_PROVIDER_RETRY_CONTAINER" >/dev/null 2>&1 || true
@@ -33,6 +44,7 @@ if [ -z "$TDF_PROVIDER_RETRY_URL" ]; then
 fi
 
 # Validate the actual target before any schema write; never clear an existing DB.
+validate_runtime_url
 attempt=0
 until psql "$TDF_PROVIDER_RETRY_URL" -X -qAt -v ON_ERROR_STOP=1 -c 'SELECT 1' >/dev/null 2>&1; do
   attempt=$((attempt + 1))
@@ -73,7 +85,8 @@ for migration in \
   2026-09-11_provider_capability_catalog \
   2026-09-13_provider_execution_runtime \
   2026-09-15_provider_query_recovery \
-  2026-09-16_payment_intent_refund_sync; do
+  2026-09-16_payment_intent_refund_sync \
+  2026-10-04_checkout_amount_correspondence; do
   psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
     -f "$TDF_PROVIDER_RETRY_ROOT/tdf-hq/sql/$migration.sql" >/dev/null
 done
@@ -95,10 +108,12 @@ fi
 psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \
   -f "$TDF_PROVIDER_RETRY_ROOT/tdf-hq/sql/2026-09-15_provider_query_recovery.sql" >/dev/null
 
+# Match quality-backend.sh optimization settings so its compiled artifacts are
+# reused; --fast here invalidates both executable and test builds after that gate.
 cd "$TDF_PROVIDER_RETRY_ROOT/tdf-hq"
 TDF_PROVIDER_RETRY_DATABASE_URL="$TDF_PROVIDER_RETRY_URL" \
 PGOPTIONS='-c statement_timeout=15000 -c lock_timeout=10000' \
-  stack test --fast --test-arguments='--match=provider-retry-runtime +RTS -N2 -RTS'
+  stack test --test-arguments='--match=provider-retry-runtime +RTS -N2 -RTS'
 
 # Nonempty rollback must fail and leave all history readable.
 if psql "$TDF_PROVIDER_RETRY_URL" -X -q -v ON_ERROR_STOP=1 \

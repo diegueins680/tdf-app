@@ -1,0 +1,1 @@
+Checkout amount PostgreSQL: migration preflight/rollback, commit-time bounds, shipping compatibility, immutability, five negative controls, structural drift rejection, six concurrent append transactions and pre-migration snapshot fence passed.

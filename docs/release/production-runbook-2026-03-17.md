@@ -1,4 +1,13 @@
-# Production release runbook — 2026-03-17
+# Historical production release snapshot — 2026-03-17
+
+> Historical evidence only. This page records the March 17 submission decision;
+> its package IDs, build anchors, authentication copy and permission statements
+> are not current release authority. Do not execute a new store submission from
+> this snapshot. Check the root-pinned Mobile revision's `app.config.ts`,
+> `eas.json` and release checks for current iOS/Android identities and behavior,
+> and [the current tester program](mobile-internal-testers-campaign-2026-06-18.md)
+> for distribution evidence and remaining admission requirements. Production web
+> and API deployment follow [the Hetzner runbook](../../ops/hetzner/README.md).
 
 ## Purpose
 Freeze the current release identity, Android RC-of-record, exact production commands, and the remaining operator-only iOS signing step.

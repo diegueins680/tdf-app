@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 
 import { loadSessionSnapshot, logoutSessionRequest, reconcileOnboardingProgress } from '../api/session';
 import { captureReconciledFirstValue } from '../analytics/onboardingCompletionAnalytics';
-import { AUTH_SESSION_EXPIRED_EVENT } from './authEvents';
+import { advanceAuthSessionEpoch, AUTH_SESSION_EXPIRED_EVENT } from './authEvents';
 import type { LocalePreferences } from '../api/preferences';
 import { reconcileSessionPersonalData } from '../utils/sessionPersonalData';
 
@@ -228,6 +228,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
 
   const clearLocalSessionState = useCallback(() => {
     sessionVersionRef.current += 1;
+    advanceAuthSessionEpoch();
     setLoading(false);
     updateSessionState(null);
     transientApiToken = null;
@@ -257,6 +258,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
         const snapshot = await loadSessionSnapshot();
         if (cancelled || versionAtStart !== sessionVersionRef.current) return;
 
+        advanceAuthSessionEpoch();
         if (!snapshot) {
           updateSessionState(null);
           return;
@@ -294,6 +296,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
 
   const login = useCallback((user: SessionUser, options?: LoginOptions) => {
     sessionVersionRef.current += 1;
+    advanceAuthSessionEpoch();
     setPersistScope(options?.remember === false ? 'session' : 'local');
     setLoading(false);
     updateSessionState(normalizeSessionUser(user));
@@ -309,6 +312,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
 
   const setApiToken = useCallback((token: string | null) => {
     sessionVersionRef.current += 1;
+    advanceAuthSessionEpoch();
     const normalized = normalizeApiToken(token);
 
     setSession((prev) => {
@@ -410,5 +414,7 @@ export function getActiveSession(): SessionUser | null {
 }
 
 export function setTransientApiToken(token: string | null | undefined): void {
-  transientApiToken = normalizeApiToken(token);
+  const normalized = normalizeApiToken(token);
+  if (normalized !== transientApiToken) advanceAuthSessionEpoch();
+  transientApiToken = normalized;
 }
