@@ -949,7 +949,7 @@
     {
       "id": "AUTH-CORS-001",
       "title": "Explicit production credentialed browser origins",
-      "statement": "Production must reject credentialed allow-all or wildcard CORS configuration and reject requests from origins outside its explicit trusted origins before the application handler executes.",
+      "statement": "Production must reject credentialed allow-all or wildcard CORS configuration and reject requests from origins outside its explicit trusted origins before the application handler executes. Explicitly trusted origins must support the existing X-Order-Lookup-Token header for public checkout GET/POST preflights; header permission does not replace server-side order authorization.",
       "domain": "AUTH",
       "actors": [
         "Browser user",
@@ -980,7 +980,8 @@
         "Startup with valid explicit origins -> validated",
         "Trusted Origin -> application handler",
         "Untrusted Origin -> middleware rejection",
-        "No Origin -> application handler subject to endpoint authentication"
+        "No Origin -> application handler subject to endpoint authentication",
+        "Trusted GET/POST checkout preflight admits X-Order-Lookup-Token alongside content-type/idempotency-key; untrusted origin remains denied."
       ],
       "forbiddenTransitions": [
         "Production allow-all/wildcard configuration -> server started",
@@ -1022,7 +1023,7 @@
       "authority": "Safety correction authorized by the current audit; explicit origin contract with observed production counterexample",
       "property": "Production credentialed origin admission requires an explicitly trusted origin; arbitrary origins cannot reach the handler.",
       "contract": "formal/system/cors-boundary.md",
-      "verification": "Actual Haskell middleware cases and two controlled implementation mutations; full gates and deployment pending.",
+      "verification": "Actual Haskell middleware cases and two controlled implementation mutations; full gates and deployment pending. Actual WAI middleware regression covers lookup-token GET/POST preflights for trusted and untrusted origins.",
       "evidence": "scripts/verify-cors-boundary.py emits source-bound finite runtime receipts."
     },
     {
@@ -6271,7 +6272,7 @@
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "e40608b5bc2ce1429c61fbfc6131f4e6e134f599cbf734a62ddd505fab3264b6",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
     "tdf-hq/src/TDF/Config.hs": "abbb65101876065724d97c24b1aef742f86300ca006e14e9c0565eb4af0dafe5",
-    "tdf-hq/src/TDF/Cors.hs": "94a8b2ffedfc793e6d8c44d62f0388dc853e3da95e75e23dfdb6fed76d7f88dd",
+    "tdf-hq/src/TDF/Cors.hs": "53b4f194ffdd118805585962fc6a2f9c9e9121a6c55d0990581dfe531ba9284f",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/Directory/Policy.hs": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
@@ -6322,7 +6323,7 @@
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "6d6019cff6baa80c82fb421c02bddf5e609b88451ad73ef0b31fcd4fb35fe7f6",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "bc9e5e0920de51b7b8c16d764991911c9eabb087cd024f2405aeb98174c57563",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
-    "tdf-hq/test/TDF/CorsSpec.hs": "ca283c34c7b4368f59ba7af790950482e527747e95574afbbd22c1ce0e6a4245",
+    "tdf-hq/test/TDF/CorsSpec.hs": "8be7f01a94ab4c4141534db48843adc3e6db345770b2f0425f457b6100488694",
     "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "e68face714495ad762b3ccb8eec7b38ce6047274c44fd6977dc44abfd56f9439",
     "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs": "dd1168717766515274065c45da50d0f6da23e824ccc7a2e49055e2977fb95ddd",
     "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs": "cdf133bc96409a0c3a56abb7a2023b0d3dc9dd0237bdb50d9a4f46b97f72ab55",
@@ -22790,7 +22791,7 @@
     {
       "id": "SURFACE-057525240b5b11f7",
       "path": "tdf-hq/src/TDF/Cors.hs",
-      "sha256": "94a8b2ffedfc793e6d8c44d62f0388dc853e3da95e75e23dfdb6fed76d7f88dd",
+      "sha256": "53b4f194ffdd118805585962fc6a2f9c9e9121a6c55d0990581dfe531ba9284f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24273,7 +24274,7 @@
     {
       "id": "SURFACE-56829a36e8042830",
       "path": "tdf-hq/test/TDF/CorsSpec.hs",
-      "sha256": "ca283c34c7b4368f59ba7af790950482e527747e95574afbbd22c1ce0e6a4245",
+      "sha256": "8be7f01a94ab4c4141534db48843adc3e6db345770b2f0425f457b6100488694",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
