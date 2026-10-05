@@ -3,6 +3,7 @@ import { Alert, Button, Checkbox, FormControlLabel, Stack, Typography } from '@m
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Link as RouterLink } from 'react-router-dom';
+import { isAccountDeletionFormEnabled } from '../config/accountDeletionRollout';
 import { Catalogs } from '../api/catalogs';
 import { requestAccountDeletion } from '../api/accountDeletion';
 import { loadSessionSnapshot } from '../api/session';
@@ -46,10 +47,11 @@ function DeletionForm({ partyId, username }: { partyId: number; username: string
 export default function AccountDeletionPage() {
   const { t, i18n } = useTranslation();
   const { session, loading, logout } = useSession();
+  const formEnabled = isAccountDeletionFormEnabled();
   const identity = useQuery({
     queryKey: ['account-deletion-session', session?.partyId],
     queryFn: loadSessionSnapshot,
-    enabled: !!session && !loading,
+    enabled: formEnabled && !!session && !loading,
     retry: false,
     staleTime: 0,
     gcTime: 0,
@@ -65,10 +67,13 @@ export default function AccountDeletionPage() {
       <Button aria-pressed={i18n.language.startsWith('en')} onClick={() => void i18n.changeLanguage('en')}>English</Button>
     </Stack>
     <Typography component="h1" variant="h3">{t('accountDeletion.title')}</Typography>
-    <Typography>{t('accountDeletion.intro')}</Typography>
+    <Typography>{t(formEnabled ? 'accountDeletion.intro' : 'accountDeletion.emailIntro')}</Typography>
     <Typography>{t('accountDeletion.timing')}</Typography>
     <Typography>{t('accountDeletion.retention')}</Typography>
-    {loading || (session && identity.isPending) ? <Typography role="status">{t('accountDeletion.loading')}</Typography> : authenticated
+    {!formEnabled ? <Stack spacing={2}>
+      <Typography>{t('accountDeletion.emailHelp')}</Typography>
+      <Button component="a" href="mailto:info@tdfrecords.net?subject=TDF%20account%20deletion" variant="contained">{t('accountDeletion.emailRequest')}</Button>
+    </Stack> : loading || (session && identity.isPending) ? <Typography role="status">{t('accountDeletion.loading')}</Typography> : authenticated
       ? <DeletionForm key={identity.data!.partyId} partyId={identity.data!.partyId} username={identity.data!.username} />
       : <Stack spacing={2}>
         {identity.isError && <Alert severity="error">{t('accountDeletion.unavailable')} <Button onClick={() => void identity.refetch()}>{t('accountDeletion.retry')}</Button></Alert>}

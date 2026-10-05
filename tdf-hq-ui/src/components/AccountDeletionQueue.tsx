@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Alert, Box, Button, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { isAccountDeletionFormEnabled } from '../config/accountDeletionRollout';
 import { InternalFeedback } from '../api/internalFeedback';
 import type { AccountDeletionActionDTO, LegacyFeedbackDTO } from '../api/types';
 
@@ -42,11 +43,14 @@ function Resolution({ item, refresh, onResolved }: { item: LegacyFeedbackDTO; re
 export default function AccountDeletionQueue() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const formEnabled = isAccountDeletionFormEnabled();
   const [offset, setOffset] = useState(0);
   const requests = useQuery({
     queryKey: ['internal-feedback', 'account-deletion', offset],
+    enabled: formEnabled,
     queryFn: () => InternalFeedback.listLegacy({ accountDeletionOnly: true, offset }),
   });
+  if (!formEnabled) return null;
   return <Card variant="outlined"><CardContent><Stack spacing={2}>
     <Typography component="h2" variant="h6">{t('accountDeletion.queueTitle')}</Typography>
     {requests.isError && <Alert severity="error">{t('accountDeletion.queueError')}</Alert>}

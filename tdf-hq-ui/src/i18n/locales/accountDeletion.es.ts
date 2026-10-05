@@ -1,4 +1,8 @@
 export default {
+  emailIntro: "Puedes solicitar la eliminación de tu cuenta completa y sus datos personales, incluido el contenido que publicaste.",
+  emailHelp: "Escribe a info@tdfrecords.net desde el contacto asociado a tu cuenta. El equipo verificará tu identidad antes de tramitar la solicitud. No envíes contraseñas ni documentos de identidad.",
+  emailRequest: "Solicitar eliminación por correo",
+
   pending: "Pendiente",
   completed: "Completada",
   rejected: "Rechazada",

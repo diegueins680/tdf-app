@@ -27,6 +27,8 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
   webServer: {
+    // Synthetic browser fixtures exercise the enabled workflow; production defaults off.
+    env: { VITE_ACCOUNT_DELETION_FORM_ENABLED: 'true' },
     command: 'npm run build:e2e --workspace=tdf-hq-ui && npm run preview:e2e --workspace=tdf-hq-ui',
     url: 'http://127.0.0.1:4173/inicio',
     reuseExistingServer: !process.env.CI,

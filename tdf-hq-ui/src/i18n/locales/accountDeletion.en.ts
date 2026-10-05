@@ -1,4 +1,8 @@
 export default {
+  emailIntro: "You can request deletion of your entire account and personal data, including content you published.",
+  emailHelp: "Write to info@tdfrecords.net using the contact associated with your account. The team will verify ownership before processing your request. Do not send passwords or identity documents.",
+  emailRequest: "Request deletion by email",
+
   pending: "Pending",
   completed: "Completed",
   rejected: "Rejected",

@@ -9,23 +9,26 @@ import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
 
 let session: SessionUser | null;
 let categoriesAvailable = true;
+let formEnabled = true;
+jest.unstable_mockModule('../config/accountDeletionRollout', () => ({ isAccountDeletionFormEnabled: () => formEnabled }));
 const logout = jest.fn();
 const snapshot = jest.fn<() => Promise<SessionResponseDTO | null>>();
 const request = jest.fn<(...args: unknown[]) => Promise<void>>();
 jest.unstable_mockModule('../session/SessionContext', () => ({ useSession: () => ({ session, loading: false, logout }) }));
 jest.unstable_mockModule('../api/session', () => ({ loadSessionSnapshot: snapshot }));
 jest.unstable_mockModule('../api/accountDeletion', () => ({ requestAccountDeletion: request }));
-jest.unstable_mockModule('../api/catalogs', () => ({ Catalogs: { listPublicBatch: async () => ({ catalogs: [
+const listPublicBatch = jest.fn(async () => ({ catalogs: [
   { catalog: { code: 'feedback-categories' }, items: categoriesAvailable ? [{ id: 'category', code: 'idea', active: true, workflowState: 'published' }] : [] },
   { catalog: { code: 'feedback-severities' }, items: [{ id: 'severity', code: 'p4', active: true, workflowState: 'published' }] },
-] }) } }));
+] }));
+jest.unstable_mockModule('../api/catalogs', () => ({ Catalogs: { listPublicBatch } }));
 const { default: Page } = await import('./AccountDeletionPage');
 function mount() { return render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><MemoryRouter><Page /></MemoryRouter></QueryClientProvider>); }
 beforeEach(async () => {
-  await i18n.changeLanguage('es'); categoriesAvailable = true;
+  await i18n.changeLanguage('es'); categoriesAvailable = true; formEnabled = true;
   session = { username: 'owner@example.com', displayName: 'Owner', roles: [], partyId: 42 };
   snapshot.mockReset(); snapshot.mockResolvedValue(session as SessionResponseDTO);
-  request.mockReset(); request.mockResolvedValue(); logout.mockClear();
+  request.mockReset(); request.mockResolvedValue(); logout.mockClear(); listPublicBatch.mockClear();
 });
 afterEach(cleanup);
 it('requires sign-in and preserves the deletion destination, without sending anything', () => {
@@ -83,4 +86,23 @@ it('sends only once while a request is pending, even for repeated form submissio
   await waitFor(() => expect(request).toHaveBeenCalledTimes(1));
   await act(async () => { finish(); });
   expect((await screen.findByRole('status')).textContent).toContain('Solicitud de eliminación recibida');
+});
+
+it('retains the existing contact route and sends no API request before rollout', async () => {
+  formEnabled = false;
+  const view = mount();
+  const link = screen.getByRole('link', { name: 'Solicitar eliminación por correo' });
+  expect(link.getAttribute('href')).toBe('mailto:info@tdfrecords.net?subject=TDF%20account%20deletion');
+  expect(screen.queryByRole('checkbox')).toBeNull();
+  expect(screen.queryByRole('status')).toBeNull();
+  expect(view.container.textContent).not.toContain('No necesitas enviar un correo');
+  await act(async () => { await Promise.resolve(); });
+  expect(snapshot).not.toHaveBeenCalled(); expect(request).not.toHaveBeenCalled(); expect(listPublicBatch).not.toHaveBeenCalled();
+  await expectNoSeriousAccessibilityViolations(view.container);
+});
+it('explains the available contact route in English before rollout', async () => {
+  formEnabled = false; await i18n.changeLanguage('en'); mount();
+  expect(screen.getByRole('link', { name: 'Request deletion by email' }).getAttribute('href')).toContain('mailto:info@tdfrecords.net');
+  expect(screen.queryByRole('checkbox')).toBeNull();
+  expect(snapshot).not.toHaveBeenCalled(); expect(request).not.toHaveBeenCalled();
 });

@@ -6,6 +6,9 @@ import { createInstance } from 'i18next';
 import es from '../i18n/locales/accountDeletion.es';
 import type { AccountDeletionActionDTO, LegacyFeedbackDTO } from '../api/types';
 
+let formEnabled = true;
+jest.unstable_mockModule('../config/accountDeletionRollout', () => ({ isAccountDeletionFormEnabled: () => formEnabled }));
+beforeEach(() => { formEnabled = true; });
 const resolve = jest.fn<(id: string, outcome: 'completed' | 'rejected', note: string) => Promise<AccountDeletionActionDTO>>();
 const list = jest.fn<(filters: unknown) => Promise<LegacyFeedbackDTO[]>>();
 jest.unstable_mockModule('../api/internalFeedback', () => ({ InternalFeedback: { listLegacy: list, resolveDeletion: resolve } }));
@@ -73,4 +76,10 @@ it('retains the authoritative terminal receipt when the subsequent queue refresh
   expect(screen.queryByRole('button', { name: es.markCompleted })).toBeNull();
   expect(screen.queryByRole('button', { name: es.markRejected })).toBeNull();
   expect(resolve).toHaveBeenCalledTimes(1);
+});
+
+it('does not query or expose the new admin workflow before rollout', async () => {
+  formEnabled = false; await show();
+  expect(screen.queryByRole('heading', { name: es.queueTitle })).toBeNull();
+  expect(list).not.toHaveBeenCalled(); expect(resolve).not.toHaveBeenCalled();
 });
