@@ -3431,7 +3431,7 @@
     {
       "id": "SURFACE-c6b247cfc6b5135b",
       "path": "scripts/interactions/test-api.py",
-      "sha256": "9559b8a8b498ada7f95d9c9a3401d2ba3981e46b2f0e110431f58cb9751c8879",
+      "sha256": "585bea6f29fe51db5f460d60ae24e5b91f625ddaf1c8aeb3c1a2e7f2ce064dd4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20913,7 +20913,7 @@
     },
     {
       "path": "formal/interactions/README.md",
-      "sha256": "83021b52a334e912e0a32f19e05697b3fd7f5b95a65faa56d5492341d1e79cda",
+      "sha256": "9608db1c42268b2cc12b5d126aa4b0dbd20d4977d42036eccc52bcd00f03e39d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21543,7 +21543,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "3aa5d5d38d33b51c5e09286b95d7e3007553acc40a36a7a6ec0aa5c7e56999a1",
+      "sha256": "50b847614e7ab12a46a3e1ab8e015b441b243cab6af0714aa40c91ba31de0797",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

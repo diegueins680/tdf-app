@@ -3313,7 +3313,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -5913,6 +5913,65 @@
       },
       "verification": "Actual controller tests inject changed head/base/queue/draft/closure, revocation failure and duplicate heads; protected-main enforcement is re-observed during bootstrap.",
       "evidence": "Current-head unit and hosted repository gates plus source-bound metadata/protection receipts; no universal concurrency proof."
+    },
+    {
+      "id": "SOC-ABUSE-001",
+      "title": "Rejected interaction writes consume the exact per-account minute budget",
+      "statement": "Authenticated interaction write attempts, including domain authorization denials, consume a durable per-account calendar-minute counter; increment 91 returns HTTP 429.",
+      "authority": "Existing canonical interaction_integrity SQL limiter and routed HTTP behavior; CI regression preserves the existing threshold.",
+      "domain": "SOC",
+      "actors": [
+        "Authenticated interaction actor"
+      ],
+      "preconditions": [
+        "Installed canonical interaction schema and live authenticated account"
+      ],
+      "inputs": [
+        "Write command and current database time"
+      ],
+      "state": {
+        "boundary": "directory_rate_limit interaction:write scope and HTTP queryWith"
+      },
+      "allowedTransitions": [
+        "Increment budget before domain command; return HTTP 429 when the minute counter exceeds 90"
+      ],
+      "forbiddenTransitions": [
+        "Rejected domain writes roll back their consumed budget",
+        "Allow increment 91 within a minute",
+        "Treat a fixed-minute rollover as a missing budget"
+      ],
+      "effects": [
+        "Durable per-account counter independent of denied domain mutation"
+      ],
+      "authorization": "Current HTTP session remains required; rate limiting never grants domain authority.",
+      "privacy": "Budget key is the existing hashed account identifier; no new PII collection.",
+      "concurrency": "Atomic PostgreSQL upsert serializes increments for the same account and minute.",
+      "idempotency": "Repeated write attempts consume the budget even if the domain command is a replay.",
+      "failure": "Domain rejection preserves the committed budget; quota exhaustion returns 429.",
+      "recovery": "The next database calendar-minute bucket has its own budget.",
+      "observability": "Actual HTTP responses and persisted isolated-test counter, without bearer tokens.",
+      "source": "tdf-hq/sql/2026-09-28_interaction_integrity.sql; scripts/interactions/test-api.py",
+      "property": "HTTP rejection at exactly counter 91, including unauthorized commands; regression spans at most two calendar windows.",
+      "contract": "formal/interactions/README.md",
+      "implementation": [
+        "tdf-hq/sql/2026-09-28_interaction_integrity.sql",
+        "tdf-hq/src/TDF/Interactions/Server.hs"
+      ],
+      "tests": [
+        "scripts/interactions/test-api.py",
+        "scripts/interactions/test-http.sh"
+      ],
+      "formalModels": [],
+      "verification": "Isolated real HTTP/PostgreSQL test checks 429 and exact persisted counter; no simulated payment or production evidence.",
+      "evidence": "CI run 37380322736 crossed 22:22 to 22:23 UTC during the old single-window assertion; corrected HTTP regression awaits execution.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Actual SQL and HTTP boundary inspected; revised runtime test pending.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Existing implementation unchanged; current revised HTTP test must execute."
+      }
     }
   ]
 }
