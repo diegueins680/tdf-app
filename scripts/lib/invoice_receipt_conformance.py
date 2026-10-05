@@ -65,10 +65,19 @@ def verify_invoice_receipts(sql, request, check, env, database, output, actors):
     iid = new_invoice()
     check('receipt cannot relabel USD amounts as EUR', receipt(iid, crCurrency='EUR')[0] == 422)
     check('currency rejection creates no receipt', sql('SELECT count(*) FROM receipt WHERE invoice_id=' + str(iid)) == '0')
-    responses = race('SELECT id FROM invoice WHERE id=' + str(iid) + ' FOR UPDATE',
-        [lambda: receipt(iid, crBuyerName='Synthetic Buyer', crBuyerEmail='synthetic@example.invalid', crNotes='Immutable synthetic note') for _ in range(8)])
+    # Force a deterministic stored representation change even on clocks that
+    # already emit microseconds. PostgreSQL's normal precision conversion exposed
+    # the initial/replay mismatch on Linux; this fixture tests persistence as the
+    # authority rather than relying on a platform's clock resolution.
+    sql("CREATE FUNCTION fixture_receipt_storage() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN NEW.issued_at := NEW.issued_at + interval '1 microsecond'; RETURN NEW; END $$; CREATE TRIGGER fixture_receipt_storage BEFORE INSERT ON receipt FOR EACH ROW EXECUTE FUNCTION fixture_receipt_storage()")
+    try:
+        responses = race('SELECT id FROM invoice WHERE id=' + str(iid) + ' FOR UPDATE',
+            [lambda: receipt(iid, crBuyerName='Synthetic Buyer', crBuyerEmail='synthetic@example.invalid', crNotes='Immutable synthetic note') for _ in range(8)])
+    finally:
+        sql('DROP TRIGGER fixture_receipt_storage ON receipt; DROP FUNCTION fixture_receipt_storage()')
     check('eight same-invoice concurrent requests all succeed', all(r[0] == 200 for r in responses))
     bodies = [json.loads(r[1]) for r in responses]
+    (output / 'invoice-receipt-replay.json').write_text(json.dumps(bodies, indent=2) + '\n')
     check('same-invoice replays return exactly one immutable receipt', len({json.dumps(b, sort_keys=True) for b in bodies}) == 1)
     first = bodies[0]
     check('receipt preserves invoice currency and exact minor units',

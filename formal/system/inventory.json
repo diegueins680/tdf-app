@@ -3556,7 +3556,7 @@
     {
       "id": "SURFACE-51d8657e7eea8356",
       "path": "scripts/lib/invoice_receipt_conformance.py",
-      "sha256": "6d3027e319102cfc90b3dbdb55c6b2b5e71a5474bce547a9ffbc91173e8d6dbb",
+      "sha256": "c83a551fadd81cfe006dd6bc59f3a9f20ffea17629144efd9aba5d47e8cfa544",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12418,7 +12418,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "1850a0e39b286ecc91f5005d85d5e78e371b25a9e307d2a1bd272fc018ec82bc",
+      "sha256": "21953cca48dd6c73e53f8264a6651acd75eadc20c700e75d043d48d21f7520a2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21543,7 +21543,7 @@
     },
     {
       "path": "formal/system/invoice-receipts.md",
-      "sha256": "66c745c48a97e69622774f135b694f52d8e8601429084394fc985ca5cda91a74",
+      "sha256": "325f44f68a6491d38e1782037f83365222ada188ca5a2f2acd74a5de3643e90d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21641,7 +21641,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "bf0ec0f54059046837b0dea1fa31354dba98f9c44cf9f6dceaa34125838ceff0",
+      "sha256": "28e840e77825291e392cdb6e4990c5bff49185d3ad08830fef9c54a48883ef0e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

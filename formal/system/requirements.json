@@ -5390,7 +5390,8 @@
         "currency relabeling or inconsistent/overflowed totals",
         "changed explicit replay parameters",
         "revoked authority commit/replay",
-        "partial invoice/receipt/line/counter commit"
+        "partial invoice/receipt/line/counter commit",
+        "Return pre-persistence values that differ from the canonical stored receipt on replay."
       ],
       "effects": [
         "Immutable receipt and line snapshot",
