@@ -80,6 +80,7 @@
       "scripts/__tests__/checkout-money-http.mjs",
       "scripts/__tests__/ci-change-scope.test.mjs",
       "scripts/__tests__/ci-pipeline.test.mjs",
+      "scripts/__tests__/compiled-api-surface.test.mjs",
       "scripts/__tests__/continuous-improvement-loop.test.mjs",
       "scripts/__tests__/dependency-security.test.mjs",
       "scripts/__tests__/disposable-postgres-url.test.mjs",
@@ -183,6 +184,7 @@
       "scripts/get-admin-token.sh",
       "scripts/get-instagram-token.mjs",
       "scripts/identity-reconciliation.mjs",
+      "scripts/inspect-compiled-api.mjs",
       "scripts/inspect-hetzner-production.mjs",
       "scripts/inspect-payment-staging.mjs",
       "scripts/instagram-lifecycle-artifact.mjs",
@@ -198,6 +200,7 @@
       "scripts/interactions/test-http.sh",
       "scripts/interactions/test-native.py",
       "scripts/interactions/test-schema.sh",
+      "scripts/lib/compiled-api-surface.mjs",
       "scripts/lib/continuous-improvement-loop-dirty-worktree.mjs",
       "scripts/lib/continuous-improvement-loop.mjs",
       "scripts/lib/discovery.mjs",
@@ -2218,7 +2221,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "4e8e990fbd6c83fa8d561f56d92de2192bac531d364b2f7ae201a16c61becade",
+      "sha256": "a995cf94e401612ee0460b96ad72320c5951f2c232cd309031804031df72961a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2543,6 +2546,12 @@
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
       "sha256": "64921de12e4f6ef21a8a65763da451acdf1492ca897c318019c2e835da140114",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-336f05a0284b88b9",
+      "path": "scripts/__tests__/compiled-api-surface.test.mjs",
+      "sha256": "9b6814b63c39a466a1e0343378d80c201db097b021881e1aa5e8725834f380b7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3164,6 +3173,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-0c3b107b729b7e74",
+      "path": "scripts/inspect-compiled-api.mjs",
+      "sha256": "da86cd9d992fbfcd232c10bdd956ea2b8280e5353e3ff9f52eac50503f6562f4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f9faf7061e36724c",
       "path": "scripts/inspect-hetzner-production.mjs",
       "sha256": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
@@ -3251,6 +3266,12 @@
       "id": "SURFACE-b7108336da7c8a87",
       "path": "scripts/interactions/test-schema.sh",
       "sha256": "72952601d46122332d21301fa22156c7153c43ac1eec3d5f3b64223211aee214",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-33d3dc767fe336d3",
+      "path": "scripts/lib/compiled-api-surface.mjs",
+      "sha256": "fdaf9455ddfb535b91278a59cc085905073b84498dd5ae8b105ff167d78190a2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3508,7 +3529,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "29f89bd3ea19fcb1d5edd95943fd9f29a2d3fcec2cb1e612f159b28442ad8346",
+      "sha256": "9ca4d1af4a59d5e6d10e2d4d8436e4497baa566e6bddec4a77c28b541e2d62a3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8740,7 +8761,7 @@
     {
       "id": "SURFACE-22005f90f8f40547",
       "path": "tdf-hq/app/Main.hs",
-      "sha256": "a77da4d842d2801c41483e003203ad86320deef883fed24f7906978276eb86cf",
+      "sha256": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10918,7 +10939,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "7f54aa410bfc4a1e9f5430d3bea6e8a9ac2f5f8269793a90733b42c3d1018d56",
+      "sha256": "3254ce2083c37d35508059895ca4d49657744598ec7a47648981f373643b2a6b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12286,7 +12307,7 @@
     {
       "id": "SURFACE-2ece749119c0d78c",
       "path": "tdf-hq/test/TDF/APITypesSpec.hs",
-      "sha256": "49e5dae9be52ff8fccc863476d77486ce1dac08037cea90d3bf398bbdee9a1fa",
+      "sha256": "81afeae7436c56aa6554caeb7010dcc7a9408d30beb52b2694c519bd8ea54236",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20255,7 +20276,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "87498d884915219f94d17dc8e8f49d41133ccfb7be690177a148cf87e6b92172",
+      "sha256": "da87a8d00e9b9d4a8bc116099fb2700ee620d79ea6adc9420336cded173c9ca2",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -20284,6 +20305,13 @@
     {
       "path": "formal/system/checkout-arithmetic.md",
       "sha256": "e076c317f3ab6740d9b4118d5dad938fd6acb5a4e527c48e2acba01fd70014e3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/compiled-api-boundary.md",
+      "sha256": "ad7dacbd0c5fe6a4346d1ef0ea06568f2ead9ddd945e5b475eb5c6f5ad891c27",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20367,7 +20395,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "46f57e18930083d3e886979de22342da8aa79c531a625132708c0812e605a84f",
+      "sha256": "7bd36ef929d1131b24a7fffc9e841416dabff7821ca75b445e9c105524fed56a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

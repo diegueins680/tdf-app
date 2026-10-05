@@ -1,11 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeOperators #-}
 {-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
 module TDF.APITypesSpec (spec) where
 
-import Data.Aeson (eitherDecode, encode, object, toJSON, (.=))
+import Data.Aeson (Value, eitherDecode, encode, object, toJSON, (.=))
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import Data.Proxy (Proxy(..))
+import Servant (AuthProtect, Get, Header, Header', JSON, Post, Required, Strict, (:>))
 import Data.Maybe (isJust)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -65,6 +69,28 @@ import TDF.Trials.DTO (TrialRequestIn (..))
 
 spec :: Spec
 spec = do
+    describe "compiler-derived API description" $ do
+        it "retains the actual method and status constructors" $ do
+            let node :: String -> String -> [Value] -> Value
+                node moduleName name args = object
+                    [ "module" .= (moduleName :: String), "name" .= (name :: String), "args" .= args ]
+            API.describeApiType (Proxy :: Proxy (Get '[JSON] T.Text)) `shouldBe`
+                node "Servant.API.Verbs" "Verb"
+                    [ node "Network.HTTP.Types.Method" "'GET" []
+                    , node "GHC.TypeLits" "200" []
+                    , node "GHC.Types" "':"
+                        [ node "Servant.API.ContentTypes" "JSON" []
+                        , node "GHC.Types" "'[]" [] ]
+                    , node "Data.Text.Internal" "Text" []
+                    ]
+        it "detects authorization, required-header and method mutations" $ do
+            API.describeApiType (Proxy :: Proxy (AuthProtect "bearer-token" :> Get '[JSON] T.Text))
+                `shouldNotBe` API.describeApiType (Proxy :: Proxy (Get '[JSON] T.Text))
+            API.describeApiType (Proxy :: Proxy (Header' '[Required, Strict] "Idempotency-Key" T.Text :> Get '[JSON] T.Text))
+                `shouldNotBe` API.describeApiType (Proxy :: Proxy (Header "Idempotency-Key" T.Text :> Get '[JSON] T.Text))
+            API.describeApiType (Proxy :: Proxy (Get '[JSON] T.Text))
+                `shouldNotBe` API.describeApiType (Proxy :: Proxy (Post '[JSON] T.Text))
+
     describe "NavigationPreferenceUpdate wire compatibility" $ do
         it "preserves generated preference values in both supported wire forms" $ property $
             let roundtrip :: Bool -> Bool -> Maybe Int -> Bool

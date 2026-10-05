@@ -290,6 +290,9 @@ jobs:
       - name: Build and test backend once
         run: bash scripts/quality-backend.sh
 
+      - name: Inspect the compiled Servant API against documented operations
+        run: node scripts/inspect-compiled-api.mjs --binary "$BACKEND_BINARY_OUT" --output "${{ runner.temp }}/compiled-api"
+
       - name: Verify booking object scope and concurrent resource calendar
         env:
           TDF_BOOKING_TEST_PG_HOST: postgres
@@ -458,6 +461,15 @@ jobs:
           PGPASSWORD: postgres
           TDF_INTERACTION_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
         run: bash scripts/interactions/test-http.sh
+
+      - name: Retain compiler-derived API discovery evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: compiled-api-${{ github.sha }}
+          path: ${{ runner.temp }}/compiled-api/
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Retain synthetic booking conformance evidence
         if: always()

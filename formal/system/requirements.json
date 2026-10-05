@@ -2968,6 +2968,85 @@
       "contract": "formal/system/private-upload-persistence.md",
       "verification": "Actual shell negative controls, digest-pinned synthetic Linux container replacement, redacted production mount inspection and guarded coordinated recovery verification.",
       "evidence": "Exact-revision CI logs and private runtime receipts; current production observation is nonconforming, not repaired by source edits."
+    },
+    {
+      "id": "SYS-API-003",
+      "title": "Compiler-derived API surface correspondence",
+      "domain": "SYS",
+      "statement": "The API discovery boundary must be derived from the same compiled CombinedAPI served by the backend, retain every supported branch and reject unknown combinators; disagreement with the declared OpenAPI route/status surface must remain explicit until reconciled.",
+      "actors": [
+        "API maintainer",
+        "Release verifier",
+        "Web and Mobile client developer"
+      ],
+      "preconditions": [
+        "Executable built from the reviewed source and initialized exact Mobile pin."
+      ],
+      "inputs": [
+        "Compiled CombinedAPI TypeRep",
+        "Resolved OpenAPI operations in generated traceability",
+        "Executable and source fingerprints"
+      ],
+      "state": {
+        "initial": "uninspected",
+        "states": [
+          "uninspected",
+          "described",
+          "decoded",
+          "compared",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Pure compiled description terminates without runtime startup.",
+        "Recognized syntax produces ordered operations and explicit opaque mounts.",
+        "Comparison records missing, extra, competing routes and success-status differences."
+      ],
+      "forbiddenTransitions": [
+        "Silently omit an unknown API combinator.",
+        "Treat absence of AuthProtect as proof of public access.",
+        "Treat compiler type names as verified JSON codecs.",
+        "Admit source-changing or binary-changing execution as fresh evidence."
+      ],
+      "effects": [
+        "Revision-scoped compiled syntax, route metadata and unresolved correspondence gaps are retained."
+      ],
+      "authorization": "Description is a local executable mode; it performs no request and grants no backend capability. Auth combinators are syntax evidence, not a complete capability matrix.",
+      "privacy": "No runtime credentials, database rows, tokens or provider responses are needed or inherited by the inspector.",
+      "concurrency": "Source and binary fingerprints must remain stable across the bounded local inspection; this does not establish database concurrency properties.",
+      "idempotency": "Inspection is read-only except exclusive creation of a new evidence directory. Earlier evidence cannot be overwritten.",
+      "failure": "Unknown syntax, malformed output, startup failure, timeout, changed source/binary, or ambiguous documented routing rejects execution.",
+      "recovery": "Preserve failed evidence; repair the explicit source or decoder and rerun from a fresh directory.",
+      "observability": "CI retains raw compiler output, normalized surface, comparison, binary hash and source fingerprints.",
+      "source": "Servant type-level API in TDF.Server.CombinedAPI and current OpenAPI; formal/system/compiled-api-boundary.md.",
+      "implementation": [
+        "tdf-hq/app/Main.hs",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "scripts/inspect-compiled-api.mjs",
+        "scripts/lib/compiled-api-surface.mjs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/APITypesSpec.hs",
+        "scripts/__tests__/compiled-api-surface.test.mjs"
+      ],
+      "formalModels": [],
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "medium",
+      "ambiguity": [
+        "Complete CombinedAPI execution and reconciliation of discovered differences remain pending.",
+        "Raw routing, handler security, middleware, DTO codecs and errors remain separate conformance boundaries."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Compiler-derived exporter and rejection controls exist; full executable output and route/status gap reconciliation remain required. No whole-API conformance claim."
+      },
+      "authority": "Compiled server type establishes implemented route declarations; approved product/API intent still governs correction of discovered contradictions.",
+      "property": "Every supported compiled branch remains represented; unknown branches and stale evidence reject rather than disappear.",
+      "contract": "formal/system/compiled-api-boundary.md",
+      "verification": "Actual Stack/GHC type reflection, Hspec mutation controls, Node decoder controls and exact-candidate executable inspection in CI.",
+      "evidence": "Revision-scoped compiled-api artifact; probe and test results do not substitute for complete executable conformance."
     }
   ]
 }

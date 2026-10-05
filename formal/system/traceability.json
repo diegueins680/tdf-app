@@ -2969,10 +2969,89 @@
       "contract": "formal/system/private-upload-persistence.md",
       "verification": "Actual shell negative controls, digest-pinned synthetic Linux container replacement, redacted production mount inspection and guarded coordinated recovery verification.",
       "evidence": "Exact-revision CI logs and private runtime receipts; current production observation is nonconforming, not repaired by source edits."
+    },
+    {
+      "id": "SYS-API-003",
+      "title": "Compiler-derived API surface correspondence",
+      "domain": "SYS",
+      "statement": "The API discovery boundary must be derived from the same compiled CombinedAPI served by the backend, retain every supported branch and reject unknown combinators; disagreement with the declared OpenAPI route/status surface must remain explicit until reconciled.",
+      "actors": [
+        "API maintainer",
+        "Release verifier",
+        "Web and Mobile client developer"
+      ],
+      "preconditions": [
+        "Executable built from the reviewed source and initialized exact Mobile pin."
+      ],
+      "inputs": [
+        "Compiled CombinedAPI TypeRep",
+        "Resolved OpenAPI operations in generated traceability",
+        "Executable and source fingerprints"
+      ],
+      "state": {
+        "initial": "uninspected",
+        "states": [
+          "uninspected",
+          "described",
+          "decoded",
+          "compared",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Pure compiled description terminates without runtime startup.",
+        "Recognized syntax produces ordered operations and explicit opaque mounts.",
+        "Comparison records missing, extra, competing routes and success-status differences."
+      ],
+      "forbiddenTransitions": [
+        "Silently omit an unknown API combinator.",
+        "Treat absence of AuthProtect as proof of public access.",
+        "Treat compiler type names as verified JSON codecs.",
+        "Admit source-changing or binary-changing execution as fresh evidence."
+      ],
+      "effects": [
+        "Revision-scoped compiled syntax, route metadata and unresolved correspondence gaps are retained."
+      ],
+      "authorization": "Description is a local executable mode; it performs no request and grants no backend capability. Auth combinators are syntax evidence, not a complete capability matrix.",
+      "privacy": "No runtime credentials, database rows, tokens or provider responses are needed or inherited by the inspector.",
+      "concurrency": "Source and binary fingerprints must remain stable across the bounded local inspection; this does not establish database concurrency properties.",
+      "idempotency": "Inspection is read-only except exclusive creation of a new evidence directory. Earlier evidence cannot be overwritten.",
+      "failure": "Unknown syntax, malformed output, startup failure, timeout, changed source/binary, or ambiguous documented routing rejects execution.",
+      "recovery": "Preserve failed evidence; repair the explicit source or decoder and rerun from a fresh directory.",
+      "observability": "CI retains raw compiler output, normalized surface, comparison, binary hash and source fingerprints.",
+      "source": "Servant type-level API in TDF.Server.CombinedAPI and current OpenAPI; formal/system/compiled-api-boundary.md.",
+      "implementation": [
+        "tdf-hq/app/Main.hs",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "scripts/inspect-compiled-api.mjs",
+        "scripts/lib/compiled-api-surface.mjs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/APITypesSpec.hs",
+        "scripts/__tests__/compiled-api-surface.test.mjs"
+      ],
+      "formalModels": [],
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "medium",
+      "ambiguity": [
+        "Complete CombinedAPI execution and reconciliation of discovered differences remain pending.",
+        "Raw routing, handler security, middleware, DTO codecs and errors remain separate conformance boundaries."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Compiler-derived exporter and rejection controls exist; full executable output and route/status gap reconciliation remain required. No whole-API conformance claim."
+      },
+      "authority": "Compiled server type establishes implemented route declarations; approved product/API intent still governs correction of discovered contradictions.",
+      "property": "Every supported compiled branch remains represented; unknown branches and stale evidence reject rather than disappear.",
+      "contract": "formal/system/compiled-api-boundary.md",
+      "verification": "Actual Stack/GHC type reflection, Hspec mutation controls, Node decoder controls and exact-candidate executable inspection in CI.",
+      "evidence": "Revision-scoped compiled-api artifact; probe and test results do not substitute for complete executable conformance."
     }
   ],
   "sourceFingerprints": {
-    ".github/workflows/ci.yml": "4e8e990fbd6c83fa8d561f56d92de2192bac531d364b2f7ae201a16c61becade",
+    ".github/workflows/ci.yml": "a995cf94e401612ee0460b96ad72320c5951f2c232cd309031804031df72961a",
     ".github/workflows/event-operations-formal.yml": "8cdbbb59f539a8394fde147ba38dc4f27260b9ac2c371c731da5b342401077d1",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
     "formal/event-operations/ChatMutationBoundary.cfg": "dc76bf1caa1a43de6891a51256da9efc4264ac45b882fef969bc15895068e0fa",
@@ -3021,6 +3100,7 @@
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "03fe83c795e80e464e4f0a6dba868723a60c079f6c5631e2b3435732eba649ea",
     "scripts/__tests__/ci-pipeline.test.mjs": "64921de12e4f6ef21a8a65763da451acdf1492ca897c318019c2e835da140114",
+    "scripts/__tests__/compiled-api-surface.test.mjs": "9b6814b63c39a466a1e0343378d80c201db097b021881e1aa5e8725834f380b7",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/formal-result-summary.test.mjs": "a3ecce01af25cb49f4b62fc51459ed9b36543f347b8d80cac6d4b1f1abfeca8c",
@@ -3042,7 +3122,9 @@
     "scripts/check-dependency-security.mjs": "4326c36055405ed802ea31a31fbb54c9843f02fbe3656a7ea43e3a3d60ec3475",
     "scripts/check-generated-api.mjs": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
     "scripts/ci-change-scope.mjs": "6e1bf4833fec7e1e51e230ccc830dca80470c0c2dcad18a2c329ad9defdf1379",
+    "scripts/inspect-compiled-api.mjs": "da86cd9d992fbfcd232c10bdd956ea2b8280e5353e3ff9f52eac50503f6562f4",
     "scripts/inspect-hetzner-production.mjs": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
+    "scripts/lib/compiled-api-surface.mjs": "fdaf9455ddfb535b91278a59cc085905073b84498dd5ae8b105ff167d78190a2",
     "scripts/lib/formal-result-summary.mjs": "fa378d768a1c4e8ff6fe67e8d18d61367cd1b272339107e71c497798fb657167",
     "scripts/lib/hetzner-migration-rehearsal.mjs": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a",
     "scripts/lib/hetzner-preparation.mjs": "b3c9f1da219779c1d1d62190569108077112af6695d95bd9ecc3c5da92cf0e5c",
@@ -3054,7 +3136,7 @@
     "scripts/production-migrations.json": "78c020063a9657ca07d6021373d3d77b08f89aa9705f0860fcd4a7121d296fd5",
     "scripts/production-release.mjs": "1643997b7b3ac422214725f4078b7b4db25f09d1df6ae5cebe8285cd257e0d59",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "29f89bd3ea19fcb1d5edd95943fd9f29a2d3fcec2cb1e612f159b28442ad8346",
+    "scripts/quality-repo.sh": "9ca4d1af4a59d5e6d10e2d4d8436e4497baa566e6bddec4a77c28b541e2d62a3",
     "scripts/rehearse-hetzner-restore.mjs": "eba3bfe18eafcbd4e5f84e71bd817d8b8ede458658c447a060b7af2c9fe559b7",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
@@ -3100,6 +3182,7 @@
     "tdf-hq-ui/src/utils/roles.ts": "a6e35fb167641efb11ffadea2d23865d3165e495cd59e0644a49e0a20f87b0da",
     "tdf-hq/Dockerfile": "9d4b6b0747296ff98277153a7fa31ae5e75a14709a0900ffd3abf2588b20cf4f",
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
+    "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/assets/feature-registry.json": "7388f163749d305fb7bc12b0ada9c4f7f988c878a1db006437db835555cbe3af",
     "tdf-hq/docs/openapi/api.yaml": "e26061fe62ed366d66059b768c62e151bbf1bec46c63e048e45e16458d046714",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
@@ -3112,7 +3195,7 @@
     "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql": "9d6236c8bf0a2f593cf54cf445d24adfe9e765cc91f000cf45dcd3b8bb86e4fd",
     "tdf-hq/sql/2026-10-04_merch_commission_exact.sql": "36a4432d9e20442107f570228e4477cb93072433f5752f9dd7d32106d60c4b1d",
     "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql": "ff27157ab7ad9b9ba559d80ff40b88f11c8c0f6857bdce0aa0ff58966e8be98d",
-    "tdf-hq/src/TDF/API.hs": "7f54aa410bfc4a1e9f5430d3bea6e8a9ac2f5f8269793a90733b42c3d1018d56",
+    "tdf-hq/src/TDF/API.hs": "3254ce2083c37d35508059895ca4d49657744598ec7a47648981f373643b2a6b",
     "tdf-hq/src/TDF/Auth.hs": "851a010d990ec981a7410ab1228bfe36a0ebc776008be7f22e7a97fb6701e5c8",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "6a0395b16a2bafa271dbc051da42972fe6a51da5db9eb2235bf78a46e47d819d",
     "tdf-hq/src/TDF/Commerce/Merch.hs": "94e7b371a6a77ccf4ab2884d9a28b7d7155c3f3dfad7154e54dad8b42cf5d7e4",
@@ -3140,6 +3223,7 @@
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/tdf-hq.cabal": "1b8e6387004eb4106e624921814f360aba0d4cb4180c635ac4d7e55f8c5096a0",
     "tdf-hq/test/Spec.hs": "d4bf3f4d36c92125cf54c87d6616e9ea76648a85ea5639b73319eb32fe74487e",
+    "tdf-hq/test/TDF/APITypesSpec.hs": "81afeae7436c56aa6554caeb7010dcc7a9408d30beb52b2694c519bd8ea54236",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
     "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "90b0a50e1d7415dc82be95fdf4c985fbb825737d09e0c87d2d185414cb154fd2",
@@ -3405,6 +3489,10 @@
       {
         "requirement": "BOOK-CALENDAR-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-API-003",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/API.hs": [
@@ -3414,6 +3502,10 @@
       },
       {
         "requirement": "SYS-ESCROW-002",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-API-003",
         "relationship": "implementation"
       }
     ],
@@ -4564,6 +4656,36 @@
         "requirement": "MEDIA-PERSIST-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq/app/Main.hs": [
+      {
+        "requirement": "SYS-API-003",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/inspect-compiled-api.mjs": [
+      {
+        "requirement": "SYS-API-003",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/lib/compiled-api-surface.mjs": [
+      {
+        "requirement": "SYS-API-003",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/APITypesSpec.hs": [
+      {
+        "requirement": "SYS-API-003",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/compiled-api-surface.test.mjs": [
+      {
+        "requirement": "SYS-API-003",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -4605,7 +4727,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "4e8e990fbd6c83fa8d561f56d92de2192bac531d364b2f7ae201a16c61becade",
+      "sha256": "a995cf94e401612ee0460b96ad72320c5951f2c232cd309031804031df72961a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -5075,6 +5197,18 @@
       "requirements": [
         {
           "requirement": "SYS-API-002",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-336f05a0284b88b9",
+      "path": "scripts/__tests__/compiled-api-surface.test.mjs",
+      "sha256": "9b6814b63c39a466a1e0343378d80c201db097b021881e1aa5e8725834f380b7",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-API-003",
           "relationship": "tests"
         }
       ]
@@ -5958,6 +6092,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-0c3b107b729b7e74",
+      "path": "scripts/inspect-compiled-api.mjs",
+      "sha256": "da86cd9d992fbfcd232c10bdd956ea2b8280e5353e3ff9f52eac50503f6562f4",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-API-003",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-f9faf7061e36724c",
       "path": "scripts/inspect-hetzner-production.mjs",
       "sha256": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
@@ -6066,6 +6212,18 @@
       "sha256": "72952601d46122332d21301fa22156c7153c43ac1eec3d5f3b64223211aee214",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-33d3dc767fe336d3",
+      "path": "scripts/lib/compiled-api-surface.mjs",
+      "sha256": "fdaf9455ddfb535b91278a59cc085905073b84498dd5ae8b105ff167d78190a2",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-API-003",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-4738d9e01ae03383",
@@ -6455,7 +6613,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "29f89bd3ea19fcb1d5edd95943fd9f29a2d3fcec2cb1e612f159b28442ad8346",
+      "sha256": "9ca4d1af4a59d5e6d10e2d4d8436e4497baa566e6bddec4a77c28b541e2d62a3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -12881,9 +13039,14 @@
     {
       "id": "SURFACE-22005f90f8f40547",
       "path": "tdf-hq/app/Main.hs",
-      "sha256": "a77da4d842d2801c41483e003203ad86320deef883fed24f7906978276eb86cf",
+      "sha256": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-API-003",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-e2578557fb74a3da",
@@ -15490,7 +15653,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "7f54aa410bfc4a1e9f5430d3bea6e8a9ac2f5f8269793a90733b42c3d1018d56",
+      "sha256": "3254ce2083c37d35508059895ca4d49657744598ec7a47648981f373643b2a6b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15499,6 +15662,10 @@
         },
         {
           "requirement": "SYS-ESCROW-002",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-API-003",
           "relationship": "implementation"
         }
       ]
@@ -16702,6 +16869,10 @@
         {
           "requirement": "BOOK-CALENDAR-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-API-003",
+          "relationship": "implementation"
         }
       ]
     },
@@ -17290,9 +17461,14 @@
     {
       "id": "SURFACE-2ece749119c0d78c",
       "path": "tdf-hq/test/TDF/APITypesSpec.hs",
-      "sha256": "49e5dae9be52ff8fccc863476d77486ce1dac08037cea90d3bf398bbdee9a1fa",
+      "sha256": "81afeae7436c56aa6554caeb7010dcc7a9408d30beb52b2694c519bd8ea54236",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-API-003",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-112ccf8551193c94",
@@ -21656,7 +21832,6 @@
     "SURFACE-20a931f02cd6a32b",
     "SURFACE-a53cc38173461f9a",
     "SURFACE-bc8c0c546d75b4cc",
-    "SURFACE-22005f90f8f40547",
     "SURFACE-e2578557fb74a3da",
     "SURFACE-33d7f13a443a2699",
     "SURFACE-a46bf6b198b99e87",
@@ -22207,7 +22382,6 @@
     "SURFACE-347e9f1684b17032",
     "SURFACE-45b71844f2c3aac7",
     "SURFACE-13ed80492a91c67d",
-    "SURFACE-2ece749119c0d78c",
     "SURFACE-112ccf8551193c94",
     "SURFACE-ca7f36927ef07d50",
     "SURFACE-bcc8793e04f6ed01",
@@ -22685,7 +22859,8 @@
     "DEPLOY-TARGET-001",
     "DEPLOY-MIGRATION-001",
     "PRIV-RAG-001",
-    "MEDIA-PERSIST-001"
+    "MEDIA-PERSIST-001",
+    "SYS-API-003"
   ],
   "stateMachines": [
     {
@@ -44663,7 +44838,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 42,
+    "PARTIAL": 43,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

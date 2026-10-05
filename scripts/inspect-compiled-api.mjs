@@ -1,0 +1,46 @@
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { sourceManifest } from './lib/verification-evidence.mjs';
+import { compiledApiSurface, compareApiSurface } from './lib/compiled-api-surface.mjs';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const args = process.argv.slice(2);
+if (args.length !== 4 || args[0] !== '--binary' || args[2] !== '--output') {
+  throw new Error('Usage: node scripts/inspect-compiled-api.mjs --binary PATH --output NEW_DIRECTORY');
+}
+const binary = path.resolve(args[1]), output = path.resolve(args[3]);
+mkdirSync(output, { mode: 0o700 });
+const sha256 = value => createHash('sha256').update(value).digest('hex');
+const git = (...flags) => execFileSync('git', flags, { cwd: root, encoding: 'utf8' }).trim();
+const before = sourceManifest(root);
+const revision = git('rev-parse', 'HEAD'), tree = git('rev-parse', 'HEAD^{tree}');
+const sourceWorktreeDirty = Boolean(git('status', '--porcelain'));
+const bytes = readFileSync(binary), binarySha256 = sha256(bytes);
+// A deliberately unusable database and no inherited credentials: description
+// must terminate without loading runtime configuration, connecting or serving.
+const raw = execFileSync(binary, ['--describe-api'], {
+  cwd: output, env: { PATH: process.env.PATH, LANG: 'C.UTF-8', DATABASE_URL: 'invalid://contract-must-not-connect', APP_PORT: 'invalid' },
+  encoding: 'utf8', timeout: 60_000, maxBuffer: 32 * 1024 * 1024,
+});
+writeFileSync(path.join(output, 'compiled-types.json'), raw, { flag: 'wx', mode: 0o600 });
+const description = JSON.parse(raw), surface = compiledApiSurface(description);
+const traceBytes = readFileSync(path.join(root, 'formal/system/traceability.json'));
+const trace = JSON.parse(traceBytes), comparison = compareApiSurface(surface, trace.apiOperations);
+if (git('rev-parse', 'HEAD') !== revision || sha256(readFileSync(binary)) !== binarySha256
+  || sourceManifest(root).digest !== before.digest) {
+  throw new Error('Compiled description provenance changed during inspection');
+}
+const report = { schemaVersion: 1, sourceRevision: revision, sourceTree: tree, sourceWorktreeDirty,
+  binarySha256, sourceDigest: before.digest, descriptionSha256: sha256(raw), traceabilitySha256: sha256(traceBytes),
+  observedAt: new Date().toISOString(), ...surface, comparison,
+  status: 'observed-not-conformance-approved',
+  limitations: 'Compiler syntax from the supplied executable, not attestation that its binary was built from this checkout. CI binds the build separately. Type names are not JSON schema. Discovery gaps are unresolved obligations.',
+};
+writeFileSync(path.join(output, 'surface.json'), JSON.stringify(report, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
+console.log(JSON.stringify({ revision, binarySha256, operations: surface.operations.length, rawMounts: surface.rawMounts.length,
+  undocumented: comparison.undocumented.length, documentedWithoutTypedRoute: comparison.documentedWithoutTypedRoute.length,
+  competing: comparison.competingCompiledRoutes.length, statusDifferences: comparison.successStatusDifferences.length,
+  status: report.status }));
