@@ -2474,7 +2474,7 @@
     },
     {
       "path": "docs/analytics.md",
-      "sha256": "e2f1d41df2782cfc07ad1398079ba6b343cb3f9ca9d708ffecb7e8178ac8bb5e",
+      "sha256": "faff105d645904460e24ebb2c768d0f1c219fc7f9ef3793de52ef32c7b3275b5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

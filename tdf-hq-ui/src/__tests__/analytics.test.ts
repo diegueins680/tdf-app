@@ -162,6 +162,42 @@ describe('analytics/posthog (web)', () => {
     expect(outgoingWithApplicationToken?.properties).not.toHaveProperty('token');
   });
 
+  test('masks ticket credentials and buyer data in SDK and explicit properties', () => {
+    const sentinel = 'PRIVATE-TICKET-SENTINEL';
+    const properties = sanitizeAnalyticsProperties({
+      event_id: 141,
+      tier_id: 2,
+      quantity: 2,
+      lookupToken: sentinel,
+      buyer_email: sentinel,
+      buyerName: sentinel,
+      holder: { name: sentinel },
+      ticketCodes: [sentinel],
+      qr_payload: sentinel,
+      nested: { transferCode: sentinel, resourcePath: sentinel, order_id: sentinel },
+      $current_url: `https://www.tdfrecords.net/eventos/141/orden/${sentinel}?id=${sentinel}`,
+      $pathname: `/eventos/141/orden/${sentinel}`,
+      $referrer: `https://tdf.test/pagos/retorno?reference=${sentinel}#${sentinel}`,
+      landingPath: `/social-events/ticket-transfers/${sentinel}/accept`,
+    });
+    expect(JSON.stringify(properties)).not.toContain(sentinel);
+    expect(properties).toMatchObject({ event_id: 141, tier_id: 2, quantity: 2 });
+    expect(properties.$current_url).toContain('/eventos/141/orden/');
+    expect(redactSensitiveQueryValues('https://tdf.test/eventos/141?utm_source=artist'))
+      .toBe('https://tdf.test/eventos/141?utm_source=artist');
+  });
+
+  test('masks camel-case credentials, fragments and nested redirect URLs', () => {
+    const sentinel = 'PRIVATE-LOOKUP-SENTINEL';
+    let redirect = `/eventos/141?lookupToken=${sentinel}&buyerEmail=${sentinel}`;
+    for (let index = 0; index < 5; index += 1) redirect = `/return?next=${encodeURIComponent(redirect)}`;
+    for (const url of [redirect, `/eventos/141#access_token=${sentinel}`,
+      `/eventos/141?resourcePath=${sentinel}`, `https://${sentinel}@tdf.test/eventos/141`,
+      `/social-events/ticket-transfers/${sentinel}/accept`, `tdf://tickets/${sentinel}`]) {
+      expect(redactSensitiveQueryValues(url)).not.toContain(sentinel);
+    }
+  });
+
   test('logs PostHog failures through the app logger', () => {
     testWindow.__ENV__ = { VITE_POSTHOG_KEY: 'phc_unit_test' };
     const resilientAnalyticsClient = getAnalyticsClient();
@@ -191,10 +227,10 @@ describe('analytics/posthog (web)', () => {
       resilientAnalyticsClient.reset();
       resilientAnalyticsClient.page('Home');
 
-      expect(loggerWarnMock).toHaveBeenCalledWith('[analytics] capture failed', { error: captureError });
-      expect(loggerWarnMock).toHaveBeenCalledWith('[analytics] identify failed', { error: identifyError });
-      expect(loggerWarnMock).toHaveBeenCalledWith('[analytics] reset failed', { error: resetError });
-      expect(loggerWarnMock).toHaveBeenCalledWith('[analytics] page failed', { error: pageError });
+      expect(loggerWarnMock).toHaveBeenCalledWith('[analytics] capture failed');
+      expect(loggerWarnMock).toHaveBeenCalledWith('[analytics] identify failed');
+      expect(loggerWarnMock).toHaveBeenCalledWith('[analytics] reset failed');
+      expect(loggerWarnMock).toHaveBeenCalledWith('[analytics] page failed');
       expect(consoleWarnSpy).not.toHaveBeenCalled();
     } finally {
       consoleWarnSpy.mockRestore();

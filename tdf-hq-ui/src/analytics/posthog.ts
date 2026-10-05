@@ -59,6 +59,30 @@ const SENSITIVE_PROPERTY_NAMES = new Set([
   'clientsecret',
   'key',
   'apikey',
+  'lookuptoken',
+  'orderlookuptoken',
+  'xorderlookuptoken',
+  'ticketcode',
+  'ticketcodes',
+  'qrcode',
+  'qrpayload',
+  'transfercode',
+  'reservationcode',
+  'buyername',
+  'buyeremail',
+  'buyerphone',
+  'holdername',
+  'holderemail',
+  'recipientemail',
+  'orderid',
+  'ticketid',
+  'paypalorderid',
+  'providerorderid',
+  'paymentintentid',
+  'resourcepath',
+  'buyer',
+  'holder',
+  'tickets',
 ]);
 
 const normalizePropertyName = (key: string): string => key.replace(/[^a-z\d]/gi, '').toLowerCase();
@@ -66,23 +90,41 @@ const normalizePropertyName = (key: string): string => key.replace(/[^a-z\d]/gi,
 const isSensitivePropertyName = (key: string): boolean =>
   SENSITIVE_PROPERTY_NAMES.has(normalizePropertyName(key));
 
+// Private order/credential paths also reach SDK-generated URL properties. Keep
+// public event IDs for funnel analysis, but never export private resource IDs.
+const privatePath = (pathname: string): string => pathname.replace(
+  /(\/(?:orden|orders|ticket-orders|ticket-transfers|tickets|checkouts)\/)[^/]+/gi,
+  '$1[REDACTED]',
+);
+
 export function redactSensitiveQueryValues(value: string, depth = 0): string {
-  if (!value.includes('?')) return value;
+  const isAbsolute = /^[a-z][a-z\d+.-]*:/i.test(value);
+  if (!isAbsolute && !value.startsWith('/') && !value.startsWith('#') && !value.includes('?')) return value;
 
   try {
-    const isAbsolute = /^[a-z][a-z\d+.-]*:/i.test(value);
     const parsed = new URL(value, 'https://analytics.invalid');
-    let changed = false;
+    const pathname = parsed.protocol === 'tdf:' && parsed.hostname === 'tickets'
+      ? '/[REDACTED]'
+      : privatePath(parsed.pathname);
+    const privateResource = pathname !== parsed.pathname || parsed.pathname === '/pagos/retorno';
+    let changed = privateResource || Boolean(parsed.hash) || Boolean(parsed.username || parsed.password);
+    parsed.pathname = pathname;
+    parsed.hash = '';
+    parsed.username = '';
+    parsed.password = '';
     for (const key of Array.from(parsed.searchParams.keys())) {
-      if (SENSITIVE_QUERY_PARAMETER.test(key)) {
+      // Return providers may add opaque keys (e.g. `id`) to private pages.
+      if (privateResource || SENSITIVE_QUERY_PARAMETER.test(key) || isSensitivePropertyName(key)) {
         parsed.searchParams.set(key, REDACTED_QUERY_VALUE);
         changed = true;
         continue;
       }
-      if (depth >= 2) continue;
       const currentValue = parsed.searchParams.get(key);
       if (currentValue == null) continue;
-      const sanitizedValue = redactSensitiveQueryValues(currentValue, depth + 1);
+      // Bound work without allowing deeply nested redirect URLs to evade masking.
+      const sanitizedValue = depth >= 2 && /[?#]/.test(currentValue)
+        ? REDACTED_QUERY_VALUE
+        : redactSensitiveQueryValues(currentValue, depth + 1);
       if (sanitizedValue !== currentValue) {
         parsed.searchParams.set(key, sanitizedValue);
         changed = true;
@@ -91,9 +133,9 @@ export function redactSensitiveQueryValues(value: string, depth = 0): string {
     if (!changed) return value;
     return isAbsolute
       ? parsed.toString()
-      : `${parsed.pathname}${parsed.search}${parsed.hash}`;
+      : `${parsed.pathname}${parsed.search}`;
   } catch {
-    return value;
+    return REDACTED_QUERY_VALUE;
   }
 }
 
@@ -126,8 +168,9 @@ const sanitizedOptionalProperties = (
   return Object.keys(sanitized).length > 0 ? sanitized : undefined;
 };
 
-function logAnalyticsFailure(operation: string, error: unknown): void {
-  logger.warn(`[analytics] ${operation} failed`, { error });
+function logAnalyticsFailure(operation: string): void {
+  // SDK exceptions can echo the rejected payload or URL.
+  logger.warn(`[analytics] ${operation} failed`);
 }
 
 function buildNoopClient(reason: string): AnalyticsClient {
@@ -178,29 +221,29 @@ export function getAnalyticsClient(): AnalyticsClient {
     capture: (event, properties) => {
       try {
         posthog.capture(event, sanitizedOptionalProperties(properties));
-      } catch (err) {
-        logAnalyticsFailure('capture', err);
+      } catch {
+        logAnalyticsFailure('capture');
       }
     },
     identify: (distinctId, properties) => {
       try {
         posthog.identify(distinctId, sanitizedOptionalProperties(properties));
-      } catch (err) {
-        logAnalyticsFailure('identify', err);
+      } catch {
+        logAnalyticsFailure('identify');
       }
     },
     reset: () => {
       try {
         posthog.reset();
-      } catch (err) {
-        logAnalyticsFailure('reset', err);
+      } catch {
+        logAnalyticsFailure('reset');
       }
     },
     page: (name, properties) => {
       try {
         posthog.capture('$pageview', sanitizeAnalyticsProperties({ ...properties, name }));
-      } catch (err) {
-        logAnalyticsFailure('page', err);
+      } catch {
+        logAnalyticsFailure('page');
       }
     },
   };
