@@ -3100,7 +3100,7 @@
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "03fe83c795e80e464e4f0a6dba868723a60c079f6c5631e2b3435732eba649ea",
     "scripts/__tests__/ci-pipeline.test.mjs": "64921de12e4f6ef21a8a65763da451acdf1492ca897c318019c2e835da140114",
-    "scripts/__tests__/compiled-api-surface.test.mjs": "9b6814b63c39a466a1e0343378d80c201db097b021881e1aa5e8725834f380b7",
+    "scripts/__tests__/compiled-api-surface.test.mjs": "b6292e9aff2ca8d24c10d0a4887aae8b0081410e0fba7198a5a0b037b9be9eba",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/formal-result-summary.test.mjs": "a3ecce01af25cb49f4b62fc51459ed9b36543f347b8d80cac6d4b1f1abfeca8c",
@@ -3124,7 +3124,7 @@
     "scripts/ci-change-scope.mjs": "6e1bf4833fec7e1e51e230ccc830dca80470c0c2dcad18a2c329ad9defdf1379",
     "scripts/inspect-compiled-api.mjs": "da86cd9d992fbfcd232c10bdd956ea2b8280e5353e3ff9f52eac50503f6562f4",
     "scripts/inspect-hetzner-production.mjs": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
-    "scripts/lib/compiled-api-surface.mjs": "fdaf9455ddfb535b91278a59cc085905073b84498dd5ae8b105ff167d78190a2",
+    "scripts/lib/compiled-api-surface.mjs": "d1b96bf4d98ecf156b46ca59a7d7905fa16b4b9a61d87faff23af5eb5a29a96b",
     "scripts/lib/formal-result-summary.mjs": "fa378d768a1c4e8ff6fe67e8d18d61367cd1b272339107e71c497798fb657167",
     "scripts/lib/hetzner-migration-rehearsal.mjs": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a",
     "scripts/lib/hetzner-preparation.mjs": "b3c9f1da219779c1d1d62190569108077112af6695d95bd9ecc3c5da92cf0e5c",
@@ -5204,7 +5204,7 @@
     {
       "id": "SURFACE-336f05a0284b88b9",
       "path": "scripts/__tests__/compiled-api-surface.test.mjs",
-      "sha256": "9b6814b63c39a466a1e0343378d80c201db097b021881e1aa5e8725834f380b7",
+      "sha256": "b6292e9aff2ca8d24c10d0a4887aae8b0081410e0fba7198a5a0b037b9be9eba",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -6216,7 +6216,7 @@
     {
       "id": "SURFACE-33d3dc767fe336d3",
       "path": "scripts/lib/compiled-api-surface.mjs",
-      "sha256": "fdaf9455ddfb535b91278a59cc085905073b84498dd5ae8b105ff167d78190a2",
+      "sha256": "d1b96bf4d98ecf156b46ca59a7d7905fa16b4b9a61d87faff23af5eb5a29a96b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

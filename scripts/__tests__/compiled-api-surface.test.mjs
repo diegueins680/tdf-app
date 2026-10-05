@@ -84,3 +84,10 @@ test('capture spelling is retained as metadata but does not create false routing
   assert.deepEqual(result.undocumented, []);
   assert.deepEqual(result.documentedWithoutTypedRoute, []);
 });
+
+test('capture-all cardinality cannot be normalized into a single-segment capture', () => {
+  const surface = describe(sub(symbol('files'), sub(node('Servant.API.Capture', 'CaptureAll', symbol('parts'), textType), verb())));
+  const result = compareApiSurface(surface, [{ id: 'GET /files/{id}', responses: ['200'] }]);
+  assert.deepEqual(result.undocumented, ['GET /files/{*}']);
+  assert.deepEqual(result.documentedWithoutTypedRoute, ['GET /files/{}']);
+});

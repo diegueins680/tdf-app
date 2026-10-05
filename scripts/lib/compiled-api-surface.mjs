@@ -113,7 +113,7 @@ export function compiledApiSurface(document) {
   return { operations, rawMounts };
 }
 // Parameter names do not alter routing. Keep originals in both source records.
-export const routeKey = (methodName, pathname) => `${methodName} ${pathname.replace(/\{[^}]+\}/g, '{}')}`;
+export const routeKey = (methodName, pathname) => `${methodName} ${pathname.replace(/\{([^}]+)\}/g, (_, capture) => capture.endsWith('*') ? '{*}' : '{}')}`;
 export function compareApiSurface(surface, documented) {
   const docs = new Map();
   for (const operation of documented) {

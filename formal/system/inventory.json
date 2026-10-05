@@ -2551,7 +2551,7 @@
     {
       "id": "SURFACE-336f05a0284b88b9",
       "path": "scripts/__tests__/compiled-api-surface.test.mjs",
-      "sha256": "9b6814b63c39a466a1e0343378d80c201db097b021881e1aa5e8725834f380b7",
+      "sha256": "b6292e9aff2ca8d24c10d0a4887aae8b0081410e0fba7198a5a0b037b9be9eba",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3271,7 +3271,7 @@
     {
       "id": "SURFACE-33d3dc767fe336d3",
       "path": "scripts/lib/compiled-api-surface.mjs",
-      "sha256": "fdaf9455ddfb535b91278a59cc085905073b84498dd5ae8b105ff167d78190a2",
+      "sha256": "d1b96bf4d98ecf156b46ca59a7d7905fa16b4b9a61d87faff23af5eb5a29a96b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
