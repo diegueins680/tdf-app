@@ -265,10 +265,15 @@ def rehearse_locked(runtime):
         execute(target.write_command('psql', ['-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-d', 'tdf_hq']), input=role_text)
         stage = 'restore-database'
         target.inspect()
-        with archive.open('rb') as input_file:
+        # Errors may contain SQL/data. Retain only on the private host, never
+        # in remote output or receipts, with a hard file-size bound.
+        def diagnostic_limit():
+            resource.setrlimit(resource.RLIMIT_FSIZE, (4 * 1024 * 1024, 4 * 1024 * 1024))
+        with archive.open('rb') as input_file, (directory / 'restore.stderr').open('xb') as diagnostic:
+            os.chmod(directory / 'restore.stderr', 0o600)
             result = subprocess.run(target.write_command('pg_restore',
                         ['-d', 'tdf_hq', '--exit-on-error', '--single-transaction']), stdin=input_file,
-                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=180)
+                        stdout=subprocess.DEVNULL, stderr=diagnostic, timeout=180, preexec_fn=diagnostic_limit)
         require(result.returncode == 0)
         stage = 'verify-restoration'
         restored_counts = validate_counts(json.loads(execute(psql(target.target, read_only=True), input=COUNTS_SQL)))

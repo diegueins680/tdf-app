@@ -2429,7 +2429,7 @@
     {
       "id": "SURFACE-60310758bd18e31e",
       "path": "ops/hetzner/rehearse-postgres-restore.py",
-      "sha256": "7478071e0be1169a826c67f36b181aa9023a0e7111a40680dc1834d9a1eb20f1",
+      "sha256": "4e4fc381e9b70a2332ed40026c4338edca4f39d77df96c808c98f3127d2dff57",
       "semanticConformance": "not-established-by-discovery"
     },
     {

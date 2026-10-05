@@ -2607,7 +2607,7 @@
     "formal/social/SessionBoundary.tla": "f52854a744652bc18f0d9f0fb4c3e6453447d26aff88267dff29ac03924e8ee6",
     "ops/hetzner/compose.production.yaml": "961c19190335ac4033d8932598796394b93c13a040ef07c3ac62660c534e45e7",
     "ops/hetzner/inspect-runtime.py": "6c439dbc8b1e17b96399990cb12d49d4d3f64757a161cffdd3224103082cf2e3",
-    "ops/hetzner/rehearse-postgres-restore.py": "7478071e0be1169a826c67f36b181aa9023a0e7111a40680dc1834d9a1eb20f1",
+    "ops/hetzner/rehearse-postgres-restore.py": "4e4fc381e9b70a2332ed40026c4338edca4f39d77df96c808c98f3127d2dff57",
     "package-lock.json": "b2663069d0f1901b4d5b76dde885fa0ff107089cf661819ed3500be6443bace4",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/checkout-amount-postgres.mjs": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
@@ -4246,7 +4246,7 @@
     {
       "id": "SURFACE-60310758bd18e31e",
       "path": "ops/hetzner/rehearse-postgres-restore.py",
-      "sha256": "7478071e0be1169a826c67f36b181aa9023a0e7111a40680dc1834d9a1eb20f1",
+      "sha256": "4e4fc381e9b70a2332ed40026c4338edca4f39d77df96c808c98f3127d2dff57",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
