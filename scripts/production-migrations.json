@@ -852,6 +852,26 @@
       "introducedBy": "f965c3d53cbbb3b42f4fb82bf1e373bc0ce2fb6b"
     },
     {
+      "id": "2026-10-05_ticket_admission_audit",
+      "path": "tdf-hq/sql/2026-10-05_ticket_admission_audit.sql",
+      "introducedBy": "468410cbe345069295ab52c42becc9f1d9aa9629"
+    },
+    {
+      "id": "2026-10-05_ticket_transfer_deadline",
+      "path": "tdf-hq/sql/2026-10-05_ticket_transfer_deadline.sql",
+      "introducedBy": "28b254a65c5d2bab5c039f777ac9d4493c296b3b"
+    },
+    {
+      "id": "2026-10-05_ticket_order_quantity_limit",
+      "path": "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit.sql",
+      "introducedBy": "67616c06acf9fca8810d918904510574b7a44eb3"
+    },
+    {
+      "id": "2026-10-05_ticket_policy_lifecycle_history",
+      "path": "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history.sql",
+      "introducedBy": "604c2366edfd2a86478e9d0177dcfeee2dd21678"
+    },
+    {
       "id": "2026-10-04_auth_recovery_expiry",
       "path": "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql",
       "introducedBy": "57315f2d4b3aafac8ec7242c5913028f157dff8d"
@@ -875,16 +895,6 @@
       "id": "2026-10-05_ddex_validation_legacy_nullability",
       "path": "tdf-hq/sql/2026-10-05_ddex_validation_legacy_nullability.sql",
       "introducedBy": "58f095cf863fafed7dcb3232e2bb3f728ac6867b"
-    },
-    {
-      "id": "2026-10-05_ticket_admission_audit",
-      "path": "tdf-hq/sql/2026-10-05_ticket_admission_audit.sql",
-      "introducedBy": "468410cbe345069295ab52c42becc9f1d9aa9629"
-    },
-    {
-      "id": "2026-10-05_ticket_transfer_deadline",
-      "path": "tdf-hq/sql/2026-10-05_ticket_transfer_deadline.sql",
-      "introducedBy": "28b254a65c5d2bab5c039f777ac9d4493c296b3b"
     }
   ]
 }
