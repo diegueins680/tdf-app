@@ -61,7 +61,7 @@ Expected response:
 
 ### Test Production Health Endpoint
 ```bash
-curl https://tdf-hq.fly.dev/health
+curl https://api.tdfrecords.net/health
 ```
 
 Expected response:

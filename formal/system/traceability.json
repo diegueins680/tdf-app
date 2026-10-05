@@ -6272,8 +6272,8 @@
     {
       "id": "OPS-CLIENT-001",
       "title": "Canonical operational clients and retired credential helpers",
-      "statement": "Operational clients default to the current canonical API while retaining explicit test/operator overrides. Retired token helpers fail before credential disclosure or provider writes; scheduled messaging checks are explicitly read-only. Health readiness must not claim a payment transaction was exercised.",
-      "property": "Operational clients default to the current canonical API while retaining explicit test/operator overrides. Retired token helpers fail before credential disclosure or provider writes; scheduled messaging checks are explicitly read-only. Health readiness must not claim a payment transaction was exercised.",
+      "statement": "Operational clients default to the current canonical API while retaining explicit test/operator overrides. Retired token helpers fail before credential disclosure or provider writes; scheduled messaging checks are explicitly read-only. Health readiness must not claim a payment transaction was exercised. Backend-generated public web and asset links default to the canonical www/API origins; explicit validated deployment overrides remain authoritative.",
+      "property": "Operational clients default to the current canonical API while retaining explicit test/operator overrides. Retired token helpers fail before credential disclosure or provider writes; scheduled messaging checks are explicitly read-only. Health readiness must not claim a payment transaction was exercised. Backend-generated public web and asset links default to the canonical www/API origins; explicit validated deployment overrides remain authoritative.",
       "domain": "OPS",
       "authority": "Reviewed source changes preserved from root #468/#485/#486/#484; final consolidated correspondence requires current independent review",
       "source": "docs/INSTAGRAM_TOKEN_SETUP.md; reviewed #468 helper/provider-cutover decisions",
@@ -6319,13 +6319,17 @@
         "scripts/refresh-messaging-token.mjs",
         "scripts/test-stripe-integration.sh",
         "scripts/upsert-course.mjs",
-        "tdf-hq/scripts/create_artists_from_list.sh"
+        "tdf-hq/scripts/create_artists_from_list.sh",
+        "tdf-hq/src/TDF/Config.hs"
       ],
       "tests": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/retired-messaging-refresher.test.mjs",
         "scripts/__tests__/payment-readiness-helper.test.mjs",
-        "scripts/__tests__/artist-import-idempotency.test.mjs"
+        "scripts/__tests__/artist-import-idempotency.test.mjs",
+        "scripts/__tests__/diagnose-social.test.mjs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx"
       ],
       "formalModels": [],
       "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
@@ -6777,6 +6781,7 @@
     "scripts/__tests__/ci-pipeline.test.mjs": "e05781eedd8e1fcc26e0a86d5b9f1a3f42b2d8eab600a5d142ecd25684ab0044",
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
+    "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
     "scripts/__tests__/disposable-postgres-url.test.mjs": "8e577a4e15ef1dcb01333a2def3d342e5b07164b3139e15c72dbe41e235348c1",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/event-preview.test.mjs": "6be60be6d0ba8e93ff2292425677c75a84fffd730a86bcbe1472645420ac7330",
@@ -6787,7 +6792,7 @@
     "scripts/__tests__/hetzner-preparation.test.mjs": "b8f8b49cf4fa4e19eb84ebb9436033cc7f52d178cc45ed9d0cec6c902a48575f",
     "scripts/__tests__/hetzner-restore.test.mjs": "d13b746d0d264c4e710a16cd81ff2f7532876d4520e9ff1ed85d8daf623b5a25",
     "scripts/__tests__/identity-http-runtime.mjs": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
-    "scripts/__tests__/instagram-token-workflows.test.mjs": "44ebbb797abd8fe0a08d275620894d15fe38d7e966da4331451f3735055d67d6",
+    "scripts/__tests__/instagram-token-workflows.test.mjs": "f139ae3230ae908c21c7c5b38c090a787bf5045719fc031396e0ac7287201744",
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
     "scripts/__tests__/merch-commission-postgres.mjs": "91dd370bf08dfe2ab871c6a617d4e2871717c9f5ff27676e692c6d776c9721c3",
     "scripts/__tests__/merch-runtime-safety.test.mjs": "7e8b8f27e40d6b1d2f329aac504096451783587ee12a827f9d3e03da64aedcfa",
@@ -6812,7 +6817,7 @@
     "scripts/ci-change-scope.mjs": "6e1bf4833fec7e1e51e230ccc830dca80470c0c2dcad18a2c329ad9defdf1379",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
-    "scripts/diagnose-social.mjs": "bfa8481a07b3f18fa757fb4c616d0efe3ade8a18191d03a7e98e757a38447caf",
+    "scripts/diagnose-social.mjs": "c0f03f43a928ef24c5609e2f67731444341d42dc70fbc35b7171aa2d6adf109b",
     "scripts/get-admin-token.sh": "168dd8f5ba17d927685a86ac763a03a9aff55736bf4b4426a6d7541817a35110",
     "scripts/get-instagram-token.mjs": "0b00f6cc1ad6793f029339bc006ed520245af87ea55e285658faf48ba978e592",
     "scripts/inspect-compiled-api.mjs": "2b65b93d80950b7c3cb650dafc247cfd49f6575e8a6653fc083223741da47e70",
@@ -6841,7 +6846,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "91510c517055246cf5e3cc2e767d7502763d8a07503a57575eb09dc04c7e5935",
+    "scripts/quality-repo.sh": "c5ddc8ca3fe00a7c66d6ac5d8a09ad929c629f4dd59abec568dc209ca3cf800e",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
@@ -6931,6 +6936,7 @@
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "aad862427b31bb0777586ae09589055043f9346e4eaaa9bf14a521e3d4fed129",
     "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "3144381852a748f77c009fc398c513672cd908192bc390fb2aad499a5cb0a174",
+    "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "9c4dac4a414d135a028b47da659f6937e060a69c8b4c8449abbedbed220d9f73",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
     "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx": "e48405433f70c9a163131f753453005460341e242be28c4f28e4afa49628d56a",
     "tdf-hq-ui/src/pages/LabelAssetsPage.tsx": "4ba88b3c7f5a9b50feabbd44bb7172e5297866b5e279d60f6329d44e0090978a",
@@ -7004,7 +7010,7 @@
     "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs": "f207af0c4782901684ca101b8c9e667c1e127c205ae14f5702a39549da1d6dcf",
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "e40608b5bc2ce1429c61fbfc6131f4e6e134f599cbf734a62ddd505fab3264b6",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
-    "tdf-hq/src/TDF/Config.hs": "abbb65101876065724d97c24b1aef742f86300ca006e14e9c0565eb4af0dafe5",
+    "tdf-hq/src/TDF/Config.hs": "154303c3f955437a9087e22b1e7198ac2d668b31137604cb3fd53835950903c8",
     "tdf-hq/src/TDF/Cors.hs": "94a8b2ffedfc793e6d8c44d62f0388dc853e3da95e75e23dfdb6fed76d7f88dd",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
@@ -7050,7 +7056,7 @@
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/tdf-hq.cabal": "1e4cbcb3a01141bed9f05fa2a2d59fe47950a7dc62fce648b60bf99f29afb03f",
-    "tdf-hq/test/Spec.hs": "e014ccfcf245b9fcdeff3816fbc277cfcf08ca898054766bc3f85f4c7974ad9e",
+    "tdf-hq/test/Spec.hs": "df7635acaabae079f2e2d71bc42b91de7f2b80155ba75f086e102946e52be6f6",
     "tdf-hq/test/TDF/APITypesSpec.hs": "e031671786b71e7714c0d8cc4f1324707917eaa452bb74030a6d7f5a1eccd068",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
@@ -7672,6 +7678,10 @@
       },
       {
         "requirement": "AUTH-WEBHOOK-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "OPS-CLIENT-001",
         "relationship": "implementation"
       }
     ],
@@ -8382,6 +8392,10 @@
       },
       {
         "requirement": "DEPLOY-READINESS-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-CLIENT-001",
         "relationship": "tests"
       }
     ],
@@ -10843,6 +10857,18 @@
         "relationship": "tests"
       }
     ],
+    "scripts/__tests__/diagnose-social.test.mjs": [
+      {
+        "requirement": "OPS-CLIENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": [
+      {
+        "requirement": "OPS-CLIENT-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq-ui/src/api/inventory.ts": [
       {
         "requirement": "MEDIA-INVENTORY-001",
@@ -11769,6 +11795,18 @@
       ]
     },
     {
+      "id": "SURFACE-f80037fcad0addf2",
+      "path": "scripts/__tests__/diagnose-social.test.mjs",
+      "sha256": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "OPS-CLIENT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-df96f3139c1e5e5b",
       "path": "scripts/__tests__/disposable-postgres-url.test.mjs",
       "sha256": "8e577a4e15ef1dcb01333a2def3d342e5b07164b3139e15c72dbe41e235348c1",
@@ -12060,7 +12098,7 @@
     {
       "id": "SURFACE-ac7679c947f7408b",
       "path": "scripts/__tests__/instagram-token-workflows.test.mjs",
-      "sha256": "44ebbb797abd8fe0a08d275620894d15fe38d7e966da4331451f3735055d67d6",
+      "sha256": "f139ae3230ae908c21c7c5b38c090a787bf5045719fc031396e0ac7287201744",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -12701,7 +12739,7 @@
     {
       "id": "SURFACE-c3c045b2c7be6d1e",
       "path": "scripts/diagnose-social.mjs",
-      "sha256": "bfa8481a07b3f18fa757fb4c616d0efe3ade8a18191d03a7e98e757a38447caf",
+      "sha256": "c0f03f43a928ef24c5609e2f67731444341d42dc70fbc35b7171aa2d6adf109b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -13509,7 +13547,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "91510c517055246cf5e3cc2e767d7502763d8a07503a57575eb09dc04c7e5935",
+      "sha256": "c5ddc8ca3fe00a7c66d6ac5d8a09ad929c629f4dd59abec568dc209ca3cf800e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18562,9 +18600,14 @@
     {
       "id": "SURFACE-5fd31c626962ad2f",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
-      "sha256": "424db5fc885e8c88f404bed15cf8ef09685784a0d97be2e36910cf06f32a01f7",
+      "sha256": "9c4dac4a414d135a028b47da659f6937e060a69c8b4c8449abbedbed220d9f73",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CLIENT-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-932153a167d40c81",
@@ -24380,7 +24423,7 @@
     {
       "id": "SURFACE-5744413d2dc2ec2e",
       "path": "tdf-hq/src/TDF/Config.hs",
-      "sha256": "abbb65101876065724d97c24b1aef742f86300ca006e14e9c0565eb4af0dafe5",
+      "sha256": "154303c3f955437a9087e22b1e7198ac2d668b31137604cb3fd53835950903c8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24389,6 +24432,10 @@
         },
         {
           "requirement": "AUTH-WEBHOOK-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "OPS-CLIENT-001",
           "relationship": "implementation"
         }
       ]
@@ -25762,7 +25809,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "e014ccfcf245b9fcdeff3816fbc277cfcf08ca898054766bc3f85f4c7974ad9e",
+      "sha256": "df7635acaabae079f2e2d71bc42b91de7f2b80155ba75f086e102946e52be6f6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -25787,6 +25834,10 @@
         },
         {
           "requirement": "DEPLOY-READINESS-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-CLIENT-001",
           "relationship": "tests"
         }
       ]
@@ -30453,7 +30504,6 @@
     "SURFACE-ac24f384b7949bc7",
     "SURFACE-b1d115adebe79a56",
     "SURFACE-814a4782598cab3d",
-    "SURFACE-5fd31c626962ad2f",
     "SURFACE-932153a167d40c81",
     "SURFACE-857a51643aefc9ce",
     "SURFACE-cc7e604a9ece48cd",
@@ -32808,7 +32858,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9504fd5bd9b4e8dadd72fa0a7bd3a56f352266fa2a69db2ead012d541d67add3",
+      "sourceSha256": "57de5847fcd4a6bdf1a39d1f3fb35cf610590bc10bc4ab802bfbe87342700204",
       "definition": {
         "states": [
           "absent",

@@ -67,6 +67,7 @@ run_npm run test:music-directory-visual-artifacts --prefix "$ROOT"
 run_npm run test:persona-program --prefix "$ROOT"
 
 node --test "$ROOT/scripts/__tests__/artist-import-idempotency.test.mjs"
+node --test "$ROOT/scripts/__tests__/diagnose-social.test.mjs"
 node --test "$ROOT/scripts/__tests__/payment-readiness-helper.test.mjs"
 
 python3 "$ROOT/scripts/test_production_access.py"
