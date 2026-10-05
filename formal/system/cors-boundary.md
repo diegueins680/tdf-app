@@ -64,3 +64,11 @@ safe unauthenticated origin checks after rollout. Rollback must preserve the
 explicit allowlist even if recovering to an older image; re-enabling arbitrary
 credentialed origins is not an acceptable recovery strategy. No migration or
 provider activation is required for this change.
+
+Public checkout uses `X-Order-Lookup-Token` as a guest order capability. Explicitly
+trusted origins must be able to send this existing header on GET/POST requests.
+The CORS preflight must advertise that header without admitting an untrusted
+origin or widening the origin allowlist. Endpoint token validation and order
+binding remain mandatory; CORS header permission grants no order authority.
+`TDF.CorsSpec` executes both methods through actual WAI middleware and denies
+the same preflight from an untrusted origin.
