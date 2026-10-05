@@ -595,13 +595,13 @@
         "name": "migrations"
       },
       "replacementId": "d2472336f16fa3b5eee0",
-      "reason": "Ordered180-entry manifest retains current main172 as an exact prefix, then the five existing conformance migrations the additive Operations scoped-projector migration and the ticket-confirmation real-time completion and claim lease corrections. Original SQL and introduction SHAs are unchanged. Both predecessor review records are retained; production apply, rollback/recovery and current combined rehearsal remain separate gates.",
+      "reason": "Ordered181-entry manifest preserves the newly shipped main5c2e0bb28 complete180-entry prefix and appends the reviewed invoice receipt snapshot migration. Every historical entry, introduction SHA and SQL byte is retained. Current combined migration rehearsal, independent review and deployment admission remain required.",
       "previousReplacementId": "c6a62c7c7469e8974ff1",
       "currentResolution": {
-        "mainRevision": "cae7a54f3c9a712837e71186b0a6bf564c13180d",
-        "mobileRevision": "6297e3f137126350aa485690bf89de19e82d3c25",
-        "valueCount": 180,
-        "reason": "Append credential-bound recovery metadata without changing prior SQL or reinterpreting historical retirement decisions."
+        "mainRevision": "5c2e0bb28f062481ceaa625833c356096a43083f",
+        "mobileRevision": "76d19fc2da965d2050df4b94e77a1d080d2e0799",
+        "valueCount": 181,
+        "reason": "Ordered181-entry manifest preserves the newly shipped main5c2e0bb28 complete180-entry prefix and appends the reviewed invoice receipt snapshot migration. Every historical entry, introduction SHA and SQL byte is retained. Current combined migration rehearsal, independent review and deployment admission remain required."
       },
       "previousResolution": {
         "originalDecision": {
@@ -10634,6 +10634,12 @@
         "mainRevision": "5c2e0bb28f062481ceaa625833c356096a43083f",
         "candidateRevision": "5a2c7ecaf80f1fb13c52de9cd150dfe893022250",
         "reason": "Retain shipped migration order and every original entry/SQL, then append invoice receipt snapshot; independent source comparison confirms all181 entry objects retained. Fresh combined migration rehearsal is mandatory."
+      },
+      "priorCurrentResolution": {
+        "mainRevision": "cae7a54f3c9a712837e71186b0a6bf564c13180d",
+        "mobileRevision": "6297e3f137126350aa485690bf89de19e82d3c25",
+        "valueCount": 180,
+        "reason": "Append credential-bound recovery metadata without changing prior SQL or reinterpreting historical retirement decisions."
       }
     }
   ]

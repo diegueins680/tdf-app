@@ -268,7 +268,7 @@
       "kind": "json-array",
       "name": "migrations",
       "valueCount": 181,
-      "change": "Ordered180-entry manifest retains current main172 as an exact prefix, then the five existing conformance migrations the additive Operations scoped-projector migration and the ticket-confirmation real-time completion and claim lease corrections. Original SQL and introduction SHAs are unchanged. Both predecessor review records are retained; production apply, rollback/recovery and current combined rehearsal remain separate gates.",
+      "change": "Ordered181-entry manifest preserves the newly shipped main5c2e0bb28 complete180-entry prefix and appends the reviewed invoice receipt snapshot migration. Every historical entry, introduction SHA and SQL byte is retained. Current combined migration rehearsal, independent review and deployment admission remain required.",
       "previousResolution": {
         "historicalReplacementId": "7578a30aa3cc5aa23870",
         "currentId": "7276e0f2faa94f468ab3",
@@ -4246,6 +4246,12 @@
         "mainRevision": "5c2e0bb28f062481ceaa625833c356096a43083f",
         "candidateRevision": "5a2c7ecaf80f1fb13c52de9cd150dfe893022250",
         "reason": "Retain shipped migration order and every original entry/SQL, then append invoice receipt snapshot; independent source comparison confirms all181 entry objects retained. Fresh combined migration rehearsal is mandatory."
+      },
+      "priorCurrentInterpretation": {
+        "sourceRevision": "5c2e0bb28f062481ceaa625833c356096a43083f",
+        "currentId": "b9883cac0fba310236a0",
+        "valueCount": 180,
+        "change": "Ordered180-entry manifest retains current main172 as an exact prefix, then the five existing conformance migrations the additive Operations scoped-projector migration and the ticket-confirmation real-time completion and claim lease corrections. Original SQL and introduction SHAs are unchanged. Both predecessor review records are retained; production apply, rollback/recovery and current combined rehearsal remain separate gates."
       }
     }
   ]
