@@ -948,7 +948,7 @@
     {
       "id": "AUTH-CORS-001",
       "title": "Explicit production credentialed browser origins",
-      "statement": "Production must reject credentialed allow-all or wildcard CORS configuration and reject requests from origins outside its explicit trusted origins before the application handler executes.",
+      "statement": "Production must reject credentialed allow-all or wildcard CORS configuration and reject requests from origins outside its explicit trusted origins before the application handler executes. Explicitly trusted origins must support the existing X-Order-Lookup-Token header for public checkout GET/POST preflights; header permission does not replace server-side order authorization.",
       "domain": "AUTH",
       "actors": [
         "Browser user",
@@ -979,7 +979,8 @@
         "Startup with valid explicit origins -> validated",
         "Trusted Origin -> application handler",
         "Untrusted Origin -> middleware rejection",
-        "No Origin -> application handler subject to endpoint authentication"
+        "No Origin -> application handler subject to endpoint authentication",
+        "Trusted GET/POST checkout preflight admits X-Order-Lookup-Token alongside content-type/idempotency-key; untrusted origin remains denied."
       ],
       "forbiddenTransitions": [
         "Production allow-all/wildcard configuration -> server started",
@@ -1021,7 +1022,7 @@
       "authority": "Safety correction authorized by the current audit; explicit origin contract with observed production counterexample",
       "property": "Production credentialed origin admission requires an explicitly trusted origin; arbitrary origins cannot reach the handler.",
       "contract": "formal/system/cors-boundary.md",
-      "verification": "Actual Haskell middleware cases and two controlled implementation mutations; full gates and deployment pending.",
+      "verification": "Actual Haskell middleware cases and two controlled implementation mutations; full gates and deployment pending. Actual WAI middleware regression covers lookup-token GET/POST preflights for trusted and untrusted origins.",
       "evidence": "scripts/verify-cors-boundary.py emits source-bound finite runtime receipts."
     },
     {

@@ -12012,7 +12012,7 @@
     {
       "id": "SURFACE-057525240b5b11f7",
       "path": "tdf-hq/src/TDF/Cors.hs",
-      "sha256": "94a8b2ffedfc793e6d8c44d62f0388dc853e3da95e75e23dfdb6fed76d7f88dd",
+      "sha256": "53b4f194ffdd118805585962fc6a2f9c9e9121a6c55d0990581dfe531ba9284f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12924,7 +12924,7 @@
     {
       "id": "SURFACE-56829a36e8042830",
       "path": "tdf-hq/test/TDF/CorsSpec.hs",
-      "sha256": "ca283c34c7b4368f59ba7af790950482e527747e95574afbbd22c1ce0e6a4245",
+      "sha256": "8be7f01a94ab4c4141534db48843adc3e6db345770b2f0425f457b6100488694",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21382,7 +21382,7 @@
     },
     {
       "path": "formal/system/cors-boundary.md",
-      "sha256": "5190d7e68ecce0b9244f63101c9bac923c177ccaf2f0c64a769a8d41028b7f2c",
+      "sha256": "7ef3c77469631cde749bed3041c22462efa4c0d441c377b0e43b580a9f6d67bf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21543,7 +21543,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "7a6d61fccd07cbcabdc6704c6fc0bc59eb626d882d33180e23d2f9953a414db1",
+      "sha256": "036f97b6e93af48a280922205e4a3d23437299e8495639961b2e3e109090b22a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
