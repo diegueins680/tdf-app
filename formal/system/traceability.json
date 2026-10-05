@@ -5567,7 +5567,7 @@
     "scripts/lib/formal-result-summary.mjs": "fa378d768a1c4e8ff6fe67e8d18d61367cd1b272339107e71c497798fb657167",
     "scripts/lib/hetzner-migration-rehearsal.mjs": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a",
     "scripts/lib/hetzner-preparation.mjs": "c0e96de12b4949cea0115e8d8ea8fe85dad2dfdd1f8496fb8b110f9e5240abc0",
-    "scripts/lib/invoice_receipt_conformance.py": "382ef805a312d34b5ce33e9f321e5b3bba7d35b44d83b24cfb934a5a68a97bc1",
+    "scripts/lib/invoice_receipt_conformance.py": "6d3027e319102cfc90b3dbdb55c6b2b5e71a5474bce547a9ffbc91173e8d6dbb",
     "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
     "scripts/lib/operations_conformance.py": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
@@ -10679,7 +10679,7 @@
     {
       "id": "SURFACE-51d8657e7eea8356",
       "path": "scripts/lib/invoice_receipt_conformance.py",
-      "sha256": "382ef805a312d34b5ce33e9f321e5b3bba7d35b44d83b24cfb934a5a68a97bc1",
+      "sha256": "6d3027e319102cfc90b3dbdb55c6b2b5e71a5474bce547a9ffbc91173e8d6dbb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

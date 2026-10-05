@@ -3545,7 +3545,7 @@
     {
       "id": "SURFACE-51d8657e7eea8356",
       "path": "scripts/lib/invoice_receipt_conformance.py",
-      "sha256": "382ef805a312d34b5ce33e9f321e5b3bba7d35b44d83b24cfb934a5a68a97bc1",
+      "sha256": "6d3027e319102cfc90b3dbdb55c6b2b5e71a5474bce547a9ffbc91173e8d6dbb",
       "semanticConformance": "not-established-by-discovery"
     },
     {

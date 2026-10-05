@@ -89,10 +89,13 @@ def verify_invoice_receipts(sql, request, check, env, database, output, actors):
 
     # Old auth middleware may have read a committed grant. Recheck under the
     # same lock held by its revocation, then reject after observing its commit.
+    invoice_permissions = sql("SELECT string_agg(quote_literal(rp.id::text)||'::uuid', ',') FROM role_permission rp JOIN security_role r ON r.id=rp.role_id JOIN security_permission p ON p.id=rp.permission_id WHERE r.code='admin' AND p.code='invoicing.access' AND rp.active")
+    check('revocation fixture captures active invoicing grants only', bool(invoice_permissions))
+    permission_scope = ' WHERE id IN (' + invoice_permissions + ')'
     for name, revoke, restore, expected in [
         ('session', "UPDATE api_token SET active=false WHERE token='fixture-admin'", "UPDATE api_token SET active=true WHERE token='fixture-admin'", 401),
         ('role assignment', 'UPDATE party_security_role SET active=false WHERE party_id=' + actors['admin'], 'UPDATE party_security_role SET active=true WHERE party_id=' + actors['admin'], 403),
-        ('module permission', "UPDATE role_permission SET active=false WHERE role_id=(SELECT id FROM security_role WHERE code='admin')", "UPDATE role_permission SET active=true WHERE role_id=(SELECT id FROM security_role WHERE code='admin')", 403),
+        ('module permission', 'UPDATE role_permission SET active=false' + permission_scope, 'UPDATE role_permission SET active=true' + permission_scope, 403),
     ]:
         try:
             responses = race(revoke, [lambda: receipt(iid)])
