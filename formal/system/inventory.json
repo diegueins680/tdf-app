@@ -4592,7 +4592,7 @@
     },
     {
       "path": "docs/venue-manager/domo-del-pululahua-financial-plan.md",
-      "sha256": "506a41e377b235bc6a955fc11e095ca406574ebe8a7e1dbc655f27555e448039",
+      "sha256": "2777f6bb06a429331f2febbbdd85c3d1a9b3275ce9239b048328d07a387ea7f4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

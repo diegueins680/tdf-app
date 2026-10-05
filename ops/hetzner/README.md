@@ -13,6 +13,14 @@ fresh consistent export after quiescing every production writer. Production is
 already accepting writes on Hetzner; never restore service from the stale Fly
 copy without a new freeze and reverse migration.
 
+The old `release:backend`, `release:backend:plan` and
+`release:backend:preflight` npm commands are retired. Direct invocation of
+`scripts/production-release.mjs` also exits before contacting any provider or
+database. Its imported source/artifact validation helpers remain in use by
+`npm run release:backend:prepare -- FULL_RELEASE_SHA FULL_RECOVERY_SHA NEW_PRIVATE_DIRECTORY`.
+That preparation command does not deploy; follow the guarded procedure below
+and preserve the live Hetzner database for application recovery.
+
 ## Host selection and cost
 
 On 2026-09-28 the authenticated Hetzner project reported CX23/CX33/CAX11/CAX21

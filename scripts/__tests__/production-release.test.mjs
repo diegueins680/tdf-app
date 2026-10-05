@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 
 import {
   captureContextualReputationGate,
@@ -27,6 +28,20 @@ import {
 } from '../lib/production-release.mjs';
 
 const releaseSha = 'ABCDEF0123456789ABCDEF0123456789ABCDEF01';
+
+test('retired Fly CLI rejects legacy commands before any provider invocation', () => {
+  for (const mode of ['plan', 'preflight', 'release']) {
+    const result = spawnSync(process.execPath, [
+      new URL('../production-release.mjs', import.meta.url).pathname,
+      mode, '--sha', releaseSha, '--execute', '--confirm', releaseSha,
+    ], { encoding: 'utf8', env: { PATH: '/nonexistent' } });
+    assert.equal(result.status, 1, result.stderr);
+    assert.match(result.stderr, /Fly release CLI is retired/);
+    assert.match(result.stderr, /ops\/hetzner\/README.md/);
+    assert.equal(result.stdout, '');
+    assert.doesNotMatch(result.stderr, /ENOENT|\$ /);
+  }
+});
 const normalizedReleaseSha = releaseSha.toLowerCase();
 const releaseImage = `diegueins680/tdf-hq:${normalizedReleaseSha}`;
 
