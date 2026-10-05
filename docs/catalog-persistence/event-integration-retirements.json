@@ -84,8 +84,8 @@
         "kind": "array",
         "name": "PUBLIC_NAV_ITEMS"
       },
-      "replacementId": "f9819fa4b81bdd8f3f21",
-      "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint."
+      "replacementId": "d24fc428c18f60568996",
+      "reason": "The reviewed public navigation successor now includes the canonical TDF Mobile entry. Its preceding fingerprint f9819fa4b81bdd8f3f21 and exact decision remain archived as previousDecision in catalog-list-decisions.json; this mapping follows the current reviewed successor while preserving the original retirement evidence."
     },
     {
       "originalDecision": {
@@ -125,8 +125,8 @@
         "kind": "array",
         "name": "mobileFeatureRegistry"
       },
-      "replacementId": "0eafdd9f0a8bbebf9a23",
-      "reason": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged.",
+      "replacementId": "44c80a6dd2f154d0d59a",
+      "reason": "The current canonical generated registry preserves every definition from payment main and adds the public tester landing. Previous reviewed successor decisions remain archived unchanged in catalog-list-decisions.json.",
       "previousReplacementId": "21babc54d68f0c44d55e",
       "currentResolution": {
         "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",

@@ -53,27 +53,36 @@
     },
     {
       "historicalReplacementId": "ffb84e8fd3972fd0730d",
-      "currentId": "0eafdd9f0a8bbebf9a23",
+      "currentId": "44c80a6dd2f154d0d59a",
       "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
       "kind": "array",
       "name": "mobileFeatureRegistry",
-      "valueCount": 158,
+      "valueCount": 159,
       "previousResolution": {
         "historicalReplacementId": "ffb84e8fd3972fd0730d",
-        "currentId": "5147eb2751a01d8b4c73",
+        "currentId": "0eafdd9f0a8bbebf9a23",
         "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
         "kind": "array",
         "name": "mobileFeatureRegistry",
-        "valueCount": 157,
+        "valueCount": 158,
         "previousResolution": {
-          "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
-          "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
-          "currentId": "21babc54d68f0c44d55e",
-          "valueCount": 156
+          "historicalReplacementId": "ffb84e8fd3972fd0730d",
+          "currentId": "5147eb2751a01d8b4c73",
+          "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+          "kind": "array",
+          "name": "mobileFeatureRegistry",
+          "valueCount": 157,
+          "previousResolution": {
+            "mainRevision": "cc244b1f86603055997b51379b297baebfd3e7ce",
+            "mobileRevision": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+            "currentId": "21babc54d68f0c44d55e",
+            "valueCount": 156
+          },
+          "change": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
         },
-        "change": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+        "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
       },
-      "change": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged."
+      "change": "The tester program adds public.mobile to the 158 definitions of the merged payment main. All prior route definitions and authorization dispositions remain intact."
     },
     {
       "historicalReplacementId": "34d5f2f94d1a165783ba",

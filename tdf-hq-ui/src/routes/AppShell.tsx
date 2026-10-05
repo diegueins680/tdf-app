@@ -1,3 +1,4 @@
+import SignupMobileInvitation from '../mobile/SignupMobileInvitation';
 import { useEffect, useRef, useState } from 'react';
 import { Box, Container, Stack, useMediaQuery, useTheme } from '@mui/material';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
@@ -265,6 +266,7 @@ export function Shell() {
         >
           <Container maxWidth="xl" sx={{ pt: { xs: 3, md: 4 }, pb: 6 }}>
             <RegistryBreadcrumbs />
+            <SignupMobileInvitation />
             {forbiddenDecision ? <ForbiddenPage decision={forbiddenDecision} /> : <RouteErrorBoundary><Outlet /></RouteErrorBoundary>}
           </Container>
           {!forbiddenDecision && !hideFloatingAssistants && (
