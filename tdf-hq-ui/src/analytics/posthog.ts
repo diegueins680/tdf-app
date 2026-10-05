@@ -217,6 +217,10 @@ export function getAnalyticsClient(): AnalyticsClient {
       if (event === null) return null;
       const projectToken = event.properties?.['token'];
       event.properties = sanitizeAnalyticsProperties(event.properties ?? {});
+      // The SDK attaches initial URLs/referrers outside event.properties, and
+      // identify also uses these top-level person-property envelopes.
+      if (event.$set) event.$set = sanitizeAnalyticsProperties(event.$set);
+      if (event.$set_once) event.$set_once = sanitizeAnalyticsProperties(event.$set_once);
       // PostHog injects its public project token at the root; application tokens stay stripped.
       if (projectToken === key) event.properties['token'] = projectToken;
       return event;
