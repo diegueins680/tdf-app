@@ -53,7 +53,10 @@
       "functions/.well-known/apple-app-site-association.js",
       "functions/.well-known/assetlinks.json.js",
       "functions/_shared/event-preview.mjs",
-      "functions/eventos/[eventId].js"
+      "functions/_shared/ticket-page.mjs",
+      "functions/eventos/[eventId].js",
+      "functions/eventos/[eventId]/entradas.js",
+      "functions/eventos/[eventId]/orden/[orderId].js"
     ],
     "ops": [
       "ops/hetzner/backup-postgres.sh",
@@ -138,6 +141,7 @@
       "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
       "scripts/__tests__/studio-internship-audit.test.mjs",
       "scripts/__tests__/ticket-admission-model.test.mjs",
+      "scripts/__tests__/ticket-page-preview.test.mjs",
       "scripts/__tests__/ui-validation-bundle.test.mjs",
       "scripts/__tests__/ux-quality-audit.test.mjs",
       "scripts/__tests__/ux-review-real-browser.mjs",
@@ -16209,7 +16213,7 @@
     },
     {
       "path": "docs/analytics.md",
-      "sha256": "e2f1d41df2782cfc07ad1398079ba6b343cb3f9ca9d708ffecb7e8178ac8bb5e",
+      "sha256": "7a2837f2227faceb649922c23d962033758afe95f20a8d67054ff2405415dfbf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -17071,6 +17075,13 @@
     {
       "path": "docs/events/patch-culture-vol-1/propuesta-condiciones.md",
       "sha256": "1dadff3dab423326520ce51df7da31bc9eaed61f5f07b8094124a7fd3284811d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/events/ticket-page-metadata.md",
+      "sha256": "5e8c883379227e5d2c83db23f2ea72f4c8c5595a7af77e5f123e40a160145f3e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
