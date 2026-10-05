@@ -4040,6 +4040,85 @@
         "classification": "PARTIAL",
         "reason": "Working implementation and bounded model require final combined checks and deployed verification; broader storage/device boundaries remain open."
       }
+    },
+    {
+      "id": "PRIV-CACHE-002",
+      "title": "Isolate Mobile query data across authentication occurrences",
+      "statement": "The Mobile query subtree must allocate a fresh client when the authentication occurrence or security scope changes. A previous occurrence response or mutation callback must not populate the current client.",
+      "authority": "authorized privacy defect repair with local reproduction",
+      "domain": "PRIV",
+      "actors": [
+        "Mobile user",
+        "Previous account on shared device",
+        "Asynchronous query or mutation callback"
+      ],
+      "preconditions": [
+        "Production AuthQueryProviders surrounds all query consumers; backend responses are correctly scoped."
+      ],
+      "inputs": [
+        "Authentication occurrence, token, Party, normalized roles/modules/flags",
+        "Queries and mutation response callbacks"
+      ],
+      "state": {
+        "boundary": "Mobile application QueryClient and component subtree",
+        "states": [
+          "anonymous occurrence",
+          "authenticated occurrence",
+          "retired occurrence with pending work"
+        ]
+      },
+      "allowedTransitions": [
+        "explicit login/logout -> fresh occurrence even with equal token",
+        "changed token/Party/role/module/flag scope -> fresh QueryClient",
+        "equivalent session refresh -> preserve QueryClient",
+        "old completion -> retired client only"
+      ],
+      "forbiddenTransitions": [
+        "old cached or late response -> current private view",
+        "old mutation callback -> current QueryClient",
+        "A->B->A -> reuse retired A cache"
+      ],
+      "effects": [
+        "Retire old cache and remount descendants; retain existing query staleTime/retry defaults and mutation retry0."
+      ],
+      "authorization": "Client isolation complements backend access control; no operation authorization is granted by cached data.",
+      "privacy": "Favorites, timestamps and visit counts belong to their session occurrence. Credentials never form React keys or a persisted query cache.",
+      "concurrency": "Synchronous render scope selection precedes child commit; a callback retains the client captured before logout.",
+      "idempotency": "No retry added; repeated explicit authentication produces a fresh occurrence even with equal identity and credentials.",
+      "failure": "New scope refetches its data. The backend may finish an already-started mutation after logout; it is not undone by cache retirement.",
+      "recovery": "Next login starts a new client; role refresh resets scoped data without replacing the authentication provider.",
+      "observability": "Actual AuthProvider, FeatureExplorerScreen and navigation adapter tests hold favorite/visit responses across logout and prove old callbacks execute without changing the next cache.",
+      "source": "AuthProvider.clear and actorless navigation-preferences callbacks; synthetic eac261c reproduction; AUTHORITY-033",
+      "property": "PrivateProjection (shared bounded model); Mobile auth-expiration behavior is not modeled here",
+      "contract": "formal/system/mobile-query-isolation.md",
+      "implementation": [
+        "tdf-mobile/src/providers/AuthProvider.tsx",
+        "tdf-mobile/src/providers/AuthQueryProviders.tsx",
+        "tdf-mobile/src/providers/AppProviders.tsx",
+        "tdf-mobile/src/lib/queryClient.ts",
+        "tdf-mobile/app/(tabs)/more.tsx",
+        "tdf-mobile/src/api/navigationPreferences.ts"
+      ],
+      "verification": "Actual Mobile provider/screen synthetic transport tests, independent StrictMode replay and shared bounded cache-isolation model.",
+      "evidence": "Final exact-candidate commands and receipts remain required; reproduced old late favorite disclosure containing visit metadata is P2; fixed controls cover favorite and visit.",
+      "status": "specified and implemented",
+      "historicalStatus": "observed-defect-repaired-awaiting-final-gates",
+      "critical": true,
+      "tests": [
+        "tdf-mobile/__tests__/AuthQueryProviders.test.tsx",
+        "tdf-mobile/__tests__/AuthProvider.test.tsx"
+      ],
+      "formalModels": [
+        "formal/event-operations/SessionCacheIsolation.tla"
+      ],
+      "confidence": "Synthetic original defect and corrected late-response behavior reproduced; full native device and release validation pending.",
+      "ambiguity": [
+        "Durable non-QueryClient storage, cross-device revocation, stale auth errors and provider-side mutation effects require separate verification."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repair and actual-screen regression checks exist; exact final gates, native device and deployed correspondence remain open."
+      }
     }
   ]
 }

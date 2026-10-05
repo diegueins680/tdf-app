@@ -49,5 +49,4 @@ client, reuse clients by actor, or authorize expiration by actor instead of epoc
 each must violate its named safety invariant, not merely fail to execute.
 
 This fixes an observed client privacy bug; frontend hiding still never replaces
-backend authorization. Mobile has a separate token-change cache clear mechanism
-and is not covered by this web model. Its full late-mutation parity remains open.
+backend authorization. Mobile parity is separately specified in [mobile-query-isolation.md](mobile-query-isolation.md). Its implementation reuses the cache-safety abstraction; Mobile auth-expiration and native-device behavior remain separate obligations.

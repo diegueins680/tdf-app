@@ -342,6 +342,17 @@
       "conflict": "Long-lived actor-independent query cache survives logout; actual component reproduction displays prior Party private response under next Party.",
       "authority": "formal/system/session-query-isolation.md",
       "resolution": "Replace and remount cache per security-scope occurrence. Preserve current query defaults but retire old client state. Bind auth expiration to request epoch; do not convert cached disclosure into intentional offline behavior."
+    },
+    {
+      "id": "AUTHORITY-033",
+      "sources": [
+        "tdf-mobile/src/providers/AuthProvider.tsx",
+        "tdf-mobile/app/(tabs)/more.tsx",
+        "tdf-mobile/src/providers/AppProviders.tsx"
+      ],
+      "conflict": "Token changes clear a shared client, but old favorite/visit callbacks repopulate it and expose personal metadata to the next account.",
+      "authority": "formal/system/mobile-query-isolation.md",
+      "resolution": "Use per-occurrence clients and remount query consumers; keep the exact shipped lineage and existing retry semantics. Clearing a shared cache is insufficient isolation. No offline or provider exactly-once guarantee is inferred."
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "eac261c515cf763a368afde6b0641a2939a8df12",
+  "mobileRevision": "7a43e78131d66646504e40ed2cc380d2bc5336d1",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -1849,6 +1849,7 @@
       "tdf-mobile/__tests__/Analytics.test.ts",
       "tdf-mobile/__tests__/ArtistDetail.test.tsx",
       "tdf-mobile/__tests__/AuthProvider.test.tsx",
+      "tdf-mobile/__tests__/AuthQueryProviders.test.tsx",
       "tdf-mobile/__tests__/AuthScreen.test.tsx",
       "tdf-mobile/__tests__/CreateEvent.test.tsx",
       "tdf-mobile/__tests__/DdexInbox.test.tsx",
@@ -2172,6 +2173,7 @@
       "tdf-mobile/src/operations/pushRegistration.ts",
       "tdf-mobile/src/providers/AppProviders.tsx",
       "tdf-mobile/src/providers/AuthProvider.tsx",
+      "tdf-mobile/src/providers/AuthQueryProviders.tsx",
       "tdf-mobile/src/providers/FirstRunProvider.tsx",
       "tdf-mobile/src/providers/NetworkProvider.tsx",
       "tdf-mobile/src/providers/UserSettingsProvider.tsx",
@@ -13123,7 +13125,13 @@
     {
       "id": "SURFACE-e8c759c0d912b54a",
       "path": "tdf-mobile/__tests__/AuthProvider.test.tsx",
-      "sha256": "e083c6f085c54e2ff6e084694eb99aafe62671dc2927dba98c03cb7f140565e4",
+      "sha256": "a76d12479c0899214bfd7fb8c2b5eea1e24d81585633c6bf7e835ca21922f474",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c85da5949c19b4d4",
+      "path": "tdf-mobile/__tests__/AuthQueryProviders.test.tsx",
+      "sha256": "ba1fca52cdff6c4bd29548ccdb96f40b212a2a6cacf3f6ee08b6698095178f5c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14911,7 +14919,7 @@
     {
       "id": "SURFACE-f17dadab838695d0",
       "path": "tdf-mobile/src/lib/queryClient.ts",
-      "sha256": "50c60d7e3856b8630703aac8e75d29ab8d311778d4f5821b79c15523d0a3126b",
+      "sha256": "149f05c3a7463dfe5de259414a14fa30619277ce4f46adc6f166b51e775a4ff2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15055,13 +15063,19 @@
     {
       "id": "SURFACE-6fe42cbeec86740d",
       "path": "tdf-mobile/src/providers/AppProviders.tsx",
-      "sha256": "9144cdc21ae192260da7c42f6ff0884409d49f4df648f09291248afe0476fb81",
+      "sha256": "5a53c52ab7582cea2457b146a52e913fcf8174a650d2791e21da028ea69efd03",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-9471bdc1113baabd",
       "path": "tdf-mobile/src/providers/AuthProvider.tsx",
-      "sha256": "94a41217ba69be848c9b7f45bbc1bd9fc616b93832e20097b31257e2c8ac101d",
+      "sha256": "e5ac647ae75d11db1ed43b9cbaff0c92c0b2c3f631e92564fb00e900ce31c74d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-06e46d35724b12d5",
+      "path": "tdf-mobile/src/providers/AuthQueryProviders.tsx",
+      "sha256": "ae919bad36236b53ab80d17674b5f70e438178e1e9cf3b482c9bd4c437e66ed2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20514,14 +20528,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "bb9b757bf76805dd8711206c52bb9f125684a4523b486d2cdc4b62426d9a1259",
+      "sha256": "8e7cfea91477f9f21f29faa9ff4cf7814d745c55e451f532b9a3690295923738",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "2cdd98c2e60a7eab9747be902df2fbfa82bd0007db6254a82e23bcf56df6cdcf",
+      "sha256": "8c06e8e16f40e0ac4c9c799f5f2e8970bd7a8737cb70624933c6d1d6c9b6bb43",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20653,6 +20667,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/mobile-query-isolation.md",
+      "sha256": "b2982e1e88342ee6b6e93853534c7db1060fec384e9e5ee61a27f6e954fe8ffe",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/payment-arithmetic.md",
       "sha256": "c08a1eccf725c31eadacdff1c36472ca984959e31233b887dc8760f1e07d6661",
       "authority": "inferred",
@@ -20675,7 +20696,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a3eda3754151917659a8bfc7ae8273c1d4dd7992324b312557374d1d2906c5c8",
+      "sha256": "7586d0fdd454f149ce3922666a120ceb4a3acbf1578f5d58b767889046547664",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -20703,7 +20724,7 @@
     },
     {
       "path": "formal/system/session-query-isolation.md",
-      "sha256": "70a43c716c0d91a9047d802d0f5eb60977d81f0a7f875425bcfa05ec0a7d0f5c",
+      "sha256": "2a3d72f757e9d8b5bde86bc778f0d1c9569b36c516771bb1699854d265806353",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

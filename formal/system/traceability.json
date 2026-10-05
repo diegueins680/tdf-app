@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "eac261c515cf763a368afde6b0641a2939a8df12",
+  "mobileRevision": "7a43e78131d66646504e40ed2cc380d2bc5336d1",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -4041,6 +4041,85 @@
         "classification": "PARTIAL",
         "reason": "Working implementation and bounded model require final combined checks and deployed verification; broader storage/device boundaries remain open."
       }
+    },
+    {
+      "id": "PRIV-CACHE-002",
+      "title": "Isolate Mobile query data across authentication occurrences",
+      "statement": "The Mobile query subtree must allocate a fresh client when the authentication occurrence or security scope changes. A previous occurrence response or mutation callback must not populate the current client.",
+      "authority": "authorized privacy defect repair with local reproduction",
+      "domain": "PRIV",
+      "actors": [
+        "Mobile user",
+        "Previous account on shared device",
+        "Asynchronous query or mutation callback"
+      ],
+      "preconditions": [
+        "Production AuthQueryProviders surrounds all query consumers; backend responses are correctly scoped."
+      ],
+      "inputs": [
+        "Authentication occurrence, token, Party, normalized roles/modules/flags",
+        "Queries and mutation response callbacks"
+      ],
+      "state": {
+        "boundary": "Mobile application QueryClient and component subtree",
+        "states": [
+          "anonymous occurrence",
+          "authenticated occurrence",
+          "retired occurrence with pending work"
+        ]
+      },
+      "allowedTransitions": [
+        "explicit login/logout -> fresh occurrence even with equal token",
+        "changed token/Party/role/module/flag scope -> fresh QueryClient",
+        "equivalent session refresh -> preserve QueryClient",
+        "old completion -> retired client only"
+      ],
+      "forbiddenTransitions": [
+        "old cached or late response -> current private view",
+        "old mutation callback -> current QueryClient",
+        "A->B->A -> reuse retired A cache"
+      ],
+      "effects": [
+        "Retire old cache and remount descendants; retain existing query staleTime/retry defaults and mutation retry0."
+      ],
+      "authorization": "Client isolation complements backend access control; no operation authorization is granted by cached data.",
+      "privacy": "Favorites, timestamps and visit counts belong to their session occurrence. Credentials never form React keys or a persisted query cache.",
+      "concurrency": "Synchronous render scope selection precedes child commit; a callback retains the client captured before logout.",
+      "idempotency": "No retry added; repeated explicit authentication produces a fresh occurrence even with equal identity and credentials.",
+      "failure": "New scope refetches its data. The backend may finish an already-started mutation after logout; it is not undone by cache retirement.",
+      "recovery": "Next login starts a new client; role refresh resets scoped data without replacing the authentication provider.",
+      "observability": "Actual AuthProvider, FeatureExplorerScreen and navigation adapter tests hold favorite/visit responses across logout and prove old callbacks execute without changing the next cache.",
+      "source": "AuthProvider.clear and actorless navigation-preferences callbacks; synthetic eac261c reproduction; AUTHORITY-033",
+      "property": "PrivateProjection (shared bounded model); Mobile auth-expiration behavior is not modeled here",
+      "contract": "formal/system/mobile-query-isolation.md",
+      "implementation": [
+        "tdf-mobile/src/providers/AuthProvider.tsx",
+        "tdf-mobile/src/providers/AuthQueryProviders.tsx",
+        "tdf-mobile/src/providers/AppProviders.tsx",
+        "tdf-mobile/src/lib/queryClient.ts",
+        "tdf-mobile/app/(tabs)/more.tsx",
+        "tdf-mobile/src/api/navigationPreferences.ts"
+      ],
+      "verification": "Actual Mobile provider/screen synthetic transport tests, independent StrictMode replay and shared bounded cache-isolation model.",
+      "evidence": "Final exact-candidate commands and receipts remain required; reproduced old late favorite disclosure containing visit metadata is P2; fixed controls cover favorite and visit.",
+      "status": "specified and implemented",
+      "historicalStatus": "observed-defect-repaired-awaiting-final-gates",
+      "critical": true,
+      "tests": [
+        "tdf-mobile/__tests__/AuthQueryProviders.test.tsx",
+        "tdf-mobile/__tests__/AuthProvider.test.tsx"
+      ],
+      "formalModels": [
+        "formal/event-operations/SessionCacheIsolation.tla"
+      ],
+      "confidence": "Synthetic original defect and corrected late-response behavior reproduced; full native device and release validation pending.",
+      "ambiguity": [
+        "Durable non-QueryClient storage, cross-device revocation, stale auth errors and provider-side mutation effects require separate verification."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repair and actual-screen regression checks exist; exact final gates, native device and deployed correspondence remain open."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -4296,9 +4375,12 @@
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "39c92770f1830489ecb1c909dfbefa7c1a11857f3f002ce89da5283c06c69a0b",
     "tdf-hq/test/TDF/ServerSpec.hs": "a205ac4f0400b0972d1fc3280cc6ed7913da633cbed670d919de38bfc96a4f45",
+    "tdf-mobile/__tests__/AuthProvider.test.tsx": "a76d12479c0899214bfd7fb8c2b5eea1e24d81585633c6bf7e835ca21922f474",
+    "tdf-mobile/__tests__/AuthQueryProviders.test.tsx": "ba1fca52cdff6c4bd29548ccdb96f40b212a2a6cacf3f6ee08b6698095178f5c",
     "tdf-mobile/__tests__/DdexInbox.test.tsx": "5082fd98e04f9c9d861e8f3fbf7fabab92ac65cdb0e5ba7dd128a62839456656",
     "tdf-mobile/__tests__/DdexPartners.test.tsx": "6311dc043ee8a286f62bd0ec4d588f3b4425f1990a73d8b94c91093cd9b99b57",
     "tdf-mobile/__tests__/ddexApi.test.ts": "c9e274d52a3bab8063c84a79c398c68657d2a07774722f64caecec0b25d4518b",
+    "tdf-mobile/app/(tabs)/more.tsx": "53cc6d33d6d37756759a2251d2d79fcd8750696b3369a3d64783d0853d21ec18",
     "tdf-mobile/app/ddex/document/[id].tsx": "787e7c4f2a28f137e614df6660c727d81890337ef69fc39cd1ea55c953f731a2",
     "tdf-mobile/app/ddex/index.tsx": "8d534fd0a1a28f0bac5767a8535a91fe1ce7762d0decff518cec5931eb6149e1",
     "tdf-mobile/app/ddex/partners.tsx": "9e2e2baf6b696a5880fd3f59f7d52bd8a6508762296a55564fb873af6d23be61",
@@ -4306,7 +4388,12 @@
     "tdf-mobile/package.json": "2df9f211d1bddbe5467021ac6398e3427b5af467262ae5321be224ebe1603612",
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/generated/types.ts": "95e41fe43d6987a0f692d207c896fa585616c9f93feae5e5579d3f9d7fa1e161",
-    "tdf-mobile/src/features/generatedFeatureRegistry.ts": "a8111cb6563d7cb08ca568175ed51460de0293db652142a7979e907e256ee2ff"
+    "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
+    "tdf-mobile/src/features/generatedFeatureRegistry.ts": "a8111cb6563d7cb08ca568175ed51460de0293db652142a7979e907e256ee2ff",
+    "tdf-mobile/src/lib/queryClient.ts": "149f05c3a7463dfe5de259414a14fa30619277ce4f46adc6f166b51e775a4ff2",
+    "tdf-mobile/src/providers/AppProviders.tsx": "5a53c52ab7582cea2457b146a52e913fcf8174a650d2791e21da028ea69efd03",
+    "tdf-mobile/src/providers/AuthProvider.tsx": "e5ac647ae75d11db1ed43b9cbaff0c92c0b2c3f631e92564fb00e900ce31c74d",
+    "tdf-mobile/src/providers/AuthQueryProviders.tsx": "ae919bad36236b53ab80d17674b5f70e438178e1e9cf3b482c9bd4c437e66ed2"
   },
   "reverseTraceability": {
     "scripts/production-release.mjs": [
@@ -6377,6 +6464,58 @@
       {
         "requirement": "PRIV-CACHE-001",
         "relationship": "formalModels"
+      },
+      {
+        "requirement": "PRIV-CACHE-002",
+        "relationship": "formalModels"
+      }
+    ],
+    "tdf-mobile/src/providers/AuthProvider.tsx": [
+      {
+        "requirement": "PRIV-CACHE-002",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/providers/AuthQueryProviders.tsx": [
+      {
+        "requirement": "PRIV-CACHE-002",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/providers/AppProviders.tsx": [
+      {
+        "requirement": "PRIV-CACHE-002",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/lib/queryClient.ts": [
+      {
+        "requirement": "PRIV-CACHE-002",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/app/(tabs)/more.tsx": [
+      {
+        "requirement": "PRIV-CACHE-002",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/api/navigationPreferences.ts": [
+      {
+        "requirement": "PRIV-CACHE-002",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/__tests__/AuthQueryProviders.test.tsx": [
+      {
+        "requirement": "PRIV-CACHE-002",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/AuthProvider.test.tsx": [
+      {
+        "requirement": "PRIV-CACHE-002",
+        "relationship": "tests"
       }
     ]
   },
@@ -20599,9 +20738,26 @@
     {
       "id": "SURFACE-e8c759c0d912b54a",
       "path": "tdf-mobile/__tests__/AuthProvider.test.tsx",
-      "sha256": "e083c6f085c54e2ff6e084694eb99aafe62671dc2927dba98c03cb7f140565e4",
+      "sha256": "a76d12479c0899214bfd7fb8c2b5eea1e24d81585633c6bf7e835ca21922f474",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-CACHE-002",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-c85da5949c19b4d4",
+      "path": "tdf-mobile/__tests__/AuthQueryProviders.test.tsx",
+      "sha256": "ba1fca52cdff6c4bd29548ccdb96f40b212a2a6cacf3f6ee08b6698095178f5c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PRIV-CACHE-002",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-889f3ed698a5ec59",
@@ -21197,7 +21353,12 @@
       "path": "tdf-mobile/app/(tabs)/more.tsx",
       "sha256": "53cc6d33d6d37756759a2251d2d79fcd8750696b3369a3d64783d0853d21ec18",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-CACHE-002",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-32b73d45dd36c278",
@@ -22058,7 +22219,12 @@
       "path": "tdf-mobile/src/api/navigationPreferences.ts",
       "sha256": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-CACHE-002",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-8db479af1de64195",
@@ -22740,9 +22906,14 @@
     {
       "id": "SURFACE-f17dadab838695d0",
       "path": "tdf-mobile/src/lib/queryClient.ts",
-      "sha256": "50c60d7e3856b8630703aac8e75d29ab8d311778d4f5821b79c15523d0a3126b",
+      "sha256": "149f05c3a7463dfe5de259414a14fa30619277ce4f46adc6f166b51e775a4ff2",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-CACHE-002",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-8659451d6bf1c46f",
@@ -22908,16 +23079,38 @@
     {
       "id": "SURFACE-6fe42cbeec86740d",
       "path": "tdf-mobile/src/providers/AppProviders.tsx",
-      "sha256": "9144cdc21ae192260da7c42f6ff0884409d49f4df648f09291248afe0476fb81",
+      "sha256": "5a53c52ab7582cea2457b146a52e913fcf8174a650d2791e21da028ea69efd03",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-CACHE-002",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-9471bdc1113baabd",
       "path": "tdf-mobile/src/providers/AuthProvider.tsx",
-      "sha256": "94a41217ba69be848c9b7f45bbc1bd9fc616b93832e20097b31257e2c8ac101d",
+      "sha256": "e5ac647ae75d11db1ed43b9cbaff0c92c0b2c3f631e92564fb00e900ce31c74d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-CACHE-002",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-06e46d35724b12d5",
+      "path": "tdf-mobile/src/providers/AuthQueryProviders.tsx",
+      "sha256": "ae919bad36236b53ab80d17674b5f70e438178e1e9cf3b482c9bd4c437e66ed2",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PRIV-CACHE-002",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-2ba88bec1c5a4d48",
@@ -24689,7 +24882,6 @@
     "SURFACE-dfdc76c7f5afe8f6",
     "SURFACE-57fb42409e4fe3c1",
     "SURFACE-c2d3a0548b7f007b",
-    "SURFACE-e8c759c0d912b54a",
     "SURFACE-889f3ed698a5ec59",
     "SURFACE-efcecbaa0e3acd71",
     "SURFACE-b008aa9647a19740",
@@ -24769,7 +24961,6 @@
     "SURFACE-f52dfd6e2d77a57f",
     "SURFACE-da3457d3ae8e7eba",
     "SURFACE-f4e817382f892226",
-    "SURFACE-4a2bad4310fce52d",
     "SURFACE-32b73d45dd36c278",
     "SURFACE-3f2b18d0947c05e7",
     "SURFACE-94216823284972e8",
@@ -24880,7 +25071,6 @@
     "SURFACE-f4bef91b91538592",
     "SURFACE-d9f8e4c9a50a093b",
     "SURFACE-4a5948130be5bbcf",
-    "SURFACE-c5908c9c6cc83942",
     "SURFACE-8db479af1de64195",
     "SURFACE-b35e32b7f76e312b",
     "SURFACE-37ad4ee4b656c78f",
@@ -24976,7 +25166,6 @@
     "SURFACE-f827393c335e64d0",
     "SURFACE-5c7e7c6b3f3a72ae",
     "SURFACE-242cd08336c0eba0",
-    "SURFACE-f17dadab838695d0",
     "SURFACE-8659451d6bf1c46f",
     "SURFACE-f70a58df1569bb6a",
     "SURFACE-84178b068cefadf8",
@@ -25000,8 +25189,6 @@
     "SURFACE-96659afab4076863",
     "SURFACE-c524a39784b123fa",
     "SURFACE-ee36105f35b640d9",
-    "SURFACE-6fe42cbeec86740d",
-    "SURFACE-9471bdc1113baabd",
     "SURFACE-2ba88bec1c5a4d48",
     "SURFACE-6dbac57013a27dfa",
     "SURFACE-71335eb9891aad95",
@@ -47379,7 +47566,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 55,
+    "PARTIAL": 56,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
