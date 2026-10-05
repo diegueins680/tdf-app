@@ -9426,6 +9426,11 @@ components:
         organizerFeeBps: { type: integer, minimum: 0, maximum: 10000 }
         taxBps: { type: integer, minimum: 0, maximum: 10000 }
         holdMinutes: { type: integer, minimum: 1 }
+        maxTicketsPerOrder:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Approved per-order limit. Older API versions omit this field and enforce the legacy limit of 100. This is not a cumulative per-buyer quota.
         termsVersion: { type: string, minLength: 1 }
         termsSummary: { type: string, minLength: 1 }
         refundPolicy: { type: string, minLength: 1 }

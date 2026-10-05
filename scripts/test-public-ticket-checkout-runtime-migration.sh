@@ -128,10 +128,17 @@ assert_equal "$(psql_exec -Atc "SELECT enabled::text FROM revenue_feature_flag W
 
 apply_file tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime_rollback.sql
 apply_file tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_order_quantity_limit.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_order_quantity_limit.sql
+assert_equal "$(psql_exec -Atc "SELECT max_tickets_per_order FROM event_ticket_checkout_policy WHERE event_id=1;")" \
+  "100" "Existing policies preserve the previous quantity limit"
+apply_file tdf-hq/sql/2026-10-05_ticket_order_quantity_limit_rollback.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_order_quantity_limit.sql
 
 psql_exec -c "
   UPDATE event_ticket_checkout_policy
     SET policy_version='owned-pilot-v1', terms_version='ticket-terms-v1',
+        max_tickets_per_order=4,
         terms_summary='Approved pilot terms.', refund_policy='Approved pilot refund policy.',
         approval_status='approved', active=TRUE,
         approved_at=NOW(), approved_by='migration-test'
@@ -285,6 +292,12 @@ assert_equal "$(psql_exec -Atc "SELECT quantity_sold FROM event_ticket_tier WHER
   "2" "Expired hold releases inventory exactly once"
 assert_equal "$(psql_exec -Atc "SELECT current_redemptions FROM promo_code WHERE id=1;")" \
   "0" "Expired hold releases promotion exactly once"
+
+apply_file tdf-hq/test/integration/ticket_order_quantity_limit.sql
+if apply_file tdf-hq/sql/2026-10-05_ticket_order_quantity_limit_rollback.sql; then
+  echo "Ticket rollback removed an approved quantity limit" >&2
+  exit 1
+fi
 
 if apply_file tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime_rollback.sql; then
   echo "Ticket rollback removed approved policy or payment/fulfillment evidence" >&2
