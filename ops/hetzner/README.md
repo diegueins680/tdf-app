@@ -170,3 +170,15 @@ is deliberate; monitor free space and preserve an off-host verified copy.
 
 The event ingestion changes in PRs #460, #463, and #464 remain separate from
 this hosting configuration and require their own review and rollout.
+
+### Social diagnostic output and side effects
+
+`scripts/diagnose-social.mjs` reads webhook/token/account metadata only. It does
+not send a test message, register webhooks or restart services. Supply the reviewed
+versioned `FACEBOOK_GRAPH_BASE` (or `FACEBOOK_MESSAGING_API_BASE`) from the backend
+configuration; only `https://graph.facebook.com/vN.N` is accepted. There is no
+separate hardcoded version fallback. Fetches have a15-second deadline and reject
+redirects. Missing/inactive/noncanonical callbacks, invalid tokens and transport
+or response failures produce a nonzero exit. Configured credentials are redacted
+from reflected metadata; raw provider errors are not printed. A passing diagnostic
+is metadata evidence only, not delivery, provider approval or release readiness.

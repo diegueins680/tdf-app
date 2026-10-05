@@ -41,6 +41,7 @@
       "scripts/__tests__/ci-change-scope.test.mjs",
       "scripts/__tests__/ci-pipeline.test.mjs",
       "scripts/__tests__/continuous-improvement-loop.test.mjs",
+      "scripts/__tests__/diagnose-social.test.mjs",
       "scripts/__tests__/event-draft-plan.test.mjs",
       "scripts/__tests__/event-operations-http-runner.test.mjs",
       "scripts/__tests__/event-operations-pluscal.test.mjs",
