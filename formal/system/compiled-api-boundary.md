@@ -38,3 +38,30 @@ a required-to-optional header mutation, and a changed method. Node controls veri
 branch isolation, opaque mounts, modifiers, unknown-node rejection, added/removed
 routes, duplicate routing and status drift. These are executable contract controls,
 not a universal proof of API implementation correctness.
+
+## Executable declaration drift gate
+
+The compiled b7628e6a5 backend emitted845 typed operations and two Raw mounts. Its
+comparison with481 documented operations found386 undocumented operations,
+25 documented operations with no typed route, three competing declarations and
+21 declared success-status differences. These counts are discovery findings, not
+all confirmed runtime defects: disabled handlers can intentionally return501/503,
+and `NoContent`/middleware behavior requires HTTP inspection.
+
+`compiled-api-surface.json` preserves the full declaration shape and branch order.
+CI compares its just-built executable against this reviewed implementation
+snapshot, including authentication, request modifiers, body and response types,
+status declarations and Raw mounts. A mismatch fails and still retains
+`contract-candidate.json` plus the discrepancy report. To update after reviewing
+intent and affected contracts, copy that fresh candidate to the canonical snapshot,
+regenerate the requirement inventory/traceability, and rerun the gate. Never
+regenerate solely to silence an unexplained failure. The ten controlled mutations
+cover removals, additions, security/modifier/body/response/status/method/order and
+Raw-path changes. Matching this snapshot does not waive existing OpenAPI gaps.
+
+Three competing declaration identities require runtime routing reconciliation:
+`GET /version`, `GET /trials/v1/subjects`, and `GET /radio/presence/{partyId}`.
+All25 documented/unmounted operations belong to `MerchReputation` API types whose
+handlers exist but are absent from the served CombinedAPI. Mounting them would
+require feature/privacy authorization review; discovery alone does not authorize
+activation. These findings remain open in the machine-readable comparison receipt.

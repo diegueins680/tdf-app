@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { compiledApiSurface, compareApiSurface } from '../lib/compiled-api-surface.mjs';
+import { compiledApiSurface, compareApiSurface, compiledApiDeclarationSnapshot, verifyCompiledApiDeclarationSnapshot } from '../lib/compiled-api-surface.mjs';
 
 const node = (module, name, ...args) => ({ module, name, args });
 const symbol = text => node('GHC.TypeLits', JSON.stringify(text));
@@ -90,4 +90,30 @@ test('capture-all cardinality cannot be normalized into a single-segment capture
   const result = compareApiSurface(surface, [{ id: 'GET /files/{id}', responses: ['200'] }]);
   assert.deepEqual(result.undocumented, ['GET /files/{*}']);
   assert.deepEqual(result.documentedWithoutTypedRoute, ['GET /files/{}']);
+});
+
+test('compiled declaration gate rejects route, auth, parameter, body, response and raw mount drift', () => {
+  const original = describe(alternative(
+    sub(symbol('secure'), sub(node('Servant.API.Experimental.Auth', 'AuthProtect', symbol('bearer-token')),
+      sub(node('Servant.API.Header', "Header'", list(modifier('Required')), symbol('If-Match'), textType),
+        sub(node('Servant.API.ReqBody', "ReqBody'", list(modifier('Required')), list(node('Servant.API.ContentTypes', 'JSON')), textType), verb('POST', 201))))),
+    sub(symbol('assets'), node('Servant.API.Raw', 'Raw'))));
+  const snapshot = compiledApiDeclarationSnapshot(structuredClone(original));
+  assert.doesNotThrow(() => verifyCompiledApiDeclarationSnapshot(original, snapshot));
+  for (const mutate of [
+    value => value.operations.push(structuredClone(value.operations[0])),
+    value => value.operations.pop(),
+    value => { value.operations[0].authCombinators = []; },
+    value => { value.operations[0].parameters[0].modifiers = []; },
+    value => { value.operations[0].bodies = []; },
+    value => { value.operations[0].responseType = null; },
+    value => { value.operations[0].successStatus = 200; },
+    value => { value.operations[0].method = 'PUT'; },
+    value => { value.operations[0].ordinal = 99; },
+    value => { value.rawMounts[0].path = '/public'; },
+  ]) {
+    const changed = structuredClone(original);
+    mutate(changed);
+    assert.throws(() => verifyCompiledApiDeclarationSnapshot(changed, snapshot), /declaration drift/);
+  }
 });

@@ -4,7 +4,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { sourceManifest } from './lib/verification-evidence.mjs';
-import { compiledApiSurface, compareApiSurface } from './lib/compiled-api-surface.mjs';
+import { compiledApiSurface, compareApiSurface, compiledApiDeclarationSnapshot, verifyCompiledApiDeclarationSnapshot } from './lib/compiled-api-surface.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
@@ -44,3 +44,12 @@ console.log(JSON.stringify({ revision, binarySha256, operations: surface.operati
   undocumented: comparison.undocumented.length, documentedWithoutTypedRoute: comparison.documentedWithoutTypedRoute.length,
   competing: comparison.competingCompiledRoutes.length, statusDifferences: comparison.successStatusDifferences.length,
   status: report.status }));
+
+// Preserve the candidate and full discrepancy report even when drift fails CI.
+// Updating this discovery snapshot is a reviewed source change, never an
+// automatic declaration that undocumented/unmounted routes are acceptable.
+writeFileSync(path.join(output, 'contract-candidate.json'),
+  JSON.stringify(compiledApiDeclarationSnapshot(surface), null, 2) + '\n', { flag: 'wx', mode: 0o600 });
+verifyCompiledApiDeclarationSnapshot(surface,
+  JSON.parse(readFileSync(path.join(root, 'formal/system/compiled-api-surface.json'))));
+console.log('Compiled API declaration snapshot matches; documented conformance gaps remain open.');

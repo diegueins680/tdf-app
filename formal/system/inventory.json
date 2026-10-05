@@ -2553,7 +2553,7 @@
     {
       "id": "SURFACE-336f05a0284b88b9",
       "path": "scripts/__tests__/compiled-api-surface.test.mjs",
-      "sha256": "b6292e9aff2ca8d24c10d0a4887aae8b0081410e0fba7198a5a0b037b9be9eba",
+      "sha256": "3570a91a6bff727573ca725986634d348744c288244c39cc86d4cceddbe58fb4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3183,7 +3183,7 @@
     {
       "id": "SURFACE-0c3b107b729b7e74",
       "path": "scripts/inspect-compiled-api.mjs",
-      "sha256": "da86cd9d992fbfcd232c10bdd956ea2b8280e5353e3ff9f52eac50503f6562f4",
+      "sha256": "9fa23fe877ffed6720c828c495274886907bf08607441ad800e1a97b5aad6faa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3279,7 +3279,7 @@
     {
       "id": "SURFACE-33d3dc767fe336d3",
       "path": "scripts/lib/compiled-api-surface.mjs",
-      "sha256": "d1b96bf4d98ecf156b46ca59a7d7905fa16b4b9a61d87faff23af5eb5a29a96b",
+      "sha256": "290aa4e9ca72792e138a1d3192c2d60cb953e8ec1229c2538e8a10f958622c2d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20374,7 +20374,7 @@
     },
     {
       "path": "formal/system/compiled-api-boundary.md",
-      "sha256": "ad7dacbd0c5fe6a4346d1ef0ea06568f2ead9ddd945e5b475eb5c6f5ad891c27",
+      "sha256": "ecbb57af69d20973661d200ae7ff3d7f80aa9037e72f7ca659c2b74cd540222c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20472,7 +20472,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a386fd06c0399ed8ddfe8be26be7c488cea46db3c61660919f438f26bd17f74d",
+      "sha256": "a4591370c8480ee7485b89ebcb54344650947a6aebb71d7d15de4d9cd26765b8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

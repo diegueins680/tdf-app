@@ -3013,7 +3013,8 @@
         "Admit source-changing or binary-changing execution as fresh evidence."
       ],
       "effects": [
-        "Revision-scoped compiled syntax, route metadata and unresolved correspondence gaps are retained."
+        "Revision-scoped compiled syntax, route metadata and unresolved correspondence gaps are retained.",
+        "CI rejects compiler declaration drift against the committed snapshot, while retaining known OpenAPI gaps as unresolved obligations."
       ],
       "authorization": "Description is a local executable mode; it performs no request and grants no backend capability. Auth combinators are syntax evidence, not a complete capability matrix.",
       "privacy": "No runtime credentials, database rows, tokens or provider responses are needed or inherited by the inspector.",
@@ -3028,7 +3029,8 @@
         "tdf-hq/src/TDF/API.hs",
         "tdf-hq/src/TDF/Server.hs",
         "scripts/inspect-compiled-api.mjs",
-        "scripts/lib/compiled-api-surface.mjs"
+        "scripts/lib/compiled-api-surface.mjs",
+        "formal/system/compiled-api-surface.json"
       ],
       "tests": [
         "tdf-hq/test/TDF/APITypesSpec.hs",
@@ -3039,12 +3041,12 @@
       "status": "specified and implemented",
       "confidence": "medium",
       "ambiguity": [
-        "Complete CombinedAPI execution and reconciliation of discovered differences remain pending.",
+        "Actual compiler export found 845 typed operations, two Raw mounts, 386 undocumented operations, 25 documented/unmounted operations, three competing declarations and 21 declared success-status differences at b7628e6a5; semantic reconciliation is incomplete.",
         "Raw routing, handler security, middleware, DTO codecs and errors remain separate conformance boundaries."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Compiler-derived exporter and rejection controls exist; full executable output and route/status gap reconciliation remain required. No whole-API conformance claim."
+        "reason": "Actual compiler discovery and snapshot drift gate exist; substantial OpenAPI, routing and runtime discrepancies remain open."
       },
       "authority": "Compiled server type establishes implemented route declarations; approved product/API intent still governs correction of discovered contradictions.",
       "property": "Every supported compiled branch remains represented; unknown branches and stale evidence reject rather than disappear.",

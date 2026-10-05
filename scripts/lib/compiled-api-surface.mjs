@@ -1,3 +1,5 @@
+import { isDeepStrictEqual } from 'node:util';
+
 // Consume compiler TypeRep structure, never a regex approximation of Haskell.
 // Unknown combinators fail rather than silently dropping a production branch.
 const key = node => `${node.module}.${node.name}`;
@@ -137,4 +139,17 @@ export function compareApiSurface(surface, documented) {
         .map(row => ({ id, compiled: row.successStatus, documented: docs.get(id).responses }))),
     limitations: 'Typed route and declared success-status correspondence only. Raw mounts may own additional paths. Handler authorization, middleware, errors, JSON codecs and feature activation require separate verification.',
   };
+}
+
+export function compiledApiDeclarationSnapshot(surface) {
+  return {
+    schemaVersion: 1,
+    authority: 'Reviewed implementation declaration snapshot; not product approval or complete API conformance.',
+    surface,
+  };
+}
+export function verifyCompiledApiDeclarationSnapshot(surface, snapshot) {
+  if (!isDeepStrictEqual(snapshot, compiledApiDeclarationSnapshot(surface))) {
+    throw new Error('Compiled API declaration drift: review the retained contract-candidate.json, reconcile intent and regenerate the canonical snapshot.');
+  }
 }
