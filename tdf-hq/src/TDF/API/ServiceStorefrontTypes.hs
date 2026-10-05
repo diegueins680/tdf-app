@@ -107,6 +107,7 @@ data ServiceStorefrontOrderDTO = ServiceStorefrontOrderDTO
   , ssoCurrency            :: Text
   , ssoStatus              :: Text
   , ssoPaymentProvider     :: Maybe Text
+  , ssoCheckoutId          :: Maybe Text
   , ssoLookupToken         :: Maybe Text
   , ssoPaidAt              :: Maybe UTCTime
   , ssoGenre               :: Maybe Text
@@ -188,6 +189,21 @@ data ServiceStorefrontRefundDTO = ServiceStorefrontRefundDTO
 
 instance ToJSON ServiceStorefrontRefundDTO
 instance FromJSON ServiceStorefrontRefundDTO
+
+-- Readiness is not a financial outcome. Amounts stay exact on JavaScript clients.
+data ServiceStorefrontRefundRecoveryDTO = ServiceStorefrontRefundRecoveryDTO
+  { ssrrRefundId :: Text
+  , ssrrEnvironment :: Text
+  , ssrrStatus :: Text
+  , ssrrAmountMinor :: Text
+  , ssrrCurrency :: Text
+  , ssrrCanQuery :: Bool
+  , ssrrOutcome :: Text
+  , ssrrCheckedAt :: Maybe UTCTime
+  } deriving (Show, Generic)
+
+instance ToJSON ServiceStorefrontRefundRecoveryDTO
+instance FromJSON ServiceStorefrontRefundRecoveryDTO
 
 data ServiceStorefrontReconciliationDTO = ServiceStorefrontReconciliationDTO
   { ssrecOrderId           :: Text

@@ -14,6 +14,8 @@ const updateSettlementStatusMock = jest.fn<(
 ) => Promise<MerchSettlement>>();
 let settlementStatus: MerchSettlement['status'] = 'held';
 let financialOperationsEnabled = false;
+let refundStatus: MerchRefund['status'] = 'requested';
+let language: 'es' | 'en' = 'es';
 
 const refund = {
   id: '9f000000-0000-4000-8000-000000000001',
@@ -105,7 +107,7 @@ jest.unstable_mockModule('../api/merch', () => ({
     adminStores: () => Promise.resolve([store]),
     adminProducts: () => Promise.resolve([]),
     adminIssues: () => Promise.resolve([]),
-    adminRefunds: () => Promise.resolve(financialOperationsEnabled ? [refund] : []),
+    adminRefunds: () => Promise.resolve(financialOperationsEnabled ? [{ ...refund, status: refundStatus }] : []),
     adminDisputes: () => Promise.resolve(financialOperationsEnabled ? [dispute] : []),
     adminSettlements: () => Promise.resolve([buildSettlement()]),
     settlementEligibleOrders: () => Promise.resolve([]),
@@ -125,7 +127,7 @@ jest.unstable_mockModule('../api/merch', () => ({
 }));
 
 jest.unstable_mockModule('react-i18next', () => ({
-  useTranslation: () => ({ i18n: { language: 'es', resolvedLanguage: 'es' } }),
+  useTranslation: () => ({ i18n: { language, resolvedLanguage: language } }),
 }));
 
 const { default: MerchAdminPage } = await import('./MerchAdminPage');
@@ -133,6 +135,7 @@ const { default: MerchAdminPage } = await import('./MerchAdminPage');
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 async function renderPage() {
+  const title = language === 'en' ? 'Merch pilot review' : 'Revisión del piloto de merch';
   const container = document.createElement('div');
   document.body.appendChild(container);
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
@@ -140,12 +143,12 @@ async function renderPage() {
   await act(async () => {
     root?.render(<QueryClientProvider client={queryClient}><MerchAdminPage /></QueryClientProvider>);
   });
-  for (let attempt = 0; attempt < 20 && !container.textContent?.includes('Revisión del piloto de merch'); attempt += 1) {
+  for (let attempt = 0; attempt < 20 && !container.textContent?.includes(title); attempt += 1) {
     await act(async () => {
       await flushPromises();
     });
   }
-  if (!container.textContent?.includes('Revisión del piloto de merch')) {
+  if (!container.textContent?.includes(title)) {
     throw new Error('Merch administration queries did not finish rendering');
   }
   return {
@@ -166,6 +169,8 @@ describe('merch settlement administration', () => {
   beforeEach(() => {
     settlementStatus = 'held';
     financialOperationsEnabled = false;
+    refundStatus = 'requested';
+    language = 'es';
     updateSettlementStatusMock.mockReset();
     updateSettlementStatusMock.mockResolvedValue(buildSettlement());
   });
@@ -210,11 +215,45 @@ describe('merch settlement administration', () => {
     const view = await renderPage();
     try {
       expect(view.container.textContent).toContain('Aprobar solo la solicitud');
-      expect(view.container.textContent).toContain('este flujo no ha movido dinero');
+      expect(view.container.textContent).toContain('Consulta la evidencia original del reembolso');
       expect(view.container.textContent).toContain('Evidencia de solo lectura');
       expect(view.container.textContent).toContain('Consulta');
       expect(view.container.textContent).toContain('Requiere respuesta');
       expect(view.container.textContent).not.toContain('Resolver disputa');
+      await expectNoSeriousAccessibilityViolations(view.container);
+    } finally {
+      await view.cleanup();
+    }
+  });
+
+  it.each(['requested', 'approved'])('permits cancellation only before execution: %s', async (status) => {
+    financialOperationsEnabled = true;
+    refundStatus = status;
+    const view = await renderPage();
+    try {
+      expect(view.container.textContent).toContain('Cancelar antes de ejecutar');
+      expect(view.container.textContent?.includes('Aprobar solo la solicitud')).toBe(status === 'requested');
+    } finally {
+      await view.cleanup();
+    }
+  });
+
+  it.each([
+    ['es', 'failed'], ['es', 'processing'], ['en', 'failed'], ['en', 'processing'],
+  ] as const)('holds uncertain refunds without unsafe actions or money claims: %s %s', async (locale, status) => {
+    financialOperationsEnabled = true;
+    refundStatus = status;
+    language = locale;
+    const view = await renderPage();
+    try {
+      const text = view.container.textContent;
+      expect(text).toContain(locale === 'en' ? 'Funds remain reserved' : 'Los fondos siguen reservados');
+      expect(text).not.toContain('Cancel before execution');
+      expect(text).not.toContain('Cancelar antes de ejecutar');
+      expect(text).not.toContain('Approve request only');
+      expect(text).not.toContain('Aprobar solo la solicitud');
+      expect(text).not.toContain('no money has moved');
+      expect(text).not.toContain('este flujo no ha movido dinero');
       await expectNoSeriousAccessibilityViolations(view.container);
     } finally {
       await view.cleanup();

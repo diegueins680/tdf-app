@@ -47,6 +47,7 @@ import           TDF.Commerce.Merch
 import qualified TDF.Commerce.RefundStore as Refund
 import           TDF.Config (assetsRootDir)
 import           TDF.DB (Env(..))
+import qualified TDF.Server.PaymentAvailability as PaymentAvailability
 
 type AppM = ReaderT Env Handler
 
@@ -172,11 +173,6 @@ requireFeature key = do
         "Feature " <> key <> " is not enabled in this environment"
     }
 
-credentialsPresent :: [String] -> IO Bool
-credentialsPresent names = and <$> mapM present names
-  where
-    present name = maybe False (not . T.null . T.strip . T.pack) <$> lookupEnv name
-
 merchPaymentMethodAvailability :: AppM (Bool, Bool, Bool)
 merchPaymentMethodAvailability = do
   checkoutEnabled <- featureEnabled "merch.checkout"
@@ -184,15 +180,16 @@ merchPaymentMethodAvailability = do
   datafastFlag <- featureEnabled "merch.checkout.datafast"
   paypalFlag <- featureEnabled "merch.checkout.paypal"
   manualFlag <- featureEnabled "merch.checkout.manual"
-  datafastCredentials <- liftIO $ credentialsPresent
-    ["DATAFAST_ENTITY_ID","DATAFAST_BEARER_TOKEN","DATAFAST_BASE_URL"]
-  paypalCredentials <- liftIO $ credentialsPresent
-    ["PAYPAL_CLIENT_ID","PAYPAL_CLIENT_SECRET","PAYPAL_WEBHOOK_ID","PAYPAL_MERCHANT_ID"]
-  manualConfiguration <- liftIO $ credentialsPresent ["MERCH_BANK_TRANSFER_INSTRUCTIONS"]
+  rawEnvironment <- liftIO (lookupEnv "COMMERCE_CHECKOUT_ENV")
+  methods <- case Checkout.resolveCheckoutEnvironment rawEnvironment of
+    Left _ -> pure []
+    Right environment ->
+      PaymentAvailability.availableImplementedPaymentMethods
+        environment PaymentAvailability.FlowMerchandise 1 "USD" True
   pure
-    ( checkoutEnabled && runtimeReady && datafastFlag && datafastCredentials
-    , checkoutEnabled && runtimeReady && paypalFlag && paypalCredentials
-    , checkoutEnabled && runtimeReady && manualFlag && manualConfiguration
+    ( checkoutEnabled && runtimeReady && datafastFlag && "datafast" `elem` methods
+    , checkoutEnabled && runtimeReady && paypalFlag && "paypal" `elem` methods
+    , checkoutEnabled && runtimeReady && manualFlag && "bank_transfer" `elem` methods
     )
 
 requireConfiguredPaymentMethod :: AppM ()
