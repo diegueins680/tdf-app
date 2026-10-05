@@ -22,7 +22,7 @@ test('renders real crawler metadata and JSON-LD without executable event content
   const html = injectEventPreview('<html><head><title>TDF Records</title></head><body></body></html>', preview);
   assert.match(html, /Festival &lt;script&gt;alert\(1\)&lt;\/script&gt;/);
   assert.match(html, /property="og:image" content="https:\/\/cdn\.example\.test\/poster\.jpg"/);
-  assert.match(html, /"@type":"MusicEvent"/);
+  assert.match(html, /"@type":"Event"/);
   assert.match(html, /rel="canonical" href="https:\/\/tdf-app\.pages\.dev\/eventos\/42"/);
   assert.doesNotMatch(html, /<script>alert\(1\)<\/script>/);
 });
@@ -67,5 +67,14 @@ test('serves real values in the initial HTML response to a crawler request', asy
     assert.doesNotMatch(html, /<script>alert\(1\)<\/script>/);
   } finally {
     globalThis.fetch = originalFetch;
+  }
+});
+
+
+test('uses the preview image fallback when no image is published', () => {
+  for (const imageUrl of [null, undefined, '', '   ']) {
+    assert.equal(safeAbsoluteImage(imageUrl), null);
+    const preview = renderEventMetadata({ ...publicEvent, imageUrl }, '42', 'https://www.tdfrecords.net');
+    assert.equal(preview.image, 'https://www.tdfrecords.net/tdf-app-icon-1024.png');
   }
 });
