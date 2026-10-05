@@ -5003,7 +5003,7 @@
     {
       "id": "PRIV-ANALYTICS-001",
       "title": "Exclude private credentials from analytics",
-      "statement": "Analytics must redact ticket/buyer/capability values and private resource identifiers before delivery, strip URL credentials/fragments, bound nested URL sanitization and omit SDK exception payloads. URL query values are denied by default except reviewed public attribution fields.",
+      "statement": "Analytics must redact ticket/buyer/capability values and private resource identifiers before delivery, strip URL credentials/fragments, bound nested URL sanitization and omit SDK exception payloads. URL query values are denied by default except reviewed public attribution fields. Apply the same sanitization to SDK top-level initial/identify person-property envelopes; distinguish ordinary scalar campaign labels from relative URL properties.",
       "property": "Analytics must redact ticket/buyer/capability values and private resource identifiers before delivery, strip URL credentials/fragments, bound nested URL sanitization and omit SDK exception payloads. URL query values are denied by default except reviewed public attribution fields.",
       "domain": "PRIV",
       "authority": "Reviewed source changes preserved from root #468/#485/#486/#484; final consolidated correspondence requires current independent review",
@@ -5628,6 +5628,82 @@
         "Default-disabled production worker has no verified sender/inbox receipt in this audit."
       ],
       "evidence": "Actual synthetic PostgreSQL concurrent workers, loopback SMTP, observed lock-wait expiry positive/negative controls and bounded NotificationLease results; consolidated candidate rerun and production verification pending."
+    },
+    {
+      "id": "EVT-PUBLIC-001",
+      "title": "Canonical public event metadata and private transaction responses",
+      "statement": "The public event is the canonical discovery surface. Checkout/receipt responses suppress indexing, caching and referrer forwarding; incomplete stock/face-value data must not be advertised as a purchasable offer.",
+      "property": "Private transaction responses carry noindex/private-no-store/no-referrer; invalid numeric route identifiers reject before app-shell access.",
+      "domain": "EVT",
+      "authority": "Root487 preserved current implementation and docs/events/ticket-page-metadata.md; current independent integration review required",
+      "source": "Root487 and existing canonical event route declarations",
+      "contract": "docs/events/ticket-page-metadata.md",
+      "actors": [
+        "Public event visitor",
+        "Ticket buyer",
+        "Search crawler"
+      ],
+      "preconditions": [
+        "Existing Cloudflare Functions and React metadata boundary; backend order authorization remains independent."
+      ],
+      "inputs": [
+        "Event/order route identifiers",
+        "Initial edge response",
+        "Public event metadata and optional preview image"
+      ],
+      "state": {
+        "fields": [
+          "public canonical event",
+          "private transaction route",
+          "valid or invalid route identifier"
+        ]
+      },
+      "allowedTransitions": [
+        "Valid transaction route -> app shell with private/noindex/no-referrer headers",
+        "Public event -> generic Event metadata with actual preview fallback"
+      ],
+      "forbiddenTransitions": [
+        "Disabled checkout or incomplete price -> purchasable structured offer",
+        "Invalid identifier -> invoke app-shell response",
+        "Order route -> independent indexed event listing"
+      ],
+      "effects": [
+        "Public metadata and HTTP privacy headers; no payment or event publication."
+      ],
+      "implementation": [
+        "functions/_shared/event-preview.mjs",
+        "functions/_shared/ticket-page.mjs",
+        "functions/eventos/[eventId]/entradas.js",
+        "functions/eventos/[eventId]/orden/[orderId].js",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx"
+      ],
+      "tests": [
+        "scripts/__tests__/event-preview.test.mjs",
+        "scripts/__tests__/ticket-page-preview.test.mjs",
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
+      "evidence": "Current candidate gate receipts must be retained separately; historical source checks are not a current integration pass.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Scoped implementation and regression correspondence; production acceptance remains separate.",
+      "ambiguity": [
+        "No whole-program refinement or external provider/device acceptance is asserted."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source contracts and scoped regressions preserved; current combined verification and applicable production acceptance remain required."
+      },
+      "authorization": "Headers are defense in depth and do not replace server order or ticket authorization.",
+      "privacy": "Initial and hydrated metadata must avoid indexing private transaction surfaces; no-store/no-referrer reduce capability propagation.",
+      "concurrency": "Each response sets its own headers; deployment identity determines which edge source is active.",
+      "idempotency": "Repeated metadata reads do not create purchases or orders.",
+      "failure": "Invalid identifiers return404 with privacy headers; unavailable preview uses the existing image fallback.",
+      "recovery": "Repair metadata source under review; complete server-authoritative event offers remain separate work.",
+      "observability": "Actual Response/header and React metadata regression tests; production edge identity and behavior require separate smoke evidence."
     }
   ]
 }
