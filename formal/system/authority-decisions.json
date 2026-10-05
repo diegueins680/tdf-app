@@ -220,6 +220,18 @@
       "conflict": "The historical checkout table declares failed terminal and draft initial; runtime explicitly supports no-charge retry and begins accepted checkouts awaiting_payment. The pure checkout helper differs and has no production caller.",
       "authority": "formal/system/payment-retry.md; user payment reliability requirements corroborated by existing runtime guards and PostgreSQL retry tests",
       "resolution": "Retire the old checkout table to historical_state_machines, label the pure helper as non-runtime reference, and formalize scoped retry admission with negative controls. Do not redefine every existing SQL transition as approved or claim the full checkout state machine is reconciled."
+    },
+    {
+      "id": "AUTHORITY-022",
+      "sources": [
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/Meta.hs",
+        "tdf-hq/src/TDF/Version.hs",
+        "tdf-hq/docs/openapi/api.yaml"
+      ],
+      "conflict": "Compiled CombinedAPI declares GET /version twice with incompatible DTOs. The later unreachable Meta.BuildInfo omits commit identity and computes builtAt from request time.",
+      "authority": "Current public OpenAPI Version schema, first served VersionAPI and canonical production identity verification",
+      "resolution": "Remove only the shadowed Meta version route/type and stale mounting example; preserve the existing first-served VersionInfo handler and its source/build metadata validation. The generated compiled snapshot must confirm one version declaration; other competing routes remain open."
     }
   ]
 }

@@ -3030,11 +3030,13 @@
         "tdf-hq/src/TDF/Server.hs",
         "scripts/inspect-compiled-api.mjs",
         "scripts/lib/compiled-api-surface.mjs",
-        "formal/system/compiled-api-surface.json"
+        "formal/system/compiled-api-surface.json",
+        "tdf-hq/src/TDF/Meta.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/APITypesSpec.hs",
-        "scripts/__tests__/compiled-api-surface.test.mjs"
+        "scripts/__tests__/compiled-api-surface.test.mjs",
+        "tdf-hq/test/Spec.hs"
       ],
       "formalModels": [],
       "critical": true,

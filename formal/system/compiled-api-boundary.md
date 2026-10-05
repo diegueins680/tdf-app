@@ -65,3 +65,10 @@ All25 documented/unmounted operations belong to `MerchReputation` API types whos
 handlers exist but are absent from the served CombinedAPI. Mounting them would
 require feature/privacy authorization review; discovery alone does not authorize
 activation. These findings remain open in the machine-readable comparison receipt.
+
+The `GET /version` duplicate is repaired by removing the shadowed Meta route.
+The first-served `VersionInfo` handler and published response fields remain the
+runtime authority (AUTHORITY-022). The removed DTO had no consumer and fabricated
+its `builtAt` from request time. Compiled snapshot regeneration must confirm the
+single remaining declaration; the two other competing identities still require
+semantic/routing review.

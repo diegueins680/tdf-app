@@ -3031,11 +3031,13 @@
         "tdf-hq/src/TDF/Server.hs",
         "scripts/inspect-compiled-api.mjs",
         "scripts/lib/compiled-api-surface.mjs",
-        "formal/system/compiled-api-surface.json"
+        "formal/system/compiled-api-surface.json",
+        "tdf-hq/src/TDF/Meta.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/APITypesSpec.hs",
-        "scripts/__tests__/compiled-api-surface.test.mjs"
+        "scripts/__tests__/compiled-api-surface.test.mjs",
+        "tdf-hq/test/Spec.hs"
       ],
       "formalModels": [],
       "critical": true,
@@ -3396,6 +3398,7 @@
     "tdf-hq/src/TDF/Config.hs": "abbb65101876065724d97c24b1aef742f86300ca006e14e9c0565eb4af0dafe5",
     "tdf-hq/src/TDF/Cors.hs": "94a8b2ffedfc793e6d8c44d62f0388dc853e3da95e75e23dfdb6fed76d7f88dd",
     "tdf-hq/src/TDF/Directory/Policy.hs": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
+    "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
     "tdf-hq/src/TDF/RagStore.hs": "80b5f523542cb71119551dbb64bd5e0c0e3e880622997a496e496e4d7fbeb912",
     "tdf-hq/src/TDF/Server.hs": "348f5a07fa5264ec8e306e71d435ce3f09d239b3f058aa9f844f1ba956123017",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
@@ -4421,6 +4424,10 @@
       {
         "requirement": "PAY-RECOVERY-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-API-003",
+        "relationship": "tests"
       }
     ],
     "formal/event-operations/PaymentRecovery.tla": [
@@ -4908,6 +4915,12 @@
       }
     ],
     "formal/system/compiled-api-surface.json": [
+      {
+        "requirement": "SYS-API-003",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Meta.hs": [
       {
         "requirement": "SYS-API-003",
         "relationship": "implementation"
@@ -17099,9 +17112,14 @@
     {
       "id": "SURFACE-39a5fb76e2858e93",
       "path": "tdf-hq/src/TDF/Meta.hs",
-      "sha256": "9d366bb511f5f348a86bc1cc172c612d6caba8d6dad9f7f1c6fbff7536b7d66c",
+      "sha256": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-API-003",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-a97719441b71656b",
@@ -17841,6 +17859,10 @@
       "requirements": [
         {
           "requirement": "PAY-RECOVERY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-API-003",
           "relationship": "tests"
         }
       ]
@@ -22693,7 +22715,6 @@
     "SURFACE-dd73bca7a3d77f4e",
     "SURFACE-da7dbfc9ff1416c5",
     "SURFACE-b5b5aa3bc4cc0232",
-    "SURFACE-39a5fb76e2858e93",
     "SURFACE-a97719441b71656b",
     "SURFACE-9913c975520e953f",
     "SURFACE-de59a337fc1e94a1",
