@@ -1,5 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { mkdtempSync, mkdirSync, copyFileSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { compiledApiSurface, compareApiSurface, compiledApiDeclarationSnapshot, verifyCompiledApiDeclarationSnapshot } from '../lib/compiled-api-surface.mjs';
 
 const node = (module, name, ...args) => ({ module, name, args });
@@ -116,4 +121,51 @@ test('compiled declaration gate rejects route, auth, parameter, body, response a
     mutate(changed);
     assert.throws(() => verifyCompiledApiDeclarationSnapshot(changed, snapshot), /declaration drift/);
   }
+});
+
+
+test('inspection binds captured snapshot bytes and rejects a baseline replacement during admission', t => {
+  const root = mkdtempSync(path.join(tmpdir(), 'tdf-api-provenance-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  for (const dir of ['scripts/lib', 'formal/system']) mkdirSync(path.join(root, dir), { recursive: true });
+  for (const file of ['scripts/inspect-compiled-api.mjs', 'scripts/lib/compiled-api-surface.mjs', 'scripts/lib/verification-evidence.mjs']) {
+    copyFileSync(new URL(`../../${file}`, import.meta.url), path.join(root, file));
+  }
+  const description = { schemaVersion: 1, api: sub(symbol('new'), verb()) };
+  const replacement = JSON.stringify(compiledApiDeclarationSnapshot(compiledApiSurface(description)));
+  const baseline = path.join(root, 'formal/system/compiled-api-surface.json');
+  writeFileSync(baseline, replacement);
+  writeFileSync(path.join(root, 'formal/system/traceability.json'), JSON.stringify({ apiOperations: [] }));
+  const binary = path.join(root, 'fixture.cjs');
+  writeFileSync(binary, `#!${process.execPath}\nprocess.stdout.write(${JSON.stringify(JSON.stringify(description))});\n`, { mode: 0o700 });
+  const git = (...args) => execFileSync('git', args, { cwd: root, stdio: 'pipe' });
+  git('init', '-q'); git('add', '.');
+  git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'fixture');
+  const run = (name, preload) => spawnSync(process.execPath,
+    [...(preload ? ['--import', preload] : []), 'scripts/inspect-compiled-api.mjs', '--binary', binary, '--output', path.join(root, name)],
+    { cwd: root, encoding: 'utf8' });
+  const passing = run('positive');
+  assert.equal(passing.status, 0, passing.stderr);
+  const receipt = JSON.parse(readFileSync(path.join(root, 'positive/surface.json')));
+  assert.equal(receipt.snapshotSha256, createHash('sha256').update(replacement).digest('hex'));
+  // Keep the binary's new route, restore an older baseline, then replace that
+  // baseline immediately after its second read. The old checker used that read
+  // for source freshness and then admitted the replacement on a third read.
+  writeFileSync(baseline, JSON.stringify(compiledApiDeclarationSnapshot(describe(sub(symbol('old'), verb())))));
+  const preload = path.join(root, 'mutation.mjs');
+  writeFileSync(preload, `import fs from 'node:fs';
+import { syncBuiltinESMExports } from 'node:module';
+const original = fs.readFileSync;
+let reads = 0;
+fs.readFileSync = function(file, ...args) {
+  const result = original.call(this, file, ...args);
+  if (String(file) === ${JSON.stringify(baseline)} && ++reads === 2)
+    fs.writeFileSync(file, ${JSON.stringify(replacement)});
+  return result;
+};
+syncBuiltinESMExports();
+`);
+  const rejected = run('negative', preload);
+  assert.notEqual(rejected.status, 0);
+  assert.match(rejected.stderr, /provenance changed during inspection/);
 });

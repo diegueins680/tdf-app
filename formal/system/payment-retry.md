@@ -2,7 +2,7 @@
 
 An uncertain provider outcome must retain its original attempt/intent and block a
 fresh charge on every rail for the checkout. A confirmed no-charge outcome permits
-a new attempt and provider reference, subject to current checkout authorization
+a fresh charge intent and provider reference, subject to current checkout authorization
 and payable state. A failed UI/request response alone is not no-charge evidence.
 Exact authenticated replays recover the original attempt; changed immutable
 parameters conflict. Closed checkouts cannot initiate a new payment. Captured
@@ -39,9 +39,18 @@ approve every SQL transition or declare the complete checkout lifecycle reconcil
 
 `ProviderRetryAdmission.tla` abstracts one authorized checkout, two canonical
 idempotency scopes (which can represent different rails), two immutable payload
-classes, and at most two attempt IDs. States per attempt are unused, active,
+classes, and at most two fresh-charge intent identities. States per intent are unused, active,
 ambiguous, confirmed no-charge and captured. Checkout creation closure, immutable
-receipts, replay responses and historical captures are modeled separately.
+initial-admission receipts, replay responses and historical captures are modeled separately.
+
+Slots map to payment intent identity, not commerce attempt-row identity. The
+supported PayPal create/capture flow has two operation attempt rows on one intent
+(`ProviderRetrySpec` asserts two attempts and one intent;
+`PaymentRuntimeStore.continuationIntentKey` preserves that intent). This model
+collapses that continuation into the same lifecycle: it does not forbid a capture
+attempt for an existing intent. Within-intent operation receipts, continuation
+admission, and their replay rules require separate runtime tests and are outside
+this model. Its immutable receipts describe only the initial fresh-charge admission.
 
 Each action represents an atomic committed transaction, so interleavings model
 concurrent requests only under the implementation's actual locking/rollback
@@ -52,14 +61,14 @@ preconditions, not proven by this model. A confirmed no-charge outcome is assume
 final and authentic. Network/provider truthfulness and external duplicate effects
 are outside this local-state abstraction.
 
-Safety invariants require one unresolved-or-captured attempt, immutable key
+Safety invariants require one unresolved-or-captured intent, immutable key
 binding, matching replay payload, no creation after closure, retained capture
-evidence and at most one captured attempt. All actions may stutter; no fairness is
+evidence and at most one captured intent. All actions may stutter; no fairness is
 assumed and **no liveness claim** is made. The model does not prove eventual
 provider response, deadlock freedom, multi-checkout independence, partial captures,
 refunds, actual authorization, unbounded history, or SQL refinement.
 
-Five controlled mutations independently remove ambiguous-attempt exclusion,
+Five controlled mutations independently remove ambiguous-intent exclusion,
 key uniqueness, replay payload binding, closure admission, or terminal evidence
 protection. Each configuration must fail its named invariant; parser/tool failures
 are not accepted as counterexamples. The positive configuration must pass.

@@ -3134,11 +3134,11 @@
     {
       "id": "PAY-RETRY-001",
       "title": "Serialized payment retry and immutable replay admission",
-      "statement": "A checkout must not admit another payment while an earlier outcome is unresolved; confirmed no-charge may enable a new attempt, exact authenticated key replays retain original identity, changed payloads conflict, closed checkouts deny new attempts, and late outcomes cannot erase captured evidence.",
+      "statement": "A checkout must not admit a fresh charge intent while an earlier charge outcome is unresolved; confirmed no-charge may enable a fresh intent, exact authenticated operation-key replays retain original identity, changed payloads conflict, closed checkouts deny fresh charge intents, and late outcomes cannot erase captured evidence. Supported create/capture continuation attempts may share one existing intent.",
       "domain": "PAY",
       "authority": "User payment reliability/idempotency requirements; existing canonical provider retry contracts and PostgreSQL tests corroborate supported recovery behavior.",
       "source": "formal/system/payment-retry.md; AUTHORITY-021",
-      "property": "One unresolved-or-captured attempt; immutable key/payload receipt; no post-closure creation; no lost capture history.",
+      "property": "One unresolved-or-captured fresh-charge intent; immutable initial-admission key/payload receipt; no post-closure fresh intent; no lost capture history. This is not a one-attempt-row invariant.",
       "contract": "formal/system/payment-retry.md",
       "actors": [
         "Checkout customer",
@@ -3156,13 +3156,6 @@
         "Checkout payable state"
       ],
       "state": {
-        "attempt": [
-          "absent",
-          "active",
-          "ambiguous",
-          "confirmed_no_charge",
-          "captured"
-        ],
         "checkoutAdmission": [
           "open",
           "closed"
@@ -3170,21 +3163,29 @@
         "evidence": [
           "immutable receipt",
           "capture history"
+        ],
+        "freshChargeIntent": [
+          "absent",
+          "active",
+          "ambiguous",
+          "confirmed_no_charge",
+          "captured"
         ]
       },
       "allowedTransitions": [
-        "Absent -> active only while checkout admission is open and every earlier attempt is confirmed no-charge.",
+        "Absent -> active fresh intent only while checkout admission is open and every earlier intent is confirmed no-charge.",
         "Active -> ambiguous on uncertain outcome; active/ambiguous -> no-charge or captured only with authentic final evidence.",
-        "Exact authenticated replay -> original attempt with no new attempt allocation."
+        "Exact authenticated operation replay -> original attempt/intent with no new allocation.",
+        "Supported PayPal create -> capture allocates a distinct operation attempt on the same intent; excluded from the initial-admission model."
       ],
       "forbiddenTransitions": [
-        "Ambiguous prior attempt -> fresh attempt on any rail.",
+        "Ambiguous prior intent -> fresh charge intent on any rail.",
         "Same scoped key with changed immutable payload -> accepted replay.",
-        "Closed checkout -> new payment attempt.",
-        "Captured attempt -> no-charge because of a conflicting late callback."
+        "Closed checkout -> fresh charge intent.",
+        "Captured intent -> no-charge because of a conflicting late callback."
       ],
       "effects": [
-        "Serialize attempt admission and retain immutable replay/capture evidence."
+        "Serialize fresh-charge admission and retain immutable replay/capture evidence."
       ],
       "authorization": "Current checkout lookup capability and provider/environment/method scope remain required; idempotency keys alone grant no authority.",
       "privacy": "Synthetic integration tests do not contact real providers or expose customer lookup capabilities.",
@@ -3219,7 +3220,8 @@
       "confidence": "high for scoped intended retry rule; full SQL/model refinement and final candidate execution remain obligations",
       "ambiguity": [
         "Complete checkout lifecycle beyond this admission boundary is not reconciled.",
-        "Model assumes verified authorization and authentic final provider evidence; it does not prove provider truthfulness or eventual response."
+        "Model assumes verified authorization and authentic final provider evidence; it does not prove provider truthfulness or eventual response.",
+        "Within-intent create/capture continuation attempts and receipts are runtime tested but excluded from this model; full correspondence is not proven."
       ],
       "conformance": {
         "classification": "PARTIAL",

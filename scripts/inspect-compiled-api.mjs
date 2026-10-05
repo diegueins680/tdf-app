@@ -29,12 +29,19 @@ writeFileSync(path.join(output, 'compiled-types.json'), raw, { flag: 'wx', mode:
 const description = JSON.parse(raw), surface = compiledApiSurface(description);
 const traceBytes = readFileSync(path.join(root, 'formal/system/traceability.json'));
 const trace = JSON.parse(traceBytes), comparison = compareApiSurface(surface, trace.apiOperations);
+// Capture every proof input before the final freshness check. Admission below
+// uses these exact bytes, never a later read of a potentially changed baseline.
+const snapshotPath = 'formal/system/compiled-api-surface.json';
+const snapshotBytes = readFileSync(path.join(root, snapshotPath));
+const snapshotSha256 = sha256(snapshotBytes);
 if (git('rev-parse', 'HEAD') !== revision || sha256(readFileSync(binary)) !== binarySha256
+  || snapshotSha256 !== before.files[snapshotPath]
+  || sha256(traceBytes) !== before.files['formal/system/traceability.json']
   || sourceManifest(root).digest !== before.digest) {
   throw new Error('Compiled description provenance changed during inspection');
 }
 const report = { schemaVersion: 1, sourceRevision: revision, sourceTree: tree, sourceWorktreeDirty,
-  binarySha256, sourceDigest: before.digest, descriptionSha256: sha256(raw), traceabilitySha256: sha256(traceBytes),
+  binarySha256, sourceDigest: before.digest, snapshotSha256, descriptionSha256: sha256(raw), traceabilitySha256: sha256(traceBytes),
   observedAt: new Date().toISOString(), ...surface, comparison,
   status: 'observed-not-conformance-approved',
   limitations: 'Compiler syntax from the supplied executable, not attestation that its binary was built from this checkout. CI binds the build separately. Type names are not JSON schema. Discovery gaps are unresolved obligations.',
@@ -51,5 +58,5 @@ console.log(JSON.stringify({ revision, binarySha256, operations: surface.operati
 writeFileSync(path.join(output, 'contract-candidate.json'),
   JSON.stringify(compiledApiDeclarationSnapshot(surface), null, 2) + '\n', { flag: 'wx', mode: 0o600 });
 verifyCompiledApiDeclarationSnapshot(surface,
-  JSON.parse(readFileSync(path.join(root, 'formal/system/compiled-api-surface.json'))));
+  JSON.parse(snapshotBytes));
 console.log('Compiled API declaration snapshot matches; documented conformance gaps remain open.');
