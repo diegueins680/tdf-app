@@ -311,8 +311,8 @@ jobs:
 
       - name: Inspect the compiled Servant API against documented operations
         run: |
-          mkdir -p artifacts/specification
-          node scripts/inspect-compiled-api.mjs --binary "$BACKEND_BINARY_OUT" --output artifacts/specification/compiled-api
+          mkdir -p tmp/specification
+          node scripts/inspect-compiled-api.mjs --binary "$BACKEND_BINARY_OUT" --output tmp/specification/compiled-api
 
       - name: Verify booking object scope and concurrent resource calendar
         env:
@@ -321,7 +321,7 @@ jobs:
           TDF_BOOKING_TEST_PG_ROLE: postgres
           TDF_BOOKING_TEST_PG_PASSWORD: postgres
           TDF_BOOKING_TEST_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
-          TDF_BOOKING_TEST_OUTPUT: artifacts/specification/booking-conformance
+          TDF_BOOKING_TEST_OUTPUT: tmp/specification/booking-conformance
         run: python3 scripts/test-booking-conformance.py
 
       - name: Verify artist self-service transactions and migration
@@ -488,7 +488,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: compiled-api-${{ github.sha }}
-          path: artifacts/specification/compiled-api/
+          path: tmp/specification/compiled-api/
           if-no-files-found: ignore
           retention-days: 7
 
@@ -497,7 +497,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: booking-conformance-${{ github.sha }}
-          path: artifacts/specification/booking-conformance
+          path: tmp/specification/booking-conformance
           if-no-files-found: ignore
           retention-days: 7
 
