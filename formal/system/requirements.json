@@ -3304,7 +3304,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -4630,6 +4630,265 @@
       },
       "verification": "Actual HTTP synthetic Teacher/Engineer hidden-payment and assigned-booking controls, plus authorized Admin positive control. Not formally covered.",
       "evidence": "Exact source/binary hashes and HTTP result.json; Stack test log; formal source/config hashes and TLC invariant counterexamples. Working checks are not deployed evidence."
+    },
+    {
+      "id": "MOB-ONBOARD-001",
+      "title": "Session-bound durable onboarding reconciliation",
+      "statement": "Onboarding completion must use confirmed server evidence for the currently rendered account; durable first-value intent survives offline or pending responses and stale account callbacks cannot complete another occurrence.",
+      "authority": "Existing reviewed Mobile #71/#132/#135 behavior; proposed consolidated correspondence remains subject to current independent review",
+      "domain": "MOB",
+      "actors": [
+        "Mobile user",
+        "Asynchronous request",
+        "Release maintainer"
+      ],
+      "preconditions": [
+        "Exact pinned Mobile source and declared backend contract are available."
+      ],
+      "inputs": [
+        "Rendered credential and Party",
+        "First-value intent",
+        "Connectivity and foreground signals",
+        "Server completion response"
+      ],
+      "state": {
+        "fields": [
+          "account-scoped durable intent",
+          "current request generation",
+          "server completion",
+          "in-flight reconciliation"
+        ]
+      },
+      "allowedTransitions": [
+        "pending -> retained on offline/nonterminal response",
+        "confirmed current-account completion -> clear owned intent",
+        "foreground/reconnect -> coalesced server reconciliation"
+      ],
+      "forbiddenTransitions": [
+        "person follow -> fabricated artist conversion",
+        "old A response -> complete B or a new A occurrence",
+        "failed persistence -> reported successful durability"
+      ],
+      "effects": [
+        "Preserve existing analytics conversion ownership and independent exit queue."
+      ],
+      "authorization": "Server authorization and rendered credential/Party remain authoritative; client intent grants no access.",
+      "privacy": "Durable markers are account/guest-scoped; remounted occurrence query clients prevent retired data from populating the next account.",
+      "concurrency": "Coalesce requests and reject stale generations across A->B->A; retry only after the correct account renders.",
+      "idempotency": "Repeated reconciliation cannot fabricate repeated first-value completion.",
+      "failure": "Retain pending intent and propagate storage/auth failures.",
+      "recovery": "Reconnect/foreground retries retained work under the current rendered account.",
+      "observability": "Named implementation tests and exact-current-source CI receipts; no production or device result is inferred from a source mapping.",
+      "source": "tdf-mobile/docs/onboarding-consolidation-2026-10-04.md; reviewed Mobile71 and133; existing FanHubOnboarding/NativeArtistFollow boundaries",
+      "property": "Onboarding completion must use confirmed server evidence for the currently rendered account; durable first-value intent survives offline or pending responses and stale account callbacks cannot complete another occurrence.",
+      "contract": "formal/system/mobile-consolidation.md",
+      "implementation": [
+        "tdf-mobile/src/api/client.ts",
+        "tdf-mobile/src/api/onboarding.ts",
+        "tdf-mobile/src/experiments/NewUserOnboardingGate.tsx",
+        "tdf-mobile/src/hooks/usePartyOwnership.ts",
+        "tdf-mobile/src/lib/firstValueCompletion.ts",
+        "tdf-mobile/src/lib/onboardingIntent.ts",
+        "tdf-mobile/src/localization/onboardingCopy.ts",
+        "tdf-mobile/src/providers/FirstRunProvider.tsx"
+      ],
+      "tests": [
+        "tdf-mobile/__tests__/AuthScreen.test.tsx",
+        "tdf-mobile/__tests__/FirstRunProvider.test.tsx",
+        "tdf-mobile/__tests__/NewUserOnboardingGate.test.tsx",
+        "tdf-mobile/__tests__/apiClient.test.ts",
+        "tdf-mobile/__tests__/onboardingApi.test.ts",
+        "tdf-mobile/__tests__/onboardingIntent.test.ts",
+        "tdf-mobile/__tests__/usePartyOwnership.test.tsx"
+      ],
+      "formalModels": [
+        "formal/event-operations/FanHubOnboarding.tla",
+        "formal/event-operations/NativeArtistFollow.tla",
+        "formal/event-operations/SessionCacheIsolation.tla"
+      ],
+      "verification": "Actual provider/API/storage regression tests and existing bounded models/negative controls. Model-to-native implementation correspondence remains partial.",
+      "evidence": "Mobile137 source86f0eca and tree-identical a280:95 suites/610 tests, lint/types/release/Metro; current native builds and root combined gates pending.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Existing source and regression coverage retained; final integration and native/provider behavior remain separately qualified.",
+      "ambiguity": [
+        "Bounded model correspondence is partial; no whole-program refinement or current production deployment is asserted."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source preservation and automated regression evidence exist; final combined root/native/release gates remain pending."
+      }
+    },
+    {
+      "id": "MOB-SOCIAL-001",
+      "title": "Truthful account-scoped saved and social views",
+      "statement": "Saved events, private drafts, social moments and localized controls must preserve server authority, account ownership and explicit pending/error state without inventing actor identity or confirmed public success.",
+      "authority": "Existing reviewed Mobile #71/#132/#135 behavior; proposed consolidated correspondence remains subject to current independent review",
+      "domain": "MOB",
+      "actors": [
+        "Mobile user",
+        "Asynchronous request",
+        "Release maintainer"
+      ],
+      "preconditions": [
+        "Exact pinned Mobile source and declared backend contract are available."
+      ],
+      "inputs": [
+        "Account and server saved-state snapshot",
+        "Queued desired state",
+        "Private draft",
+        "Public feed/reaction results",
+        "Locale and retry interaction"
+      ],
+      "state": {
+        "fields": [
+          "server/cached/pending snapshot source",
+          "owned desired-state queue",
+          "scoped draft",
+          "public read result"
+        ]
+      },
+      "allowedTransitions": [
+        "offline desired state -> explicitly pending owned queue",
+        "successful server response -> confirmed snapshot",
+        "public read failure -> retryable failure"
+      ],
+      "forbiddenTransitions": [
+        "authentication failure -> cached successful authorization",
+        "anonymous total -> invented actor identity",
+        "failed public read -> fabricated local public feed",
+        "implicit unscoped legacy import -> current account ownership"
+      ],
+      "effects": [
+        "Keep canonical interaction controls, accessibility/retry labels and partial-detail disclosure."
+      ],
+      "authorization": "Only server-accepted mutations are confirmed; queued intent and presentation do not grant access.",
+      "privacy": "Scope drafts/saved state to the account; preserve unread legacy data until explicit ownership-confirmed import.",
+      "concurrency": "Concurrent queued desired state and server refresh remain distinguishable and account scoped.",
+      "idempotency": "Desired reaction/saved state is explicit; read retries do not create actor identity or public mutation.",
+      "failure": "Propagate auth/storage failures and expose retryable read failures.",
+      "recovery": "Retry current-account reads and reconcile durable desired state without describing pending work as confirmed.",
+      "observability": "Named implementation tests and exact-current-source CI receipts; no production or device result is inferred from a source mapping.",
+      "source": "tdf-mobile/docs/onboarding-consolidation-2026-10-04.md source46/47/48/51/54/61 retention decisions; reviewed Mobile71",
+      "property": "Saved events, private drafts, social moments and localized controls must preserve server authority, account ownership and explicit pending/error state without inventing actor identity or confirmed public success.",
+      "contract": "formal/system/mobile-consolidation.md",
+      "implementation": [
+        "tdf-mobile/app/(tabs)/events.tsx",
+        "tdf-mobile/app/(tabs)/social.tsx",
+        "tdf-mobile/app/userProfile.tsx",
+        "tdf-mobile/src/api/directory.ts",
+        "tdf-mobile/src/api/events.ts",
+        "tdf-mobile/src/components/EventCard.tsx",
+        "tdf-mobile/src/components/EventMomentCard.tsx",
+        "tdf-mobile/src/lib/eventMoments.ts",
+        "tdf-mobile/src/lib/eventMomentsRepository.ts",
+        "tdf-mobile/src/lib/savedEvents.ts",
+        "tdf-mobile/src/localization/eventExperienceCopy.ts"
+      ],
+      "tests": [
+        "tdf-mobile/__tests__/EventCardTickets.test.tsx",
+        "tdf-mobile/__tests__/EventDetailMoments.test.tsx",
+        "tdf-mobile/__tests__/EventMomentCardReaction.test.tsx",
+        "tdf-mobile/__tests__/SocialScreen.test.tsx",
+        "tdf-mobile/__tests__/UserProfileRsvpActivity.test.tsx",
+        "tdf-mobile/__tests__/directoryApi.test.ts",
+        "tdf-mobile/__tests__/eventMoments.test.ts",
+        "tdf-mobile/__tests__/savedEvents.test.ts",
+        "tdf-mobile/__tests__/socialApiMapperSanitization.test.ts",
+        "tdf-mobile/src/lib/eventSharing.test.ts"
+      ],
+      "formalModels": [
+        "formal/event-operations/NativeArtistFollow.tla"
+      ],
+      "verification": "Actual screen, API mapper and storage tests; NativeArtistFollow only bounds namespace/session follow behavior, not the complete saved-event or draft implementation.",
+      "evidence": "Mobile137 source86f0eca and tree-identical a280:95 suites/610 tests, lint/types/release/Metro; current native builds and root combined gates pending.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Existing source and regression coverage retained; final integration and native/provider behavior remain separately qualified.",
+      "ambiguity": [
+        "Bounded model correspondence is partial; no whole-program refinement or current production deployment is asserted."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source preservation and automated regression evidence exist; final combined root/native/release gates remain pending."
+      }
+    },
+    {
+      "id": "MOB-BUILD-001",
+      "title": "Validated Mobile build identity and truthful checks",
+      "statement": "Mobile build and validation workflows must use the declared source/runtime and intended release or isolated-test configuration; failed validation or synthetic execution must not be reported as success.",
+      "authority": "Existing reviewed Mobile #71/#132/#135 behavior; proposed consolidated correspondence remains subject to current independent review",
+      "domain": "MOB",
+      "actors": [
+        "Mobile user",
+        "Asynchronous request",
+        "Release maintainer"
+      ],
+      "preconditions": [
+        "Exact pinned Mobile source and declared backend contract are available."
+      ],
+      "inputs": [
+        "Exact source revision and lockfile",
+        "Release/test profile",
+        "Public analytics configuration",
+        "Protected signing inputs and synthetic service response"
+      ],
+      "state": {
+        "fields": [
+          "unverified source",
+          "validated configuration",
+          "build result",
+          "synthetic result"
+        ]
+      },
+      "allowedTransitions": [
+        "validated source/profile -> artifact build",
+        "actual successful check -> recorded pass"
+      ],
+      "forbiddenTransitions": [
+        "critical synthetic authorization failure -> success",
+        "missing or stale validation -> released artifact",
+        "privileged secret -> public configuration"
+      ],
+      "effects": [
+        "Preserve the reviewed signed-build public analytics configuration and release-branch validation triggers."
+      ],
+      "authorization": "CI can build/test; independent review, store admission and deployment remain separate authorities.",
+      "privacy": "Public analytics identifiers are configuration; signing/API/application secrets remain protected and excluded from logs/artifacts.",
+      "concurrency": "Bind receipts to exact source; rerun checks after material source changes.",
+      "idempotency": "Same source/profile must select the same validation; no false cached pass.",
+      "failure": "Propagate nonzero failures and missing required configuration.",
+      "recovery": "Repair inputs, repeat current-head checks and retain failed evidence.",
+      "observability": "Named implementation tests and exact-current-source CI receipts; no production or device result is inferred from a source mapping.",
+      "source": "Mobile132 Datadog critical-error decision; Mobile135 signed-build analytics configuration; tdf-mobile/docs/tester-program.md and current workflow/signing checks",
+      "property": "Mobile build and validation workflows must use the declared source/runtime and intended release or isolated-test configuration; failed validation or synthetic execution must not be reported as success.",
+      "contract": "formal/system/mobile-consolidation.md",
+      "implementation": [
+        "tdf-mobile/.github/workflows/android-release-build.yml",
+        "tdf-mobile/.github/workflows/ios-release-build.yml",
+        "tdf-mobile/.github/workflows/datadog-synthetics.yml",
+        "tdf-mobile/.github/workflows/mobile-validate.yml",
+        "tdf-mobile/scripts/android-release.py",
+        "tdf-mobile/scripts/ios-signing.py",
+        "tdf-mobile/scripts/release-check.mjs"
+      ],
+      "tests": [
+        "tdf-mobile/scripts/tests/test_android_release.py",
+        "tdf-mobile/scripts/tests/test_ios_signing.py"
+      ],
+      "formalModels": [],
+      "verification": "Existing signing guard unit tests, release checks and hosted Validate/Datadog. Native build completion, device behavior, store admission and production analytics delivery are separate evidence.",
+      "evidence": "Mobile137 source86f0eca and tree-identical a280:95 suites/610 tests, lint/types/release/Metro; current native builds and root combined gates pending.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Existing source and regression coverage retained; final integration and native/provider behavior remain separately qualified.",
+      "ambiguity": [
+        "Bounded model correspondence is partial; no whole-program refinement or current production deployment is asserted."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source preservation and automated regression evidence exist; final combined root/native/release gates remain pending."
+      }
     }
   ]
 }

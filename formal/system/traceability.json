@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "d306cacc3b485e95da08c662c48488425a33055b",
+  "mobileRevision": "a280e0d53f7cab5410084898c0ae0277c029fe4c",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -4631,13 +4631,272 @@
       },
       "verification": "Actual HTTP synthetic Teacher/Engineer hidden-payment and assigned-booking controls, plus authorized Admin positive control. Not formally covered.",
       "evidence": "Exact source/binary hashes and HTTP result.json; Stack test log; formal source/config hashes and TLC invariant counterexamples. Working checks are not deployed evidence."
+    },
+    {
+      "id": "MOB-ONBOARD-001",
+      "title": "Session-bound durable onboarding reconciliation",
+      "statement": "Onboarding completion must use confirmed server evidence for the currently rendered account; durable first-value intent survives offline or pending responses and stale account callbacks cannot complete another occurrence.",
+      "authority": "Existing reviewed Mobile #71/#132/#135 behavior; proposed consolidated correspondence remains subject to current independent review",
+      "domain": "MOB",
+      "actors": [
+        "Mobile user",
+        "Asynchronous request",
+        "Release maintainer"
+      ],
+      "preconditions": [
+        "Exact pinned Mobile source and declared backend contract are available."
+      ],
+      "inputs": [
+        "Rendered credential and Party",
+        "First-value intent",
+        "Connectivity and foreground signals",
+        "Server completion response"
+      ],
+      "state": {
+        "fields": [
+          "account-scoped durable intent",
+          "current request generation",
+          "server completion",
+          "in-flight reconciliation"
+        ]
+      },
+      "allowedTransitions": [
+        "pending -> retained on offline/nonterminal response",
+        "confirmed current-account completion -> clear owned intent",
+        "foreground/reconnect -> coalesced server reconciliation"
+      ],
+      "forbiddenTransitions": [
+        "person follow -> fabricated artist conversion",
+        "old A response -> complete B or a new A occurrence",
+        "failed persistence -> reported successful durability"
+      ],
+      "effects": [
+        "Preserve existing analytics conversion ownership and independent exit queue."
+      ],
+      "authorization": "Server authorization and rendered credential/Party remain authoritative; client intent grants no access.",
+      "privacy": "Durable markers are account/guest-scoped; remounted occurrence query clients prevent retired data from populating the next account.",
+      "concurrency": "Coalesce requests and reject stale generations across A->B->A; retry only after the correct account renders.",
+      "idempotency": "Repeated reconciliation cannot fabricate repeated first-value completion.",
+      "failure": "Retain pending intent and propagate storage/auth failures.",
+      "recovery": "Reconnect/foreground retries retained work under the current rendered account.",
+      "observability": "Named implementation tests and exact-current-source CI receipts; no production or device result is inferred from a source mapping.",
+      "source": "tdf-mobile/docs/onboarding-consolidation-2026-10-04.md; reviewed Mobile71 and133; existing FanHubOnboarding/NativeArtistFollow boundaries",
+      "property": "Onboarding completion must use confirmed server evidence for the currently rendered account; durable first-value intent survives offline or pending responses and stale account callbacks cannot complete another occurrence.",
+      "contract": "formal/system/mobile-consolidation.md",
+      "implementation": [
+        "tdf-mobile/src/api/client.ts",
+        "tdf-mobile/src/api/onboarding.ts",
+        "tdf-mobile/src/experiments/NewUserOnboardingGate.tsx",
+        "tdf-mobile/src/hooks/usePartyOwnership.ts",
+        "tdf-mobile/src/lib/firstValueCompletion.ts",
+        "tdf-mobile/src/lib/onboardingIntent.ts",
+        "tdf-mobile/src/localization/onboardingCopy.ts",
+        "tdf-mobile/src/providers/FirstRunProvider.tsx"
+      ],
+      "tests": [
+        "tdf-mobile/__tests__/AuthScreen.test.tsx",
+        "tdf-mobile/__tests__/FirstRunProvider.test.tsx",
+        "tdf-mobile/__tests__/NewUserOnboardingGate.test.tsx",
+        "tdf-mobile/__tests__/apiClient.test.ts",
+        "tdf-mobile/__tests__/onboardingApi.test.ts",
+        "tdf-mobile/__tests__/onboardingIntent.test.ts",
+        "tdf-mobile/__tests__/usePartyOwnership.test.tsx"
+      ],
+      "formalModels": [
+        "formal/event-operations/FanHubOnboarding.tla",
+        "formal/event-operations/NativeArtistFollow.tla",
+        "formal/event-operations/SessionCacheIsolation.tla"
+      ],
+      "verification": "Actual provider/API/storage regression tests and existing bounded models/negative controls. Model-to-native implementation correspondence remains partial.",
+      "evidence": "Mobile137 source86f0eca and tree-identical a280:95 suites/610 tests, lint/types/release/Metro; current native builds and root combined gates pending.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Existing source and regression coverage retained; final integration and native/provider behavior remain separately qualified.",
+      "ambiguity": [
+        "Bounded model correspondence is partial; no whole-program refinement or current production deployment is asserted."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source preservation and automated regression evidence exist; final combined root/native/release gates remain pending."
+      }
+    },
+    {
+      "id": "MOB-SOCIAL-001",
+      "title": "Truthful account-scoped saved and social views",
+      "statement": "Saved events, private drafts, social moments and localized controls must preserve server authority, account ownership and explicit pending/error state without inventing actor identity or confirmed public success.",
+      "authority": "Existing reviewed Mobile #71/#132/#135 behavior; proposed consolidated correspondence remains subject to current independent review",
+      "domain": "MOB",
+      "actors": [
+        "Mobile user",
+        "Asynchronous request",
+        "Release maintainer"
+      ],
+      "preconditions": [
+        "Exact pinned Mobile source and declared backend contract are available."
+      ],
+      "inputs": [
+        "Account and server saved-state snapshot",
+        "Queued desired state",
+        "Private draft",
+        "Public feed/reaction results",
+        "Locale and retry interaction"
+      ],
+      "state": {
+        "fields": [
+          "server/cached/pending snapshot source",
+          "owned desired-state queue",
+          "scoped draft",
+          "public read result"
+        ]
+      },
+      "allowedTransitions": [
+        "offline desired state -> explicitly pending owned queue",
+        "successful server response -> confirmed snapshot",
+        "public read failure -> retryable failure"
+      ],
+      "forbiddenTransitions": [
+        "authentication failure -> cached successful authorization",
+        "anonymous total -> invented actor identity",
+        "failed public read -> fabricated local public feed",
+        "implicit unscoped legacy import -> current account ownership"
+      ],
+      "effects": [
+        "Keep canonical interaction controls, accessibility/retry labels and partial-detail disclosure."
+      ],
+      "authorization": "Only server-accepted mutations are confirmed; queued intent and presentation do not grant access.",
+      "privacy": "Scope drafts/saved state to the account; preserve unread legacy data until explicit ownership-confirmed import.",
+      "concurrency": "Concurrent queued desired state and server refresh remain distinguishable and account scoped.",
+      "idempotency": "Desired reaction/saved state is explicit; read retries do not create actor identity or public mutation.",
+      "failure": "Propagate auth/storage failures and expose retryable read failures.",
+      "recovery": "Retry current-account reads and reconcile durable desired state without describing pending work as confirmed.",
+      "observability": "Named implementation tests and exact-current-source CI receipts; no production or device result is inferred from a source mapping.",
+      "source": "tdf-mobile/docs/onboarding-consolidation-2026-10-04.md source46/47/48/51/54/61 retention decisions; reviewed Mobile71",
+      "property": "Saved events, private drafts, social moments and localized controls must preserve server authority, account ownership and explicit pending/error state without inventing actor identity or confirmed public success.",
+      "contract": "formal/system/mobile-consolidation.md",
+      "implementation": [
+        "tdf-mobile/app/(tabs)/events.tsx",
+        "tdf-mobile/app/(tabs)/social.tsx",
+        "tdf-mobile/app/userProfile.tsx",
+        "tdf-mobile/src/api/directory.ts",
+        "tdf-mobile/src/api/events.ts",
+        "tdf-mobile/src/components/EventCard.tsx",
+        "tdf-mobile/src/components/EventMomentCard.tsx",
+        "tdf-mobile/src/lib/eventMoments.ts",
+        "tdf-mobile/src/lib/eventMomentsRepository.ts",
+        "tdf-mobile/src/lib/savedEvents.ts",
+        "tdf-mobile/src/localization/eventExperienceCopy.ts"
+      ],
+      "tests": [
+        "tdf-mobile/__tests__/EventCardTickets.test.tsx",
+        "tdf-mobile/__tests__/EventDetailMoments.test.tsx",
+        "tdf-mobile/__tests__/EventMomentCardReaction.test.tsx",
+        "tdf-mobile/__tests__/SocialScreen.test.tsx",
+        "tdf-mobile/__tests__/UserProfileRsvpActivity.test.tsx",
+        "tdf-mobile/__tests__/directoryApi.test.ts",
+        "tdf-mobile/__tests__/eventMoments.test.ts",
+        "tdf-mobile/__tests__/savedEvents.test.ts",
+        "tdf-mobile/__tests__/socialApiMapperSanitization.test.ts",
+        "tdf-mobile/src/lib/eventSharing.test.ts"
+      ],
+      "formalModels": [
+        "formal/event-operations/NativeArtistFollow.tla"
+      ],
+      "verification": "Actual screen, API mapper and storage tests; NativeArtistFollow only bounds namespace/session follow behavior, not the complete saved-event or draft implementation.",
+      "evidence": "Mobile137 source86f0eca and tree-identical a280:95 suites/610 tests, lint/types/release/Metro; current native builds and root combined gates pending.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Existing source and regression coverage retained; final integration and native/provider behavior remain separately qualified.",
+      "ambiguity": [
+        "Bounded model correspondence is partial; no whole-program refinement or current production deployment is asserted."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source preservation and automated regression evidence exist; final combined root/native/release gates remain pending."
+      }
+    },
+    {
+      "id": "MOB-BUILD-001",
+      "title": "Validated Mobile build identity and truthful checks",
+      "statement": "Mobile build and validation workflows must use the declared source/runtime and intended release or isolated-test configuration; failed validation or synthetic execution must not be reported as success.",
+      "authority": "Existing reviewed Mobile #71/#132/#135 behavior; proposed consolidated correspondence remains subject to current independent review",
+      "domain": "MOB",
+      "actors": [
+        "Mobile user",
+        "Asynchronous request",
+        "Release maintainer"
+      ],
+      "preconditions": [
+        "Exact pinned Mobile source and declared backend contract are available."
+      ],
+      "inputs": [
+        "Exact source revision and lockfile",
+        "Release/test profile",
+        "Public analytics configuration",
+        "Protected signing inputs and synthetic service response"
+      ],
+      "state": {
+        "fields": [
+          "unverified source",
+          "validated configuration",
+          "build result",
+          "synthetic result"
+        ]
+      },
+      "allowedTransitions": [
+        "validated source/profile -> artifact build",
+        "actual successful check -> recorded pass"
+      ],
+      "forbiddenTransitions": [
+        "critical synthetic authorization failure -> success",
+        "missing or stale validation -> released artifact",
+        "privileged secret -> public configuration"
+      ],
+      "effects": [
+        "Preserve the reviewed signed-build public analytics configuration and release-branch validation triggers."
+      ],
+      "authorization": "CI can build/test; independent review, store admission and deployment remain separate authorities.",
+      "privacy": "Public analytics identifiers are configuration; signing/API/application secrets remain protected and excluded from logs/artifacts.",
+      "concurrency": "Bind receipts to exact source; rerun checks after material source changes.",
+      "idempotency": "Same source/profile must select the same validation; no false cached pass.",
+      "failure": "Propagate nonzero failures and missing required configuration.",
+      "recovery": "Repair inputs, repeat current-head checks and retain failed evidence.",
+      "observability": "Named implementation tests and exact-current-source CI receipts; no production or device result is inferred from a source mapping.",
+      "source": "Mobile132 Datadog critical-error decision; Mobile135 signed-build analytics configuration; tdf-mobile/docs/tester-program.md and current workflow/signing checks",
+      "property": "Mobile build and validation workflows must use the declared source/runtime and intended release or isolated-test configuration; failed validation or synthetic execution must not be reported as success.",
+      "contract": "formal/system/mobile-consolidation.md",
+      "implementation": [
+        "tdf-mobile/.github/workflows/android-release-build.yml",
+        "tdf-mobile/.github/workflows/ios-release-build.yml",
+        "tdf-mobile/.github/workflows/datadog-synthetics.yml",
+        "tdf-mobile/.github/workflows/mobile-validate.yml",
+        "tdf-mobile/scripts/android-release.py",
+        "tdf-mobile/scripts/ios-signing.py",
+        "tdf-mobile/scripts/release-check.mjs"
+      ],
+      "tests": [
+        "tdf-mobile/scripts/tests/test_android_release.py",
+        "tdf-mobile/scripts/tests/test_ios_signing.py"
+      ],
+      "formalModels": [],
+      "verification": "Existing signing guard unit tests, release checks and hosted Validate/Datadog. Native build completion, device behavior, store admission and production analytics delivery are separate evidence.",
+      "evidence": "Mobile137 source86f0eca and tree-identical a280:95 suites/610 tests, lint/types/release/Metro; current native builds and root combined gates pending.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Existing source and regression coverage retained; final integration and native/provider behavior remain separately qualified.",
+      "ambiguity": [
+        "Bounded model correspondence is partial; no whole-program refinement or current production deployment is asserted."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source preservation and automated regression evidence exist; final combined root/native/release gates remain pending."
+      }
     }
   ],
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
-    ".github/workflows/ci.yml": "021541980348669b01cbb19bb7448b948ba0ce09f0017e431272d18e3ea12a46",
+    ".github/workflows/ci.yml": "41b77e0a2e317f9818922047ef993b8fff279dc111c1132ecd2d31bdbc644651",
     ".github/workflows/event-operations-formal.yml": "8cdbbb59f539a8394fde147ba38dc4f27260b9ac2c371c731da5b342401077d1",
-    "docs/catalog-persistence/catalog-list-decisions.json": "9ae8d8e5ba384fceadc2b326dea510d25f9b1e668138719c4529438b75ab7ca9",
+    "docs/catalog-persistence/catalog-list-decisions.json": "31665447f76e39a723d081e43ee1e15e27fee509fb46aa873010caa48d9fc556",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
     "formal/event-operations/CatalogReorder.tla": "ab228ae812143f050feac4035e9724fb647a1072cb7816d500894ea1ba335c5d",
@@ -4647,11 +4906,13 @@
     "formal/event-operations/ChatMutationNoRollback.cfg": "689d923264fb1fc9bbd57fae69dcc6fac4619d9ff7f050b5f1be15f09090457f",
     "formal/event-operations/CredentialLifecycle.tla": "2930edc753523a7a315cd76a04e389570785c8fd39eb0cd1ea69e700c1f528bc",
     "formal/event-operations/DirectoryClaimReview.tla": "bad88bce95e46906a7f202d7d798efabbd87202fd822e7c9202184479bb1b652",
+    "formal/event-operations/FanHubOnboarding.tla": "07defbfba2dad98e7f1ca70700d7521204c8a86af90f356ed42d342f8492e71d",
     "formal/event-operations/HostedServicePayment.cfg": "29663fa3078459cb0abf5de479b7206aa840c6779fc9522f2eefa9d1592d2227",
     "formal/event-operations/HostedServicePayment.tla": "675bacb7fce3962a773608e51901383cd41993b0c079fc20989f231e4df928a1",
     "formal/event-operations/HostedServicePaymentAtomic.cfg": "403e274802ca9eb7d988e0fb1e282acb23acf89a6e953d5dd2856f00b0976f73",
     "formal/event-operations/HostedServicePaymentProgress.cfg": "3057b71fcdda169e70e3258b7aa642b73d6105647184c611a46a30fd603a5402",
     "formal/event-operations/HostedServicePaymentReplay.cfg": "f69e606679e1d625b2f3d93e89b638da3a2d792f9488646fdca2057c4880e498",
+    "formal/event-operations/NativeArtistFollow.tla": "1a4bdcf27bbf69e0aa3c58bb6742290cd6dcdd64d0ad4dc8b196e8c38519d4ef",
     "formal/event-operations/OperationsApproval.tla": "471ee2b49075d444febc4883a7c7269a347a571eecd7bfbd80df3efa2072e49e",
     "formal/event-operations/OperationsCommandFence.tla": "58bde50248ca2dd62ab496c251d6596bc8f6a6289db144951458870b1e93436b",
     "formal/event-operations/PaymentRecovery.cfg": "31684633da67e4a607058dce9e9dae842c2214ff87ba126fbade01a5c4bbfbdc",
@@ -4754,7 +5015,7 @@
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
     "scripts/privacy-request-ledger.py": "9274444f82bef45844d492c296b6a5ca9410e6000867331adb6d624ddc5af960",
-    "scripts/production-migrations.json": "c8ceacf27340f87b25cd3c8aae04718d6e878b9fac88a6dc05f7e37a913955c1",
+    "scripts/production-migrations.json": "d32492a6d52dbfa93ce8463d37d90149280bd0635705468e72177c78dada1e02",
     "scripts/production-release.mjs": "1643997b7b3ac422214725f4078b7b4db25f09d1df6ae5cebe8285cd257e0d59",
     "scripts/quality-backend.sh": "7be0e6a87e50b625239a70858d53d9d3340a409000ea9f1dc475c96585b495d7",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
@@ -4793,11 +5054,11 @@
     "streaming/mediamtx.yml": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
     "tdf-hq-ui/public/data-deletion.html": "fe759cb4af0642f024ef31d61f55cb890c8d52e1e05c9e00b409d020f3fc1c13",
     "tdf-hq-ui/public/mobile-app/data-deletion.html": "0e149f6fdb4e81761d1fd0f3f217ac1b9c5138d4987d935ed103ccbbd7ca1a0d",
-    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "234284f03d528db660c753079560449f16106c84fcf370b7a88758f6b1dbe990",
+    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "c8b89250da35c17eb01fd453fc8ab73585b14e2210123c127ecbdc3dc6ff0c19",
     "tdf-hq-ui/src/api/bookings.ts": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
     "tdf-hq-ui/src/api/client.test.ts": "eaec88fe099c62f7d68c2c350eb1b3493a71e132b7324e25e588b34ec76aed56",
     "tdf-hq-ui/src/api/client.ts": "3cbd9d209c184f0892451f4957721be0a55f65e922df33090c4a8b1e00ccfd13",
-    "tdf-hq-ui/src/api/generated/types.ts": "80c00d11c1aa5fbdd3db707a55537f574f0ebd3e54d0de017f030123d6291622",
+    "tdf-hq-ui/src/api/generated/types.ts": "c75c0d3b6ed4ec50a816765521a0f7a92972940a9981f595537dc74f52ea39eb",
     "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx": "7723dd458079bcad7d7c3f39933b2025de76462f8d0fb40a6c6d4e6bd35deb49",
     "tdf-hq-ui/src/components/LazyPaginatedList.tsx": "8c96fc43fa7096d5bf59e0a724c19bd4b73d1f05582a25d99b633ba95f075d91",
     "tdf-hq-ui/src/components/TicketCredentialQR.tsx": "0ae153c24a40b2a2688c5eeb93e04a7b7c15f0a37a3cc1414950061bbf556831",
@@ -4816,7 +5077,7 @@
     "tdf-hq-ui/src/pages/LoginPage.tsx": "78885e7bb418d22f98657a2823effb36743857f0edc8b4fa9849a219e9aa3c3b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
-    "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "8e0d3110540f418a6e6487820db920e5090756c809190818dd80802d0195591b",
+    "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "307ac18a2c370eea2190de478b9a450c6e15e99dae15850edaaee9381e507ca3",
     "tdf-hq-ui/src/session/SessionContext.tsx": "57281da0da41ea04116422cad679e7f7052f55b1e0e3054feeab4438e83c0b5b",
     "tdf-hq-ui/src/session/SessionProviders.test.tsx": "db255bb28b7788b5090883abd8b33769fb1507bf0c353a66f097725024f74de1",
     "tdf-hq-ui/src/session/SessionProviders.tsx": "0a75819f91321403b981874eef2d44482d6a0fd90e3bfbc009daa7b925d8082f",
@@ -4831,7 +5092,7 @@
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/assets/feature-registry.json": "7388f163749d305fb7bc12b0ada9c4f7f988c878a1db006437db835555cbe3af",
-    "tdf-hq/docs/openapi/api.yaml": "d55f01b1ce86614187fa542fba82699a83af283cdc30afb7e4f1213ceab55137",
+    "tdf-hq/docs/openapi/api.yaml": "f01e2291f4c9305058b2639942d7c2a7bd6b09d52219bc61a774fd0b84ab251b",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/persistent-uploads.sh": "89c251d96be949d638941d45d4a8994f09c8157a04bea786ee93aefde90cbd44",
     "tdf-hq/production-entrypoint.sh": "9cf124a277a19e2d5c0d7769cfc8a2d16dc2d21f09e93406b3ebfa293e0416b4",
@@ -4880,7 +5141,7 @@
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
-    "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "2e1e1e64cae868fddba7e2e7b5871a11b9808957c531d606f5ffe4a5d7a840bc",
+    "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "dbd05677233c45449db5ccdfbb45b0cdddc1bae34b4d989c81cb176fa563ca71",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "4b2be34a6dc602a8a626eb2cc104cd3e9478ee8dae43a7287d4d6112445b1f2d",
     "tdf-hq/src/TDF/Server/ProviderExecution.hs": "a8ea11e94ddf018b3955f2c67e86122035731268499b605673a2766e577c0a48",
@@ -4922,30 +5183,75 @@
     "tdf-hq/test/TDF/ServerSpec.hs": "a205ac4f0400b0972d1fc3280cc6ed7913da633cbed670d919de38bfc96a4f45",
     "tdf-hq/test/TicketAdmissionMain.hs": "42ca67dad504ceaf6998ec067f3088f0d4cb4f06f8dc9162b8f96de60a8537d2",
     "tdf-hq/test/TicketDatabaseRoutingMain.hs": "2f389f2ddab6718c96414d96aa86a02d07d20f0303657a385f71443a95b22001",
+    "tdf-mobile/.github/workflows/android-release-build.yml": "4d2938e8c0220ed323b6f8e639c729d97e091afe113509d87fd14140c340df3e",
+    "tdf-mobile/.github/workflows/datadog-synthetics.yml": "09ce9584ea2fd8fbce95bf0d720be7594457e809f0b46dbcd2e0feb788564d98",
+    "tdf-mobile/.github/workflows/ios-release-build.yml": "27823e8b817628542e37d318486b3acec9c183989737717675a9d41a26f9d81c",
+    "tdf-mobile/.github/workflows/mobile-validate.yml": "4d4e1186594a96993171f6b1ebf4ce162271ab991385adc13b4e3321123db387",
     "tdf-mobile/__tests__/AuthProvider.test.tsx": "a76d12479c0899214bfd7fb8c2b5eea1e24d81585633c6bf7e835ca21922f474",
     "tdf-mobile/__tests__/AuthQueryProviders.test.tsx": "ba1fca52cdff6c4bd29548ccdb96f40b212a2a6cacf3f6ee08b6698095178f5c",
+    "tdf-mobile/__tests__/AuthScreen.test.tsx": "fde45c5d297594759b86444e697d79f56dd7413865b72528ec1eaedac343fd9b",
     "tdf-mobile/__tests__/DdexInbox.test.tsx": "5082fd98e04f9c9d861e8f3fbf7fabab92ac65cdb0e5ba7dd128a62839456656",
     "tdf-mobile/__tests__/DdexPartners.test.tsx": "6311dc043ee8a286f62bd0ec4d588f3b4425f1990a73d8b94c91093cd9b99b57",
-    "tdf-mobile/__tests__/EventDetailLiveBroadcastLifecycle.test.tsx": "4cbc66b4cbefc8022e1b5ca2f356d78173ce96ef227a7bccad9b0ad1a17bf78d",
+    "tdf-mobile/__tests__/EventCardTickets.test.tsx": "d98649ad19fed8b46dadbe20601e3d299ba334d75c6abea5aeb37e2782b6a519",
+    "tdf-mobile/__tests__/EventDetailLiveBroadcastLifecycle.test.tsx": "5fa36d709f29921ac128350ccd07366dde32e309c923a217d6450c5f9018dd32",
+    "tdf-mobile/__tests__/EventDetailMoments.test.tsx": "dbeb0867d8ae95ae77e2a1529cd250d066844a04fc4e9d421681f0ae31628840",
+    "tdf-mobile/__tests__/EventMomentCardReaction.test.tsx": "35c75aa6a37a6f9472abc454e5bd46abc51a6818fc0e93370f4c486e2ef96ac1",
+    "tdf-mobile/__tests__/FirstRunProvider.test.tsx": "98e59e33e12c6aa88721c9cac49354a11793484b220689ead819b03629e65f72",
+    "tdf-mobile/__tests__/NewUserOnboardingGate.test.tsx": "0269cfcb7eb5810b04164c968c0ffe237f797bdb50b9eaa7576016e02fd15e98",
+    "tdf-mobile/__tests__/SocialScreen.test.tsx": "75d5a858f1e96b9848c15c8a2defd07d93fd010747331bc3452b1977a343628e",
+    "tdf-mobile/__tests__/UserProfileRsvpActivity.test.tsx": "f09ef80d0a302e5bb6902d1521dc9cf23c2e8b7f447bd000e75d0d0376611ed3",
+    "tdf-mobile/__tests__/apiClient.test.ts": "e675b6948ec62d4163f47e37b5f7fa4cdf93dd40a6a3890ab9b9aa1b5c894ecd",
     "tdf-mobile/__tests__/ddexApi.test.ts": "c9e274d52a3bab8063c84a79c398c68657d2a07774722f64caecec0b25d4518b",
+    "tdf-mobile/__tests__/directoryApi.test.ts": "477010a59bdff0576ab9cab6f2d79f5fddb9a8e4ed9b63f0ebc8a329adaf39a4",
+    "tdf-mobile/__tests__/eventMoments.test.ts": "8d2e690a4253ac3c39a84e54beaa92db2d3cdb6fefe60ef26e77c9e4c532a824",
     "tdf-mobile/__tests__/liveBroadcastsRepository.test.ts": "ff98004607a259e2b0e9a9e677d121a564a78e61e6a66074e948e04d15ff9d6d",
+    "tdf-mobile/__tests__/onboardingApi.test.ts": "4770fd9508a3a13c6ab0fb701d900b32633bac7b377d3f4fed4498f0b0c08300",
+    "tdf-mobile/__tests__/onboardingIntent.test.ts": "5598a1deba59da59d8c3c669ad8d77836040bd855776a4108a73639cc3842319",
+    "tdf-mobile/__tests__/savedEvents.test.ts": "ac739d4a8ad14f77b40ee8f310276b9e0073eae3084bcc671d3be946fd9cdbc8",
+    "tdf-mobile/__tests__/socialApiMapperSanitization.test.ts": "fc0cfd4f44e229e61e64320041776ef82ad457e14474206179cfd86351234455",
+    "tdf-mobile/__tests__/usePartyOwnership.test.tsx": "ccdd151045745a81c7bd461d8aeddded98cd102a5cfa97e6cd561872cbf438d1",
+    "tdf-mobile/app/(tabs)/events.tsx": "518cc2e2bbde4ffb7d8da49fcccc384d222b2121cb8b7d4799d7023bc4bcd1a1",
     "tdf-mobile/app/(tabs)/more.tsx": "53cc6d33d6d37756759a2251d2d79fcd8750696b3369a3d64783d0853d21ec18",
+    "tdf-mobile/app/(tabs)/social.tsx": "7133744ece6db0db256daa2489c9f94bb6deadf69d76c65a09e0d6dde23a7796",
     "tdf-mobile/app/ddex/document/[id].tsx": "787e7c4f2a28f137e614df6660c727d81890337ef69fc39cd1ea55c953f731a2",
     "tdf-mobile/app/ddex/index.tsx": "8d534fd0a1a28f0bac5767a8535a91fe1ce7762d0decff518cec5931eb6149e1",
     "tdf-mobile/app/ddex/partners.tsx": "9e2e2baf6b696a5880fd3f59f7d52bd8a6508762296a55564fb873af6d23be61",
-    "tdf-mobile/app/eventDetail.tsx": "3d6457bb18f42d5fac7c00590e47f7b250a9b8f739cd6aa2c127be9610b6f36c",
+    "tdf-mobile/app/eventDetail.tsx": "81718007671292738d4ac815f1b2e39d1a250ed717d3f99714e28905736bd76b",
+    "tdf-mobile/app/userProfile.tsx": "cf1d6d3f9896e2d6ced654cfc0f530bc5d7d7869c228ca95c3250297cde2bfe4",
     "tdf-mobile/package-lock.json": "1d669d0ea79f240494299f22c868f79753b921ad6f06656ad71b5942ccd3ac35",
     "tdf-mobile/package.json": "2df9f211d1bddbe5467021ac6398e3427b5af467262ae5321be224ebe1603612",
+    "tdf-mobile/scripts/android-release.py": "359097ccd6ccb3585d544fa40b0a84cd874fc2df0f514cce8d71fdeb5ec95d5c",
+    "tdf-mobile/scripts/ios-signing.py": "b82eeb2adf72523c7e82b99458ce85784131afb7b3ab7971eb9052060732b627",
+    "tdf-mobile/scripts/release-check.mjs": "134c027743c05c08d93d7696a4b5af88448f375cee8641ea9298907a37a689c4",
+    "tdf-mobile/scripts/tests/test_android_release.py": "9fe8727e8da7a4de515e663ce232bec40fae0bcc3bf9cc491bde36d1c8b3fab7",
+    "tdf-mobile/scripts/tests/test_ios_signing.py": "22dc11816ec576d9d834249d9c24b2b26c21b81a3c9471b15c94822f203d7a14",
+    "tdf-mobile/src/api/client.ts": "aabfd57e21b6301458c11f923c5ec5e5f8429b1bf8d0bbddd27a15cc8ddd50a3",
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
-    "tdf-mobile/src/api/generated/types.ts": "80c00d11c1aa5fbdd3db707a55537f574f0ebd3e54d0de017f030123d6291622",
+    "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
+    "tdf-mobile/src/api/events.ts": "a6014149f81240e56023471ea987fc8ac8245fc06d3034fb0382750e818d2b1e",
+    "tdf-mobile/src/api/generated/types.ts": "c75c0d3b6ed4ec50a816765521a0f7a92972940a9981f595537dc74f52ea39eb",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
+    "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
+    "tdf-mobile/src/components/EventCard.tsx": "4eaba1e6a6ac76b67bbc7f5a6a8d24e0e14e81ebb0eb29041da70265dacd21a2",
+    "tdf-mobile/src/components/EventMomentCard.tsx": "d157367b980c01a8425a396971519124105860e6394b5c27d90cc5c2fc7dd9c8",
+    "tdf-mobile/src/experiments/NewUserOnboardingGate.tsx": "80c962ddd011c5b8121d9da53af1ddd4b4c691533d24fd233fbc4e39723f6e19",
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": "a8111cb6563d7cb08ca568175ed51460de0293db652142a7979e907e256ee2ff",
+    "tdf-mobile/src/hooks/usePartyOwnership.ts": "d95a290a5cf31cb69c41b257144118cec54fc1d132ff24971d0283da05405cca",
+    "tdf-mobile/src/lib/eventMoments.ts": "4c737b4a82c92dfd89a362caaba5b7d1bae16f06d93ecdb08c104737f24a598d",
+    "tdf-mobile/src/lib/eventMomentsRepository.ts": "3fc6bd9bff601d1b03a311b57a384b385a87a2e3413a5c3452fb3fdb06b17a7e",
+    "tdf-mobile/src/lib/eventSharing.test.ts": "75c1e1b893800063e06315fbb56457c0ee4bee113d8ea45227361be3adcced8b",
+    "tdf-mobile/src/lib/firstValueCompletion.ts": "d5c2580eddea4ea7907eac147bd5b84870aec6409f9c51e1bdf051c57171c7a7",
     "tdf-mobile/src/lib/liveBroadcastPublishing.ts": "9b00774ddd70fd6f3425e6877cb52d9c6fa933f5c0af13f3af3327a5db042b98",
     "tdf-mobile/src/lib/liveBroadcastsRepository.ts": "b7fed7ab7c9ad18a065f59ecc1cb2dcf7abf841aae555cee3fc8c0121036083c",
+    "tdf-mobile/src/lib/onboardingIntent.ts": "cfe60e2d5ce8cc09314d2e8728c5603ceca0dceffbe920c91b9ff7234d1d4f4e",
     "tdf-mobile/src/lib/queryClient.ts": "149f05c3a7463dfe5de259414a14fa30619277ce4f46adc6f166b51e775a4ff2",
-    "tdf-mobile/src/providers/AppProviders.tsx": "5a53c52ab7582cea2457b146a52e913fcf8174a650d2791e21da028ea69efd03",
+    "tdf-mobile/src/lib/savedEvents.ts": "d43e5d39203ce4a1670f3ced2a03e3ebb9ac81b61127cc497ecda8fea69c31a8",
+    "tdf-mobile/src/localization/eventExperienceCopy.ts": "5ddb85172b79e36a24366b30b573b51462adb0500a94747355d47943d5b238e4",
+    "tdf-mobile/src/localization/onboardingCopy.ts": "faf5c64e81e584a3710e17adebc26705fbfad350f5fecc69f99d7dd0628663ee",
+    "tdf-mobile/src/providers/AppProviders.tsx": "ffd5a5922918be901c68d31503279220aa978775fbd213b5ef186d9502902a0a",
     "tdf-mobile/src/providers/AuthProvider.tsx": "e5ac647ae75d11db1ed43b9cbaff0c92c0b2c3f631e92564fb00e900ce31c74d",
-    "tdf-mobile/src/providers/AuthQueryProviders.tsx": "ae919bad36236b53ab80d17674b5f70e438178e1e9cf3b482c9bd4c437e66ed2"
+    "tdf-mobile/src/providers/AuthQueryProviders.tsx": "ae919bad36236b53ab80d17674b5f70e438178e1e9cf3b482c9bd4c437e66ed2",
+    "tdf-mobile/src/providers/FirstRunProvider.tsx": "b2d91da63d9cb764a8359e5f56100d98d54f93a1443d000952630cb85f0ca56f"
   },
   "reverseTraceability": {
     "scripts/production-release.mjs": [
@@ -7100,6 +7406,10 @@
       {
         "requirement": "PRIV-CACHE-002",
         "relationship": "formalModels"
+      },
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "formalModels"
       }
     ],
     "tdf-mobile/src/providers/AuthProvider.tsx": [
@@ -7395,6 +7705,292 @@
         "requirement": "OPS-WORKER-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-mobile/src/api/client.ts": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/api/onboarding.ts": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/experiments/NewUserOnboardingGate.tsx": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/hooks/usePartyOwnership.ts": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/lib/firstValueCompletion.ts": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/lib/onboardingIntent.ts": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/localization/onboardingCopy.ts": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/providers/FirstRunProvider.tsx": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/__tests__/AuthScreen.test.tsx": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/FirstRunProvider.test.tsx": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/NewUserOnboardingGate.test.tsx": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/apiClient.test.ts": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/onboardingApi.test.ts": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/onboardingIntent.test.ts": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/usePartyOwnership.test.tsx": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/FanHubOnboarding.tla": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/NativeArtistFollow.tla": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "formalModels"
+      },
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "tdf-mobile/app/(tabs)/events.tsx": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/app/(tabs)/social.tsx": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/app/userProfile.tsx": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/api/directory.ts": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/api/events.ts": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/components/EventCard.tsx": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/components/EventMomentCard.tsx": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/lib/eventMoments.ts": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/lib/eventMomentsRepository.ts": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/lib/savedEvents.ts": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/localization/eventExperienceCopy.ts": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/__tests__/EventCardTickets.test.tsx": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/EventDetailMoments.test.tsx": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/EventMomentCardReaction.test.tsx": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/SocialScreen.test.tsx": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/UserProfileRsvpActivity.test.tsx": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/directoryApi.test.ts": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/eventMoments.test.ts": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/savedEvents.test.ts": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/socialApiMapperSanitization.test.ts": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/src/lib/eventSharing.test.ts": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/.github/workflows/android-release-build.yml": [
+      {
+        "requirement": "MOB-BUILD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/.github/workflows/ios-release-build.yml": [
+      {
+        "requirement": "MOB-BUILD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/.github/workflows/datadog-synthetics.yml": [
+      {
+        "requirement": "MOB-BUILD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/.github/workflows/mobile-validate.yml": [
+      {
+        "requirement": "MOB-BUILD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/scripts/android-release.py": [
+      {
+        "requirement": "MOB-BUILD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/scripts/ios-signing.py": [
+      {
+        "requirement": "MOB-BUILD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/scripts/release-check.mjs": [
+      {
+        "requirement": "MOB-BUILD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/scripts/tests/test_android_release.py": [
+      {
+        "requirement": "MOB-BUILD-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/scripts/tests/test_ios_signing.py": [
+      {
+        "requirement": "MOB-BUILD-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -7441,7 +8037,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "021541980348669b01cbb19bb7448b948ba0ce09f0017e431272d18e3ea12a46",
+      "sha256": "41b77e0a2e317f9818922047ef993b8fff279dc111c1132ecd2d31bdbc644651",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -9478,7 +10074,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "c8ceacf27340f87b25cd3c8aae04718d6e878b9fac88a6dc05f7e37a913955c1",
+      "sha256": "d32492a6d52dbfa93ce8463d37d90149280bd0635705468e72177c78dada1e02",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -10763,7 +11359,7 @@
     {
       "id": "SURFACE-73f84c14f54480df",
       "path": "scripts/test-public-ticket-checkout-runtime-migration.sh",
-      "sha256": "d612642c93c917c9d7fadb1449096627c4a7adc8221c19699ef4388e7224e563",
+      "sha256": "7fdc39a6de69890c0ba3e45d248210324459303fb158e9965bc242c76f440170",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -11365,7 +11961,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "234284f03d528db660c753079560449f16106c84fcf370b7a88758f6b1dbe990",
+      "sha256": "c8b89250da35c17eb01fd453fc8ab73585b14e2210123c127ecbdc3dc6ff0c19",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -11840,7 +12436,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "80c00d11c1aa5fbdd3db707a55537f574f0ebd3e54d0de017f030123d6291622",
+      "sha256": "c75c0d3b6ed4ec50a816765521a0f7a92972940a9981f595537dc74f52ea39eb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14897,7 +15493,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "8e0d3110540f418a6e6487820db920e5090756c809190818dd80802d0195591b",
+      "sha256": "307ac18a2c370eea2190de478b9a450c6e15e99dae15850edaaee9381e507ca3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16440,7 +17036,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "d55f01b1ce86614187fa542fba82699a83af283cdc30afb7e4f1213ceab55137",
+      "sha256": "f01e2291f4c9305058b2639942d7c2a7bd6b09d52219bc61a774fd0b84ab251b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18958,6 +19554,34 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-ed48d78fa40594c9",
+      "path": "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit.sql",
+      "sha256": "0d3a8a75abbf07f9dfa0f6744daa6137f2611e10822e66ef8afe9fa666386342",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-45c133c91e4ba42b",
+      "path": "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit_rollback.sql",
+      "sha256": "339e5714c731c5619938653a916c1f89bcda88aa629e4b081fe9cf8823219a48",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-827c82a820edaee2",
+      "path": "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history.sql",
+      "sha256": "866c5c2381ebe7a416b2ab45f0451feac119d60e1e90a099016257425c8d7d7f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-06bc10cd817549c3",
+      "path": "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history_rollback.sql",
+      "sha256": "c8980f0d236a67886457fbf60e67fed32c347fea123242d22b52500edd023866",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-d3e82544e1757e3e",
       "path": "tdf-hq/sql/2026-10-05_ticket_transfer_deadline.sql",
       "sha256": "fbc22ce153e447bcf9d6f464fb0995d99a11e7104f6c1adb3a89e771f44de04b",
@@ -20312,7 +20936,7 @@
     {
       "id": "SURFACE-a6d0775d20903e98",
       "path": "tdf-hq/src/TDF/Routes/EventTickets.hs",
-      "sha256": "c10d6fb92f77c08829b94136540b32d9361297acc421132b0e6c8b47244b5a07",
+      "sha256": "3557aa7feb725075e3cbc97f69fdd34f0de1b9b59f6545f91df80850b80f3914",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -20438,7 +21062,7 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "2e1e1e64cae868fddba7e2e7b5871a11b9808957c531d606f5ffe4a5d7a840bc",
+      "sha256": "dbd05677233c45449db5ccdfbb45b0cdddc1bae34b4d989c81cb176fa563ca71",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22008,6 +22632,13 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-797e095cf9630adf",
+      "path": "tdf-hq/test/integration/ticket_order_quantity_limit.sql",
+      "sha256": "3b0644e828f65673d57532ecb8d27a26df155c3a0d9399337be5a58af5aa7548",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-2156981b9c95285d",
       "path": "tdf-hq/test/sql/event_ingestion_boundaries.sql",
       "sha256": "a8a46464333c4d055af00c1ab94c358025e6981705d10810c65fca25fb47e399",
@@ -22045,16 +22676,26 @@
     {
       "id": "SURFACE-cbc4762024e82de2",
       "path": "tdf-mobile/.github/workflows/android-release-build.yml",
-      "sha256": "8eb9d10b80586df9a105317de591a1394ffa40cb66a5b47f3d79010527b90054",
+      "sha256": "4d2938e8c0220ed323b6f8e639c729d97e091afe113509d87fd14140c340df3e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-BUILD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-9000b422122afb98",
       "path": "tdf-mobile/.github/workflows/datadog-synthetics.yml",
-      "sha256": "813efd0f971b844e28cb4bbdfdb51773023e4b393e8a32a276925852b53de344",
+      "sha256": "09ce9584ea2fd8fbce95bf0d720be7594457e809f0b46dbcd2e0feb788564d98",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-BUILD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-d84c1fc5d701e2cc",
@@ -22073,9 +22714,14 @@
     {
       "id": "SURFACE-4d083e586c68746a",
       "path": "tdf-mobile/.github/workflows/ios-release-build.yml",
-      "sha256": "bae4e78b1ef42423cc02a19ddb6023cea921c868cac4d6125d8b996861976f4a",
+      "sha256": "27823e8b817628542e37d318486b3acec9c183989737717675a9d41a26f9d81c",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-BUILD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-d7fd396a0e21292f",
@@ -22087,9 +22733,14 @@
     {
       "id": "SURFACE-dc7f9bd65923411b",
       "path": "tdf-mobile/.github/workflows/mobile-validate.yml",
-      "sha256": "a788962e79a78ca8ea5ff50af55bf1287c1aeab98322904e1d38b3500ee2e268",
+      "sha256": "4d4e1186594a96993171f6b1ebf4ce162271ab991385adc13b4e3321123db387",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-BUILD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-dfdc76c7f5afe8f6",
@@ -22139,9 +22790,14 @@
     {
       "id": "SURFACE-889f3ed698a5ec59",
       "path": "tdf-mobile/__tests__/AuthScreen.test.tsx",
-      "sha256": "5e21018648e40b329e91ea441d5248017418c38654df64c2f28fcd70d2ae6aee",
+      "sha256": "fde45c5d297594759b86444e697d79f56dd7413865b72528ec1eaedac343fd9b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-efcecbaa0e3acd71",
@@ -22191,14 +22847,19 @@
     {
       "id": "SURFACE-a4f08b34347d1281",
       "path": "tdf-mobile/__tests__/EventCardTickets.test.tsx",
-      "sha256": "3fa9f37e0a35698d016f03e3f7c8661247230ced25e441c02b3f515221de690d",
+      "sha256": "d98649ad19fed8b46dadbe20601e3d299ba334d75c6abea5aeb37e2782b6a519",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-547a7176f0a822e5",
       "path": "tdf-mobile/__tests__/EventDetailLiveBroadcastLifecycle.test.tsx",
-      "sha256": "4cbc66b4cbefc8022e1b5ca2f356d78173ce96ef227a7bccad9b0ad1a17bf78d",
+      "sha256": "5fa36d709f29921ac128350ccd07366dde32e309c923a217d6450c5f9018dd32",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22210,9 +22871,26 @@
     {
       "id": "SURFACE-aa9a5dc6fca02108",
       "path": "tdf-mobile/__tests__/EventDetailMoments.test.tsx",
-      "sha256": "7b3c5142714108c192cc450b22e4511eac739ae683ead7099419278a355eaee9",
+      "sha256": "dbeb0867d8ae95ae77e2a1529cd250d066844a04fc4e9d421681f0ae31628840",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-99ea7561d1a327d8",
+      "path": "tdf-mobile/__tests__/EventMomentCardReaction.test.tsx",
+      "sha256": "35c75aa6a37a6f9472abc454e5bd46abc51a6818fc0e93370f4c486e2ef96ac1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-7924613b1e052502",
@@ -22224,9 +22902,14 @@
     {
       "id": "SURFACE-3677524f8992889a",
       "path": "tdf-mobile/__tests__/FirstRunProvider.test.tsx",
-      "sha256": "9b23e8488f0a3f0548b38cacf91c6cded53f74c08f1b412c50edbb5b0f4dabb3",
+      "sha256": "98e59e33e12c6aa88721c9cac49354a11793484b220689ead819b03629e65f72",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-adcc415d122d0352",
@@ -22259,9 +22942,14 @@
     {
       "id": "SURFACE-5d346a1514ee4d1a",
       "path": "tdf-mobile/__tests__/NewUserOnboardingGate.test.tsx",
-      "sha256": "c796fa951f6eb337a787efbad7ce80e25cee4866852b2710e3ff49fe24439b0b",
+      "sha256": "0269cfcb7eb5810b04164c968c0ffe237f797bdb50b9eaa7576016e02fd15e98",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-7617f2ba54034017",
@@ -22322,9 +23010,14 @@
     {
       "id": "SURFACE-9dcb9db6d3e58c16",
       "path": "tdf-mobile/__tests__/SocialScreen.test.tsx",
-      "sha256": "dcf663dfaffd22a0496548e307531187f62621c65e262356a96596512b081d83",
+      "sha256": "75d5a858f1e96b9848c15c8a2defd07d93fd010747331bc3452b1977a343628e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-55f3d615ea7ca850",
@@ -22364,9 +23057,14 @@
     {
       "id": "SURFACE-f2759dc51ae88b80",
       "path": "tdf-mobile/__tests__/UserProfileRsvpActivity.test.tsx",
-      "sha256": "f8573e8ef01b9cad773248f14e167740258237b787b0c9280ab92cf1af5ecc6e",
+      "sha256": "f09ef80d0a302e5bb6902d1521dc9cf23c2e8b7f447bd000e75d0d0376611ed3",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-8bd34e14602ba906",
@@ -22385,9 +23083,14 @@
     {
       "id": "SURFACE-d17c354d94ccad58",
       "path": "tdf-mobile/__tests__/apiClient.test.ts",
-      "sha256": "8a58a35c29115323719cef26dcbf861848dba138dd1306484082257f2213d734",
+      "sha256": "e675b6948ec62d4163f47e37b5f7fa4cdf93dd40a6a3890ab9b9aa1b5c894ecd",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-4539ccabdae7a1f5",
@@ -22439,16 +23142,26 @@
     {
       "id": "SURFACE-6dbf00e189d654d9",
       "path": "tdf-mobile/__tests__/directoryApi.test.ts",
-      "sha256": "6fb81589d4e6a96e853a4f82e0ca24c1f77d8f541738426f14a437a677bbe388",
+      "sha256": "477010a59bdff0576ab9cab6f2d79f5fddb9a8e4ed9b63f0ebc8a329adaf39a4",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-8c291869bc754896",
       "path": "tdf-mobile/__tests__/eventMoments.test.ts",
-      "sha256": "747852eb835eeab3af0fa3a0bfd26ea2f19501a74613d57d4fecb4c375e7bfd9",
+      "sha256": "8d2e690a4253ac3c39a84e54beaa92db2d3cdb6fefe60ef26e77c9e4c532a824",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-293e026d753996ba",
@@ -22542,16 +23255,26 @@
     {
       "id": "SURFACE-732c6140ea2e91b9",
       "path": "tdf-mobile/__tests__/onboardingApi.test.ts",
-      "sha256": "a4607cd2db753a79c6d9a2386844eff9f6c1db84bbb9fd0004422bdbebd352d3",
+      "sha256": "4770fd9508a3a13c6ab0fb701d900b32633bac7b377d3f4fed4498f0b0c08300",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-7f1e3ac93d0c65d1",
       "path": "tdf-mobile/__tests__/onboardingIntent.test.ts",
-      "sha256": "84bae3e40acde1db2eae3a94405903711d65b7d8622304c3e34d6d6ffe1486cb",
+      "sha256": "5598a1deba59da59d8c3c669ad8d77836040bd855776a4108a73639cc3842319",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-5ba6bb5006d5feaa",
@@ -22619,9 +23342,14 @@
     {
       "id": "SURFACE-1d06c25393cae84a",
       "path": "tdf-mobile/__tests__/savedEvents.test.ts",
-      "sha256": "d986e1c1be34c0bdc9e221f1aaa18a24f4004010f433a028ad102bfd8e77069f",
+      "sha256": "ac739d4a8ad14f77b40ee8f310276b9e0073eae3084bcc671d3be946fd9cdbc8",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-3f53444fc1175241",
@@ -22633,9 +23361,14 @@
     {
       "id": "SURFACE-550aba7f4c6afb01",
       "path": "tdf-mobile/__tests__/socialApiMapperSanitization.test.ts",
-      "sha256": "72c80633014a21a658e533774d840916a83669ab5273f3c0bbcac1d09882ce9b",
+      "sha256": "fc0cfd4f44e229e61e64320041776ef82ad457e14474206179cfd86351234455",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-cf96b8497525f5f6",
@@ -22668,9 +23401,14 @@
     {
       "id": "SURFACE-578b85ef5c094ecb",
       "path": "tdf-mobile/__tests__/usePartyOwnership.test.tsx",
-      "sha256": "7f46ae28fbb43a06aa4758d43a48f465e0d584c64e1ecd258a2e909c5e27ec5a",
+      "sha256": "ccdd151045745a81c7bd461d8aeddded98cd102a5cfa97e6cd561872cbf438d1",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-c20fbacb648be9fa",
@@ -22724,9 +23462,14 @@
     {
       "id": "SURFACE-da3457d3ae8e7eba",
       "path": "tdf-mobile/app/(tabs)/events.tsx",
-      "sha256": "36ad76a613e16502ab2fab691286e4051ac97067a8938e3d6fd82025200efd96",
+      "sha256": "518cc2e2bbde4ffb7d8da49fcccc384d222b2121cb8b7d4799d7023bc4bcd1a1",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-f4e817382f892226",
@@ -22771,9 +23514,14 @@
     {
       "id": "SURFACE-8780b23371215b16",
       "path": "tdf-mobile/app/(tabs)/social.tsx",
-      "sha256": "f2a0f3b902c402b0b49d7a802a00533667dc6bab82a751a0694e93eca9ff49a4",
+      "sha256": "7133744ece6db0db256daa2489c9f94bb6deadf69d76c65a09e0d6dde23a7796",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-a024eca492fbdf36",
@@ -22982,7 +23730,7 @@
     {
       "id": "SURFACE-ab43846a5d628103",
       "path": "tdf-mobile/app/eventDetail.tsx",
-      "sha256": "3d6457bb18f42d5fac7c00590e47f7b250a9b8f739cd6aa2c127be9610b6f36c",
+      "sha256": "81718007671292738d4ac815f1b2e39d1a250ed717d3f99714e28905736bd76b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23092,9 +23840,14 @@
     {
       "id": "SURFACE-16e17f802f72e06c",
       "path": "tdf-mobile/app/userProfile.tsx",
-      "sha256": "0fd0709ccf9692da3fe0f0a66d9619990f8c09748ba793e1eaded10823e562ec",
+      "sha256": "cf1d6d3f9896e2d6ced654cfc0f530bc5d7d7869c228ca95c3250297cde2bfe4",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-5172c3aa23df27d8",
@@ -23321,7 +24074,12 @@
       "path": "tdf-mobile/scripts/android-release.py",
       "sha256": "359097ccd6ccb3585d544fa40b0a84cd874fc2df0f514cce8d71fdeb5ec95d5c",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-BUILD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-49be021610567519",
@@ -23398,28 +24156,48 @@
       "path": "tdf-mobile/scripts/ios-signing.py",
       "sha256": "b82eeb2adf72523c7e82b99458ce85784131afb7b3ab7971eb9052060732b627",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-BUILD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-21cdc1519a948266",
       "path": "tdf-mobile/scripts/release-check.mjs",
       "sha256": "134c027743c05c08d93d7696a4b5af88448f375cee8641ea9298907a37a689c4",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-BUILD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-576d9c2a91a42c51",
       "path": "tdf-mobile/scripts/tests/test_android_release.py",
       "sha256": "9fe8727e8da7a4de515e663ce232bec40fae0bcc3bf9cc491bde36d1c8b3fab7",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-BUILD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-bfc5bd8fcf9e9e4d",
       "path": "tdf-mobile/scripts/tests/test_ios_signing.py",
       "sha256": "22dc11816ec576d9d834249d9c24b2b26c21b81a3c9471b15c94822f203d7a14",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-BUILD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-85dc8ac2c70e20e0",
@@ -23494,9 +24272,14 @@
     {
       "id": "SURFACE-c2392e7f7f8aefc5",
       "path": "tdf-mobile/src/api/client.ts",
-      "sha256": "e42b09eb09fa9eb17fe83670749aacf3528adb927ee30017628cc49cc9316f6f",
+      "sha256": "aabfd57e21b6301458c11f923c5ec5e5f8429b1bf8d0bbddd27a15cc8ddd50a3",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-e0edb1f5f845910d",
@@ -23520,9 +24303,14 @@
     {
       "id": "SURFACE-4084f20f60cc3c6d",
       "path": "tdf-mobile/src/api/directory.ts",
-      "sha256": "7d380f2a99ba1c56fbf681a94af09a740a7f410c27f54d3482c08e7aac22fefa",
+      "sha256": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-1fa13f838eba721d",
@@ -23534,9 +24322,14 @@
     {
       "id": "SURFACE-5cc50673dc611e52",
       "path": "tdf-mobile/src/api/events.ts",
-      "sha256": "bed0fa1fee13156a4128012568f378229fcfe562cf354bbd49f181472548fca6",
+      "sha256": "a6014149f81240e56023471ea987fc8ac8245fc06d3034fb0382750e818d2b1e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-289d16e2dcc9030c",
@@ -23555,7 +24348,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "80c00d11c1aa5fbdd3db707a55537f574f0ebd3e54d0de017f030123d6291622",
+      "sha256": "c75c0d3b6ed4ec50a816765521a0f7a92972940a9981f595537dc74f52ea39eb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23628,9 +24421,14 @@
     {
       "id": "SURFACE-b35e32b7f76e312b",
       "path": "tdf-mobile/src/api/onboarding.ts",
-      "sha256": "4c1e27682f8beb327ca97a8b30ed40d30a15c6c4df2e7df6ea957a8e3fc93367",
+      "sha256": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-37ad4ee4b656c78f",
@@ -23747,9 +24545,14 @@
     {
       "id": "SURFACE-4fb25fdb1fdf7ed8",
       "path": "tdf-mobile/src/components/EventCard.tsx",
-      "sha256": "b5e2f2981ca41d71210ae40fcf16b7183e3682fe557b7bbc103e29099eb4ec10",
+      "sha256": "4eaba1e6a6ac76b67bbc7f5a6a8d24e0e14e81ebb0eb29041da70265dacd21a2",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-8ce4ad416c6e61d1",
@@ -23761,9 +24564,14 @@
     {
       "id": "SURFACE-efc2098b5027a610",
       "path": "tdf-mobile/src/components/EventMomentCard.tsx",
-      "sha256": "ccf8b197426e276d8d3822984b22729cc513cec31b6cb3714e6e1335ee84ae52",
+      "sha256": "d157367b980c01a8425a396971519124105860e6394b5c27d90cc5c2fc7dd9c8",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-67484eb36a87ee67",
@@ -23901,9 +24709,14 @@
     {
       "id": "SURFACE-50a65b66e31dfada",
       "path": "tdf-mobile/src/experiments/NewUserOnboardingGate.tsx",
-      "sha256": "1205d3f66ca0cfdffdde070fdecbf374c5be8df70d82344cd20420c4d66cd72c",
+      "sha256": "80c962ddd011c5b8121d9da53af1ddd4b4c691533d24fd233fbc4e39723f6e19",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-fe02da061556f4fc",
@@ -24046,9 +24859,14 @@
     {
       "id": "SURFACE-551b9854e1304354",
       "path": "tdf-mobile/src/hooks/usePartyOwnership.ts",
-      "sha256": "3ec15e9118e2a917553a3f3576f60b2143c189ff88c0d7cdc50c2607861e2498",
+      "sha256": "d95a290a5cf31cb69c41b257144118cec54fc1d132ff24971d0283da05405cca",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-20f0809095655bce",
@@ -24123,16 +24941,26 @@
     {
       "id": "SURFACE-15e17b090a435ac7",
       "path": "tdf-mobile/src/lib/eventMoments.ts",
-      "sha256": "954a0f4994b2e104162722a3114e911c176caaa816a670dde32f9f987ada8d2d",
+      "sha256": "4c737b4a82c92dfd89a362caaba5b7d1bae16f06d93ecdb08c104737f24a598d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-d04d238fd7a01a74",
       "path": "tdf-mobile/src/lib/eventMomentsRepository.ts",
-      "sha256": "7722d080f51e06e336e42eb4371560baa74015740ef04bb0b1ad7b52db27172a",
+      "sha256": "3fc6bd9bff601d1b03a311b57a384b385a87a2e3413a5c3452fb3fdb06b17a7e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-575088555e574066",
@@ -24151,9 +24979,14 @@
     {
       "id": "SURFACE-e62dc791fa833b13",
       "path": "tdf-mobile/src/lib/eventSharing.test.ts",
-      "sha256": "bf267cfb7ecfa3b0780ac514c9c4730e5131525cd5bf13dfc4f1d7404fde9984",
+      "sha256": "75c1e1b893800063e06315fbb56457c0ee4bee113d8ea45227361be3adcced8b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-cc97bf1990866365",
@@ -24172,9 +25005,14 @@
     {
       "id": "SURFACE-475a7b86b3216594",
       "path": "tdf-mobile/src/lib/firstValueCompletion.ts",
-      "sha256": "9d35de9b6a9d20404d0bd1d65a687485828f66b6253b0e289aa2a94da22ac1dc",
+      "sha256": "d5c2580eddea4ea7907eac147bd5b84870aec6409f9c51e1bdf051c57171c7a7",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-d9565e5ecb4ec3e3",
@@ -24287,9 +25125,14 @@
     {
       "id": "SURFACE-f827393c335e64d0",
       "path": "tdf-mobile/src/lib/onboardingIntent.ts",
-      "sha256": "5f32fe69a9f424a48df104eddbb624615cb025527c7aa88ea3b0133359b75bb1",
+      "sha256": "cfe60e2d5ce8cc09314d2e8728c5603ceca0dceffbe920c91b9ff7234d1d4f4e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-5c7e7c6b3f3a72ae",
@@ -24355,9 +25198,14 @@
     {
       "id": "SURFACE-11982cf68b9f1c66",
       "path": "tdf-mobile/src/lib/savedEvents.ts",
-      "sha256": "be7b078b242c1347d1de6c86562c89ae770db9972c5b086f2dfb0a60154ed6e9",
+      "sha256": "d43e5d39203ce4a1670f3ced2a03e3ebb9ac81b61127cc497ecda8fea69c31a8",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-a797fa59038f86c5",
@@ -24395,11 +25243,28 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-66eee79ab156a1e2",
+      "path": "tdf-mobile/src/localization/eventExperienceCopy.ts",
+      "sha256": "5ddb85172b79e36a24366b30b573b51462adb0500a94747355d47943d5b238e4",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-8706580fc77ee8a5",
       "path": "tdf-mobile/src/localization/onboardingCopy.ts",
-      "sha256": "48b61343314e513995c93e6f2c95e4543e4a82fb3771d153cdd0b27714574753",
+      "sha256": "faf5c64e81e584a3710e17adebc26705fbfad350f5fecc69f99d7dd0628663ee",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-67d021717b413c4f",
@@ -24481,7 +25346,7 @@
     {
       "id": "SURFACE-6fe42cbeec86740d",
       "path": "tdf-mobile/src/providers/AppProviders.tsx",
-      "sha256": "5a53c52ab7582cea2457b146a52e913fcf8174a650d2791e21da028ea69efd03",
+      "sha256": "ffd5a5922918be901c68d31503279220aa978775fbd213b5ef186d9502902a0a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24517,9 +25382,14 @@
     {
       "id": "SURFACE-2ba88bec1c5a4d48",
       "path": "tdf-mobile/src/providers/FirstRunProvider.tsx",
-      "sha256": "adf56b391c084c9ad1ee380c524777faeaa5fb9de273bc3bbf6d2675d3cbe41b",
+      "sha256": "b2d91da63d9cb764a8359e5f56100d98d54f93a1443d000952630cb85f0ca56f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-6dbac57013a27dfa",
@@ -26000,6 +26870,10 @@
     "SURFACE-7b2283a7e0bcd3e1",
     "SURFACE-528ba14a45085166",
     "SURFACE-926be86200012f94",
+    "SURFACE-ed48d78fa40594c9",
+    "SURFACE-45c133c91e4ba42b",
+    "SURFACE-827c82a820edaee2",
+    "SURFACE-06bc10cd817549c3",
     "SURFACE-dd062802b0652474",
     "SURFACE-7c4cd603babd8c4c",
     "SURFACE-b4cc3e91d4f2bb58",
@@ -26274,34 +27148,26 @@
     "SURFACE-94dff14f64d2e213",
     "SURFACE-c1ded07314607a0a",
     "SURFACE-2a3469a3736ce761",
+    "SURFACE-797e095cf9630adf",
     "SURFACE-2156981b9c95285d",
     "SURFACE-fff0fc437764ddd9",
     "SURFACE-d3c3c6a421007e12",
     "SURFACE-a9181c3d1f2e9fa0",
     "SURFACE-5a64e0ed1f9e7c79",
-    "SURFACE-cbc4762024e82de2",
-    "SURFACE-9000b422122afb98",
     "SURFACE-d84c1fc5d701e2cc",
     "SURFACE-8b8075b14e77947f",
-    "SURFACE-4d083e586c68746a",
     "SURFACE-d7fd396a0e21292f",
-    "SURFACE-dc7f9bd65923411b",
     "SURFACE-dfdc76c7f5afe8f6",
     "SURFACE-57fb42409e4fe3c1",
     "SURFACE-c2d3a0548b7f007b",
-    "SURFACE-889f3ed698a5ec59",
     "SURFACE-efcecbaa0e3acd71",
     "SURFACE-b008aa9647a19740",
     "SURFACE-34f76aa7fd7d8a7d",
-    "SURFACE-a4f08b34347d1281",
-    "SURFACE-aa9a5dc6fca02108",
     "SURFACE-7924613b1e052502",
-    "SURFACE-3677524f8992889a",
     "SURFACE-adcc415d122d0352",
     "SURFACE-99b5cd25c1db6135",
     "SURFACE-b5094e4b58658656",
     "SURFACE-f52377912391d22a",
-    "SURFACE-5d346a1514ee4d1a",
     "SURFACE-7617f2ba54034017",
     "SURFACE-f6247393de2c5801",
     "SURFACE-297ec8707ed309a7",
@@ -26310,23 +27176,18 @@
     "SURFACE-fa6406a2607ba343",
     "SURFACE-64794cece32266e3",
     "SURFACE-67b7cdf4c5bfce1b",
-    "SURFACE-9dcb9db6d3e58c16",
     "SURFACE-55f3d615ea7ca850",
     "SURFACE-1ff38e07e27723ce",
     "SURFACE-4420ef07b349f29e",
     "SURFACE-24e99beac8cf6857",
     "SURFACE-8487f846bf4e8547",
-    "SURFACE-f2759dc51ae88b80",
     "SURFACE-8bd34e14602ba906",
     "SURFACE-335a8d72ecdce55f",
-    "SURFACE-d17c354d94ccad58",
     "SURFACE-4539ccabdae7a1f5",
     "SURFACE-896c51af6808024a",
     "SURFACE-1a9c6b490ed4d09a",
     "SURFACE-a0436207cb7f5fda",
     "SURFACE-2947edfcf470d479",
-    "SURFACE-6dbf00e189d654d9",
-    "SURFACE-8c291869bc754896",
     "SURFACE-293e026d753996ba",
     "SURFACE-38f4ba1a427a2577",
     "SURFACE-7aafc197c0caae2e",
@@ -26338,8 +27199,6 @@
     "SURFACE-0f816b9eb1e4f3e8",
     "SURFACE-01f7d4bf0f33ebf4",
     "SURFACE-bae7e7b342339ba7",
-    "SURFACE-732c6140ea2e91b9",
-    "SURFACE-7f1e3ac93d0c65d1",
     "SURFACE-5ba6bb5006d5feaa",
     "SURFACE-1c3400d296cfc582",
     "SURFACE-90e6814442a1fc38",
@@ -26349,14 +27208,11 @@
     "SURFACE-f9c17b64490f0807",
     "SURFACE-f1994218e0fef98d",
     "SURFACE-c2fdb9d722ce3100",
-    "SURFACE-1d06c25393cae84a",
     "SURFACE-3f53444fc1175241",
-    "SURFACE-550aba7f4c6afb01",
     "SURFACE-cf96b8497525f5f6",
     "SURFACE-4ce4ed0b5b303e85",
     "SURFACE-f93a5b36f29ce79c",
     "SURFACE-bbc4187afb507320",
-    "SURFACE-578b85ef5c094ecb",
     "SURFACE-c20fbacb648be9fa",
     "SURFACE-be1f54efcc2cd549",
     "SURFACE-58c233508e8c95bf",
@@ -26364,12 +27220,10 @@
     "SURFACE-bba36fc1cc274031",
     "SURFACE-a483d055ed20e769",
     "SURFACE-f52dfd6e2d77a57f",
-    "SURFACE-da3457d3ae8e7eba",
     "SURFACE-f4e817382f892226",
     "SURFACE-32b73d45dd36c278",
     "SURFACE-3f2b18d0947c05e7",
     "SURFACE-94216823284972e8",
-    "SURFACE-8780b23371215b16",
     "SURFACE-a024eca492fbdf36",
     "SURFACE-47829ca1954e2594",
     "SURFACE-a1e06606ef29fdc7",
@@ -26408,7 +27262,6 @@
     "SURFACE-cef1fa050e3f9d2c",
     "SURFACE-69205bb0d640d69a",
     "SURFACE-603be2889dcb2b32",
-    "SURFACE-16e17f802f72e06c",
     "SURFACE-5172c3aa23df27d8",
     "SURFACE-05536e6195d532e5",
     "SURFACE-01fb1ca7bfdb5058",
@@ -26437,7 +27290,6 @@
     "SURFACE-724d67db609973ab",
     "SURFACE-8254ab3be0263414",
     "SURFACE-635d2beee7db16c2",
-    "SURFACE-d9259f08043bd4f2",
     "SURFACE-49be021610567519",
     "SURFACE-a5513b81233f035b",
     "SURFACE-c571475cdefc021d",
@@ -26448,10 +27300,6 @@
     "SURFACE-2663e424dec4b0da",
     "SURFACE-0365adce5821e515",
     "SURFACE-43b48bb1049e5324",
-    "SURFACE-e35888ce8cee79f8",
-    "SURFACE-21cdc1519a948266",
-    "SURFACE-576d9c2a91a42c51",
-    "SURFACE-bfc5bd8fcf9e9e4d",
     "SURFACE-85dc8ac2c70e20e0",
     "SURFACE-3aa70a7b24875247",
     "SURFACE-3469b2a00ddfcab0",
@@ -26462,11 +27310,8 @@
     "SURFACE-e8c55bfb71a219d9",
     "SURFACE-befc4b8bb8e310b8",
     "SURFACE-5bea0425bb03c75c",
-    "SURFACE-c2392e7f7f8aefc5",
     "SURFACE-e0edb1f5f845910d",
-    "SURFACE-4084f20f60cc3c6d",
     "SURFACE-1fa13f838eba721d",
-    "SURFACE-5cc50673dc611e52",
     "SURFACE-289d16e2dcc9030c",
     "SURFACE-46d6bd0c597127bb",
     "SURFACE-fd7ca489d7b98e6a",
@@ -26476,7 +27321,6 @@
     "SURFACE-d9f8e4c9a50a093b",
     "SURFACE-4a5948130be5bbcf",
     "SURFACE-8db479af1de64195",
-    "SURFACE-b35e32b7f76e312b",
     "SURFACE-37ad4ee4b656c78f",
     "SURFACE-26cf2fa9d3b7742d",
     "SURFACE-3f1019289e00f2c8",
@@ -26493,9 +27337,7 @@
     "SURFACE-88103f1d6fb89685",
     "SURFACE-7568a6ba01e6268b",
     "SURFACE-8fa816d092471420",
-    "SURFACE-4fb25fdb1fdf7ed8",
     "SURFACE-8ce4ad416c6e61d1",
-    "SURFACE-efc2098b5027a610",
     "SURFACE-67484eb36a87ee67",
     "SURFACE-9513e7cf46c08071",
     "SURFACE-6094001768e3e5b7",
@@ -26515,7 +27357,6 @@
     "SURFACE-f6fe8714240b267d",
     "SURFACE-c092c30387f56b09",
     "SURFACE-488e321ca96d4906",
-    "SURFACE-50a65b66e31dfada",
     "SURFACE-fe02da061556f4fc",
     "SURFACE-482557ebc534dc5c",
     "SURFACE-12818522512d2c5b",
@@ -26534,7 +27375,6 @@
     "SURFACE-a5dc5289b135b90e",
     "SURFACE-ac457e7680793333",
     "SURFACE-ae8457615b62fb27",
-    "SURFACE-551b9854e1304354",
     "SURFACE-20f0809095655bce",
     "SURFACE-d15aa021ceb88208",
     "SURFACE-cdc665d26aa25ed8",
@@ -26545,14 +27385,10 @@
     "SURFACE-53aadf3e9a01c85f",
     "SURFACE-7ffb76239ab51a1e",
     "SURFACE-241caaddc6fa4502",
-    "SURFACE-15e17b090a435ac7",
-    "SURFACE-d04d238fd7a01a74",
     "SURFACE-575088555e574066",
     "SURFACE-feed51c44a669cc6",
-    "SURFACE-e62dc791fa833b13",
     "SURFACE-cc97bf1990866365",
     "SURFACE-d2757126dae7e418",
-    "SURFACE-475a7b86b3216594",
     "SURFACE-d9565e5ecb4ec3e3",
     "SURFACE-128aee2289576c8a",
     "SURFACE-dbeee33c014d1248",
@@ -26565,7 +27401,6 @@
     "SURFACE-f1ca11df9f79103d",
     "SURFACE-d230acf12b1223f0",
     "SURFACE-83ac5c06d4510a57",
-    "SURFACE-f827393c335e64d0",
     "SURFACE-5c7e7c6b3f3a72ae",
     "SURFACE-242cd08336c0eba0",
     "SURFACE-8659451d6bf1c46f",
@@ -26573,13 +27408,11 @@
     "SURFACE-84178b068cefadf8",
     "SURFACE-037a6e028ee8e9c1",
     "SURFACE-55bbee643020e610",
-    "SURFACE-11982cf68b9f1c66",
     "SURFACE-a797fa59038f86c5",
     "SURFACE-d58967285ab2cbe5",
     "SURFACE-6ebc1ecf580ae9e1",
     "SURFACE-c174acc4cd69d07d",
     "SURFACE-150ec23482847cbb",
-    "SURFACE-8706580fc77ee8a5",
     "SURFACE-67d021717b413c4f",
     "SURFACE-e4d65d8b68003724",
     "SURFACE-ab2f22b78d9a1a9a",
@@ -26591,7 +27424,6 @@
     "SURFACE-96659afab4076863",
     "SURFACE-c524a39784b123fa",
     "SURFACE-ee36105f35b640d9",
-    "SURFACE-2ba88bec1c5a4d48",
     "SURFACE-6dbac57013a27dfa",
     "SURFACE-71335eb9891aad95",
     "SURFACE-13071a719c15429e",
@@ -26648,7 +27480,8 @@
     "MEDIA-DRIVE-001",
     "MEDIA-STREAM-001",
     "OPS-WORKER-001",
-    "OPS-METRICS-001"
+    "OPS-METRICS-001",
+    "MOB-BUILD-001"
   ],
   "stateMachines": [
     {
@@ -49210,7 +50043,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 63,
+    "PARTIAL": 66,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
