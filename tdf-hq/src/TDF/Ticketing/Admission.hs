@@ -108,8 +108,7 @@ admitTicket actor eventKey lookupValue now = do
             \ AND exception.provider_reference=binding.provider_resource_id\
             \ AND exception.internal_reference=runtime.order_id::text\
             \ WHERE runtime.order_id=? AND binding.resource_type='capture'\
-            \ AND exception.exception_type IN ('external_refund_detected','external_reversal_detected')\
-            \ AND exception.status IN ('open','assigned'))"
+            \ AND exception.exception_type IN ('external_refund_detected','external_reversal_detected'))"
             [toPersistValue (M.eventTicketOrderRefId ticket)]
           let reviewRequired = reviews /= [Single False]
           if not paymentValid then pure (Left AdmissionUnpaid)

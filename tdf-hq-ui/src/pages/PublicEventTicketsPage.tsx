@@ -36,6 +36,7 @@ import TicketCredentialQR from '../components/TicketCredentialQR';
 import MobilePromo from '../mobile/MobilePromo';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { useMetaTags } from '../hooks/useMetaTags';
+import { env } from '../utils/env';
 
 const makeIdempotencyKey = (): string => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -108,8 +109,8 @@ export default function PublicEventTicketsPage() {
   const [paypalReady, setPaypalReady] = useState(false);
   const [paypalOpen, setPaypalOpen] = useState(false);
   const [paypalOrderId, setPaypalOrderId] = useState<string | null>(null);
-  const paypalButtonRef = useRef<HTMLDivElement | null>(null);
-  const paypalClientId = import.meta.env?.VITE_PAYPAL_CLIENT_ID?.trim() ?? '';
+  const [paypalButtonContainer, setPaypalButtonContainer] = useState<HTMLDivElement | null>(null);
+  const paypalClientId = env.read('VITE_PAYPAL_CLIENT_ID') ?? '';
 
   const storefront = useQuery({
     queryKey: ['public-event-ticket-storefront', eventId],
@@ -312,8 +313,8 @@ export default function PublicEventTicketsPage() {
 
   useEffect(() => {
     if (!paypalOpen || !paypalReady || !paypalOrderId || !checkout || !checkoutLookupToken
-        || !paypalButtonRef.current || typeof window === 'undefined' || !window.paypal) return;
-    paypalButtonRef.current.innerHTML = '';
+        || !paypalButtonContainer || typeof window === 'undefined' || !window.paypal) return;
+    paypalButtonContainer.innerHTML = '';
     const buttons = window.paypal.Buttons({
       createOrder: () => paypalOrderId,
       onApprove: async (data) => {
@@ -352,9 +353,9 @@ export default function PublicEventTicketsPage() {
         ? 'PayPal did not complete. No payment was confirmed.'
         : 'PayPal no completó la operación. No se confirmó ningún pago.'),
     });
-    void buttons.render(paypalButtonRef.current);
+    void buttons.render(paypalButtonContainer);
     return () => buttons.close?.();
-  }, [checkout, checkoutLookupToken, english, paypalOpen, paypalOrderId, paypalReady]);
+  }, [checkout, checkoutLookupToken, english, paypalButtonContainer, paypalOpen, paypalOrderId, paypalReady]);
 
   if (!validEventId || !validOrderId) {
     return <Container sx={{ py: 8 }}><Alert severity="error">Invalid event or order.</Alert></Container>;
@@ -393,8 +394,8 @@ export default function PublicEventTicketsPage() {
                   {storefront.data.venueName && <Chip icon={<PlaceIcon />} label={storefront.data.venueName} variant="outlined" />}
                 </Stack>
                 <Alert severity="info">{english
-                  ? 'Prices, discounts, fees, taxes, capacity, and the temporary hold are calculated and enforced by the server.'
-                  : 'Precios, descuentos, tarifas, impuestos, capacidad y retención temporal se calculan y validan en el servidor.'}</Alert>
+                  ? 'Review the full total before paying. Your tickets are held for the time shown.'
+                  : 'Revisa el total antes de pagar. Tus entradas se reservan durante el tiempo indicado.'}</Alert>
               </Stack>
             </CardContent>
           </Card>
@@ -532,9 +533,6 @@ export default function PublicEventTicketsPage() {
                       <MobilePromo surface="ticket_confirmation" />
                     </Stack>
                   )}
-                  <Typography variant="caption" color="text.secondary">{english
-                    ? `Payment status: ${checkout.paymentStatus}. Fulfillment status: ${checkout.fulfillmentStatus}. These states are independent.`
-                    : `Pago: ${checkout.paymentStatus}. Cumplimiento: ${checkout.fulfillmentStatus}. Son estados independientes.`}</Typography>
                 </Stack>
               </CardContent>
             </Card>
@@ -547,8 +545,8 @@ export default function PublicEventTicketsPage() {
         <DialogContent dividers>
           <Stack spacing={1.5}>
             <Alert severity="info">{english
-              ? 'Datafast hosts the card form. Returning to TDF does not mean payment; the server verifies the provider resource, amount, currency, merchant, and order.'
-              : 'Datafast aloja el formulario. Volver a TDF no significa pago; el servidor verifica recurso, importe, moneda, comercio y orden.'}</Alert>
+              ? 'Complete payment in the secure form. Your tickets will appear here once payment is confirmed.'
+              : 'Completa el pago en el formulario seguro. Tus entradas aparecerán aquí cuando se confirme el pago.'}</Alert>
             {datafastCheckout && datafastReturnUrl && <Box ref={datafastFormRef} key={datafastWidgetKey} sx={{ minHeight: 360 }}>
               <form action={datafastReturnUrl} className="paymentWidgets" data-brands="VISA MASTER DINERS AMEX DISCOVER" />
             </Box>}
@@ -565,9 +563,9 @@ export default function PublicEventTicketsPage() {
         <DialogContent dividers>
           <Stack spacing={1.5}>
             <Alert severity="info">{english
-              ? 'PayPal approval is not payment success. TDF captures and verifies the immutable order on the server.'
-              : 'Aprobar en PayPal no significa pago exitoso. TDF captura y verifica la orden inmutable en el servidor.'}</Alert>
-            <Box ref={paypalButtonRef} sx={{ minHeight: 48 }} />
+              ? 'Complete payment with PayPal. Your tickets will appear here once payment is confirmed.'
+              : 'Completa el pago con PayPal. Tus entradas aparecerán aquí cuando se confirme el pago.'}</Alert>
+            <Box ref={setPaypalButtonContainer} sx={{ minHeight: 48 }} />
           </Stack>
         </DialogContent>
         <DialogActions><Button color="inherit" onClick={() => setPaypalOpen(false)}>{english ? 'Close' : 'Cerrar'}</Button></DialogActions>
