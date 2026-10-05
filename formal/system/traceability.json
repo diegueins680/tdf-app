@@ -3060,7 +3060,7 @@
       "status": "specified and implemented",
       "confidence": "medium",
       "ambiguity": [
-        "Actual compiler export found 845 typed operations, two Raw mounts, 386 undocumented operations, 25 documented/unmounted operations, three competing declarations and 21 declared success-status differences at b7628e6a5; semantic reconciliation is incomplete.",
+        "Compiled5d9a917ed exports843 typed operations, two Raw mounts,385 undocumented operations,25 explicitly deferred documented operations and21 declared success-status differences. Competing typed route identities are now zero; codec, status and broad semantic reconciliation remain incomplete.",
         "Raw routing, handler security, middleware, DTO codecs and errors remain separate conformance boundaries."
       ],
       "conformance": {
@@ -3610,7 +3610,7 @@
     "formal/social/SessionBoundary.tla": "f52854a744652bc18f0d9f0fb4c3e6453447d26aff88267dff29ac03924e8ee6",
     "formal/system/api-availability.json": "67ebaf0974ad3c2cdf3949f44e834e6ce13ff4444cce7304e73aaabd1f48b25d",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
-    "formal/system/compiled-api-surface.json": "7f3872fc6ff706abaca76c933118b7abab4193dd527f5eeb4eba132933d99333",
+    "formal/system/compiled-api-surface.json": "e42c7becdc4bfeb4966dc7eeed09952b56a9420f1f1937ec4975cedb0181f012",
     "ops/hetzner/compose.production.yaml": "1191a5773dc83807be2364340f8cb9f0feb33af4ed45d6e0bfbefe9f3bc42db8",
     "ops/hetzner/inspect-runtime.py": "9e83d408bcc97c4978854c3b3d137eb4dae384c919e9b57cf96a0abbd825a524",
     "ops/hetzner/rehearse-postgres-restore.py": "9d35791e9c215de5252ca1bd9637e8d1ae69387c72b420df34ee60e7ff8d49cf",

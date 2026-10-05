@@ -102,3 +102,16 @@ actual policy, resolved OpenAPI and canonical compiled snapshot, so policy-only
 changes cannot bypass admission by skipping a backend build. Python also rejects
 missing/duplicate operation identities and invalid requirement/provenance links.
 The backend inspector separately verifies the snapshot against the new executable.
+
+## Rebuilt declaration evidence
+
+The executable linked from clean `5d9a917ed7b1b53c19cb4acfe3d0d9ae357c0be1`
+emits843 typed operations, two Raw mounts and zero competing typed routes. Its
+SHA256 is `c594dac6d9f09746381fab25d617cd15d82d102d4b97f310f1c17b876bf1520f`.
+Comparing the old and new snapshots while ignoring shifted ordinals finds only
+the radio/subject repairs above; both Raw mount definitions are unchanged.
+The25 unmounted declarations match the exact local-only deferral list. There are
+still385 undocumented typed operations and21 declared success-status differences.
+Snapshot admission is not a claim that those remaining discrepancies are resolved.
+The full backend suite was still running when this executable was inspected;
+its later test receipt must be checked separately.

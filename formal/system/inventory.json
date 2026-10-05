@@ -20409,7 +20409,7 @@
     },
     {
       "path": "formal/system/compiled-api-boundary.md",
-      "sha256": "8ed3bc7a77518895dc2312ea45a0510dc940af25a3524d0064b875d40d29d082",
+      "sha256": "c289ade7aaca48183d3ef05f7cff33bbbd6bdac154a061fd901b38f9e571950d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20507,7 +20507,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "698eead031d7e46b31750b6a7fcbea5e32e22b15d879c5528f346ee8041aa4a5",
+      "sha256": "392fb04c7b98031bc34e1459c4f9a8e44d697bf1beeb64ad3a46edd7244dc7ae",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

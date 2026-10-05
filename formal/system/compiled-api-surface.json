@@ -640,7 +640,7 @@
       },
       {
         "ordinal": 11,
-        "path": "/trials/v1/subjects",
+        "path": "/trials/v1/subjects/catalog",
         "parameters": [
           {
             "in": "query",
@@ -48655,45 +48655,6 @@
       },
       {
         "ordinal": 817,
-        "path": "/radio/presence/{partyId}",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "partyId",
-            "modifiers": [],
-            "type": {
-              "args": [],
-              "module": "GHC.Internal.Int",
-              "name": "Int64"
-            }
-          }
-        ],
-        "bodies": [],
-        "authCombinators": [],
-        "internalInputs": [],
-        "method": "GET",
-        "successStatus": 200,
-        "contentTypes": [
-          {
-            "args": [],
-            "module": "Servant.API.ContentTypes",
-            "name": "JSON"
-          }
-        ],
-        "responseType": {
-          "args": [
-            {
-              "args": [],
-              "module": "TDF.DTO",
-              "name": "RadioPresenceDTO"
-            }
-          ],
-          "module": "GHC.Internal.Maybe",
-          "name": "Maybe"
-        }
-      },
-      {
-        "ordinal": 818,
         "path": "/rooms/public",
         "parameters": [],
         "bodies": [],
@@ -48721,7 +48682,7 @@
         }
       },
       {
-        "ordinal": 819,
+        "ordinal": 818,
         "path": "/services/catalog/public",
         "parameters": [
           {
@@ -48846,7 +48807,7 @@
         }
       },
       {
-        "ordinal": 820,
+        "ordinal": 819,
         "path": "/services/storefront",
         "parameters": [],
         "bodies": [],
@@ -48874,7 +48835,7 @@
         }
       },
       {
-        "ordinal": 821,
+        "ordinal": 820,
         "path": "/services/storefront/{packageId}",
         "parameters": [
           {
@@ -48907,7 +48868,7 @@
         }
       },
       {
-        "ordinal": 822,
+        "ordinal": 821,
         "path": "/services/storefront/order",
         "parameters": [
           {
@@ -48978,7 +48939,7 @@
         }
       },
       {
-        "ordinal": 823,
+        "ordinal": 822,
         "path": "/services/storefront/order/{orderId}",
         "parameters": [
           {
@@ -49032,7 +48993,7 @@
         }
       },
       {
-        "ordinal": 824,
+        "ordinal": 823,
         "path": "/services/storefront/order/{orderId}/stripe/payment-intent",
         "parameters": [
           {
@@ -49086,7 +49047,7 @@
         }
       },
       {
-        "ordinal": 825,
+        "ordinal": 824,
         "path": "/services/storefront/order/{orderId}/datafast/checkout",
         "parameters": [
           {
@@ -49140,7 +49101,7 @@
         }
       },
       {
-        "ordinal": 826,
+        "ordinal": 825,
         "path": "/services/storefront/datafast/status",
         "parameters": [
           {
@@ -49226,7 +49187,7 @@
         }
       },
       {
-        "ordinal": 827,
+        "ordinal": 826,
         "path": "/services/storefront/order/{orderId}/paypal/create",
         "parameters": [
           {
@@ -49280,7 +49241,7 @@
         }
       },
       {
-        "ordinal": 828,
+        "ordinal": 827,
         "path": "/services/storefront/paypal/capture",
         "parameters": [
           {
@@ -49351,7 +49312,7 @@
         }
       },
       {
-        "ordinal": 829,
+        "ordinal": 828,
         "path": "/services/storefront/paypal/webhook",
         "parameters": [
           {
@@ -49506,7 +49467,7 @@
         }
       },
       {
-        "ordinal": 830,
+        "ordinal": 829,
         "path": "/services/storefront/order/{orderId}/manual-payment",
         "parameters": [
           {
@@ -49587,7 +49548,7 @@
         }
       },
       {
-        "ordinal": 831,
+        "ordinal": 830,
         "path": "/services/storefront/order/{orderId}/revision",
         "parameters": [
           {
@@ -49668,7 +49629,7 @@
         }
       },
       {
-        "ordinal": 832,
+        "ordinal": 831,
         "path": "/engineers",
         "parameters": [],
         "bodies": [],
@@ -49696,7 +49657,7 @@
         }
       },
       {
-        "ordinal": 833,
+        "ordinal": 832,
         "path": "/bookings/public/availability",
         "parameters": [
           {
@@ -49767,7 +49728,7 @@
         }
       },
       {
-        "ordinal": 834,
+        "ordinal": 833,
         "path": "/bookings/public",
         "parameters": [
           {
@@ -49838,7 +49799,7 @@
         }
       },
       {
-        "ordinal": 835,
+        "ordinal": 834,
         "path": "/bookings/public/checkout",
         "parameters": [
           {
@@ -49909,7 +49870,7 @@
         }
       },
       {
-        "ordinal": 836,
+        "ordinal": 835,
         "path": "/bookings/public/orders/{bookingId}",
         "parameters": [
           {
@@ -49963,7 +49924,7 @@
         }
       },
       {
-        "ordinal": 837,
+        "ordinal": 836,
         "path": "/bookings/public/orders/{bookingId}/datafast/checkout",
         "parameters": [
           {
@@ -50017,7 +49978,7 @@
         }
       },
       {
-        "ordinal": 838,
+        "ordinal": 837,
         "path": "/bookings/public/orders/{bookingId}/datafast/status",
         "parameters": [
           {
@@ -50087,7 +50048,7 @@
         }
       },
       {
-        "ordinal": 839,
+        "ordinal": 838,
         "path": "/bookings/public/orders/{bookingId}/paypal/create",
         "parameters": [
           {
@@ -50141,7 +50102,7 @@
         }
       },
       {
-        "ordinal": 840,
+        "ordinal": 839,
         "path": "/bookings/public/orders/{bookingId}/paypal/capture",
         "parameters": [
           {
@@ -50222,7 +50183,7 @@
         }
       },
       {
-        "ordinal": 841,
+        "ordinal": 840,
         "path": "/bookings/public/orders/{bookingId}/manual-payment",
         "parameters": [
           {
@@ -50303,7 +50264,7 @@
         }
       },
       {
-        "ordinal": 842,
+        "ordinal": 841,
         "path": "/bookings/public/orders/{bookingId}/manual-payment/evidence",
         "parameters": [
           {
@@ -50384,7 +50345,7 @@
         }
       },
       {
-        "ordinal": 845,
+        "ordinal": 844,
         "path": "/social-events/stripe/webhook",
         "parameters": [
           {
@@ -50457,7 +50418,7 @@
     ],
     "rawMounts": [
       {
-        "ordinal": 843,
+        "ordinal": 842,
         "path": "/inventory",
         "parameters": [],
         "bodies": [],
@@ -50465,7 +50426,7 @@
         "internalInputs": []
       },
       {
-        "ordinal": 844,
+        "ordinal": 843,
         "path": "/assets/serve",
         "parameters": [],
         "bodies": [],

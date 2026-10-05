@@ -3059,7 +3059,7 @@
       "status": "specified and implemented",
       "confidence": "medium",
       "ambiguity": [
-        "Actual compiler export found 845 typed operations, two Raw mounts, 386 undocumented operations, 25 documented/unmounted operations, three competing declarations and 21 declared success-status differences at b7628e6a5; semantic reconciliation is incomplete.",
+        "Compiled5d9a917ed exports843 typed operations, two Raw mounts,385 undocumented operations,25 explicitly deferred documented operations and21 declared success-status differences. Competing typed route identities are now zero; codec, status and broad semantic reconciliation remain incomplete.",
         "Raw routing, handler security, middleware, DTO codecs and errors remain separate conformance boundaries."
       ],
       "conformance": {
