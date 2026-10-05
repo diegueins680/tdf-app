@@ -79,6 +79,7 @@ const SENSITIVE_PROPERTY_NAMES = new Set([
   'paypalorderid',
   'providerorderid',
   'paymentintentid',
+  'quoteid',
   'resourcepath',
   'buyer',
   'holder',
@@ -93,7 +94,7 @@ const isSensitivePropertyName = (key: string): boolean =>
 // Private order/credential paths also reach SDK-generated URL properties. Keep
 // public event IDs for funnel analysis, but never export private resource IDs.
 const privatePath = (pathname: string): string => pathname.replace(
-  /(\/(?:orden|orders|ticket-orders|ticket-transfers|tickets|checkouts)\/)[^/]+/gi,
+  /(\/(?:orden|orders|ticket-orders|ticket-transfers|tickets|checkouts|cotizaciones)\/)[^/]+/gi,
   '$1[REDACTED]',
 );
 
@@ -108,7 +109,7 @@ export function redactSensitiveQueryValues(value: string, depth = 0): string {
       ? '/[REDACTED]'
       : privatePath(decodedPath);
     const privateResource = pathname !== decodedPath
-      || /\/(?:pagos\/retorno|pago-datafast)\/?$/i.test(decodedPath);
+      || /\/(?:pagos\/retorno|pago-datafast|live-sessions\/registro)\/?$/i.test(decodedPath);
     let changed = privateResource || Boolean(parsed.hash) || Boolean(parsed.username || parsed.password);
     if (pathname !== decodedPath) parsed.pathname = pathname;
     parsed.hash = '';

@@ -202,8 +202,9 @@ describe('analytics/posthog (web)', () => {
     const sentinel = 'PRIVATE-PROVIDER-RESOURCE';
     for (const path of ['/marketplace/pago-datafast', '/mezcla-mastering/pago-datafast',
       '/pagos/retorno/', '/PAGOS/RETORNO', '/marketplace/%70ago-datafast',
-      '/eventos/141/%6Frden/92']) {
-      expect(redactSensitiveQueryValues(`https://tdf.test${path}?id=${sentinel}&reference=${sentinel}`))
+      '/eventos/141/%6Frden/92', '/domo-del-pululahua/cotizaciones/92',
+      '/curso/produccion/orden/92', '/live-sessions/registro']) {
+      expect(redactSensitiveQueryValues(`https://tdf.test${path}?id=${sentinel}&reference=${sentinel}&t=${sentinel}`))
         .not.toContain(sentinel);
     }
   });
