@@ -1,3 +1,5 @@
+BEGIN;
+
 -- Preserve issued evidence. Incompatible legacy rows stop this migration;
 -- never rewrite currency, amounts or duplicate receipts to make it pass.
 -- Block legacy writers before sampling issued numbers; production also drains
@@ -45,3 +47,5 @@ DO $$ BEGIN
     );
   END IF;
 END $$;
+
+COMMIT;
