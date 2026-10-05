@@ -174,17 +174,30 @@ withFixture redirectList legacyReplay action = withSystemTempDirectory "tdf-driv
   connections <- newIORef (0 :: Int)
   hops <- newIORef []
   writes <- newIORef []
-  nextResponse <- newIORef BS.empty
+  admittedRequest <- newIORef Nothing
   let modifyRequest request = do
-        -- Record before admission: a followed redirect rejected by the host
-        -- guard must still fail the redirect-control assertion.
-        modifyIORef' attempts (<> [(HC.host request, HC.port request, HC.secure request, HC.method request, HC.path request)])
         let hop = (HC.method request, HC.path request)
         unless (HC.host request == "www.googleapis.com" && HC.port request == 443
-          && HC.secure request && hop `elem` [listHop, createHop, shareHop, metaHop]) $
+          && HC.secure request && hop `elem` [listHop, createHop, shareHop, metaHop]) $ do
+            -- A rejected redirect is still an attempted destination, even when
+            -- it never reaches the synthetic connection constructor.
+            modifyIORef' attempts (<> [destination request])
             throwIO (userError "Unexpected synthetic provider destination or operation")
         unless (lookup "Authorization" (HC.requestHeaders request) == Just ("Bearer " <> TE.encodeUtf8 fixtureToken)) $
           throwIO (userError "Only the explicit synthetic credential is admitted")
+        -- http-client may invoke its request transformation hook more than once
+        -- per transport operation. Validate every invocation, but count effects
+        -- only when a connection is actually admitted (responses force close).
+        writeIORef admittedRequest (Just request)
+        pure request { HC.redirectCount = 0 }
+      destination request =
+        (HC.host request, HC.port request, HC.secure request, HC.method request, HC.path request)
+      connect _ _ _ = do
+        selected <- atomicModifyIORef' admittedRequest (\request -> (Nothing, request))
+        request <- maybe (fail "Connection without admitted synthetic request") pure selected
+        let hop = (HC.method request, HC.path request)
+        modifyIORef' attempts (<> [destination request])
+        modifyIORef' connections (+1)
         seen <- readIORef hops
         unless (length seen < 16) $ throwIO (userError "Unexpected provider request loop")
         modifyIORef' hops (<> [hop])
@@ -204,14 +217,10 @@ withFixture redirectList legacyReplay action = withSystemTempDirectory "tdf-driv
           writeIORef created True
           pure "{\"id\":\"syntheticDriveFileA\"}"
         else pure "{}"
-        writeIORef nextResponse $ if redirectList && hop == listHop
-          then "HTTP/1.1 302 Found\r\nLocation: https://unexpected.invalid/not-allowed\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
-          else "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: "
-            <> BS.pack (show (BS.length body)) <> "\r\nConnection: close\r\n\r\n" <> body
-        pure request { HC.redirectCount = 0 }
-      connect _ _ _ = do
-        modifyIORef' connections (+1)
-        response <- readIORef nextResponse
+        let response = if redirectList && hop == listHop
+              then "HTTP/1.1 302 Found\r\nLocation: https://unexpected.invalid/not-allowed\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+              else "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: "
+                <> BS.pack (show (BS.length body)) <> "\r\nConnection: close\r\n\r\n" <> body
         remaining <- newIORef response
         HC.makeConnection
           (atomicModifyIORef' remaining (\bytes -> (BS.empty, bytes)))

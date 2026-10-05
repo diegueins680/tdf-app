@@ -4370,7 +4370,7 @@
     "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "e68face714495ad762b3ccb8eec7b38ce6047274c44fd6977dc44abfd56f9439",
     "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs": "dd1168717766515274065c45da50d0f6da23e824ccc7a2e49055e2977fb95ddd",
     "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs": "cdf133bc96409a0c3a56abb7a2023b0d3dc9dd0237bdb50d9a4f46b97f72ab55",
-    "tdf-hq/test/TDF/DriveReplaySpec.hs": "20cece0c5b4861577db3c445a86315dbeaf245c577ade83b56c1275f58278a11",
+    "tdf-hq/test/TDF/DriveReplaySpec.hs": "b8515d4a6b596e50344416eb819921234bd99ef0d2ec5518a053e84d6788b916",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "39c92770f1830489ecb1c909dfbefa7c1a11857f3f002ce89da5283c06c69a0b",
@@ -20032,7 +20032,7 @@
     {
       "id": "SURFACE-93ad4526d09f9815",
       "path": "tdf-hq/test/TDF/DriveReplaySpec.hs",
-      "sha256": "20cece0c5b4861577db3c445a86315dbeaf245c577ade83b56c1275f58278a11",
+      "sha256": "b8515d4a6b596e50344416eb819921234bd99ef0d2ec5518a053e84d6788b916",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
