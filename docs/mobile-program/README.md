@@ -91,3 +91,9 @@ La invitación contextual, el consentimiento independiente, las opciones de desc
 - La ejecución local completa tuvo además dos suites con timeouts bajo carga. Su repetición aislada pasó (9 tests); no se cambiaron aserciones ni timeouts.
 - Preview Cloudflare del primer commit: https://24ea74f9.tdf-app.pages.dev/app; manifiesto de distribución descargado y comprobado. Es preview, no producción.
 - La auditoría adicional `audit:features` detecta una omisión previa, `/configuracion/fuentes-videos`, ajena a la landing. No se oculta ese diagnóstico ni se afirma que esta auditoría adicional esté verde.
+
+### Actualización de main durante la revisión
+
+El repositorio principal incorporó pagos PR #414 en `fdac8e76523befee1603f49f6c7cf7d00762931b` mientras se revisaba este trabajo. Se integró esa base conservando la carga diferida de rutas y la invitación posterior a signup. Mobile [PR #130](https://github.com/diegueins680/TDF-mobile/pull/130) regenera los dos archivos compartidos contra esta API nueva, incluyendo ahora las declaraciones de pagos y las 159 entradas del catálogo. No se modifica código de checkout en esa sincronización. Typecheck y 27 pruebas de registro/checkout pasan; CI mobile también pasa.
+
+La web corregida sobre esta base pasa 37 pruebas focalizadas y el build: 318.464 bytes gzip iniciales. La matriz previa completa pasó 20/20; se repite sobre esta base con una aserción adicional de selección de archivo mediante Enter. Los formularios de la beta antigua se orientan a `/app`, sin prometer que el binario TestFlight 19 incluya el nuevo formulario nativo.

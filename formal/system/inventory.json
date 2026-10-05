@@ -54,6 +54,7 @@
       "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
       "scripts/__tests__/fixtures/production-schema-20260814.sql",
       "scripts/__tests__/fixtures/production-ticketing-base.sql",
+      "scripts/__tests__/fixtures/provider-retry-ledger-base.sql",
       "scripts/__tests__/formal-methods-audit.test.mjs",
       "scripts/__tests__/identity-http-runtime.mjs",
       "scripts/__tests__/identity-reconciliation.test.mjs",
@@ -65,6 +66,8 @@
       "scripts/__tests__/music-directory-visual-artifacts.test.mjs",
       "scripts/__tests__/navigation-http-runtime.mjs",
       "scripts/__tests__/onboarding-real-browser.mjs",
+      "scripts/__tests__/payment-query-report-contract.test.mjs",
+      "scripts/__tests__/payment-staging-inspection.test.mjs",
       "scripts/__tests__/persona-test-program.test.mjs",
       "scripts/__tests__/production-entrypoint.test.mjs",
       "scripts/__tests__/production-release.test.mjs",
@@ -123,6 +126,7 @@
       "scripts/get-admin-token.sh",
       "scripts/get-instagram-token.mjs",
       "scripts/identity-reconciliation.mjs",
+      "scripts/inspect-payment-staging.mjs",
       "scripts/instagram-lifecycle-artifact.mjs",
       "scripts/instagram-openclaw-cdp.mjs",
       "scripts/install-continuous-improvement-loop-launchd.sh",
@@ -299,8 +303,11 @@
       "scripts/test-notification-navigation-migration.sh",
       "scripts/test-party-selector-rate-limit-scope-migration.sh",
       "scripts/test-payment-arithmetic-verifier.py",
+      "scripts/test-payment-audit-runtime.sh",
       "scripts/test-provider-event-operations-migration.sh",
+      "scripts/test-provider-execution-runtime-migration.sh",
       "scripts/test-provider-identity.sh",
+      "scripts/test-provider-retry-runtime.sh",
       "scripts/test-public-booking-http-concurrency.sh",
       "scripts/test-public-booking-tentative-idempotency-migration.sh",
       "scripts/test-public-ticket-checkout-runtime-migration.sh",
@@ -418,6 +425,7 @@
       "tdf-hq-ui/src/__tests__/publicBookingRooms.test.ts",
       "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
       "tdf-hq-ui/src/analytics/growthAttribution.ts",
+      "tdf-hq-ui/src/analytics/onboardingCompletionAnalytics.ts",
       "tdf-hq-ui/src/analytics/onboardingProgress.test.ts",
       "tdf-hq-ui/src/analytics/onboardingProgress.ts",
       "tdf-hq-ui/src/analytics/partySelectorTelemetry.test.ts",
@@ -447,6 +455,7 @@
       "tdf-hq-ui/src/api/client.ts",
       "tdf-hq-ui/src/api/cms.test.ts",
       "tdf-hq-ui/src/api/cms.ts",
+      "tdf-hq-ui/src/api/commerceOperations.test.ts",
       "tdf-hq-ui/src/api/commerceOperations.ts",
       "tdf-hq-ui/src/api/contracts.ts",
       "tdf-hq-ui/src/api/courses.ts",
@@ -499,11 +508,15 @@
       "tdf-hq-ui/src/api/parties.ts",
       "tdf-hq-ui/src/api/partySelector.test.ts",
       "tdf-hq-ui/src/api/partySelector.ts",
+      "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
+      "tdf-hq-ui/src/api/paymentCapabilities.ts",
       "tdf-hq-ui/src/api/payments.ts",
       "tdf-hq-ui/src/api/pipelines.test.ts",
       "tdf-hq-ui/src/api/pipelines.ts",
       "tdf-hq-ui/src/api/preferences.test.ts",
       "tdf-hq-ui/src/api/preferences.ts",
+      "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
+      "tdf-hq-ui/src/api/providerPaymentSessions.ts",
       "tdf-hq-ui/src/api/queryValidation.test.ts",
       "tdf-hq-ui/src/api/radio.test.ts",
       "tdf-hq-ui/src/api/radio.ts",
@@ -626,6 +639,14 @@
       "tdf-hq-ui/src/components/notificationTarget.ts",
       "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx",
       "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
+      "tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.test.tsx",
+      "tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.tsx",
+      "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
+      "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
+      "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
+      "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+      "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx",
+      "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx",
       "tdf-hq-ui/src/components/reputation/CategoryPriorityPrototype.test.ts",
       "tdf-hq-ui/src/components/reputation/CategoryPriorityPrototype.tsx",
       "tdf-hq-ui/src/components/reputation/ContextualRankingPrototype.test.ts",
@@ -883,6 +904,8 @@
       "tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts",
       "tdf-hq-ui/src/pages/PaymentsPage.partySelector.test.ts",
       "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+      "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
+      "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
       "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx",
       "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
       "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
@@ -962,6 +985,7 @@
       "tdf-hq-ui/src/pages/teachersPageLogic.ts",
       "tdf-hq-ui/src/react-router.d.ts",
       "tdf-hq-ui/src/routes/AppErrorBoundary.tsx",
+      "tdf-hq-ui/src/routes/AppRoutes.tsx",
       "tdf-hq-ui/src/routes/AppShell.test.tsx",
       "tdf-hq-ui/src/routes/AppShell.tsx",
       "tdf-hq-ui/src/routes/RouteLoadingFallback.tsx",
@@ -1041,6 +1065,8 @@
       "tdf-hq-ui/src/utils/optionalBrowserStorage.ts",
       "tdf-hq-ui/src/utils/passwordPolicy.test.ts",
       "tdf-hq-ui/src/utils/passwordPolicy.ts",
+      "tdf-hq-ui/src/utils/providerPaymentResume.test.ts",
+      "tdf-hq-ui/src/utils/providerPaymentResume.ts",
       "tdf-hq-ui/src/utils/publicBookingRooms.ts",
       "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts",
       "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
@@ -1385,6 +1411,14 @@
       "tdf-hq/sql/2026-09-10_party_selector_rate_limit_scopes_rollback.sql",
       "tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql",
       "tdf-hq/sql/2026-09-10_payment_attempt_intent_binding_rollback.sql",
+      "tdf-hq/sql/2026-09-11_manual_bank_provider_activation.sql",
+      "tdf-hq/sql/2026-09-11_manual_bank_provider_activation_rollback.sql",
+      "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql",
+      "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync_rollback.sql",
+      "tdf-hq/sql/2026-09-11_provider_capability_catalog.sql",
+      "tdf-hq/sql/2026-09-11_provider_capability_catalog_rollback.sql",
+      "tdf-hq/sql/2026-09-13_provider_execution_runtime.sql",
+      "tdf-hq/sql/2026-09-13_provider_execution_runtime_rollback.sql",
       "tdf-hq/sql/2026-09-14_event_operations_api.sql",
       "tdf-hq/sql/2026-09-14_event_operations_api_rollback.sql",
       "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
@@ -1404,6 +1438,8 @@
       "tdf-hq/sql/2026-09-15_event_task_revision_rollback.sql",
       "tdf-hq/sql/2026-09-15_event_task_revisioned_read.sql",
       "tdf-hq/sql/2026-09-15_event_task_revisioned_read_rollback.sql",
+      "tdf-hq/sql/2026-09-15_provider_query_recovery.sql",
+      "tdf-hq/sql/2026-09-15_provider_query_recovery_rollback.sql",
       "tdf-hq/sql/2026-09-15_social_v2_chat_api.sql",
       "tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.sql",
       "tdf-hq/sql/2026-09-15_social_v2_profile_reads.sql",
@@ -1412,6 +1448,8 @@
       "tdf-hq/sql/2026-09-16_artist_self_service_rollback.sql",
       "tdf-hq/sql/2026-09-16_event_task_completion.sql",
       "tdf-hq/sql/2026-09-16_event_task_completion_rollback.sql",
+      "tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql",
+      "tdf-hq/sql/2026-09-16_payment_intent_refund_sync_rollback.sql",
       "tdf-hq/sql/2026-09-16_social_v2_fan_effects.sql",
       "tdf-hq/sql/2026-09-16_social_v2_legacy_writes.sql",
       "tdf-hq/sql/2026-09-17_directory_event_privacy_composition.sql",
@@ -1506,6 +1544,7 @@
       "tdf-hq/src/TDF/API/Payments.hs",
       "tdf-hq/src/TDF/API/Pipelines.hs",
       "tdf-hq/src/TDF/API/Proposals.hs",
+      "tdf-hq/src/TDF/API/ProviderExecution.hs",
       "tdf-hq/src/TDF/API/Radio.hs",
       "tdf-hq/src/TDF/API/RecordsIngestion.hs",
       "tdf-hq/src/TDF/API/Reviews.hs",
@@ -1546,14 +1585,20 @@
       "tdf-hq/src/TDF/Commerce/Merch.hs",
       "tdf-hq/src/TDF/Commerce/MerchReservationWorker.hs",
       "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
+      "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
       "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs",
       "tdf-hq/src/TDF/Commerce/ProviderAdapter/Http.hs",
+      "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs",
       "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs",
       "tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs",
       "tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs",
       "tdf-hq/src/TDF/Commerce/ProviderCapabilityStore.hs",
       "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
       "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
+      "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
+      "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
+      "tdf-hq/src/TDF/Commerce/ProviderRuntimeConfig.hs",
+      "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
       "tdf-hq/src/TDF/Commerce/RefundStore.hs",
       "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
       "tdf-hq/src/TDF/Commerce/StateMachine.hs",
@@ -1636,7 +1681,9 @@
       "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
       "tdf-hq/src/TDF/Server/Merch.hs",
       "tdf-hq/src/TDF/Server/MerchReputation.hs",
+      "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
       "tdf-hq/src/TDF/Server/PaymentCapabilities.hs",
+      "tdf-hq/src/TDF/Server/ProviderExecution.hs",
       "tdf-hq/src/TDF/Server/RecordsIngestion.hs",
       "tdf-hq/src/TDF/Server/Reviews.hs",
       "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
@@ -1719,6 +1766,9 @@
       "tdf-hq/test/TDF/Catalog/RecordsSpec.hs",
       "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
       "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs",
+      "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+      "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs",
+      "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs",
       "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
       "tdf-hq/test/TDF/CourseIdentitySpec.hs",
       "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs",
@@ -1738,6 +1788,7 @@
       "tdf-hq/test/TDF/Server/EventRelationsSpec.hs",
       "tdf-hq/test/TDF/Server/EventResearchSpec.hs",
       "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
+      "tdf-hq/test/TDF/Server/PaymentAuditSpec.hs",
       "tdf-hq/test/TDF/ServerAdminSpec.hs",
       "tdf-hq/test/TDF/ServerAuthSpec.hs",
       "tdf-hq/test/TDF/ServerExtraSpec.hs",
@@ -1809,6 +1860,7 @@
       "tdf-hq/test/integration/interactions/schema-properties.sql",
       "tdf-hq/test/integration/label_project_notes_backfill_postgres.sql",
       "tdf-hq/test/integration/merch_checkout_expiry_assertions.sql",
+      "tdf-hq/test/integration/payment_audit_fixture.sql",
       "tdf-hq/test/integration/pipeline_authorization_http.sh",
       "tdf-hq/test/integration/pipeline_workflow_cutover_negative.sh",
       "tdf-hq/test/integration/pipeline_workflow_cutover_postgres.sql",
@@ -2279,6 +2331,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/adr/0115-provider-neutral-payment-routing.md",
+      "sha256": "eea5914cd1be37a407ed41d491de8a9731cf98c5abc0a3915c222034b2ceb317",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/adr/0116-bounded-formal-verification.md",
       "sha256": "50f1437db3375b292b40563131852153907d1c29439c7b07b8fa1af2231ef05b",
       "authority": "approved",
@@ -2286,10 +2345,115 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/adr/0116-minimized-provider-notification-evidence.md",
+      "sha256": "c82a9493ccf2cbcc8e1322bbbc5d39d6be039694ec34713e66793b5828f8eb2d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0117-shared-bounded-payment-transport.md",
+      "sha256": "0052edab15b0cc433e53b5acb30934811a94cf51ba590b9251c627b4f9266fd5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/adr/0117-shared-resource-allocation.md",
       "sha256": "0c55db4a0f13f86e3852e2c64a5df9f2351f3adfd09a7b7503a0d73ff1e17d01",
       "authority": "proposed",
       "authorityBasis": "Status: proposed",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0118-signed-payment-notification-identity.md",
+      "sha256": "a8160c4248b12572bdaf8d94c5feee21ea81649ee79902d814fa0014791e58d4",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0119-atomic-provider-query-application.md",
+      "sha256": "8f332602d65927b957ae6fe7ac43787554ac67821928400a6b2344664d3a5739",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0120-durable-provider-query-recovery.md",
+      "sha256": "8a7e9b7ec54d54c4ab2d24b59cdeb6d5d3978630eea1a1728eb0881af9ba4871",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0121-history-preserving-no-charge-reconciliation.md",
+      "sha256": "859d9da97477c4c037e2b20e57b915b1a2cdf27f168fd1632ab6bbc8a2ba73c1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0122-read-only-payment-query-observability.md",
+      "sha256": "fd82b5a851aa8903964e1da237aadf95c7e6fb85270d6ebac2707e3b52f636ea",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0123-idempotent-capture-evidence-and-binding.md",
+      "sha256": "ea5cc2d4dfbf2f230e2c56caa86ddffa14b1cf85ca7aadc3f94d0fe15f58c6d9",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0124-closed-checkout-approval-evidence.md",
+      "sha256": "34e1ba20d677465ef57b9f752f4d7c0fdbfbf8f69d9a8c833a04c7b169312209",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0125-read-only-reconciliation-evidence.md",
+      "sha256": "b42c98c803addb68c1ac4d849a5b145f9476d4d4d98ad9d482c665756822375d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0126-checkout-completion-capability-gates.md",
+      "sha256": "86ce04cfba3e8cb8fbc24f4a6c8b1d9c6a780a6f94b7a8534af3b22aebc339a5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0127-payment-worker-diagnostic-boundaries.md",
+      "sha256": "44b4c7df7b4a5c91e783ec67c8d9982858212c93f7362b6a7ed31363fa67ea8a",
+      "authority": "inferred",
+      "authorityBasis": "Status: implemented and locally regression-tested on a dependent draft branch;",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0128-refund-execution-fence.md",
+      "sha256": "6cf3bed80ed343b7c9df80731e24af98318a987455aa530205eea6f81021b801",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0129-atomic-canonical-refund-accounting.md",
+      "sha256": "4c9fbb7a4ffe2aae05a76ba699706cb26369c146253606111ebd7acd422bfa2f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0130-known-id-refund-query-recovery.md",
+      "sha256": "77381f295932b971424581e6d3c9109f72ff98213dc9871483ec22d51b37e721",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
@@ -3561,7 +3725,7 @@
     },
     {
       "path": "docs/mobile-program/README.md",
-      "sha256": "0d6c2a483341d01246bffcdfcf40cd0a6f005407f6dd3a26931d6879ec3da780",
+      "sha256": "6994d508c1a6c747a3f0d27f4848078d739e8fec2a791523fdc268c03b89c189",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -3735,6 +3899,34 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/payments/capture-replay-integrity-2026-09-15.md",
+      "sha256": "ef4e6c281729d4d1a5973353c8e802f99f1bce6d83a0181cf632154d9227a0bd",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/closed-checkout-approval-2026-09-15.md",
+      "sha256": "03c6c7aef1c36cb142b7f0ed09a0848d61758c3ea88bab0a88235a9c319b7e24",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/completion-capability-repair-2026-09-15.md",
+      "sha256": "ec37b3c79b88156c786660df2aab6714868096cbdbd7e92f2ed7706bf979f04b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/component-environment-review-2026-09-16.md",
+      "sha256": "e7878f1e3a092bd79f5a3bea0a02359852c7b442108f888dec173aa1a5f20a68",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/payments/ecuador-payment-platform-audit-2026-09-09.md",
       "sha256": "68c288cad3593d6f88000d64f3411047bc97a9bdc97f2247f6aee89d531085f7",
       "authority": "inferred",
@@ -3742,8 +3934,176 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/payments/ecuador-payment-platform-audit-2026-09-11.md",
+      "sha256": "819d350d7e7ebc11b344f84f19524af661313c10348a4e4116efd18aade2c26d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/held-refund-query-2026-09-16.md",
+      "sha256": "a04fc729e3da9fb05b729572e1ec731fa76b06c6bbeb7a715081bf5c3800127f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/http-boundary-2026-09-14.md",
+      "sha256": "903b5e49681ac405b534d981ed2a04468075e980d3dd371296a45862f4912604",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/merchant-routing-review-2026-09-16.md",
+      "sha256": "cb13fc6607ee000d985dc2e7d23accef138aaa43eb32d18fedb2d1daa3c5d5a3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/no-charge-replay-2026-09-15.md",
+      "sha256": "f05c7e2e66fd5deec56fbc23f5b17df7a3d294a161f4a1cba1422539c3d6a48a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/notification-identity-2026-09-14.md",
+      "sha256": "6b1a97fdbe7ae17b1a5ddc95d1175bc4bbe54ac34701fd1b4cc457cecd83a093",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/notification-minimization-2026-09-14.md",
+      "sha256": "fa2def1a41471d11348e94c0d5a9ead511f1c5e3dbb1b21569626d6a960be1c6",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/payments/operator-runbooks.md",
-      "sha256": "40007a0d87c5fee600a90e3b6ee79966d44aab02acccbed42f6998c6e82aff94",
+      "sha256": "6463e16da525ad0fe3902be8f8dc02e5e6b6b519f7f07c83baa9f753a0348b5d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/provider-execution-verification-2026-09-14.md",
+      "sha256": "40522cda1d23f1080787b9783a785a0dbdc6bf695c22eebe52a4b389688ff20f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/query-observability-2026-09-15.md",
+      "sha256": "3221134ec174e0e69cb2a79c8f3384601e99d77f166e806e48c68f49982d8f71",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/query-recovery-2026-09-15.md",
+      "sha256": "2bfe8d0285a66a71a8e06a7175242885e37ee0ec05182efaee76a876895549c3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/reconciliation-atomicity-2026-09-14.md",
+      "sha256": "e4d6a850b4518b453b00388a63364721c8733d1771de7bc26e6550f7587d1cc2",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/reconciliation-evidence-2026-09-15.md",
+      "sha256": "ba6356fa6dbe4c93f753ab315058ff4991a0cc3c1a94eef8e1d64336cddb5655",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/recurring-readiness-review-2026-09-16.md",
+      "sha256": "4de14ed2451de3f5b52426fd56906e0797ae38d25b6cb04a42b13ad54d375fa8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/refund-accounting-2026-09-16.md",
+      "sha256": "9aa36ebfa7dd5e5d3650edd8b460cee3cf50de74398e070af7bf6343b9981376",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/refund-execution-safety-2026-09-16.md",
+      "sha256": "75b32f28e15279098a4071d465101eb4c5cd39923b0a97781c9df5511d5e8396",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/retry-reconciliation-safety-2026-09-14.md",
+      "sha256": "d5e50bd1e815a4acc61bb8529e6355ad547711869c25855e38109ef9a4cdf503",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/review-boundaries-2026-09-16.md",
+      "sha256": "763fc017a7b50da8c259811a8e8c67aba0d887494ad178ec36ed3729049c3619",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/review-repair-2026-09-16.md",
+      "sha256": "ddd483eebc74abb603ddbe780b66a5b0859efa9d9b8d6d5df8dc5475f4131ed3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/runtime-review-followup-2026-09-16.md",
+      "sha256": "6f9e3ad8fe4cab3495f92758f738696016154722239f4e61fb86b8b3deb8aebe",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/stack-integration-2026-09-15.md",
+      "sha256": "6655964d5897d882a4312b71cfd1b48dbd385c8c7ba0591a98ef838357f1bff5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/stack-integration-2026-09-16.md",
+      "sha256": "1d5556521dc303e6d92990448f47317c4beb782cd370d6a5e2470416aad539e7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/staging-access-2026-09-14.md",
+      "sha256": "798dc114303924105a48a730c7c9dc852b0a0af31d2b80033d9f75e3ac4c1471",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/terminal-recovery-2026-09-14.md",
+      "sha256": "16f6239d9bab886a25c5e9f41ceee804a393d3e4a15d2e4942ddb5f5ecc6ac8a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/worker-log-safety-2026-09-15.md",
+      "sha256": "6dc02468c1c3952689ed675a5ca26eb6b0e72d611b44ca953c4971bb0859a65e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -3939,7 +4299,7 @@
     },
     {
       "path": "docs/revenue-platform/provider-capability-matrix.md",
-      "sha256": "bd2da1a323e1c83c86fb0172af17cde4b8c0b0c5da1e325e6420feeb1c289629",
+      "sha256": "918eeeba77ab91c11b4ba80c1f8a5f69ecf4206687c61167261c99193bc7a8f2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -4960,6 +5320,41 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/HostedServicePayment.cfg",
+      "sha256": "29663fa3078459cb0abf5de479b7206aa840c6779fc9522f2eefa9d1592d2227",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/HostedServicePayment.tla",
+      "sha256": "675bacb7fce3962a773608e51901383cd41993b0c079fc20989f231e4df928a1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/HostedServicePaymentAtomic.cfg",
+      "sha256": "403e274802ca9eb7d988e0fb1e282acb23acf89a6e953d5dd2856f00b0976f73",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/HostedServicePaymentProgress.cfg",
+      "sha256": "3057b71fcdda169e70e3258b7aa642b73d6105647184c611a46a30fd603a5402",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/HostedServicePaymentReplay.cfg",
+      "sha256": "f69e606679e1d625b2f3d93e89b638da3a2d792f9488646fdca2057c4880e498",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/InvitationSafety.cfg",
       "sha256": "61505b22d7a3915f744f75b8b376137c26c4bb28da08ed56cd91e1485adaa831",
       "authority": "inferred",
@@ -5172,6 +5567,41 @@
     {
       "path": "formal/event-operations/OptionalTokenRecoveryUnsafeStorage.cfg",
       "sha256": "4b0687ca30fc422a8da36336162c85bc135f61f589699763af3977d3494db056",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PaymentRecovery.cfg",
+      "sha256": "31684633da67e4a607058dce9e9dae842c2214ff87ba126fbade01a5c4bbfbdc",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PaymentRecovery.tla",
+      "sha256": "b939b064c407ffa18cd5276d0bd332bb257b7f848b666bc704c8ad1c7394ecb4",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/PaymentRecoveryCompleted.cfg",
+      "sha256": "6098dc9a9461b295d2e546b932ef710099f2a45e5ea502630c646206f81e0b7d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PaymentRecoveryOverwrite.cfg",
+      "sha256": "ceb606c1e65996f2b72bcfc367255e149b22e42c2cc9ef72c2e6a9cd881b205c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PaymentRecoveryReturn.cfg",
+      "sha256": "ac3bcb7094ab0c465b34347bc6282ec4038ac40dc6f464579ed069690a145643",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -5403,6 +5833,41 @@
     {
       "path": "formal/event-operations/ReceiptReplayStaleSnapshot.cfg",
       "sha256": "7e7b315796c0acacebe7b02c593ac0aeab867699a5282da6aafa7245ed67257a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RefundRecovery.cfg",
+      "sha256": "ba10aef6f3933c799a44bff583ad40eae5e62931f5cf3acd98caf6d147c30457",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RefundRecovery.tla",
+      "sha256": "1d8000590ad630f250a1b9e1fcaf5f3e1e8d91613e62daef33fbe8423442ae9e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/RefundRecoveryAccounting.cfg",
+      "sha256": "75e88634e2988c7bb6988d41278280bd1e8c4c25c5f487b087f53584183d0668",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RefundRecoveryAuthority.cfg",
+      "sha256": "4afa03d6529045f942c54f80eb7e15e579e8728b694cd304256a6ced4a7afdec",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RefundRecoveryExecution.cfg",
+      "sha256": "6882026c6f5cfb3f3e251df3ccc8d9eb6ccc95204440603e6e645668dcc29349",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -5840,6 +6305,13 @@
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/refund-recovery-correspondence.md",
+      "sha256": "b1a79260b9d0a5737be58d99392bb78383e4d70f1326ccfb0d5c99bef4b9ff45",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
     },
     {
       "path": "formal/interactions/README.md",
@@ -6403,7 +6875,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "c183a1933901c37d2c3282ff7ffbe1962956d16f867f2bc7968e662b07d46156",
+      "sha256": "ad0decc620171b08d3b567694107f5dc1d7b1ecacd0fd23a2d4e2cb9436f15d8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -6861,6 +7333,51 @@
       "gap": "Per-clause implementation correspondence not discharged by inventory"
     },
     {
+      "id": "0115-provider-neutral-payment-routing:2fde9075f100",
+      "statement": "Use a canonical payment domain and exact provider adapter boundary. Routing requires an environment-specific provider account whose feature, credential-validation, and contract-approval gates are true, plus exact verified payment method and method-capability evidence. Runtime configuration is checked again before a route appears or an attempt starts.",
+      "source": "docs/adr/0115-provider-neutral-payment-routing.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0115-provider-neutral-payment-routing:cf89f268232a",
+      "statement": "Product flow, method, currency, amount, buyer country, operation, and required capabilities are inputs. Marketplace creation additionally requires connected accounts, split settlement, and seller payouts. The shared PlaceToPay/PayPhone create, status, notification, and authenticated-query executor is now present. Operational availability still requires complete runtime configuration, a ready account, approved contract, validated credentials, exact method-capability evidence, and environment flags. PlaceToPay additionally requires an explicit account/site payment-method ID mapping so a method selection cannot open a broader hosted checkout.",
+      "source": "docs/adr/0115-provider-neutral-payment-routing.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0115-provider-neutral-payment-routing:4a48f50cd8c2",
+      "statement": "All monetary values use integer minor units. An attempt binds immutably to its canonical intent and provider resource. Cross-provider fallback is allowed only when the first provider was not contacted, rejected before resource creation, or authoritatively confirmed that no charge exists. Timeout, network loss, unverified return, or unknown provider state requires reconciliation.",
+      "source": "docs/adr/0115-provider-neutral-payment-routing.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0115-provider-neutral-payment-routing:3914a0b9ef65",
+      "statement": "Web and mobile consume server capability decisions. Paid mobile ticket checkout delegates to the canonical responsive web flow; the app does not maintain a second card executor.",
+      "source": "docs/adr/0115-provider-neutral-payment-routing.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0115-provider-neutral-payment-routing:315789b434d8",
+      "statement": "Provider callbacks are typed by immutable evidence. PlaceToPay SHA-256 notifications are `signature_verified`; PayPhone's published external notification has no documented cryptographic signature and is `untrusted_callback`. Both are only triggers for an authenticated query that must match the stored merchant, external resource, merchant reference, amount, currency, checkout, attempt, and intent.",
+      "source": "docs/adr/0115-provider-neutral-payment-routing.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
       "id": "0116-bounded-formal-verification:c4e13ca23e9d",
       "statement": "- Use TLA+ state machines for lifecycle, invitation, task/RACI, contract/payment, and liveness. - Use a PlusCal process model for simultaneous confirmation of overlapping exclusive reservations. - Use Alloy for ownership/coproduction, grants/visibility, RACI/dependencies, invitation conversion, contract acceptance, and booking/override relations. - Pin tool versions/checksums and record exact finite scopes, fairness assumptions, results, counterexamples, changes, and limitations. - Require a satisfiable Alloy scenario as well as assertions with no bounded counterexample. - Translate every critical modeled transition into database constraints/transactions, typed API guards, property/model tests, authorization tests, and concurrency tests.",
       "source": "docs/adr/0116-bounded-formal-verification.md#decision",
@@ -6870,10 +7387,487 @@
       "gap": "Per-clause implementation correspondence not discharged by inventory"
     },
     {
+      "id": "0116-minimized-provider-notification-evidence:aee3d718e776",
+      "statement": "Enforce typed, bounded projections in `ProviderEventStore`, shared by every current inbox writer. Authentication and merchant/transaction binding checks remain in the existing intake and worker paths. Reject unsupported inbox providers and invalid retained field types with fixed error messages. Never return parser input in an error or print decrypted payloads through their `Show` instance.",
+      "source": "docs/adr/0116-minimized-provider-notification-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0116-minimized-provider-notification-evidence:0e05a3b5d1ed",
+      "statement": "| Provider | Retained fields | Trust/processing unchanged | |---|---|---| | PayPal, three handled capture events | Envelope `id`, `event_type`, `create_time`; resource `id`, `status`, amount `value`/`currency_code`, payee `merchant_id`, supplementary related `order_id` | Verify the original event with PayPal before storing; worker validates immutable envelope metadata and capture bindings. Refund/reversal events retain the existing reconciliation-exception behavior, not newly implemented refund execution. | | Other PayPal event types | Envelope identifiers/time and resource ID only | Remain unsupported/ignored. This does not implement disputes, subscriptions, payouts or new event types. | | PlaceToPay | `requestId`, `signature`, status `status`/`date` | Retain the exact signed strings for local re-verification; only an authenticated provider query may establish financial state. The callback's unsigned `reference`, reason and message are not used by the current worker and are discarded. | | PayPhone | Canonical `TransactionId`, `ClientTransactionId`, optional `StoreId` | Normalize supported aliases; drop untrusted status and customer fields. The callback remains an untrusted query trigger and cannot establish payment success. |",
+      "source": "docs/adr/0116-minimized-provider-notification-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0116-minimized-provider-notification-evidence:15d4d6890f4a",
+      "statement": "Strings have bounded sizes and printable ASCII validation; timestamps must parse as RFC 3339. Transaction IDs must be positive `Int64` values. Arbitrary objects cannot survive in an allowlisted scalar field. Financial amount strings retain their original decimal representation; this projection never converts money using floating-point arithmetic.",
+      "source": "docs/adr/0116-minimized-provider-notification-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0116-minimized-provider-notification-evidence:f52f80751580",
+      "statement": "```mermaid flowchart LR A[Original callback] --> B[Existing authentication and binding checks] B --> C[Typed provider-specific field projection] C --> D[Encrypt retained evidence and store its checksum] D --> E[Durable inbox / claim / retries] E --> F[Existing PayPal verified-event processor] E --> G[Hosted provider authenticated status query] F --> H[Canonical payment and fulfillment boundaries] G --> H ```",
+      "source": "docs/adr/0116-minimized-provider-notification-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0117-shared-bounded-payment-transport:4f7750fca04a",
+      "statement": "```text Bookings / tickets / courses / Domo / services / marketplace -> existing Datafast / PayPal remote helpers -----------+ Provider sessions / reconciliation | -> PlaceToPay / PayPhone adapter requests --------------+ v ProviderAdapter.Http (shared boundary) -> provider destination validation -> payment TLS pool, no implicit retries -> no redirects; 15-second total deadline -> streamed, decompressed response <= 1 MiB -> typed JSON or redacted uncertain error ```",
+      "source": "docs/adr/0117-shared-bounded-payment-transport.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0117-shared-bounded-payment-transport:4c4be01b3d37",
+      "statement": "- Preserve the existing JSON/form encodings, immutable merchant references, integer/decimal-string amounts and PayPal request IDs in the active helpers. - Centralize safe URL parsing, validation after headers are attached, HTTP execution, typed JSON decoding and static error messages. Reject HTTP, URL credentials, explicit URL ports, fragments, cross-provider hosts and explicit `Host` header overrides. Malformed UTF-8 host bytes fail closed. - PayPal, PlaceToPay and PayPhone retain exact configured provider host choices. Datafast retains the existing valid-DNS `oppwa.com` origin family and the existing sandbox/production environment check, rather than asserting an unverified universal regional endpoint. Its configured origin is normalized before use. Merchant-specific Datafast endpoints still require qualification. - Use a separate shared TLS manager with normal certificate verification and `managerRetryableException = const False`. All active call sites changed here use it; the unrelated general-purpose manager is untouched. Injected managers are trusted application/test dependencies, not user configuration. - Disable redirects and automatic cookie handling. Enforce both a 15-second response-header timeout and a 15-second total execution deadline, including body reads. Use exception-safe `withResponse` cleanup. Synchronous transport and decompression exceptions are redacted; external asynchronous cancellation is not deliberately swallowed. - Consume successful responses incrementally. Stop on the first chunk exceeding the one-MiB accumulated limit. Non-2xx responses are errors without consuming their bodies. Decode inside the deadline and omit JSON diagnostics from errors. - Validate PayPal access-token length/visible ASCII and Bearer token type before creating a financial request. Never print requests, tokens or response bodies. - Remove only the three unused PayPal HTTP helpers. Keep the active helpers, pure legacy validators, existing public DTOs, endpoints and financial records.",
+      "source": "docs/adr/0117-shared-bounded-payment-transport.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
       "id": "0117-shared-resource-allocation:c1071dc15e7a",
       "statement": "- Bind every exclusively bookable event participant, room, venue, asset, or provider capacity to an existing canonical `resource` identity. - Compute a half-open occupied interval including setup, travel, soundcheck, teardown, and recovery buffers before confirmation. - Route tentative/confirmed event allocation through the shared exclusion/capacity primitive in the same transaction as booking/engagement state, command receipt, audit, and outbox. - Provide an explicit privileged override command with policy, actor, non-empty reason, affected interval, and immutable audit. Ordinary confirmation cannot set an override flag. - Do not infer or overwrite historical bindings. Backfill exact links where provable and report the rest for review.",
       "source": "docs/adr/0117-shared-resource-allocation.md#decision",
       "status": "proposed",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0118-signed-payment-notification-identity:86a096f1514d",
+      "statement": "After original-body authentication, derive:",
+      "source": "docs/adr/0118-signed-payment-notification-identity.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0118-signed-payment-notification-identity:704de4cd6fac",
+      "statement": "```text ptp-v2- + SHA256(UTF8(JSON array[ \"tdf:placetopay:notification:v2\", integer requestId, exact status.status, exact status.date, lowercase signature ])) ```",
+      "source": "docs/adr/0118-signed-payment-notification-identity.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0118-signed-payment-notification-identity:a002436c0e20",
+      "statement": "The versioned array encoding is pinned by an independently computed test golden. It is independent of object ordering, whitespace, equivalent JSON number/key spelling, unsigned fields and signature hex casing. Exact signed status/date strings remain unchanged. Distinct signed tuples or signing-key digests remain distinct; this does not merge statuses, normalize instants or infer a financial transition from a callback. The signature bytes alone are not used as the ID, avoiding ambiguity from the provider's undelimited input concatenation.",
+      "source": "docs/adr/0118-signed-payment-notification-identity.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0118-signed-payment-notification-identity:67adbac5867d",
+      "statement": "`ProviderEventStore` enforces this identity for verified PlaceToPay inserts, regardless of a caller-supplied event ID. It rejects the untrusted-store path for this provider. Identity derivation itself does **not** authenticate anything: the Servant handler still verifies the original message with the configured secret before any inbox persistence. Other providers keep their existing IDs.",
+      "source": "docs/adr/0118-signed-payment-notification-identity.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0118-signed-payment-notification-identity:c437db067e83",
+      "statement": "New retained payloads normalize only the signature's hexadecimal casing. The existing unique `(provider, environment, merchant_account_ref, provider_event_id)` constraint serializes concurrent inserts. Duplicate checks still require matching immutable metadata, trust, resource, timestamp and an allowed payload checksum. Replay never requeues a terminal row. No advisory locks or new schema are needed.",
+      "source": "docs/adr/0118-signed-payment-notification-identity.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0119-atomic-provider-query-application:31d51a93bbb3",
+      "statement": "The caller owns the SQL transaction. An authenticated, adapter-parsed query is applied under a local savepoint:",
+      "source": "docs/adr/0119-atomic-provider-query-application.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0119-atomic-provider-query-application:2dda51a5b3cc",
+      "statement": "```text Caller transaction (and any locks acquired before application) └─ revalidate immutable binding and exact query money/identity/certainty └─ savepoint: provider query application ├─ provider operation ├─ payment attempt + canonical intent/history ├─ checkout payment state ├─ balanced capture ledger + receipt └─ audit / unknown-status exception domain rejection → roll back only this savepoint success/pending → release savepoint, NOT commit caller commits or rolls back all its work SQL exception / interruption → escape to caller; outer transaction rolls back ```",
+      "source": "docs/adr/0119-atomic-provider-query-application.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0119-atomic-provider-query-application:6ab718b1f8e9",
+      "statement": "`applyQueryResult` is an internal Haskell composition boundary, not a public API. Its input must come from an authenticated query parsed against the stored locator. It reloads the immutable binding and rejects changed identifiers or money. It also rejects absent/different amount or currency, a different resource ID, or certainty inconsistent with the typed status. These checks are defense in depth; assembling an `AdapterResult` is not authentication and must never be used to turn callback financial fields into evidence.",
+      "source": "docs/adr/0119-atomic-provider-query-application.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0119-atomic-provider-query-application:6ae761624362",
+      "statement": "The wrapper no longer commits or rolls back the caller's transaction. Domain errors return `Left` after rolling back local partial writes. Database errors are not caught and converted into successful outcomes inside an aborted SQL transaction. Pre-existing caller locks remain held through its commit/rollback. Locks acquired inside a failed savepoint may be released; a future job lease must therefore be locked **before** invoking this helper.",
+      "source": "docs/adr/0119-atomic-provider-query-application.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0119-atomic-provider-query-application:a966372af6ee",
+      "statement": "`processProviderEventIO` remains the production entry point. Its injectable transport/clock variant allows contract tests without bypassing stored callback trust validation, runtime configuration, immutable lookup or adapter parsing. Production still uses the shared bounded/no-implicit-retry HTTP transport. Query application and mismatch timestamps now use the response observation time, not the earlier callback/query-start time. This is local observation time, not a claim about provider settlement time.",
+      "source": "docs/adr/0119-atomic-provider-query-application.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0121-history-preserving-no-charge-reconciliation:49c845b4d3b6",
+      "statement": "Use `AdapterCancelled` for newly queried PayPhone status `2`, retaining `ProviderConfirmedNoCharge` only after authenticated server-side lookup with exact immutable resource, merchant reference, amount and currency matching. Callbacks remain hints; no callback status or browser parameter is charge evidence. Unknown codes remain ambiguous and cannot release fallback.",
+      "source": "docs/adr/0121-history-preserving-no-charge-reconciliation.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0121-history-preserving-no-charge-reconciliation:f8bd1dda32da",
+      "statement": "After the operation outcome is validated and locked, inspect the bound intent and attempt under the existing caller-owned SQL transaction/savepoint:",
+      "source": "docs/adr/0121-history-preserving-no-charge-reconciliation.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0121-history-preserving-no-charge-reconciliation:f6909fc35408",
+      "statement": "| Existing financial state | Result of a confirmed no-charge query | |---|---| | Coherent failed/canceled intent and failed/canceled attempt, zero authorized/captured/refunded money, no posted ledger for that attempt | Return processed without changing intent, attempt, checkout, financial history or its existing failure label. | | Coherent unresolved intent/attempt with zero money and no posted ledger | Apply the first terminal outcome once. New cancellations use canceled intent and attempt states. | | Money/ledger evidence or incoherent/unsupported terminal state | Reject for reconciliation; never silently relabel or clear money. |",
+      "source": "docs/adr/0121-history-preserving-no-charge-reconciliation.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0121-history-preserving-no-charge-reconciliation:fdf2b8eb9718",
+      "statement": "The query still validates current provider evidence. This is not accepting a failed database row as proof of no charge. A previously ambiguous operation can be resolved by authenticated matching evidence; any existing coherent terminal financial label remains unchanged. Success/conflicting no-charge operation guards remain intact.",
+      "source": "docs/adr/0121-history-preserving-no-charge-reconciliation.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0121-history-preserving-no-charge-reconciliation:9b072a7bec1e",
+      "statement": "Canceling a payment attempt does not cancel its order. A first verified cancellation leaves an active checkout retryable (`failed`), while the intent and attempt are `cancelled`. A closed/paid/expired checkout is not reopened. Replays never write checkout state, so a newer processing/paid attempt remains untouched. Historical canceled intents with legacy failed attempts remain compatible; no bulk data migration or backfill changes them.",
+      "source": "docs/adr/0121-history-preserving-no-charge-reconciliation.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0121-history-preserving-no-charge-reconciliation:f5e3c26088cc",
+      "statement": "Existing public session state remains `confirmed_no_charge`, and customer copy continues to say no charge was completed. It does not assert who canceled or that an issuer declined. No new wire enum, generated client or payment method activation is necessary for this classification repair.",
+      "source": "docs/adr/0121-history-preserving-no-charge-reconciliation.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0123-idempotent-capture-evidence-and-binding:e1c8264cddc8",
+      "statement": "Preserve the existing caller-owned transaction and immutable binding validation. Treat a coherent, already-posted capture as an acknowledgement only: return `Right False` (not newly paid) without any financial update, receipt issuance, audit/history append, or fulfillment transition. Require the original successful attempt, full recorded checkout payment, posted attempt capture ledger and an exact matching payment receipt. Post-capture refund/dispute checkout states may acknowledge that original capture without returning the checkout to paid.",
+      "source": "docs/adr/0123-idempotent-capture-evidence-and-binding.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0123-idempotent-capture-evidence-and-binding:15dfb8855fb4",
+      "statement": "Check receipt amount, currency, canonical receipt number, adapter and external resource together. A voided original receipt is still historical capture evidence, not permission to issue a replacement or represent it as a valid fiscal document. Missing, conflicting or partial evidence must require reconciliation instead of being backfilled by a repeated provider result. First captures retain all authoritative-provider, binding, currency and amount gates.",
+      "source": "docs/adr/0123-idempotent-capture-evidence-and-binding.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0123-idempotent-capture-evidence-and-binding:c0b522d1f0de",
+      "statement": "Binding replay must not rewrite a terminal attempt or its timestamps. A binding first validates and locks the exact checkout/attempt pair before any insertion. It can advance an unresolved attempt monotonically; a stage observation is not authority to resurrect failed/canceled/expired/review states or regress a processing attempt. Update the checkout only for a real permitted attempt-stage change. Existing immutable binding fields and stored references are never changed.",
+      "source": "docs/adr/0123-idempotent-capture-evidence-and-binding.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0124-closed-checkout-approval-evidence:cdd60c6720b4",
+      "statement": "After adapter parsing, exact amount/currency/resource validation and a fresh immutable-binding lookup, lock the create operation and then the checkout/attempt. For an approval on `expired` or `cancelled`, append a `verified_payment_on_closed_checkout` reconciliation exception containing the provider, environment, merchant alias, checkout/resource references, exact expected and observed minor units, currency and local observation time. Append a correlated audit event linking the exception, attempt and create operation in the same caller-owned transaction. Do not persist raw query responses or payer data.",
+      "source": "docs/adr/0124-closed-checkout-approval-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0124-closed-checkout-approval-evidence:a8fafd5b701f",
+      "statement": "The exception UUID is UUIDv5 in the URL namespace over the versioned name `urn:tdf:payment-review:closed-checkout:v1:` plus the canonical create-operation UUID. It is an identity key, not a secret or an authentication mechanism. Existing primary-key uniqueness and operation serialization deduplicate callbacks, leases and concurrent queries without a schema migration. A retained row must match the immutable scope and money; conflicting evidence fails closed without rewriting it.",
+      "source": "docs/adr/0124-closed-checkout-approval-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0124-closed-checkout-approval-evidence:9580ae175beb",
+      "statement": "The capture ledger, receipt, checkout, attempt, intent and operation remain unchanged. This record is an unresolved observation, **not booked cash, recognized revenue, a suspense-ledger posting, a settlement or a refund**. The processor returns its existing dead-letter disposition. A scheduled job does not add a second generic review entry for the same recorded approval.",
+      "source": "docs/adr/0124-closed-checkout-approval-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0124-closed-checkout-approval-evidence:284215037636",
+      "statement": "Once this review identity exists, a subsequent matched query cannot automatically release it, including after an exception workflow-label change. The exact-replay and authenticated status readers mask that operation as `ambiguous`, hide its encrypted redirect and disallow fallback using the existing API contract. Stored provider status and references are preserved. This conservative projection means the local payment application needs reconciliation, not that the observed provider approval disappeared. It makes no claim that a worker is currently live.",
+      "source": "docs/adr/0124-closed-checkout-approval-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0124-closed-checkout-approval-evidence:df662ef44c01",
+      "statement": "```text authenticated query + immutable binding + exact money | closed checkout approval | exception + audit, one transaction | hold / no redirect / no fallback | authorized finance investigation (no automated release or refund) ```",
+      "source": "docs/adr/0124-closed-checkout-approval-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0125-read-only-reconciliation-evidence:cc217eb97308",
+      "statement": "Append `GET /admin/commerce/reconciliation-exceptions` to the existing commerce operations API. Apply the existing strict-Admin policy before validating filters or accessing a database. Default to sandbox; permit explicit production reads under that same authorization. Accept four review statuses, an optional canonical checkout UUID, limit 1–100 (default 25) and offset 0–10000 (default 0). Echo every applied filter. Never accept a customer lookup token in this endpoint.",
+      "source": "docs/adr/0125-read-only-reconciliation-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0125-read-only-reconciliation-evidence:b0f1476b5566",
+      "statement": "Read inside a read-only SQL transaction with a three-second per-statement timeout. Require the exception, binding, attempt and checkout tables. Missing tables are reported as `crrSchemaReady=false`, not as a verified empty result. SQL failures, including locks/timeouts or incompatible columns, return a fixed 503 without diagnostics. Successful reports and database-error responses use `no-store`.",
+      "source": "docs/adr/0125-read-only-reconciliation-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0125-read-only-reconciliation-evidence:6aae794d72d1",
+      "statement": "Select one bounded exception page before linking it. Return exception UUID, allowlisted provider/status/reason classifications, nullable exact expected and observed minor units, validated currency text and timestamps. Unknown stored classifications become `unrecognized`. Omit raw exception text, merchant aliases, external references, notes, assignment identities and provider payloads entirely. Amounts are nullable signed-64-bit **decimal strings** in this additive contract; null is unknown, never zero. Existing numeric DTOs are not silently reinterpreted.",
+      "source": "docs/adr/0125-read-only-reconciliation-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0125-read-only-reconciliation-evidence:a34a786995fa",
+      "statement": "Return internal checkout/attempt UUIDs only when there is exactly one matching attempt and its stored binding agrees on provider, environment, merchant and resource; checkout identity/environment and attempt/checkout money must agree with the binding. The exception's legacy text reference is compared as text, never cast to UUID or exposed. These links identify records; they do not authenticate the exception amount or prove a capture/settlement. Missing links are not evidence of no payment. Multiple eligible attempts yield no link rather than a guessed one.",
+      "source": "docs/adr/0125-read-only-reconciliation-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0125-read-only-reconciliation-evidence:b47e5dc37df9",
+      "statement": "```text strict Admin → validate bounded filters → read-only exception page | unique immutable-binding lookup | redacted DTO / nullable exact-money strings / \\ web admin view generated mobile types (read only) (no native admin screen) ```",
+      "source": "docs/adr/0125-read-only-reconciliation-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0125-read-only-reconciliation-evidence:93f3b6e2aaa6",
+      "statement": "Web defaults to sandbox/open, has no mutation controls and uses the generated contract. Hide previous evidence during refresh, request failure, filter-response mismatch or invalid submitted checkout input. Use `BigInt` for exact USD display; other currencies retain explicit integer minor units without assuming a scale. Spanish/English labels, accessible filter controls, responsive cards and neutral review-status chips preserve the distinction between review and payment state. There is no durable browser storage for this report and inactive query data has zero retention time. Live offset pagination is not an immutable accounting export.",
+      "source": "docs/adr/0125-read-only-reconciliation-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0126-checkout-completion-capability-gates:615e302385ee",
+      "statement": "The public runtime boundary applies the following minimum requirements before selecting routes. Caller-supplied requirements are additive and cannot remove these requirements. Existing account, contract, credential, method, product, currency, environment, runtime-configuration and feature checks remain in force.",
+      "source": "docs/adr/0126-checkout-completion-capability-gates.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0126-checkout-completion-capability-gates:1d27148fcabb",
+      "statement": "| Implemented method / operation | Required capability evidence | |---|---| | Public card checkout | `one_time` and `server_verification` | | Public PayPal wallet checkout | `one_time` and `capture` | | Public PlaceToPay bank redirect / DeUna | `one_time` and `server_verification` | | Public PayPhone wallet | `one_time` and `server_verification` | | Independently reviewed manual bank method | Existing `one_time`; no invented remote capture/query operation | | Marketplace flow | All applicable requirements above plus `connected_accounts`, `split_settlement`, `seller_payouts` | | Datafast's historical `capture` attempt | `one_time` and `server_verification`; preserve the historical operation name because it verifies an automatic debit rather than sending a separate capture | | PayPal and other true capture attempts | Existing `capture` requirement, plus applicable marketplace requirements |",
+      "source": "docs/adr/0126-checkout-completion-capability-gates.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0126-checkout-completion-capability-gates:7d12680276e7",
+      "statement": "`loadRuntimeReadyRoutes` is shared by the public capability API, product checkout method lists and the new hosted-session creation gate. Tightening this boundary therefore removes an unqualified method from presentation and rejects a new hosted session requested directly. No client can opt out with an empty required- capabilities array. The pure `routePayments` engine remains usable for specific internal operations; it does not itself assert that a complete public checkout exists. Normalization is idempotent and preserves caller restrictions.",
+      "source": "docs/adr/0126-checkout-completion-capability-gates.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0126-checkout-completion-capability-gates:0bb0db9ce2dd",
+      "statement": "Existing create replay precedes new-session qualification so interrupted clients can still recover the original operation after capability/account revocation. This neither contacts a new provider nor authorizes another charge. Datafast and PayPal create/confirmation attempts remain on the original intent, exact replay preserves identity and a different capture key cannot create another continuation.",
+      "source": "docs/adr/0126-checkout-completion-capability-gates.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0126-checkout-completion-capability-gates:7df5986577c7",
+      "statement": "No provider is enabled. No new method, payment link, native flow, financial transition, external request or migration is added. Payment links and other unimplemented executors remain behind their existing runtime gates; a generic provider profile is not proof that a usable customer flow has been implemented.",
+      "source": "docs/adr/0126-checkout-completion-capability-gates.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0127-payment-worker-diagnostic-boundaries:a5c46e7551a3",
+      "statement": "Use a tested single-iteration boundary for each existing worker loop. Production passes its unchanged tick action, stderr error sink and, where applicable, stdout information sink. Tests replace only actions/sinks, not payment policy.",
+      "source": "docs/adr/0127-payment-worker-diagnostic-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0127-payment-worker-diagnostic-boundaries:7204bf1cb95f",
+      "statement": "- Error events contain only fixed component, level and message fields. Never render, inspect, truncate, hash or append a caught exception. The existing `error` detail field is intentionally removed from the two vulnerable events. - Keep event-processing and expiry counters as integer-only information events; retain the existing silent idle behavior. These counters are not charges, settlements, revenue, worker heartbeats or evidence of merchant qualification. - Catch synchronous diagnostic-write failures without logging their exceptions elsewhere, repeating the tick, changing a lease or altering financial state. The next iteration remains subject to the existing delay and qualification, locking, idempotency and stale-lease rules. - Preserve `safe-exceptions` cancellation semantics for the tick and log sink. Cancellation/shutdown is not a recoverable provider failure and must not be swallowed or relabeled as one. - Make the provider-event startup warning fixed as well; invalid encryption configuration remains disabled and its value never enters a diagnostic.",
+      "source": "docs/adr/0127-payment-worker-diagnostic-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0127-payment-worker-diagnostic-boundaries:d15a98395c63",
+      "statement": "This changes diagnostics only. It does not acknowledge/retry provider events, clear dead letters, enable a worker or provider, mark an order paid, release inventory directly, issue a refund, change an API/client or modify a database. Existing persistent payment audit/history and reconciliation evidence remain authoritative and unchanged.",
+      "source": "docs/adr/0127-payment-worker-diagnostic-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0128-refund-execution-fence:c179b6de8e52",
+      "statement": "Use the existing transaction and locked refund row as a durable, non-expiring execution fence. Only `requested` or `approved` may acquire the first permit, under the existing independent-approver rule. `processing`/`succeeded` replays return the stored record without another permit. `failed` requires reconciliation; it cannot be reissued or cancelled by these application commands. Pre-execution `requested`/`approved` cancellation remains available.",
+      "source": "docs/adr/0128-refund-execution-fence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0128-refund-execution-fence:9a904d8cc7d7",
+      "statement": "```text requested -> approved -> processing -> succeeded | | | +------------+ +-- timeout / mismatch / unknown -> processing (held) v cancelled historical failed -> held for reconciliation ```",
+      "source": "docs/adr/0128-refund-execution-fence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0128-refund-execution-fence:1a020299f08a",
+      "statement": "The legacy function name `recordRefundFailure` is retained for source compatibility, but means a failure to verify completion: record a diagnostic, not a terminal financial conclusion. Keep the amount reserved at checkout and line level. Do not overwrite existing provider references. Do not store arbitrary provider status text as a diagnostic code. Exact verified completion retains the existing ledger/credit-note path and duplicate-evidence protection.",
+      "source": "docs/adr/0128-refund-execution-fence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0128-refund-execution-fence:111ff87d4ef9",
+      "statement": "Perform balance comparisons using unbounded `Integer` arithmetic before accepting an `Int64` minor-unit request. Public amounts and persisted types are unchanged. Overcommitted or negative stored balances fail closed; no rounding or float is used.",
+      "source": "docs/adr/0128-refund-execution-fence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0129-atomic-canonical-refund-accounting:0fd60ad14336",
+      "statement": "Keep completion in the existing caller-owned SQL transaction:",
+      "source": "docs/adr/0129-atomic-canonical-refund-accounting.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0129-atomic-canonical-refund-accounting:cd6a330475aa",
+      "statement": "```text lock original refund; exact succeeded replay returns without writes -> lock original checkout and attempt; verify immutable binding and payable state -> read committed successful-refund totals after acquiring those locks -> check checkout totals and the original intent's capture/refund totals -> apply PaymentRefundVerified to that intent and append its state history -> complete refund + checkout + ledger + credit-note record + refund audit -> commit all, or roll back all on SQL failure ```",
+      "source": "docs/adr/0129-atomic-canonical-refund-accounting.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0129-atomic-canonical-refund-accounting:04ea98c6f215",
+      "statement": "No recoverable `Left` is returned after a successful intent transition. The remaining writes either succeed or raise an SQL exception that escapes the transaction. Callers must not catch that exception inside the transaction and commit partial work.",
+      "source": "docs/adr/0129-atomic-canonical-refund-accounting.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0129-atomic-canonical-refund-accounting:4a2146b824ff",
+      "statement": "The checkout lock serializes distinct partial refunds. Aggregate checks use a fresh statement after acquiring the lock: a scalar subquery in a waiting `READ COMMITTED` locking statement can retain the earlier statement snapshot. The intent check is scoped to the original attempt, not a replacement payment. Refund replay remains idempotent at the locked refund record; a numeric refund event is never treated as generically replay-idempotent by the intent store.",
+      "source": "docs/adr/0129-atomic-canonical-refund-accounting.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0129-atomic-canonical-refund-accounting:b340f7569ba7",
+      "statement": "Compare sums using unbounded `Integer` before materializing an `Int64` result. Reject negative stored refunded balances. Full/partial classification and all external currency/minor-unit contracts stay unchanged.",
+      "source": "docs/adr/0129-atomic-canonical-refund-accounting.md#decision",
+      "status": "inferred",
       "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
       "verification": "open",
       "gap": "Per-clause implementation correspondence not discharged by inventory"
@@ -9374,6 +10368,74 @@
       "correspondence": "See domain traceability; discovery establishes no refinement"
     },
     {
+      "configuration": "formal/event-operations/HostedServicePayment.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Workers = {callback, recovery}",
+        "  UnsafeAtomic = FALSE",
+        "  UnsafeReplay = FALSE",
+        "  UnsafeProgress = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  NoMissingFulfillment",
+        "  ExactlyOnePaidAudit",
+        "  NoFulfillmentRegression",
+        "  BindingRequired"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/HostedServicePaymentAtomic.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Workers = {callback, recovery}",
+        "  UnsafeAtomic = TRUE",
+        "  UnsafeReplay = FALSE",
+        "  UnsafeProgress = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  NoMissingFulfillment"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/HostedServicePaymentProgress.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Workers = {callback, recovery}",
+        "  UnsafeAtomic = FALSE",
+        "  UnsafeReplay = FALSE",
+        "  UnsafeProgress = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  NoFulfillmentRegression"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/HostedServicePaymentReplay.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Workers = {callback, recovery}",
+        "  UnsafeAtomic = FALSE",
+        "  UnsafeReplay = TRUE",
+        "  UnsafeProgress = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  ExactlyOnePaidAudit"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
       "configuration": "formal/event-operations/InvitationSafety.cfg",
       "declarations": [
         "CONSTANTS",
@@ -9661,6 +10723,73 @@
         "INVARIANTS NoRequestWithoutToken NoInventedToken FragmentPrecedence",
         "PROPERTY RecoverySettles",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PaymentRecovery.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Checkouts = {checkout_a, checkout_b}",
+        "  UnsafeOverwrite = FALSE",
+        "  UnsafeReturn = FALSE",
+        "  UnsafeCompletedFlow = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  NoLostRecovery",
+        "  CorrectReturn",
+        "  NoCompletedFlowHijack"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PaymentRecoveryCompleted.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Checkouts = {checkout_a, checkout_b}",
+        "  UnsafeOverwrite = FALSE",
+        "  UnsafeReturn = FALSE",
+        "  UnsafeCompletedFlow = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  NoCompletedFlowHijack"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PaymentRecoveryOverwrite.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Checkouts = {checkout_a, checkout_b}",
+        "  UnsafeOverwrite = TRUE",
+        "  UnsafeReturn = FALSE",
+        "  UnsafeCompletedFlow = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  NoLostRecovery"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PaymentRecoveryReturn.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Checkouts = {checkout_a, checkout_b}",
+        "  UnsafeOverwrite = FALSE",
+        "  UnsafeReturn = TRUE",
+        "  UnsafeCompletedFlow = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  CorrectReturn"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
@@ -9969,6 +11098,98 @@
         "SPECIFICATION Spec",
         "INVARIANTS TypeOK NoUnauthorizedDisclosure ReceiptBindingPreserved",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RefundRecovery.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Refunds = {refund_a, refund_b}",
+        "  Workers = {worker_a, worker_b}",
+        "  Captured = 2",
+        "  UnsafeExecutionReplay = FALSE",
+        "  UnsafeAccountingReplay = FALSE",
+        "  UnsafeAuthority = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  NoDuplicateExecution",
+        "  NoDuplicateAccounting",
+        "  CurrentAuthorityAtApply",
+        "  ReceiptsMatchAccounting",
+        "  Conservation",
+        "  TypeOK"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RefundRecoveryAccounting.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Refunds = {refund_a, refund_b}",
+        "  Workers = {worker_a, worker_b}",
+        "  Captured = 2",
+        "  UnsafeExecutionReplay = FALSE",
+        "  UnsafeAccountingReplay = TRUE",
+        "  UnsafeAuthority = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  NoDuplicateExecution",
+        "  NoDuplicateAccounting",
+        "  CurrentAuthorityAtApply",
+        "  ReceiptsMatchAccounting",
+        "  Conservation",
+        "  TypeOK"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RefundRecoveryAuthority.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Refunds = {refund_a, refund_b}",
+        "  Workers = {worker_a, worker_b}",
+        "  Captured = 2",
+        "  UnsafeExecutionReplay = FALSE",
+        "  UnsafeAccountingReplay = FALSE",
+        "  UnsafeAuthority = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  NoDuplicateExecution",
+        "  NoDuplicateAccounting",
+        "  CurrentAuthorityAtApply",
+        "  ReceiptsMatchAccounting",
+        "  Conservation",
+        "  TypeOK"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RefundRecoveryExecution.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Refunds = {refund_a, refund_b}",
+        "  Workers = {worker_a, worker_b}",
+        "  Captured = 2",
+        "  UnsafeExecutionReplay = TRUE",
+        "  UnsafeAccountingReplay = FALSE",
+        "  UnsafeAuthority = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  NoDuplicateExecution",
+        "  NoDuplicateAccounting",
+        "  CurrentAuthorityAtApply",
+        "  ReceiptsMatchAccounting",
+        "  Conservation",
+        "  TypeOK"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

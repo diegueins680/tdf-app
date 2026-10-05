@@ -27,6 +27,7 @@ dependencies:
   - mime-mail
   - monad-logger
   - mtl
+  - network
   - path-pieces
   - persistent
   - persistent-postgresql

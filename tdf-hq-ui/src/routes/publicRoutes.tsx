@@ -42,6 +42,7 @@ const PublicBookingPage = lazy(() => import('../pages/PublicBookingPage'));
 const PublicBookingOrderTrackingPage = lazy(() => import('../pages/PublicBookingOrderTrackingPage'));
 const PublicReputationRightsPage = lazy(() => import('../pages/PublicReputationRightsPage'));
 const PublicEventTicketsPage = lazy(() => import('../pages/PublicEventTicketsPage'));
+const ProviderPaymentReturnPage = lazy(() => import('../pages/ProviderPaymentReturnPage'));
 const PublicWhatsAppConsentPage = lazy(() => import('../pages/PublicWhatsAppConsentPage'));
 const PublicWhatsAppConsentSuccessPage = lazy(() => import('../pages/PublicWhatsAppConsentSuccessPage'));
 const InteractionPage = lazy(() => import('../pages/InteractionPage'));
@@ -79,6 +80,7 @@ export function renderPublicRoutes() {
       <Route path="/eventos/:eventId" element={<PublicBranding><DirectoryPublicDetailPage kind="event" /></PublicBranding>} />
       <Route path="/eventos/:eventId/entradas" element={<PublicBranding><PublicEventTicketsPage /></PublicBranding>} />
       <Route path="/eventos/:eventId/orden/:orderId" element={<PublicBranding><PublicEventTicketsPage /></PublicBranding>} />
+      <Route path="/pagos/retorno" element={<PublicBranding><ProviderPaymentReturnPage /></PublicBranding>} />
       <Route path="/venues/:venueId" element={<PublicBranding><DirectoryPublicDetailPage kind="venue" /></PublicBranding>} />
       <Route path="/conversacion/:destinationKind/:destinationId" element={<PublicBranding><InteractionPage /></PublicBranding>} />
       <Route path="/fans" element={<PublicBranding><FanHubPage /></PublicBranding>} />
