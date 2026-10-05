@@ -117,7 +117,7 @@ uses the existing canonical migration-batch generator, including its schema
 verifier, and binds the manifest and SQL hashes to the receipt. The helper first
 rejects unknown or changed applied history, applies the batch twice on the admitted
 isolate, and requires complete ledger correspondence, preserved historical entries
-and stable second-application results. Any provider/revenue/social control changes
+and stable second-application results. Any provider/revenue/social, merchandise-reputation, interaction or optional event-operation control changes
 are reported explicitly; their presence is not authorization to activate them in
 production. No application or worker is started against the restored data. SQL and
 migration diagnostics stay inside the root-private archive directory.

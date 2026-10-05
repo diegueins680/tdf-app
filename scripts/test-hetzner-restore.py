@@ -27,6 +27,31 @@ def container():
                 'Tmpfs': {key: '' for key in (restore.DATA, '/var/run/postgresql', '/tmp')}}, 'Mounts': []}
 
 
+class CollectorCompatibilityTests(unittest.TestCase):
+    def test_restored_database_uses_actual_collector_with_optional_event_table(self):
+        fixture_spec = importlib.util.spec_from_file_location('inspection_fixture', ROOT/'scripts/test-hetzner-inspection.py')
+        fixtures = importlib.util.module_from_spec(fixture_spec)
+        fixture_spec.loader.exec_module(fixtures)
+        runtime = fixtures.module
+        raw = fixtures.database()
+        raw.pop('eventOperationFlags')  # Main SQL does not query this optional table.
+        with self.assertRaises(KeyError):
+            runtime.summarize_database(raw)  # Previous restore integration fails.
+        for observed, expected in [(None, None), ([], []),
+                ([{'feature_code': 'event.operations.api', 'enabled': False}],
+                 [{'flag': 'event.operations.api', 'enabled': False}])]:
+            with self.subTest(observed=observed), patch.object(restore, 'execute', return_value=json.dumps(raw)) as query, \
+                    patch.object(runtime, 'optional_event_flags', return_value=observed) as optional:
+                result = restore.observe_database(runtime, TARGET)
+                self.assertEqual(result['eventOperationFlags'], expected)
+                self.assertIn(TARGET, query.call_args.args[0])
+                self.assertNotIn(SOURCE, query.call_args.args[0])
+                optional.assert_called_once_with(TARGET)
+        with patch.object(restore, 'execute', return_value=json.dumps(raw)), \
+                patch.object(runtime, 'optional_event_flags', side_effect=ValueError('synthetic optional query rejection')):
+            with self.assertRaises(ValueError): restore.observe_database(runtime, TARGET)
+
+
 class RestoreBoundaryTests(unittest.TestCase):
     def make(self):
         return restore.IsolatedRestore(SOURCE, IMAGE, IMAGE_ID, NONCE)
@@ -283,8 +308,8 @@ class CandidateMigrationTests(unittest.TestCase):
     def test_two_applications_preserve_history_and_report_control_changes(self):
         for fault in [None, 'execution', 'missing', 'history', 'second-control-change']:
             with self.subTest(fault=fault), tempfile.TemporaryDirectory() as temporary:
-                before = {'migrations': self.ledger(), 'revenueFlags': [], 'providerAccounts': [], 'socialRuntime': None}
-                after = {**before, 'migrations': self.ledger(True), 'revenueFlags': [{'enabled': True}]}
+                before = {'migrations': self.ledger(), **{key: None for key in restore.DATABASE_CONTROLS}}
+                after = {**before, 'migrations': self.ledger(True), **{key: [{'enabled': True}] for key in restore.DATABASE_CONTROLS}}
                 second = copy.deepcopy(after)
                 if fault == 'missing': after['migrations'] = self.ledger()
                 if fault == 'history': after['migrations'][0]['source_commit'] = 'e'*40
@@ -299,6 +324,7 @@ class CandidateMigrationTests(unittest.TestCase):
                         result = restore.rehearse_candidate(runtime, target, Path(temporary), self.candidate(), before)
                         self.assertEqual(result['applications'], 2)
                         self.assertFalse(result['deploymentAuthorized'])
+                        self.assertEqual(set(result['controlChanges']), set(restore.DATABASE_CONTROLS))
                         self.assertEqual(result['controlChanges']['revenueFlags']['after'], [{'enabled': True}])
                         self.assertEqual(run.call_count, 2)
                     for call in run.call_args_list:

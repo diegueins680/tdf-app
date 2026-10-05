@@ -2470,7 +2470,7 @@
     {
       "id": "SURFACE-60310758bd18e31e",
       "path": "ops/hetzner/rehearse-postgres-restore.py",
-      "sha256": "9d35791e9c215de5252ca1bd9637e8d1ae69387c72b420df34ee60e7ff8d49cf",
+      "sha256": "4794f49c34ed9042fc58450020ea844dc1dae57852c6a2607c4f8d5d23a0176e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4252,7 +4252,7 @@
     {
       "id": "SURFACE-1ecc6d6a29d831c9",
       "path": "scripts/test-hetzner-restore.py",
-      "sha256": "29c865489be16fb0510927b5fe6815498dde82dc74197365ac37bfbe28c79cf4",
+      "sha256": "279906ce3fca58619f1a4c361c475c810bb666263418ca45a975ee0ad4fd8e41",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20542,7 +20542,7 @@
     },
     {
       "path": "ops/hetzner/README.md",
-      "sha256": "b66d10d8e6b5947f6fda4a2810fca1a7f9479b784371b821d0a923c1b204bc22",
+      "sha256": "1df18109dfb35e76e59c5e5d89101cf67e4fbfb8dafee1840005e70163f15dc6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

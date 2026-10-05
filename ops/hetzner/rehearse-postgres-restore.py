@@ -231,6 +231,19 @@ def validate_candidate(candidate, ledger, *, complete=False):
     return len(expected) - len(observed)
 
 
+DATABASE_CONTROLS = ('revenueFlags', 'providerAccounts', 'socialRuntime',
+                     'merchReputationFlags', 'missingMerchReputationFlags',
+                     'eventOperationFlags', 'interactionRuntime', 'interactionEntityKinds')
+
+
+def observe_database(runtime, container_id):
+    # Keep restore verification compatible with the collector's optional table
+    # boundary. SQL alone deliberately cannot reference an absent event table.
+    data = json.loads(execute(runtime.database_command(container_id), input=runtime.SQL))
+    data['eventOperationFlags'] = runtime.optional_event_flags(container_id)
+    return runtime.summarize_database(data)
+
+
 def rehearse_candidate(runtime, target, directory, candidate, restored):
     pending = validate_candidate(candidate, restored['migrations'])
     sql_file = directory / 'candidate-migrations.sql'
@@ -248,7 +261,7 @@ def rehearse_candidate(runtime, target, directory, candidate, restored):
                          ['-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-d', 'tdf_hq']), stdin=input_file,
                          stdout=output, stderr=output, timeout=180, preexec_fn=diagnostic_limit)
         require(result.returncode == 0)
-        after = runtime.summarize_database(json.loads(execute(runtime.database_command(target.target), input=runtime.SQL)))
+        after = observe_database(runtime, target.target)
         validate_candidate(candidate, after['migrations'], complete=True)
         # Existing applied history must survive unchanged; new entries bind the
         # immutable candidate. This rejects ledger rewriting during rehearsal.
@@ -262,12 +275,11 @@ def rehearse_candidate(runtime, target, directory, candidate, restored):
             first = after
         else:
             require(after == first)
-    controls = ('revenueFlags', 'providerAccounts', 'socialRuntime')
     return {'sourceRevision': candidate['sourceRevision'], 'manifestSha256': candidate['manifestSha256'],
             'sqlSha256': candidate['sqlSha256'], 'applications': 2, 'pendingBefore': pending,
             'migrationCount': len(after['migrations']), 'schemaVerification': 'passed by canonical batch',
             'controlChanges': {key: {'before': restored[key], 'after': after[key]}
-                               for key in controls if restored[key] != after[key]},
+                               for key in DATABASE_CONTROLS if restored[key] != after[key]},
             'deploymentAuthorized': False}
 
 
@@ -392,7 +404,7 @@ def rehearse_locked(runtime, candidate=None):
         stage = 'verify-restoration'
         restored_counts = validate_counts(json.loads(execute(psql(target.target, read_only=True), input=COUNTS_SQL)))
         require(restored_counts == source_counts)
-        restored = runtime.summarize_database(json.loads(execute(runtime.database_command(target.target), input=runtime.SQL)))
+        restored = observe_database(runtime, target.target)
         require(restored['migrations'] == snapshot['database']['migrations'])
         candidate_result = None
         if candidate is not None:
