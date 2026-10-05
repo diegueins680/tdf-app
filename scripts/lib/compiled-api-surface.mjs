@@ -153,3 +153,34 @@ export function verifyCompiledApiDeclarationSnapshot(surface, snapshot) {
     throw new Error('Compiled API declaration drift: review the retained contract-candidate.json, reconcile intent and regenerate the canonical snapshot.');
   }
 }
+
+// Deferral is a reviewed product boundary, not permission to omit arbitrary APIs.
+export function verifyApiAvailability(surface, documented, policy) {
+  if (policy?.schemaVersion !== 1 || typeof policy.authority !== 'string' || !policy.authority.trim()
+    || !Array.isArray(policy.deferredOperations)) throw new Error('Malformed API availability policy');
+  const comparison = compareApiSurface(surface, documented);
+  const missing = new Set(comparison.documentedWithoutTypedRoute);
+  const declared = new Set(documented.map(row => {
+    const split = row.id.indexOf(' ');
+    return routeKey(row.id.slice(0, split), row.id.slice(split + 1));
+  }));
+  const deferred = new Set();
+  for (const row of policy.deferredOperations) {
+    if (!row || typeof row.id !== 'string' || !/^[A-Z]+ \/[^?]*$/.test(row.id)
+      || typeof row.requirement !== 'string' || !/^[A-Z]+-[A-Z0-9-]+$/.test(row.requirement)
+      || typeof row.reason !== 'string' || !row.reason.trim()
+      || !Array.isArray(row.sources) || !row.sources.length
+      || row.sources.some(source => typeof source !== 'string' || !source.trim())) {
+      throw new Error('Malformed deferred API operation');
+    }
+    const split = row.id.indexOf(' '), id = routeKey(row.id.slice(0, split), row.id.slice(split + 1));
+    if (id !== row.id || deferred.has(id)) throw new Error('Duplicate or noncanonical deferred API operation');
+    deferred.add(id);
+    if (!declared.has(id)) throw new Error(`Deferred API declaration disappeared: ${id}`);
+    if (!missing.has(id)) throw new Error(`Deferred API unexpectedly mounted: ${id}`);
+  }
+  const unexplained = [...missing].filter(id => !deferred.has(id));
+  if (unexplained.length) throw new Error(`Documented API unexpectedly unmounted: ${unexplained.join(', ')}`);
+  return { deferredOperations: [...deferred].sort(), unexpectedUnmounted: [],
+    limitations: 'Explicit typed-route deferrals only; Raw mount behavior, production flags and authorization require separate evidence.' };
+}

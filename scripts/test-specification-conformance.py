@@ -91,6 +91,18 @@ class ConformanceControls(unittest.TestCase):
         self.assertIn('GET /directory/search', operations)
         self.assertEqual(operations['GET /social/v2/me']['source'], 'tdf-hq/docs/openapi/social-v2.yaml')
 
+    def test_deferred_api_requires_real_requirement_and_provenance(self):
+        policy = copy.deepcopy(self.generated['apiAvailability'])
+        self.assertEqual(len(policy['deferredOperations']), 25)
+        conformance.validate_availability(policy, self.generated['requirements'])
+        for field, value in [('requirement', 'MKT-UNKNOWN-999'), ('sources', []),
+                             ('sources', ['../outside.md']), ('sources', ['/etc/passwd']),
+                             ('sources', ['absent-file.md']), ('sources', [None])]:
+            invalid = copy.deepcopy(policy)
+            invalid['deferredOperations'][0][field] = value
+            with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+                conformance.validate_availability(invalid, self.generated['requirements'])
+
     def test_openapi_negative_controls(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory).resolve()

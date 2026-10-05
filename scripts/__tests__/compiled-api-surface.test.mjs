@@ -5,7 +5,7 @@ import { mkdtempSync, mkdirSync, copyFileSync, writeFileSync, readFileSync, real
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
-import { compiledApiSurface, compareApiSurface, compiledApiDeclarationSnapshot, verifyCompiledApiDeclarationSnapshot } from '../lib/compiled-api-surface.mjs';
+import { compiledApiSurface, compareApiSurface, compiledApiDeclarationSnapshot, verifyCompiledApiDeclarationSnapshot, verifyApiAvailability } from '../lib/compiled-api-surface.mjs';
 
 const node = (module, name, ...args) => ({ module, name, args });
 const symbol = text => node('GHC.TypeLits', JSON.stringify(text));
@@ -136,6 +136,7 @@ test('inspection binds captured snapshot bytes and rejects a baseline replacemen
   const baseline = path.join(root, 'formal/system/compiled-api-surface.json');
   writeFileSync(baseline, replacement);
   writeFileSync(path.join(root, 'formal/system/traceability.json'), JSON.stringify({ apiOperations: [] }));
+  writeFileSync(path.join(root, 'formal/system/api-availability.json'), JSON.stringify({ schemaVersion: 1, authority: 'fixture', deferredOperations: [] }));
   const binary = path.join(root, 'fixture.cjs');
   writeFileSync(binary, `#!${process.execPath}\nprocess.stdout.write(${JSON.stringify(JSON.stringify(description))});\n`, { mode: 0o700 });
   const git = (...args) => execFileSync('git', args, { cwd: root, stdio: 'pipe' });
@@ -176,4 +177,21 @@ syncBuiltinESMExports();
   const ambiguous = run('duplicate');
   assert.notEqual(ambiguous.status, 0);
   assert.match(ambiguous.stderr, /Competing compiled route declarations/);
+});
+
+test('availability gate admits explicit deferral and rejects missing, mounted, stale or malformed exceptions', () => {
+  const surface = describe(sub(symbol('live'), verb()));
+  const documented = [{ id: 'GET /live', responses: ['200'] }, { id: 'GET /deferred', responses: ['200'] }];
+  const policy = { schemaVersion: 1, authority: 'reviewed', deferredOperations: [
+    { id: 'GET /deferred', requirement: 'MKT-REPUTATION-001', reason: 'Local only', sources: ['contract.md'] },
+  ] };
+  assert.deepEqual(verifyApiAvailability(surface, documented, policy).deferredOperations, ['GET /deferred']);
+  assert.throws(() => verifyApiAvailability(surface, documented, { ...policy, deferredOperations: [] }), /unexpectedly unmounted/);
+  assert.throws(() => verifyApiAvailability(describe(alternative(sub(symbol('live'), verb()), sub(symbol('deferred'), verb()))), documented, policy), /unexpectedly mounted/);
+  assert.throws(() => verifyApiAvailability(surface, documented.slice(0, 1), policy), /declaration disappeared/);
+  assert.throws(() => verifyApiAvailability(surface, documented, { ...policy, deferredOperations: [...policy.deferredOperations, ...policy.deferredOperations] }), /Duplicate/);
+  for (const field of ['id', 'requirement', 'reason', 'sources']) {
+    const invalid = structuredClone(policy); delete invalid.deferredOperations[0][field];
+    assert.throws(() => verifyApiAvailability(surface, documented, invalid), /Malformed/);
+  }
 });

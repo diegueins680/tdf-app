@@ -122,10 +122,34 @@ def validate_requirements(requirements, root=ROOT):
     return seen
 
 
+
+def validate_availability(policy, requirements, root=ROOT):
+    ids = {row['id'] for row in requirements}
+    if policy.get('schemaVersion') != 1 or not isinstance(policy.get('deferredOperations'), list):
+        raise ValueError('Invalid API availability policy')
+    for row in policy['deferredOperations']:
+        if row.get('requirement') not in ids:
+            raise ValueError('Deferred API lacks requirement ownership')
+        sources = row.get('sources')
+        if not isinstance(sources, list) or not sources:
+            raise ValueError('Deferred API lacks provenance')
+        for reference in sources:
+            if not isinstance(reference, str):
+                raise ValueError('Invalid deferred API provenance')
+            path = Path(reference)
+            target = root/path
+            if (path.is_absolute() or '..' in path.parts or not target.is_file()
+                    or not target.resolve().is_relative_to(root.resolve())
+                    or any((root/parent).is_symlink() for parent in (path, *path.parents))):
+                raise ValueError('Invalid deferred API provenance')
+    return policy
+
+
 def generate(root=ROOT):
     inventory = json.loads((root/'formal/system/inventory.json').read_text())
     requirements = json.loads((root/'formal/system/requirements.json').read_text())['requirements']
     validate_requirements(requirements, root)
+    availability = validate_availability(json.loads((root/'formal/system/api-availability.json').read_text()), requirements, root)
     reverse = {}
     for row in requirements:
         for field in ['implementation', 'tests', 'formalModels']:
@@ -185,7 +209,7 @@ def generate(root=ROOT):
             'unmappedSurfaces': [s['id'] for s in surfaces if not s['requirements']],
             'untestedRequirements': [r['id'] for r in requirements if not r['tests']],
             'unmodeledCriticalRequirements': [r['id'] for r in requirements if r.get('critical') and not r['formalModels']],
-            'stateMachines': models, 'apiOperations': operations, 'capabilityMatrix': capabilities,
+            'stateMachines': models, 'apiOperations': operations, 'apiAvailability': availability, 'capabilityMatrix': capabilities,
             'conformanceCounts': counts,
             'limitations': ['Role predicates are preserved, not flattened into unconditional grants.',
                             'OpenAPI operations are not proof of Servant or runtime endpoint coverage.',

@@ -3047,7 +3047,8 @@
         "scripts/inspect-compiled-api.mjs",
         "scripts/lib/compiled-api-surface.mjs",
         "formal/system/compiled-api-surface.json",
-        "tdf-hq/src/TDF/Meta.hs"
+        "tdf-hq/src/TDF/Meta.hs",
+        "formal/system/api-availability.json"
       ],
       "tests": [
         "tdf-hq/test/TDF/APITypesSpec.hs",
@@ -3475,6 +3476,81 @@
         "classification": "PARTIAL",
         "reason": "Scoped failure repair and tests/model added; full worker lifecycle and deployed behavior remain open."
       }
+    },
+    {
+      "id": "MKT-REPUTATION-001",
+      "title": "Explicitly deferred merchandise-reputation API",
+      "domain": "MKT",
+      "statement": "The merchandise-reputation contract is for synthetic local development and must remain absent from the production CombinedAPI until a separately reviewed activation decision reconciles its privacy, authorization and rollout requirements. Every deferred documented operation must be individually enumerated; arbitrary missing routes are forbidden.",
+      "actors": [
+        "API maintainer",
+        "Release reviewer",
+        "Synthetic local tester"
+      ],
+      "preconditions": [
+        "Existing local-only scope in docs/merch-reputation.md; no approved activation transition."
+      ],
+      "inputs": [
+        "Compiled CombinedAPI operations",
+        "Resolved OpenAPI declarations",
+        "formal/system/api-availability.json"
+      ],
+      "state": {
+        "initial": "local-only",
+        "states": [
+          "local-only",
+          "activation-review-required"
+        ],
+        "terminal": []
+      },
+      "allowedTransitions": [
+        "Local synthetic implementation and contract maintenance without production mounting.",
+        "Request a separate reviewed activation decision; this requirement does not grant activation."
+      ],
+      "forbiddenTransitions": [
+        "Mount a deferred typed route while its deferral remains authoritative.",
+        "Silently omit an undeferred documented route.",
+        "Remove a deferred declaration without reconciling its policy entry."
+      ],
+      "effects": [
+        "Retain all raw conformance discrepancies and emit explicit typed-route availability evidence."
+      ],
+      "authorization": "Frontend visibility or a database flag cannot authorize mounting; domain-specific backend authorization must be reviewed before activation.",
+      "privacy": "No review, message, notification or customer data is needed for this declaration check.",
+      "concurrency": "Inspector captures immutable input bytes and rejects source changes during inspection; production observations remain sequential.",
+      "idempotency": "Repeated checks on identical inputs produce identical route classifications; receipts use exclusive output creation.",
+      "failure": "Missing, duplicate, stale, mounted or malformed deferrals reject the gate.",
+      "recovery": "Preserve discrepancy evidence; reconcile the intended scope and review source changes before rerunning. Do not auto-mount to make counts match.",
+      "observability": "Record source, binary and policy hashes plus the exact deferred route identities.",
+      "source": "docs/merch-reputation.md local-only status; compiled eadbcb451 discovery of25 absent types; AUTHORITY-026.",
+      "implementation": [
+        "scripts/inspect-compiled-api.mjs",
+        "scripts/lib/compiled-api-surface.mjs",
+        "formal/system/api-availability.json",
+        "tdf-hq/src/TDF/API/MerchReputation.hs",
+        "tdf-hq/src/TDF/Server/MerchReputation.hs"
+      ],
+      "tests": [
+        "scripts/__tests__/compiled-api-surface.test.mjs",
+        "scripts/test-specification-conformance.py"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "High for compiled typed-route availability; domain behavior and Raw reachability require separate verification.",
+      "ambiguity": [
+        "Deferred implementation business rules, full authorization and privacy are not validated by absence from CombinedAPI.",
+        "No mounting or production activation is approved."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Executable declaration controls exist; final rebuilt candidate and broader deferred-domain conformance remain outstanding."
+      },
+      "contract": "formal/system/compiled-api-boundary.md",
+      "authority": "AUTHORITY-026 preserves the existing explicitly local-only domain scope.",
+      "property": "Every documented unmounted typed operation is explicitly deferred; no deferred operation is mounted.",
+      "verification": "Compiled surface gate, controlled mounting/omission/stale-policy mutations and requirement/provenance checks.",
+      "evidence": "Exact-source compiled availability receipt and Node/Python gate logs."
     }
   ],
   "sourceFingerprints": {
@@ -3529,6 +3605,7 @@
     "formal/social/DmReads.tla": "b322db9a64900980298be4b0ed7f9d8341f8df66a2ed0fa57ebca8868b893eff",
     "formal/social/LegacyDm.tla": "82c7adae30ad9df72df8e288948b3fc7c3bae3bc16cc82766d32ccc665167e16",
     "formal/social/SessionBoundary.tla": "f52854a744652bc18f0d9f0fb4c3e6453447d26aff88267dff29ac03924e8ee6",
+    "formal/system/api-availability.json": "67ebaf0974ad3c2cdf3949f44e834e6ce13ff4444cce7304e73aaabd1f48b25d",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/compiled-api-surface.json": "7f3872fc6ff706abaca76c933118b7abab4193dd527f5eeb4eba132933d99333",
     "ops/hetzner/compose.production.yaml": "1191a5773dc83807be2364340f8cb9f0feb33af4ed45d6e0bfbefe9f3bc42db8",
@@ -3542,7 +3619,7 @@
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "03fe83c795e80e464e4f0a6dba868723a60c079f6c5631e2b3435732eba649ea",
     "scripts/__tests__/ci-pipeline.test.mjs": "a431e137bb4669893ee93ab56591b986f7835b97d5da80222db9fa753cbe1417",
-    "scripts/__tests__/compiled-api-surface.test.mjs": "cd43ba27b092db4b1652f7ead7202cb64721323e05fd95553c073c3a2aebcb42",
+    "scripts/__tests__/compiled-api-surface.test.mjs": "e6df8ffa2effd62841e6d0131104c327d91257b89836d6b3e71234468c64c2b3",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/disposable-postgres-url.test.mjs": "35c802c14c16ca2e53492845b7023715ed22aea775e39b7e237603d164fbb374",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
@@ -3569,9 +3646,9 @@
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/ci-change-scope.mjs": "6e1bf4833fec7e1e51e230ccc830dca80470c0c2dcad18a2c329ad9defdf1379",
     "scripts/deploy-stripe-ticketing.sh": "33fb7bde438832698cc382e83e1056f0196d1aa18c5753cfc64ba89ca65d5f95",
-    "scripts/inspect-compiled-api.mjs": "2c7f0777f3ba6301b0e836fd1c0912ff3390fca2aef861f5b08a7af5c129e32f",
+    "scripts/inspect-compiled-api.mjs": "ff34782c6de3c831b68f2a4b80aaaf2130b12f7615a957f7ac7a8b7191591305",
     "scripts/inspect-hetzner-production.mjs": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
-    "scripts/lib/compiled-api-surface.mjs": "290aa4e9ca72792e138a1d3192c2d60cb953e8ec1229c2538e8a10f958622c2d",
+    "scripts/lib/compiled-api-surface.mjs": "f2f8fb3e46b5d6d6fba6936bc8cf9f23dd373a04fc61cb264488b89c91302b76",
     "scripts/lib/disposable-postgres-url.mjs": "49cdbc947485d89de6be08f23c888c686c4255de9cb73a331fc573352738fdb4",
     "scripts/lib/formal-result-summary.mjs": "fa378d768a1c4e8ff6fe67e8d18d61367cd1b272339107e71c497798fb657167",
     "scripts/lib/hetzner-migration-rehearsal.mjs": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a",
@@ -3593,7 +3670,7 @@
     "scripts/social/dm-read-model-cases.sql": "f4d2afe041a287e218fec18cd60122ae092842cf43ffc2eab00d79ea42957ebb",
     "scripts/social/dm-read-refinement.sql": "067a8f255ee74ed589bd4a97b94ab918335c07e6a4dc69ee0a39c23a48d4dcea",
     "scripts/social/test-dm-writes.sh": "2f216b4a6d7537959a0ddc6aa4da52afc5a11828d852dc6a3c5d469702e9122a",
-    "scripts/specification-conformance.py": "7e0d9aa01c62362482a60b409bb57d7b07c3863d393a4d606af81148158ab2d2",
+    "scripts/specification-conformance.py": "9ed7ec818fb0f80ca4522129276db3ead0110e273dee4c73c7d7d1980ff5acea",
     "scripts/specification-inventory.py": "d2fd062de80b6aacf832714799d7596f13cabf101d2d7073192b2cd6ec6ff275",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
@@ -3607,7 +3684,7 @@
     "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
-    "scripts/test-specification-conformance.py": "edd2d8b6b8d46603144d9fb02af2f43850dbf2791f8266a1dd109a1e9e9e19b9",
+    "scripts/test-specification-conformance.py": "d9a85530946bce9fbbfe2f03c532fc4630757fca9337e93712ebba031b010cb9",
     "scripts/test-specification-inventory.py": "429bfd7c6ee6600e4010394f476c1247597d3c6c1a88f1fbd5e738c96b221df8",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "836906067ac620b64214922f9390c012848abf5bc1c4ca6f15a02757986bcddd",
@@ -3653,6 +3730,7 @@
     "tdf-hq/sql/2026-10-04_merch_commission_exact.sql": "36a4432d9e20442107f570228e4477cb93072433f5752f9dd7d32106d60c4b1d",
     "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql": "ff27157ab7ad9b9ba559d80ff40b88f11c8c0f6857bdce0aa0ff58966e8be98d",
     "tdf-hq/src/TDF/API.hs": "3b1f027ffe718dd547fc2299f6aa8977b9db9915736d4210dc1df235cb1372bc",
+    "tdf-hq/src/TDF/API/MerchReputation.hs": "84d721478ab6f904dee04ae3568a32d30f37a220937b703fc74a006c44995bdb",
     "tdf-hq/src/TDF/API/Radio.hs": "5c62e0f4a402225202217be3a8361991127ad1ac093fd0f4366789dd1723357f",
     "tdf-hq/src/TDF/Auth.hs": "851a010d990ec981a7410ab1228bfe36a0ebc776008be7f22e7a97fb6701e5c8",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "6a0395b16a2bafa271dbc051da42972fe6a51da5db9eb2235bf78a46e47d819d",
@@ -3673,6 +3751,7 @@
     "tdf-hq/src/TDF/Server.hs": "f4ff8ec05572f9c96009bd6e4bdfe808327192672ead560d7996f831164048d2",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
+    "tdf-hq/src/TDF/Server/MerchReputation.hs": "4b2be34a6dc602a8a626eb2cc104cd3e9478ee8dae43a7287d4d6112445b1f2d",
     "tdf-hq/src/TDF/Server/ProviderExecution.hs": "a8ea11e94ddf018b3955f2c67e86122035731268499b605673a2766e577c0a48",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
@@ -4125,6 +4204,10 @@
     "scripts/test-specification-conformance.py": [
       {
         "requirement": "SYS-TRACE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MKT-REPUTATION-001",
         "relationship": "tests"
       }
     ],
@@ -5284,11 +5367,19 @@
       {
         "requirement": "SYS-API-003",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-REPUTATION-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/lib/compiled-api-surface.mjs": [
       {
         "requirement": "SYS-API-003",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-REPUTATION-001",
         "relationship": "implementation"
       }
     ],
@@ -5304,6 +5395,16 @@
         "relationship": "implementation"
       }
     ],
+    "formal/system/api-availability.json": [
+      {
+        "requirement": "SYS-API-003",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-REPUTATION-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/test/TDF/APITypesSpec.hs": [
       {
         "requirement": "SYS-API-003",
@@ -5313,6 +5414,10 @@
     "scripts/__tests__/compiled-api-surface.test.mjs": [
       {
         "requirement": "SYS-API-003",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MKT-REPUTATION-001",
         "relationship": "tests"
       }
     ],
@@ -5464,6 +5569,18 @@
       {
         "requirement": "OPS-ENRICH-001",
         "relationship": "formalModels"
+      }
+    ],
+    "tdf-hq/src/TDF/API/MerchReputation.hs": [
+      {
+        "requirement": "MKT-REPUTATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Server/MerchReputation.hs": [
+      {
+        "requirement": "MKT-REPUTATION-001",
+        "relationship": "implementation"
       }
     ]
   },
@@ -6010,11 +6127,15 @@
     {
       "id": "SURFACE-336f05a0284b88b9",
       "path": "scripts/__tests__/compiled-api-surface.test.mjs",
-      "sha256": "cd43ba27b092db4b1652f7ead7202cb64721323e05fd95553c073c3a2aebcb42",
+      "sha256": "e6df8ffa2effd62841e6d0131104c327d91257b89836d6b3e71234468c64c2b3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-API-003",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MKT-REPUTATION-001",
           "relationship": "tests"
         }
       ]
@@ -6932,11 +7053,15 @@
     {
       "id": "SURFACE-0c3b107b729b7e74",
       "path": "scripts/inspect-compiled-api.mjs",
-      "sha256": "2c7f0777f3ba6301b0e836fd1c0912ff3390fca2aef861f5b08a7af5c129e32f",
+      "sha256": "ff34782c6de3c831b68f2a4b80aaaf2130b12f7615a957f7ac7a8b7191591305",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-API-003",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-REPUTATION-001",
           "relationship": "implementation"
         }
       ]
@@ -7054,11 +7179,15 @@
     {
       "id": "SURFACE-33d3dc767fe336d3",
       "path": "scripts/lib/compiled-api-surface.mjs",
-      "sha256": "290aa4e9ca72792e138a1d3192c2d60cb953e8ec1229c2538e8a10f958622c2d",
+      "sha256": "f2f8fb3e46b5d6d6fba6936bc8cf9f23dd373a04fc61cb264488b89c91302b76",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-API-003",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-REPUTATION-001",
           "relationship": "implementation"
         }
       ]
@@ -8009,7 +8138,7 @@
     {
       "id": "SURFACE-13021813fc894ba2",
       "path": "scripts/specification-conformance.py",
-      "sha256": "7e0d9aa01c62362482a60b409bb57d7b07c3863d393a4d606af81148158ab2d2",
+      "sha256": "9ed7ec818fb0f80ca4522129276db3ead0110e273dee4c73c7d7d1980ff5acea",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -8685,11 +8814,15 @@
     {
       "id": "SURFACE-21c4ed4ad1e7c32f",
       "path": "scripts/test-specification-conformance.py",
-      "sha256": "edd2d8b6b8d46603144d9fb02af2f43850dbf2791f8266a1dd109a1e9e9e19b9",
+      "sha256": "d9a85530946bce9fbbfe2f03c532fc4630757fca9337e93712ebba031b010cb9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-TRACE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MKT-REPUTATION-001",
           "relationship": "tests"
         }
       ]
@@ -16763,7 +16896,12 @@
       "path": "tdf-hq/src/TDF/API/MerchReputation.hs",
       "sha256": "84d721478ab6f904dee04ae3568a32d30f37a220937b703fc74a006c44995bdb",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MKT-REPUTATION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-076082895c77848b",
@@ -17925,7 +18063,12 @@
       "path": "tdf-hq/src/TDF/Server/MerchReputation.hs",
       "sha256": "4b2be34a6dc602a8a626eb2cc104cd3e9478ee8dae43a7287d4d6112445b1f2d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MKT-REPUTATION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-576775b1139a1557",
@@ -23194,7 +23337,6 @@
     "SURFACE-68690990a6b528d0",
     "SURFACE-a2a3d8ce17850067",
     "SURFACE-81441a3bffa22539",
-    "SURFACE-bc0ce2c9721d3d48",
     "SURFACE-076082895c77848b",
     "SURFACE-e454210d86a70f09",
     "SURFACE-4ec58002d2eff1e2",
@@ -23316,7 +23458,6 @@
     "SURFACE-436c77cb88490332",
     "SURFACE-06aae7ecd0fab607",
     "SURFACE-7385d5c53761b485",
-    "SURFACE-93436e246ed23b35",
     "SURFACE-576775b1139a1557",
     "SURFACE-2c8ed40114d9013d",
     "SURFACE-c446ba475dccb0e6",
@@ -23842,7 +23983,8 @@
     "SYS-API-003",
     "SYS-VERIFY-004",
     "AUTH-RADIO-001",
-    "COURSE-SUBJECT-001"
+    "COURSE-SUBJECT-001",
+    "MKT-REPUTATION-001"
   ],
   "stateMachines": [
     {
@@ -32101,6 +32243,237 @@
       "conformance": "not-established-by-client-generation"
     }
   ],
+  "apiAvailability": {
+    "schemaVersion": 1,
+    "authority": "AUTHORITY-026; MKT-REPUTATION-001. Explicitly deferred contract declarations; no activation authorization.",
+    "deferredOperations": [
+      {
+        "id": "GET /merch/admin/reputation/cases",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      },
+      {
+        "id": "GET /merch/admin/reputation/category-suggestions",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      },
+      {
+        "id": "GET /merch/artists/{}/stores",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      },
+      {
+        "id": "GET /merch/orders/{}/reviews/eligibility",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      },
+      {
+        "id": "GET /merch/products/{}/reputation",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      },
+      {
+        "id": "GET /merch/products/{}/reviews",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      },
+      {
+        "id": "GET /merch/reputation/formula",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      },
+      {
+        "id": "GET /merch/reputation/notification-preferences",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      },
+      {
+        "id": "GET /merch/reputation/preferences/{}",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      },
+      {
+        "id": "GET /merch/seller/stores/{}/reputation",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      },
+      {
+        "id": "GET /merch/stores/{}/reputation",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      },
+      {
+        "id": "GET /merch/stores/{}/reviews",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      },
+      {
+        "id": "POST /merch/admin/reputation/appeals/{}/decision",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      },
+      {
+        "id": "POST /merch/admin/reputation/cases/{}/decision",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      },
+      {
+        "id": "POST /merch/admin/reputation/cases/{}/workflow",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      },
+      {
+        "id": "POST /merch/admin/reputation/category-suggestions/{}/decision",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      },
+      {
+        "id": "POST /merch/reputation/category-suggestions",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      },
+      {
+        "id": "POST /merch/reputation/decisions/{}/appeal",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      },
+      {
+        "id": "POST /merch/reputation/reports",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      },
+      {
+        "id": "PUT /merch/orders/{}/lines/{}/product-review",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      },
+      {
+        "id": "PUT /merch/orders/{}/review-buyer-claim",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      },
+      {
+        "id": "PUT /merch/orders/{}/store-review",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      },
+      {
+        "id": "PUT /merch/reputation/notification-preferences",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      },
+      {
+        "id": "PUT /merch/reputation/preferences/{}",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      },
+      {
+        "id": "PUT /merch/reviews/{}/response",
+        "requirement": "MKT-REPUTATION-001",
+        "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+        "sources": [
+          "docs/merch-reputation.md",
+          "tdf-hq/src/TDF/API/MerchReputation.hs"
+        ]
+      }
+    ]
+  },
   "capabilityMatrix": [
     {
       "feature": "public.mobile",
@@ -45789,7 +46162,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 48,
+    "PARTIAL": 49,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

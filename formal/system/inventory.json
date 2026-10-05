@@ -2553,7 +2553,7 @@
     {
       "id": "SURFACE-336f05a0284b88b9",
       "path": "scripts/__tests__/compiled-api-surface.test.mjs",
-      "sha256": "cd43ba27b092db4b1652f7ead7202cb64721323e05fd95553c073c3a2aebcb42",
+      "sha256": "e6df8ffa2effd62841e6d0131104c327d91257b89836d6b3e71234468c64c2b3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3183,7 +3183,7 @@
     {
       "id": "SURFACE-0c3b107b729b7e74",
       "path": "scripts/inspect-compiled-api.mjs",
-      "sha256": "2c7f0777f3ba6301b0e836fd1c0912ff3390fca2aef861f5b08a7af5c129e32f",
+      "sha256": "ff34782c6de3c831b68f2a4b80aaaf2130b12f7615a957f7ac7a8b7191591305",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3279,7 +3279,7 @@
     {
       "id": "SURFACE-33d3dc767fe336d3",
       "path": "scripts/lib/compiled-api-surface.mjs",
-      "sha256": "290aa4e9ca72792e138a1d3192c2d60cb953e8ec1229c2538e8a10f958622c2d",
+      "sha256": "f2f8fb3e46b5d6d6fba6936bc8cf9f23dd373a04fc61cb264488b89c91302b76",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3969,7 +3969,7 @@
     {
       "id": "SURFACE-13021813fc894ba2",
       "path": "scripts/specification-conformance.py",
-      "sha256": "7e0d9aa01c62362482a60b409bb57d7b07c3863d393a4d606af81148158ab2d2",
+      "sha256": "9ed7ec818fb0f80ca4522129276db3ead0110e273dee4c73c7d7d1980ff5acea",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4437,7 +4437,7 @@
     {
       "id": "SURFACE-21c4ed4ad1e7c32f",
       "path": "scripts/test-specification-conformance.py",
-      "sha256": "edd2d8b6b8d46603144d9fb02af2f43850dbf2791f8266a1dd109a1e9e9e19b9",
+      "sha256": "d9a85530946bce9fbbfe2f03c532fc4630757fca9337e93712ebba031b010cb9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16944,7 +16944,7 @@
     },
     {
       "path": "docs/merch-reputation.md",
-      "sha256": "00abf2ebb5228c24afd0c0b63b3ffc6e07970903c76d6d4fa64325e422b79d05",
+      "sha256": "5469f7fb26fd62e33baf505f37985e8a60e4a416bafcab5c0799ef42a925ac3c",
       "authority": "inferred",
       "authorityBasis": "Estado: implementación oscura para datos sintéticos locales. Los nueve flags nacen desactivados en `staging` y `production`. No se importan ratings externos, no se envían mensajes y no se modifica el estado financiero o logístico de una orden.",
       "kind": "requirement-candidate"
@@ -20367,14 +20367,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "2118794847578cb6d0adbc319eb2e45f0eacae0a6eff009b4d9835313849ff21",
+      "sha256": "2e37b78f973b3de589e61b9f4401e5d6944ded2fdb6d67a5db3c941d33633aef",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "e73993ce4bd0c4ffdc889f9311965fae71ae6726df057e754b63e3c1dc32d602",
+      "sha256": "17b3186c3d464c888b8fc8c29c12c88c432b3b5b2118b0c41ae0030729d280f2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20402,7 +20402,7 @@
     },
     {
       "path": "formal/system/compiled-api-boundary.md",
-      "sha256": "866db04e2ffd27daf85f5bd4d94b3cf096a8682b9201603d41153574ceb390db",
+      "sha256": "05ad41def9fbe46945b07e66ac5e7b82a2dffba1c94a1dea8a66858d2bcf71ca",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20500,7 +20500,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "6aeab44520267167454a682f11f4f86e1b19fb8a9327de436d0b9313492ca406",
+      "sha256": "6a7e5d039ccf4f5be295d43ee3f461c422e848b5254984dd0b7c54e38f8460b1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

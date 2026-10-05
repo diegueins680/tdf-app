@@ -75,3 +75,24 @@ other identities through the scoped [read contracts](routed-read-boundaries.md).
 Fresh compiled/HTTP evidence must verify those repairs. The gate now rejects any
 competing typed route even when its regenerated snapshot matches; a negative
 control attempts that exact bypass. Opaque Raw mounts remain an explicit limit.
+
+## Explicit availability: MKT-REPUTATION-001
+
+`api-availability.json` is the canonical typed-route deferral list. The25
+merchandise-reputation declarations retain their existing synthetic-local-only
+scope from `docs/merch-reputation.md` (AUTHORITY-026). They are individually
+listed with requirement ownership and provenance. A regenerated declaration
+snapshot cannot authorize mounting them. The compiled gate rejects an
+unexpectedly mounted deferral, an unexplained missing documented operation,
+a disappeared documented deferral, duplicate entries and malformed entries.
+The raw comparison still reports all missing declarations; a separate availability
+receipt explains only reviewed deferrals. Policy bytes are captured and hashed
+before the final freshness check. Raw mounts and actual feature/authorization
+behavior remain outside this typed-route contract.
+
+Fresh read-only observation at2026-10-05T07:59:37Z on backend645f56f found all nine
+merchandise-reputation production flags false, interaction runtime enabled with
+activation history true, social runtime disabled with no activation history, and
+no event-operation flag table. These are distinct control families. Missing
+controls are unknown, never silently interpreted as disabled. This historical
+observation is not a substitute for a fresh release inspection.

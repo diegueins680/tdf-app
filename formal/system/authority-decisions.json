@@ -267,6 +267,17 @@
       "conflict": "Artist worker and schedule target retired Fly; old runbook directs Fly release/rollback. The worker marks a batch with a sub-threshold failed item completed.",
       "authority": "Verified canonical backend identity and explicit user requirement that failed workers cannot report success.",
       "resolution": "Use canonical API default/schedule, retire obsolete operational commands in favor of current Hetzner procedure, and separate early-stop threshold from failed-run completion. Preserve schedule and publication opt-in, add actual worker regression and scoped bounded model. No production dispatch or feature activation is performed."
+    },
+    {
+      "id": "AUTHORITY-026",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs",
+        "formal/system/api-availability.json"
+      ],
+      "conflict": "OpenAPI publishes25 merchandise-reputation operations whose Haskell types and handlers exist but are not in CombinedAPI; interpreting every documented route as currently shipped contradicts the explicit local-only rollout scope.",
+      "authority": "Existing explicit synthetic-local-only domain scope, corroborated by compiled routing and current production nine flags observed disabled. Observation alone does not authorize intent.",
+      "resolution": "Enumerate the25 deferred operations in canonical availability policy, require their continued absence and flag any other missing documented route. Preserve raw discrepancy counts; no feature or route is activated. Future mounting needs a reviewed scope decision and relevant domain gates."
     }
   ]
 }

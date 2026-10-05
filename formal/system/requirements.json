@@ -3046,7 +3046,8 @@
         "scripts/inspect-compiled-api.mjs",
         "scripts/lib/compiled-api-surface.mjs",
         "formal/system/compiled-api-surface.json",
-        "tdf-hq/src/TDF/Meta.hs"
+        "tdf-hq/src/TDF/Meta.hs",
+        "formal/system/api-availability.json"
       ],
       "tests": [
         "tdf-hq/test/TDF/APITypesSpec.hs",
@@ -3474,6 +3475,81 @@
         "classification": "PARTIAL",
         "reason": "Scoped failure repair and tests/model added; full worker lifecycle and deployed behavior remain open."
       }
+    },
+    {
+      "id": "MKT-REPUTATION-001",
+      "title": "Explicitly deferred merchandise-reputation API",
+      "domain": "MKT",
+      "statement": "The merchandise-reputation contract is for synthetic local development and must remain absent from the production CombinedAPI until a separately reviewed activation decision reconciles its privacy, authorization and rollout requirements. Every deferred documented operation must be individually enumerated; arbitrary missing routes are forbidden.",
+      "actors": [
+        "API maintainer",
+        "Release reviewer",
+        "Synthetic local tester"
+      ],
+      "preconditions": [
+        "Existing local-only scope in docs/merch-reputation.md; no approved activation transition."
+      ],
+      "inputs": [
+        "Compiled CombinedAPI operations",
+        "Resolved OpenAPI declarations",
+        "formal/system/api-availability.json"
+      ],
+      "state": {
+        "initial": "local-only",
+        "states": [
+          "local-only",
+          "activation-review-required"
+        ],
+        "terminal": []
+      },
+      "allowedTransitions": [
+        "Local synthetic implementation and contract maintenance without production mounting.",
+        "Request a separate reviewed activation decision; this requirement does not grant activation."
+      ],
+      "forbiddenTransitions": [
+        "Mount a deferred typed route while its deferral remains authoritative.",
+        "Silently omit an undeferred documented route.",
+        "Remove a deferred declaration without reconciling its policy entry."
+      ],
+      "effects": [
+        "Retain all raw conformance discrepancies and emit explicit typed-route availability evidence."
+      ],
+      "authorization": "Frontend visibility or a database flag cannot authorize mounting; domain-specific backend authorization must be reviewed before activation.",
+      "privacy": "No review, message, notification or customer data is needed for this declaration check.",
+      "concurrency": "Inspector captures immutable input bytes and rejects source changes during inspection; production observations remain sequential.",
+      "idempotency": "Repeated checks on identical inputs produce identical route classifications; receipts use exclusive output creation.",
+      "failure": "Missing, duplicate, stale, mounted or malformed deferrals reject the gate.",
+      "recovery": "Preserve discrepancy evidence; reconcile the intended scope and review source changes before rerunning. Do not auto-mount to make counts match.",
+      "observability": "Record source, binary and policy hashes plus the exact deferred route identities.",
+      "source": "docs/merch-reputation.md local-only status; compiled eadbcb451 discovery of25 absent types; AUTHORITY-026.",
+      "implementation": [
+        "scripts/inspect-compiled-api.mjs",
+        "scripts/lib/compiled-api-surface.mjs",
+        "formal/system/api-availability.json",
+        "tdf-hq/src/TDF/API/MerchReputation.hs",
+        "tdf-hq/src/TDF/Server/MerchReputation.hs"
+      ],
+      "tests": [
+        "scripts/__tests__/compiled-api-surface.test.mjs",
+        "scripts/test-specification-conformance.py"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "High for compiled typed-route availability; domain behavior and Raw reachability require separate verification.",
+      "ambiguity": [
+        "Deferred implementation business rules, full authorization and privacy are not validated by absence from CombinedAPI.",
+        "No mounting or production activation is approved."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Executable declaration controls exist; final rebuilt candidate and broader deferred-domain conformance remain outstanding."
+      },
+      "contract": "formal/system/compiled-api-boundary.md",
+      "authority": "AUTHORITY-026 preserves the existing explicitly local-only domain scope.",
+      "property": "Every documented unmounted typed operation is explicitly deferred; no deferred operation is mounted.",
+      "verification": "Compiled surface gate, controlled mounting/omission/stale-policy mutations and requirement/provenance checks.",
+      "evidence": "Exact-source compiled availability receipt and Node/Python gate logs."
     }
   ]
 }
