@@ -1,0 +1,32 @@
+name: Ticketing event access preflight
+on:
+  workflow_dispatch:
+  push:
+    branches: [feat/patch-culture-ticketing-20261005]
+    paths:
+      - scripts/inspect-ticketing-event-access.mjs
+      - .github/workflows/ticketing-event-preflight.yml
+permissions:
+  contents: read
+concurrency:
+  group: ticketing-event-access-preflight
+  cancel-in-progress: false
+jobs:
+  inspect:
+    if: github.repository == 'diegueins680/tdf-app'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Inspect canonical event access without mutating production
+        env:
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+        run: node scripts/inspect-ticketing-event-access.mjs
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ticketing-event-access
+          path: ticketing-event-access.json
+          retention-days: 7
