@@ -82,6 +82,7 @@ executable tdf-hq-exe
     TDF.Commerce.DomoQuotes
     TDF.Commerce.EventTickets
     TDF.Ticketing.Admission
+    TDF.Ticketing.Confirmation
     TDF.Ticketing.Inventory
     TDF.Ticketing.Transfer
     TDF.Commerce.MarketplaceSales
@@ -306,6 +307,7 @@ test-suite tdf-hq-test
     TDF.Commerce.WorkerLoggingSpec
     TDF.Commerce.PaymentArithmeticSpec
     TDF.EmailHeadersSpec
+    TDF.TicketConfirmationSpec
     Paths_tdf_hq
     TDF.API
     TDF.API.Admin
@@ -376,6 +378,7 @@ test-suite tdf-hq-test
     TDF.Commerce.DomoQuotes
     TDF.Commerce.EventTickets
     TDF.Ticketing.Admission
+    TDF.Ticketing.Confirmation
     TDF.Ticketing.Inventory
     TDF.Ticketing.Transfer
     TDF.Commerce.MarketplaceSales

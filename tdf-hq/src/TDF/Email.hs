@@ -13,6 +13,7 @@ module TDF.Email
   , sendCoursePaymentReminderEmail
   , sendMarketplaceOrderEmail
   , sendTestEmail
+  , sendTransactionalEmail
   , sendEngineerBookingEmail
   -- Ticketing system emails
   , sendTicketConfirmationEmail
@@ -328,8 +329,13 @@ sendTestEmail
 sendTestEmail Nothing _name _email _subject _body _cta =
   putStrLn "[Email] SMTP not configured; skipped test email."
 sendTestEmail (Just cfg) name email subject bodyLines mCtaUrl = do
-  let preheader = "Correo de prueba de TDF Records"
-      greeting  = if T.null name then "Hola," else "Hola " <> name <> ","
+  sendTransactionalEmail cfg name email subject "Correo de prueba de TDF Records" bodyLines mCtaUrl
+
+-- Callers must persist delivery intent before invoking this transport. A return
+-- value means SMTP accepted the message, not that it reached the inbox.
+sendTransactionalEmail :: EmailConfig -> Text -> Text -> Text -> Text -> [Text] -> Maybe Text -> IO ()
+sendTransactionalEmail cfg name email subject preheader bodyLines mCtaUrl = do
+  let greeting = if T.null name then "Hola," else "Hola " <> name <> ","
       toAddr = Address (Just name) email
       mail = buildMail cfg toAddr subject preheader greeting bodyLines mCtaUrl
   sendMailWithLogging cfg toAddr subject mail
@@ -463,12 +469,8 @@ sendTicketConfirmationEmail
   -> [Text] -- ^ ticket codes
   -> Maybe Text -- ^ optional app URL
   -> IO ()
-sendTicketConfirmationEmail Nothing name email eventTitle _eventDate quantity tierName total _codes _appUrl = do
-  putStrLn $ "SMTP configuration missing; skipped ticket confirmation email for "
-    <> T.unpack name <> " <" <> T.unpack email <> ">."
-  putStrLn $ "Event: " <> T.unpack eventTitle
-  putStrLn $ "Quantity: " <> show quantity <> " x " <> T.unpack tierName
-  putStrLn $ "Total: " <> T.unpack total
+sendTicketConfirmationEmail Nothing _name _email _eventTitle _eventDate _quantity _tierName _total _codes _appUrl =
+  putStrLn "[Email] SMTP not configured; ticket confirmation was not sent."
 sendTicketConfirmationEmail (Just cfg) name email eventTitle eventDate quantity tierName total ticketCodes mAppUrl = do
   let subject   = "Tus entradas para " <> eventTitle
       preheader = "Confirmación de compra - " <> T.pack (show quantity) <> " entrada(s) para " <> eventTitle
@@ -508,13 +510,8 @@ sendTicketTransferNotificationEmail
   -> Text   -- ^ transfer acceptance URL containing the pre-generated code
   -> Maybe Text -- ^ optional app URL
   -> IO ()
-sendTicketTransferNotificationEmail Nothing recipientName recipientEmail senderName eventTitle _eventDate ticketCode acceptUrl _appUrl = do
-  putStrLn $ "SMTP configuration missing; skipped transfer notification email for "
-    <> T.unpack recipientName <> " <" <> T.unpack recipientEmail <> ">."
-  putStrLn $ "From: " <> T.unpack senderName
-  putStrLn $ "Event: " <> T.unpack eventTitle
-  putStrLn $ "Ticket: " <> T.unpack ticketCode
-  putStrLn $ "Accept URL: " <> T.unpack acceptUrl
+sendTicketTransferNotificationEmail Nothing _recipientName _recipientEmail _senderName _eventTitle _eventDate _ticketCode _acceptUrl _appUrl =
+  putStrLn "[Email] SMTP not configured; ticket transfer notification was not sent."
 sendTicketTransferNotificationEmail (Just cfg) recipientName recipientEmail senderName eventTitle eventDate ticketCode acceptUrl _mAppUrl = do
   let subject   = senderName <> " te ha transferido una entrada"
       preheader = "Has recibido una entrada para " <> eventTitle
@@ -549,14 +546,8 @@ sendWaitlistNotificationEmail
   -> Text   -- ^ expiry time (formatted, e.g. "24 hours")
   -> Maybe Text -- ^ optional app URL
   -> IO ()
-sendWaitlistNotificationEmail Nothing name email eventTitle _eventDate tierName quantity reservedUrl expiry _appUrl = do
-  putStrLn $ "SMTP configuration missing; skipped waitlist notification email for "
-    <> T.unpack name <> " <" <> T.unpack email <> ">."
-  putStrLn $ "Event: " <> T.unpack eventTitle
-  putStrLn $ "Tier: " <> T.unpack tierName
-  putStrLn $ "Quantity: " <> show quantity
-  putStrLn $ "Reserved URL: " <> T.unpack reservedUrl
-  putStrLn $ "Expires: " <> T.unpack expiry
+sendWaitlistNotificationEmail Nothing _name _email _eventTitle _eventDate _tierName _quantity _reservedUrl _expiry _appUrl =
+  putStrLn "[Email] SMTP not configured; waitlist notification was not sent."
 sendWaitlistNotificationEmail (Just cfg) name email eventTitle eventDate tierName quantity reservedUrl expiry _mAppUrl = do
   let subject   = "¡Entradas disponibles para " <> eventTitle <> "!"
       preheader = "Las entradas que esperabas están disponibles - reserva garantizada por " <> expiry
@@ -590,12 +581,8 @@ sendRefundConfirmationEmail
   -> Maybe Text -- ^ optional processing timeline
   -> Maybe Text -- ^ optional app URL
   -> IO ()
-sendRefundConfirmationEmail Nothing name email eventTitle refundAmount status _timeline _appUrl = do
-  putStrLn $ "SMTP configuration missing; skipped refund confirmation email for "
-    <> T.unpack name <> " <" <> T.unpack email <> ">."
-  putStrLn $ "Event: " <> T.unpack eventTitle
-  putStrLn $ "Amount: " <> T.unpack refundAmount
-  putStrLn $ "Status: " <> T.unpack status
+sendRefundConfirmationEmail Nothing _name _email _eventTitle _refundAmount _status _timeline _appUrl =
+  putStrLn "[Email] SMTP not configured; refund confirmation was not sent."
 sendRefundConfirmationEmail (Just cfg) name email eventTitle refundAmount status mTimeline _mAppUrl = do
   let subject   = "Reembolso " <> (if status == "processed" then "procesado" else "aprobado") <> " - " <> eventTitle
       preheader = "Tu reembolso de " <> refundAmount <> " ha sido " <> (if status == "processed" then "procesado" else "aprobado")

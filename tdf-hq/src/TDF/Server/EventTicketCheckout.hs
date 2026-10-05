@@ -1401,9 +1401,8 @@ finalizeVerifiedTicketOrder :: TicketPaymentContext -> AppM ()
 finalizeVerifiedTicketOrder context = do
   now <- liftIO getCurrentTime
   Env{ envPool } <- ask
-  (order, ticketCodes, newlyIssued) <- liftIO $
+  _ <- liftIO $
     runSqlPool
       (SocialEvents.finalizePaidTicketOrder now (tpcOrderKey context))
       envPool
-  when newlyIssued $
-    SocialEvents.sendTicketConfirmationForOrder order ticketCodes
+  pure ()
