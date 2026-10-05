@@ -63,11 +63,11 @@ are the only difference from the runtime source of the signed artifacts.
 
 ## Store disclosure audit and account deletion
 
-The 5 October authenticated Play Console audit found the saved declaration still
+The 5 October authenticated Play Console audit found the previously saved declaration
 claims that the app does not allow account creation, despite native password
 signup and Google authentication. App activity and device identifiers were not
-declared; User IDs had only the app-functionality purpose. These saved answers
-must be corrected before distributing the newly configured analytics build.
+declared; User IDs had only the app-functionality purpose. Those answers were corrected and saved for review before distributing the
+newly configured analytics build.
 A build finishing successfully does not resolve this release boundary.
 
 The owner confirmed that `info@tdfrecords.net` will handle account-deletion
@@ -76,8 +76,33 @@ and the canonical `www.tdfrecords.net` URLs. Legacy Pages URLs remain served.
 The existing native About screen links to the deletion page; it now provides
 Spanish and English instructions and asks only for the account email and
 requested deletion scope, not unnecessary identity or credential data.
-Apple App Privacy must also be checked against the new native collection before
-the new build is made available. Physical iPhone OAuth evidence remains absent.
+Authenticated App Store Connect readback confirms User ID, Device ID and Product
+Interaction are already declared for analytics linked to the user's identity.
+The native party selector also emits latency/error classifications: Performance
+Data (analytics, linked to identity, not cross-company advertising tracking)
+and the analytics purpose for Other Diagnostic Data were published in Apple
+App Privacy. Play Diagnostics was saved for review as non-ephemeral collection
+for analytics. This does not publish an App Store app version.
+Its privacy and privacy-choices URLs now reference the canonical domain; Apple
+says these metadata changes accompany the next app version.
+
+The current production rejection is now directly verified: Apple reviewed
+1.0.1 (25) on 28 September on iPhone 17 Pro Max / iOS27 and reported a login
+failure (2.1) and absence of an equivalent privacy-preserving login option (4.8).
+Current native authentication implements password/Google, not a verified Sign in
+with Apple flow. Physical iPhone login proof and resolution of 4.8 remain public
+App Store release gates; Beta App Review is a separate process. No App Review
+resubmission or message to Apple was sent.
+
+Play's corrected account-creation, analytics/feedback data and canonical deletion
+answers, plus the canonical privacy URL, are saved for review. The changes do not
+mean Google has approved them. Submit them after the updated disclosure deploys.
+EAS remote counters were read back as iOS32 / Android24 to avoid reusing numbers.
+iOS32 was uploaded through EAS submission `85446118-dba6-457d-93bd-018c39d1d674`
+and is VALID/internal, awaiting Beta App Review, with ES/EN test notes saved.
+An Android24 edit validated, but Google rejected withholding
+review via `changesNotSentForReview=true`; the failed edit was deleted. Retry the
+normal existing closed-testing submission only after the disclosure is deployed.
 
 ## Dashboard semantics
 

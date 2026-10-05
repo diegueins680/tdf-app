@@ -3795,7 +3795,7 @@
     },
     {
       "path": "docs/mobile-program/analytics-2026-10-05.md",
-      "sha256": "1ebaba36d09768b4f296eeb717057283af506abd861acb786a15021cfe8cf8d1",
+      "sha256": "8e6d5502fb3958fc99801d14657ec214a486aa480b7dcaf01421a52fd90b8721",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
