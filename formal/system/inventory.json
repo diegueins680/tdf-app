@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "655ffae872eb2eae9eb5b758b6a57a3b3ce12691",
+  "mobileRevision": "7b262727df040006f2c6b3c98508c2400c5f53d6",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -4064,7 +4064,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "fcb987b112e0b77d219bae5eba040c2675d3459588586115dbdf6fb83c2c276f",
+      "sha256": "8ddd81f1b1abc2384773463bfd10611e2fa425a7d6c6e30e97325dcd75989440",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5114,7 +5114,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "2207eef670ca3a17d842f4b2169ffbb2e11d164f5648b23cc21331ee4b04b168",
+      "sha256": "1b49f7bcdebe107075c61dea9fb88922f74bb43affa5ee49a1622cef07745e69",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8864,7 +8864,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "a3f2bac66dd740b8186eaae7b27192777dc420927f1cfd67febabccc8a1fe411",
+      "sha256": "86601fcbd245d8e7c2a466ab1e39633fe49575d6276b78f5ab036de6841db84d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11228,7 +11228,7 @@
     {
       "id": "SURFACE-7cf7c6b148c9588e",
       "path": "tdf-hq/src/TDF/API/Types.hs",
-      "sha256": "f26541257f7470a8e84830c457c6e4f0391fc18d8898b9c4e7f0ba634a466f8e",
+      "sha256": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12338,7 +12338,7 @@
     {
       "id": "SURFACE-2ece749119c0d78c",
       "path": "tdf-hq/test/TDF/APITypesSpec.hs",
-      "sha256": "81afeae7436c56aa6554caeb7010dcc7a9408d30beb52b2694c519bd8ea54236",
+      "sha256": "e031671786b71e7714c0d8cc4f1324707917eaa452bb74030a6d7f5a1eccd068",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14252,7 +14252,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "2207eef670ca3a17d842f4b2169ffbb2e11d164f5648b23cc21331ee4b04b168",
+      "sha256": "1b49f7bcdebe107075c61dea9fb88922f74bb43affa5ee49a1622cef07745e69",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20444,14 +20444,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "76952b9ff7d9fcc857e7fdc6bdfb2ef168430349ff40c7a5c9dca88a965d0beb",
+      "sha256": "6e27c3c950fd0d67271abecf4ca6526011a5b455a530ba6ec10cc22a2a5f34d5",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "384448af864f238709af7bee563d22b70613087a0ed54a85c4c342a53c48fd95",
+      "sha256": "3a975787685e6c362ea0fa6b6c8212a17f47c67a1b30e8cdb6bb1165bfae17c9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20569,6 +20569,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/meta-webhook-admission.md",
+      "sha256": "4e9d077ac4101e9738664dfc81a6545942eca624d1607dc0c59f2547686ff838",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/payment-arithmetic.md",
       "sha256": "c08a1eccf725c31eadacdff1c36472ca984959e31233b887dc8760f1e07d6661",
       "authority": "inferred",
@@ -20591,7 +20598,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "673dbc980665bf589973fb37d751e9f1e4f4a666b22a6da8cf7ecd1e7b5f8d55",
+      "sha256": "f5fd6fbaaee3fda4e0065470ce123c720833e98b0f06b3fa837f535770fc2486",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -20766,7 +20773,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "a3f2bac66dd740b8186eaae7b27192777dc420927f1cfd67febabccc8a1fe411",
+      "sha256": "86601fcbd245d8e7c2a466ab1e39633fe49575d6276b78f5ab036de6841db84d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"

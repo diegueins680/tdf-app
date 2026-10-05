@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "655ffae872eb2eae9eb5b758b6a57a3b3ce12691",
+  "mobileRevision": "7b262727df040006f2c6b3c98508c2400c5f53d6",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -3808,6 +3808,84 @@
       "contract": "formal/system/webhook-log-privacy.md",
       "verification": "Actual signed synthetic HTTP sentinel checks, no real provider calls.",
       "evidence": "Revision-bound build/runtime receipts; source inspection alone is not runtime validation."
+    },
+    {
+      "id": "AUTH-WEBHOOK-001",
+      "title": "Meta webhook authentication fails closed without keys",
+      "domain": "AUTH",
+      "statement": "All Facebook, Instagram and WhatsApp webhook POST aliases shall require a nonblank configured Meta secret and valid HMAC over exact raw bytes before ingestion; missing configuration shall disable receipt with503, never disable authentication.",
+      "actors": [
+        "Meta provider",
+        "Unauthenticated external caller",
+        "Backend operator"
+      ],
+      "preconditions": [
+        "Nonblank configured app secret",
+        "Exact-body HMAC-SHA256 with sha256-prefixed header"
+      ],
+      "inputs": [
+        "Raw provider bytes",
+        "X-Hub-Signature-256",
+        "FACEBOOK_APP_SECRET or META_APP_SECRET configuration"
+      ],
+      "state": {
+        "initial": "untrusted receipt",
+        "terminal": [
+          "unavailable503",
+          "unauthorized401",
+          "validated ingestion"
+        ]
+      },
+      "allowedTransitions": [
+        "Configured key and valid signature -> envelope validation -> existing ingestion",
+        "Absent or blank key ->503 without mutation",
+        "Missing or incorrect signature with configured key ->401 without mutation"
+      ],
+      "forbiddenTransitions": [
+        "Absent configuration admits unsigned payloads",
+        "Signature for different raw bytes authenticates mutation",
+        "Compatibility alias bypasses signature admission"
+      ],
+      "effects": [
+        "Only authenticated envelopes reach message, tombstone or delivery-state processing"
+      ],
+      "authorization": "Shared signature helper on all four POST routes; GET verification remains distinct configured verify-token handling.",
+      "privacy": "Signed input remains private; PRIV-WEBHOOK-001 limits receipt logging. Tests use synthetic keys and deletion-only or empty envelopes.",
+      "concurrency": "Authentication precedes processing per request. Concurrent key rotation and worker ordering are not verified here.",
+      "idempotency": "No new replay or request-key semantics. Valid signature is not proof that an event is new.",
+      "failure": "503 absent/blank key;401 configured key with invalid/missing signature; existing malformed-envelope errors after authentication.",
+      "recovery": "Configure a valid key and retry eligible deliveries under existing provider semantics; no anonymous-development fallback.",
+      "observability": "Explicit503/401 distinguish unavailable signing configuration from invalid proof; do not log key values or raw private envelopes.",
+      "source": "Shared API.Types verifier, optional Config normalization, all mounted handlers, existing bypass unit test; AUTHORITY-030.",
+      "implementation": [
+        "tdf-hq/src/TDF/API/Types.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/src/TDF/Routes/Courses.hs",
+        "tdf-hq/src/TDF/API/Instagram.hs",
+        "tdf-hq/docs/openapi/api.yaml"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/APITypesSpec.hs",
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [],
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "medium",
+      "ambiguity": [
+        "Provider replay, key rotation, downstream idempotency and all-error-path privacy remain separate obligations."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Shared guard, helper properties and HTTP fixtures require final compiled execution and deployment; no universal cryptographic or delivery proof."
+      },
+      "authority": "AUTHORITY-030; optional configuration may disable integration, never authentication.",
+      "property": "Only configured exact-body HMAC reaches mutation; unavailable or rejected admission leaves state unchanged.",
+      "contract": "formal/system/meta-webhook-admission.md",
+      "verification": "QuickCheck raw-byte binding and HTTP absent/blank-key alias controls with positive deletion fixtures.",
+      "evidence": "Current source and revision-specific runtime receipts required; production secret presence is configuration evidence only."
     }
   ],
   "sourceFingerprints": {
@@ -3934,7 +4012,7 @@
     "scripts/specification-inventory.py": "d2fd062de80b6aacf832714799d7596f13cabf101d2d7073192b2cd6ec6ff275",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-booking-conformance.py": "fcb987b112e0b77d219bae5eba040c2675d3459588586115dbdf6fb83c2c276f",
+    "scripts/test-booking-conformance.py": "8ddd81f1b1abc2384773463bfd10611e2fa425a7d6c6e30e97325dcd75989440",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-inspection.py": "560125d36d6469b3f2f2ca1dea30ba0bf452dc9e9e373f2e0521256052c0ed98",
     "scripts/test-hetzner-restore.py": "279906ce3fca58619f1a4c361c475c810bb666263418ca45a975ee0ad4fd8e41",
@@ -3953,7 +4031,7 @@
     "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
     "scripts/verify-system-evidence.mjs": "7aa7ac054cebe9a16f39a21afce1b36588c889493716baf3c7629880565e3e3f",
     "tdf-hq-ui/src/api/bookings.ts": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
-    "tdf-hq-ui/src/api/generated/types.ts": "2207eef670ca3a17d842f4b2169ffbb2e11d164f5648b23cc21331ee4b04b168",
+    "tdf-hq-ui/src/api/generated/types.ts": "1b49f7bcdebe107075c61dea9fb88922f74bb43affa5ee49a1622cef07745e69",
     "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx": "7723dd458079bcad7d7c3f39933b2025de76462f8d0fb40a6c6d4e6bd35deb49",
     "tdf-hq-ui/src/components/LazyPaginatedList.tsx": "8c96fc43fa7096d5bf59e0a724c19bd4b73d1f05582a25d99b633ba95f075d91",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
@@ -3978,7 +4056,7 @@
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/assets/feature-registry.json": "7388f163749d305fb7bc12b0ada9c4f7f988c878a1db006437db835555cbe3af",
-    "tdf-hq/docs/openapi/api.yaml": "a3f2bac66dd740b8186eaae7b27192777dc420927f1cfd67febabccc8a1fe411",
+    "tdf-hq/docs/openapi/api.yaml": "86601fcbd245d8e7c2a466ab1e39633fe49575d6276b78f5ab036de6841db84d",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/persistent-uploads.sh": "89c251d96be949d638941d45d4a8994f09c8157a04bea786ee93aefde90cbd44",
     "tdf-hq/production-entrypoint.sh": "9cf124a277a19e2d5c0d7769cfc8a2d16dc2d21f09e93406b3ebfa293e0416b4",
@@ -3992,8 +4070,10 @@
     "tdf-hq/sql/2026-10-05_ddex_validation_legacy_nullability.sql": "5df84ed2bf411ee976d39907845970e0d9e4defedca25142d1c51cca59624f6e",
     "tdf-hq/src/TDF/API.hs": "3b1f027ffe718dd547fc2299f6aa8977b9db9915736d4210dc1df235cb1372bc",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
+    "tdf-hq/src/TDF/API/Instagram.hs": "d31bf02a6a69cab1c0122699eb890fcc32e4809234b41246f3185bec76c8c1ef",
     "tdf-hq/src/TDF/API/MerchReputation.hs": "84d721478ab6f904dee04ae3568a32d30f37a220937b703fc74a006c44995bdb",
     "tdf-hq/src/TDF/API/Radio.hs": "5c62e0f4a402225202217be3a8361991127ad1ac093fd0f4366789dd1723357f",
+    "tdf-hq/src/TDF/API/Types.hs": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
     "tdf-hq/src/TDF/Auth.hs": "851a010d990ec981a7410ab1228bfe36a0ebc776008be7f22e7a97fb6701e5c8",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "6a0395b16a2bafa271dbc051da42972fe6a51da5db9eb2235bf78a46e47d819d",
     "tdf-hq/src/TDF/Commerce/Merch.hs": "94e7b371a6a77ccf4ab2884d9a28b7d7155c3f3dfad7154e54dad8b42cf5d7e4",
@@ -4012,6 +4092,7 @@
     "tdf-hq/src/TDF/Directory/Policy.hs": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
     "tdf-hq/src/TDF/RagStore.hs": "80b5f523542cb71119551dbb64bd5e0c0e3e880622997a496e496e4d7fbeb912",
+    "tdf-hq/src/TDF/Routes/Courses.hs": "750e7304fa71dfccdce5132c24fbb077043087b5b0d8fe17e2ca6dcbb5384fcb",
     "tdf-hq/src/TDF/Server.hs": "f4ff8ec05572f9c96009bd6e4bdfe808327192672ead560d7996f831164048d2",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
@@ -4034,7 +4115,7 @@
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/tdf-hq.cabal": "1b8e6387004eb4106e624921814f360aba0d4cb4180c635ac4d7e55f8c5096a0",
     "tdf-hq/test/Spec.hs": "d4bf3f4d36c92125cf54c87d6616e9ea76648a85ea5639b73319eb32fe74487e",
-    "tdf-hq/test/TDF/APITypesSpec.hs": "81afeae7436c56aa6554caeb7010dcc7a9408d30beb52b2694c519bd8ea54236",
+    "tdf-hq/test/TDF/APITypesSpec.hs": "e031671786b71e7714c0d8cc4f1324707917eaa452bb74030a6d7f5a1eccd068",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
     "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "90b0a50e1d7415dc82be95fdf4c985fbb825737d09e0c87d2d185414cb154fd2",
@@ -4057,7 +4138,7 @@
     "tdf-mobile/package-lock.json": "1d669d0ea79f240494299f22c868f79753b921ad6f06656ad71b5942ccd3ac35",
     "tdf-mobile/package.json": "2df9f211d1bddbe5467021ac6398e3427b5af467262ae5321be224ebe1603612",
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
-    "tdf-mobile/src/api/generated/types.ts": "2207eef670ca3a17d842f4b2169ffbb2e11d164f5648b23cc21331ee4b04b168",
+    "tdf-mobile/src/api/generated/types.ts": "1b49f7bcdebe107075c61dea9fb88922f74bb43affa5ee49a1622cef07745e69",
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": "a8111cb6563d7cb08ca568175ed51460de0293db652142a7979e907e256ee2ff"
   },
   "reverseTraceability": {
@@ -4319,6 +4400,10 @@
       {
         "requirement": "AUTH-RADIO-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-WEBHOOK-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/API.hs": [
@@ -4507,6 +4592,10 @@
       {
         "requirement": "AUTH-CORS-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-WEBHOOK-001",
+        "relationship": "implementation"
       }
     ],
     "ops/hetzner/compose.production.yaml": [
@@ -4602,6 +4691,10 @@
     "tdf-hq/docs/openapi/api.yaml": [
       {
         "requirement": "ID-ARTIST-CLAIM-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-WEBHOOK-001",
         "relationship": "implementation"
       }
     ],
@@ -5579,6 +5672,10 @@
       {
         "requirement": "PRIV-WEBHOOK-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "AUTH-WEBHOOK-001",
+        "relationship": "tests"
       }
     ],
     "formal/event-operations/StudioBookingScope.tla": [
@@ -5722,6 +5819,10 @@
     "tdf-hq/test/TDF/APITypesSpec.hs": [
       {
         "requirement": "SYS-API-003",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "AUTH-WEBHOOK-001",
         "relationship": "tests"
       }
     ],
@@ -6002,6 +6103,28 @@
     "tdf-hq/src/TDF/ServerExtra.hs": [
       {
         "requirement": "PRIV-WEBHOOK-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-WEBHOOK-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/API/Types.hs": [
+      {
+        "requirement": "AUTH-WEBHOOK-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Routes/Courses.hs": [
+      {
+        "requirement": "AUTH-WEBHOOK-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/API/Instagram.hs": [
+      {
+        "requirement": "AUTH-WEBHOOK-001",
         "relationship": "implementation"
       }
     ]
@@ -8718,7 +8841,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "fcb987b112e0b77d219bae5eba040c2675d3459588586115dbdf6fb83c2c276f",
+      "sha256": "8ddd81f1b1abc2384773463bfd10611e2fa425a7d6c6e30e97325dcd75989440",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -8755,6 +8878,10 @@
         },
         {
           "requirement": "PRIV-WEBHOOK-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "AUTH-WEBHOOK-001",
           "relationship": "tests"
         }
       ]
@@ -10146,7 +10273,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "2207eef670ca3a17d842f4b2169ffbb2e11d164f5648b23cc21331ee4b04b168",
+      "sha256": "1b49f7bcdebe107075c61dea9fb88922f74bb43affa5ee49a1622cef07745e69",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14666,11 +14793,15 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "a3f2bac66dd740b8186eaae7b27192777dc420927f1cfd67febabccc8a1fe411",
+      "sha256": "86601fcbd245d8e7c2a466ab1e39633fe49575d6276b78f5ab036de6841db84d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "ID-ARTIST-CLAIM-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-WEBHOOK-001",
           "relationship": "implementation"
         }
       ]
@@ -17316,7 +17447,12 @@
       "path": "tdf-hq/src/TDF/API/Instagram.hs",
       "sha256": "d31bf02a6a69cab1c0122699eb890fcc32e4809234b41246f3185bec76c8c1ef",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-WEBHOOK-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-b0337643e2433350",
@@ -17520,9 +17656,14 @@
     {
       "id": "SURFACE-7cf7c6b148c9588e",
       "path": "tdf-hq/src/TDF/API/Types.hs",
-      "sha256": "f26541257f7470a8e84830c457c6e4f0391fc18d8898b9c4e7f0ba634a466f8e",
+      "sha256": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-WEBHOOK-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-fe906347e07abbb3",
@@ -17931,6 +18072,10 @@
       "requirements": [
         {
           "requirement": "AUTH-CORS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-WEBHOOK-001",
           "relationship": "implementation"
         }
       ]
@@ -18415,7 +18560,12 @@
       "path": "tdf-hq/src/TDF/Routes/Courses.hs",
       "sha256": "750e7304fa71dfccdce5132c24fbb077043087b5b0d8fe17e2ca6dcbb5384fcb",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-WEBHOOK-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-21573408c23f618c",
@@ -18470,6 +18620,10 @@
         },
         {
           "requirement": "AUTH-RADIO-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-WEBHOOK-001",
           "relationship": "implementation"
         }
       ]
@@ -18690,6 +18844,10 @@
       "requirements": [
         {
           "requirement": "PRIV-WEBHOOK-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-WEBHOOK-001",
           "relationship": "implementation"
         }
       ]
@@ -19103,11 +19261,15 @@
     {
       "id": "SURFACE-2ece749119c0d78c",
       "path": "tdf-hq/test/TDF/APITypesSpec.hs",
-      "sha256": "81afeae7436c56aa6554caeb7010dcc7a9408d30beb52b2694c519bd8ea54236",
+      "sha256": "e031671786b71e7714c0d8cc4f1324707917eaa452bb74030a6d7f5a1eccd068",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-API-003",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "AUTH-WEBHOOK-001",
           "relationship": "tests"
         }
       ]
@@ -21487,7 +21649,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "2207eef670ca3a17d842f4b2169ffbb2e11d164f5648b23cc21331ee4b04b168",
+      "sha256": "1b49f7bcdebe107075c61dea9fb88922f74bb43affa5ee49a1622cef07745e69",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23901,7 +24063,6 @@
     "SURFACE-afc4cb3bc501dafc",
     "SURFACE-b512bf606a31fa6e",
     "SURFACE-a72004f4d0fc91c5",
-    "SURFACE-91a712933913dd6f",
     "SURFACE-b0337643e2433350",
     "SURFACE-46c44f4c44b3bb33",
     "SURFACE-d0fe32fbd49d7b5b",
@@ -23927,7 +24088,6 @@
     "SURFACE-c1e9e07dfd2c941f",
     "SURFACE-224511e286675674",
     "SURFACE-c9bd1bcf315011ee",
-    "SURFACE-7cf7c6b148c9588e",
     "SURFACE-fe906347e07abbb3",
     "SURFACE-b36aba9e72486f8c",
     "SURFACE-fd3727258ca900ae",
@@ -24018,7 +24178,6 @@
     "SURFACE-5204086b1469543d",
     "SURFACE-6f37d3a5f8237996",
     "SURFACE-08cd86a43181517d",
-    "SURFACE-52b73c408ae18bc0",
     "SURFACE-21573408c23f618c",
     "SURFACE-a6d0775d20903e98",
     "SURFACE-6076c182710c4ad6",
@@ -24548,7 +24707,8 @@
     "COURSE-SUBJECT-001",
     "MKT-REPUTATION-001",
     "REC-DDEX-001",
-    "PRIV-WEBHOOK-001"
+    "PRIV-WEBHOOK-001",
+    "AUTH-WEBHOOK-001"
   ],
   "stateMachines": [
     {
@@ -27122,7 +27282,34 @@
       "source": "tdf-hq/docs/openapi/api.yaml",
       "security": [],
       "responses": [
-        "200"
+        "200",
+        "400",
+        "401",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /hooks/whatsapp",
+      "operationId": "verifyWhatsAppWebhookLegacy",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [],
+      "responses": [
+        "200",
+        "403"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /hooks/whatsapp",
+      "operationId": "handleWhatsAppWebhookLegacy",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "503"
       ],
       "conformance": "not-established-by-client-generation"
     },
@@ -27169,6 +27356,30 @@
       "conformance": "not-established-by-client-generation"
     },
     {
+      "id": "GET /instagram/webhook",
+      "operationId": "verifyInstagramWebhook",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [],
+      "responses": [
+        "200",
+        "403"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /instagram/webhook",
+      "operationId": "handleInstagramWebhook",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
       "id": "GET /facebook/webhook",
       "operationId": null,
       "source": "tdf-hq/docs/openapi/api.yaml",
@@ -27185,7 +27396,10 @@
       "source": "tdf-hq/docs/openapi/api.yaml",
       "security": [],
       "responses": [
-        "200"
+        "200",
+        "400",
+        "401",
+        "503"
       ],
       "conformance": "not-established-by-client-generation"
     },
@@ -46797,7 +47011,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 52,
+    "PARTIAL": 53,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

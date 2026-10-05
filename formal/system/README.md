@@ -7,6 +7,8 @@ Historical green results are not current-candidate evidence.
 
 ## Canonical package
 
+- [meta-webhook-admission.md](meta-webhook-admission.md): fail-closed key configuration and exact-body authentication for all supported aliases.
+
 - [webhook-log-privacy.md](webhook-log-privacy.md): private provider payload exclusion from operational receipt logs.
 
 - [catalog-reorder.md](catalog-reorder.md): atomic administrative reordering, revision conflicts and bounded negative controls.
@@ -93,7 +95,8 @@ does not import unrelated later Mobile-main work. The compatibility revision
 `ff10746207ba5b57428560db64fb255d7417a481` descends from147ec8bc and carries
 the reviewed dependency, feature-registry and generated API repairs. These
 ancestry facts do not establish every native payment workflow's conformance.
-The additive booking-calendar repair brings the current manifest to170 entries.
+The additive booking-calendar repair brought that checkpoint to170 entries.
+The subsequent DDEX legacy-nullability compatibility repair adds entry171.
 AUTHORITY-020 records this baseline supersession; the original starting SHA
 and its evidence remain unchanged.
 

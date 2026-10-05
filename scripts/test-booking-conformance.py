@@ -69,12 +69,12 @@ def check(name, condition):
     print('PASS ' + name, flush=True)
 
 
-def request(path, payload=None, token='fixture-admin', method=None, idempotency=None, signed=False):
+def request(path, payload=None, token='fixture-admin', method=None, idempotency=None, signed=False, signature_body=None):
     body = None if payload is None else json.dumps(payload).encode()
     req = urllib.request.Request('http://127.0.0.1:' + str(http_port) + path, data=body,
         method=method or ('GET' if body is None else 'PUT'),
         headers={**({'Authorization': 'Bearer ' + token} if token else {}), 'Content-Type': 'application/json', **({'Idempotency-Key': idempotency} if idempotency else {}),
-                 **({'X-Hub-Signature-256': 'sha256=' + hmac.new(b'synthetic-local-webhook-secret', body, hashlib.sha256).hexdigest()} if signed else {})})
+                 **({'X-Hub-Signature-256': 'sha256=' + hmac.new(b'synthetic-local-webhook-secret', body if signature_body is None else signature_body, hashlib.sha256).hexdigest()} if signed else {})})
     try:
         with urllib.request.urlopen(req, timeout=30) as response:
             return response.status, response.read().decode()
@@ -555,6 +555,19 @@ try:
     check('RAG renders current public course rather than cached private text', 'PUBLIC_CURRENT' in content and all(value not in content for value in ['PRIVATE_SENTINEL', 'POISONED_CACHED_PRIVATE_TEXT', 'PUBLIC_BEFORE']))
     sql("DELETE FROM course WHERE slug='public-conformance-course'")
     check('deleted course cannot survive through stale index', knowledge() == [])
+    for channel, object_name in [('facebook', 'page'), ('instagram', 'instagram')]:
+        identity = 'synthetic-signed-deletion-' + str(uuid.uuid4())
+        payload = {'object': object_name, 'entry': [{'messaging': [{'sender': {'id': 'synthetic-sender'}, 'message': {'mid': identity, 'is_deleted': True}}]}]}
+        path = '/' + channel + '/webhook'
+        check('configured webhook rejects signature for different raw bytes ' + channel,
+              request(path, payload, token=None, method='POST', signed=True, signature_body=b'{}')[0] == 401)
+        check('invalid signature cannot create tombstone ' + channel,
+              sql("SELECT count(*) FROM " + channel + "_message WHERE external_id='" + identity + "'") == '0')
+        check('configured webhook accepts exact signed deletion ' + channel,
+              request(path, payload, token=None, method='POST', signed=True) == (200, ''))
+        check('signed deletion fixture actually exercises database mutation ' + channel,
+              sql("SELECT count(*) FROM " + channel + "_message WHERE external_id='" + identity + "' AND deleted_at IS NOT NULL") == '1')
+
     # AUTH-WEBHOOK-001: unavailable keys disable all public aliases, even if
     # the caller supplies a signature. Deletion-only payloads cannot send replies.
     for secret_mode in ['absent', 'blank']:

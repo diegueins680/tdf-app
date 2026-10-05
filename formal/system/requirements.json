@@ -3807,6 +3807,84 @@
       "contract": "formal/system/webhook-log-privacy.md",
       "verification": "Actual signed synthetic HTTP sentinel checks, no real provider calls.",
       "evidence": "Revision-bound build/runtime receipts; source inspection alone is not runtime validation."
+    },
+    {
+      "id": "AUTH-WEBHOOK-001",
+      "title": "Meta webhook authentication fails closed without keys",
+      "domain": "AUTH",
+      "statement": "All Facebook, Instagram and WhatsApp webhook POST aliases shall require a nonblank configured Meta secret and valid HMAC over exact raw bytes before ingestion; missing configuration shall disable receipt with503, never disable authentication.",
+      "actors": [
+        "Meta provider",
+        "Unauthenticated external caller",
+        "Backend operator"
+      ],
+      "preconditions": [
+        "Nonblank configured app secret",
+        "Exact-body HMAC-SHA256 with sha256-prefixed header"
+      ],
+      "inputs": [
+        "Raw provider bytes",
+        "X-Hub-Signature-256",
+        "FACEBOOK_APP_SECRET or META_APP_SECRET configuration"
+      ],
+      "state": {
+        "initial": "untrusted receipt",
+        "terminal": [
+          "unavailable503",
+          "unauthorized401",
+          "validated ingestion"
+        ]
+      },
+      "allowedTransitions": [
+        "Configured key and valid signature -> envelope validation -> existing ingestion",
+        "Absent or blank key ->503 without mutation",
+        "Missing or incorrect signature with configured key ->401 without mutation"
+      ],
+      "forbiddenTransitions": [
+        "Absent configuration admits unsigned payloads",
+        "Signature for different raw bytes authenticates mutation",
+        "Compatibility alias bypasses signature admission"
+      ],
+      "effects": [
+        "Only authenticated envelopes reach message, tombstone or delivery-state processing"
+      ],
+      "authorization": "Shared signature helper on all four POST routes; GET verification remains distinct configured verify-token handling.",
+      "privacy": "Signed input remains private; PRIV-WEBHOOK-001 limits receipt logging. Tests use synthetic keys and deletion-only or empty envelopes.",
+      "concurrency": "Authentication precedes processing per request. Concurrent key rotation and worker ordering are not verified here.",
+      "idempotency": "No new replay or request-key semantics. Valid signature is not proof that an event is new.",
+      "failure": "503 absent/blank key;401 configured key with invalid/missing signature; existing malformed-envelope errors after authentication.",
+      "recovery": "Configure a valid key and retry eligible deliveries under existing provider semantics; no anonymous-development fallback.",
+      "observability": "Explicit503/401 distinguish unavailable signing configuration from invalid proof; do not log key values or raw private envelopes.",
+      "source": "Shared API.Types verifier, optional Config normalization, all mounted handlers, existing bypass unit test; AUTHORITY-030.",
+      "implementation": [
+        "tdf-hq/src/TDF/API/Types.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/src/TDF/Routes/Courses.hs",
+        "tdf-hq/src/TDF/API/Instagram.hs",
+        "tdf-hq/docs/openapi/api.yaml"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/APITypesSpec.hs",
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [],
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "medium",
+      "ambiguity": [
+        "Provider replay, key rotation, downstream idempotency and all-error-path privacy remain separate obligations."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Shared guard, helper properties and HTTP fixtures require final compiled execution and deployment; no universal cryptographic or delivery proof."
+      },
+      "authority": "AUTHORITY-030; optional configuration may disable integration, never authentication.",
+      "property": "Only configured exact-body HMAC reaches mutation; unavailable or rejected admission leaves state unchanged.",
+      "contract": "formal/system/meta-webhook-admission.md",
+      "verification": "QuickCheck raw-byte binding and HTTP absent/blank-key alias controls with positive deletion fixtures.",
+      "evidence": "Current source and revision-specific runtime receipts required; production secret presence is configuration evidence only."
     }
   ]
 }

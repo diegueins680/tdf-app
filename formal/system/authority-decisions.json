@@ -310,6 +310,17 @@
       "conflict": "Authenticated Facebook/Instagram private payloads are copied verbatim into stderr operational logs.",
       "authority": "formal/system/webhook-log-privacy.md",
       "resolution": "Remove raw payload receipts; retain only fixed channel and event count after persistence. Preserve governed message records and mark historical log retention/remediation as unresolved, not silently repaired."
+    },
+    {
+      "id": "AUTHORITY-030",
+      "sources": [
+        "tdf-hq/src/TDF/API/Types.hs",
+        "tdf-hq/test/TDF/APITypesSpec.hs",
+        "tdf-hq/src/TDF/Config.hs"
+      ],
+      "conflict": "A development-motivated comment and test permit absent optional secret configuration to bypass authentication in every environment.",
+      "authority": "formal/system/meta-webhook-admission.md",
+      "resolution": "Absent or blank secret makes all four POST aliases unavailable503. Configured signature checks remain401 on invalid proof. Explicit synthetic keys replace implicit development bypass; no production key values or changes."
     }
   ]
 }
