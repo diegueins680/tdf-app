@@ -67,6 +67,7 @@ data ApprovedTicketPolicy = ApprovedTicketPolicy
   , atpTermsSummary    :: Text
   , atpRefundPolicy    :: Text
   , atpTransferAllowed :: Bool
+  , atpMaxTicketsPerOrder :: Int
   } deriving (Eq, Show)
 
 data TicketRuntimeView = TicketRuntimeView
@@ -201,7 +202,7 @@ loadApprovedTicketPolicy now eventKey = do
   rows <- (rawSql
     "SELECT id::text, policy_version, currency, buyer_fee_bps,\
     \ organizer_fee_bps, tax_bps, hold_minutes, terms_version,\
-    \ terms_summary, refund_policy, transfer_allowed\
+    \ terms_summary, refund_policy, transfer_allowed, max_tickets_per_order\
     \ FROM event_ticket_checkout_policy\
     \ WHERE event_id = ? AND active AND approval_status = 'approved'\
     \ AND approved_at IS NOT NULL AND approved_by IS NOT NULL\
@@ -211,13 +212,13 @@ loadApprovedTicketPolicy now eventKey = do
     :: SqlPersistT IO
       [( Single Text, Single Text, Single Text, Single Int, Single Int
        , Single Int, Single Int, Single Text, Single Text, Single Text
-       , Single Bool
+       , Single Bool, Single Int
        )])
   pure $ case rows of
     [( Single atpId, Single atpVersion, Single atpCurrency
      , Single atpBuyerFeeBps, Single atpOrganizerFeeBps, Single atpTaxBps
      , Single atpHoldMinutes, Single atpTermsVersion, Single atpTermsSummary
-     , Single atpRefundPolicy, Single atpTransferAllowed
+     , Single atpRefundPolicy, Single atpTransferAllowed, Single atpMaxTicketsPerOrder
      )] -> Just ApprovedTicketPolicy{..}
     _ -> Nothing
 
@@ -288,6 +289,7 @@ getPublicEventTicketStorefront rawEventId = do
           , Routes.termsSummary = atpTermsSummary
           , Routes.refundPolicy = atpRefundPolicy
           , Routes.transferAllowed = atpTransferAllowed
+          , Routes.maxTicketsPerOrder = atpMaxTicketsPerOrder
           }) <$> policy
       reason
         | not domainEnabled = Just "Public ticket checkout is disabled in this environment"
@@ -403,6 +405,9 @@ createPublicEventTicketCheckout rawEventId mIdempotency
   policy <- runDB (loadApprovedTicketPolicy now eventKey)
     >>= maybe (throwError (conflict
       "This event has no approved active ticket price and fee policy")) pure
+  when (requestedQuantity < 1 || requestedQuantity > atpMaxTicketsPerOrder policy) $
+    throwError (badRequest ("Ticket quantity must be between 1 and "
+      <> T.pack (show (atpMaxTicketsPerOrder policy)) <> " for this event"))
   unless (T.toUpper (SM.eventTicketTierCurrency tier) == atpCurrency policy) $
     throwError (conflict "Ticket tier currency does not match the approved event policy")
   checkoutEnvironment <- loadCheckoutEnvironment
@@ -1396,9 +1401,8 @@ finalizeVerifiedTicketOrder :: TicketPaymentContext -> AppM ()
 finalizeVerifiedTicketOrder context = do
   now <- liftIO getCurrentTime
   Env{ envPool } <- ask
-  (order, ticketCodes, newlyIssued) <- liftIO $
+  _ <- liftIO $
     runSqlPool
       (SocialEvents.finalizePaidTicketOrder now (tpcOrderKey context))
       envPool
-  when newlyIssued $
-    SocialEvents.sendTicketConfirmationForOrder order ticketCodes
+  pure ()

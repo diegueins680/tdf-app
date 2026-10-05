@@ -53,6 +53,7 @@ data PublicEventTicketPolicyDTO = PublicEventTicketPolicyDTO
   , termsSummary      :: Text
   , refundPolicy      :: Text
   , transferAllowed   :: Bool
+  , maxTicketsPerOrder :: Int
   } deriving (Eq, Show, Generic)
 
 instance ToJSON PublicEventTicketPolicyDTO

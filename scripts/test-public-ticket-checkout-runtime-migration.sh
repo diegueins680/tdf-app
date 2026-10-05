@@ -128,10 +128,32 @@ assert_equal "$(psql_exec -Atc "SELECT enabled::text FROM revenue_feature_flag W
 
 apply_file tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime_rollback.sql
 apply_file tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_order_quantity_limit.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_order_quantity_limit.sql
+assert_equal "$(psql_exec -Atc "SELECT max_tickets_per_order FROM event_ticket_checkout_policy WHERE event_id=1;")" \
+  "100" "Existing policies preserve the previous quantity limit"
+apply_file tdf-hq/sql/2026-10-05_ticket_order_quantity_limit_rollback.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_order_quantity_limit.sql
+
+# Existing snapshots must remain intact, while the implicit legacy limit gets
+# explicit corrective evidence even before any policy is subsequently edited.
+legacy_history_hash="$(psql_exec -Atc "SELECT md5(string_agg(row_to_json(h)::text,'' ORDER BY id)) FROM event_ticket_checkout_policy_history h;")"
+legacy_history_count="$(psql_exec -Atc "SELECT count(*) FROM event_ticket_checkout_policy_history;")"
+apply_file tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history.sql
+assert_equal "$(psql_exec -Atc "SELECT md5(string_agg(row_to_json(h)::text,'' ORDER BY id)) FROM event_ticket_checkout_policy_history h WHERE NOT (snapshot ? 'migration_origin_history_id');")" \
+  "$legacy_history_hash" "Migration preserves original history bytes and authors"
+assert_equal "$(psql_exec -Atc "SELECT count(*) FROM event_ticket_checkout_policy_history WHERE snapshot->>'max_tickets_per_order'='100' AND snapshot ? 'migration_origin_history_id';")" \
+  "$legacy_history_count" "Legacy history has one explicit quantity-limit correction per original row"
+if apply_file tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history_rollback.sql; then
+  echo "Policy rollback discarded corrective history evidence" >&2
+  exit 1
+fi
 
 psql_exec -c "
   UPDATE event_ticket_checkout_policy
     SET policy_version='owned-pilot-v1', terms_version='ticket-terms-v1',
+        max_tickets_per_order=4,
         terms_summary='Approved pilot terms.', refund_policy='Approved pilot refund policy.',
         approval_status='approved', active=TRUE,
         approved_at=NOW(), approved_by='migration-test'
@@ -285,6 +307,28 @@ assert_equal "$(psql_exec -Atc "SELECT quantity_sold FROM event_ticket_tier WHER
   "2" "Expired hold releases inventory exactly once"
 assert_equal "$(psql_exec -Atc "SELECT current_redemptions FROM promo_code WHERE id=1;")" \
   "0" "Expired hold releases promotion exactly once"
+
+apply_file tdf-hq/test/integration/ticket_order_quantity_limit.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql
+assert_equal "$(psql_exec -Atc 'SELECT COUNT(*) FROM event_ticket_confirmation_delivery')" "0" "No historical confirmation backfill"
+apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_delivery_rollback.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index.sql
+assert_equal "$(psql_exec -Atc "SELECT count(*) FROM pg_indexes WHERE indexname='event_ticket_confirmation_expired_lease_idx' AND indexdef LIKE '%lease_expires_at%' AND indexdef LIKE '%processing%';")" "1" "Expired lease recovery has a partial processing index"
+apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index_rollback.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index.sql
+apply_file tdf-hq/test/integration/ticket_confirmation_delivery.sql
+psql_exec -c 'SELECT event_ticket_queue_confirmation(1)' >/dev/null
+if apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_delivery_rollback.sql; then
+  echo "Ticket rollback discarded confirmation delivery evidence" >&2
+  exit 1
+fi
+if apply_file tdf-hq/sql/2026-10-05_ticket_order_quantity_limit_rollback.sql; then
+  echo "Ticket rollback removed an approved quantity limit" >&2
+  exit 1
+fi
 
 if apply_file tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime_rollback.sql; then
   echo "Ticket rollback removed approved policy or payment/fulfillment evidence" >&2

@@ -375,6 +375,15 @@ jobs:
           bash scripts/test-ticket-admission.sh
           node --test scripts/__tests__/ticket-admission-model.test.mjs
 
+      - name: Verify durable ticket confirmations and concurrent workers
+        env:
+          PGPASSWORD: postgres
+          TICKET_CONFIRMATION_TEST_DSN: postgresql://postgres:postgres@postgres:5432/tdf_ticket_confirmation_worker_test
+        run: |
+          createdb -h postgres -U postgres tdf_ticket_confirmation_worker_test
+          bash scripts/test-ticket-confirmation.sh
+          python3 scripts/test-ticket-confirmation-smtp.py
+
       - name: Verify automatic migrations against the production schema
         env:
           TDF_AUTOMIG_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
@@ -727,6 +736,13 @@ jobs:
 
       - name: Rehearse verified experience review migration
         run: sh ./scripts/test-verified-experience-reviews-migration.sh
+
+      - name: Verify public ticket checkout policy limits and rollback
+        env:
+          TDF_TICKET_PGURL: postgresql://postgres:postgres@127.0.0.1:5432/tdf_public_ticket_checkout_test
+        run: |
+          psql "$PGURL" -v ON_ERROR_STOP=1 -c 'CREATE DATABASE tdf_public_ticket_checkout_test'
+          npm run test:public-ticket-checkout-migration
 
       - name: Create production baseline fixture
         run: |
