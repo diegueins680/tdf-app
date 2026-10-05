@@ -5830,7 +5830,8 @@
         "Supported Linux sealed memfd runtime",
         "Pinned private age binary",
         "Private native X25519 identity held independently of production for actual off-host recovery",
-        "Independently trusted capture and transfer content hashes"
+        "Independently trusted capture and transfer content hashes",
+        "Transfer caller authenticates both endpoints and supplies only ciphertext with the independently trusted encryption receipt; channel ownership is exclusive."
       ],
       "inputs": [
         "Private captured bundle or transferred ciphertext",
@@ -5857,7 +5858,8 @@
       },
       "allowedTransitions": [
         "Verify bytes -> seal executable -> encrypt private source -> recheck source -> encrypted-not-transferred",
-        "Verify sealed tool and trusted transfer hash -> authenticated decryption -> trusted plaintext comparison -> decrypted-content-verified"
+        "Verify sealed tool and trusted transfer hash -> authenticated decryption -> trusted plaintext comparison -> decrypted-content-verified",
+        "Trusted ciphertext -> nonce/size/hash-bound offer -> exclusive private durable retention and reopen/hash -> return persisted bytes -> trusted round-trip verification; decryption/restoration remain false."
       ],
       "forbiddenTransitions": [
         "Execute a subsequently replaced pathname instead of verified bytes",
@@ -5865,7 +5867,8 @@
         "Expose identity or plaintext through logs, arguments or environment",
         "Overwrite an output or accept partial decryption",
         "Treat public-key encryption as sender authentication",
-        "Infer transfer or restored system from encryption/decryption"
+        "Infer transfer or restored system from encryption/decryption",
+        "A changed nonce, frame kind, byte count, hash, truncated stream, persistence failure or substituted path must not complete transfer; existing output cannot be overwritten."
       ],
       "effects": [
         "Exclusive private ciphertext or plaintext output",
@@ -5882,20 +5885,23 @@
         "ops/hetzner/recovery-envelope.py",
         "ops/hetzner/recovery-tools.json",
         "scripts/install-recovery-tools.py",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        "ops/hetzner/recovery-transfer.py"
       ],
       "tests": [
         "scripts/test-recovery-envelope.py",
         "scripts/test-recovery-tools.py",
-        "scripts/quality-repo.sh"
+        "scripts/quality-repo.sh",
+        "scripts/test-recovery-transfer.py",
+        "scripts/test-recovery-transfer-ssh.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
       "confidence": "Real age integration and scheduling controls; no cryptographic or whole-system proof.",
       "ambiguity": [
-        "Production key custody, coordinated capture, trusted bundle evidence and off-host transfer/retrieval remain unimplemented."
+        "Production key custody, coordinated capture, trusted complete-bundle evidence and integrated off-host restoration remain unimplemented. The transfer primitive and sandboxed SSH test do not establish production retention or recovery."
       ],
-      "verification": "Linux real-tool negative/scheduling controls and deterministic installer tests; unsupported platforms cannot stand in for Linux runtime evidence.",
+      "verification": "Linux real-tool controls, deterministic installer tests, private-file/socket transfer negative controls and explicit synthetic canonical-SSH round trip; production coordinated recovery remains separate.",
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Encryption primitive and controlled checks exist; integrated production key/backup/transfer/restoration workflow remains outstanding."

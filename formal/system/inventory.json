@@ -73,6 +73,7 @@
       "ops/hetzner/recovery-envelope.py",
       "ops/hetzner/recovery-files.py",
       "ops/hetzner/recovery-tools.json",
+      "ops/hetzner/recovery-transfer.py",
       "ops/hetzner/rehearse-postgres-restore.py",
       "ops/hetzner/release-journal.py",
       "ops/privacy/request-workflow.json"
@@ -430,6 +431,8 @@
       "scripts/test-recovery-envelope.py",
       "scripts/test-recovery-files.py",
       "scripts/test-recovery-tools.py",
+      "scripts/test-recovery-transfer-ssh.py",
+      "scripts/test-recovery-transfer.py",
       "scripts/test-release-journal.py",
       "scripts/test-requirement-declarations.py",
       "scripts/test-service-booking-checkout-runtime-migration.sh",
@@ -2660,6 +2663,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-20a6acfb43905d8e",
+      "path": "ops/hetzner/recovery-transfer.py",
+      "sha256": "feb2c02962e866089cc0d5c89e789a79940a2c6a28feec6db05b5f1e17b6081d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-60310758bd18e31e",
       "path": "ops/hetzner/rehearse-postgres-restore.py",
       "sha256": "66d134bd4510328d824375cfd72c25a89380b7c1360e0b00ca295bef78d6af7a",
@@ -3844,7 +3853,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "7be2d7ae96f245bfffe5cb6ab84bcf9f0a22275133799417f4672acfd2bf4991",
+      "sha256": "676182c34f8af5aab84366fc0df796171fd2c643980ce65cad3da271c5b76ea4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4763,6 +4772,18 @@
       "id": "SURFACE-273813235d3bf51b",
       "path": "scripts/test-recovery-tools.py",
       "sha256": "91b2037bea06ffbf5a71a0948b2ab89185aaa695ffcfee53d6717975efceb934",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3decb666edd35d7d",
+      "path": "scripts/test-recovery-transfer-ssh.py",
+      "sha256": "1d40b07dce794ff35e184fe55f95db9a2180201900a4ab6dd89c7f83028bca29",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a3bbab97fc4c51d1",
+      "path": "scripts/test-recovery-transfer.py",
+      "sha256": "eecc140330b4ccfeafa8d46971694ebd30fe51430780ed03463ff6419148dce6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21858,7 +21879,7 @@
     },
     {
       "path": "formal/system/recovery-envelope.md",
-      "sha256": "6af6d997db007dffac3bb59e306e2469285f214b184ad58f230f5f9646d1fe9d",
+      "sha256": "fe122eabcb2db02c729df4639cd13ce01e973d0a6aea2f8d27c9f28db23f38c4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21886,7 +21907,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "dad50c30912b9c14cc377ad89a7d5accffa7baf46c7800a42d48c734ccdf92b5",
+      "sha256": "bd143abd915560dcb161868185f7fb5448ed8ec4fc965bd4a850ae089ea4770a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

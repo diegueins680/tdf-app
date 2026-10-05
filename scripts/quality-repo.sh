@@ -33,6 +33,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-physical-postgres-recovery
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-release-journal.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-recovery-tools.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-recovery-envelope.py"
+PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-recovery-transfer.py"
 node --test "$ROOT/scripts/__tests__/hetzner-inspection.test.mjs"
 node --test "$ROOT/scripts/__tests__/hetzner-preparation.test.mjs"
 node --test "$ROOT/scripts/__tests__/persistent-uploads.test.mjs"

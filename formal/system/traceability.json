@@ -5831,7 +5831,8 @@
         "Supported Linux sealed memfd runtime",
         "Pinned private age binary",
         "Private native X25519 identity held independently of production for actual off-host recovery",
-        "Independently trusted capture and transfer content hashes"
+        "Independently trusted capture and transfer content hashes",
+        "Transfer caller authenticates both endpoints and supplies only ciphertext with the independently trusted encryption receipt; channel ownership is exclusive."
       ],
       "inputs": [
         "Private captured bundle or transferred ciphertext",
@@ -5858,7 +5859,8 @@
       },
       "allowedTransitions": [
         "Verify bytes -> seal executable -> encrypt private source -> recheck source -> encrypted-not-transferred",
-        "Verify sealed tool and trusted transfer hash -> authenticated decryption -> trusted plaintext comparison -> decrypted-content-verified"
+        "Verify sealed tool and trusted transfer hash -> authenticated decryption -> trusted plaintext comparison -> decrypted-content-verified",
+        "Trusted ciphertext -> nonce/size/hash-bound offer -> exclusive private durable retention and reopen/hash -> return persisted bytes -> trusted round-trip verification; decryption/restoration remain false."
       ],
       "forbiddenTransitions": [
         "Execute a subsequently replaced pathname instead of verified bytes",
@@ -5866,7 +5868,8 @@
         "Expose identity or plaintext through logs, arguments or environment",
         "Overwrite an output or accept partial decryption",
         "Treat public-key encryption as sender authentication",
-        "Infer transfer or restored system from encryption/decryption"
+        "Infer transfer or restored system from encryption/decryption",
+        "A changed nonce, frame kind, byte count, hash, truncated stream, persistence failure or substituted path must not complete transfer; existing output cannot be overwritten."
       ],
       "effects": [
         "Exclusive private ciphertext or plaintext output",
@@ -5883,20 +5886,23 @@
         "ops/hetzner/recovery-envelope.py",
         "ops/hetzner/recovery-tools.json",
         "scripts/install-recovery-tools.py",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        "ops/hetzner/recovery-transfer.py"
       ],
       "tests": [
         "scripts/test-recovery-envelope.py",
         "scripts/test-recovery-tools.py",
-        "scripts/quality-repo.sh"
+        "scripts/quality-repo.sh",
+        "scripts/test-recovery-transfer.py",
+        "scripts/test-recovery-transfer-ssh.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
       "confidence": "Real age integration and scheduling controls; no cryptographic or whole-system proof.",
       "ambiguity": [
-        "Production key custody, coordinated capture, trusted bundle evidence and off-host transfer/retrieval remain unimplemented."
+        "Production key custody, coordinated capture, trusted complete-bundle evidence and integrated off-host restoration remain unimplemented. The transfer primitive and sandboxed SSH test do not establish production retention or recovery."
       ],
-      "verification": "Linux real-tool negative/scheduling controls and deterministic installer tests; unsupported platforms cannot stand in for Linux runtime evidence.",
+      "verification": "Linux real-tool controls, deterministic installer tests, private-file/socket transfer negative controls and explicit synthetic canonical-SSH round trip; production coordinated recovery remains separate.",
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Encryption primitive and controlled checks exist; integrated production key/backup/transfer/restoration workflow remains outstanding."
@@ -6734,6 +6740,7 @@
     "ops/hetzner/recovery-envelope.py": "dd916295bcae2318cbe1e00af9c51e38cf40838993326e284614d0b09e0250fb",
     "ops/hetzner/recovery-files.py": "09c07444444b498d9fe5f9696e8ebec9b3010cc2453c59e72de74ccd60cdcb84",
     "ops/hetzner/recovery-tools.json": "a2427185433ece7d46514d9827eb788a223d09881b3d68adb259c1df44b6c2a4",
+    "ops/hetzner/recovery-transfer.py": "feb2c02962e866089cc0d5c89e789a79940a2c6a28feec6db05b5f1e17b6081d",
     "ops/hetzner/rehearse-postgres-restore.py": "66d134bd4510328d824375cfd72c25a89380b7c1360e0b00ca295bef78d6af7a",
     "ops/hetzner/release-journal.py": "bc23f81802b6b4aa554b430c3ec9ee27161e6f8843d3ae9bc460b4d20f861634",
     "ops/hetzner/tdf-postgres-backup.service": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
@@ -6815,7 +6822,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "7be2d7ae96f245bfffe5cb6ab84bcf9f0a22275133799417f4672acfd2bf4991",
+    "scripts/quality-repo.sh": "676182c34f8af5aab84366fc0df796171fd2c643980ce65cad3da271c5b76ea4",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
@@ -6846,6 +6853,8 @@
     "scripts/test-recovery-envelope.py": "730f6d41789ac414c6578b1e19d9be44f47e19299e9c5826dc831248291d59d0",
     "scripts/test-recovery-files.py": "3da1087e55ecc127cc9a45eb20f6a3fe6f714c7719b1ad09fdde15b4feea2299",
     "scripts/test-recovery-tools.py": "91b2037bea06ffbf5a71a0948b2ab89185aaa695ffcfee53d6717975efceb934",
+    "scripts/test-recovery-transfer-ssh.py": "1d40b07dce794ff35e184fe55f95db9a2180201900a4ab6dd89c7f83028bca29",
+    "scripts/test-recovery-transfer.py": "eecc140330b4ccfeafa8d46971694ebd30fe51430780ed03463ff6419148dce6",
     "scripts/test-release-journal.py": "498c638af45f323fa86f9b98819fda85768dc7d173d3ce969922b8beaa570e32",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
@@ -10342,6 +10351,12 @@
         "relationship": "implementation"
       }
     ],
+    "ops/hetzner/recovery-transfer.py": [
+      {
+        "requirement": "DEPLOY-ENVELOPE-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-recovery-envelope.py": [
       {
         "requirement": "DEPLOY-ENVELOPE-001",
@@ -10349,6 +10364,18 @@
       }
     ],
     "scripts/test-recovery-tools.py": [
+      {
+        "requirement": "DEPLOY-ENVELOPE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-recovery-transfer.py": [
+      {
+        "requirement": "DEPLOY-ENVELOPE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-recovery-transfer-ssh.py": [
       {
         "requirement": "DEPLOY-ENVELOPE-001",
         "relationship": "tests"
@@ -11388,6 +11415,18 @@
       "id": "SURFACE-ab32c7f5b65f1b86",
       "path": "ops/hetzner/recovery-tools.json",
       "sha256": "a2427185433ece7d46514d9827eb788a223d09881b3d68adb259c1df44b6c2a4",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-ENVELOPE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-20a6acfb43905d8e",
+      "path": "ops/hetzner/recovery-transfer.py",
+      "sha256": "feb2c02962e866089cc0d5c89e789a79940a2c6a28feec6db05b5f1e17b6081d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -13377,7 +13416,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "7be2d7ae96f245bfffe5cb6ab84bcf9f0a22275133799417f4672acfd2bf4991",
+      "sha256": "676182c34f8af5aab84366fc0df796171fd2c643980ce65cad3da271c5b76ea4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14767,6 +14806,30 @@
       "id": "SURFACE-273813235d3bf51b",
       "path": "scripts/test-recovery-tools.py",
       "sha256": "91b2037bea06ffbf5a71a0948b2ab89185aaa695ffcfee53d6717975efceb934",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-ENVELOPE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-3decb666edd35d7d",
+      "path": "scripts/test-recovery-transfer-ssh.py",
+      "sha256": "1d40b07dce794ff35e184fe55f95db9a2180201900a4ab6dd89c7f83028bca29",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-ENVELOPE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-a3bbab97fc4c51d1",
+      "path": "scripts/test-recovery-transfer.py",
+      "sha256": "eecc140330b4ccfeafa8d46971694ebd30fe51430780ed03463ff6419148dce6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -32609,7 +32672,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "dad50c30912b9c14cc377ad89a7d5accffa7baf46c7800a42d48c734ccdf92b5",
+      "sourceSha256": "bd143abd915560dcb161868185f7fb5448ed8ec4fc965bd4a850ae089ea4770a",
       "definition": {
         "states": [
           "absent",
