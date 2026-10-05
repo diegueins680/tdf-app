@@ -84,6 +84,11 @@ create response, and failed cleanup retaining its reservation. Its controlled
 cleanup recovery has exact knowledge of its own completed requests; it is not a
 general production-recovery command. Private synthetic archives remain for
 inspection. No image pull, production source, account or provider is involved.
+Each exclusively created empty fixture first demonstrates rejection of a real
+POSIX default ACL, then removes only the two recognized POSIX ACL attributes
+from that fixture before creating children. This handles hosted-runner ACL
+inheritance without changing the production metadata guard or normalizing any
+existing recovery data. Unknown attributes remain a failure.
 
 The existing RestoreIsolation bounded model covers shared reservation/orphan
 ordering, with its documented bounds and mutations. It does **not** model cold

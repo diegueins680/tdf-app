@@ -4678,7 +4678,7 @@
     {
       "id": "SURFACE-99a7ddb4ad51eda9",
       "path": "scripts/test-physical-postgres-docker.py",
-      "sha256": "bfba7cc479be464d192e89d5a07479aee4a4c3ee2f2cdcff99e99b046bd4f9ad",
+      "sha256": "45ec2870f000ad08842dc5820de550159ba89dd03fe54d17869a7e80c7695e7a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21837,7 +21837,7 @@
     },
     {
       "path": "formal/system/physical-recovery.md",
-      "sha256": "47232d4205970583fef371c092bb862cd314bf7a7b365dbc53c3f99e1074f264",
+      "sha256": "064331b8df457322ed1a16f1196179436ac7aca41d8b1897915f4f64ba1e891f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

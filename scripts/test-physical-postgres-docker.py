@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import re
+import struct
 import sys
 import uuid
 from unittest.mock import patch
@@ -18,6 +19,7 @@ spec = importlib.util.spec_from_file_location('physical', Path(__file__).resolve
 p = importlib.util.module_from_spec(spec); spec.loader.exec_module(p)
 r = p.restore
 CREATED_FIXTURES = []
+ACL_FIXTURE_CONTROLS = 0
 
 
 def require(value):
@@ -25,10 +27,31 @@ def require(value):
 
 
 def new_directory():
+    global ACL_FIXTURE_CONTROLS
     nonce = uuid.uuid4().hex
     directory = p.HOST_ROOT/('rehearsal-'+nonce)
     with p.files.directory(str(p.HOST_ROOT), private=True): directory.mkdir(mode=0o700)
     CREATED_FIXTURES.append(directory)
+    # Hosted runners may inherit POSIX ACLs. Normalize only this invocation's
+    # exclusively created, still-empty fixture, never a recovery source/copy or
+    # shared parent. Unknown metadata remains an error; the production guard is
+    # unchanged. Exercise that guard even on hosts without inherited ACLs.
+    with p.files.directory(str(directory), private=True) as fd:
+        allowed = {'system.posix_acl_access', 'system.posix_acl_default'}
+        require(not os.listdir(fd) and set(os.listxattr(fd)) <= allowed)
+        default_acl = struct.pack('<I', 2) + b''.join(
+            struct.pack('<HHI', tag, permissions, 0xffffffff)
+            for tag, permissions in ((1, 7), (4, 0), (32, 0)))
+        os.setxattr(fd, 'system.posix_acl_default', default_acl)
+        try: p.files.walk(fd)
+        except ValueError: pass
+        else: raise ValueError('Recovery accepted unsupported ACL metadata')
+        for name in os.listxattr(fd):
+            require(name in allowed)
+            os.removexattr(fd, name)
+        os.fchmod(fd, 0o700)
+        p.files.no_extended_attributes(fd)
+        ACL_FIXTURE_CONTROLS += 1
     return nonce, directory
 
 
@@ -158,6 +181,7 @@ def main():
         'initializedRecoveredDatabase': result['initializedDatabase'],
         'uncleanControlRejectedBeforePostgresStart': True, 'lostCreateResponseRecoveredForCleanup': True,
         'failedCleanupRetainedReservation': True,
+        'unsupportedAclRejectedBeforeFixtureNormalization': ACL_FIXTURE_CONTROLS,
         'ownedContainersRemoved': True, 'productionDataAccessed': False}))
 
 
