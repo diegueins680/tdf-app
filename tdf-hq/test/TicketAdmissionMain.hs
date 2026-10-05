@@ -103,6 +103,16 @@ main = do
             deny scan expected
           runSqlPool (rawSql "SELECT count(*) FROM event_ticket_admission_audit" []) pool
             `shouldReturn` [Single (0 :: Int)]
+        it "denies disputed and reversed canonical payments despite a stale paid order" $ do
+          runSqlPool (do
+            rawExecute "INSERT INTO event_ticket_checkout_policy(id,event_id) VALUES ('11111111-1111-4111-a111-111111111111',1)" []
+            rawExecute "INSERT INTO event_ticket_checkout_runtime VALUES (1,'11111111-1111-4111-a111-111111111111',1,'disputed')" []
+            ) pool
+          forM_ (["disputed", "chargeback", "refunded", "processing"] :: [Text]) $ \payment -> do
+            runSqlPool (rawExecute "UPDATE event_ticket_checkout_runtime SET payment_status=?" [PersistText payment]) pool
+            deny scan AdmissionUnpaid
+          runSqlPool (rawSql "SELECT count(*) FROM event_ticket_admission_audit" []) pool
+            `shouldReturn` [Single (0 :: Int)]
         it "rolls back admission when durable audit fails" $ do
           runSqlPool (rawExecute "INSERT INTO event_ticket_admission_audit VALUES (1,1,1,'10',now())" []) pool
           result <- try scan

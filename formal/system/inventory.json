@@ -6807,7 +6807,7 @@
     },
     {
       "path": "formal/ticket-admission/README.md",
-      "sha256": "0390d55a4a7d9142a8a6ca70b79725dc8b48cedf4248333456aa303330ed7ef3",
+      "sha256": "501a9af62409a0dcc82d52559cad9fb7c9973edd65c992ce2dfce43eed2a004e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

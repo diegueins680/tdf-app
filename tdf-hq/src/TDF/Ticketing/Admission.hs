@@ -90,24 +90,33 @@ admitTicket actor eventKey lookupValue now = do
         (_, "checked_in") -> pure (Left AdmissionAlreadyUsed)
         (_, "checkedin") -> pure (Left AdmissionAlreadyUsed)
         ("paid", "issued") | M.eventTicketCheckedInAt ticket == Nothing -> do
-          changed <- updateWhereCount
-            [ M.EventTicketId ==. ticketKey
-            , M.EventTicketStatus ==. M.eventTicketStatus ticket
-            , M.EventTicketCheckedInAt ==. Nothing
-            ]
-            [ M.EventTicketStatus =. "checked_in"
-            , M.EventTicketCheckedInAt =. Just now
-            , M.EventTicketUpdatedAt =. now
-            ]
-          unless (changed == 1) $ fail "Admission mutation was not singular"
-          rawExecute
-            "INSERT INTO event_ticket_admission_audit(ticket_id,event_id,order_id,actor_party_id,admitted_at) VALUES (?,?,?,?,?)"
-            [toPersistValue ticketKey, toPersistValue eventKey, toPersistValue (M.eventTicketOrderRefId ticket), PersistText actor, PersistUTCTime now]
-          stored <- getEntity ticketKey
-          case stored of
-            Just entity@(Entity _ value)
-              | M.eventTicketStatus value == "checked_in"
-              , M.eventTicketCheckedInAt value /= Nothing -> pure (Right entity)
-            _ -> fail "Admission stored state did not match mutation"
+          runtimes <- rawSql
+            "SELECT event_id,payment_status FROM event_ticket_checkout_runtime WHERE order_id=?"
+            [toPersistValue (M.eventTicketOrderRefId ticket)]
+          let paymentValid = case runtimes of
+                [] -> True -- Legacy orders predate the canonical public checkout runtime.
+                [(Single runtimeEvent, Single paymentStatus)] -> runtimeEvent == eventKey &&
+                  paymentStatus `elem` (["paid", "partially_refunded"] :: [Text])
+                _ -> False
+          if not paymentValid then pure (Left AdmissionUnpaid) else do
+              changed <- updateWhereCount
+                [ M.EventTicketId ==. ticketKey
+                , M.EventTicketStatus ==. M.eventTicketStatus ticket
+                , M.EventTicketCheckedInAt ==. Nothing
+                ]
+                [ M.EventTicketStatus =. "checked_in"
+                , M.EventTicketCheckedInAt =. Just now
+                , M.EventTicketUpdatedAt =. now
+                ]
+              unless (changed == 1) $ fail "Admission mutation was not singular"
+              rawExecute
+                "INSERT INTO event_ticket_admission_audit(ticket_id,event_id,order_id,actor_party_id,admitted_at) VALUES (?,?,?,?,?)"
+                [toPersistValue ticketKey, toPersistValue eventKey, toPersistValue (M.eventTicketOrderRefId ticket), PersistText actor, PersistUTCTime now]
+              stored <- getEntity ticketKey
+              case stored of
+                Just entity@(Entity _ value)
+                  | M.eventTicketStatus value == "checked_in"
+                  , M.eventTicketCheckedInAt value /= Nothing -> pure (Right entity)
+                _ -> fail "Admission stored state did not match mutation"
         ("paid", _) -> pure (Left AdmissionInvalidState)
         _ -> pure (Left AdmissionUnpaid)

@@ -156,7 +156,8 @@
     "providerReadinessDiagnosticHttpStatus": 404,
     "implementationPullRequest": "https://github.com/diegueins680/tdf-app/pull/480",
     "transferConcurrencyLocalPostgresPassed": true,
-    "localPostgresTicketingTestCount": 18
+    "localPostgresTicketingTestCount": 19,
+    "disputedPaymentAdmissionLocalPostgresPassed": true
   },
   "organizerResponse": {
     "source": "Direct user message in this conversation",
