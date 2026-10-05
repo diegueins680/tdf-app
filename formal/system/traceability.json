@@ -5391,7 +5391,8 @@
         "currency relabeling or inconsistent/overflowed totals",
         "changed explicit replay parameters",
         "revoked authority commit/replay",
-        "partial invoice/receipt/line/counter commit"
+        "partial invoice/receipt/line/counter commit",
+        "Return pre-persistence values that differ from the canonical stored receipt on replay."
       ],
       "effects": [
         "Immutable receipt and line snapshot",
@@ -5664,7 +5665,7 @@
     "scripts/lib/formal-result-summary.mjs": "fa378d768a1c4e8ff6fe67e8d18d61367cd1b272339107e71c497798fb657167",
     "scripts/lib/hetzner-migration-rehearsal.mjs": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a",
     "scripts/lib/hetzner-preparation.mjs": "c0e96de12b4949cea0115e8d8ea8fe85dad2dfdd1f8496fb8b110f9e5240abc0",
-    "scripts/lib/invoice_receipt_conformance.py": "6d3027e319102cfc90b3dbdb55c6b2b5e71a5474bce547a9ffbc91173e8d6dbb",
+    "scripts/lib/invoice_receipt_conformance.py": "c83a551fadd81cfe006dd6bc59f3a9f20ffea17629144efd9aba5d47e8cfa544",
     "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
     "scripts/lib/operations_conformance.py": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
@@ -5830,7 +5831,7 @@
     "tdf-hq/src/TDF/RagStore.hs": "80b5f523542cb71119551dbb64bd5e0c0e3e880622997a496e496e4d7fbeb912",
     "tdf-hq/src/TDF/Routes/Courses.hs": "750e7304fa71dfccdce5132c24fbb077043087b5b0d8fe17e2ca6dcbb5384fcb",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "3557aa7feb725075e3cbc97f69fdd34f0de1b9b59f6545f91df80850b80f3914",
-    "tdf-hq/src/TDF/Server.hs": "98820dee37a796a4b605042bd59f7a9165f5aab2189c3d849e4b6842e3a1e651",
+    "tdf-hq/src/TDF/Server.hs": "ba0e9862d72501563b4d2d16f04701932467627754a1cd2cf53acf82cbd40988",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
@@ -10850,7 +10851,7 @@
     {
       "id": "SURFACE-51d8657e7eea8356",
       "path": "scripts/lib/invoice_receipt_conformance.py",
-      "sha256": "6d3027e319102cfc90b3dbdb55c6b2b5e71a5474bce547a9ffbc91173e8d6dbb",
+      "sha256": "c83a551fadd81cfe006dd6bc59f3a9f20ffea17629144efd9aba5d47e8cfa544",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22419,7 +22420,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "98820dee37a796a4b605042bd59f7a9165f5aab2189c3d849e4b6842e3a1e651",
+      "sha256": "ba0e9862d72501563b4d2d16f04701932467627754a1cd2cf53acf82cbd40988",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30037,7 +30038,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "2bfb5681da0d77c297bc2ca73d45c2c2681a16069fcb339fec4b59a256180303",
+      "sourceSha256": "db6f64af8c3ad188639c4c4ca2c0b77f8b3c3ffeda84c7769502c35ff1f8a318",
       "definition": {
         "states": [
           "absent",

@@ -78,3 +78,14 @@ Primary rationale: PostgreSQL17 [row/table locks](https://www.postgresql.org/doc
 and [ON CONFLICT](https://www.postgresql.org/docs/17/sql-insert.html) support local
 transaction serialization. TDF adopts these local primitives without inferring
 exactly-once provider effects. See `RES-RECEIPT-001` in the research register.
+
+## Persisted response identity
+
+First issuance reloads the committed-shape receipt and line values inside the same
+transaction before returning. Replays read that same representation. In-memory
+timestamps can exceed PostgreSQL microsecond precision, so returning pre-insert
+values violated exact replay identity on Linux despite passing on a microsecond
+clock. The HTTP race fixture deterministically shifts the stored timestamp by one
+microsecond and requires all eight responses to match; this models storage
+normalization without relying on OS clock resolution. Fixture bodies contain only
+synthetic records and are retained when a replay assertion fails.

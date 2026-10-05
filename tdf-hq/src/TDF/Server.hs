@@ -13931,7 +13931,7 @@ issueReceipt now mBuyerName mBuyerEmail mNotes mCurrency (Entity iid inv) lineEn
         , receiptCreatedAt    = now
         }
   rid <- insert receiptRecord
-  receiptLines <- forM lineEntities $ \(Entity _ line) -> do
+  forM_ lineEntities $ \(Entity _ line) -> do
     let lineRecord = ReceiptLine
           { receiptLineReceiptId = rid
           , receiptLineDescription = invoiceLineDescription line
@@ -13940,9 +13940,12 @@ issueReceipt now mBuyerName mBuyerEmail mNotes mCurrency (Entity iid inv) lineEn
           , receiptLineTaxBps      = Just (invoiceLineTaxBps line)
           , receiptLineTotalCents  = invoiceLineTotalCents line
           }
-    rlId <- insert lineRecord
-    pure (Entity rlId lineRecord)
-  pure (Entity rid receiptRecord, receiptLines)
+    insert_ lineRecord
+  -- PostgreSQL normalizes timestamps to its storage precision. Return the
+  -- persisted representation on first issuance as well as every replay.
+  persistedReceipt <- getJust rid
+  persistedLines <- selectList [ReceiptLineReceiptId ==. rid] [Asc ReceiptLineId]
+  pure (Entity rid persistedReceipt, persistedLines)
 
 generateReceiptNumber :: Day -> SqlPersistT IO Text
 generateReceiptNumber day = do
