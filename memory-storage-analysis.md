@@ -1,10 +1,15 @@
 # Análisis de Almacenamiento para Recuerdos del Fan Club
 
-## Estado Actual
+> Referencia histórica: este análisis describe la infraestructura anterior en
+> Fly.io. No representa el alojamiento actual ni sus volúmenes o base de datos.
+> La URL canónica del API para configuraciones nuevas es
+> `https://api.tdfrecords.net`.
 
-El proyecto `tdf-label` se despliega en **Fly.io** con la siguiente configuración de almacenamiento:
+## Estado de la infraestructura anterior
 
-### Infraestructura Actual
+El proyecto `tdf-label` se desplegaba en **Fly.io** con la siguiente configuración de almacenamiento:
+
+### Infraestructura documentada en ese momento
 - **Backend**: Haskell (Servant) en Fly.io (`tdf-hq.fly.dev`)
 - **Frontend**: React en Cloudflare Pages (`tdf-app.pages.dev`)
 - **Base de datos**: PostgreSQL (gestionada por Fly.io)

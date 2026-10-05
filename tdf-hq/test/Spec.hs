@@ -4849,6 +4849,16 @@ main = hspec $ do
             assertInvalid "-1"
             assertInvalid "thirty-days"
 
+        it "defaults generated public links to the canonical web and asset hosts" $
+            withEnvOverrides
+                [ ("HQ_APP_URL", Nothing)
+                , ("HQ_ASSETS_BASE_URL", Nothing)
+                ]
+                $ do
+                    cfg <- loadConfig
+                    resolveConfiguredAppBase cfg `shouldBe` "https://www.tdfrecords.net"
+                    resolveConfiguredAssetsBase cfg `shouldBe` "https://api.tdfrecords.net/assets/serve"
+
         it "normalizes configured backend public base URLs before generating fallback links" $
             withEnvOverrides
                 [ ("HQ_APP_URL", Just " https://hq.example.com/app/ ")

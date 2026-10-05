@@ -3,8 +3,8 @@
  * Social Infrastructure Diagnostic
  *
  * Checks Instagram + Facebook webhook subscriptions and messaging tokens.
- * Run locally with securely supplied current-deployment environment variables.
- * This diagnostic does not apply callback or credential changes.
+ * Read-only checks using the operator-provided environment.
+ * Follow ops/hetzner/README.md for current production access/configuration.
  */
 
 const APP_ID = process.env.FACEBOOK_APP_ID || process.env.META_APP_ID;
@@ -13,10 +13,27 @@ const IG_MSG_TOKEN = process.env.INSTAGRAM_MESSAGING_TOKEN;
 const IG_ACCOUNT_ID = process.env.INSTAGRAM_MESSAGING_ACCOUNT_ID;
 const FB_MSG_TOKEN = process.env.FACEBOOK_MESSAGING_TOKEN || process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
 const FB_PAGE_ID = process.env.FACEBOOK_MESSAGING_PAGE_ID || process.env.FACEBOOK_PAGE_ID;
+const GRAPH_BASE = (process.env.FACEBOOK_GRAPH_BASE || process.env.FACEBOOK_MESSAGING_API_BASE || '')
+  .trim().replace(/\/+$/, '');
+
+
+// Never echo configured credentials, including provider metadata that reflects
+// a submitted token. Raw fetch/JSON exceptions are not safe diagnostics either.
+const privateValues = ['FACEBOOK_APP_SECRET', 'META_APP_SECRET',
+  'INSTAGRAM_MESSAGING_TOKEN', 'FACEBOOK_MESSAGING_TOKEN', 'FACEBOOK_PAGE_ACCESS_TOKEN',
+  'INSTAGRAM_VERIFY_TOKEN', 'IG_VERIFY_TOKEN', 'FACEBOOK_VERIFY_TOKEN']
+  .map(name => process.env[name]).filter(Boolean)
+  .flatMap(value => [value, encodeURIComponent(value)])
+  .sort((a, b) => b.length - a.length);
+function safeLog(message) {
+  let output = String(message);
+  for (const value of privateValues) output = output.replaceAll(value, '[redacted]');
+  console.log(output);
+}
 
 async function graph(path, token) {
-  const url = `https://graph.facebook.com/v18.0${path}&access_token=${encodeURIComponent(token)}`;
-  const res = await fetch(url);
+  const url = `${GRAPH_BASE}${path}&access_token=${encodeURIComponent(token)}`;
+  const res = await fetch(url, { redirect: 'error', signal: AbortSignal.timeout(15_000) });
   return res.json();
 }
 
@@ -24,137 +41,129 @@ async function appGraph(path) {
   return graph(path, `${APP_ID}|${APP_SECRET}`);
 }
 
+const failedChecks = [];
+
 function check(name, ok, detail = '') {
   const icon = ok ? '✅' : '❌';
-  console.log(`${icon} ${name}${detail ? ': ' + detail : ''}`);
+  safeLog(`${icon} ${name}${detail ? ': ' + detail : ''}`);
+  if (!ok) failedChecks.push(name);
   return ok;
 }
 
 async function main() {
-  console.log('=== Social Infrastructure Diagnostic ===\n');
+  safeLog('=== Social Infrastructure Diagnostic ===\n');
+
+  // Use the operator's explicit backend version; do not silently probe a
+  // different hardcoded version or send credentials to an arbitrary host.
+  if (!/^https:\/\/graph\.facebook\.com\/v[0-9]+\.[0-9]+$/.test(GRAPH_BASE || '')) {
+    safeLog('Set FACEBOOK_GRAPH_BASE to the reviewed versioned https://graph.facebook.com endpoint.');
+    process.exitCode = 1;
+    return;
+  }
 
   // 1. App credentials
   if (!APP_ID || !APP_SECRET) {
-    console.log('❌ FACEBOOK_APP_ID and FACEBOOK_APP_SECRET must be set');
+    safeLog('❌ FACEBOOK_APP_ID and FACEBOOK_APP_SECRET must be set');
     process.exit(1);
   }
-  console.log(`App ID: ${APP_ID}\n`);
+  safeLog(`App ID: ${APP_ID}\n`);
 
   // 2. App subscriptions
-  console.log('--- App Webhook Subscriptions ---');
+  safeLog('--- App Webhook Subscriptions ---');
   const subs = await appGraph(`/${APP_ID}/subscriptions?`);
   const igSub = subs.data?.find(s => s.object === 'instagram');
   const fbSub = subs.data?.find(s => s.object === 'page');
 
-  const igSubscribed = igSub?.active === true && igSub.callback_url === 'https://api.tdfrecords.net/instagram/webhook';
-  const fbSubscribed = fbSub?.active === true && fbSub.callback_url === 'https://api.tdfrecords.net/facebook/webhook';
+  check('Instagram canonical webhook active', igSub?.active === true
+    && igSub.callback_url === 'https://api.tdfrecords.net/instagram/webhook');
+  check('Facebook canonical webhook active', fbSub?.active === true
+    && fbSub.callback_url === 'https://api.tdfrecords.net/facebook/webhook');
 
-  check('Instagram webhook subscribed', igSubscribed, igSub ? `callback=${igSub.callback_url}, active=${igSub.active}` : 'missing');
-  check('Facebook webhook subscribed', fbSubscribed, fbSub ? `callback=${fbSub.callback_url}, active=${fbSub.active}` : 'missing');
-
-  if (!igSubscribed) {
-    console.log('\n🔧 To fix Instagram subscription:');
-    console.log('  curl -X POST "https://graph.facebook.com/v18.0/${FACEBOOK_APP_ID:-${META_APP_ID}}/subscriptions" --data-urlencode "object=instagram" --data-urlencode "callback_url=https://api.tdfrecords.net/instagram/webhook" --data-urlencode "fields=messages" --data-urlencode "verify_token=${INSTAGRAM_VERIFY_TOKEN:-${IG_VERIFY_TOKEN:?Set INSTAGRAM_VERIFY_TOKEN or IG_VERIFY_TOKEN from the current protected configuration}}" --data-urlencode "access_token=${FACEBOOK_APP_ID:-${META_APP_ID}}|${FACEBOOK_APP_SECRET:-${META_APP_SECRET}}"');
-  }
-
-  if (!fbSubscribed) {
-    console.log('\n🔧 To fix Facebook subscription:');
-    console.log('  curl -X POST "https://graph.facebook.com/v18.0/${FACEBOOK_APP_ID:-${META_APP_ID}}/subscriptions" --data-urlencode "object=page" --data-urlencode "callback_url=https://api.tdfrecords.net/facebook/webhook" --data-urlencode "fields=messages" --data-urlencode "verify_token=${FACEBOOK_MESSAGING_TOKEN:-${FACEBOOK_PAGE_ACCESS_TOKEN:-${INSTAGRAM_VERIFY_TOKEN:-${IG_VERIFY_TOKEN:?Set INSTAGRAM_VERIFY_TOKEN or IG_VERIFY_TOKEN from the current protected configuration}}}}" --data-urlencode "access_token=${FACEBOOK_APP_ID:-${META_APP_ID}}|${FACEBOOK_APP_SECRET:-${META_APP_SECRET}}"');
+  if (!igSub || !fbSub) {
+    safeLog('Configure missing subscriptions in the existing Meta app dashboard.');
+    safeLog('Instagram callback: https://api.tdfrecords.net/instagram/webhook');
+    safeLog('Facebook callback: https://api.tdfrecords.net/facebook/webhook');
+    safeLog('Use the corresponding private verification token; do not paste it into logs.');
   }
 
   // 3. Instagram messaging token
-  console.log('\n--- Instagram Messaging Token ---');
+  safeLog('\n--- Instagram Messaging Token ---');
   if (!IG_MSG_TOKEN) {
     check('INSTAGRAM_MESSAGING_TOKEN configured', false, 'not set');
   } else {
     const debug = await graph('/debug_token?input_token=' + encodeURIComponent(IG_MSG_TOKEN), `${APP_ID}|${APP_SECRET}`);
     if (debug.error) {
-      check('Token valid', false, debug.error.message);
+      check('Token valid', false, 'provider rejected token metadata');
     } else {
       const info = debug.data;
-      check('Token valid', info.is_valid);
-      console.log(`   App ID: ${info.app_id}, Type: ${info.type}`);
-      console.log(`   Scopes: ${(info.scopes || []).join(', ')}`);
+      check('Token valid', info.is_valid === true);
+      safeLog(`   App ID: ${info.app_id}, Type: ${info.type}`);
+      safeLog(`   Scopes: ${(info.scopes || []).join(', ')}`);
       if (info.expires_at) {
         const days = Math.floor((info.expires_at * 1000 - Date.now()) / (86400000));
-        console.log(`   Expires in: ${days} days`);
-        if (days < 7) console.log('   ⚠️ Expires soon!');
+        safeLog(`   Expires in: ${days} days`);
+        if (days < 7) safeLog('   ⚠️ Expires soon!');
       }
     }
 
-    if (!debug.error || debug.error.code !== 190) {
+    if (!IG_ACCOUNT_ID) {
+      check('INSTAGRAM_MESSAGING_ACCOUNT_ID configured', false, 'not set');
+    } else if (!debug.error || debug.error.code !== 190) {
       const acct = await graph(`/${IG_ACCOUNT_ID}?fields=username`, IG_MSG_TOKEN);
       if (acct.error) {
-        check('Can read IG account', false, acct.error.message);
+        check('Can read IG account', false, 'provider rejected account metadata');
       } else {
-        check('Can read IG account', true, `@${acct.username}`);
+        check('Can read IG account', typeof acct.username === 'string' && acct.username.length > 0,
+          typeof acct.username === 'string' ? `@${acct.username}` : 'missing account metadata');
       }
 
-      // Dry-run message send
-      const send = await fetch(`https://graph.facebook.com/v18.0/${IG_ACCOUNT_ID}/messages`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${IG_MSG_TOKEN}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recipient: { id: 'TEST_INVALID' }, message: { text: 'test' }, messaging_type: 'RESPONSE' })
-      });
-      const sendJson = await send.json();
-      if (sendJson.error?.code === 100 || sendJson.error?.message?.includes('TEST_INVALID')) {
-        check('Can call message endpoint', true, 'endpoint accessible (recipient rejected as expected)');
-      } else if (sendJson.error) {
-        check('Can call message endpoint', false, `${sendJson.error.code}: ${sendJson.error.message}`);
-      } else {
-        check('Can call message endpoint', true);
-      }
+      safeLog('Message delivery not tested: this diagnostic performs only read requests.');
     }
   }
 
   // 4. Facebook messaging token
-  console.log('\n--- Facebook Messaging Token ---');
+  safeLog('\n--- Facebook Messaging Token ---');
   if (!FB_MSG_TOKEN) {
     check('FACEBOOK_MESSAGING_TOKEN configured', false, 'not set');
   } else {
     const debug = await graph('/debug_token?input_token=' + encodeURIComponent(FB_MSG_TOKEN), `${APP_ID}|${APP_SECRET}`);
     if (debug.error) {
-      check('Token valid', false, debug.error.message);
+      check('Token valid', false, 'provider rejected token metadata');
     } else {
       const info = debug.data;
-      check('Token valid', info.is_valid);
-      console.log(`   Scopes: ${(info.scopes || []).join(', ')}`);
+      check('Token valid', info.is_valid === true);
+      safeLog(`   Scopes: ${(info.scopes || []).join(', ')}`);
     }
   }
 
   if (!FB_PAGE_ID) {
     check('FACEBOOK_MESSAGING_PAGE_ID configured', false, 'not set');
   } else {
-    console.log(`   Page ID: ${FB_PAGE_ID}`);
+    safeLog(`   Page ID: ${FB_PAGE_ID}`);
   }
 
   // 5. Summary
-  console.log('\n=== Summary ===');
-  const issues = [];
-  if (!igSubscribed) issues.push('Re-subscribe Instagram webhook');
-  if (!fbSubscribed) issues.push('Re-subscribe Facebook webhook + set FACEBOOK_MESSAGING_TOKEN');
-  if (!IG_MSG_TOKEN || (await graph('/debug_token?input_token=' + encodeURIComponent(IG_MSG_TOKEN || 'x'), `${APP_ID}|${APP_SECRET}`)).error?.code === 190) {
-    issues.push('Refresh INSTAGRAM_MESSAGING_TOKEN');
-  }
-  if (!FB_MSG_TOKEN) issues.push('Set FACEBOOK_MESSAGING_TOKEN');
-  if (!FB_PAGE_ID) issues.push('Set FACEBOOK_MESSAGING_PAGE_ID');
-
+  safeLog('\n=== Summary ===');
+  const issues = [...new Set(failedChecks)];
   if (issues.length === 0) {
-    console.log('✅ All checks passed');
+    safeLog('✅ All checks passed');
   } else {
-    console.log('❌ Issues found:');
-    issues.forEach(i => console.log(`   - ${i}`));
-    console.log('\n📖 Token refresh guide:');
-    console.log('   1. Go to https://developers.facebook.com/tools/explorer/');
-    console.log('   2. Select app "TDF Bot" (1098715965613487)');
-    console.log('   3. Get User Access Token with: pages_messaging, instagram_basic, instagram_manage_messages');
-    console.log('   4. Exchange for Page Token:');
-    console.log(`      GET /me/accounts?access_token=USER_TOKEN`);
-    console.log('   5. Copy the page access_token for "TDF Studio"');
-    console.log('   6. Follow docs/INSTAGRAM_TOKEN_SETUP.md: Messaging credential rotation after the cutover.');
-    console.log('   7. An authorized operator must update the current Hetzner secret store, verify live messaging, and synchronize GitHub check credentials.');
-    console.log('      Do not update or restart the retired Fly app; this diagnostic performs no writes.');
+    process.exitCode = 1;
+    safeLog('❌ Issues found:');
+    issues.forEach(i => safeLog(`   - ${i}`));
+    safeLog('\n📖 Token refresh guide:');
+    safeLog('   1. Go to https://developers.facebook.com/tools/explorer/');
+    safeLog('   2. Select app "TDF Bot" (1098715965613487)');
+    safeLog('   3. Get User Access Token with: pages_messaging, instagram_basic, instagram_manage_messages');
+    safeLog('   4. Exchange for Page Token:');
+    safeLog(`      GET /me/accounts?access_token=USER_TOKEN`);
+    safeLog('   5. Copy the page access_token for "TDF Studio"');
+    safeLog('   6. Follow ops/hetzner/README.md for protected production configuration.');
+    safeLog('   7. Use the reviewed canonical release procedure; this diagnostic does not restart services.');
   }
 }
 
-main().catch(console.error);
+main().catch(() => {
+  safeLog('Social diagnostic failed; no credentials or raw provider response printed.');
+  process.exitCode = 1;
+});
