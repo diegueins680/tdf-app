@@ -463,6 +463,17 @@
       "conflict": "Current receipt code relabels currency without conversion and uses count-based concurrent numbering; receipt replay intent is unbound and missing from canonical OpenAPI.",
       "authority": "User monetary/concurrency invariants and immutable invoice financial evidence",
       "resolution": "Fix transactional implementation and additive constraints; preserve invoice money, bind explicit replay parameters and current authority; document actual mounted API. Do not redefine reproduced bugs as product intent."
+    },
+    {
+      "id": "AUTHORITY-044",
+      "sources": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "formal/system/readiness.md"
+      ],
+      "conflict": "Health documentation promised a database check while runtime unconditionally returned ok; OpenAPI described an absent version and omitted actual db field.",
+      "authority": "Existing readiness intent and user deployment verification requirements",
+      "resolution": "Repair the handler to query its application pool, bound cooperative waiting, preserve cancellation and return fixed503 failures. Correct the actual response contract and both generated clients; do not treat healthy as full release admission."
     }
   ]
 }

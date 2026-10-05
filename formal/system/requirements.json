@@ -3309,7 +3309,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -5534,6 +5534,89 @@
       },
       "property": "Every successful archive receipt follows source admission, both nonempty dumps, readable archive metadata, unchanged source and durable private evidence; failures cannot imply restoration.",
       "evidence": "Exact revision test logs, installed hashes, scheduled execution and independent restore receipts with their separate scopes."
+    },
+    {
+      "id": "DEPLOY-READINESS-001",
+      "title": "Fresh database readiness without private failure detail",
+      "statement": "A ready HTTP response requires a successful fresh SELECT 1 through the application database pool. Pool or query failure and expiry of the two-second cooperative deadline return503 with fixed non-private fields; every readiness response forbids caching.",
+      "domain": "DEPLOY",
+      "authority": "User deployment verification and failed-worker success requirements; existing documented health intent",
+      "source": "tdf-hq/docs/openapi/api.yaml; formal/system/readiness.md",
+      "contract": "formal/system/readiness.md",
+      "critical": true,
+      "actors": [
+        "Anonymous health monitor",
+        "Deployment operator",
+        "Application process"
+      ],
+      "preconditions": [
+        "Startup gate has completed before live database probing."
+      ],
+      "inputs": [
+        "GET /health",
+        "Application-owned database connection pool"
+      ],
+      "state": {
+        "states": [
+          "starting",
+          "probing",
+          "ready",
+          "unavailable"
+        ],
+        "initial": "starting",
+        "terminal": []
+      },
+      "allowedTransitions": [
+        "starting -> probing after boot succeeds",
+        "probing -> ready only after fresh successful query",
+        "probing -> unavailable on synchronous error, false result or deadline",
+        "A subsequent request independently probes current state"
+      ],
+      "forbiddenTransitions": [
+        "Return database ok without a successful query",
+        "Cache a previous readiness response",
+        "Render SQL/connection/exception detail in public failure output",
+        "Convert asynchronous process cancellation to a healthy response"
+      ],
+      "effects": [
+        "HTTP200 status=ok/db=ok or HTTP503 status=degraded/db=unavailable; startup503 status=starting/db=starting",
+        "Cache-Control no-store; failures Retry-After5"
+      ],
+      "authorization": "Public non-mutating fixed SELECT1; no caller SQL or chosen database target.",
+      "privacy": "Fixed JSON fields exclude database errors, credentials and hostnames; no probe exception rendering.",
+      "concurrency": "Each request includes pool acquisition in its deadline; runtime cancellation must propagate. System.Timeout is cooperative and cannot bound uninterruptible native operations or prove release writer exclusion.",
+      "idempotency": "Read-only independent observations; retry cannot reuse a cached positive observation.",
+      "failure": "Synchronous exception, negative probe or expired deadline yields503. Runtime cancellation propagates.",
+      "recovery": "Retry a fresh request after database/pool recovery; health does not establish migration, worker, provider, backup or whole-system readiness.",
+      "observability": "Exact handler HTTP checks, source-bound verifier output and deployed read-only probes; record source and time.",
+      "implementation": [
+        "tdf-hq/src/TDF/App/Readiness.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/App/StartupResponse.hs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-hq/tdf-hq.cabal"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ReadinessSpec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "scripts/verify-readiness.py",
+        "scripts/quality-backend.sh"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Source-derived narrow boundary; exact full-handler and deployed validation outstanding.",
+      "ambiguity": [],
+      "verification": "Actual Haskell boundary tests and three detected controlled mutations; real HTTP handler tests with failed pool and SQLite query. No formal runtime refinement proof.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Full handler build, PostgreSQL failure/recovery and final deployed validation remain outstanding."
+      },
+      "property": "HTTP200 implies a fresh successful application-pool database round trip; failure details remain fixed and responses uncacheable.",
+      "evidence": "Source fingerprints and exact command/revision results; negative variants remove the database check, deadline or cancellation propagation."
     }
   ]
 }

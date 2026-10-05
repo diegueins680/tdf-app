@@ -224,6 +224,7 @@ import qualified TDF.Trials.Server as TrialsServer
 import qualified TDF.Trials.Models as Trials
 import qualified TDF.Meta as Meta
 import           TDF.Version      (VersionInfo(..), getVersionInfo)
+import           TDF.App.Readiness (databaseReady)
 import qualified TDF.Handlers.InputList as InputList
 import qualified TDF.Email as Email
 import qualified TDF.Email.Service as EmailSvc
@@ -7968,8 +7969,16 @@ duplicateCourseRegistrationMessage contactLabel statuses
       "Multiple course registrations match this " <> contactLabel
 
 -- Health
-health :: AppM TDF.API.HealthStatus
-health = pure (HealthStatus "ok" "ok")
+health :: AppM (Headers '[Header "Cache-Control" Text] TDF.API.HealthStatus)
+health = do
+  pool <- asks envPool
+  ready <- liftIO (databaseReady pool)
+  if ready
+    then pure (addHeader "no-store" (HealthStatus "ok" "ok"))
+    else throwError err503
+      { errBody = encode (HealthStatus "degraded" "unavailable")
+      , errHeaders = [("Content-Type", "application/json"), ("Cache-Control", "no-store"), ("Retry-After", "5")]
+      }
 
 
 

@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 §9.2.2",
+      "title": "RFC 9110 \u00a79.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -532,6 +532,16 @@
       "applicability": "Verified active TDF daily logical backup timer",
       "decision": "adopted",
       "rationale": "Capture protected globals, pin actual storage and record archive-only success. Require separate restore and coordinated assets/off-host evidence; do not infer disaster recovery from exit0."
+    },
+    {
+      "id": "RES-READINESS-001",
+      "source": "https://hackage-content.haskell.org/package/base-4.19.2.0/docs/System-Timeout.html",
+      "title": "Haskell cooperative timeout boundary",
+      "recommendation": "Runtime timeout cannot guarantee interruption of arbitrary foreign blocking calls; external health monitors need their own deadline.",
+      "applicability": "Application database readiness pool/query timeout",
+      "decision": "adopted",
+      "rationale": "Use cooperative timeout with cancellation propagation, explicitly exclude universal wall-clock guarantees and require an independent HTTP deadline. Do not treat timeout alone as provider or release conformance.",
+      "verifiedAt": "2026-10-05"
     }
   ]
 }

@@ -1967,11 +1967,26 @@ paths:
   /health:
     get:
       summary: Health Check
-      description: Checks the health of the API server and its database connection.
+      description: Readiness requires a fresh database round trip, including pool acquisition, under a two-second cooperative timeout (external monitors need their own request timeout). Database errors or timeout return503 with fixed details. Startup also returns503. This does not establish provider, schema, worker or full-system conformance.
       operationId: getHealth
+      security: []
       responses:
         '200':
-          description: Successful response
+          description: Database round trip succeeded.
+          headers:
+            Cache-Control:
+              schema: {type: string, enum: [no-store]}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+        '503':
+          description: Initializing, unavailable database, or expired readiness deadline.
+          headers:
+            Cache-Control:
+              schema: {type: string, enum: [no-store]}
+            Retry-After:
+              schema: {type: string, enum: ['5']}
           content:
             application/json:
               schema:
@@ -13334,14 +13349,18 @@ components:
 
     Health:
       type: object
+      required: [status, db]
       properties:
         status:
           type: string
-          enum: [ok, degraded]
+          enum: [ok, degraded, starting]
           description: Service status.
-        version:
+        db:
           type: string
-          description: Application version.
+          enum: [ok, unavailable, starting]
+        message:
+          type: string
+          description: Optional fixed startup explanation. Database errors never include exception details.
     LoginRequest:
       type: object
       required: [username, password]

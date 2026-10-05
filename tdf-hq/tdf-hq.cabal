@@ -14,6 +14,7 @@ executable tdf-hq-exe
     TDF.App.Boot
     TDF.App.StartupResponse
     TDF.App.FailureBoundary
+    TDF.App.Readiness
     TDF.API.Admin
     TDF.API
     TDF.API.Bands
@@ -316,6 +317,7 @@ test-suite tdf-hq-test
     TDF.CorsSpec
     TDF.Invoice.ReceiptSpec
     TDF.FailureBoundarySpec
+    TDF.ReadinessSpec
     TDF.TicketConfirmationSpec
     Paths_tdf_hq
     TDF.API
@@ -323,6 +325,7 @@ test-suite tdf-hq-test
     TDF.App.Boot
     TDF.App.StartupResponse
     TDF.App.FailureBoundary
+    TDF.App.Readiness
     TDF.API.Bands
     TDF.API.Facebook
     TDF.API.Future

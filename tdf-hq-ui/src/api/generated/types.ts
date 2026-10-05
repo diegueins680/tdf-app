@@ -1380,7 +1380,7 @@ export interface paths {
         };
         /**
          * Health Check
-         * @description Checks the health of the API server and its database connection.
+         * @description Readiness requires a fresh database round trip, including pool acquisition, under a two-second cooperative timeout (external monitors need their own request timeout). Database errors or timeout return503 with fixed details. Startup also returns503. This does not establish provider, schema, worker or full-system conformance.
          */
         get: operations["getHealth"];
         put?: never;
@@ -12069,9 +12069,11 @@ export interface components {
              * @description Service status.
              * @enum {string}
              */
-            status?: "ok" | "degraded";
-            /** @description Application version. */
-            version?: string;
+            status: "ok" | "degraded" | "starting";
+            /** @enum {string} */
+            db: "ok" | "unavailable" | "starting";
+            /** @description Optional fixed startup explanation. Database errors never include exception details. */
+            message?: string;
         };
         LoginRequest: {
             /**
@@ -20900,9 +20902,21 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Successful response */
+            /** @description Database round trip succeeded. */
             200: {
                 headers: {
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Health"];
+                };
+            };
+            /** @description Initializing, unavailable database, or expired readiness deadline. */
+            503: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    "Retry-After"?: "5";
                     [name: string]: unknown;
                 };
                 content: {

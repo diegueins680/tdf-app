@@ -7,6 +7,8 @@ Historical green results are not current-candidate evidence.
 
 ## Canonical package
 
+- [readiness.md](readiness.md): fresh database probe, fixed unavailable responses and cancellation/deadline controls.
+
 - [logical-backup.md](logical-backup.md): scheduled archive source admission, private completion evidence and explicit recovery exclusions.
 
 - [mobile-query-isolation.md](mobile-query-isolation.md): shipped Mobile per-occurrence query cache isolation and actual-screen late-response regression.
