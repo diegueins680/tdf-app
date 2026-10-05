@@ -241,9 +241,9 @@ def verify_operations(sql, request, check, env, database, output, actors):
         'engineer': {'booking', 'maintenance_ticket', 'social_event', 'intern_project'},
         'maintenance': {'booking', 'maintenance_ticket', 'manual'},
         'reception': {'booking', 'course_registration', 'manual', 'payment', 'social_event'},
-        'producer': set(), 'aandr': set()}
+        'producer': set(), 'a-and-r': set()}
+    check('operations policy fixture contains every required role', set(expected) <= set(actors))
     for role, visible in expected.items():
-        if role not in actors: continue
         sql('INSERT INTO operations_scope_member(organization_id,branch_id,party_id) VALUES (' + q(org) + ',' + q(branches[0]) + ',' + actors[role] + ') ON CONFLICT DO NOTHING')
         sql('UPDATE operations_work_item SET assignee_party_id=' + actors[role] + ' WHERE id IN (' + ','.join(q(key) for key in policy_items.values()) + ')')
         listed = request('/operations/work-items?organizationId=' + org + '&branchId=' + branches[0] + '&limit=100', token='fixture-' + role)
@@ -306,7 +306,7 @@ def verify_operations(sql, request, check, env, database, output, actors):
     check('operations future source key is not preclaimed by manual creation', future_manual[0] == 201
           and json.loads(future_manual[1])['correlationKey'] != future_key)
     def enqueue(correlation, branch, entity='payment', metadata='{}'):
-        source_id = sql("INSERT INTO payment(party_id,method,amount_cents,currency,received_at) VALUES (" + actors['admin'] + ",'Cash',1,'USD',now()) RETURNING id") if entity == 'payment' else str(uuid.uuid4())
+        source_id = sql("INSERT INTO payment(party_id,method,amount_cents,currency,received_at) VALUES (" + actors['admin'] + ",'CashM',1,'USD',now()) RETURNING id") if entity == 'payment' else str(uuid.uuid4())
         return sql("INSERT INTO operations_domain_event(organization_id,branch_id,event_type,aggregate_type,aggregate_id,source_system,source_channel,correlation_key,deduplication_key,occurred_at,payload) VALUES ("
                    + q(org) + ',' + q(branch) + ",'synthetic.source'," + q(entity) + ',' + q(source_id)
                    + ",'synthetic','synthetic'," + q(correlation) + ',' + q(str(uuid.uuid4()))
