@@ -594,7 +594,7 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "b9883cac0fba310236a0",
+      "replacementId": "d2472336f16fa3b5eee0",
       "reason": "Ordered180-entry manifest retains current main172 as an exact prefix, then the five existing conformance migrations the additive Operations scoped-projector migration and the ticket-confirmation real-time completion and claim lease corrections. Original SQL and introduction SHAs are unchanged. Both predecessor review records are retained; production apply, rollback/recovery and current combined rehearsal remain separate gates.",
       "previousReplacementId": "c6a62c7c7469e8974ff1",
       "currentResolution": {
@@ -673,7 +673,7 @@
               "name": "migrations"
             },
             "replacementId": "2527a9c1e7a4951491dd",
-            "reason": "Ordered177-entry release registry preserves current main’s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
+            "reason": "Ordered177-entry release registry preserves current main\u2019s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
             "previousReplacementId": "c6a62c7c7469e8974ff1",
             "currentResolution": {
               "mainRevision": "cae7a54f3c9a712837e71186b0a6bf564c13180d",
@@ -699,7 +699,7 @@
                 "name": "migrations"
               },
               "replacementId": "2be7a048fab31c7e895c",
-              "reason": "Ordered175-entry release registry preserves current main’s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
+              "reason": "Ordered175-entry release registry preserves current main\u2019s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
               "previousReplacementId": "c6a62c7c7469e8974ff1",
               "currentResolution": {
                 "mainRevision": "9abd8551bd77b2c29039ffdb94cdaa1e241d4287",
@@ -10628,6 +10628,12 @@
             }
           }
         }
+      },
+      "receiptConsolidation": {
+        "previousId": "b9883cac0fba310236a0",
+        "mainRevision": "5c2e0bb28f062481ceaa625833c356096a43083f",
+        "candidateRevision": "5a2c7ecaf80f1fb13c52de9cd150dfe893022250",
+        "reason": "Retain shipped migration order and every original entry/SQL, then append invoice receipt snapshot; independent source comparison confirms all181 entry objects retained. Fresh combined migration rehearsal is mandatory."
       }
     }
   ]

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "dc981fee203b95f3993afb5eebf6b070d4e72aa8",
+  "mobileRevision": "76d19fc2da965d2050df4b94e77a1d080d2e0799",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -2130,7 +2130,7 @@
         "Record allowlisted runtime/ledger facts; preserve provider flags and production data."
       ],
       "authorization": "Explicit audit/read authorization permits observation, not bypassing deployment review; dedicated SSH identity and existing inventory SQL role are required.",
-      "privacy": "Never print raw container configuration, credentials, command stderr or provider/customer payloads.",
+      "privacy": "Never print raw container configuration, credentials, command stderr or provider/customer payloads. Protected credential transfer is memory-only through verified SSH; refuse unsafe credential file ownership, type or mode. Catalog and mailbox reports retain aggregate facts, not credentials, raw messages or recipient addresses.",
       "concurrency": "Observations are sequential, not an atomic fleet snapshot; fresh verification is required within a future guarded release.",
       "idempotency": "Read-only repeat observations do not mutate application state. Exclusive receipt creation rejects accidental overwrite.",
       "failure": "Fail closed on an unexpected target, database identity, image reference or output path; do not fall back to another host/provider.",
@@ -2144,7 +2144,8 @@
       "ambiguity": [
         "Absent environment variables need effective-default analysis.",
         "Container image/public version observations require artifact metadata correspondence before release.",
-        "Optional event-operations flag-table absence and missing merchandise flag rows remain explicit unknowns; observed flag state alone is not authorization to enable or mount features."
+        "Optional event-operations flag-table absence and missing merchandise flag rows remain explicit unknowns; observed flag state alone is not authorization to enable or mount features.",
+        "The catalog-role SQL requires separately authorized provisioning; read-only monitoring does not authorize sending mail, suppressing recipients or modifying application records."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -2157,12 +2158,17 @@
       "implementation": [
         "ops/hetzner/inspect-runtime.py",
         "scripts/inspect-hetzner-production.mjs",
-        "scripts/production_access.py"
+        "scripts/production_access.py",
+        "scripts/production-catalog-inventory.mjs",
+        "ops/hetzner/catalog-readonly-role.sql",
+        "scripts/mail-deliverability-monitor.py"
       ],
       "tests": [
         "scripts/test-hetzner-inspection.py",
         "scripts/__tests__/hetzner-inspection.test.mjs",
-        "scripts/test_production_access.py"
+        "scripts/test_production_access.py",
+        "scripts/__tests__/production-catalog-inventory.test.mjs",
+        "scripts/test_mail_deliverability_monitor.py"
       ],
       "critical": false
     },
@@ -2220,7 +2226,7 @@
       },
       "id": "DEPLOY-TARGET-001",
       "title": "Retired providers cannot receive a production release",
-      "statement": "The former Fly preflight/release entrypoint must reject before any remote tool because current production is Hetzner; source-only historical planning does not establish deployment eligibility.",
+      "statement": "All invocations of the retired Fly release CLI reject before remote tools. Imported source/artifact preparation helpers do not establish deployment eligibility; the guarded Hetzner executor remains an open release obligation.",
       "property": "Retired Fly commands invoke no git, docker, ssh or flyctl operation before rejecting.",
       "implementation": [
         "scripts/production-release.mjs",
@@ -5178,17 +5184,18 @@
       "id": "PRIV-ANALYTICS-001",
       "title": "Private navigation and credentials are excluded at analytics serialization",
       "domain": "PRIV",
-      "statement": "Web analytics must strip the named sensitive properties recursively and redact private path identifiers, fragments, URL credentials and non-attribution query values before SDK transmission, including SDK-generated person-property envelopes. A missing project key must produce a no-op client.",
-      "authority": "AUTHORITY-042; accepted main PR487 privacy consolidation and docs/analytics.md",
-      "source": "docs/analytics.md",
-      "contract": "tdf-hq-ui/src/__tests__/analytics.test.ts",
+      "statement": "Web analytics must strip the named sensitive properties recursively and redact private path identifiers, fragments, URL credentials and non-attribution query values before SDK transmission, including SDK-generated person-property envelopes. A missing project key must produce a no-op client. Ordinary scalar campaign labels remain intact; recognized URL properties and HTTP(S)/tdf URLs retain URL sanitization.",
+      "authority": "AUTHORITY-042; accepted main PR487 privacy consolidation and docs/analytics.md; preserved #468/#485 correspondence",
+      "source": "docs/analytics.md; #485 reviewed privacy corrections",
+      "contract": "formal/system/web-cutover-correspondence.md",
       "actors": [
         "Web visitor",
         "Authenticated web actor",
         "PostHog SDK"
       ],
       "preconditions": [
-        "Web analytics configured with a public project token, or explicitly unavailable when unconfigured."
+        "Web analytics configured with a public project token, or explicitly unavailable when unconfigured.",
+        "Analytics enabled only by explicit configured rollout; existing authorization unchanged."
       ],
       "inputs": [
         "Explicit event/identify/page properties",
@@ -5218,7 +5225,9 @@
         "Transmit a named sensitive field in nested event or person-property envelopes",
         "Transmit credentials, fragments, private resource identifiers or unapproved query values from recognized URL properties",
         "Log arbitrary SDK exception payloads",
-        "Treat an unconfigured client as provider receipt evidence"
+        "Treat an unconfigured client as provider receipt evidence",
+        "Private code, buyer details, URL credential or SDK exception payload -> telemetry/log",
+        "Unknown URL query key -> unredacted value"
       ],
       "effects": [
         "Sanitized optional telemetry; core user action remains separate",
@@ -5334,7 +5343,12 @@
       },
       "property": "Transactional pages do not become misleading independent search offers or shared-cache/referrer sources.",
       "verification": "Actual edge Response and React component tests; not search-engine or cache-vendor proof.",
-      "evidence": "Exact combined repository/UI gates and source-bound deployed safe smoke."
+      "evidence": "Exact combined repository/UI gates and source-bound deployed safe smoke.",
+      "supersedes": {
+        "id": "EVT-PUBLIC-001",
+        "sourceRevision": "ce422263309d85ce7001e7dfe0f8c27f35e8c409",
+        "reason": "Same implemented event/transaction metadata boundary consolidated into the more detailed source-backed contract; no requirement or test removed."
+      }
     },
     {
       "id": "PAY-INVOICE-001",
@@ -5978,13 +5992,567 @@
       },
       "property": "No controlled effect invocation precedes durable intent; no unresolved intent admits the next effect or another nonce.",
       "evidence": "Synthetic filesystem/process controls only, exact source-qualified Linux evidence required."
+    },
+    {
+      "id": "MOB-ONBOARD-001",
+      "title": "Session-bound durable onboarding reconciliation",
+      "statement": "Onboarding completion must use confirmed server evidence for the currently rendered account; durable first-value intent survives offline or pending responses and stale account callbacks cannot complete another occurrence.",
+      "authority": "Existing reviewed Mobile #71/#132/#135 behavior; proposed consolidated correspondence remains subject to current independent review",
+      "domain": "MOB",
+      "actors": [
+        "Mobile user",
+        "Asynchronous request",
+        "Release maintainer"
+      ],
+      "preconditions": [
+        "Exact pinned Mobile source and declared backend contract are available."
+      ],
+      "inputs": [
+        "Rendered credential and Party",
+        "First-value intent",
+        "Connectivity and foreground signals",
+        "Server completion response"
+      ],
+      "state": {
+        "fields": [
+          "account-scoped durable intent",
+          "current request generation",
+          "server completion",
+          "in-flight reconciliation"
+        ]
+      },
+      "allowedTransitions": [
+        "pending -> retained on offline/nonterminal response",
+        "confirmed current-account completion -> clear owned intent",
+        "foreground/reconnect -> coalesced server reconciliation"
+      ],
+      "forbiddenTransitions": [
+        "person follow -> fabricated artist conversion",
+        "old A response -> complete B or a new A occurrence",
+        "failed persistence -> reported successful durability"
+      ],
+      "effects": [
+        "Preserve existing analytics conversion ownership and independent exit queue."
+      ],
+      "authorization": "Server authorization and rendered credential/Party remain authoritative; client intent grants no access.",
+      "privacy": "Durable markers are account/guest-scoped; remounted occurrence query clients prevent retired data from populating the next account.",
+      "concurrency": "Coalesce requests and reject stale generations across A->B->A; retry only after the correct account renders.",
+      "idempotency": "Repeated reconciliation cannot fabricate repeated first-value completion.",
+      "failure": "Retain pending intent and propagate storage/auth failures.",
+      "recovery": "Reconnect/foreground retries retained work under the current rendered account.",
+      "observability": "Named implementation tests and exact-current-source CI receipts; no production or device result is inferred from a source mapping.",
+      "source": "tdf-mobile/docs/onboarding-consolidation-2026-10-04.md; reviewed Mobile71 and133; existing FanHubOnboarding/NativeArtistFollow boundaries",
+      "property": "Onboarding completion must use confirmed server evidence for the currently rendered account; durable first-value intent survives offline or pending responses and stale account callbacks cannot complete another occurrence.",
+      "contract": "formal/system/mobile-consolidation.md",
+      "implementation": [
+        "tdf-mobile/src/api/client.ts",
+        "tdf-mobile/src/api/onboarding.ts",
+        "tdf-mobile/src/experiments/NewUserOnboardingGate.tsx",
+        "tdf-mobile/src/hooks/usePartyOwnership.ts",
+        "tdf-mobile/src/lib/firstValueCompletion.ts",
+        "tdf-mobile/src/lib/onboardingIntent.ts",
+        "tdf-mobile/src/localization/onboardingCopy.ts",
+        "tdf-mobile/src/providers/FirstRunProvider.tsx"
+      ],
+      "tests": [
+        "tdf-mobile/__tests__/AuthScreen.test.tsx",
+        "tdf-mobile/__tests__/FirstRunProvider.test.tsx",
+        "tdf-mobile/__tests__/NewUserOnboardingGate.test.tsx",
+        "tdf-mobile/__tests__/apiClient.test.ts",
+        "tdf-mobile/__tests__/onboardingApi.test.ts",
+        "tdf-mobile/__tests__/onboardingIntent.test.ts",
+        "tdf-mobile/__tests__/usePartyOwnership.test.tsx"
+      ],
+      "formalModels": [
+        "formal/event-operations/FanHubOnboarding.tla",
+        "formal/event-operations/NativeArtistFollow.tla",
+        "formal/event-operations/SessionCacheIsolation.tla"
+      ],
+      "verification": "Actual provider/API/storage regression tests and existing bounded models/negative controls. Model-to-native implementation correspondence remains partial.",
+      "evidence": "Mobile137 source86f0eca and tree-identical a280:95 suites/610 tests, lint/types/release/Metro; current native builds and root combined gates pending.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Existing source and regression coverage retained; final integration and native/provider behavior remain separately qualified.",
+      "ambiguity": [
+        "Bounded model correspondence is partial; no whole-program refinement or current production deployment is asserted."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source preservation and automated regression evidence exist; final combined root/native/release gates remain pending."
+      }
+    },
+    {
+      "id": "MOB-SOCIAL-001",
+      "title": "Truthful account-scoped saved and social views",
+      "statement": "Saved events, private drafts, social moments and localized controls must preserve server authority, account ownership and explicit pending/error state without inventing actor identity or confirmed public success.",
+      "authority": "Existing reviewed Mobile #71/#132/#135 behavior; proposed consolidated correspondence remains subject to current independent review",
+      "domain": "MOB",
+      "actors": [
+        "Mobile user",
+        "Asynchronous request",
+        "Release maintainer"
+      ],
+      "preconditions": [
+        "Exact pinned Mobile source and declared backend contract are available."
+      ],
+      "inputs": [
+        "Account and server saved-state snapshot",
+        "Queued desired state",
+        "Private draft",
+        "Public feed/reaction results",
+        "Locale and retry interaction"
+      ],
+      "state": {
+        "fields": [
+          "server/cached/pending snapshot source",
+          "owned desired-state queue",
+          "scoped draft",
+          "public read result"
+        ]
+      },
+      "allowedTransitions": [
+        "offline desired state -> explicitly pending owned queue",
+        "successful server response -> confirmed snapshot",
+        "public read failure -> retryable failure"
+      ],
+      "forbiddenTransitions": [
+        "authentication failure -> cached successful authorization",
+        "anonymous total -> invented actor identity",
+        "failed public read -> fabricated local public feed",
+        "implicit unscoped legacy import -> current account ownership"
+      ],
+      "effects": [
+        "Keep canonical interaction controls, accessibility/retry labels and partial-detail disclosure."
+      ],
+      "authorization": "Only server-accepted mutations are confirmed; queued intent and presentation do not grant access.",
+      "privacy": "Scope drafts/saved state to the account; preserve unread legacy data until explicit ownership-confirmed import.",
+      "concurrency": "Concurrent queued desired state and server refresh remain distinguishable and account scoped.",
+      "idempotency": "Desired reaction/saved state is explicit; read retries do not create actor identity or public mutation.",
+      "failure": "Propagate auth/storage failures and expose retryable read failures.",
+      "recovery": "Retry current-account reads and reconcile durable desired state without describing pending work as confirmed.",
+      "observability": "Named implementation tests and exact-current-source CI receipts; no production or device result is inferred from a source mapping.",
+      "source": "tdf-mobile/docs/onboarding-consolidation-2026-10-04.md source46/47/48/51/54/61 retention decisions; reviewed Mobile71",
+      "property": "Saved events, private drafts, social moments and localized controls must preserve server authority, account ownership and explicit pending/error state without inventing actor identity or confirmed public success.",
+      "contract": "formal/system/mobile-consolidation.md",
+      "implementation": [
+        "tdf-mobile/app/(tabs)/events.tsx",
+        "tdf-mobile/app/(tabs)/social.tsx",
+        "tdf-mobile/app/userProfile.tsx",
+        "tdf-mobile/src/api/directory.ts",
+        "tdf-mobile/src/api/events.ts",
+        "tdf-mobile/src/components/EventCard.tsx",
+        "tdf-mobile/src/components/EventMomentCard.tsx",
+        "tdf-mobile/src/lib/eventMoments.ts",
+        "tdf-mobile/src/lib/eventMomentsRepository.ts",
+        "tdf-mobile/src/lib/savedEvents.ts",
+        "tdf-mobile/src/localization/eventExperienceCopy.ts"
+      ],
+      "tests": [
+        "tdf-mobile/__tests__/EventCardTickets.test.tsx",
+        "tdf-mobile/__tests__/EventDetailMoments.test.tsx",
+        "tdf-mobile/__tests__/EventMomentCardReaction.test.tsx",
+        "tdf-mobile/__tests__/SocialScreen.test.tsx",
+        "tdf-mobile/__tests__/UserProfileRsvpActivity.test.tsx",
+        "tdf-mobile/__tests__/directoryApi.test.ts",
+        "tdf-mobile/__tests__/eventMoments.test.ts",
+        "tdf-mobile/__tests__/savedEvents.test.ts",
+        "tdf-mobile/__tests__/socialApiMapperSanitization.test.ts",
+        "tdf-mobile/src/lib/eventSharing.test.ts"
+      ],
+      "formalModels": [
+        "formal/event-operations/NativeArtistFollow.tla"
+      ],
+      "verification": "Actual screen, API mapper and storage tests; NativeArtistFollow only bounds namespace/session follow behavior, not the complete saved-event or draft implementation.",
+      "evidence": "Mobile137 source86f0eca and tree-identical a280:95 suites/610 tests, lint/types/release/Metro; current native builds and root combined gates pending.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Existing source and regression coverage retained; final integration and native/provider behavior remain separately qualified.",
+      "ambiguity": [
+        "Bounded model correspondence is partial; no whole-program refinement or current production deployment is asserted."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source preservation and automated regression evidence exist; final combined root/native/release gates remain pending."
+      }
+    },
+    {
+      "id": "MOB-BUILD-001",
+      "title": "Validated Mobile build identity and truthful checks",
+      "statement": "Mobile build and validation workflows must use the declared source/runtime and intended release or isolated-test configuration; failed validation or synthetic execution must not be reported as success.",
+      "authority": "Existing reviewed Mobile #71/#132/#135 behavior; proposed consolidated correspondence remains subject to current independent review",
+      "domain": "MOB",
+      "actors": [
+        "Mobile user",
+        "Asynchronous request",
+        "Release maintainer"
+      ],
+      "preconditions": [
+        "Exact pinned Mobile source and declared backend contract are available."
+      ],
+      "inputs": [
+        "Exact source revision and lockfile",
+        "Release/test profile",
+        "Public analytics configuration",
+        "Protected signing inputs and synthetic service response"
+      ],
+      "state": {
+        "fields": [
+          "unverified source",
+          "validated configuration",
+          "build result",
+          "synthetic result"
+        ]
+      },
+      "allowedTransitions": [
+        "validated source/profile -> artifact build",
+        "actual successful check -> recorded pass"
+      ],
+      "forbiddenTransitions": [
+        "critical synthetic authorization failure -> success",
+        "missing or stale validation -> released artifact",
+        "privileged secret -> public configuration"
+      ],
+      "effects": [
+        "Preserve the reviewed signed-build public analytics configuration and release-branch validation triggers."
+      ],
+      "authorization": "CI can build/test; independent review, store admission and deployment remain separate authorities.",
+      "privacy": "Public analytics identifiers are configuration; signing/API/application secrets remain protected and excluded from logs/artifacts.",
+      "concurrency": "Bind receipts to exact source; rerun checks after material source changes.",
+      "idempotency": "Same source/profile must select the same validation; no false cached pass.",
+      "failure": "Propagate nonzero failures and missing required configuration.",
+      "recovery": "Repair inputs, repeat current-head checks and retain failed evidence.",
+      "observability": "Named implementation tests and exact-current-source CI receipts; no production or device result is inferred from a source mapping.",
+      "source": "Mobile132 Datadog critical-error decision; Mobile135 signed-build analytics configuration; tdf-mobile/docs/tester-program.md and current workflow/signing checks",
+      "property": "Mobile build and validation workflows must use the declared source/runtime and intended release or isolated-test configuration; failed validation or synthetic execution must not be reported as success.",
+      "contract": "formal/system/mobile-consolidation.md",
+      "implementation": [
+        "tdf-mobile/.github/workflows/android-release-build.yml",
+        "tdf-mobile/.github/workflows/ios-release-build.yml",
+        "tdf-mobile/.github/workflows/datadog-synthetics.yml",
+        "tdf-mobile/.github/workflows/mobile-validate.yml",
+        "tdf-mobile/scripts/android-release.py",
+        "tdf-mobile/scripts/ios-signing.py",
+        "tdf-mobile/scripts/release-check.mjs"
+      ],
+      "tests": [
+        "tdf-mobile/scripts/tests/test_android_release.py",
+        "tdf-mobile/scripts/tests/test_ios_signing.py"
+      ],
+      "formalModels": [],
+      "verification": "Existing signing guard unit tests, release checks and hosted Validate/Datadog. Native build completion, device behavior, store admission and production analytics delivery are separate evidence.",
+      "evidence": "Mobile137 source86f0eca and tree-identical a280:95 suites/610 tests, lint/types/release/Metro; current native builds and root combined gates pending.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Existing source and regression coverage retained; final integration and native/provider behavior remain separately qualified.",
+      "ambiguity": [
+        "Bounded model correspondence is partial; no whole-program refinement or current production deployment is asserted."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source preservation and automated regression evidence exist; final combined root/native/release gates remain pending."
+      }
+    },
+    {
+      "id": "OPS-CLIENT-001",
+      "title": "Canonical operational clients and retired credential helpers",
+      "statement": "Operational clients default to the current canonical API while retaining explicit test/operator overrides. Retired token helpers fail before credential disclosure or provider writes; scheduled messaging checks are explicitly read-only. Health readiness must not claim a payment transaction was exercised.",
+      "property": "Operational clients default to the current canonical API while retaining explicit test/operator overrides. Retired token helpers fail before credential disclosure or provider writes; scheduled messaging checks are explicitly read-only. Health readiness must not claim a payment transaction was exercised.",
+      "domain": "OPS",
+      "authority": "Reviewed source changes preserved from root #468/#485/#486/#484; final consolidated correspondence requires current independent review",
+      "source": "docs/INSTAGRAM_TOKEN_SETUP.md; reviewed #468 helper/provider-cutover decisions",
+      "contract": "formal/system/web-cutover-correspondence.md",
+      "actors": [
+        "Authorized operator",
+        "Scheduled diagnostic"
+      ],
+      "preconditions": [
+        "Current protected credentials for explicitly authorized operations; synthetic tests intercept external transports."
+      ],
+      "inputs": [
+        "Explicit API override or canonical default",
+        "Credential health result",
+        "Reviewed artist entity types and source keys"
+      ],
+      "state": {
+        "fields": [
+          "target API",
+          "diagnostic result",
+          "import source key"
+        ]
+      },
+      "allowedTransitions": [
+        "Current API -> authorized existing operation",
+        "Unhealthy messaging token -> failure without scheduled refresh",
+        "Explicit stable source key -> idempotent artist import"
+      ],
+      "forbiddenTransitions": [
+        "Retired helper -> print stored token or mutate Fly",
+        "HTTP health success -> claim successful payment",
+        "Missing reviewed entity types -> artist import"
+      ],
+      "effects": [
+        "Preserve existing backend authorization and source-key semantics; no provider migration is performed by a diagnostic."
+      ],
+      "implementation": [
+        ".github/workflows/check-messaging-token.yml",
+        "scripts/diagnose-instagram.mjs",
+        "scripts/diagnose-social.mjs",
+        "scripts/get-admin-token.sh",
+        "scripts/get-instagram-token.mjs",
+        "scripts/refresh-messaging-token.mjs",
+        "scripts/test-stripe-integration.sh",
+        "scripts/upsert-course.mjs",
+        "tdf-hq/scripts/create_artists_from_list.sh"
+      ],
+      "tests": [
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/retired-messaging-refresher.test.mjs",
+        "scripts/__tests__/payment-readiness-helper.test.mjs",
+        "scripts/__tests__/artist-import-idempotency.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
+      "evidence": "Current candidate gate receipts must be retained separately; historical source checks are not a current integration pass.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Scoped implementation and regression correspondence; production acceptance remains separate.",
+      "ambiguity": [
+        "No whole-program refinement or external provider/device acceptance is asserted."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source contracts and scoped regressions preserved; current combined verification and applicable production acceptance remain required."
+      },
+      "authorization": "Only explicitly authorized API writes or operator repair; scheduled messaging workflow has contents:read and invokes --check.",
+      "privacy": "Retired helpers do not read or print token state. Operational authentication output is sensitive and is not audit evidence.",
+      "concurrency": "Existing backend idempotency applies to artist imports; client URL choice does not provide a transaction or concurrency guarantee.",
+      "idempotency": "Artist importer retains stable per-source keys and stops on HTTP error; no general upsert exactly-once assertion.",
+      "failure": "Fail unhealthy checks and retired commands; report external behavior not exercised.",
+      "recovery": "Repair protected current configuration and repeat diagnostics; provider repair is separately authorized.",
+      "observability": "Exit status and redacted health facts; never retain live token output."
+    },
+    {
+      "id": "MEDIA-INVENTORY-001",
+      "title": "Authenticated uploads and complete inventory pagination",
+      "statement": "Inventory XHR uploads must carry the current cookie session while preserving existing bearer and encoded QR routing. Inventory listing uses the accepted 100-row page size and accumulates pages until the reported total, legacy complete response or empty page.",
+      "property": "Inventory XHR uploads must carry the current cookie session while preserving existing bearer and encoded QR routing. Inventory listing uses the accepted 100-row page size and accumulates pages until the reported total, legacy complete response or empty page.",
+      "domain": "MEDIA",
+      "authority": "Reviewed source changes preserved from root #468/#485/#486/#484; final consolidated correspondence requires current independent review",
+      "source": "Root #468 production cookie-upload and pagination regression",
+      "contract": "formal/system/web-cutover-correspondence.md",
+      "actors": [
+        "Authenticated inventory operator",
+        "QR capability holder"
+      ],
+      "preconditions": [
+        "Configured canonical API and server authorization; listing remains subject to backend access controls."
+      ],
+      "inputs": [
+        "File",
+        "Current cookie/bearer",
+        "Encoded QR capability",
+        "Paged inventory response"
+      ],
+      "state": {
+        "fields": [
+          "upload progress/result",
+          "page number",
+          "accumulated rows"
+        ]
+      },
+      "allowedTransitions": [
+        "Authenticated upload -> server-authorized stored media",
+        "Nonterminal page -> fetch next page"
+      ],
+      "forbiddenTransitions": [
+        "Cookie-only session -> silently omit credentials",
+        "First page -> claim complete inventory when total is larger"
+      ],
+      "effects": [
+        "Upload one selected file; reading pages creates no asset records."
+      ],
+      "implementation": [
+        "tdf-hq-ui/src/api/inventory.ts",
+        "tdf-hq-ui/src/pages/LabelAssetsPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/api/inventory.upload.test.ts",
+        "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
+      "evidence": "Current candidate gate receipts must be retained separately; historical source checks are not a current integration pass.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Scoped implementation and regression correspondence; production acceptance remains separate.",
+      "ambiguity": [
+        "No whole-program refinement or external provider/device acceptance is asserted."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source contracts and scoped regressions preserved; current combined verification and applicable production acceptance remain required."
+      },
+      "authorization": "Server session and QR capability checks remain authoritative; withCredentials does not grant a role.",
+      "privacy": "Do not copy HttpOnly credentials into readable tokens or audit logs.",
+      "concurrency": "Pages are sequential reads and not an atomic inventory snapshot; concurrent inventory changes remain possible.",
+      "idempotency": "Listing retries are reads. Upload retries can create multiple blobs and are not claimed exactly once.",
+      "failure": "Propagate upload/list failures; an empty page terminates an inconsistent listing rather than spinning.",
+      "recovery": "Retry under a valid session; production smoke must use the unmodified deployed UI and compare uploaded bytes.",
+      "observability": "XHR cookie/bearer/QR tests and multi-page regression; deployed Google login/upload acceptance remains separately recorded."
+    },
+    {
+      "id": "MOB-PUBLIC-001",
+      "title": "Accurate Mobile public disclosures and support",
+      "statement": "Published Mobile entry, privacy, support and terms pages must identify current canonical TDF surfaces and support contacts and describe configured analytics truthfully. A built artifact or merged configuration is not tester admission or production analytics activation.",
+      "property": "Published Mobile entry, privacy, support and terms pages must identify current canonical TDF surfaces and support contacts and describe configured analytics truthfully. A built artifact or merged configuration is not tester admission or production analytics activation.",
+      "domain": "MOB",
+      "authority": "Reviewed source changes preserved from root #468/#485/#486/#484; final consolidated correspondence requires current independent review",
+      "source": "Reviewed root #486 disclosures and docs/analytics.md; current Mobile distribution authority",
+      "contract": "formal/system/web-cutover-correspondence.md",
+      "actors": [
+        "Mobile visitor",
+        "Release maintainer"
+      ],
+      "preconditions": [
+        "Current distribution manifest and reviewed provider configuration remain authoritative."
+      ],
+      "inputs": [
+        "Published support/privacy text",
+        "Canonical origin/contact",
+        "Configured analytics provider"
+      ],
+      "state": {
+        "fields": [
+          "published information",
+          "configured rollout",
+          "actual distribution availability"
+        ]
+      },
+      "allowedTransitions": [
+        "Reviewed current information -> published static page"
+      ],
+      "forbiddenTransitions": [
+        "Code merge -> claim store admission",
+        "Preview telemetry -> claim production receipt"
+      ],
+      "effects": [
+        "Expose current public guidance without collecting new information or activating a provider."
+      ],
+      "implementation": [
+        "tdf-hq-ui/public/mobile-app/index.html",
+        "tdf-hq-ui/public/mobile-app/privacy.html",
+        "tdf-hq-ui/public/mobile-app/support.html",
+        "tdf-hq-ui/public/mobile-app/terms.html"
+      ],
+      "tests": [],
+      "formalModels": [],
+      "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
+      "evidence": "Current candidate gate receipts must be retained separately; historical source checks are not a current integration pass.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Scoped implementation and regression correspondence; production acceptance remains separate.",
+      "ambiguity": [
+        "No whole-program refinement or external provider/device acceptance is asserted.",
+        "Informational public-page mapping is noncritical; privacy data handling and deletion enforcement remain independently critical requirements."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source contracts and scoped regressions preserved; current combined verification and applicable production acceptance remain required."
+      },
+      "authorization": "Store admission, privacy fulfillment and analytics configuration retain their separate authorities.",
+      "privacy": "State actual PostHog EU usage/disclosure; existing deletion workflow is separately mapped by PRIV-DELETE-001.",
+      "concurrency": "Static deploy identity must match reviewed source; concurrent configuration changes require fresh verification.",
+      "idempotency": "Repeated reads have no application mutation.",
+      "failure": "Stale or unavailable distribution must not be presented as verified current availability.",
+      "recovery": "Correct source under review and reverify deployed content and links.",
+      "observability": "Source review and deployed static-page/browser checks; no dedicated automated assertion covers all legal disclosure wording."
+    },
+    {
+      "id": "OPS-INTEGRATION-001",
+      "title": "Parallel development with serialized protected-main admission",
+      "domain": "OPS",
+      "statement": "At most one distinct ready PR head receives main-integration-admission from the serialized metadata controller after other observed heads are revoked and the queue/head/base snapshot is rechecked. Admission never replaces independent review, strict-base checks or quality gates.",
+      "property": "Metadata scheduling cannot waive protected-main review/check requirements; an incomplete observation or failed revocation cannot grant a new slot.",
+      "authority": "User instruction that parallel repository work must continue; existing protected-main policy remains authoritative for atomic merge eligibility.",
+      "source": "docs/main-integration-admission.md",
+      "contract": "docs/main-integration-admission.md",
+      "actors": [
+        "Parallel contributors",
+        "Independent reviewer",
+        "Serialized metadata controller",
+        "GitHub protected-branch enforcement"
+      ],
+      "preconditions": [
+        "Single admission writer: bootstrap controller before installation, then the main-only workflow concurrency group.",
+        "Strict up-to-date base, required checks, independent review, stale-review dismissal and administrator enforcement remain enabled."
+      ],
+      "inputs": [
+        "Paginated open-main PR metadata",
+        "Current main and head SHAs",
+        "Latest admission statuses"
+      ],
+      "state": {
+        "queue": [
+          "observed",
+          "revoking",
+          "revalidated",
+          "admitted",
+          "withheld"
+        ]
+      },
+      "allowedTransitions": [
+        "Observed complete metadata -> revoke other slots -> identical fresh snapshot -> grant oldest non-draft unambiguous head",
+        "Changed metadata or failed write -> withhold new admission",
+        "Merged or draft candidate -> next eligible candidate on fresh reconciliation"
+      ],
+      "forbiddenTransitions": [
+        "Execute PR source in pull_request_target",
+        "Emit a quality/approval result from scheduling metadata",
+        "Grant another slot after a failed revocation",
+        "Grant both PRs sharing an ambiguous commit status identity"
+      ],
+      "effects": [
+        "Only the dedicated commit scheduling status changes; no reviews, source refs, deployment or branch policy are modified by the controller."
+      ],
+      "authorization": "Existing GitHub review/quality protection determines actual merge authority. The controller has metadata read/status write only.",
+      "privacy": "Read PR identity/state only; no PR body, customer data or credentials are emitted.",
+      "concurrency": "GitHub Actions serializes the controller; sequential API calls are not an atomic snapshot. Strict branch protection guards the final main update after observation. Bootstrap must hand off to the main workflow before any competing local writer runs.",
+      "idempotency": "Do not repost an unchanged context/state/description; missed or coalesced events are reconciled from fresh metadata.",
+      "failure": "API errors, partial status inventory, failed revocation or changing observations fail closed; source work/CI can continue while merges wait.",
+      "recovery": "Repair/rerun the trusted main workflow, or revalidate the single bootstrap controller before installation. Do not remove quality/review checks to recover throughput.",
+      "observability": "Dry-run queue plan, dedicated commit status, GitHub workflow run and recorded before/after branch protection.",
+      "implementation": [
+        "scripts/merge-admission.py",
+        ".github/workflows/merge-admission.yml",
+        "scripts/quality-repo.sh"
+      ],
+      "tests": [
+        "scripts/test-merge-admission.py"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Finite metadata-controller fault tests; final safety depends on the documented GitHub protection and single-controller assumptions.",
+      "ambiguity": [
+        "GitHub event scheduling has no five-minute availability guarantee.",
+        "Repository administrators can intentionally alter statuses/settings; this is not an adversarial administrator boundary.",
+        "Duplicate PR heads need consolidation because statuses identify commits, not PRs."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local race/failure controls and metadata dry run pass; bootstrap and hosted controller operation require separate recorded verification."
+      },
+      "verification": "Actual controller tests inject changed head/base/queue/draft/closure, revocation failure and duplicate heads; protected-main enforcement is re-observed during bootstrap.",
+      "evidence": "Current-head unit and hosted repository gates plus source-bound metadata/protection receipts; no universal concurrency proof."
     }
   ],
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
+    ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/ci.yml": "053ed9f34026b1ecf12b6bf14cf2eb9430a59f43f3c5236b21d77a72f1575c03",
     ".github/workflows/event-operations-formal.yml": "a038253d968022ed95501359a07f16852bf8dcc1da198b7aa303543f0f95b552",
-    "docs/catalog-persistence/catalog-list-decisions.json": "b2b9caf40d76eaacec5e1a0dc98cf683683b7416e2523873ad872cc303885d52",
+    ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
+    "docs/catalog-persistence/catalog-list-decisions.json": "3f5ea00881870b1eb542af0d4a28cee67e5e5fe470b786dad7c5d92c90bc94ed",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
     "formal/event-operations/ApplicationCanary.tla": "0aa431a595b11112508c1042b88d5ba787f630798f6762d51cdc924bf7f879d1",
@@ -5995,6 +6563,7 @@
     "formal/event-operations/ChatMutationNoRollback.cfg": "689d923264fb1fc9bbd57fae69dcc6fac4619d9ff7f050b5f1be15f09090457f",
     "formal/event-operations/CredentialLifecycle.tla": "2930edc753523a7a315cd76a04e389570785c8fd39eb0cd1ea69e700c1f528bc",
     "formal/event-operations/DirectoryClaimReview.tla": "bad88bce95e46906a7f202d7d798efabbd87202fd822e7c9202184479bb1b652",
+    "formal/event-operations/FanHubOnboarding.tla": "07defbfba2dad98e7f1ca70700d7521204c8a86af90f356ed42d342f8492e71d",
     "formal/event-operations/HostedServicePayment.cfg": "29663fa3078459cb0abf5de479b7206aa840c6779fc9522f2eefa9d1592d2227",
     "formal/event-operations/HostedServicePayment.tla": "675bacb7fce3962a773608e51901383cd41993b0c079fc20989f231e4df928a1",
     "formal/event-operations/HostedServicePaymentAtomic.cfg": "403e274802ca9eb7d988e0fb1e282acb23acf89a6e953d5dd2856f00b0976f73",
@@ -6002,6 +6571,7 @@
     "formal/event-operations/HostedServicePaymentReplay.cfg": "f69e606679e1d625b2f3d93e89b638da3a2d792f9488646fdca2057c4880e498",
     "formal/event-operations/InvoiceReceipt.tla": "a9a175e907bcb0278088a2131636f4327e3d4a1dcadd86cfd3b2ac09e43c7933",
     "formal/event-operations/LogicalBackup.tla": "2335f3679acd4a56c9f5daff8188e13f3a4608a50d3dab13610e4636ac4a4ebb",
+    "formal/event-operations/NativeArtistFollow.tla": "1a4bdcf27bbf69e0aa3c58bb6742290cd6dcdd64d0ad4dc8b196e8c38519d4ef",
     "formal/event-operations/NotificationLease.tla": "e3ee096b8c79eca3fe93d5f0fab0345312d2295dfe5ab3ded75a92bd41050a5a",
     "formal/event-operations/OperationsApproval.tla": "471ee2b49075d444febc4883a7c7269a347a571eecd7bfbd80df3efa2072e49e",
     "formal/event-operations/OperationsCommandFence.tla": "58bde50248ca2dd62ab496c251d6596bc8f6a6289db144951458870b1e93436b",
@@ -6059,7 +6629,8 @@
     "functions/eventos/[eventId]/orden/[orderId].js": "4590c38182a6223fe6b8c62f6b329a0aaca66b377a13b6085e5e32dee4cc0de4",
     "ops/hetzner/backup-postgres.py": "f54d3bc769fcad8ddb047c6fb30b4bcf69193c81fc1e50c23f1102c253518117",
     "ops/hetzner/backup-postgres.sh": "71682273cf6e2efec4644369af577f3ee6c0ee015c5d45d5998c9a43ea3f23a7",
-    "ops/hetzner/compose.production.yaml": "1191a5773dc83807be2364340f8cb9f0feb33af4ed45d6e0bfbefe9f3bc42db8",
+    "ops/hetzner/catalog-readonly-role.sql": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
+    "ops/hetzner/compose.production.yaml": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
     "ops/hetzner/inspect-runtime.py": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
     "ops/hetzner/isolated-application-canary.py": "6c3e861e6f177da093f39eb84366872e42c46f248a73bc196e7e29a800d5f36f",
     "ops/hetzner/recovery-envelope.py": "dd916295bcae2318cbe1e00af9c51e38cf40838993326e284614d0b09e0250fb",
@@ -6073,6 +6644,7 @@
     "package-lock.json": "591c111bb4548a3f3ce23ae313030d5dcee05f54c10f2161464e789cf2221f4c",
     "package.json": "f3f77a10e1b8aa74e555d9db534dc2c35b404bded3732abefe1cfc21c83d98ac",
     "scripts/__tests__/artist-enrichment.test.mjs": "ce91b413a5aad2f3c8d5dfc861d352162d7a1bc14236bc7b56424904f9ed7e40",
+    "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/catalog-list-audit.test.mjs": "a792f74cdd4497a9c44907d394884012728cbbdfd8c1793e079619344605fb94",
     "scripts/__tests__/checkout-amount-postgres.mjs": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
@@ -6091,14 +6663,18 @@
     "scripts/__tests__/hetzner-preparation.test.mjs": "b8f8b49cf4fa4e19eb84ebb9436033cc7f52d178cc45ed9d0cec6c902a48575f",
     "scripts/__tests__/hetzner-restore.test.mjs": "d13b746d0d264c4e710a16cd81ff2f7532876d4520e9ff1ed85d8daf623b5a25",
     "scripts/__tests__/identity-http-runtime.mjs": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
+    "scripts/__tests__/instagram-token-workflows.test.mjs": "44ebbb797abd8fe0a08d275620894d15fe38d7e966da4331451f3735055d67d6",
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
     "scripts/__tests__/merch-commission-postgres.mjs": "91dd370bf08dfe2ab871c6a617d4e2871717c9f5ff27676e692c6d776c9721c3",
     "scripts/__tests__/merch-runtime-safety.test.mjs": "7e8b8f27e40d6b1d2f329aac504096451783587ee12a827f9d3e03da64aedcfa",
     "scripts/__tests__/operations-api-schema.test.mjs": "6c1146cf1240e2a90f0f8e62da8e9e7f8abf12440eb4a3bf466e090b93e50f1f",
-    "scripts/__tests__/persistent-uploads.test.mjs": "0dc864d08b90d8731f0ddcb056dad5c7990c5e07dab80084396e87f62ee76df6",
+    "scripts/__tests__/payment-readiness-helper.test.mjs": "bddad0df011362abedc3cb346688ab3beead734f4e3dc787828ffd057f204a03",
+    "scripts/__tests__/persistent-uploads.test.mjs": "3fa7cfdf56ccf0533240f6b9028970915897af0147023e9e305c77303d19e889",
+    "scripts/__tests__/production-catalog-inventory.test.mjs": "364bebeddbef85604ac275967b974b79d6f855e997877c867e491770fdd2ae16",
     "scripts/__tests__/production-entrypoint.test.mjs": "c4e1d14cc296c80c9724b1ec4d4c3a4986e9be3f732b615813ad4d5af8e2de53",
     "scripts/__tests__/production-release.test.mjs": "29c89ae6637f872b56d85928326229bfcfeaa478bf57ef4a542ab4d7a905834e",
     "scripts/__tests__/provider-rollback.test.mjs": "383fd368848ee72bd59be7fa5c2d77855754d0c9e58955613239f57c6c65983a",
+    "scripts/__tests__/retired-messaging-refresher.test.mjs": "c7bb7180b1a750099e0744e70b73fac5c46298225744bbc76457d2fe2df2698a",
     "scripts/__tests__/ticket-admission-model.test.mjs": "b18f70f304b0ed5b37f7709f49d50862ac60b2d71fa9f58ad18e9844a1f7e586",
     "scripts/__tests__/ticket-page-preview.test.mjs": "0d2dc6da9514a43994b98f676ed99d317a8af9efdbf0cac7ca304ae2189cde37",
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
@@ -6111,6 +6687,10 @@
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/ci-change-scope.mjs": "6e1bf4833fec7e1e51e230ccc830dca80470c0c2dcad18a2c329ad9defdf1379",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
+    "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
+    "scripts/diagnose-social.mjs": "bfa8481a07b3f18fa757fb4c616d0efe3ade8a18191d03a7e98e757a38447caf",
+    "scripts/get-admin-token.sh": "168dd8f5ba17d927685a86ac763a03a9aff55736bf4b4426a6d7541817a35110",
+    "scripts/get-instagram-token.mjs": "0b00f6cc1ad6793f029339bc006ed520245af87ea55e285658faf48ba978e592",
     "scripts/inspect-compiled-api.mjs": "2b65b93d80950b7c3cb650dafc247cfd49f6575e8a6653fc083223741da47e70",
     "scripts/inspect-hetzner-production.mjs": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
     "scripts/install-recovery-tools.py": "87e21bcbbf08076148d6b5d0aca5464afedad77ec209a5cf95439ab440e286a0",
@@ -6127,14 +6707,18 @@
     "scripts/lib/readiness_conformance.py": "7ba76834d05464a182ff5aacc4bd2b27694faad90f9bb99e37f2bf1d75eab65d",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
+    "scripts/mail-deliverability-monitor.py": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a",
+    "scripts/merge-admission.py": "24bd87a5b6c078ec8cf099e9c6fe46567dca33acd08574953efef75644b0b2b2",
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
     "scripts/privacy-request-ledger.py": "9274444f82bef45844d492c296b6a5ca9410e6000867331adb6d624ddc5af960",
-    "scripts/production-migrations.json": "6fb3d4f152c2217e638276654f1670f2d58a124ee0e4c95a747c2fc6a2093868",
+    "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
+    "scripts/production-migrations.json": "7c46f4475f4949d7e53d7a76cc02c4cfbe5d633c44927d4abe4a8660e68ee9b7",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "0c036cda5bb8f0be9c5856af79aae32a630fbbc96945e27d46aeb20bc8c90704",
+    "scripts/quality-repo.sh": "585a3b6e8eff06b42789f69251205e1e3b2dc27e26af89e02c7d8336417bf637",
+    "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
@@ -6152,6 +6736,7 @@
     "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
     "scripts/test-isolated-application-canary.py": "434a9ca07c7aa04ccfc21177742babbc1e548a8128fab80e9898403911e21f40",
     "scripts/test-marketplace-contact-identity.sh": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
+    "scripts/test-merge-admission.py": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
@@ -6165,11 +6750,14 @@
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
+    "scripts/test-stripe-integration.sh": "f3c057e5afea48b657a2eeb35763b49054979cfaf84ec2e48940617a2d64f8df",
     "scripts/test-ticket-admission.sh": "e861b2b98961f0c24ddacd5e67f3622ea665d118ad69979948dc82cb1aa81800",
     "scripts/test-ticket-confirmation-lease.py": "9246ce1669f1f6bb32352897b290dd3ef85efa222655bf54680b027dc6129420",
     "scripts/test-ticket-confirmation-smtp.py": "ab36fc612102863669f18a8b12db86ee4192f77d56bbad31b5dc7aa3a5834743",
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
+    "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
+    "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "b5ba1d728abbc2181ffd260237e5743f38feb7681cb7fcd4e9cc5c969a2395b0",
     "scripts/verify-event-operations-formal.sh": "35ccadfcc900ec789bc8f0eeea18d1862c82c9c9714fcff757d022ac069db3e4",
@@ -6184,6 +6772,10 @@
     "streaming/mediamtx.yml": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
     "tdf-hq-ui/public/data-deletion.html": "fe759cb4af0642f024ef31d61f55cb890c8d52e1e05c9e00b409d020f3fc1c13",
     "tdf-hq-ui/public/mobile-app/data-deletion.html": "32b495f131da0c153d219f8d2fadb0d04fcd2300782a17e75216c2ad5d96f695",
+    "tdf-hq-ui/public/mobile-app/index.html": "4e3e201b1ba1cd62fa22d2c487c759cdc55569f0591fdf1e864c6eefd70731c2",
+    "tdf-hq-ui/public/mobile-app/privacy.html": "5aadcfc8e72fe83f6ed58999ee0f1963ca3b1eec031212bc7a3fdf1fc51d4f5b",
+    "tdf-hq-ui/public/mobile-app/support.html": "56a65c45903c596b908bf49416a1e8e073453accbb6186bb19cc22e9d85191c5",
+    "tdf-hq-ui/public/mobile-app/terms.html": "cd1c821e65f488d4fcc9304714fc358ae13bc72aadf354cbc1a3b7bc89e3374c",
     "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "cb7030ef6c014862b24db70df7a4080c7d480fca431cf90c032d9cee91910ab2",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "8d53d8843af919c437dfff1d88dd85b02a6b037e7b88336d96edbd071e09c4a9",
     "tdf-hq-ui/src/analytics/posthog.ts": "055add96cca77d4b346946d478092851e224aed2a1db53bb1a8a4efe43e408e8",
@@ -6191,6 +6783,8 @@
     "tdf-hq-ui/src/api/client.test.ts": "eaec88fe099c62f7d68c2c350eb1b3493a71e132b7324e25e588b34ec76aed56",
     "tdf-hq-ui/src/api/client.ts": "3cbd9d209c184f0892451f4957721be0a55f65e922df33090c4a8b1e00ccfd13",
     "tdf-hq-ui/src/api/generated/types.ts": "97e3c5c5fd2e5c7c86ce64d6ac82af0925efa6cb474654ff7d431c6e5544a4a7",
+    "tdf-hq-ui/src/api/inventory.ts": "7462c17a811a3e307b8ff551745b76cf7e2ea7691d1193c9076190c77545a07c",
+    "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
     "tdf-hq-ui/src/api/invoices.ts": "f353342cef647949f9039126b01816cf6a69636c4b9bd868b99b3e7c4ce28838",
     "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx": "7723dd458079bcad7d7c3f39933b2025de76462f8d0fb40a6c6d4e6bd35deb49",
     "tdf-hq-ui/src/components/LazyPaginatedList.tsx": "8c96fc43fa7096d5bf59e0a724c19bd4b73d1f05582a25d99b633ba95f075d91",
@@ -6207,6 +6801,8 @@
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "aad862427b31bb0777586ae09589055043f9346e4eaaa9bf14a521e3d4fed129",
     "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "3144381852a748f77c009fc398c513672cd908192bc390fb2aad499a5cb0a174",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
+    "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx": "e48405433f70c9a163131f753453005460341e242be28c4f28e4afa49628d56a",
+    "tdf-hq-ui/src/pages/LabelAssetsPage.tsx": "4ba88b3c7f5a9b50feabbd44bb7172e5297866b5e279d60f6329d44e0090978a",
     "tdf-hq-ui/src/pages/LoginPage.test.tsx": "173a82881bf1ee9764582a56a82ea72c9e6aede174eab68ffbfbc77f8bfb6db7",
     "tdf-hq-ui/src/pages/LoginPage.tsx": "a08e02310726ed8c9a9306b106fdb65419ecb93e27d8b35efa6da847bdabf049",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
@@ -6232,6 +6828,7 @@
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/persistent-uploads.sh": "89c251d96be949d638941d45d4a8994f09c8157a04bea786ee93aefde90cbd44",
     "tdf-hq/production-entrypoint.sh": "9cf124a277a19e2d5c0d7769cfc8a2d16dc2d21f09e93406b3ebfa293e0416b4",
+    "tdf-hq/scripts/create_artists_from_list.sh": "eeabe1146bf9ad4cf9baf35d47ad320d6ded90662b56a72014ef9a899a0c814d",
     "tdf-hq/sql/2026-09-15_social_v2_chat_api.sql": "faa8026e41a293c01656120e360590d793ea575af0e12a68c67b916deb86dc52",
     "tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.sql": "8f86bc3c25209d6f56987dd3f84123e2be4fd78e3a9ee9876075ca1077a1864c",
     "tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql": "e70e67606e1ff1451ee6cf0404a7cad28b2ede0b72ffa92c16aab9cea9d72cca",
@@ -6352,32 +6949,75 @@
     "tdf-hq/test/integration/ticket_confirmation_delivery.sql": "9a6222ff1d4c604e263da81d9da92d6a42a6ab2b78384b0c7e5a83bd6cb6e46d",
     "tdf-hq/test/integration/ticket_confirmation_worker_fixture.sql": "e2579621708c05e80a699c2de280a033ca57ba0ba9767a037656d4a3857a7527",
     "tdf-hq/test/integration/ticket_order_quantity_limit.sql": "3b0644e828f65673d57532ecb8d27a26df155c3a0d9399337be5a58af5aa7548",
+    "tdf-mobile/.github/workflows/android-release-build.yml": "4d2938e8c0220ed323b6f8e639c729d97e091afe113509d87fd14140c340df3e",
     "tdf-mobile/.github/workflows/datadog-synthetics.yml": "09ce9584ea2fd8fbce95bf0d720be7594457e809f0b46dbcd2e0feb788564d98",
+    "tdf-mobile/.github/workflows/ios-release-build.yml": "27823e8b817628542e37d318486b3acec9c183989737717675a9d41a26f9d81c",
     "tdf-mobile/.github/workflows/mobile-validate.yml": "4d4e1186594a96993171f6b1ebf4ce162271ab991385adc13b4e3321123db387",
     "tdf-mobile/__tests__/AuthProvider.test.tsx": "a76d12479c0899214bfd7fb8c2b5eea1e24d81585633c6bf7e835ca21922f474",
     "tdf-mobile/__tests__/AuthQueryProviders.test.tsx": "0062663cef59cc75ff32d326ef90b9550669a433f8bb8ffd1af4e0a52e6734ed",
+    "tdf-mobile/__tests__/AuthScreen.test.tsx": "fde45c5d297594759b86444e697d79f56dd7413865b72528ec1eaedac343fd9b",
     "tdf-mobile/__tests__/DdexInbox.test.tsx": "5082fd98e04f9c9d861e8f3fbf7fabab92ac65cdb0e5ba7dd128a62839456656",
     "tdf-mobile/__tests__/DdexPartners.test.tsx": "6311dc043ee8a286f62bd0ec4d588f3b4425f1990a73d8b94c91093cd9b99b57",
+    "tdf-mobile/__tests__/EventCardTickets.test.tsx": "d98649ad19fed8b46dadbe20601e3d299ba334d75c6abea5aeb37e2782b6a519",
     "tdf-mobile/__tests__/EventDetailLiveBroadcastLifecycle.test.tsx": "5fa36d709f29921ac128350ccd07366dde32e309c923a217d6450c5f9018dd32",
+    "tdf-mobile/__tests__/EventDetailMoments.test.tsx": "dbeb0867d8ae95ae77e2a1529cd250d066844a04fc4e9d421681f0ae31628840",
+    "tdf-mobile/__tests__/EventMomentCardReaction.test.tsx": "35c75aa6a37a6f9472abc454e5bd46abc51a6818fc0e93370f4c486e2ef96ac1",
+    "tdf-mobile/__tests__/FirstRunProvider.test.tsx": "98e59e33e12c6aa88721c9cac49354a11793484b220689ead819b03629e65f72",
+    "tdf-mobile/__tests__/NewUserOnboardingGate.test.tsx": "0269cfcb7eb5810b04164c968c0ffe237f797bdb50b9eaa7576016e02fd15e98",
+    "tdf-mobile/__tests__/SocialScreen.test.tsx": "75d5a858f1e96b9848c15c8a2defd07d93fd010747331bc3452b1977a343628e",
+    "tdf-mobile/__tests__/UserProfileRsvpActivity.test.tsx": "f09ef80d0a302e5bb6902d1521dc9cf23c2e8b7f447bd000e75d0d0376611ed3",
+    "tdf-mobile/__tests__/apiClient.test.ts": "e675b6948ec62d4163f47e37b5f7fa4cdf93dd40a6a3890ab9b9aa1b5c894ecd",
     "tdf-mobile/__tests__/ddexApi.test.ts": "c9e274d52a3bab8063c84a79c398c68657d2a07774722f64caecec0b25d4518b",
+    "tdf-mobile/__tests__/directoryApi.test.ts": "477010a59bdff0576ab9cab6f2d79f5fddb9a8e4ed9b63f0ebc8a329adaf39a4",
+    "tdf-mobile/__tests__/eventMoments.test.ts": "8d2e690a4253ac3c39a84e54beaa92db2d3cdb6fefe60ef26e77c9e4c532a824",
     "tdf-mobile/__tests__/liveBroadcastsRepository.test.ts": "ff98004607a259e2b0e9a9e677d121a564a78e61e6a66074e948e04d15ff9d6d",
+    "tdf-mobile/__tests__/onboardingApi.test.ts": "4770fd9508a3a13c6ab0fb701d900b32633bac7b377d3f4fed4498f0b0c08300",
+    "tdf-mobile/__tests__/onboardingIntent.test.ts": "5598a1deba59da59d8c3c669ad8d77836040bd855776a4108a73639cc3842319",
+    "tdf-mobile/__tests__/savedEvents.test.ts": "ac739d4a8ad14f77b40ee8f310276b9e0073eae3084bcc671d3be946fd9cdbc8",
+    "tdf-mobile/__tests__/socialApiMapperSanitization.test.ts": "fc0cfd4f44e229e61e64320041776ef82ad457e14474206179cfd86351234455",
+    "tdf-mobile/__tests__/usePartyOwnership.test.tsx": "ccdd151045745a81c7bd461d8aeddded98cd102a5cfa97e6cd561872cbf438d1",
+    "tdf-mobile/app/(tabs)/events.tsx": "518cc2e2bbde4ffb7d8da49fcccc384d222b2121cb8b7d4799d7023bc4bcd1a1",
     "tdf-mobile/app/(tabs)/more.tsx": "53cc6d33d6d37756759a2251d2d79fcd8750696b3369a3d64783d0853d21ec18",
+    "tdf-mobile/app/(tabs)/social.tsx": "7133744ece6db0db256daa2489c9f94bb6deadf69d76c65a09e0d6dde23a7796",
     "tdf-mobile/app/ddex/document/[id].tsx": "787e7c4f2a28f137e614df6660c727d81890337ef69fc39cd1ea55c953f731a2",
     "tdf-mobile/app/ddex/index.tsx": "8d534fd0a1a28f0bac5767a8535a91fe1ce7762d0decff518cec5931eb6149e1",
     "tdf-mobile/app/ddex/partners.tsx": "9e2e2baf6b696a5880fd3f59f7d52bd8a6508762296a55564fb873af6d23be61",
     "tdf-mobile/app/eventDetail.tsx": "81718007671292738d4ac815f1b2e39d1a250ed717d3f99714e28905736bd76b",
+    "tdf-mobile/app/userProfile.tsx": "cf1d6d3f9896e2d6ced654cfc0f530bc5d7d7869c228ca95c3250297cde2bfe4",
     "tdf-mobile/package-lock.json": "1d669d0ea79f240494299f22c868f79753b921ad6f06656ad71b5942ccd3ac35",
     "tdf-mobile/package.json": "2df9f211d1bddbe5467021ac6398e3427b5af467262ae5321be224ebe1603612",
+    "tdf-mobile/scripts/android-release.py": "359097ccd6ccb3585d544fa40b0a84cd874fc2df0f514cce8d71fdeb5ec95d5c",
+    "tdf-mobile/scripts/ios-signing.py": "b82eeb2adf72523c7e82b99458ce85784131afb7b3ab7971eb9052060732b627",
+    "tdf-mobile/scripts/release-check.mjs": "134c027743c05c08d93d7696a4b5af88448f375cee8641ea9298907a37a689c4",
+    "tdf-mobile/scripts/tests/test_android_release.py": "9fe8727e8da7a4de515e663ce232bec40fae0bcc3bf9cc491bde36d1c8b3fab7",
+    "tdf-mobile/scripts/tests/test_ios_signing.py": "22dc11816ec576d9d834249d9c24b2b26c21b81a3c9471b15c94822f203d7a14",
+    "tdf-mobile/src/api/client.ts": "aabfd57e21b6301458c11f923c5ec5e5f8429b1bf8d0bbddd27a15cc8ddd50a3",
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
+    "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
+    "tdf-mobile/src/api/events.ts": "a6014149f81240e56023471ea987fc8ac8245fc06d3034fb0382750e818d2b1e",
     "tdf-mobile/src/api/generated/types.ts": "97e3c5c5fd2e5c7c86ce64d6ac82af0925efa6cb474654ff7d431c6e5544a4a7",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
+    "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
+    "tdf-mobile/src/components/EventCard.tsx": "4eaba1e6a6ac76b67bbc7f5a6a8d24e0e14e81ebb0eb29041da70265dacd21a2",
+    "tdf-mobile/src/components/EventMomentCard.tsx": "d157367b980c01a8425a396971519124105860e6394b5c27d90cc5c2fc7dd9c8",
+    "tdf-mobile/src/experiments/NewUserOnboardingGate.tsx": "80c962ddd011c5b8121d9da53af1ddd4b4c691533d24fd233fbc4e39723f6e19",
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": "a8111cb6563d7cb08ca568175ed51460de0293db652142a7979e907e256ee2ff",
+    "tdf-mobile/src/hooks/usePartyOwnership.ts": "d95a290a5cf31cb69c41b257144118cec54fc1d132ff24971d0283da05405cca",
+    "tdf-mobile/src/lib/eventMoments.ts": "4c737b4a82c92dfd89a362caaba5b7d1bae16f06d93ecdb08c104737f24a598d",
+    "tdf-mobile/src/lib/eventMomentsRepository.ts": "3fc6bd9bff601d1b03a311b57a384b385a87a2e3413a5c3452fb3fdb06b17a7e",
+    "tdf-mobile/src/lib/eventSharing.test.ts": "75c1e1b893800063e06315fbb56457c0ee4bee113d8ea45227361be3adcced8b",
+    "tdf-mobile/src/lib/firstValueCompletion.ts": "d5c2580eddea4ea7907eac147bd5b84870aec6409f9c51e1bdf051c57171c7a7",
     "tdf-mobile/src/lib/liveBroadcastPublishing.ts": "9b00774ddd70fd6f3425e6877cb52d9c6fa933f5c0af13f3af3327a5db042b98",
     "tdf-mobile/src/lib/liveBroadcastsRepository.ts": "b7fed7ab7c9ad18a065f59ecc1cb2dcf7abf841aae555cee3fc8c0121036083c",
+    "tdf-mobile/src/lib/onboardingIntent.ts": "cfe60e2d5ce8cc09314d2e8728c5603ceca0dceffbe920c91b9ff7234d1d4f4e",
     "tdf-mobile/src/lib/queryClient.ts": "149f05c3a7463dfe5de259414a14fa30619277ce4f46adc6f166b51e775a4ff2",
+    "tdf-mobile/src/lib/savedEvents.ts": "d43e5d39203ce4a1670f3ced2a03e3ebb9ac81b61127cc497ecda8fea69c31a8",
+    "tdf-mobile/src/localization/eventExperienceCopy.ts": "5ddb85172b79e36a24366b30b573b51462adb0500a94747355d47943d5b238e4",
+    "tdf-mobile/src/localization/onboardingCopy.ts": "faf5c64e81e584a3710e17adebc26705fbfad350f5fecc69f99d7dd0628663ee",
     "tdf-mobile/src/providers/AppProviders.tsx": "ffd5a5922918be901c68d31503279220aa978775fbd213b5ef186d9502902a0a",
     "tdf-mobile/src/providers/AuthProvider.tsx": "e5ac647ae75d11db1ed43b9cbaff0c92c0b2c3f631e92564fb00e900ce31c74d",
-    "tdf-mobile/src/providers/AuthQueryProviders.tsx": "ae919bad36236b53ab80d17674b5f70e438178e1e9cf3b482c9bd4c437e66ed2"
+    "tdf-mobile/src/providers/AuthQueryProviders.tsx": "ae919bad36236b53ab80d17674b5f70e438178e1e9cf3b482c9bd4c437e66ed2",
+    "tdf-mobile/src/providers/FirstRunProvider.tsx": "b2d91da63d9cb764a8359e5f56100d98d54f93a1443d000952630cb85f0ca56f"
   },
   "reverseTraceability": {
     "scripts/production-release.mjs": [
@@ -7674,6 +8314,24 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/production-catalog-inventory.mjs": [
+      {
+        "requirement": "DEPLOY-OBSERVE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "ops/hetzner/catalog-readonly-role.sql": [
+      {
+        "requirement": "DEPLOY-OBSERVE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/mail-deliverability-monitor.py": [
+      {
+        "requirement": "DEPLOY-OBSERVE-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-hetzner-inspection.py": [
       {
         "requirement": "DEPLOY-OBSERVE-001",
@@ -7703,6 +8361,18 @@
       }
     ],
     "scripts/test_production_access.py": [
+      {
+        "requirement": "DEPLOY-OBSERVE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/production-catalog-inventory.test.mjs": [
+      {
+        "requirement": "DEPLOY-OBSERVE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test_mail_deliverability_monitor.py": [
       {
         "requirement": "DEPLOY-OBSERVE-001",
         "relationship": "tests"
@@ -7902,6 +8572,10 @@
       {
         "requirement": "DEPLOY-JOURNAL-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-INTEGRATION-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/quality-mobile.sh": [
@@ -8724,6 +9398,10 @@
       {
         "requirement": "PRIV-CACHE-002",
         "relationship": "formalModels"
+      },
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "formalModels"
       }
     ],
     "tdf-mobile/src/providers/AuthProvider.tsx": [
@@ -9158,11 +9836,19 @@
       {
         "requirement": "SYS-CI-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MOB-BUILD-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/.github/workflows/datadog-synthetics.yml": [
       {
         "requirement": "SYS-CI-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MOB-BUILD-001",
         "relationship": "implementation"
       }
     ],
@@ -9589,6 +10275,424 @@
         "requirement": "DEPLOY-JOURNAL-001",
         "relationship": "formalModels"
       }
+    ],
+    "tdf-mobile/src/api/client.ts": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/api/onboarding.ts": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/experiments/NewUserOnboardingGate.tsx": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/hooks/usePartyOwnership.ts": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/lib/firstValueCompletion.ts": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/lib/onboardingIntent.ts": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/localization/onboardingCopy.ts": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/providers/FirstRunProvider.tsx": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/__tests__/AuthScreen.test.tsx": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/FirstRunProvider.test.tsx": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/NewUserOnboardingGate.test.tsx": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/apiClient.test.ts": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/onboardingApi.test.ts": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/onboardingIntent.test.ts": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/usePartyOwnership.test.tsx": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/FanHubOnboarding.tla": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/NativeArtistFollow.tla": [
+      {
+        "requirement": "MOB-ONBOARD-001",
+        "relationship": "formalModels"
+      },
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "tdf-mobile/app/(tabs)/events.tsx": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/app/(tabs)/social.tsx": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/app/userProfile.tsx": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/api/directory.ts": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/api/events.ts": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/components/EventCard.tsx": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/components/EventMomentCard.tsx": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/lib/eventMoments.ts": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/lib/eventMomentsRepository.ts": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/lib/savedEvents.ts": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/src/localization/eventExperienceCopy.ts": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/__tests__/EventCardTickets.test.tsx": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/EventDetailMoments.test.tsx": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/EventMomentCardReaction.test.tsx": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/SocialScreen.test.tsx": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/UserProfileRsvpActivity.test.tsx": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/directoryApi.test.ts": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/eventMoments.test.ts": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/savedEvents.test.ts": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/socialApiMapperSanitization.test.ts": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/src/lib/eventSharing.test.ts": [
+      {
+        "requirement": "MOB-SOCIAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/.github/workflows/android-release-build.yml": [
+      {
+        "requirement": "MOB-BUILD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/.github/workflows/ios-release-build.yml": [
+      {
+        "requirement": "MOB-BUILD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/scripts/android-release.py": [
+      {
+        "requirement": "MOB-BUILD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/scripts/ios-signing.py": [
+      {
+        "requirement": "MOB-BUILD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/scripts/release-check.mjs": [
+      {
+        "requirement": "MOB-BUILD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-mobile/scripts/tests/test_android_release.py": [
+      {
+        "requirement": "MOB-BUILD-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/scripts/tests/test_ios_signing.py": [
+      {
+        "requirement": "MOB-BUILD-001",
+        "relationship": "tests"
+      }
+    ],
+    ".github/workflows/check-messaging-token.yml": [
+      {
+        "requirement": "OPS-CLIENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/diagnose-instagram.mjs": [
+      {
+        "requirement": "OPS-CLIENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/diagnose-social.mjs": [
+      {
+        "requirement": "OPS-CLIENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/get-admin-token.sh": [
+      {
+        "requirement": "OPS-CLIENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/get-instagram-token.mjs": [
+      {
+        "requirement": "OPS-CLIENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/refresh-messaging-token.mjs": [
+      {
+        "requirement": "OPS-CLIENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-stripe-integration.sh": [
+      {
+        "requirement": "OPS-CLIENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/upsert-course.mjs": [
+      {
+        "requirement": "OPS-CLIENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/scripts/create_artists_from_list.sh": [
+      {
+        "requirement": "OPS-CLIENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/instagram-token-workflows.test.mjs": [
+      {
+        "requirement": "OPS-CLIENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/retired-messaging-refresher.test.mjs": [
+      {
+        "requirement": "OPS-CLIENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/payment-readiness-helper.test.mjs": [
+      {
+        "requirement": "OPS-CLIENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/artist-import-idempotency.test.mjs": [
+      {
+        "requirement": "OPS-CLIENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/api/inventory.ts": [
+      {
+        "requirement": "MEDIA-INVENTORY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/LabelAssetsPage.tsx": [
+      {
+        "requirement": "MEDIA-INVENTORY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/inventory.upload.test.ts": [
+      {
+        "requirement": "MEDIA-INVENTORY-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx": [
+      {
+        "requirement": "MEDIA-INVENTORY-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/public/mobile-app/index.html": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/public/mobile-app/privacy.html": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/public/mobile-app/support.html": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/public/mobile-app/terms.html": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/merge-admission.py": [
+      {
+        "requirement": "OPS-INTEGRATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    ".github/workflows/merge-admission.yml": [
+      {
+        "requirement": "OPS-INTEGRATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-merge-admission.py": [
+      {
+        "requirement": "OPS-INTEGRATION-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -9623,7 +10727,12 @@
       "path": ".github/workflows/check-messaging-token.yml",
       "sha256": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CLIENT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-87abe6b969342c3c",
@@ -9696,6 +10805,18 @@
       "sha256": "5c812f5a50e54395e87c5ecf2209cc2ec47158cc97849bb16edf394764904513",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-305964459d20ce97",
+      "path": ".github/workflows/merge-admission.yml",
+      "sha256": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "OPS-INTEGRATION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-f9eb7b8efd30e406",
@@ -10005,7 +11126,12 @@
       "path": "ops/hetzner/catalog-readonly-role.sql",
       "sha256": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DEPLOY-OBSERVE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-f4743034f585d310",
@@ -10017,7 +11143,7 @@
     {
       "id": "SURFACE-93a9612c9f1fea9b",
       "path": "ops/hetzner/compose.production.yaml",
-      "sha256": "1191a5773dc83807be2364340f8cb9f0feb33af4ed45d6e0bfbefe9f3bc42db8",
+      "sha256": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -10211,7 +11337,12 @@
       "path": "scripts/__tests__/artist-import-idempotency.test.mjs",
       "sha256": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CLIENT-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-d06f40dc4caf72e4",
@@ -10641,7 +11772,12 @@
       "path": "scripts/__tests__/instagram-token-workflows.test.mjs",
       "sha256": "44ebbb797abd8fe0a08d275620894d15fe38d7e966da4331451f3735055d67d6",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CLIENT-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-aaf6250f3ecffcca",
@@ -10765,7 +11901,12 @@
       "path": "scripts/__tests__/payment-readiness-helper.test.mjs",
       "sha256": "bddad0df011362abedc3cb346688ab3beead734f4e3dc787828ffd057f204a03",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CLIENT-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-2f21c1c45f5b1cca",
@@ -10777,7 +11918,7 @@
     {
       "id": "SURFACE-9f80dbca9b5074c0",
       "path": "scripts/__tests__/persistent-uploads.test.mjs",
-      "sha256": "0dc864d08b90d8731f0ddcb056dad5c7990c5e07dab80084396e87f62ee76df6",
+      "sha256": "3fa7cfdf56ccf0533240f6b9028970915897af0147023e9e305c77303d19e889",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -10798,7 +11939,12 @@
       "path": "scripts/__tests__/production-catalog-inventory.test.mjs",
       "sha256": "364bebeddbef85604ac275967b974b79d6f855e997877c867e491770fdd2ae16",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DEPLOY-OBSERVE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-bd35aa30f70923f7",
@@ -10860,7 +12006,12 @@
       "path": "scripts/__tests__/retired-messaging-refresher.test.mjs",
       "sha256": "c7bb7180b1a750099e0744e70b73fac5c46298225744bbc76457d2fe2df2698a",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CLIENT-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-bcdd803220771b0c",
@@ -11250,14 +12401,24 @@
       "path": "scripts/diagnose-instagram.mjs",
       "sha256": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CLIENT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-c3c045b2c7be6d1e",
       "path": "scripts/diagnose-social.mjs",
       "sha256": "bfa8481a07b3f18fa757fb4c616d0efe3ade8a18191d03a7e98e757a38447caf",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CLIENT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-55c2c32700cda24a",
@@ -11327,14 +12488,24 @@
       "path": "scripts/get-admin-token.sh",
       "sha256": "168dd8f5ba17d927685a86ac763a03a9aff55736bf4b4426a6d7541817a35110",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CLIENT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-1c7d386a5185ce43",
       "path": "scripts/get-instagram-token.mjs",
       "sha256": "0b00f6cc1ad6793f029339bc006ed520245af87ea55e285658faf48ba978e592",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CLIENT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-61ce5bdd849d0317",
@@ -11810,7 +12981,24 @@
       "path": "scripts/mail-deliverability-monitor.py",
       "sha256": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DEPLOY-OBSERVE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-40555a0730cda366",
+      "path": "scripts/merge-admission.py",
+      "sha256": "24bd87a5b6c078ec8cf099e9c6fe46567dca33acd08574953efef75644b0b2b2",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "OPS-INTEGRATION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-8b09001cab518c05",
@@ -11918,12 +13106,17 @@
       "path": "scripts/production-catalog-inventory.mjs",
       "sha256": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DEPLOY-OBSERVE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "6fb3d4f152c2217e638276654f1670f2d58a124ee0e4c95a747c2fc6a2093868",
+      "sha256": "7c46f4475f4949d7e53d7a76cc02c4cfbe5d633c44927d4abe4a8660e68ee9b7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -12026,7 +13219,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "0c036cda5bb8f0be9c5856af79aae32a630fbbc96945e27d46aeb20bc8c90704",
+      "sha256": "585a3b6e8eff06b42789f69251205e1e3b2dc27e26af89e02c7d8336417bf637",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -12060,6 +13253,10 @@
         {
           "requirement": "DEPLOY-JOURNAL-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-INTEGRATION-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -12082,7 +13279,12 @@
       "path": "scripts/refresh-messaging-token.mjs",
       "sha256": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CLIENT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-d71c43a36310a429",
@@ -13157,6 +14359,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-56631cee05d8221c",
+      "path": "scripts/test-merge-admission.py",
+      "sha256": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "OPS-INTEGRATION-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-4af46ac98c4298f1",
       "path": "scripts/test-music-directory-contract.mjs",
       "sha256": "bdf7030e6b528a7f3457e5fa1149196cc99a249b3d6b957e0b69f2b424dd8f67",
@@ -13468,7 +14682,12 @@
       "path": "scripts/test-stripe-integration.sh",
       "sha256": "f3c057e5afea48b657a2eeb35763b49054979cfaf84ec2e48940617a2d64f8df",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CLIENT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-df93425ce321f1fb",
@@ -13590,7 +14809,12 @@
       "path": "scripts/test_mail_deliverability_monitor.py",
       "sha256": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DEPLOY-OBSERVE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-3f433a02bd9aa5ff",
@@ -13616,7 +14840,12 @@
       "path": "scripts/upsert-course.mjs",
       "sha256": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CLIENT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-7873643aff696047",
@@ -13952,28 +15181,48 @@
       "path": "tdf-hq-ui/public/mobile-app/index.html",
       "sha256": "4e3e201b1ba1cd62fa22d2c487c759cdc55569f0591fdf1e864c6eefd70731c2",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-1656aae22ee2e9e0",
       "path": "tdf-hq-ui/public/mobile-app/privacy.html",
       "sha256": "5aadcfc8e72fe83f6ed58999ee0f1963ca3b1eec031212bc7a3fdf1fc51d4f5b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-9ab2dcf023458604",
       "path": "tdf-hq-ui/public/mobile-app/support.html",
       "sha256": "56a65c45903c596b908bf49416a1e8e073453accbb6186bb19cc22e9d85191c5",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-27e00a2c872dcc44",
       "path": "tdf-hq-ui/public/mobile-app/terms.html",
       "sha256": "cd1c821e65f488d4fcc9304714fc358ae13bc72aadf354cbc1a3b7bc89e3374c",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-58b1b762b88c9b8e",
@@ -14632,14 +15881,24 @@
       "path": "tdf-hq-ui/src/api/inventory.ts",
       "sha256": "7462c17a811a3e307b8ff551745b76cf7e2ea7691d1193c9076190c77545a07c",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-INVENTORY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-4bd49968c033f10e",
       "path": "tdf-hq-ui/src/api/inventory.upload.test.ts",
       "sha256": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-INVENTORY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-8954d786b64d481b",
@@ -17246,14 +18505,24 @@
       "path": "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx",
       "sha256": "e48405433f70c9a163131f753453005460341e242be28c4f28e4afa49628d56a",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-INVENTORY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-44ac4b25200a0ba1",
       "path": "tdf-hq-ui/src/pages/LabelAssetsPage.tsx",
       "sha256": "4ba88b3c7f5a9b50feabbd44bb7172e5297866b5e279d60f6329d44e0090978a",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-INVENTORY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-547227e70118d509",
@@ -19389,7 +20658,12 @@
       "path": "tdf-hq/scripts/create_artists_from_list.sh",
       "sha256": "eeabe1146bf9ad4cf9baf35d47ad320d6ded90662b56a72014ef9a899a0c814d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CLIENT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-35b22fbf8d991de3",
@@ -25240,7 +26514,12 @@
       "path": "tdf-mobile/.github/workflows/android-release-build.yml",
       "sha256": "4d2938e8c0220ed323b6f8e639c729d97e091afe113509d87fd14140c340df3e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-BUILD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-9000b422122afb98",
@@ -25250,6 +26529,10 @@
       "requirements": [
         {
           "requirement": "SYS-CI-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MOB-BUILD-001",
           "relationship": "implementation"
         }
       ]
@@ -25273,7 +26556,12 @@
       "path": "tdf-mobile/.github/workflows/ios-release-build.yml",
       "sha256": "27823e8b817628542e37d318486b3acec9c183989737717675a9d41a26f9d81c",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-BUILD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-d7fd396a0e21292f",
@@ -25290,6 +26578,10 @@
       "requirements": [
         {
           "requirement": "SYS-CI-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MOB-BUILD-001",
           "relationship": "implementation"
         }
       ]
@@ -25344,7 +26636,12 @@
       "path": "tdf-mobile/__tests__/AuthScreen.test.tsx",
       "sha256": "fde45c5d297594759b86444e697d79f56dd7413865b72528ec1eaedac343fd9b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-efcecbaa0e3acd71",
@@ -25396,7 +26693,12 @@
       "path": "tdf-mobile/__tests__/EventCardTickets.test.tsx",
       "sha256": "d98649ad19fed8b46dadbe20601e3d299ba334d75c6abea5aeb37e2782b6a519",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-547a7176f0a822e5",
@@ -25415,14 +26717,24 @@
       "path": "tdf-mobile/__tests__/EventDetailMoments.test.tsx",
       "sha256": "dbeb0867d8ae95ae77e2a1529cd250d066844a04fc4e9d421681f0ae31628840",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-99ea7561d1a327d8",
       "path": "tdf-mobile/__tests__/EventMomentCardReaction.test.tsx",
       "sha256": "35c75aa6a37a6f9472abc454e5bd46abc51a6818fc0e93370f4c486e2ef96ac1",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-7924613b1e052502",
@@ -25436,7 +26748,12 @@
       "path": "tdf-mobile/__tests__/FirstRunProvider.test.tsx",
       "sha256": "98e59e33e12c6aa88721c9cac49354a11793484b220689ead819b03629e65f72",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-adcc415d122d0352",
@@ -25471,7 +26788,12 @@
       "path": "tdf-mobile/__tests__/NewUserOnboardingGate.test.tsx",
       "sha256": "0269cfcb7eb5810b04164c968c0ffe237f797bdb50b9eaa7576016e02fd15e98",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-7617f2ba54034017",
@@ -25534,7 +26856,12 @@
       "path": "tdf-mobile/__tests__/SocialScreen.test.tsx",
       "sha256": "75d5a858f1e96b9848c15c8a2defd07d93fd010747331bc3452b1977a343628e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-55f3d615ea7ca850",
@@ -25576,7 +26903,12 @@
       "path": "tdf-mobile/__tests__/UserProfileRsvpActivity.test.tsx",
       "sha256": "f09ef80d0a302e5bb6902d1521dc9cf23c2e8b7f447bd000e75d0d0376611ed3",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-8bd34e14602ba906",
@@ -25597,7 +26929,12 @@
       "path": "tdf-mobile/__tests__/apiClient.test.ts",
       "sha256": "e675b6948ec62d4163f47e37b5f7fa4cdf93dd40a6a3890ab9b9aa1b5c894ecd",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-4539ccabdae7a1f5",
@@ -25651,14 +26988,24 @@
       "path": "tdf-mobile/__tests__/directoryApi.test.ts",
       "sha256": "477010a59bdff0576ab9cab6f2d79f5fddb9a8e4ed9b63f0ebc8a329adaf39a4",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-8c291869bc754896",
       "path": "tdf-mobile/__tests__/eventMoments.test.ts",
       "sha256": "8d2e690a4253ac3c39a84e54beaa92db2d3cdb6fefe60ef26e77c9e4c532a824",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-293e026d753996ba",
@@ -25754,14 +27101,24 @@
       "path": "tdf-mobile/__tests__/onboardingApi.test.ts",
       "sha256": "4770fd9508a3a13c6ab0fb701d900b32633bac7b377d3f4fed4498f0b0c08300",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-7f1e3ac93d0c65d1",
       "path": "tdf-mobile/__tests__/onboardingIntent.test.ts",
       "sha256": "5598a1deba59da59d8c3c669ad8d77836040bd855776a4108a73639cc3842319",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-5ba6bb5006d5feaa",
@@ -25831,7 +27188,12 @@
       "path": "tdf-mobile/__tests__/savedEvents.test.ts",
       "sha256": "ac739d4a8ad14f77b40ee8f310276b9e0073eae3084bcc671d3be946fd9cdbc8",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-3f53444fc1175241",
@@ -25845,7 +27207,12 @@
       "path": "tdf-mobile/__tests__/socialApiMapperSanitization.test.ts",
       "sha256": "fc0cfd4f44e229e61e64320041776ef82ad457e14474206179cfd86351234455",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-cf96b8497525f5f6",
@@ -25880,7 +27247,12 @@
       "path": "tdf-mobile/__tests__/usePartyOwnership.test.tsx",
       "sha256": "ccdd151045745a81c7bd461d8aeddded98cd102a5cfa97e6cd561872cbf438d1",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-c20fbacb648be9fa",
@@ -25936,7 +27308,12 @@
       "path": "tdf-mobile/app/(tabs)/events.tsx",
       "sha256": "518cc2e2bbde4ffb7d8da49fcccc384d222b2121cb8b7d4799d7023bc4bcd1a1",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-f4e817382f892226",
@@ -25983,7 +27360,12 @@
       "path": "tdf-mobile/app/(tabs)/social.tsx",
       "sha256": "7133744ece6db0db256daa2489c9f94bb6deadf69d76c65a09e0d6dde23a7796",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-a024eca492fbdf36",
@@ -26304,7 +27686,12 @@
       "path": "tdf-mobile/app/userProfile.tsx",
       "sha256": "cf1d6d3f9896e2d6ced654cfc0f530bc5d7d7869c228ca95c3250297cde2bfe4",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-5172c3aa23df27d8",
@@ -26531,7 +27918,12 @@
       "path": "tdf-mobile/scripts/android-release.py",
       "sha256": "359097ccd6ccb3585d544fa40b0a84cd874fc2df0f514cce8d71fdeb5ec95d5c",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-BUILD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-49be021610567519",
@@ -26608,28 +28000,48 @@
       "path": "tdf-mobile/scripts/ios-signing.py",
       "sha256": "b82eeb2adf72523c7e82b99458ce85784131afb7b3ab7971eb9052060732b627",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-BUILD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-21cdc1519a948266",
       "path": "tdf-mobile/scripts/release-check.mjs",
       "sha256": "134c027743c05c08d93d7696a4b5af88448f375cee8641ea9298907a37a689c4",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-BUILD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-576d9c2a91a42c51",
       "path": "tdf-mobile/scripts/tests/test_android_release.py",
       "sha256": "9fe8727e8da7a4de515e663ce232bec40fae0bcc3bf9cc491bde36d1c8b3fab7",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-BUILD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-bfc5bd8fcf9e9e4d",
       "path": "tdf-mobile/scripts/tests/test_ios_signing.py",
       "sha256": "22dc11816ec576d9d834249d9c24b2b26c21b81a3c9471b15c94822f203d7a14",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-BUILD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-85dc8ac2c70e20e0",
@@ -26706,7 +28118,12 @@
       "path": "tdf-mobile/src/api/client.ts",
       "sha256": "aabfd57e21b6301458c11f923c5ec5e5f8429b1bf8d0bbddd27a15cc8ddd50a3",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-e0edb1f5f845910d",
@@ -26732,7 +28149,12 @@
       "path": "tdf-mobile/src/api/directory.ts",
       "sha256": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-1fa13f838eba721d",
@@ -26746,7 +28168,12 @@
       "path": "tdf-mobile/src/api/events.ts",
       "sha256": "a6014149f81240e56023471ea987fc8ac8245fc06d3034fb0382750e818d2b1e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-289d16e2dcc9030c",
@@ -26844,7 +28271,12 @@
       "path": "tdf-mobile/src/api/onboarding.ts",
       "sha256": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-37ad4ee4b656c78f",
@@ -26963,7 +28395,12 @@
       "path": "tdf-mobile/src/components/EventCard.tsx",
       "sha256": "4eaba1e6a6ac76b67bbc7f5a6a8d24e0e14e81ebb0eb29041da70265dacd21a2",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-8ce4ad416c6e61d1",
@@ -26977,7 +28414,12 @@
       "path": "tdf-mobile/src/components/EventMomentCard.tsx",
       "sha256": "d157367b980c01a8425a396971519124105860e6394b5c27d90cc5c2fc7dd9c8",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-67484eb36a87ee67",
@@ -27117,7 +28559,12 @@
       "path": "tdf-mobile/src/experiments/NewUserOnboardingGate.tsx",
       "sha256": "80c962ddd011c5b8121d9da53af1ddd4b4c691533d24fd233fbc4e39723f6e19",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-fe02da061556f4fc",
@@ -27262,7 +28709,12 @@
       "path": "tdf-mobile/src/hooks/usePartyOwnership.ts",
       "sha256": "d95a290a5cf31cb69c41b257144118cec54fc1d132ff24971d0283da05405cca",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-20f0809095655bce",
@@ -27339,14 +28791,24 @@
       "path": "tdf-mobile/src/lib/eventMoments.ts",
       "sha256": "4c737b4a82c92dfd89a362caaba5b7d1bae16f06d93ecdb08c104737f24a598d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-d04d238fd7a01a74",
       "path": "tdf-mobile/src/lib/eventMomentsRepository.ts",
       "sha256": "3fc6bd9bff601d1b03a311b57a384b385a87a2e3413a5c3452fb3fdb06b17a7e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-575088555e574066",
@@ -27367,7 +28829,12 @@
       "path": "tdf-mobile/src/lib/eventSharing.test.ts",
       "sha256": "75c1e1b893800063e06315fbb56457c0ee4bee113d8ea45227361be3adcced8b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-cc97bf1990866365",
@@ -27388,7 +28855,12 @@
       "path": "tdf-mobile/src/lib/firstValueCompletion.ts",
       "sha256": "d5c2580eddea4ea7907eac147bd5b84870aec6409f9c51e1bdf051c57171c7a7",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-d9565e5ecb4ec3e3",
@@ -27503,7 +28975,12 @@
       "path": "tdf-mobile/src/lib/onboardingIntent.ts",
       "sha256": "cfe60e2d5ce8cc09314d2e8728c5603ceca0dceffbe920c91b9ff7234d1d4f4e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-5c7e7c6b3f3a72ae",
@@ -27571,7 +29048,12 @@
       "path": "tdf-mobile/src/lib/savedEvents.ts",
       "sha256": "d43e5d39203ce4a1670f3ced2a03e3ebb9ac81b61127cc497ecda8fea69c31a8",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-a797fa59038f86c5",
@@ -27613,14 +29095,24 @@
       "path": "tdf-mobile/src/localization/eventExperienceCopy.ts",
       "sha256": "5ddb85172b79e36a24366b30b573b51462adb0500a94747355d47943d5b238e4",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-SOCIAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-8706580fc77ee8a5",
       "path": "tdf-mobile/src/localization/onboardingCopy.ts",
       "sha256": "faf5c64e81e584a3710e17adebc26705fbfad350f5fecc69f99d7dd0628663ee",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-67d021717b413c4f",
@@ -27740,7 +29232,12 @@
       "path": "tdf-mobile/src/providers/FirstRunProvider.tsx",
       "sha256": "b2d91da63d9cb764a8359e5f56100d98d54f93a1443d000952630cb85f0ca56f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-ONBOARD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-6dbac57013a27dfa",
@@ -27886,7 +29383,6 @@
   "unmappedSurfaces": [
     "SURFACE-5c3fa597431eda03",
     "SURFACE-e322a9d58d6bbd4b",
-    "SURFACE-562c5d7f20f572bc",
     "SURFACE-87abe6b969342c3c",
     "SURFACE-ab96c3ab21cf19fc",
     "SURFACE-717dbf61c7979518",
@@ -27920,13 +29416,11 @@
     "SURFACE-0d1b6286746163ff",
     "SURFACE-cca59b046cc76ace",
     "SURFACE-8780cd8d489d13bd",
-    "SURFACE-cec43d1d88b9cc40",
     "SURFACE-f4743034f585d310",
     "SURFACE-c9ca596d51c940f8",
     "SURFACE-b85ac3ceaf40e5fb",
     "SURFACE-0da2aa9657386c51",
     "SURFACE-039bc8d278e3dafc",
-    "SURFACE-35a1af26327814c1",
     "SURFACE-d96822f506e6f794",
     "SURFACE-2a6db69bcc12b984",
     "SURFACE-9344bbc594468ec5",
@@ -27948,7 +29442,6 @@
     "SURFACE-e4c6bf3c31cac943",
     "SURFACE-d09bf04096bd6964",
     "SURFACE-20231ef140c7dd90",
-    "SURFACE-ac7679c947f7408b",
     "SURFACE-aaf6250f3ecffcca",
     "SURFACE-e12f540d456f8d56",
     "SURFACE-ed51dd1c0fc53a51",
@@ -27956,12 +29449,9 @@
     "SURFACE-3875378b2b3df521",
     "SURFACE-2661bcd3e8c66ae8",
     "SURFACE-69900817facd771e",
-    "SURFACE-d6162ffeac44e062",
     "SURFACE-2f21c1c45f5b1cca",
     "SURFACE-57edc37515705dee",
-    "SURFACE-b587b9996fa32f37",
     "SURFACE-3abf163ab83b446e",
-    "SURFACE-adf1756c72e6da05",
     "SURFACE-bcdd803220771b0c",
     "SURFACE-80b41740576c6c1f",
     "SURFACE-2814c9b72c5f2d05",
@@ -27995,8 +29485,6 @@
     "SURFACE-587b06f07bbc17e1",
     "SURFACE-655b9679c92bd422",
     "SURFACE-cb864006a7638836",
-    "SURFACE-a36895a956e7a0db",
-    "SURFACE-c3c045b2c7be6d1e",
     "SURFACE-55c2c32700cda24a",
     "SURFACE-e6406d56712d5de9",
     "SURFACE-0540f4b62e8a5c1d",
@@ -28006,8 +29494,6 @@
     "SURFACE-4a87e40b74f5caa1",
     "SURFACE-017df03fe878b45b",
     "SURFACE-298863fcec57d5aa",
-    "SURFACE-12bd2db7cef49569",
-    "SURFACE-1c7d386a5185ce43",
     "SURFACE-61ce5bdd849d0317",
     "SURFACE-09f409fc2f5fdd87",
     "SURFACE-6efdc7705573cc29",
@@ -28039,7 +29525,6 @@
     "SURFACE-4a885036f5208454",
     "SURFACE-f1db2c4adbf5dce0",
     "SURFACE-0aa382713c667a78",
-    "SURFACE-a0fd8416fa83358e",
     "SURFACE-8b09001cab518c05",
     "SURFACE-8cdaeb57d09457bd",
     "SURFACE-0791e1b29e37b9cf",
@@ -28051,11 +29536,9 @@
     "SURFACE-676b7216bda83497",
     "SURFACE-1ef043656b0c0dd7",
     "SURFACE-6f6080552d114453",
-    "SURFACE-5d3cb3a8a35fced1",
     "SURFACE-bac1f41447e33768",
     "SURFACE-63149d1c69a3c6a7",
     "SURFACE-0210b80fb6caf081",
-    "SURFACE-3c9fe0c437e218da",
     "SURFACE-b6551e477e5d382b",
     "SURFACE-173452b4342d16ba",
     "SURFACE-39275efbaea5cb7e",
@@ -28181,7 +29664,6 @@
     "SURFACE-df0467f34f5e71d1",
     "SURFACE-829614625675f708",
     "SURFACE-69baedf792a35920",
-    "SURFACE-ea1437d2751ff22e",
     "SURFACE-df93425ce321f1fb",
     "SURFACE-712726a891f46cde",
     "SURFACE-5b061ec22f6fb1b6",
@@ -28191,9 +29673,7 @@
     "SURFACE-27f5d30ad4a9fccb",
     "SURFACE-306ef04f302e88df",
     "SURFACE-773458db4c86e811",
-    "SURFACE-dcfbc3e06e8b9e4f",
     "SURFACE-4ab08b8d4e69f343",
-    "SURFACE-d71afc2bac6fdf73",
     "SURFACE-7873643aff696047",
     "SURFACE-7ade12b1e0a8aa7b",
     "SURFACE-488ec868b5fc5265",
@@ -28209,10 +29689,6 @@
     "SURFACE-ee14fa660066a784",
     "SURFACE-16fd6a7d303023ea",
     "SURFACE-a2ada5ea1a6d219a",
-    "SURFACE-4c56dddf990a5626",
-    "SURFACE-1656aae22ee2e9e0",
-    "SURFACE-9ab2dcf023458604",
-    "SURFACE-27e00a2c872dcc44",
     "SURFACE-58b1b762b88c9b8e",
     "SURFACE-c13a12d2ea792bdf",
     "SURFACE-092f602711fabb68",
@@ -28293,8 +29769,6 @@
     "SURFACE-3a8631af15793b20",
     "SURFACE-7f274ed7ae3d4fde",
     "SURFACE-c1dbdb6b385cafc3",
-    "SURFACE-4f584dc31d92ebd7",
-    "SURFACE-4bd49968c033f10e",
     "SURFACE-7c8fda1bc9a6aba7",
     "SURFACE-123087b1a3efd70f",
     "SURFACE-cbf077a3da6bbf4a",
@@ -28639,8 +30113,6 @@
     "SURFACE-4fd1798287b449fb",
     "SURFACE-6c5ad1714500a7c5",
     "SURFACE-c9de0ed930b9721b",
-    "SURFACE-e69a77d56fe70d3a",
-    "SURFACE-44ac4b25200a0ba1",
     "SURFACE-547227e70118d509",
     "SURFACE-105a1dc051fd691f",
     "SURFACE-4f9114663eff5a34",
@@ -28900,7 +30372,6 @@
     "SURFACE-f8f0f47adc96f3f2",
     "SURFACE-f9a6ca79828de51f",
     "SURFACE-36af4d5fa27b9616",
-    "SURFACE-1771e20dc5ad17a4",
     "SURFACE-35b22fbf8d991de3",
     "SURFACE-a6438cd2d73e0d79",
     "SURFACE-15b6d2c5bcb08a12",
@@ -29489,28 +30960,20 @@
     "SURFACE-d3c3c6a421007e12",
     "SURFACE-a9181c3d1f2e9fa0",
     "SURFACE-5a64e0ed1f9e7c79",
-    "SURFACE-cbc4762024e82de2",
     "SURFACE-d84c1fc5d701e2cc",
     "SURFACE-8b8075b14e77947f",
-    "SURFACE-4d083e586c68746a",
     "SURFACE-d7fd396a0e21292f",
     "SURFACE-dfdc76c7f5afe8f6",
     "SURFACE-57fb42409e4fe3c1",
     "SURFACE-c2d3a0548b7f007b",
-    "SURFACE-889f3ed698a5ec59",
     "SURFACE-efcecbaa0e3acd71",
     "SURFACE-b008aa9647a19740",
     "SURFACE-34f76aa7fd7d8a7d",
-    "SURFACE-a4f08b34347d1281",
-    "SURFACE-aa9a5dc6fca02108",
-    "SURFACE-99ea7561d1a327d8",
     "SURFACE-7924613b1e052502",
-    "SURFACE-3677524f8992889a",
     "SURFACE-adcc415d122d0352",
     "SURFACE-99b5cd25c1db6135",
     "SURFACE-b5094e4b58658656",
     "SURFACE-f52377912391d22a",
-    "SURFACE-5d346a1514ee4d1a",
     "SURFACE-7617f2ba54034017",
     "SURFACE-f6247393de2c5801",
     "SURFACE-297ec8707ed309a7",
@@ -29519,23 +30982,18 @@
     "SURFACE-fa6406a2607ba343",
     "SURFACE-64794cece32266e3",
     "SURFACE-67b7cdf4c5bfce1b",
-    "SURFACE-9dcb9db6d3e58c16",
     "SURFACE-55f3d615ea7ca850",
     "SURFACE-1ff38e07e27723ce",
     "SURFACE-4420ef07b349f29e",
     "SURFACE-24e99beac8cf6857",
     "SURFACE-8487f846bf4e8547",
-    "SURFACE-f2759dc51ae88b80",
     "SURFACE-8bd34e14602ba906",
     "SURFACE-335a8d72ecdce55f",
-    "SURFACE-d17c354d94ccad58",
     "SURFACE-4539ccabdae7a1f5",
     "SURFACE-896c51af6808024a",
     "SURFACE-1a9c6b490ed4d09a",
     "SURFACE-a0436207cb7f5fda",
     "SURFACE-2947edfcf470d479",
-    "SURFACE-6dbf00e189d654d9",
-    "SURFACE-8c291869bc754896",
     "SURFACE-293e026d753996ba",
     "SURFACE-38f4ba1a427a2577",
     "SURFACE-7aafc197c0caae2e",
@@ -29547,8 +31005,6 @@
     "SURFACE-0f816b9eb1e4f3e8",
     "SURFACE-01f7d4bf0f33ebf4",
     "SURFACE-bae7e7b342339ba7",
-    "SURFACE-732c6140ea2e91b9",
-    "SURFACE-7f1e3ac93d0c65d1",
     "SURFACE-5ba6bb5006d5feaa",
     "SURFACE-1c3400d296cfc582",
     "SURFACE-90e6814442a1fc38",
@@ -29558,14 +31014,11 @@
     "SURFACE-f9c17b64490f0807",
     "SURFACE-f1994218e0fef98d",
     "SURFACE-c2fdb9d722ce3100",
-    "SURFACE-1d06c25393cae84a",
     "SURFACE-3f53444fc1175241",
-    "SURFACE-550aba7f4c6afb01",
     "SURFACE-cf96b8497525f5f6",
     "SURFACE-4ce4ed0b5b303e85",
     "SURFACE-f93a5b36f29ce79c",
     "SURFACE-bbc4187afb507320",
-    "SURFACE-578b85ef5c094ecb",
     "SURFACE-c20fbacb648be9fa",
     "SURFACE-be1f54efcc2cd549",
     "SURFACE-58c233508e8c95bf",
@@ -29573,12 +31026,10 @@
     "SURFACE-bba36fc1cc274031",
     "SURFACE-a483d055ed20e769",
     "SURFACE-f52dfd6e2d77a57f",
-    "SURFACE-da3457d3ae8e7eba",
     "SURFACE-f4e817382f892226",
     "SURFACE-32b73d45dd36c278",
     "SURFACE-3f2b18d0947c05e7",
     "SURFACE-94216823284972e8",
-    "SURFACE-8780b23371215b16",
     "SURFACE-a024eca492fbdf36",
     "SURFACE-47829ca1954e2594",
     "SURFACE-a1e06606ef29fdc7",
@@ -29617,7 +31068,6 @@
     "SURFACE-cef1fa050e3f9d2c",
     "SURFACE-69205bb0d640d69a",
     "SURFACE-603be2889dcb2b32",
-    "SURFACE-16e17f802f72e06c",
     "SURFACE-5172c3aa23df27d8",
     "SURFACE-05536e6195d532e5",
     "SURFACE-01fb1ca7bfdb5058",
@@ -29646,7 +31096,6 @@
     "SURFACE-724d67db609973ab",
     "SURFACE-8254ab3be0263414",
     "SURFACE-635d2beee7db16c2",
-    "SURFACE-d9259f08043bd4f2",
     "SURFACE-49be021610567519",
     "SURFACE-a5513b81233f035b",
     "SURFACE-c571475cdefc021d",
@@ -29657,10 +31106,6 @@
     "SURFACE-2663e424dec4b0da",
     "SURFACE-0365adce5821e515",
     "SURFACE-43b48bb1049e5324",
-    "SURFACE-e35888ce8cee79f8",
-    "SURFACE-21cdc1519a948266",
-    "SURFACE-576d9c2a91a42c51",
-    "SURFACE-bfc5bd8fcf9e9e4d",
     "SURFACE-85dc8ac2c70e20e0",
     "SURFACE-3aa70a7b24875247",
     "SURFACE-3469b2a00ddfcab0",
@@ -29671,11 +31116,8 @@
     "SURFACE-e8c55bfb71a219d9",
     "SURFACE-befc4b8bb8e310b8",
     "SURFACE-5bea0425bb03c75c",
-    "SURFACE-c2392e7f7f8aefc5",
     "SURFACE-e0edb1f5f845910d",
-    "SURFACE-4084f20f60cc3c6d",
     "SURFACE-1fa13f838eba721d",
-    "SURFACE-5cc50673dc611e52",
     "SURFACE-289d16e2dcc9030c",
     "SURFACE-46d6bd0c597127bb",
     "SURFACE-fd7ca489d7b98e6a",
@@ -29685,7 +31127,6 @@
     "SURFACE-d9f8e4c9a50a093b",
     "SURFACE-4a5948130be5bbcf",
     "SURFACE-8db479af1de64195",
-    "SURFACE-b35e32b7f76e312b",
     "SURFACE-37ad4ee4b656c78f",
     "SURFACE-26cf2fa9d3b7742d",
     "SURFACE-3f1019289e00f2c8",
@@ -29702,9 +31143,7 @@
     "SURFACE-88103f1d6fb89685",
     "SURFACE-7568a6ba01e6268b",
     "SURFACE-8fa816d092471420",
-    "SURFACE-4fb25fdb1fdf7ed8",
     "SURFACE-8ce4ad416c6e61d1",
-    "SURFACE-efc2098b5027a610",
     "SURFACE-67484eb36a87ee67",
     "SURFACE-9513e7cf46c08071",
     "SURFACE-6094001768e3e5b7",
@@ -29724,7 +31163,6 @@
     "SURFACE-f6fe8714240b267d",
     "SURFACE-c092c30387f56b09",
     "SURFACE-488e321ca96d4906",
-    "SURFACE-50a65b66e31dfada",
     "SURFACE-fe02da061556f4fc",
     "SURFACE-482557ebc534dc5c",
     "SURFACE-12818522512d2c5b",
@@ -29743,7 +31181,6 @@
     "SURFACE-a5dc5289b135b90e",
     "SURFACE-ac457e7680793333",
     "SURFACE-ae8457615b62fb27",
-    "SURFACE-551b9854e1304354",
     "SURFACE-20f0809095655bce",
     "SURFACE-d15aa021ceb88208",
     "SURFACE-cdc665d26aa25ed8",
@@ -29754,14 +31191,10 @@
     "SURFACE-53aadf3e9a01c85f",
     "SURFACE-7ffb76239ab51a1e",
     "SURFACE-241caaddc6fa4502",
-    "SURFACE-15e17b090a435ac7",
-    "SURFACE-d04d238fd7a01a74",
     "SURFACE-575088555e574066",
     "SURFACE-feed51c44a669cc6",
-    "SURFACE-e62dc791fa833b13",
     "SURFACE-cc97bf1990866365",
     "SURFACE-d2757126dae7e418",
-    "SURFACE-475a7b86b3216594",
     "SURFACE-d9565e5ecb4ec3e3",
     "SURFACE-128aee2289576c8a",
     "SURFACE-dbeee33c014d1248",
@@ -29774,7 +31207,6 @@
     "SURFACE-f1ca11df9f79103d",
     "SURFACE-d230acf12b1223f0",
     "SURFACE-83ac5c06d4510a57",
-    "SURFACE-f827393c335e64d0",
     "SURFACE-5c7e7c6b3f3a72ae",
     "SURFACE-242cd08336c0eba0",
     "SURFACE-8659451d6bf1c46f",
@@ -29782,14 +31214,11 @@
     "SURFACE-84178b068cefadf8",
     "SURFACE-037a6e028ee8e9c1",
     "SURFACE-55bbee643020e610",
-    "SURFACE-11982cf68b9f1c66",
     "SURFACE-a797fa59038f86c5",
     "SURFACE-d58967285ab2cbe5",
     "SURFACE-6ebc1ecf580ae9e1",
     "SURFACE-c174acc4cd69d07d",
     "SURFACE-150ec23482847cbb",
-    "SURFACE-66eee79ab156a1e2",
-    "SURFACE-8706580fc77ee8a5",
     "SURFACE-67d021717b413c4f",
     "SURFACE-e4d65d8b68003724",
     "SURFACE-ab2f22b78d9a1a9a",
@@ -29801,7 +31230,6 @@
     "SURFACE-96659afab4076863",
     "SURFACE-c524a39784b123fa",
     "SURFACE-ee36105f35b640d9",
-    "SURFACE-2ba88bec1c5a4d48",
     "SURFACE-6dbac57013a27dfa",
     "SURFACE-71335eb9891aad95",
     "SURFACE-13071a719c15429e",
@@ -29823,7 +31251,9 @@
     "SURFACE-b7c7359f0a4f26db",
     "SURFACE-21b31fbb27b536c4"
   ],
-  "untestedRequirements": [],
+  "untestedRequirements": [
+    "MOB-PUBLIC-001"
+  ],
   "unmodeledCriticalRequirements": [
     "SYS-VERIFY-001",
     "SYS-VERIFY-002",
@@ -29867,7 +31297,11 @@
     "EVT-PRESENTATION-001",
     "DEPLOY-READINESS-001",
     "DEPLOY-FILES-001",
-    "DEPLOY-ENVELOPE-001"
+    "DEPLOY-ENVELOPE-001",
+    "MOB-BUILD-001",
+    "OPS-CLIENT-001",
+    "MEDIA-INVENTORY-001",
+    "OPS-INTEGRATION-001"
   ],
   "stateMachines": [
     {
@@ -30989,7 +32423,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "4582ca65056773ccca6cdf12ba40b574d8925e7921d28e98009e8d11d41f1a3d",
+      "sourceSha256": "e701d414b9c944bdfa2459efefa2b67df38040f5062894cf7ecbf6bb0102d5a2",
       "definition": {
         "states": [
           "absent",
@@ -52793,7 +54227,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 78,
+    "PARTIAL": 85,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

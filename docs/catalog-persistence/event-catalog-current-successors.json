@@ -263,11 +263,11 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "b9883cac0fba310236a0",
+      "currentId": "d2472336f16fa3b5eee0",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 180,
+      "valueCount": 181,
       "change": "Ordered180-entry manifest retains current main172 as an exact prefix, then the five existing conformance migrations the additive Operations scoped-projector migration and the ticket-confirmation real-time completion and claim lease corrections. Original SQL and introduction SHAs are unchanged. Both predecessor review records are retained; production apply, rollback/recovery and current combined rehearsal remain separate gates.",
       "previousResolution": {
         "historicalReplacementId": "7578a30aa3cc5aa23870",
@@ -292,7 +292,7 @@
             "kind": "json-array",
             "name": "migrations",
             "valueCount": 177,
-            "change": "Ordered177-entry release registry preserves current main’s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
+            "change": "Ordered177-entry release registry preserves current main\u2019s172 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. The prior175-entry conformance and172-entry main decisions are retained below. No pending conformance or ticketing migration is represented as already applied; combined applied-ledger, schema and rollback rehearsal remains required before release.",
             "previousResolution": {
               "historicalReplacementId": "7578a30aa3cc5aa23870",
               "currentId": "2be7a048fab31c7e895c",
@@ -300,7 +300,7 @@
               "kind": "json-array",
               "name": "migrations",
               "valueCount": 175,
-              "change": "Ordered175-entry release registry preserves current main’s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
+              "change": "Ordered175-entry release registry preserves current main\u2019s170 entries as an exact prefix, then appends the five conformance migrations in their reviewed relative order. Every introduction SHA and SQL byte remains unchanged. Previous173-entry conformance and170-entry main reviews are retained below; the five conformance additions were not applied to production. Combined applied-ledger, schema and rollback rehearsal remains required before release.",
               "previousResolution": {
                 "historicalReplacementId": "7578a30aa3cc5aa23870",
                 "currentId": "0f3d73c6a3dc4bf18f22",
@@ -4240,6 +4240,12 @@
             "change": "Appends the additive admission audit migration and its exact introduction commit, preserving all previous ordered migration entries. No payment activation or product catalog values are introduced."
           }
         }
+      },
+      "receiptConsolidation": {
+        "previousId": "b9883cac0fba310236a0",
+        "mainRevision": "5c2e0bb28f062481ceaa625833c356096a43083f",
+        "candidateRevision": "5a2c7ecaf80f1fb13c52de9cd150dfe893022250",
+        "reason": "Retain shipped migration order and every original entry/SQL, then append invoice receipt snapshot; independent source comparison confirms all181 entry objects retained. Fresh combined migration rehearsal is mandatory."
       }
     }
   ]
