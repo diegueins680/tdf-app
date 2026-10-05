@@ -1520,6 +1520,10 @@
       "tdf-hq/sql/2026-10-03_discovery_ownership_metadata_boundary.sql",
       "tdf-hq/sql/2026-10-05_ticket_admission_audit.sql",
       "tdf-hq/sql/2026-10-05_ticket_admission_audit_rollback.sql",
+      "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit.sql",
+      "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit_rollback.sql",
+      "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history.sql",
+      "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history_rollback.sql",
       "tdf-hq/sql/2026-10-05_ticket_transfer_deadline.sql",
       "tdf-hq/sql/2026-10-05_ticket_transfer_deadline_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
@@ -1885,6 +1889,7 @@
       "tdf-hq/test/integration/social_event_workflow_cutover_postgres.sql",
       "tdf-hq/test/integration/social_event_workflow_postgres.sql",
       "tdf-hq/test/integration/ticket_admission_fixture.sql",
+      "tdf-hq/test/integration/ticket_order_quantity_limit.sql",
       "tdf-hq/test/sql/event_ingestion_boundaries.sql",
       "tdf-hq/test/sql/identity_reconciliation.sql",
       "tdf-hq/test/sql/records_ingestion_invariants.sql",
@@ -3314,14 +3319,14 @@
     },
     {
       "path": "docs/events/patch-culture-vol-1/README.md",
-      "sha256": "dada641835af7bff1374194154307f0f02573d81c543df46395909355b239713",
+      "sha256": "b2de7eaeb1a916f752ed8dbc7846ed9c92c3e604d55d0fd9dde256d3bbe532b8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/events/patch-culture-vol-1/propuesta-condiciones.md",
-      "sha256": "e7051763016bdfe82fa8b01fc19b3c428635838dc3b4aabe4ec3542ae764ddaf",
+      "sha256": "1dadff3dab423326520ce51df7da31bc9eaed61f5f07b8094124a7fd3284811d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -6807,7 +6812,7 @@
     },
     {
       "path": "formal/ticket-admission/README.md",
-      "sha256": "501a9af62409a0dcc82d52559cad9fb7c9973edd65c992ce2dfce43eed2a004e",
+      "sha256": "b7d358f5d51c12f09af9964e6fd86c22a5e65502dcf7f82b60e6663b967d35e9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -6912,7 +6917,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "ad0decc620171b08d3b567694107f5dc1d7b1ecacd0fd23a2d4e2cb9436f15d8",
+      "sha256": "e5b862a2d4e750a57f00cab3a3365dd1f50fd44cbe0bf64619e69723545b108f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"

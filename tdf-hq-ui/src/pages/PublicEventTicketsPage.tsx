@@ -205,6 +205,13 @@ export default function PublicEventTicketsPage() {
       setMessage(english ? 'Choose a valid ticket and quantity.' : 'Elige una entrada y cantidad válidas.');
       return;
     }
+    const maximumQuantity = storefront.data.policy?.maxTicketsPerOrder ?? 100;
+    if (selectedQuantity > maximumQuantity) {
+      setMessage(english
+        ? `You can buy up to ${maximumQuantity} tickets per order.`
+        : `Puedes comprar hasta ${maximumQuantity} entradas por orden.`);
+      return;
+    }
     const payload: PublicEventTicketCheckoutRequest = {
       tierId: selectedTierId,
       quantity: selectedQuantity,
@@ -418,7 +425,11 @@ export default function PublicEventTicketsPage() {
                       </MenuItem>
                     ))}
                   </TextField>
-                  <TextField required type="number" label={english ? 'Quantity' : 'Cantidad'} value={quantity} onChange={(event) => setQuantity(event.target.value)} inputProps={{ min: 1, max: Math.min(100, selectedTier?.remaining ?? 1), step: 1 }} />
+                  <TextField required type="number" label={english ? 'Quantity' : 'Cantidad'} value={quantity} onChange={(event) => setQuantity(event.target.value)} inputProps={{ min: 1, max: Math.min(storefront.data.policy?.maxTicketsPerOrder ?? 100, selectedTier?.remaining ?? 1), step: 1 }}
+                    helperText={english
+                      ? `Up to ${storefront.data.policy?.maxTicketsPerOrder ?? 100} tickets per order.`
+                      : `Hasta ${storefront.data.policy?.maxTicketsPerOrder ?? 100} entradas por orden.`}
+                  />
                   <TextField required label={english ? 'Full name' : 'Nombre completo'} value={buyerName} onChange={(event) => setBuyerName(event.target.value)} inputProps={{ maxLength: 160 }} />
                   <TextField required type="email" label="Email" value={buyerEmail} onChange={(event) => setBuyerEmail(event.target.value)} inputProps={{ maxLength: 254 }} />
                   <TextField label={english ? 'Phone (optional)' : 'Teléfono (opcional)'} value={buyerPhone} onChange={(event) => setBuyerPhone(event.target.value)} inputProps={{ maxLength: 24 }} />

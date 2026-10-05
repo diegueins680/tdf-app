@@ -9339,6 +9339,8 @@ export interface components {
             organizerFeeBps: number;
             taxBps: number;
             holdMinutes: number;
+            /** @description Approved per-order limit. Older API versions omit this field and enforce the legacy limit of 100. This is not a cumulative per-buyer quota. */
+            maxTicketsPerOrder?: number;
             termsVersion: string;
             termsSummary: string;
             refundPolicy: string;
