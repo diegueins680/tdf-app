@@ -162,6 +162,7 @@ import           TDF.Auth
   , moduleName
   , modulesForRoles
   , validateModuleAccess
+  , withCurrentAuthSession
   )
 import           TDF.Seed       (seedAll, seedInventoryAssets, seedMarketplaceListings)
 import           TDF.ServerAdmin (adminServer)

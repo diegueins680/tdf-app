@@ -2885,7 +2885,7 @@
     "tdf-hq/src/TDF/Cors.hs": "94a8b2ffedfc793e6d8c44d62f0388dc853e3da95e75e23dfdb6fed76d7f88dd",
     "tdf-hq/src/TDF/Directory/Policy.hs": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
     "tdf-hq/src/TDF/RagStore.hs": "80b5f523542cb71119551dbb64bd5e0c0e3e880622997a496e496e4d7fbeb912",
-    "tdf-hq/src/TDF/Server.hs": "3a3c232691da496540ea211e014f02dc3df0359f68b15f5699d1ef3e53f43c2f",
+    "tdf-hq/src/TDF/Server.hs": "42085dd2d375ed07dfa57eeee85abbddad40838395b6ad62cc16a55174124532",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/ProviderExecution.hs": "a8ea11e94ddf018b3955f2c67e86122035731268499b605673a2766e577c0a48",
@@ -16222,7 +16222,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "3a3c232691da496540ea211e014f02dc3df0359f68b15f5699d1ef3e53f43c2f",
+      "sha256": "42085dd2d375ed07dfa57eeee85abbddad40838395b6ad62cc16a55174124532",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
