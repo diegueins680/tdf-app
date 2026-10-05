@@ -16,7 +16,7 @@ This guide covers deploying the TDF Stripe Ticketing System to production.
 ## Prerequisites
 
 - Stripe account (test mode for development, live mode for production)
-- Fly.io CLI installed and authenticated
+- Approved access to the canonical Hetzner deployment/recovery procedure
 - Cloudflare Pages or Vercel account for frontend
 - Access to TDF database
 

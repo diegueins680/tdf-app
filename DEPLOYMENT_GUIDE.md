@@ -4,7 +4,7 @@
 runs on Hetzner at `https://api.tdfrecords.net`. Use the
 [current deployment and recovery runbook](ops/hetzner/README.md) and its
 [cutover evidence and outstanding validation](ops/hetzner/validation-2026-09-28.md).
-Google interactive login and authenticated upload validation remain incomplete.
+Current deployment identities and interactive acceptance results are recorded in that runbook.
 
 The provider setup, secret writes, migration, ticketing and rollback commands
 below are historical reference, not authorization or instructions for the live
@@ -51,7 +51,7 @@ The TDF platform consists of three deployable components:
 
 ---
 
-## Backend Deployment (Koyeb)
+## Legacy Backend Deployment (Koyeb)
 
 ### Option 1: Dockerfile Deployment (Recommended)
 
@@ -204,7 +204,7 @@ server {
 
 ---
 
-## Backend Deployment (Fly.io)
+## Legacy Backend Deployment (Fly.io)
 
 Fly formerly powered the production `tdf-hq` API; this section is historical. Production releases must use the guarded release lane; do not run `fly deploy` or `scripts/deploy-stripe-ticketing.sh production` directly.
 
@@ -284,7 +284,7 @@ The API provides a health check endpoint at `/health` that returns:
 }
 ```
 
-After deploying or updating secrets, verify the service is healthy:
+For the historical Fly deployment only, verify that Fly service after deployment or secret updates:
 
 ```bash
 # Check health endpoint
