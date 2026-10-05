@@ -70,6 +70,21 @@ class RecoveryFilesTests(unittest.TestCase):
                     path.unlink()
                     self.archive.unlink(missing_ok=True)
 
+    def test_retained_directory_handle_does_not_follow_replaced_source_path(self):
+        with files.directory(str(self.source)) as source_fd:
+            retained = self.root/'retained-source'
+            self.source.rename(retained)
+            self.source.mkdir(); (self.source/'replacement').write_text('wrong tree')
+            manifest = files.capture_directory_fd(source_fd, str(self.archive))
+        self.restore(manifest)
+        self.assertFalse((self.root/'restored'/'replacement').exists())
+        self.assertEqual((self.root/'restored'/'private'/'attachment').read_bytes(), bytes(range(256))*11)
+        fd = os.open(self.archive, os.O_RDONLY)
+        try:
+            with self.assertRaises(ValueError): files.capture_directory_fd(fd, str(self.root/'invalid.tar'))
+        finally: os.close(fd)
+        self.assertFalse((self.root/'invalid.tar').exists())
+
     def test_symlink_ancestor_cannot_redirect_capture_or_restore(self):
         alias = self.root/'alias'; alias.symlink_to(self.source, target_is_directory=True)
         with self.assertRaises(OSError): files.capture(str(alias/'private'), str(self.archive))

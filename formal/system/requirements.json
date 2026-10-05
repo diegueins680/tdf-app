@@ -3315,7 +3315,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -5757,7 +5757,8 @@
         "Absolute source directory",
         "New archive path",
         "Trusted private manifest",
-        "New restore path"
+        "New restore path",
+        "Caller-admitted live container identity and image for retained-root legacy uploads"
       ],
       "state": {
         "states": [
@@ -5776,14 +5777,16 @@
       },
       "allowedTransitions": [
         "Admit paths -> capture contents/metadata -> recheck -> return private manifest",
-        "Validate manifest/archive -> create new private target -> replay exact members -> apply metadata -> rehash -> verified"
+        "Validate manifest/archive -> create new private target -> replay exact members -> apply metadata -> rehash -> verified",
+        "Bind live container/process/root/mount namespace -> caller stops and fences writers -> require same cleanly exited instance -> capture actual uploads through retained descriptors"
       ],
       "forbiddenTransitions": [
         "Follow symlink components or restore outside new target",
         "Overwrite existing archives or target contents",
         "Accept links, special files, unsupported metadata or missing/extra/duplicate members",
         "Return success after changed source, incorrect bytes or metadata",
-        "Infer database coordination or off-host recovery from file replay"
+        "Infer database coordination or off-host recovery from file replay",
+        "Capture legacy uploads from a running, restarted, mounted-over or unadmitted container"
       ],
       "effects": [
         "Private exclusive archive",
@@ -5792,17 +5795,20 @@
       ],
       "authorization": "Operator-local library; no implicit production execution, remote transfer or deployment. Caller must establish release-level target and writer admission.",
       "privacy": "Archive, manifest paths and diagnostics remain private. Public evidence contains only aggregate counts/hashes. No credential or customer content logging.",
-      "concurrency": "Caller-held writer fence required. Descriptor-relative no-follow opens, before/after inode checks and second full scan detect sampled mutation; do not prove atomic snapshots or resistance to same-UID/privileged concurrent replacement.",
+      "concurrency": "Caller-held writer fence required. Descriptor-relative no-follow opens, before/after inode checks and second full scan detect sampled mutation; do not prove atomic snapshots or resistance to same-UID/privileged concurrent replacement. Legacy helper holds pidfd, root and mount namespace descriptors across caller-owned shutdown; checks actual namespace topology and same container start identity before and after capture. Privileged host tampering is excluded.",
       "idempotency": "Exclusive creation rejects retries using an existing archive or restore destination; independent attempts require new paths.",
       "failure": "Raise without success; retain private partial output for diagnosis. Unsupported metadata fails instead of silently degrading restored semantics.",
       "recovery": "Inspect failed output under ownership boundary; independently retry into new paths. Never overwrite production or infer successful restore from archive existence.",
       "observability": "Return private exact manifest and aggregate file-tree-restored result with coordinatedDatabase=false and offHost=false. Caller supplies durable authenticated bundle receipt.",
       "implementation": [
-        "ops/hetzner/recovery-files.py"
+        "ops/hetzner/recovery-files.py",
+        "ops/hetzner/stopped-application-storage.py"
       ],
       "tests": [
         "scripts/test-recovery-files.py",
-        "scripts/quality-repo.sh"
+        "scripts/quality-repo.sh",
+        "scripts/test-stopped-application-storage.py",
+        "scripts/test-stopped-application-docker.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",

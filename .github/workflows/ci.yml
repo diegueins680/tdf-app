@@ -163,6 +163,7 @@ jobs:
           docker pull "$tdf_physical_image"
           sudo install -d -m 700 /opt/tdf/backups
           sudo env TDF_PHYSICAL_TEST_IMAGE="$tdf_physical_image" PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-physical-postgres-docker.py
+          sudo env TDF_PHYSICAL_TEST_IMAGE="$tdf_physical_image" PYTHONDONTWRITEBYTECODE=1 timeout --signal=TERM --kill-after=15 180 python3 scripts/test-stopped-application-docker.py
 
   ui-quality:
     needs: changes

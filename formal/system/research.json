@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 §9.2.2",
+      "title": "RFC 9110 \u00a79.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -624,6 +624,17 @@
       "applicability": "Durable ciphertext retention, retrieval and release-journal files",
       "decision": "adopted within trusted filesystem assumptions",
       "rationale": "File fsync alone does not establish directory-entry persistence. Reopen/hash validates readable retained bytes; an outer supervisor must bound potentially stalled filesystem calls. No claim of power-loss testing or dishonest-storage tolerance.",
+      "verifiedAt": "2026-10-05"
+    },
+    {
+      "id": "RES-LEGACY-UPLOADS-001",
+      "source": "https://man7.org/linux/man-pages/man7/namespaces.7.html",
+      "supportingSource": "https://docs.docker.com/reference/cli/docker/container/export/",
+      "title": "Retained Linux mount namespace for legacy writable-layer recovery",
+      "recommendation": "An open namespace descriptor retains the namespace after its processes exit; Docker export excludes mounted volumes and is not an independent complete filesystem inventory.",
+      "applicability": "Capturing legacy /app/uploads after the admitted application stops and before replacement",
+      "decision": "adopted for Linux rootful Docker; coordinated production fencing remains pending",
+      "rationale": "Pin process, actual root and mount namespace while live, reject mounts covering uploads and require the same stopped instance before/after descriptor-based metadata capture. Avoid assuming GraphDriver paths or archive metadata completeness. Root host, kernel and Docker remain trusted; unsupported namespace/process layouts fail closed.",
       "verifiedAt": "2026-10-05"
     }
   ]

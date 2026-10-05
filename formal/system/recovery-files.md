@@ -39,6 +39,31 @@ The caller must durably publish and authenticate the bundle manifest and bind th
 entire archive digest, including padding, before any later release admission.
 An attacker able to replace both inputs is outside this primitive's trust boundary.
 
+## Legacy application writable layer
+
+`ops/hetzner/stopped-application-storage.py` retains an admitted Linux rootful
+Docker container's actual root and mount namespace before its caller stops it.
+Admission binds the full container ID, immutable image, process cgroup, pidfd,
+start timestamp and configured mounts. A child checks the actual held namespace's
+mount table; mounts covering or below `/app/uploads` are rejected. The host Python
+must support `setns` and `pidfd_open`; namespace entry requires host privileges.
+The helper does not stop containers or establish the production writer fence.
+
+After caller-owned shutdown, capture requires that same instance to be exited,
+without OOM/restart and with exit code0 or143. It reads `/app/uploads` through the
+retained root descriptor, with no-follow component traversal and the same complete
+metadata checks as normal file capture. Missing uploads are recorded explicitly.
+Actual namespace and Docker identity checks repeat after capture. A restarted
+instance cannot reuse the old descriptors. Descriptor ownership ends when the
+context closes; the caller must capture before replacing the old container.
+Privileged host tampering and concurrent external writers remain outside the
+primitive's guarantees. No Docker archive metadata or storage-driver path is
+assumed to be complete or stable.
+
+`capture_directory_fd` borrows a caller-admitted directory descriptor and never
+closes it. This allows capture after the original pathname/process disappears;
+the caller remains responsible for source authorization and writer exclusion.
+
 ## Executable evidence
 
 `python3 scripts/test-recovery-files.py` creates actual synthetic archives and files.
@@ -49,6 +74,16 @@ and metadata, invalid manifests, extended attributes and numeric PAX headers.
 The repository quality gate runs these checks. Linux execution and macOS checks
 are distinct evidence; neither establishes an actual production content restore.
 No filesystem formal refinement proof is claimed.
+
+`test-stopped-application-storage.py` checks lifecycle/mount/descriptor controls.
+The opt-in Linux `test-stopped-application-docker.py` creates only a new64MiB
+network-isolated synthetic container. It tests actual namespace retention through
+shutdown, full file metadata replay, rejection of a real unsupported xattr, and
+running/restarted-source rejection. Its image stop signal is explicitly SIGTERM;
+image defaults must not make unrelated failures satisfy a negative control.
+The fixture checks identity before every lifecycle mutation and retains the
+durable reservation if cleanup cannot be verified. CI runs this fixture; production
+container shutdown and production data recovery are separate evidence.
 
 ## Remaining coordinated recovery sequence
 
