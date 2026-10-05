@@ -4508,7 +4508,7 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/AccountDeletionReceipt' }
-        '400': { description: Invalid request, catalog reference, marker or attachment }
+        '400': { description: 'Invalid request, catalog reference, marker or attachment' }
         '401': { description: Active authentication required }
         '403': { description: Authenticated account does not match accountId }
   /feedback/internal:
@@ -4568,6 +4568,31 @@ paths:
       responses:
         '200': { description: Legacy feedback, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/LegacyFeedback' } } } } }
         '403': { description: Administrator access required }
+  /feedback/internal/account-deletion/{feedbackId}:
+    post:
+      tags: [Internal feedback]
+      summary: Record manual deletion fulfilment with an authenticated administrator audit
+      description: Records completion or rejection once; does not erase account data. Concurrent repeated resolution returns 409.
+      operationId: resolveAccountDeletion
+      parameters:
+        - { name: feedbackId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [adrOutcome, adrNote]
+              properties:
+                adrOutcome: { type: string, enum: [completed, rejected] }
+                adrNote: { type: string, minLength: 1, maxLength: 2000 }
+      responses:
+        '200': { description: Audit recorded, content: { application/json: { schema: { $ref: '#/components/schemas/AccountDeletionAction' } } } }
+        '400': { description: Invalid outcome or missing note or unidentified completion }
+        '401': { description: Active session required }
+        '403': { description: Administrator required }
+        '404': { description: Deletion request not found }
+        '409': { description: Request already resolved }
   /feedback/internal/{reportId}:
     parameters:
       - { name: reportId, in: path, required: true, schema: { type: string, format: uuid } }
@@ -14643,10 +14668,19 @@ components:
         ifrHistory: { type: array, items: { $ref: '#/components/schemas/InternalFeedbackHistory' } }
         ifrRetests: { type: array, items: { $ref: '#/components/schemas/InternalFeedbackRetest' } }
         ifrPotentialDuplicates: { type: array, items: { $ref: '#/components/schemas/InternalFeedbackSummary' } }
+    AccountDeletionAction:
+      type: object
+      required: [adaOutcome, adaNote, adaActor, adaCreatedAt]
+      properties:
+        adaOutcome: { type: string, enum: [completed, rejected] }
+        adaNote: { type: string }
+        adaActor: { type: integer, format: int64, nullable: true }
+        adaCreatedAt: { type: string, format: date-time }
     LegacyFeedback:
       type: object
       required: [lfdId, lfdTitle, lfdDescription, lfdConsent, lfdHasAttachment, lfdCreatedAt]
       properties:
+        lfdDeletionHistory: { type: array, items: { $ref: '#/components/schemas/AccountDeletionAction' } }
         lfdId: { type: string, format: uuid }
         lfdTitle: { type: string }
         lfdDescription: { type: string }

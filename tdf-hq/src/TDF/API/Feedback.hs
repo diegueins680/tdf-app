@@ -10,6 +10,8 @@ module TDF.API.Feedback
   , InternalFeedbackAPI
   , FeedbackPayload(..)
   , AccountDeletionReceipt(..)
+  , AccountDeletionResolution(..)
+  , AccountDeletionActionDTO(..)
   , InternalFeedbackCreate(..)
   , InternalFeedbackUpdate(..)
   , InternalFeedbackDTO(..)
@@ -63,6 +65,8 @@ type InternalFeedbackAPI =
   :<|> "export.csv" :> QueryParam "state" Text :> QueryParam "module" Text :> Get '[PlainText] Text
   :<|> "export.json" :> QueryParam "state" Text :> QueryParam "module" Text :> Get '[JSON] [InternalFeedbackSummaryDTO]
   :<|> "legacy" :> QueryParam "accountDeletionOnly" Bool :> QueryParam "offset" Int :> Get '[JSON] [LegacyFeedbackDTO]
+  :<|> "account-deletion" :> Capture "feedbackId" Text
+         :> ReqBody '[JSON] AccountDeletionResolution :> Post '[JSON] AccountDeletionActionDTO
   :<|> ReqBody '[JSON] InternalFeedbackCreate :> PostCreated '[JSON] InternalFeedbackDTO
   :<|> Capture "reportId" Text :>
          (    Get '[JSON] InternalFeedbackDTO
@@ -82,6 +86,22 @@ data AccountDeletionReceipt = AccountDeletionReceipt
   } deriving (Show, Generic)
 instance ToJSON AccountDeletionReceipt
 instance FromJSON AccountDeletionReceipt
+
+data AccountDeletionResolution = AccountDeletionResolution
+  { adrOutcome :: Text
+  , adrNote :: Text
+  } deriving (Show, Generic)
+instance ToJSON AccountDeletionResolution
+instance FromJSON AccountDeletionResolution
+
+data AccountDeletionActionDTO = AccountDeletionActionDTO
+  { adaOutcome :: Text
+  , adaNote :: Text
+  , adaActor :: Maybe Int64
+  , adaCreatedAt :: UTCTime
+  } deriving (Show, Generic)
+instance ToJSON AccountDeletionActionDTO
+instance FromJSON AccountDeletionActionDTO
 
 data FeedbackPayload = FeedbackPayload
   { fpTitle        :: Text
@@ -339,6 +359,7 @@ data LegacyFeedbackDTO = LegacyFeedbackDTO
   , lfdCreatedBy     :: Maybe Int64
   , lfdHasAttachment :: Bool
   , lfdCreatedAt     :: UTCTime
+  , lfdDeletionHistory :: [AccountDeletionActionDTO]
   } deriving (Show, Generic)
 instance ToJSON LegacyFeedbackDTO
 instance FromJSON LegacyFeedbackDTO

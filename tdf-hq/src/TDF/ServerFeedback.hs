@@ -9,6 +9,7 @@ module TDF.ServerFeedback
   ( feedbackServer
   , internalFeedbackServer
   , validateAccountDeletionIdentity
+  , validateAccountDeletionOutcome
   , normalizeOptionalFeedbackText
   , validateFeedbackDescription
   , validateFeedbackTitle
@@ -92,6 +93,14 @@ validateAccountDeletionIdentity expected actual
   | expected <= 0 = Left err400
   | actual == Nothing = Left err401
   | actual /= Just expected = Left err403
+  | otherwise = Right ()
+
+-- Terminal outcomes are immutable; completed requires an authenticated owner.
+validateAccountDeletionOutcome :: Bool -> Bool -> Text -> Either ServerError ()
+validateAccountDeletionOutcome resolved identified outcome
+  | outcome /= "completed" && outcome /= "rejected" = Left err400
+  | resolved = Left err409
+  | outcome == "completed" && not identified = Left err400
   | otherwise = Right ()
 
 feedbackServer
@@ -245,6 +254,7 @@ internalFeedbackServer user =
   :<|> exportCsvH
   :<|> exportJsonH
   :<|> listLegacyFeedbackH
+  :<|> resolveAccountDeletionH
   :<|> createReportH
   :<|> reportByIdH
   where
@@ -295,6 +305,7 @@ internalFeedbackServer user =
           [PersistText "account_deletion_request\n", PersistInt64 (fromIntegral requestedOffset)]
         else selectList [] [Desc ME.FeedbackCreatedAt, Desc ME.FeedbackId, LimitTo 1000, OffsetBy requestedOffset]
       fmap catMaybes $ forM rows $ \(Entity feedbackKey feedback) -> do
+        history <- withPool $ accountDeletionHistory feedbackKey
         normalized <- withPool $ getBy (ME.UniqueInternalFeedbackReport feedbackKey)
         pure $ case normalized of
           Just _ | deletionOnly /= Just True -> Nothing
@@ -309,7 +320,37 @@ internalFeedbackServer user =
             , lfdCreatedBy = fromSqlKey <$> feedbackCreatedBy feedback
             , lfdHasAttachment = isJust (feedbackAttachment feedback)
             , lfdCreatedAt = feedbackCreatedAt feedback
+            , lfdDeletionHistory = history
             }
+
+    -- Append-only fulfilment evidence in the existing audit table. A locked
+    -- request can leave pending only once; this records work, never erases data.
+    resolveAccountDeletionH rawFeedbackId AccountDeletionResolution{..} = do
+      ensureAdmin
+      feedbackKey <- parseInternalKey @ME.Feedback rawFeedbackId
+      unless (adrOutcome == "completed" || adrOutcome == "rejected") $
+        throwError err400 { errBody = "Outcome must be completed or rejected" }
+      note <- validateInternalText "note" 2000 adrNote
+      result <- withPool $ withCurrentAuthSession user $ do
+        rows <- rawSql "SELECT ?? FROM feedback WHERE id = ? FOR UPDATE" [toPersistValue feedbackKey]
+        case rows of
+          [Entity _ feedback] | "account_deletion_request\n" `T.isPrefixOf` feedbackDescription feedback -> do
+            previous <- accountDeletionHistory feedbackKey
+            case validateAccountDeletionOutcome (not (null previous)) (isJust (feedbackCreatedBy feedback)) adrOutcome of
+              Left problem -> pure (Left problem)
+              Right () -> do
+                now <- liftIO getCurrentTime
+                insert_ M.AuditLog
+                  { M.auditLogActorId = Just (auPartyId user)
+                  , M.auditLogEntity = "account_deletion_request"
+                  , M.auditLogEntityId = toPathPiece feedbackKey
+                  , M.auditLogAction = adrOutcome
+                  , M.auditLogDiff = Just note
+                  , M.auditLogCreatedAt = now
+                  }
+                pure (Right (AccountDeletionActionDTO adrOutcome note (Just (fromSqlKey (auPartyId user))) now))
+          _ -> pure (Left err404)
+      maybe (throwError err401) (either throwError pure) result
 
     createReportH InternalFeedbackCreate{..} = do
       ensureInternalAccess
@@ -1702,6 +1743,17 @@ withPool
   => SqlPersistT IO a
   -> m a
 withPool action = asks envPool >>= liftIO . runSqlPool action
+
+accountDeletionHistory :: ME.FeedbackId -> SqlPersistT IO [AccountDeletionActionDTO]
+accountDeletionHistory feedbackKey = do
+  rows <- selectList
+    [ M.AuditLogEntity ==. "account_deletion_request"
+    , M.AuditLogEntityId ==. toPathPiece feedbackKey
+    ] [Desc M.AuditLogCreatedAt, Desc M.AuditLogId]
+  pure [ AccountDeletionActionDTO
+           (M.auditLogAction row) (fromMaybe "" (M.auditLogDiff row))
+           (fromSqlKey <$> M.auditLogActorId row) (M.auditLogCreatedAt row)
+       | Entity _ row <- rows ]
 
 lockInternalFeedbackReportsForUpdate
   :: ME.InternalFeedbackReportId

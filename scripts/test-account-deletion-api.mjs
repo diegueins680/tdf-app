@@ -40,4 +40,22 @@ export async function verifyAccountDeletion({ request, admin, account, categoryI
   assert.equal(new Set(visible.map(record => record.lfdId)).size, visible.length, 'Page boundaries must not repeat records');
   assert.ok(visible.every(record => record.lfdDescription.startsWith('account_deletion_request\n')));
   await request('/feedback/internal/legacy?accountDeletionOnly=true&offset=-1', { token: admin.token, expected: 400 });
+  const resolutionPath = `/feedback/internal/account-deletion/${accepted[0]}`;
+  const resolution = { adrOutcome: 'completed', adrNote: 'Synthetic fulfilment verified; no real account erased.' };
+  await request(resolutionPath, { method: 'POST', json: resolution, expected: 401 });
+  await request(resolutionPath, { token: account.token, method: 'POST', json: resolution, expected: 403 });
+  await request(resolutionPath, { token: admin.token, method: 'POST', json: { ...resolution, adrNote: ' ' }, expected: 400 });
+  await request(resolutionPath, { token: admin.token, method: 'POST', json: { ...resolution, adrOutcome: 'unknown' }, expected: 400 });
+  const receipt = await request(resolutionPath, { token: admin.token, method: 'POST', json: resolution });
+  assert.equal(receipt.adaActor, admin.partyId);
+  assert.equal(receipt.adaOutcome, 'completed');
+  await request(resolutionPath, { token: admin.token, method: 'POST', json: { ...resolution, adrOutcome: 'rejected' }, expected: 409 });
+  const refreshed = [...await request(queue, { token: admin.token }), ...await request('/feedback/internal/legacy?accountDeletionOnly=true&offset=20', { token: admin.token })];
+  const history = refreshed.find(record => record.lfdId === accepted[0]).lfdDeletionHistory;
+  assert.equal(history.length, 1);
+  assert.equal(history[0].adaNote, resolution.adrNote);
+  assert.equal(history[0].adaActor, admin.partyId);
+  const rejected = await request(`/feedback/internal/account-deletion/${accepted[1]}`, { token: admin.token, method: 'POST', json: { adrOutcome: 'rejected', adrNote: 'Synthetic invalid ownership evidence.' } });
+  assert.equal(rejected.adaOutcome, 'rejected');
+
 }

@@ -1,4 +1,14 @@
 export default {
+  pending: "Pendiente",
+  completed: "Completada",
+  rejected: "Rechazada",
+  resolutionNote: "Resultado y verificación del procesamiento",
+  resolutionHelp: "Registra el trabajo ya realizado y la confirmación al titular. Estos botones solo guardan el resultado; no eliminan datos. No incluyas contraseñas ni información personal innecesaria.",
+  markCompleted: "Registrar eliminación completada",
+  markRejected: "Registrar rechazo",
+  resolutionError: "No se pudo confirmar el registro. Actualiza la cola antes de intentarlo de nuevo.",
+  auditActor: "Operador {{actor}} · {{date}}",
+
   queueTitle: 'Solicitudes de eliminación de cuenta',
   queueEmpty: 'No hay solicitudes en esta página.',
   queueError: 'No se pudieron cargar las solicitudes de eliminación.',

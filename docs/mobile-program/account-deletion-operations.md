@@ -41,7 +41,11 @@ manual with the already stated target of 30 days and a completion confirmation.
    Revoke sessions and linked service access as part of the existing owner-run
    deletion process. Do not delete shared financial records indiscriminately.
 5. Confirm completion through the verified account contact, and record the
-   processing result in the internal queue. Do not expose the request, identity
+   processing result and verified-contact confirmation in the internal queue. The
+   completed/rejected actions require a note and append the operator identity and
+   timestamp to the existing audit table. Requests begin pending; concurrent or
+   repeated resolution returns 409 without overwriting the first result. These
+   actions record work already performed and never erase data. Do not expose the request, identity
    or result to other users or product analytics.
 
 This change does not automate erasure or prove a production account has been

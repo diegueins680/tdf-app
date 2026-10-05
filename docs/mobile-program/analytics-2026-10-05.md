@@ -82,7 +82,12 @@ The web pin additionally preserves generated ticket/deletion contracts and the
 shared discovery registry. These generated changes do not alter the exact
 source of the already signed artifacts. Mobile PR141 merged the authenticated
 receipt contract while preserving current mobile main; discovery synchronization
-is reviewed separately.
+is reviewed separately in PR142 at `49dad502fc6526e3fdd2393a916562eda32a1d7f`.
+Its generated-only compatible ancestor is `b65cf5a36bdbccd47a7d3c96a285366052186b25`;
+The preceding discovery head passed 95 suites / 611 tests and Expo Doctor 17/17.
+The new audit-contract synchronization passes local release and discovery checks;
+its hosted checks must qualify the updated head before merge.
+This qualification is separate from the signed-artifact source above.
 
 ## Store disclosure audit and account deletion
 

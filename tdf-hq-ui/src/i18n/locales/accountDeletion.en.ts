@@ -1,4 +1,14 @@
 export default {
+  pending: "Pending",
+  completed: "Completed",
+  rejected: "Rejected",
+  resolutionNote: "Processing result and verification",
+  resolutionHelp: "Record completed work and confirmation to the account holder. These buttons only record the outcome; they do not erase data. Do not include passwords or unnecessary personal information.",
+  markCompleted: "Record completed deletion",
+  markRejected: "Record rejection",
+  resolutionError: "We could not confirm the update. Refresh the queue before trying again.",
+  auditActor: "Operator {{actor}} · {{date}}",
+
   queueTitle: 'Account deletion requests',
   queueEmpty: 'There are no requests on this page.',
   queueError: 'Could not load account deletion requests.',

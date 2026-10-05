@@ -320,6 +320,7 @@ import TDF.ServerFeedback
       filterInternalReportSummaries,
       internalReportTypeForCategoryCode,
       validateAccountDeletionIdentity,
+      validateAccountDeletionOutcome,
       normalizeOptionalFeedbackText,
       sanitizeFeedbackAttachmentFileName,
       validateEnvironment,
@@ -9546,6 +9547,20 @@ main = hspec $ do
                 ( validateWhatsAppOptOutReason
                     (Just (Data.Text.replicate 501 "x"))
                 )
+
+    describe "validateAccountDeletionOutcome" $ do
+        prop "accepts exactly a first valid resolution with ownership required for completion" $
+            \resolved identified (raw :: String) ->
+                let outcome = T.pack raw
+                    accepted = either (const False) (const True) (validateAccountDeletionOutcome resolved identified outcome)
+                in accepted == (not resolved && (outcome == "rejected" || (outcome == "completed" && identified)))
+        it "never overwrites completed or rejected work" $ do
+            map (\outcome -> either errHTTPCode (const 200) (validateAccountDeletionOutcome True True outcome)) ["completed", "rejected"] `shouldBe` [409, 409]
+        it "permits rejecting unidentified requests but never completing them" $ do
+            either errHTTPCode (const 200) (validateAccountDeletionOutcome False False "rejected") `shouldBe` 200
+            either errHTTPCode (const 200) (validateAccountDeletionOutcome False False "completed") `shouldBe` 400
+        it "records completion for an identified pending request" $
+            either errHTTPCode (const 200) (validateAccountDeletionOutcome False True "completed") `shouldBe` 200
 
     describe "validateAccountDeletionIdentity" $ do
         it "accepts exactly positive matching authenticated identities for arbitrary account IDs" $
