@@ -7551,7 +7551,7 @@
     {
       "id": "SURFACE-8b406122e72d741c",
       "path": "e2e/web/mobile-program.spec.mjs",
-      "sha256": "b1edde679513b09417b439a71ad6c576d5504883e981bca23a91063d1e0388f9",
+      "sha256": "b611bd52c2811657f11373e7f7638875aea1d9e831919ab6fa9e0062d8e7541b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -11152,7 +11152,7 @@
     {
       "id": "SURFACE-58b1b762b88c9b8e",
       "path": "tdf-hq-ui/public/mobile-distribution.json",
-      "sha256": "edebce0b337da6b5d37e8a468d126f060c7701c1d3bfb048cf7709cd9303cd91",
+      "sha256": "c4ae01681008e3588976812895addb26ce9461b4734c898228593f11d731b686",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -13546,14 +13546,14 @@
     {
       "id": "SURFACE-81e227132420f964",
       "path": "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
-      "sha256": "cbf5752a2a89f599de0c188fb9c4e6f80a424e6457b663ae324d7f4f8f8ac2f4",
+      "sha256": "eb1403d40d570e350724286b3285d733c241172b8e3d0508be9c50b7c1729203",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-7ffb652987ca6eb6",
       "path": "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
-      "sha256": "f4ab27ca3d1bf232a6cf0ecfc317fe3cfb083dae4c66777b859eb7cc0ed6bd3b",
+      "sha256": "6a96bfd68919e74d4af52c8c3474715fe3760bc3bcbc9affaae78d863b4683f7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -13593,7 +13593,7 @@
     {
       "id": "SURFACE-faf0ef2a53a46622",
       "path": "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
-      "sha256": "cc5151257343606c68bb8f84063b5a8965c67017866c786295907d56ecd21c60",
+      "sha256": "2cda5efe4cfeb77f4e67e629b3aa8b5aec10c617658ddc8042ba01990c6a2c2b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -14653,7 +14653,7 @@
     {
       "id": "SURFACE-c6ff06a2e2277d3e",
       "path": "tdf-hq-ui/src/pages/MobileAppPage.tsx",
-      "sha256": "ef168f74c7e3a06867f4df4871f569ba12fed4fa0d4e62ac5cd2cf218bbc2d70",
+      "sha256": "64d6270c6b48fcb9bd5af79ba337d67e45effcb9d319a02ed5dbff58926ebf63",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
