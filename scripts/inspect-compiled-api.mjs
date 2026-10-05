@@ -57,6 +57,9 @@ console.log(JSON.stringify({ revision, binarySha256, operations: surface.operati
 // automatic declaration that undocumented/unmounted routes are acceptable.
 writeFileSync(path.join(output, 'contract-candidate.json'),
   JSON.stringify(compiledApiDeclarationSnapshot(surface), null, 2) + '\n', { flag: 'wx', mode: 0o600 });
+if (comparison.competingCompiledRoutes.length) {
+  throw new Error('Competing compiled route declarations: disambiguate routing before admitting the snapshot');
+}
 verifyCompiledApiDeclarationSnapshot(surface,
   JSON.parse(snapshotBytes));
 console.log('Compiled API declaration snapshot matches; documented conformance gaps remain open.');

@@ -2553,7 +2553,7 @@
     {
       "id": "SURFACE-336f05a0284b88b9",
       "path": "scripts/__tests__/compiled-api-surface.test.mjs",
-      "sha256": "d52e9580179da35251719902e0e43dcab33075d522e425309781420b56f44fb1",
+      "sha256": "cd43ba27b092db4b1652f7ead7202cb64721323e05fd95553c073c3a2aebcb42",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3183,7 +3183,7 @@
     {
       "id": "SURFACE-0c3b107b729b7e74",
       "path": "scripts/inspect-compiled-api.mjs",
-      "sha256": "7babd07957ee51067607a10950a92adcf4232ef5bcb81993f3a3ec4c3867f2d2",
+      "sha256": "2c7f0777f3ba6301b0e836fd1c0912ff3390fca2aef861f5b08a7af5c129e32f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20374,7 +20374,7 @@
     },
     {
       "path": "formal/system/compiled-api-boundary.md",
-      "sha256": "228e515ed1dc0b040425f6dfa9ba554f8dce95e73985d0d8771efeb97e508ded",
+      "sha256": "866db04e2ffd27daf85f5bd4d94b3cf096a8682b9201603d41153574ceb390db",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

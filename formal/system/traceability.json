@@ -3435,7 +3435,7 @@
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "03fe83c795e80e464e4f0a6dba868723a60c079f6c5631e2b3435732eba649ea",
     "scripts/__tests__/ci-pipeline.test.mjs": "a431e137bb4669893ee93ab56591b986f7835b97d5da80222db9fa753cbe1417",
-    "scripts/__tests__/compiled-api-surface.test.mjs": "d52e9580179da35251719902e0e43dcab33075d522e425309781420b56f44fb1",
+    "scripts/__tests__/compiled-api-surface.test.mjs": "cd43ba27b092db4b1652f7ead7202cb64721323e05fd95553c073c3a2aebcb42",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/disposable-postgres-url.test.mjs": "35c802c14c16ca2e53492845b7023715ed22aea775e39b7e237603d164fbb374",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
@@ -3460,7 +3460,7 @@
     "scripts/check-generated-api.mjs": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
     "scripts/check-new-specification-surfaces.py": "b1ea5a96edaedd17c6b0f3b2795723599291fd8ac260d2d519c12d268313a040",
     "scripts/ci-change-scope.mjs": "6e1bf4833fec7e1e51e230ccc830dca80470c0c2dcad18a2c329ad9defdf1379",
-    "scripts/inspect-compiled-api.mjs": "7babd07957ee51067607a10950a92adcf4232ef5bcb81993f3a3ec4c3867f2d2",
+    "scripts/inspect-compiled-api.mjs": "2c7f0777f3ba6301b0e836fd1c0912ff3390fca2aef861f5b08a7af5c129e32f",
     "scripts/inspect-hetzner-production.mjs": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
     "scripts/lib/compiled-api-surface.mjs": "290aa4e9ca72792e138a1d3192c2d60cb953e8ec1229c2538e8a10f958622c2d",
     "scripts/lib/disposable-postgres-url.mjs": "49cdbc947485d89de6be08f23c888c686c4255de9cb73a331fc573352738fdb4",
@@ -5754,7 +5754,7 @@
     {
       "id": "SURFACE-336f05a0284b88b9",
       "path": "scripts/__tests__/compiled-api-surface.test.mjs",
-      "sha256": "d52e9580179da35251719902e0e43dcab33075d522e425309781420b56f44fb1",
+      "sha256": "cd43ba27b092db4b1652f7ead7202cb64721323e05fd95553c073c3a2aebcb42",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -6666,7 +6666,7 @@
     {
       "id": "SURFACE-0c3b107b729b7e74",
       "path": "scripts/inspect-compiled-api.mjs",
-      "sha256": "7babd07957ee51067607a10950a92adcf4232ef5bcb81993f3a3ec4c3867f2d2",
+      "sha256": "2c7f0777f3ba6301b0e836fd1c0912ff3390fca2aef861f5b08a7af5c129e32f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

@@ -59,7 +59,7 @@ regenerate solely to silence an unexplained failure. The ten controlled mutation
 cover removals, additions, security/modifier/body/response/status/method/order and
 Raw-path changes. Matching this snapshot does not waive existing OpenAPI gaps.
 
-Three competing declaration identities require runtime routing reconciliation:
+The initial discovery found three competing declaration identities:
 `GET /version`, `GET /trials/v1/subjects`, and `GET /radio/presence/{partyId}`.
 All25 documented/unmounted operations belong to `MerchReputation` API types whose
 handlers exist but are absent from the served CombinedAPI. Mounting them would
@@ -70,5 +70,8 @@ The `GET /version` duplicate is repaired by removing the shadowed Meta route.
 The first-served `VersionInfo` handler and published response fields remain the
 runtime authority (AUTHORITY-022). The removed DTO had no consumer and fabricated
 its `builtAt` from request time. Compiled snapshot regeneration must confirm the
-single remaining declaration; the two other competing identities still require
-semantic/routing review.
+single remaining declaration. AUTHORITY-023 and AUTHORITY-024 reconcile the two
+other identities through the scoped [read contracts](routed-read-boundaries.md).
+Fresh compiled/HTTP evidence must verify those repairs. The gate now rejects any
+competing typed route even when its regenerated snapshot matches; a negative
+control attempts that exact bypass. Opaque Raw mounts remain an explicit limit.

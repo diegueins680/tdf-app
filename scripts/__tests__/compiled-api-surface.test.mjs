@@ -168,4 +168,12 @@ syncBuiltinESMExports();
   const rejected = run('negative', preload);
   assert.notEqual(rejected.status, 0);
   assert.match(rejected.stderr, /provenance changed during inspection/);
+
+  // Regenerating a matching snapshot must not waive ambiguous route ownership.
+  const duplicate = { schemaVersion: 1, api: alternative(description.api, description.api) };
+  writeFileSync(binary, `#!${process.execPath}\nprocess.stdout.write(${JSON.stringify(JSON.stringify(duplicate))});\n`);
+  writeFileSync(baseline, JSON.stringify(compiledApiDeclarationSnapshot(compiledApiSurface(duplicate))));
+  const ambiguous = run('duplicate');
+  assert.notEqual(ambiguous.status, 0);
+  assert.match(ambiguous.stderr, /Competing compiled route declarations/);
 });
