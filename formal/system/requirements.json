@@ -5237,8 +5237,7 @@
       "critical": true,
       "confidence": "High for inspected finite sanitizer boundary; complete consent/runtime provider verification remains open.",
       "ambiguity": [
-        "No complete free-text PII detection or whole-provider retention proof.",
-        "Main PR485 tracks preservation of scheme-like campaign labels; this consolidation retains the currently shipped182fe6a behavior until that correction merges."
+        "No complete free-text PII detection or whole-provider retention proof."
       ],
       "conformance": {
         "classification": "PARTIAL",

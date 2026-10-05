@@ -291,3 +291,7 @@ contracts remain at `docs/analytics.md` and `docs/events/ticket-page-metadata.md
 This checkpoint does not change the current shipped root Mobile23948ec5 baseline
 or the compatible audite7cb33eb source. Later Mobile-main merges are not silently
 substituted for a shipped root gitlink.
+
+Main7b801dedb97f034355d4ddfe8f69762a0632a021 (PR485) subsequently merged
+the scheme-like campaign-label correction. It is retained by normal merge;
+PRIV-ANALYTICS-001 keeps the same serializer boundary and mapped regression suite.

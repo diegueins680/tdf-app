@@ -5238,8 +5238,7 @@
       "critical": true,
       "confidence": "High for inspected finite sanitizer boundary; complete consent/runtime provider verification remains open.",
       "ambiguity": [
-        "No complete free-text PII detection or whole-provider retention proof.",
-        "Main PR485 tracks preservation of scheme-like campaign labels; this consolidation retains the currently shipped182fe6a behavior until that correction merges."
+        "No complete free-text PII detection or whole-provider retention proof."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -5508,8 +5507,8 @@
     "tdf-hq-ui/public/data-deletion.html": "fe759cb4af0642f024ef31d61f55cb890c8d52e1e05c9e00b409d020f3fc1c13",
     "tdf-hq-ui/public/mobile-app/data-deletion.html": "0e149f6fdb4e81761d1fd0f3f217ac1b9c5138d4987d935ed103ccbbd7ca1a0d",
     "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "cb7030ef6c014862b24db70df7a4080c7d480fca431cf90c032d9cee91910ab2",
-    "tdf-hq-ui/src/__tests__/analytics.test.ts": "ae90e662ab416adf3f09a5d5bf2076e387069421e6930f6bcf58f56c63cea0c7",
-    "tdf-hq-ui/src/analytics/posthog.ts": "0d790804125065c6216b311fe5e04a12d8c282312b6036078fbd9fbce2137746",
+    "tdf-hq-ui/src/__tests__/analytics.test.ts": "8d53d8843af919c437dfff1d88dd85b02a6b037e7b88336d96edbd071e09c4a9",
+    "tdf-hq-ui/src/analytics/posthog.ts": "055add96cca77d4b346946d478092851e224aed2a1db53bb1a8a4efe43e408e8",
     "tdf-hq-ui/src/api/bookings.ts": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
     "tdf-hq-ui/src/api/client.test.ts": "eaec88fe099c62f7d68c2c350eb1b3493a71e132b7324e25e588b34ec76aed56",
     "tdf-hq-ui/src/api/client.ts": "3cbd9d209c184f0892451f4957721be0a55f65e922df33090c4a8b1e00ccfd13",
@@ -12679,7 +12678,7 @@
     {
       "id": "SURFACE-6fb3830cc5f24988",
       "path": "tdf-hq-ui/src/__tests__/analytics.test.ts",
-      "sha256": "ae90e662ab416adf3f09a5d5bf2076e387069421e6930f6bcf58f56c63cea0c7",
+      "sha256": "8d53d8843af919c437dfff1d88dd85b02a6b037e7b88336d96edbd071e09c4a9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -12747,7 +12746,7 @@
     {
       "id": "SURFACE-96eef8ce345a4711",
       "path": "tdf-hq-ui/src/analytics/posthog.ts",
-      "sha256": "0d790804125065c6216b311fe5e04a12d8c282312b6036078fbd9fbce2137746",
+      "sha256": "055add96cca77d4b346946d478092851e224aed2a1db53bb1a8a4efe43e408e8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

@@ -5006,7 +5006,7 @@
     {
       "id": "SURFACE-6fb3830cc5f24988",
       "path": "tdf-hq-ui/src/__tests__/analytics.test.ts",
-      "sha256": "ae90e662ab416adf3f09a5d5bf2076e387069421e6930f6bcf58f56c63cea0c7",
+      "sha256": "8d53d8843af919c437dfff1d88dd85b02a6b037e7b88336d96edbd071e09c4a9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5060,7 +5060,7 @@
     {
       "id": "SURFACE-96eef8ce345a4711",
       "path": "tdf-hq-ui/src/analytics/posthog.ts",
-      "sha256": "0d790804125065c6216b311fe5e04a12d8c282312b6036078fbd9fbce2137746",
+      "sha256": "055add96cca77d4b346946d478092851e224aed2a1db53bb1a8a4efe43e408e8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21193,7 +21193,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "d0bf9d72ef113d86fca04ad299c0e5d24f1af8350ea12c3026f6cf0e4eb3f891",
+      "sha256": "eae92cff15db050aecefdbc377a17282d53df6f27be1f94a02eca8dac798b4e1",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -21396,7 +21396,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "d7c15dec7079ff78ff02efc3290c605c6b035cf14ef151ad4c624d6345b2b825",
+      "sha256": "6f98eb19ecd4d76e582137311d90fa40318a9cd288414a419cc113d14549f056",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
