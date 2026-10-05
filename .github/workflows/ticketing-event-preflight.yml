@@ -1,4 +1,4 @@
-name: Ticketing event access preflight
+name: Ticketing private event preparation
 on:
   workflow_dispatch:
   push:
@@ -8,6 +8,7 @@ on:
       - .github/workflows/ticketing-event-preflight.yml
       - scripts/prepare-event-draft.mjs
       - docs/events/patch-culture-vol-1/draft-plan.json
+      - docs/events/patch-culture-vol-1/evidence/flyer-video-frame.png
 permissions:
   contents: read
 concurrency:
