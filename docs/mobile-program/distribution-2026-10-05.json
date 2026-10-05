@@ -18,7 +18,7 @@
     "physicalGoogleOAuthVerified": false
   },
   "android": {
-    "checkedAt": "2026-10-05T05:27:05.674Z",
+    "checkedAt": "2026-10-05T21:12:29.366Z",
     "packageName": "com.tdf.records",
     "tracks": [
       {
@@ -31,18 +31,18 @@
         "track": "alpha",
         "releases": [
           {
-            "name": "1.0.1 (23) - TDF tester feedback",
+            "name": "1.0.1 (24) - TDF tester analytics",
             "versionCodes": [
-              "23"
+              "24"
             ],
             "releaseNotes": [
               {
                 "language": "en-US",
-                "text": "Help improve TDF. Send a bug, UX issue, idea or comment from Profile or About. Technical details and screenshots are optional. Testing invitations respect dismissal and opt-out."
+                "text": "Help improve TDF. This beta enables product analytics to understand app usage and the tester program. Feedback from Profile or About is voluntary; technical details and screenshots are optional. Read the updated privacy notice."
               },
               {
                 "language": "es-419",
-                "text": "Ayuda a mejorar TDF. Envía errores, problemas de UX, ideas o comentarios desde Perfil o Acerca de. La información técnica y las capturas son opcionales. Las invitaciones respetan tu decisión de descartarlas o desactivarlas."
+                "text": "Ayuda a mejorar TDF. Esta beta activa analytics para entender el uso de la app y el programa de testers. El feedback desde Perfil o Acerca de es voluntario; los detalles t\u00e9cnicos y capturas son opcionales. Consulta el aviso de privacidad actualizado."
               }
             ],
             "status": "completed"
@@ -95,6 +95,26 @@
     "reviewRequested": true,
     "reviewApprovalVerified": true,
     "consoleObservation": {
+      "checkedAt": "2026-10-05T21:13:38.053080+00:00",
+      "source": "Authenticated Google Play Console closed alpha track and tester settings",
+      "releaseState": "Available to selected testers",
+      "versionCode": 24,
+      "publishedDate": "2026-10-05",
+      "consoleDisplayedReleaseTime": "3:57 PM",
+      "managedPublishing": false,
+      "consoleCountryRegionCount": 178,
+      "admission": "selected_email_lists",
+      "selectedListSizes": [
+        68,
+        1,
+        11
+      ],
+      "listCountsAreUniqueOrOptedIn": false,
+      "existingListsPreserved": true,
+      "physicalInstallVerified": false,
+      "publicAvailabilityVerified": false
+    },
+    "previousConsoleObservation": {
       "checkedAt": "2026-10-05T12:37:34.407635Z",
       "source": "Authenticated Google Play Console; aggregate counts only",
       "releaseState": "Available to selected testers",
@@ -127,21 +147,32 @@
         "membershipChanged": false,
         "remoteInstallRequested": false
       }
-    }
+    },
+    "sourceCommit24": "6ebe6c5fee3efb8712c673f102c44ec4913710e2",
+    "artifact24Sha256": "62836a384ae866297149ffff546e467edce893238203c5b21927f01898409483",
+    "build24Run": "https://github.com/diegueins680/TDF-mobile/actions/runs/37325943662"
   },
   "analytics": {
     "existingProvider": "PostHog",
-    "productionProjectKeyConfigured": false,
-    "liveProviderReceiptVerified": false,
-    "browserAccess": {
-      "checkedAt": "2026-10-05T12:43:08.654593Z",
-      "regions": [
-        "EU",
-        "US"
-      ],
-      "result": "Existing Google session reaches organization creation in both regions; no accessible organization",
-      "organizationCreated": false,
-      "termsAccepted": false
-    }
+    "productionProjectKeyConfigured": true,
+    "liveProviderReceiptVerified": true,
+    "historicalPreActivationObservation": {
+      "productionProjectKeyConfigured": false,
+      "liveProviderReceiptVerified": false,
+      "browserAccess": {
+        "checkedAt": "2026-10-05T12:43:08.654593Z",
+        "regions": [
+          "EU",
+          "US"
+        ],
+        "result": "Existing Google session reaches organization creation in both regions; no accessible organization",
+        "organizationCreated": false,
+        "termsAccepted": false
+      }
+    },
+    "webEvidenceCheckedAt": "2026-10-05T18:24:00Z",
+    "projectId": 294698,
+    "region": "EU",
+    "nativeProviderReceiptVerified": false
   }
 }

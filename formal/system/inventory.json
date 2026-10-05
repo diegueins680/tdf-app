@@ -3797,21 +3797,21 @@
     },
     {
       "path": "docs/mobile-program/README.md",
-      "sha256": "04bf5902596a3f8b2ded3ff06069ccbbc8df36f020e3c1bb99aab9d1f961314d",
+      "sha256": "5f5a898deb0cc04dd7a603fcb915f22b0f2cbe4ad8f1e4ebdf30ece78da2707f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/mobile-program/account-deletion-operations.md",
-      "sha256": "de7e104a0ab655bc3f1779cbefefdb69256a55e285862724fa95181806a9157e",
+      "sha256": "8bdc7e5dc296a5d0473f03b7e8656b3700111fd2deb550eb4c827140806a9f97",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/mobile-program/analytics-2026-10-05.md",
-      "sha256": "c6946d62d19b04446622c88ddc040a168699afcb2b2ee98bb5b2e8ba174f2cf3",
+      "sha256": "b43bcd143ba1ef63bb0bda4f72e720af76880e586476a70e8ff98f7eb5bcbf13",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -6975,7 +6975,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "37084cff8af44a0123dada181426e4eab3058d924fdb13940e634de5950e5a34",
+      "sha256": "cf5e8025e10cf24a9628d72d6e900ee2d2adc0d667904fdab3a1abb5bcd8fc3a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
