@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "c1d6031b36e52dd365e699163900e65adb0621e0",
+  "mobileRevision": "4c23fea473656fb7bdc9dc90c625acd1551a6888",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -2600,7 +2600,7 @@
     },
     {
       "authority": "approved",
-      "source": "Product-owner booking scope decision 2026-10-04; docs/adr/; formal/system/bookings.md",
+      "source": "Product-owner booking scope decision 2026-10-04; docs/adr/0109-service-booking-deposits-and-shared-calendar.md; formal/system/bookings.md",
       "contract": "formal/system/bookings.md",
       "domain": "AUTH",
       "actors": [
@@ -2659,7 +2659,9 @@
       "property": "Authenticated studio booking access requires Scheduling admission and either Admin, Manager, StudioManager or Reception, or the stored customer/assigned engineer identity. A supplied assignment does not confer authority.",
       "implementation": [
         "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql"
+        "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql",
+        "formal/system/booking-policy.json",
+        "tdf-hq/src/TDF/RagStore.hs"
       ],
       "tests": [
         "scripts/test-booking-conformance.py",
@@ -2669,7 +2671,7 @@
     },
     {
       "authority": "approved",
-      "source": "Product-owner booking scope decision 2026-10-04; docs/adr/; formal/system/bookings.md",
+      "source": "Product-owner booking scope decision 2026-10-04; docs/adr/0109-service-booking-deposits-and-shared-calendar.md; formal/system/bookings.md",
       "contract": "formal/system/bookings.md",
       "domain": "BOOK",
       "actors": [
@@ -2728,7 +2730,8 @@
       "property": "Accepted booking edits preserve the exclusion-backed resource calendar atomically; a notes-only concurrent edit cannot resurrect cancellation and generic edits cannot bypass checkout snapshot or lifecycle authority.",
       "implementation": [
         "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql"
+        "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql",
+        "formal/system/booking-policy.json"
       ],
       "tests": [
         "scripts/test-booking-conformance.py",
@@ -2777,6 +2780,7 @@
     "formal/social/DmReads.tla": "b322db9a64900980298be4b0ed7f9d8341f8df66a2ed0fa57ebca8868b893eff",
     "formal/social/LegacyDm.tla": "82c7adae30ad9df72df8e288948b3fc7c3bae3bc16cc82766d32ccc665167e16",
     "formal/social/SessionBoundary.tla": "f52854a744652bc18f0d9f0fb4c3e6453447d26aff88267dff29ac03924e8ee6",
+    "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "ops/hetzner/compose.production.yaml": "961c19190335ac4033d8932598796394b93c13a040ef07c3ac62660c534e45e7",
     "ops/hetzner/inspect-runtime.py": "6c439dbc8b1e17b96399990cb12d49d4d3f64757a161cffdd3224103082cf2e3",
     "ops/hetzner/rehearse-postgres-restore.py": "9d35791e9c215de5252ca1bd9637e8d1ae69387c72b420df34ee60e7ff8d49cf",
@@ -2810,7 +2814,7 @@
     "scripts/lib/hetzner-migration-rehearsal.mjs": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a",
     "scripts/lib/hetzner-preparation.mjs": "c6bbfb4aa25013264a4fbbeb5122f0b709ff48b9105a26b4645e8c022014a0c1",
     "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
-    "scripts/lib/production-release.mjs": "18746fb479dcc705517fbf69b1a5153178a676b23c94e0c160fc080f89eaa35f",
+    "scripts/lib/production-release.mjs": "d083e1f7d457610a08e63d4e6b482befc87fd386690cafa538d23ad913118beb",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
@@ -2828,7 +2832,7 @@
     "scripts/specification-inventory.py": "d2fd062de80b6aacf832714799d7596f13cabf101d2d7073192b2cd6ec6ff275",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-booking-conformance.py": "72ea870ed34761e7668a2a0897a45430bd2aadb7ec90b0dfb6b07c8645313eba",
+    "scripts/test-booking-conformance.py": "c2c63b10dd70b32fdadf2e78397923fba72c47092a6d290c232cf227ca5fd98c",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-inspection.py": "bd6d20cea85b0e1c3c29a342bf78e512345b8f224c4d880563d3634ac18c923c",
     "scripts/test-hetzner-restore.py": "29c865489be16fb0510927b5fe6815498dde82dc74197365ac37bfbe28c79cf4",
@@ -2848,8 +2852,8 @@
     "tdf-hq-ui/src/features/featureRegistry.test.ts": "3202fad3806ebb31695ca186727f9163373d6ad6c6f9cfa79089d129bbaf1b6b",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "aad862427b31bb0777586ae09589055043f9346e4eaaa9bf14a521e3d4fed129",
-    "tdf-hq-ui/src/pages/LoginPage.test.tsx": "90a502bdbfe3363efe8d3e0eb0a664bb1c57d118156bb2131c09ba32e885b3ec",
-    "tdf-hq-ui/src/pages/LoginPage.tsx": "366cdb1ebadb0ff0494260e7c98edfd6da1d622f70df415b5627bf60dbdd95ad",
+    "tdf-hq-ui/src/pages/LoginPage.test.tsx": "f88e22a6253b0cefe744d8e09b7edc088c2f45c52934855eba384365af88cac0",
+    "tdf-hq-ui/src/pages/LoginPage.tsx": "78885e7bb418d22f98657a2823effb36743857f0edc8b4fa9849a219e9aa3c3b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
     "tdf-hq-ui/src/utils/providerPaymentResume.test.ts": "103a2f73519a73ffb088df88e847789b4fc5f6afd07d9c38bdeafd0dbc4039e9",
@@ -2857,7 +2861,7 @@
     "tdf-hq-ui/src/utils/roles.ts": "a6e35fb167641efb11ffadea2d23865d3165e495cd59e0644a49e0a20f87b0da",
     "tdf-hq/Dockerfile": "d5afe1363da6c68cba251ab928fe10ad4c47aafea2924c27402e50c9d323fb1a",
     "tdf-hq/Dockerfile.runtime": "cc561dc926a491699de7b34ad3d01e1dd0e13d53cdc5dc87484aeb7e303129b8",
-    "tdf-hq/assets/feature-registry.json": "937ec3786fdef97afc5ac11dd93380baa707de14448872a923e07875ca65ee81",
+    "tdf-hq/assets/feature-registry.json": "7388f163749d305fb7bc12b0ada9c4f7f988c878a1db006437db835555cbe3af",
     "tdf-hq/docs/openapi/api.yaml": "22fabcb83e3beb9144c4c93cc5d2d6351bdc1c9814b2391237fddc6e40c56e16",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/sql/2026-09-15_social_v2_chat_api.sql": "faa8026e41a293c01656120e360590d793ea575af0e12a68c67b916deb86dc52",
@@ -2880,7 +2884,8 @@
     "tdf-hq/src/TDF/Config.hs": "abbb65101876065724d97c24b1aef742f86300ca006e14e9c0565eb4af0dafe5",
     "tdf-hq/src/TDF/Cors.hs": "94a8b2ffedfc793e6d8c44d62f0388dc853e3da95e75e23dfdb6fed76d7f88dd",
     "tdf-hq/src/TDF/Directory/Policy.hs": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
-    "tdf-hq/src/TDF/Server.hs": "3367d43eb66d5302d9bd1d727a10f5f68bdb2ea124f3943c4e65026505fb7190",
+    "tdf-hq/src/TDF/RagStore.hs": "b9274aaffa4d75a3916be32a33fab492b20d67ccefcc8a7687ce50ff5bc99a3a",
+    "tdf-hq/src/TDF/Server.hs": "3a3c232691da496540ea211e014f02dc3df0359f68b15f5699d1ef3e53f43c2f",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/ProviderExecution.hs": "a8ea11e94ddf018b3955f2c67e86122035731268499b605673a2766e577c0a48",
@@ -2904,7 +2909,7 @@
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "39c92770f1830489ecb1c909dfbefa7c1a11857f3f002ce89da5283c06c69a0b",
     "tdf-hq/test/TDF/ServerSpec.hs": "d49ecbf6d6db9bb47b62f89945f1c3a2841ef389758ba6a0719363259aecb470",
     "tdf-mobile/package-lock.json": "1d669d0ea79f240494299f22c868f79753b921ad6f06656ad71b5942ccd3ac35",
-    "tdf-mobile/src/features/generatedFeatureRegistry.ts": "0aa585495694b2954d6db9a667c497f792a272037e9a66cb11ceb0baaa35a400"
+    "tdf-mobile/src/features/generatedFeatureRegistry.ts": "a8111cb6563d7cb08ca568175ed51460de0293db652142a7979e907e256ee2ff"
   },
   "reverseTraceability": {
     "scripts/production-release.mjs": [
@@ -4171,6 +4176,22 @@
         "relationship": "implementation"
       }
     ],
+    "formal/system/booking-policy.json": [
+      {
+        "requirement": "AUTH-BOOK-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "BOOK-CALENDAR-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/RagStore.hs": [
+      {
+        "requirement": "AUTH-BOOK-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-booking-conformance.py": [
       {
         "requirement": "AUTH-BOOK-001",
@@ -4410,6 +4431,13 @@
       "id": "SURFACE-d8799e5a0806f908",
       "path": "e2e/web/helpers/review-paint.mjs",
       "sha256": "f8f6d9d3164a0017dcc6a83f79d7e4a989d01fc94d0817f5fd08d55aa5a8e022",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-8b406122e72d741c",
+      "path": "e2e/web/mobile-program.spec.mjs",
+      "sha256": "b1edde679513b09417b439a71ad6c576d5504883e981bca23a91063d1e0388f9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -5805,7 +5833,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "18746fb479dcc705517fbf69b1a5153178a676b23c94e0c160fc080f89eaa35f",
+      "sha256": "d083e1f7d457610a08e63d4e6b482befc87fd386690cafa538d23ad913118beb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -6708,7 +6736,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "72ea870ed34761e7668a2a0897a45430bd2aadb7ec90b0dfb6b07c8645313eba",
+      "sha256": "c2c63b10dd70b32fdadf2e78397923fba72c47092a6d290c232cf227ca5fd98c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -7502,6 +7530,13 @@
       "id": "SURFACE-a2ada5ea1a6d219a",
       "path": "tdf-hq-ui/public/manifest.json",
       "sha256": "55627bc0699a4af5b4cb240c199041ed73966c346ceca712303e30525fba46c7",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-58b1b762b88c9b8e",
+      "path": "tdf-hq-ui/public/mobile-distribution.json",
+      "sha256": "efc81392ebe14a5651c848c0590666024a4bf4ce57f8a37b2bc119cae84b2695",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -8754,14 +8789,14 @@
     {
       "id": "SURFACE-6838929c1edd8346",
       "path": "tdf-hq-ui/src/components/PublicBranding.test.tsx",
-      "sha256": "36ebcb548bd183ddb55bf10d75c6125a1ad1eeefab8ee7df4430866fc4a65b16",
+      "sha256": "8133459f78d91d5e24ff243c61163f5c9bf10703167f7aa4d59e8bc928d04c00",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "b38982afb9fdc1af66e46347cdcf6b55d85e12c541b316cb63035579de125291",
+      "sha256": "1f43956a75a96472fe0020ddeda0d203b32be8b242606f1f55303ce290a48861",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -8859,7 +8894,7 @@
     {
       "id": "SURFACE-5db1e9afd0ec5152",
       "path": "tdf-hq-ui/src/components/SessionMenu.tsx",
-      "sha256": "72814a8ecc03a89b597eccd2d8bfd230c3ea188bada2a90126c69cd97dab0d21",
+      "sha256": "879936d6024a7bbda6db096306b7fb28ba983a47f775a1696c20cae3d5ebf7b8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -9798,14 +9833,14 @@
     {
       "id": "SURFACE-844ef4d7558a76f8",
       "path": "tdf-hq-ui/src/i18n/locales/en.ts",
-      "sha256": "9976716653f209ae336a062e0b6e515a7fdf9ff309f35f76b6d8d39bd238f0de",
+      "sha256": "13a78807515189c9e7570420c859f73effa1c7ec8a142001d4cfa200d8d7ddbf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-40770a4aba9f94ce",
       "path": "tdf-hq-ui/src/i18n/locales/es.ts",
-      "sha256": "da288a92e18bd71664ef0deb00faa7c9933e558e84d83bdf412c401dd28d6385",
+      "sha256": "99057d26312f48e6a0d0473cc882d22cae9239a137137f95c37ab1124c36e2ae",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -9813,6 +9848,20 @@
       "id": "SURFACE-90a473fead52aa3c",
       "path": "tdf-hq-ui/src/i18n/locales/fr.ts",
       "sha256": "6b37556073dd9cea311563561571cd1207a51c5d84bbf0735b4d48fce2f4ae04",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-81e227132420f964",
+      "path": "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
+      "sha256": "cbf5752a2a89f599de0c188fb9c4e6f80a424e6457b663ae324d7f4f8f8ac2f4",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-7ffb652987ca6eb6",
+      "path": "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
+      "sha256": "f4ab27ca3d1bf232a6cf0ecfc317fe3cfb083dae4c66777b859eb7cc0ed6bd3b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -9841,6 +9890,62 @@
       "id": "SURFACE-dfd1359e6fe03cbc",
       "path": "tdf-hq-ui/src/main.tsx",
       "sha256": "a4b37c95ed1aeb7e0e74ca510c6612c734c2e48609059b3fff2d6f5558bbbebd",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-faf0ef2a53a46622",
+      "path": "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
+      "sha256": "cc5151257343606c68bb8f84063b5a8965c67017866c786295907d56ecd21c60",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-7bc3d01f19102b0f",
+      "path": "tdf-hq-ui/src/mobile/MobileFeedbackForm.tsx",
+      "sha256": "0938235f07a4968e05c82554d26f75ee47c536970f753190ee8bfcbc2b536696",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-c466dd3a2779a06d",
+      "path": "tdf-hq-ui/src/mobile/MobilePromo.tsx",
+      "sha256": "d0ce4f9d0725a7a70177e67dcb437c61f5788cfdf748523d41821e6b2207b056",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-2df2e567dfc3a0a8",
+      "path": "tdf-hq-ui/src/mobile/MobilePromoContent.tsx",
+      "sha256": "b7058064649a89f1ffd122b8efd28e2366ec09262adc3d124126b86699da0fd7",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-819b0e4031c018fe",
+      "path": "tdf-hq-ui/src/mobile/SignupMobileInvitation.tsx",
+      "sha256": "7edef2615653cd8c935a1127a8359aa238a646de55271656737468616913fba0",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-b23f9529e000034e",
+      "path": "tdf-hq-ui/src/mobile/distribution.test.ts",
+      "sha256": "a42ab19b01db3ba0008636c9bdba9131e7611129e2376fb73723cbd8784e5fcb",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-eacf10bd53df9292",
+      "path": "tdf-hq-ui/src/mobile/distribution.ts",
+      "sha256": "d21480479320baca9e86f494881b464b09d63380d06099ab34d5e9597e33184c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-171c838f0fbd4380",
+      "path": "tdf-hq-ui/src/mobile/telemetry.ts",
+      "sha256": "eff710d079d99c2e3e01297e4a1ebf50f4e259b2d7e2521c28fe8c5f6f86dd3d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -10655,7 +10760,7 @@
     {
       "id": "SURFACE-2b469a2b395c027a",
       "path": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-      "sha256": "90a502bdbfe3363efe8d3e0eb0a664bb1c57d118156bb2131c09ba32e885b3ec",
+      "sha256": "f88e22a6253b0cefe744d8e09b7edc088c2f45c52934855eba384365af88cac0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -10671,7 +10776,7 @@
     {
       "id": "SURFACE-f46d0ae001744f15",
       "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
-      "sha256": "366cdb1ebadb0ff0494260e7c98edfd6da1d622f70df415b5627bf60dbdd95ad",
+      "sha256": "78885e7bb418d22f98657a2823effb36743857f0edc8b4fa9849a219e9aa3c3b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -10835,6 +10940,13 @@
       "id": "SURFACE-4a562abbc0b9c284",
       "path": "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
       "sha256": "4108f16793becc7a7845b16353a13edb8e64d7b6278e4c8dd7465bec534448d0",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-c6ff06a2e2277d3e",
+      "path": "tdf-hq-ui/src/pages/MobileAppPage.tsx",
+      "sha256": "ef168f74c7e3a06867f4df4871f569ba12fed4fa0d4e62ac5cd2cf218bbc2d70",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -11523,7 +11635,7 @@
     {
       "id": "SURFACE-e21f5f9f9c9cf3d5",
       "path": "tdf-hq-ui/src/routes/AppShell.tsx",
-      "sha256": "259d5f2638ed2fbe9e9c4c7f254266419a7ef934dc13d477ef2973bfa166e1ca",
+      "sha256": "24c46f7ebbf128fabf9681e91972f5f41081bf776f8fe15e3486276996aa1cd2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -11551,7 +11663,7 @@
     {
       "id": "SURFACE-f6a0ac8526319c29",
       "path": "tdf-hq-ui/src/routes/publicRoutes.tsx",
-      "sha256": "c047cab7c5948fb406089b510d9db084407f8b1758fe4b5aab55b5be80e6fb06",
+      "sha256": "549e3dba76f23f8606285e0f4382731e1fd778c018a6e4c21e14ce971a6778a5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -12353,7 +12465,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "937ec3786fdef97afc5ac11dd93380baa707de14448872a923e07875ca65ee81",
+      "sha256": "7388f163749d305fb7bc12b0ada9c4f7f988c878a1db006437db835555cbe3af",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16049,9 +16161,14 @@
     {
       "id": "SURFACE-4d5b5b67e9af24f7",
       "path": "tdf-hq/src/TDF/RagStore.hs",
-      "sha256": "180835775d7f0acf48bd8b64524ca58be4821db18cd8b04079a286fba09fc2d0",
+      "sha256": "b9274aaffa4d75a3916be32a33fab492b20d67ccefcc8a7687ce50ff5bc99a3a",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-BOOK-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-5204086b1469543d",
@@ -16105,7 +16222,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "3367d43eb66d5302d9bd1d727a10f5f68bdb2ea124f3943c4e65026505fb7190",
+      "sha256": "3a3c232691da496540ea211e014f02dc3df0359f68b15f5699d1ef3e53f43c2f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -17833,6 +17950,20 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-55f3d615ea7ca850",
+      "path": "tdf-mobile/__tests__/TesterFeedback.test.tsx",
+      "sha256": "6fc954f56f719da54adcc2e884cc6709939abfd53d3f10c7a8a3b10fbf31f131",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-1ff38e07e27723ce",
+      "path": "tdf-mobile/__tests__/TesterParticipation.test.ts",
+      "sha256": "d76bb123b45264ab57cc748f7532d9253563c6bce05dc2706509bf345ed0303b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-4420ef07b349f29e",
       "path": "tdf-mobile/__tests__/ThemeProvider.test.tsx",
       "sha256": "e7be17113bb894175c579086273e27b17dea64e99a3af024ba944ebab9a06674",
@@ -17842,7 +17973,7 @@
     {
       "id": "SURFACE-24e99beac8cf6857",
       "path": "tdf-mobile/__tests__/TicketCheckout.test.tsx",
-      "sha256": "44844ec02b402ed16f3ae6b8f3f40570cbd9249310ff2cf136d722d39c9319ac",
+      "sha256": "47a2cfd461532f02a5dc2b2c29234fdcdeeccaac0c7e391097a517b90c354f78",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -17947,7 +18078,7 @@
     {
       "id": "SURFACE-7aafc197c0caae2e",
       "path": "tdf-mobile/__tests__/featureRegistry.test.ts",
-      "sha256": "87c72a01a71ca0efc728efc39833e45d4939b065499ed22ba3891d7d1358d8c1",
+      "sha256": "44a816ddc9c953522502961694eb4115d46e1f2ed6d59e5ffd257d0d0477d533",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -18071,6 +18202,13 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-f9c17b64490f0807",
+      "path": "tdf-mobile/__tests__/providerNeutralCheckout.test.ts",
+      "sha256": "1c4f93fc7f2c01352b82b97a2865adc7c8ac0f0bd714154555389feaa7790913",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-f1994218e0fef98d",
       "path": "tdf-mobile/__tests__/recordsApi.test.ts",
       "sha256": "124c0a8911135ad35873b6dacd6220435cb4026aa601d517aef8047f4e0da4d3",
@@ -18143,7 +18281,7 @@
     {
       "id": "SURFACE-c20fbacb648be9fa",
       "path": "tdf-mobile/app.config.ts",
-      "sha256": "8950d392554b4fc6c9c89ff44fb615c33ceb0e07ca15e6ce65547bda93bdecde",
+      "sha256": "aa01e4d6dfd39732bd36a40b6682a015511a681a43021e65958c435a6c5dcd32",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -18262,14 +18400,14 @@
     {
       "id": "SURFACE-6ee4c45f7e759da9",
       "path": "tdf-mobile/app/_layout.tsx",
-      "sha256": "060428dbf5bd5750aa1f9fdb6d39bcf98a109afa3e655c666ff9c165d44eadd0",
+      "sha256": "946980dc6818a0452007e5c8ab0b0a695edaa10ad01d1d29177023ead1fd5303",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-ddc8c70a4c052271",
       "path": "tdf-mobile/app/about.tsx",
-      "sha256": "6d0c2fd31f868730f4deb1e5e908b2c42b000995644e73aab845626263f5413f",
+      "sha256": "99c90cc79ec468e1619aead515d23f039e2ac8693748cd2f1266065c6047ff52",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -18465,7 +18603,7 @@
     {
       "id": "SURFACE-af732080b10603d0",
       "path": "tdf-mobile/app/merch/preferences.tsx",
-      "sha256": "7a2fb83810dd7bdf1ca68127e7718e905b10dcba8b51e2cbd52e71ddd1f705e3",
+      "sha256": "7dee666174eb35d9588b92cb57457ff622920dc5f0a3356eb468e5001b197450",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -18521,7 +18659,7 @@
     {
       "id": "SURFACE-69205bb0d640d69a",
       "path": "tdf-mobile/app/ticketCheckout.tsx",
-      "sha256": "a44ec400a4404a1fab661d980e47ef951f3e4795b1f876a257521f05af03377f",
+      "sha256": "bdc26946f5eafeb76b9765a03463052e0d0472bbdaef2dc4c840056d4f676ba2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -18535,7 +18673,7 @@
     {
       "id": "SURFACE-16e17f802f72e06c",
       "path": "tdf-mobile/app/userProfile.tsx",
-      "sha256": "b0b0fa170442eaede01eec0d95191d18d442cd12dfd04e6746e44140210fff05",
+      "sha256": "0fd0709ccf9692da3fe0f0a66d9619990f8c09748ba793e1eaded10823e562ec",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -18668,7 +18806,7 @@
     {
       "id": "SURFACE-d8afa5dac464655f",
       "path": "tdf-mobile/eas.json",
-      "sha256": "779f313cef45032497b54487e8e7f695cce6ea73e33ad55f9a8c2113098819d4",
+      "sha256": "8562f4736bc474e1e8dbc882df50da4f0e5fc0c65fd86cd94e9c00f427281f60",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -18750,7 +18888,7 @@
     {
       "id": "SURFACE-74d531fc7e7a3fc1",
       "path": "tdf-mobile/package.json",
-      "sha256": "dd54dacbc0a9ee6304e88db43337b003837007dd802324105d71d1f8dc329b9f",
+      "sha256": "2df9f211d1bddbe5467021ac6398e3427b5af467262ae5321be224ebe1603612",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -19212,7 +19350,7 @@
     {
       "id": "SURFACE-fce475d418ec1945",
       "path": "tdf-mobile/src/components/PublicLinksSection.tsx",
-      "sha256": "756dbdf6d722f979f9e926b630e40bc19fde532ca867b3d8d8ffc10916743c58",
+      "sha256": "83958d15ef54f06b085d0e46cd248c5b83922b89368b883d31cfb965c658b2d0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -19373,7 +19511,7 @@
     {
       "id": "SURFACE-3cdceeb8afd26986",
       "path": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-      "sha256": "0aa585495694b2954d6db9a667c497f792a272037e9a66cb11ceb0baaa35a400",
+      "sha256": "a8111cb6563d7cb08ca568175ed51460de0293db652142a7979e907e256ee2ff",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19439,6 +19577,27 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-9c21dce16740790a",
+      "path": "tdf-mobile/src/feedback/FeedbackEntry.tsx",
+      "sha256": "9b9581995690c81064dc08976556875d9531fb3b94c63c45c64ed7975ed81dd9",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-a5dc5289b135b90e",
+      "path": "tdf-mobile/src/feedback/metadata.ts",
+      "sha256": "250f051907c2bda528bc260ce935f2ba0088b9016efbd46bbd2be7ba683787dd",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-ac457e7680793333",
+      "path": "tdf-mobile/src/feedback/participation.ts",
+      "sha256": "e9d0034227c04eeaf5f7b2a140a6a71ea1e551022902a49e2e50da6440ec32ea",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-ae8457615b62fb27",
       "path": "tdf-mobile/src/hooks/useDebouncedValue.ts",
       "sha256": "0653f63dad6ddfc4f8e787e29db75fe9f9b0916a1bf3743da5f582ab769cfb17",
@@ -19476,7 +19635,7 @@
     {
       "id": "SURFACE-e7f8e8448c62347e",
       "path": "tdf-mobile/src/i18n/index.ts",
-      "sha256": "a81aed86a3c19bd9e8331c475c5413c877ceba9b50de37c41fcd681dd69d1db8",
+      "sha256": "f31c14525ae2f33ec103e45731ace45924eef74f1f087f479e69513bc97d8862",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -19687,6 +19846,13 @@
       "id": "SURFACE-5c7e7c6b3f3a72ae",
       "path": "tdf-mobile/src/lib/passwordPolicy.ts",
       "sha256": "8c876f6e973d6d4741a25759149dde3ea7747ee926843262b3e8ad3a98de000a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-242cd08336c0eba0",
+      "path": "tdf-mobile/src/lib/providerNeutralCheckout.ts",
+      "sha256": "7c36f58a8272b113b46c664b6def2c74d8aac992ff3cb4710692ecc84503cfa6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -20047,6 +20213,7 @@
     "SURFACE-f40804c1455f8bad",
     "SURFACE-acbdfac127b57e53",
     "SURFACE-d8799e5a0806f908",
+    "SURFACE-8b406122e72d741c",
     "SURFACE-1650513d8810b7f7",
     "SURFACE-e5280fb6cf4274bc",
     "SURFACE-bb80adee648c0293",
@@ -20351,6 +20518,7 @@
     "SURFACE-dfe8096f81b40bd5",
     "SURFACE-52eaee55a9a4d661",
     "SURFACE-a2ada5ea1a6d219a",
+    "SURFACE-58b1b762b88c9b8e",
     "SURFACE-e5cf91b3e384faae",
     "SURFACE-1585a9050a6bc1d3",
     "SURFACE-02bd88f022e926a3",
@@ -20676,10 +20844,20 @@
     "SURFACE-844ef4d7558a76f8",
     "SURFACE-40770a4aba9f94ce",
     "SURFACE-90a473fead52aa3c",
+    "SURFACE-81e227132420f964",
+    "SURFACE-7ffb652987ca6eb6",
     "SURFACE-eb51f33c8df76f33",
     "SURFACE-b354b9104200a96e",
     "SURFACE-f2804d98461b2053",
     "SURFACE-dfd1359e6fe03cbc",
+    "SURFACE-faf0ef2a53a46622",
+    "SURFACE-7bc3d01f19102b0f",
+    "SURFACE-c466dd3a2779a06d",
+    "SURFACE-2df2e567dfc3a0a8",
+    "SURFACE-819b0e4031c018fe",
+    "SURFACE-b23f9529e000034e",
+    "SURFACE-eacf10bd53df9292",
+    "SURFACE-171c838f0fbd4380",
     "SURFACE-5345e2df51ab5d67",
     "SURFACE-f3ed014e95930721",
     "SURFACE-53c8ba4f1cec8bc4",
@@ -20814,6 +20992,7 @@
     "SURFACE-c223f9f65297d13a",
     "SURFACE-bee40b89d7a09a1d",
     "SURFACE-4a562abbc0b9c284",
+    "SURFACE-c6ff06a2e2277d3e",
     "SURFACE-a4131610c954eb01",
     "SURFACE-ce5da75bdb773e8c",
     "SURFACE-d3757406b3552635",
@@ -21502,7 +21681,6 @@
     "SURFACE-2985225fc5e67846",
     "SURFACE-3760e982b560b6c3",
     "SURFACE-2d796ef32d3ee01d",
-    "SURFACE-4d5b5b67e9af24f7",
     "SURFACE-5204086b1469543d",
     "SURFACE-6f37d3a5f8237996",
     "SURFACE-08cd86a43181517d",
@@ -21708,6 +21886,8 @@
     "SURFACE-64794cece32266e3",
     "SURFACE-67b7cdf4c5bfce1b",
     "SURFACE-9dcb9db6d3e58c16",
+    "SURFACE-55f3d615ea7ca850",
+    "SURFACE-1ff38e07e27723ce",
     "SURFACE-4420ef07b349f29e",
     "SURFACE-24e99beac8cf6857",
     "SURFACE-8487f846bf4e8547",
@@ -21742,6 +21922,7 @@
     "SURFACE-78fc3daf8ffa47b3",
     "SURFACE-d25b394d86117970",
     "SURFACE-21bc5ac863792e29",
+    "SURFACE-f9c17b64490f0807",
     "SURFACE-f1994218e0fef98d",
     "SURFACE-c2fdb9d722ce3100",
     "SURFACE-1d06c25393cae84a",
@@ -21934,6 +22115,9 @@
     "SURFACE-499f915882243564",
     "SURFACE-f7d9103ac417db69",
     "SURFACE-44f9049b317d873e",
+    "SURFACE-9c21dce16740790a",
+    "SURFACE-a5dc5289b135b90e",
+    "SURFACE-ac457e7680793333",
     "SURFACE-ae8457615b62fb27",
     "SURFACE-551b9854e1304354",
     "SURFACE-20f0809095655bce",
@@ -21970,6 +22154,7 @@
     "SURFACE-83ac5c06d4510a57",
     "SURFACE-f827393c335e64d0",
     "SURFACE-5c7e7c6b3f3a72ae",
+    "SURFACE-242cd08336c0eba0",
     "SURFACE-f17dadab838695d0",
     "SURFACE-8659451d6bf1c46f",
     "SURFACE-f70a58df1569bb6a",
@@ -30330,6 +30515,50 @@
     }
   ],
   "capabilityMatrix": [
+    {
+      "feature": "public.mobile",
+      "resource": "/app",
+      "action": "discover",
+      "authentication": "public",
+      "rolesAny": [],
+      "rolesAll": [],
+      "modulesAll": [],
+      "modulesAny": [],
+      "strictAdmin": false,
+      "scope": "none",
+      "condition": {
+        "flag": null,
+        "maturity": "stable"
+      },
+      "mobile": {
+        "kind": "external-web",
+        "destination": "https://www.tdfrecords.net/app",
+        "documentedException": null
+      },
+      "authority": "client discovery policy; backend denial requires independent verification"
+    },
+    {
+      "feature": "public.mobile",
+      "resource": "/app",
+      "action": "view",
+      "authentication": "public",
+      "rolesAny": [],
+      "rolesAll": [],
+      "modulesAll": [],
+      "modulesAny": [],
+      "strictAdmin": false,
+      "scope": "none",
+      "condition": {
+        "flag": null,
+        "maturity": "stable"
+      },
+      "mobile": {
+        "kind": "external-web",
+        "destination": "https://www.tdfrecords.net/app",
+        "documentedException": null
+      },
+      "authority": "client discovery policy; backend denial requires independent verification"
+    },
     {
       "feature": "community.discussion",
       "resource": "/conversacion/:destinationKind/:destinationId",

@@ -9438,7 +9438,7 @@ partyRelated user pidI = do
           , prcStartAt        = Trials.classSessionStartAt cs
           , prcEndAt          = Trials.classSessionEndAt cs
           , prcStatus         = classStatusLabel (Trials.classSessionAttended cs) (Trials.classSessionStartAt cs) mBooking
-          , prcBookingId      = fromSqlKey <$> Trials.classSessionBookingId cs
+          , prcBookingId      = if isJust mBooking then fromSqlKey <$> Trials.classSessionBookingId cs else Nothing
           }
 
       toRelatedTrack (Entity key t) =

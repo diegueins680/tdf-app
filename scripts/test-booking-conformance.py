@@ -65,7 +65,7 @@ def request(path, payload=None, token='fixture-admin', method=None, idempotency=
     body = None if payload is None else json.dumps(payload).encode()
     req = urllib.request.Request('http://127.0.0.1:' + str(http_port) + path, data=body,
         method=method or ('GET' if body is None else 'PUT'),
-        headers={'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', **({'Idempotency-Key': idempotency} if idempotency else {})})
+        headers={**({'Authorization': 'Bearer ' + token} if token else {}), 'Content-Type': 'application/json', **({'Idempotency-Key': idempotency} if idempotency else {})})
     try:
         with urllib.request.urlopen(req, timeout=30) as response:
             return response.status, response.read().decode()
@@ -143,6 +143,9 @@ try:
             check(role + ' cannot read foreign unfiltered calendar', status in (200, 401, 403) and 'PRIVATE_SYNTHETIC_NOTE' not in body)
             status, _ = request('/bookings/' + first, {'ubNotes': 'UNAUTHORIZED'}, token='fixture-' + role)
             check(role + ' cannot mutate foreign booking', status in (401, 403, 404))
+    for selector in ['partyId=' + owner, 'engineerPartyId=' + owner, 'partyId=' + owner + '&engineerPartyId=' + owner]:
+        status, body = request('/bookings?' + selector, token='fixture-artist')
+        check('foreign filtered calendar denied ' + selector, status == 200 and 'PRIVATE_SYNTHETIC_NOTE' not in body)
     status, body = request('/bookings?bookingId=' + first, token='fixture-owner')
     check('customer owner can read own booking', status == 200 and 'PRIVATE_SYNTHETIC_NOTE' in body)
     check('denied role mutations have no side effects', sql('SELECT notes FROM booking WHERE id=' + first) == 'PRIVATE_SYNTHETIC_NOTE')
@@ -201,7 +204,27 @@ try:
             if barrier.poll() is None:
                 barrier.terminate(); barrier.wait(timeout=5)
 
-    sql("UPDATE api_token SET active=false WHERE token='fixture-owner'")
+    with (OUTPUT / 'revocation-barrier.log').open('w') as log:
+        barrier = subprocess.Popen(['psql', '-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-d', NAME],
+            env=ENV, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=log, text=True)
+        try:
+            barrier.stdin.write("BEGIN; SET LOCAL idle_in_transaction_session_timeout='20s'; UPDATE api_token SET active=false WHERE token='fixture-owner'; SELECT 'LOCKED';\n")
+            barrier.stdin.flush()
+            for _ in range(4):
+                if barrier.stdout.readline().strip() == 'LOCKED': break
+            else: raise RuntimeError('Revocation barrier did not acquire token lock')
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                mutation = executor.submit(request, '/bookings/' + first, {'ubNotes': 'REVOKED'}, 'fixture-owner')
+                for _ in range(100):
+                    waiting = int(sql("SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid() AND state='active' AND wait_event_type='Lock' AND query ILIKE '%api_token%'") or 0)
+                    if waiting: break
+                    time.sleep(.05)
+                else: raise RuntimeError('Mutation did not wait on revocation fence')
+                barrier.stdin.write('COMMIT;\n'); barrier.stdin.flush(); barrier.stdin.close(); barrier.wait(timeout=5)
+                check('revocation winning session lock denies in-flight mutation', mutation.result()[0] == 401)
+        finally:
+            if barrier.poll() is None:
+                barrier.terminate(); barrier.wait(timeout=5)
     check('revoked session cannot retry mutation', request('/bookings/' + first, {'ubNotes': 'REVOKED'}, token='fixture-owner')[0] == 401)
     check('revoked retry leaves note unchanged', sql('SELECT notes FROM booking WHERE id=' + first) == 'ASSIGNED')
     offering = sql("SELECT o.id FROM service_offering o JOIN workflow_state w ON w.id=o.workflow_state_id WHERE o.active AND o.deprecated_at IS NULL AND NOT o.requires_engineer AND w.code='published' ORDER BY o.code LIMIT 1")
@@ -260,6 +283,29 @@ try:
             input="BEGIN; CREATE FUNCTION booking_control_noop() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RETURN NEW; END $$; DROP TRIGGER trg_service_booking_sync_legacy_allocation ON booking; CREATE TRIGGER trg_service_booking_sync_legacy_allocation " + definition + ';\n' + schema_sql + '\nROLLBACK;', capture_output=True, text=True)
         (OUTPUT / ('schema-control-' + label + '.log')).write_text(probe.stdout + probe.stderr)
         check('schema rejects ineffective booking trigger ' + label, probe.returncode != 0 and 'Booking calendar update and checkout correspondence contract is missing' in probe.stderr)
+    # Anonymous assistant retrieval must not treat the internal index as public.
+    # No OPENAI_API_KEY is present; local embeddings and fallback reply are used.
+    embedding = [0] * 1536
+    word_hash = 5381
+    for character in 'hola': word_hash = word_hash * 33 + ord(character)
+    embedding[word_hash % 1536] = 1
+    def rag_chunk(source, identity, content):
+        sql("INSERT INTO rag_chunk(source,source_id,chunk_index,content,metadata,embedding) VALUES ('" + source + "','" + identity + "',0,'" + content + "','{}','" + json.dumps(embedding) + "'::vector)")
+    def knowledge():
+        status, body = request('/ads/assist', {'aarMessage': 'hola'}, token=None, method='POST')
+        check('anonymous assistant remains available', status == 200)
+        return json.loads(body)['aasKnowledgeUsed']
+    for source in ['availability', 'studio_brain', 'campaign', 'ad', 'resource', 'service', 'unknown']:
+        rag_chunk(source, 'private-' + source, 'PRIVATE_SENTINEL_' + source)
+    rag_chunk('course', 'missing-course', 'MISSING_COURSE_SENTINEL')
+    check('private and unknown RAG sources excluded', knowledge() == [])
+    sql("INSERT INTO course(slug,title,price_cents,currency,capacity,updated_at) VALUES ('public-conformance-course','PUBLIC_BEFORE',15000,'USD',12,now())")
+    rag_chunk('course', 'public-conformance-course', 'POISONED_CACHED_PRIVATE_TEXT')
+    sql("UPDATE course SET title='PUBLIC_CURRENT',updated_at=now()+interval '1 minute' WHERE slug='public-conformance-course'")
+    content = ' '.join(knowledge())
+    check('RAG renders current public course rather than cached private text', 'PUBLIC_CURRENT' in content and all(value not in content for value in ['PRIVATE_SENTINEL', 'POISONED_CACHED_PRIVATE_TEXT', 'PUBLIC_BEFORE']))
+    sql("DELETE FROM course WHERE slug='public-conformance-course'")
+    check('deleted course cannot survive through stale index', knowledge() == [])
     result = {'revision': revision, 'workingTreeDirty': dirty, 'binarySha256': hashlib.sha256(BINARY.read_bytes()).hexdigest(), 'checks': checks, 'status': 'passed'}
 finally:
     if server is not None:
