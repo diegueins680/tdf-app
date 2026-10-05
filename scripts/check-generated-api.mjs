@@ -26,9 +26,15 @@ export function checkGeneratedApi(root) {
     [mobile, 'src/api/generated/types.ts'],
   ];
   for (const [repo, file] of clients) {
-    const expected = git(repo, 'show', `HEAD:${file}`);
-    const staged = git(repo, 'show', `:${file}`);
-    if (!expected.equals(staged) || !expected.equals(readFileSync(path.join(repo, file)))) {
+    // Compare exact Git blob identities without buffering the generated file in
+    // child-process stdout. The consolidated contract exceeds Node's 1 MiB limit.
+    const expected = git(repo, 'rev-parse', `HEAD:${file}`).toString().trim();
+    const staged = git(repo, 'rev-parse', `:${file}`).toString().trim();
+    const actualBlob = execFileSync('git', ['hash-object', '--no-filters', '--stdin'], {
+      cwd: repo, input: readFileSync(path.join(repo, file)), encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim();
+    if (expected !== staged || expected !== actualBlob) {
       throw new Error(`Generated API drift: ${path.relative(root, path.join(repo, file))}`);
     }
   }

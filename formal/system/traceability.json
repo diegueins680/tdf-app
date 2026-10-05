@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "982ade380e0826dcdad582f8da92023b863b9dfa",
+  "mobileRevision": "705fd75d3c87a31e8086fd6743398b01057676da",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -1821,25 +1821,288 @@
         "classification": "PARTIAL",
         "reason": "Pure61 examples/nine controls and SQL30 boundary inserts/three controls pass; final full runtime, PG17 and deployment remain pending."
       }
+    },
+    {
+      "id": "REF-RECOVERY-001",
+      "title": "Held refund recovery preserves execution and accounting evidence",
+      "statement": "A processing refund with an ambiguous provider outcome must retain its held balance, be queried rather than re-executed, and apply verified completion once under current authority.",
+      "domain": "REF",
+      "authority": "approved",
+      "source": "docs/adr/0128-refund-execution-fence.md; docs/adr/0129-atomic-canonical-refund-accounting.md; docs/adr/0130-known-id-refund-query-recovery.md",
+      "property": "Never execute an ambiguous processing refund a second time.; Never duplicate canonical refund accounting.; Never apply an external result using authority checked only before HTTP.",
+      "contract": "formal/event-operations/refund-recovery-correspondence.md",
+      "actors": [
+        "Authorized accounting operator",
+        "Refund query worker",
+        "Payment provider"
+      ],
+      "preconditions": [
+        "Applicable provider, feature and environment gates remain independently enforced; this requirement does not authorize activation."
+      ],
+      "inputs": [
+        "Refund ID and immutable amount/currency/merchant/resource binding",
+        "Provider query outcome",
+        "Current feature/provider authority"
+      ],
+      "state": {
+        "initial": "requested",
+        "intermediate": [
+          "processing with held balance",
+          "provider result available"
+        ],
+        "terminal": [
+          "succeeded; immutable accounting retained"
+        ]
+      },
+      "allowedTransitions": [
+        "Execute admitted request once; retain hold while outcome is ambiguous.",
+        "Query known provider refund; recheck locked state and authority before applying.",
+        "Return already-completed evidence on a duplicate application."
+      ],
+      "forbiddenTransitions": [
+        "Never execute an ambiguous processing refund a second time.",
+        "Never duplicate canonical refund accounting.",
+        "Never apply an external result using authority checked only before HTTP."
+      ],
+      "effects": [
+        "Atomically update refund, checkout balance and canonical payment intent when verified.",
+        "Retain financial/audit history and operator-owned flags on recovery."
+      ],
+      "authorization": "Re-evaluate current runtime and database eligibility after provider HTTP; bounded model abstracts the conjunction of these guards.",
+      "privacy": "Provider payload minimization and encryption remain separate contracts; synthetic tests contain no real customer/provider credentials.",
+      "concurrency": "Two bounded workers may query concurrently; SQL locks and atomic recordVerifiedRefund provide the concrete application boundary.",
+      "idempotency": "Same verified completion is observational after success; ambiguous external outcomes never imply a new execution permission.",
+      "failure": "Keep processing/held state for unverified or ambiguous results; reject changed immutable binding.",
+      "recovery": "Use known-ID query recovery and preserve financial history; nonempty queue rollback must fail.",
+      "observability": "Retain exact candidate SHA, database/model bounds, command, result and named negative-control evidence; never log credentials or raw payment payloads.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs",
+        "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
+        "tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "scripts/test-provider-retry-runtime.sh",
+        "scripts/verify-event-operations-formal.sh",
+        "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs",
+        "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs"
+      ],
+      "formalModels": [
+        "formal/event-operations/RefundRecovery.tla",
+        "formal/event-operations/RefundRecovery.cfg",
+        "formal/event-operations/RefundRecoveryExecution.cfg",
+        "formal/event-operations/RefundRecoveryAccounting.cfg",
+        "formal/event-operations/RefundRecoveryAuthority.cfg"
+      ],
+      "verification": "Existing model/implementation correspondence imported from consolidated main; rerun combined-candidate runtime and bounded checks before claiming conformance.",
+      "evidence": "Exact-revision CI/formal/runtime receipts; prior parent evidence is historical only.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Scoped source correspondence; combined-candidate execution and deployment pending",
+      "ambiguity": [
+        "Bounded two-unit/two-refund model does not prove provider authenticity, network termination, SQL isolation or crash recovery."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Imported implementation and bounded models are mapped; full combined-candidate and deployment evidence remains open."
+      }
+    },
+    {
+      "id": "PAY-FULFILLMENT-001",
+      "title": "Hosted service payment and fulfillment commit together",
+      "statement": "Verified hosted service payment must atomically update its bound service order and canonical checkout, emit one paid audit, and preserve later fulfillment progress on replay.",
+      "domain": "PAY",
+      "authority": "approved",
+      "source": "formal/event-operations/refund-recovery-correspondence.md; docs/payments/stack-integration-2026-09-16.md",
+      "property": "Never commit paid checkout without corresponding fulfillment payment state.; Never duplicate the paid audit on replay.; Never regress fulfillment progress after payment.; Never synchronize an invalid domain/amount binding.",
+      "contract": "formal/event-operations/refund-recovery-correspondence.md",
+      "actors": [
+        "Provider callback/query worker",
+        "Authorized fulfillment operator"
+      ],
+      "preconditions": [
+        "Applicable provider, feature and environment gates remain independently enforced; this requirement does not authorize activation."
+      ],
+      "inputs": [
+        "Verified checkout/provider binding",
+        "Service order identity, amount and current fulfillment state"
+      ],
+      "state": {
+        "initial": "unpaid",
+        "intermediate": [
+          "paid"
+        ],
+        "terminal": [
+          "in_progress within this bounded model"
+        ]
+      },
+      "allowedTransitions": [
+        "Apply verified bound payment and order synchronization in one transaction.",
+        "Advance paid fulfillment; retain that state under repeated payment application."
+      ],
+      "forbiddenTransitions": [
+        "Never commit paid checkout without corresponding fulfillment payment state.",
+        "Never duplicate the paid audit on replay.",
+        "Never regress fulfillment progress after payment.",
+        "Never synchronize an invalid domain/amount binding."
+      ],
+      "effects": [
+        "Canonical paid evidence and service order synchronization commit or roll back together."
+      ],
+      "authorization": "Valid provider binding is necessary; callback verification and operator authorization remain additional backend requirements.",
+      "privacy": "The correspondence does not authorize public order lookup or place lookup capabilities in URLs.",
+      "concurrency": "Two bounded completion workers and one fulfillment transition; real savepoint and row locks must preserve the atomic model boundary.",
+      "idempotency": "A repeated verified result preserves completed accounting and later fulfillment progress.",
+      "failure": "Binding mismatch rejects synchronization; outer transaction rollback also removes payment/order effects.",
+      "recovery": "Retry through durable query/reconciliation without inventing new payment evidence.",
+      "observability": "Retain exact candidate SHA, database/model bounds, command, result and named negative-control evidence; never log credentials or raw payment payloads.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "scripts/test-provider-retry-runtime.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/HostedServicePayment.tla",
+        "formal/event-operations/HostedServicePayment.cfg",
+        "formal/event-operations/HostedServicePaymentAtomic.cfg",
+        "formal/event-operations/HostedServicePaymentReplay.cfg",
+        "formal/event-operations/HostedServicePaymentProgress.cfg"
+      ],
+      "verification": "Existing model/implementation correspondence imported from consolidated main; rerun combined-candidate runtime and bounded checks before claiming conformance.",
+      "evidence": "Exact-revision CI/formal/runtime receipts; prior parent evidence is historical only.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Scoped source correspondence; combined-candidate execution and deployment pending",
+      "ambiguity": [
+        "Model abstracts SQL transaction success and provider verification; no whole-program refinement or liveness claim."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Imported implementation and bounded models are mapped; full combined-candidate and deployment evidence remains open."
+      }
+    },
+    {
+      "id": "PAY-RECOVERY-001",
+      "title": "Checkout-scoped browser payment recovery",
+      "statement": "Starting another checkout in one browser session must preserve prior recovery records; provider returns must select their matching checkout, and completed orders must not capture a new purchase flow.",
+      "domain": "PAY",
+      "authority": "approved",
+      "source": "formal/event-operations/refund-recovery-correspondence.md; docs/payments/stack-integration-2026-09-16.md",
+      "property": "Never overwrite another checkout recovery record on a new start.; Never resume a different checkout from a bound provider return.; Never let a completed order hijack a new purchase.",
+      "contract": "formal/event-operations/refund-recovery-correspondence.md",
+      "actors": [
+        "Browser customer",
+        "Provider redirect",
+        "Backend payment adapter"
+      ],
+      "preconditions": [
+        "Applicable provider, feature and environment gates remain independently enforced; this requirement does not authorize activation."
+      ],
+      "inputs": [
+        "Public checkout selector",
+        "Checkout-scoped pending/resume record",
+        "Server-confirmed completion response"
+      ],
+      "state": {
+        "initial": "no record",
+        "intermediate": [
+          "started with stored recovery",
+          "selected matching return"
+        ],
+        "terminal": [
+          "completed record retained but excluded from new-flow discovery"
+        ]
+      },
+      "allowedTransitions": [
+        "Store each checkout independently in sessionStorage.",
+        "Resolve an exact matching public checkout selector; read compatible historical singleton records.",
+        "Retain completion capabilities but exclude completed candidates from fresh flow discovery."
+      ],
+      "forbiddenTransitions": [
+        "Never overwrite another checkout recovery record on a new start.",
+        "Never resume a different checkout from a bound provider return.",
+        "Never let a completed order hijack a new purchase."
+      ],
+      "effects": [
+        "Preserve retry idempotency keys and recovery lookup capabilities for their original checkout."
+      ],
+      "authorization": "Browser records and public selectors do not grant backend payment authority; backend lookup/session checks remain necessary.",
+      "privacy": "Do not put lookup capabilities in return URLs; sessionStorage is scoped to the originating browser tab, not a cross-tab synchronization guarantee.",
+      "concurrency": "Two bounded checkout records within one browser session; delayed responses and concrete UI scheduling remain component-test obligations.",
+      "idempotency": "Retry the original request/key for pending evidence; do not guess among ambiguous unbound records.",
+      "failure": "Decline ambiguous recovery selection; storage failure/expiry must not be represented as server payment success.",
+      "recovery": "Return to the original checkout record and recover authoritative state; keep completed keys for direct order recovery.",
+      "observability": "Retain exact candidate SHA, database/model bounds, command, result and named negative-control evidence; never log credentials or raw payment payloads.",
+      "implementation": [
+        "tdf-hq-ui/src/utils/providerPaymentResume.ts",
+        "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
+        "tdf-hq/src/TDF/Server/ProviderExecution.hs"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/utils/providerPaymentResume.test.ts",
+        "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
+        "tdf-hq/test/Spec.hs",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/PaymentRecovery.tla",
+        "formal/event-operations/PaymentRecovery.cfg",
+        "formal/event-operations/PaymentRecoveryOverwrite.cfg",
+        "formal/event-operations/PaymentRecoveryReturn.cfg",
+        "formal/event-operations/PaymentRecoveryCompleted.cfg"
+      ],
+      "verification": "Existing model/implementation correspondence imported from consolidated main; rerun combined-candidate runtime and bounded checks before claiming conformance.",
+      "evidence": "Exact-revision CI/formal/runtime receipts; prior parent evidence is historical only.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Scoped source correspondence; combined-candidate execution and deployment pending",
+      "ambiguity": [
+        "Bounded model assumes successful storage and verified responses; expiry, storage failure, cross-device/tab synchronization and native Mobile payment parity are excluded."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Imported implementation and bounded models are mapped; full combined-candidate and deployment evidence remains open."
+      }
     }
   ],
   "sourceFingerprints": {
-    ".github/workflows/ci.yml": "3fd49bf2e145bef8e65f05e2b3c6ad3069c0bda2c40a2b190521beabd46acb5d",
+    ".github/workflows/ci.yml": "973900ec5b05196fd223818aa834641088b5758164a6225563001d7c95c11378",
     ".github/workflows/event-operations-formal.yml": "210f59ede61c720ebd87399246c98dc9e58903e856dd01356c8336384d70feed",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
     "formal/event-operations/CredentialLifecycle.tla": "2930edc753523a7a315cd76a04e389570785c8fd39eb0cd1ea69e700c1f528bc",
     "formal/event-operations/DirectoryClaimReview.tla": "bad88bce95e46906a7f202d7d798efabbd87202fd822e7c9202184479bb1b652",
+    "formal/event-operations/HostedServicePayment.cfg": "29663fa3078459cb0abf5de479b7206aa840c6779fc9522f2eefa9d1592d2227",
+    "formal/event-operations/HostedServicePayment.tla": "675bacb7fce3962a773608e51901383cd41993b0c079fc20989f231e4df928a1",
+    "formal/event-operations/HostedServicePaymentAtomic.cfg": "403e274802ca9eb7d988e0fb1e282acb23acf89a6e953d5dd2856f00b0976f73",
+    "formal/event-operations/HostedServicePaymentProgress.cfg": "3057b71fcdda169e70e3258b7aa642b73d6105647184c611a46a30fd603a5402",
+    "formal/event-operations/HostedServicePaymentReplay.cfg": "f69e606679e1d625b2f3d93e89b638da3a2d792f9488646fdca2057c4880e498",
+    "formal/event-operations/PaymentRecovery.cfg": "31684633da67e4a607058dce9e9dae842c2214ff87ba126fbade01a5c4bbfbdc",
+    "formal/event-operations/PaymentRecovery.tla": "b939b064c407ffa18cd5276d0bd332bb257b7f848b666bc704c8ad1c7394ecb4",
+    "formal/event-operations/PaymentRecoveryCompleted.cfg": "6098dc9a9461b295d2e546b932ef710099f2a45e5ea502630c646206f81e0b7d",
+    "formal/event-operations/PaymentRecoveryOverwrite.cfg": "ceb606c1e65996f2b72bcfc367255e149b22e42c2cc9ef72c2e6a9cd881b205c",
+    "formal/event-operations/PaymentRecoveryReturn.cfg": "ac3bcb7094ab0c465b34347bc6282ec4038ac40dc6f464579ed069690a145643",
     "formal/event-operations/ProviderRollback.tla": "3cd0940077eb991aaeb283893b8bf14b237bcf5aa3413cfb029c6faf79947ea0",
     "formal/event-operations/RecoveryExpiry.tla": "2055bb6d0a30dfc61ba33b3e3651d380f09e6e0b15073bbf9951fb376c0e186c",
+    "formal/event-operations/RefundRecovery.cfg": "ba10aef6f3933c799a44bff583ad40eae5e62931f5cf3acd98caf6d147c30457",
+    "formal/event-operations/RefundRecovery.tla": "1d8000590ad630f250a1b9e1fcaf5f3e1e8d91613e62daef33fbe8423442ae9e",
+    "formal/event-operations/RefundRecoveryAccounting.cfg": "75e88634e2988c7bb6988d41278280bd1e8c4c25c5f487b087f53584183d0668",
+    "formal/event-operations/RefundRecoveryAuthority.cfg": "4afa03d6529045f942c54f80eb7e15e579e8728b694cd304256a6ced4a7afdec",
+    "formal/event-operations/RefundRecoveryExecution.cfg": "6882026c6f5cfb3f3e251df3ccc8d9eb6ccc95204440603e6e645668dcc29349",
     "formal/event-operations/SignupIdentity.tla": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
     "ops/hetzner/compose.production.yaml": "961c19190335ac4033d8932598796394b93c13a040ef07c3ac62660c534e45e7",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/checkout-amount-postgres.mjs": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "03fe83c795e80e464e4f0a6dba868723a60c079f6c5631e2b3435732eba649ea",
-    "scripts/__tests__/ci-pipeline.test.mjs": "031ec23f9f0e3dd08fcb934b59a5e63215def0b07eb2be9219e738e14daa1574",
+    "scripts/__tests__/ci-pipeline.test.mjs": "64921de12e4f6ef21a8a65763da451acdf1492ca897c318019c2e835da140114",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
-    "scripts/__tests__/generated-api-conformance.test.mjs": "da6a8039a136268283e11a054c981c16990db543e4154a391a2c3ff90873018e",
+    "scripts/__tests__/generated-api-conformance.test.mjs": "34ee30eadd4114f8229af92693a01767fa8a7056233758cf0050b38f99e29f6f",
     "scripts/__tests__/identity-http-runtime.mjs": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
     "scripts/__tests__/merch-commission-postgres.mjs": "91dd370bf08dfe2ab871c6a617d4e2871717c9f5ff27676e692c6d776c9721c3",
@@ -1847,67 +2110,83 @@
     "scripts/__tests__/verification-evidence.test.mjs": "62e23312cd0f60dd3ec08597ca45071071f116bd10d15303c8b9bab55668fb84",
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
     "scripts/check-build-trust.mjs": "1f1486dd10e0edb906926a3ff419b765fdca8c263d3fa8065e5353d50992e61e",
-    "scripts/check-generated-api.mjs": "216256d09571f6fe741460f64541c62f0e341ccbd975db8353964d9b41d8d09c",
+    "scripts/check-generated-api.mjs": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
     "scripts/ci-change-scope.mjs": "6e1bf4833fec7e1e51e230ccc830dca80470c0c2dcad18a2c329ad9defdf1379",
-    "scripts/lib/production-release.mjs": "cb6720651672b221bd0111ad476e9fc00fce6f42a94fecab1f93cfb25def8ead",
+    "scripts/lib/production-release.mjs": "0e02e1bcf6f8a451860ad5c1f52ac8461effc88659bce690f9ce222875878f71",
     "scripts/lib/verification-evidence.mjs": "57a76761fbe10452d1c664c3a0ff6b0fe291a1267dd7e9007b1f09fa1657f525",
-    "scripts/production-migrations.json": "d193c71b0551cb1bed103f9a30543e87a9e7c21c79bfcd47ae64d940c4323a87",
+    "scripts/production-migrations.json": "d1b45b55ebb0b86987fcb2c628de2edc1ada2c7abbb046f0f6009325538bdfe3",
     "scripts/production-release.mjs": "f79231d797d83c953f1bf15d64e93d962e9b3bc72efe192c4243af6ccfe051ad",
     "scripts/specification-conformance.py": "7e0d9aa01c62362482a60b409bb57d7b07c3863d393a4d606af81148158ab2d2",
     "scripts/specification-inventory.py": "4e7c722e3a04f0bcae857a7f1d280550ee938fc21bd770f3077feb749a6831ae",
-    "scripts/test-artist-merch-runtime.sh": "bb890b3e3e1b4f6e94b039f397b4b3aae33cb456613477491ce565521003050a",
+    "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
+    "scripts/test-provider-retry-runtime.sh": "fefc986deb95fc2ff2d8ad1af2829d20363128fbc52846fbfffa0ebc65b27353",
     "scripts/test-specification-conformance.py": "edd2d8b6b8d46603144d9fb02af2f43850dbf2791f8266a1dd109a1e9e9e19b9",
     "scripts/test-specification-inventory.py": "429bfd7c6ee6600e4010394f476c1247597d3c6c1a88f1fbd5e738c96b221df8",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "836906067ac620b64214922f9390c012848abf5bc1c4ca6f15a02757986bcddd",
-    "scripts/verify-event-operations-formal.sh": "63893939763aec0eea4a7c9ffe74c34b0f08b57c2789464136801f2675d29ebc",
+    "scripts/verify-event-operations-formal.sh": "7cf784520d75e5f8eba5ecc1b9cbbdee3b9d1da536d365f3f55e0e171c0a4c2d",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
     "scripts/verify-system-evidence.mjs": "6518277395cc99a25df3ffa5469d5150a5a7cd5c3d10f4409ecb695fb49ca03e",
+    "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
+    "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "fd6674cc3b97424d868e0f77e681c5fea4362a82f8babc71dff15dc345112589",
     "tdf-hq-ui/src/features/featureRegistry.test.ts": "3202fad3806ebb31695ca186727f9163373d6ad6c6f9cfa79089d129bbaf1b6b",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "aad862427b31bb0777586ae09589055043f9346e4eaaa9bf14a521e3d4fed129",
-    "tdf-hq-ui/src/pages/LoginPage.test.tsx": "d7e2e4ba531266075903e7aedc88927a6af29745110530347cdb72a3ea9319b8",
+    "tdf-hq-ui/src/pages/LoginPage.test.tsx": "90a502bdbfe3363efe8d3e0eb0a664bb1c57d118156bb2131c09ba32e885b3ec",
     "tdf-hq-ui/src/pages/LoginPage.tsx": "366cdb1ebadb0ff0494260e7c98edfd6da1d622f70df415b5627bf60dbdd95ad",
+    "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
+    "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
+    "tdf-hq-ui/src/utils/providerPaymentResume.test.ts": "103a2f73519a73ffb088df88e847789b4fc5f6afd07d9c38bdeafd0dbc4039e9",
+    "tdf-hq-ui/src/utils/providerPaymentResume.ts": "27f2bbb6169784ba41aa14ddf9e2fade00617452594157fe8c74eed64ce3f0ba",
     "tdf-hq-ui/src/utils/roles.ts": "a6e35fb167641efb11ffadea2d23865d3165e495cd59e0644a49e0a20f87b0da",
     "tdf-hq/Dockerfile": "d5afe1363da6c68cba251ab928fe10ad4c47aafea2924c27402e50c9d323fb1a",
     "tdf-hq/Dockerfile.runtime": "cc561dc926a491699de7b34ad3d01e1dd0e13d53cdc5dc87484aeb7e303129b8",
-    "tdf-hq/assets/feature-registry.json": "5f4665b6b15488748eb7fa69a585dd88fd7e94c8d5f7437cf99bb161783b28b0",
-    "tdf-hq/docs/openapi/api.yaml": "e05910417e0962c3595ab0bea9828b905c5ef077210cdf12678be76484d1e2af",
+    "tdf-hq/assets/feature-registry.json": "937ec3786fdef97afc5ac11dd93380baa707de14448872a923e07875ca65ee81",
+    "tdf-hq/docs/openapi/api.yaml": "6de5124eee0d2a5fb489a652777c8f13cee45a251049e0446d9f301f2301cb97",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
+    "tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql": "e70e67606e1ff1451ee6cf0404a7cad28b2ede0b72ffa92c16aab9cea9d72cca",
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql": "9d6236c8bf0a2f593cf54cf445d24adfe9e765cc91f000cf45dcd3b8bb86e4fd",
     "tdf-hq/sql/2026-10-04_merch_commission_exact.sql": "36a4432d9e20442107f570228e4477cb93072433f5752f9dd7d32106d60c4b1d",
-    "tdf-hq/src/TDF/API.hs": "52899306d6b3d74f542a87ca135c1f8395e0fe5b42a4a1ee6396edc7a38d987c",
+    "tdf-hq/src/TDF/API.hs": "7f54aa410bfc4a1e9f5430d3bea6e8a9ac2f5f8269793a90733b42c3d1018d56",
     "tdf-hq/src/TDF/Auth.hs": "851a010d990ec981a7410ab1228bfe36a0ebc776008be7f22e7a97fb6701e5c8",
-    "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "204bd27888a0e4645a2c107e4d4cba9c0a4db41adfc8f7ed9c76182a8d6b1245",
+    "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "6a0395b16a2bafa271dbc051da42972fe6a51da5db9eb2235bf78a46e47d819d",
     "tdf-hq/src/TDF/Commerce/Merch.hs": "94e7b371a6a77ccf4ab2884d9a28b7d7155c3f3dfad7154e54dad8b42cf5d7e4",
     "tdf-hq/src/TDF/Commerce/Money.hs": "52545229a4f9015140658ded13b2e708a541187b47d6dfd3143e32914dae136c",
-    "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs": "955ca2a1d362eae9e9a14c7e7a6169df8b4825221f46ba2b4800db03380de481",
+    "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs": "4e2fb9d4f258dc060804e507d42b1bca93addebf96b6d0a3e2062fe1484d7640",
+    "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs": "6791d94fd7808fd13c8e371122d3f082c7668f78a9ae660297019d0032d0b7c9",
+    "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs": "f207af0c4782901684ca101b8c9e667c1e127c205ae14f5702a39549da1d6dcf",
+    "tdf-hq/src/TDF/Commerce/RefundStore.hs": "e40608b5bc2ce1429c61fbfc6131f4e6e134f599cbf734a62ddd505fab3264b6",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "f3b3183fc1a089b71c135b5fc6e7ca4ef370e6e42b376230815a82a9ae5b7b03",
     "tdf-hq/src/TDF/Config.hs": "abbb65101876065724d97c24b1aef742f86300ca006e14e9c0565eb4af0dafe5",
     "tdf-hq/src/TDF/Cors.hs": "94a8b2ffedfc793e6d8c44d62f0388dc853e3da95e75e23dfdb6fed76d7f88dd",
     "tdf-hq/src/TDF/Directory/Policy.hs": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
-    "tdf-hq/src/TDF/Server.hs": "386bb638b562501136ebe40e7c82b245ae1a5aa3852a31551809e28e446093db",
+    "tdf-hq/src/TDF/Server.hs": "2080bf46ca557c501a55e6e8d7cdf1858c540e876f8b4af1388eddbc35aef7aa",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
-    "tdf-hq/src/TDF/Server/Merch.hs": "13c1f56a9c8e12d95b93cc8800334c033e942c54cf959c546b0656e9b72a0f5b",
+    "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
+    "tdf-hq/src/TDF/Server/ProviderExecution.hs": "a8ea11e94ddf018b3955f2c67e86122035731268499b605673a2766e577c0a48",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
     "tdf-hq/src/TDF/ServerAuth.hs": "f2e6388e573818567db451d3770b88442741fbf5b3724104fc4126346f1aaa36",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "b5a17355e77ca659d9ccf06e1f16a0719adc9d3419f256a4e1d32c1f4c565aa7",
+    "tdf-hq/tdf-hq.cabal": "1b8e6387004eb4106e624921814f360aba0d4cb4180c635ac4d7e55f8c5096a0",
+    "tdf-hq/test/Spec.hs": "d4bf3f4d36c92125cf54c87d6616e9ea76648a85ea5639b73319eb32fe74487e",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "2692643e091e108f1532db0eeb87426dc15cea5d45c258c3945c12052852611a",
+    "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "80f70e7556b9aeefcbd1d473e2cd1d1e0b608aaa45964472bc0cb30351295888",
+    "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "3cba6f58f8e10f1bed8e92ec2f9e23d33ed0482ce73ab9e431f4f23851e2a1c6",
     "tdf-hq/test/TDF/CorsSpec.hs": "ca283c34c7b4368f59ba7af790950482e527747e95574afbbd22c1ce0e6a4245",
     "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "e68face714495ad762b3ccb8eec7b38ce6047274c44fd6977dc44abfd56f9439",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "39c92770f1830489ecb1c909dfbefa7c1a11857f3f002ce89da5283c06c69a0b",
     "tdf-hq/test/TDF/ServerSpec.hs": "d49ecbf6d6db9bb47b62f89945f1c3a2841ef389758ba6a0719363259aecb470",
-    "tdf-mobile/src/features/generatedFeatureRegistry.ts": "b250d29d8515d9d978f1ce65e63e7a5ab0acf71695c8cdf12b0314e5455f2d57"
+    "tdf-mobile/src/features/generatedFeatureRegistry.ts": "0aa585495694b2954d6db9a667c497f792a272037e9a66cb11ceb0baaa35a400"
   },
   "reverseTraceability": {
     "scripts/production-release.mjs": [
@@ -1950,6 +2229,18 @@
       {
         "requirement": "SYS-VERIFY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "REF-RECOVERY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-FULFILLMENT-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-RECOVERY-001",
+        "relationship": "tests"
       }
     ],
     "scripts/__tests__/event-operations-pluscal.test.mjs": [
@@ -2504,6 +2795,10 @@
       {
         "requirement": "PAY-CHECKOUT-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-FULFILLMENT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": [
@@ -2589,6 +2884,200 @@
         "requirement": "PAY-CHECKOUT-003",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq/src/TDF/Commerce/RefundStore.hs": [
+      {
+        "requirement": "REF-RECOVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs": [
+      {
+        "requirement": "REF-RECOVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql": [
+      {
+        "requirement": "REF-RECOVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": [
+      {
+        "requirement": "REF-RECOVERY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-FULFILLMENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-provider-retry-runtime.sh": [
+      {
+        "requirement": "REF-RECOVERY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-FULFILLMENT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": [
+      {
+        "requirement": "REF-RECOVERY-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": [
+      {
+        "requirement": "REF-RECOVERY-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/RefundRecovery.tla": [
+      {
+        "requirement": "REF-RECOVERY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/RefundRecovery.cfg": [
+      {
+        "requirement": "REF-RECOVERY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/RefundRecoveryExecution.cfg": [
+      {
+        "requirement": "REF-RECOVERY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/RefundRecoveryAccounting.cfg": [
+      {
+        "requirement": "REF-RECOVERY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/RefundRecoveryAuthority.cfg": [
+      {
+        "requirement": "REF-RECOVERY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs": [
+      {
+        "requirement": "PAY-FULFILLMENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "formal/event-operations/HostedServicePayment.tla": [
+      {
+        "requirement": "PAY-FULFILLMENT-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/HostedServicePayment.cfg": [
+      {
+        "requirement": "PAY-FULFILLMENT-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/HostedServicePaymentAtomic.cfg": [
+      {
+        "requirement": "PAY-FULFILLMENT-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/HostedServicePaymentReplay.cfg": [
+      {
+        "requirement": "PAY-FULFILLMENT-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/HostedServicePaymentProgress.cfg": [
+      {
+        "requirement": "PAY-FULFILLMENT-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "tdf-hq-ui/src/utils/providerPaymentResume.ts": [
+      {
+        "requirement": "PAY-RECOVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": [
+      {
+        "requirement": "PAY-RECOVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": [
+      {
+        "requirement": "PAY-RECOVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Server/ProviderExecution.hs": [
+      {
+        "requirement": "PAY-RECOVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/utils/providerPaymentResume.test.ts": [
+      {
+        "requirement": "PAY-RECOVERY-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": [
+      {
+        "requirement": "PAY-RECOVERY-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": [
+      {
+        "requirement": "PAY-RECOVERY-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/Spec.hs": [
+      {
+        "requirement": "PAY-RECOVERY-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/PaymentRecovery.tla": [
+      {
+        "requirement": "PAY-RECOVERY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/PaymentRecovery.cfg": [
+      {
+        "requirement": "PAY-RECOVERY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/PaymentRecoveryOverwrite.cfg": [
+      {
+        "requirement": "PAY-RECOVERY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/PaymentRecoveryReturn.cfg": [
+      {
+        "requirement": "PAY-RECOVERY-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/PaymentRecoveryCompleted.cfg": [
+      {
+        "requirement": "PAY-RECOVERY-001",
+        "relationship": "formalModels"
+      }
     ]
   },
   "surfaces": [
@@ -2630,7 +3119,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "3fd49bf2e145bef8e65f05e2b3c6ad3069c0bda2c40a2b190521beabd46acb5d",
+      "sha256": "973900ec5b05196fd223818aa834641088b5758164a6225563001d7c95c11378",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -2946,7 +3435,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "2866c4c75c54716d5c75a2b475add6b5a0654a705322ff9fb0e6084222adf599",
+      "sha256": "37cd0c75903cbad7b4eb4decfd63781e7d7fab1265bb89e5609173cc5527e760",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -3047,7 +3536,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "031ec23f9f0e3dd08fcb934b59a5e63215def0b07eb2be9219e738e14daa1574",
+      "sha256": "64921de12e4f6ef21a8a65763da451acdf1492ca897c318019c2e835da140114",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -3195,6 +3684,13 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-e4c6bf3c31cac943",
+      "path": "scripts/__tests__/fixtures/provider-retry-ledger-base.sql",
+      "sha256": "0a896cd95e31b5e08c22624e59d82845dd0dbce4e57b93d25d7e1fcdd6279e4c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-d09bf04096bd6964",
       "path": "scripts/__tests__/formal-methods-audit.test.mjs",
       "sha256": "8c2234cb42c2d631ef9523eb9d15b52908d28b98a8499c7e3e7a79119a2745bc",
@@ -3204,7 +3700,7 @@
     {
       "id": "SURFACE-adc432036f751c55",
       "path": "scripts/__tests__/generated-api-conformance.test.mjs",
-      "sha256": "da6a8039a136268283e11a054c981c16990db543e4154a391a2c3ff90873018e",
+      "sha256": "34ee30eadd4114f8229af92693a01767fa8a7056233758cf0050b38f99e29f6f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -3315,7 +3811,7 @@
     {
       "id": "SURFACE-df80d476d03d210a",
       "path": "scripts/__tests__/merch-runtime-safety.test.mjs",
-      "sha256": "3d253d9beed2b434e06d4d217ec83b303097cd2101bd300b04640e8e2826b394",
+      "sha256": "c127989f3a5cbd0d7974eaf9ad9a86d747591a6cc9110ffe0b22689aab45ee01",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -3341,6 +3837,20 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-69900817facd771e",
+      "path": "scripts/__tests__/payment-query-report-contract.test.mjs",
+      "sha256": "a8ea7da17d97eabfd11b8d94f8a948dc336408a916200927475bc70339702ff0",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-2f21c1c45f5b1cca",
+      "path": "scripts/__tests__/payment-staging-inspection.test.mjs",
+      "sha256": "acb99cc43fbbdca8d24d3d52b7972b0100c5aa1392959ff5c5b91927677db317",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-57edc37515705dee",
       "path": "scripts/__tests__/persona-test-program.test.mjs",
       "sha256": "7f5842c21cd414c9aa541d41b71a01c3dc9347bf4ffee3c12eda88d8839f3128",
@@ -3357,7 +3867,7 @@
     {
       "id": "SURFACE-73a4c004bae044bb",
       "path": "scripts/__tests__/production-release.test.mjs",
-      "sha256": "8cf7053c7cc6c1f5e6a849d3b5b488900f54d0b40ea181ed2f548c4035bd4d77",
+      "sha256": "5735fff347586aa3a4968a4d3d0c3a36225bf8438993980f50c2ca065dfde797",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -3595,7 +4105,7 @@
     {
       "id": "SURFACE-9306a961784ddefa",
       "path": "scripts/check-generated-api.mjs",
-      "sha256": "216256d09571f6fe741460f64541c62f0e341ccbd975db8353964d9b41d8d09c",
+      "sha256": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -3792,6 +4302,13 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-09f409fc2f5fdd87",
+      "path": "scripts/inspect-payment-staging.mjs",
+      "sha256": "a141c1c20e8c9c0d149c91a6cffec7690fd13388ec5f00a0ecfe0ecc26855317",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-e10a3732c19671ff",
       "path": "scripts/instagram-lifecycle-artifact.mjs",
       "sha256": "488f9e35f8f881b0f021c857c728fee65f0ae5895f28cf8e09c2a95a128ff2a2",
@@ -3976,7 +4493,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "cb6720651672b221bd0111ad476e9fc00fce6f42a94fecab1f93cfb25def8ead",
+      "sha256": "0e02e1bcf6f8a451860ad5c1f52ac8461effc88659bce690f9ce222875878f71",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -4116,7 +4633,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "d193c71b0551cb1bed103f9a30543e87a9e7c21c79bfcd47ae64d940c4323a87",
+      "sha256": "d1b45b55ebb0b86987fcb2c628de2edc1ada2c7abbb046f0f6009325538bdfe3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -4148,7 +4665,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "6c23e13ede4d94188bea46f326cfd8bdb59b9f4f4f16836b23cbdfe04884741d",
+      "sha256": "7be0e6a87e50b625239a70858d53d9d3340a409000ea9f1dc475c96585b495d7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -4554,7 +5071,7 @@
     {
       "id": "SURFACE-07a18534c1eba4e0",
       "path": "scripts/social/preview.mjs",
-      "sha256": "e33be89eb5dda1b3485f00d58d74393b131d914dcb34c179c337218d998c694d",
+      "sha256": "24a8ab3d7fb8c2ea5b9ac58404b4d6ec2c85a91456b3976751a8b9e8b2ae1da2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -4743,7 +5260,7 @@
     {
       "id": "SURFACE-58805fa683558aef",
       "path": "scripts/test-artist-merch-runtime.sh",
-      "sha256": "bb890b3e3e1b4f6e94b039f397b4b3aae33cb456613477491ce565521003050a",
+      "sha256": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -4788,7 +5305,7 @@
     {
       "id": "SURFACE-d6c33dc1652ba8f2",
       "path": "scripts/test-canonical-payment-lifecycle-migration.sh",
-      "sha256": "a35365d085e3a46efad4f1ec31662af46f92da71d241b7de59e13b951d145bc5",
+      "sha256": "1067352d6f5c53dfba368a08409c1543e4e23bff26661c125f68f32be1d999d1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -5108,9 +5625,23 @@
       ]
     },
     {
+      "id": "SURFACE-c135b76cb25cf121",
+      "path": "scripts/test-payment-audit-runtime.sh",
+      "sha256": "38e12fa06837ea1a216560df21362d25afcd461e1940517dc97f2a94fbf997d2",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-3c9e2b2fae1ee373",
       "path": "scripts/test-provider-event-operations-migration.sh",
       "sha256": "62d337f21e58ec877346901403ae3690d0e9365e69c78d60049d9a72d4f624f1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-821047b31f93bf41",
+      "path": "scripts/test-provider-execution-runtime-migration.sh",
+      "sha256": "0e0f7ba6572b6e8237ab083def7f9f3f63ebfc87016cce3608cf60c7c11b1871",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -5122,9 +5653,25 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-1aa70e99c086e23f",
+      "path": "scripts/test-provider-retry-runtime.sh",
+      "sha256": "fefc986deb95fc2ff2d8ad1af2829d20363128fbc52846fbfffa0ebc65b27353",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "REF-RECOVERY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-FULFILLMENT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-3e964491714d824a",
       "path": "scripts/test-public-booking-http-concurrency.sh",
-      "sha256": "d4825289ef1120438d3201877013ed86883d6f904fcf76e557f32a9c7078f1e6",
+      "sha256": "6bcbfa2634384f4288b10b140c9e1aa0a518c5ffa7beb0347bac988d9b92fb60",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -5341,12 +5888,24 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "63893939763aec0eea4a7c9ffe74c34b0f08b57c2789464136801f2675d29ebc",
+      "sha256": "7cf784520d75e5f8eba5ecc1b9cbbdee3b9d1da536d365f3f55e0e171c0a4c2d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-VERIFY-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "REF-RECOVERY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-FULFILLMENT-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-RECOVERY-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -5484,7 +6043,7 @@
     {
       "id": "SURFACE-02bd88f022e926a3",
       "path": "tdf-hq-ui/src/App.tsx",
-      "sha256": "f98e7f54638907305d0f927d9115a08ff29508efdaa17b36a3f9af8f196426fc",
+      "sha256": "4323e995fc9aa15d369a4f1783dcfc69097fa5a8cdb6a1de1f93c72d523a65de",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -5554,7 +6113,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "1709240d9bdf9e3d9704ba0abf9b5f9734c356882213b3656e698a28cda05b97",
+      "sha256": "76a8c8c32a9e63001f1981f23da53299cd018899a7f773a40e8859ca4e6d6d48",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -5594,6 +6153,13 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-056e006eae5d1a35",
+      "path": "tdf-hq-ui/src/analytics/onboardingCompletionAnalytics.ts",
+      "sha256": "6fb86614993372675bc7f34ce6b99487421decb416865b157acf938a014ddac5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-72586bea3daa1f56",
       "path": "tdf-hq-ui/src/analytics/onboardingProgress.test.ts",
       "sha256": "6bbde9264b7abf4bafcb5ee60abc63e7f7cc31e5fdf73d347ce6a19af83bdd6a",
@@ -5603,7 +6169,7 @@
     {
       "id": "SURFACE-ddd5bddf37a22b13",
       "path": "tdf-hq-ui/src/analytics/onboardingProgress.ts",
-      "sha256": "141c36716babd9b982a0c4f44ef176c341a67d38c82f8f7f87aa378f20201177",
+      "sha256": "be2b650c76476ef018a3be02ec7832b5bdc59ab96d80ccfd03f783e3734ccee5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -5715,7 +6281,7 @@
     {
       "id": "SURFACE-5a383ebf9d6c9038",
       "path": "tdf-hq-ui/src/api/bookings.ts",
-      "sha256": "644247dde5303bdbe38d4eaf558a5062032925aa6eec26c2e9d3b78cab873e44",
+      "sha256": "1479e6fa87025c548757e6bb2100b9a907b97c38f49fdbf1a4b2df904679ce60",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -5797,9 +6363,16 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-4f1a575585c3cc83",
+      "path": "tdf-hq-ui/src/api/commerceOperations.test.ts",
+      "sha256": "24fb56c61fa897f389edf3d2efdf72020f3dd3f16ce53559d8113d3c072c20fa",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-53e830f66e47cd69",
       "path": "tdf-hq-ui/src/api/commerceOperations.ts",
-      "sha256": "c1721a59c14fb4b1e8f2c77217a16fde08ffb8135fea8ddbaba1271f3378848b",
+      "sha256": "ebbfafeaffec0931711e16124eb58d1f3772d8d0c9782d8d99405d4c16abb97c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -5813,7 +6386,7 @@
     {
       "id": "SURFACE-20340c57830b2359",
       "path": "tdf-hq-ui/src/api/courses.ts",
-      "sha256": "f0b336210e2b6bebad1f2c0395f7252ac43c4aa9a2b406635a0163ee57c6a7eb",
+      "sha256": "8419d11c42539f59ad7d6ab0af37c4f20c5e13edde6854a1c6ee80c2fc3de836",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -5995,7 +6568,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "21803ca9542afe64ea67baf50c6ff34008ceca85f787bf82d04edb1940c77927",
+      "sha256": "beb99fbb047fe600e2c922702d52c9c9519c039c39981f4a6b4bc64724b07b14",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -6161,6 +6734,20 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-9e1dbd68b39d926a",
+      "path": "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
+      "sha256": "8c0afc9528962481e7ce690373d153e32e968b6e0f2f590fb304459d2846e017",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-c29a804d309aa3af",
+      "path": "tdf-hq-ui/src/api/paymentCapabilities.ts",
+      "sha256": "0b196cead2b5488ba028997427c4b974f7997bcb57619058545c8554c4c4032f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-26dc290d28b12ef0",
       "path": "tdf-hq-ui/src/api/payments.ts",
       "sha256": "25065609611e3e7fd4c5463acff2f85a8847abc087df04bc4ffd71636f3e9bc3",
@@ -6192,6 +6779,20 @@
       "id": "SURFACE-9babc79b1a56bd8b",
       "path": "tdf-hq-ui/src/api/preferences.ts",
       "sha256": "af75820d8783f712a9f55088b8a05208fd538691a81fd29aa90cbca06547c2b1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-19d831e818ff64d7",
+      "path": "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
+      "sha256": "f71cf7e1b218c9cbbd7099b13ca472ca3a9db773c933c4ea7f8774ee4cb0e4a2",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-d3dd73dc1f3e306b",
+      "path": "tdf-hq-ui/src/api/providerPaymentSessions.ts",
+      "sha256": "702a5c9cf268fd0a722be1765bd858426ad18f68926b31d9d2d04ff43ec94c43",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -6268,14 +6869,14 @@
     {
       "id": "SURFACE-70b5b11efdf99990",
       "path": "tdf-hq-ui/src/api/serviceStorefront.test.ts",
-      "sha256": "dd4136e899499c3dcc0c44fdcecc60345e0ea27efdba6211a6f690c404cd07cf",
+      "sha256": "9e271df5302d80e33b58ad805e9d674a04e8c8301ec8a0e0f5837b9243f406de",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-8ad44ff90027d686",
       "path": "tdf-hq-ui/src/api/serviceStorefront.ts",
-      "sha256": "9edddfda4823b34e69cc9692c1804092be9c817520ec49ff764993b50684d6fe",
+      "sha256": "160cc28ed84e8d0ddad9f766aa23d7efcd7990fdcb4e1438fc2373c10f0456d1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -7018,6 +7619,72 @@
       "id": "SURFACE-e1fc722d5c6ece7f",
       "path": "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
       "sha256": "079986b30420bd3e88993a37b8936f6cb274d5904a1450ac4502546365d682ff",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-388d446af04495d3",
+      "path": "tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.test.tsx",
+      "sha256": "5e6cac90ffd749dcbd93d2e0673be05e073b7732ada83bae545444df0039de8c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-65cbecbfc60140c5",
+      "path": "tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.tsx",
+      "sha256": "652702467208778aa94a04bead7953ae96a5e4f6458e2aafee69e733c0435b72",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-3b9b0b0c805d8c24",
+      "path": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
+      "sha256": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-RECOVERY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-8ff97ac79f9014bb",
+      "path": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
+      "sha256": "fd6674cc3b97424d868e0f77e681c5fea4362a82f8babc71dff15dc345112589",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-RECOVERY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-24f155f2a25a5ede",
+      "path": "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
+      "sha256": "20efac1816a623a3c4da1f1d184798805f57df773151ea900b176f652b764cfa",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-4bc4cdfae1ab1163",
+      "path": "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+      "sha256": "1a93b9565edd1fde2b85b71c4181f478b3b37e9b38bf43f0784f55adc17b1122",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-9fb827f13f2ab951",
+      "path": "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx",
+      "sha256": "51ae6b0d232085def9519c716b62c63e348f5e8920fa356d537e633048af28b5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-cc4546803ae98fba",
+      "path": "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx",
+      "sha256": "9544eb483c5460fde46a93e265f9bf9faf22cfa3c66eaa8e50af93adbac09fd5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -7953,14 +8620,14 @@
     {
       "id": "SURFACE-39fe3c9e56197ba9",
       "path": "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
-      "sha256": "f6f222959b034b34183bfd504b313d0e954800e6cfad449538f720d68e3ee9d9",
+      "sha256": "24b4e9da00d5f6f970774d2300d85e78b3b6364988106b64b7226efe19d91c9c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-4863f94a96956295",
       "path": "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
-      "sha256": "b7e04cffb8c658757456255c26b3d38b07dab65ca5c438161eb0020e333e12a5",
+      "sha256": "6f1e8487723dcc8da6f717139f89d71d2c4ffdba924a5709ec170a2a0634168c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -8009,7 +8676,7 @@
     {
       "id": "SURFACE-f12bf83921a15e4d",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
-      "sha256": "6bc9eb2f3595d8a8bfd036d0cb6cdab2037c5e91dac4cfd7e421dd573be89acb",
+      "sha256": "d55576b5d8a1679ea7585d7f9cb44f5529ceb11fa0ee9884842ed312088e7a1f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -8138,7 +8805,7 @@
     {
       "id": "SURFACE-8f336ec91c101452",
       "path": "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
-      "sha256": "1e382de48cc22a3e637deaed498e433c46c68c92f68b19207f082ac907c6caa7",
+      "sha256": "b996f233c5f720da302ad23091958d5fb57484d30a3198d6c3efa9965ee8a9f0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -8509,7 +9176,7 @@
     {
       "id": "SURFACE-2b469a2b395c027a",
       "path": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-      "sha256": "d7e2e4ba531266075903e7aedc88927a6af29745110530347cdb72a3ea9319b8",
+      "sha256": "90a502bdbfe3363efe8d3e0eb0a664bb1c57d118156bb2131c09ba32e885b3ec",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -8583,21 +9250,21 @@
     {
       "id": "SURFACE-ae8970a24d4f1f59",
       "path": "tdf-hq-ui/src/pages/MarketplacePage.tsx",
-      "sha256": "9ddd162dc085a11d1dfc4ee5f29eb8efa205caab62d071e950e14b8573c2621c",
+      "sha256": "d4f14d90a03be1ce0edb84e3d646775def21d0cdec1345a398f09247eb9f650a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-b8e4f0b3d0a3ec9f",
       "path": "tdf-hq-ui/src/pages/MerchAdminPage.test.tsx",
-      "sha256": "9a0aa678e697087cd420e838540145995b259db8a52c041ce3a9f153b150e276",
+      "sha256": "2ebb0cc8490fb5df6e2ea0ea8781e9776afbec0e999ddfa5cd9b9d594dd2f725",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-61f97ffdc68a2602",
       "path": "tdf-hq-ui/src/pages/MerchAdminPage.tsx",
-      "sha256": "51c31b52159e474ef5429064c36a4d4940781650eeaf82a33b1fa9e4562edfbc",
+      "sha256": "d55416678e1fcfee6fb9c27e4f9e14a747f4b9360e19b8167670cae3469290c7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -8681,14 +9348,14 @@
     {
       "id": "SURFACE-bee40b89d7a09a1d",
       "path": "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx",
-      "sha256": "3a9bc707db534a635ffe09b7d194cfc3c8b96e2ff91a09be9de6f1124711cc1a",
+      "sha256": "fcc7b8e4ac9f7a22000ae8e90d29873e3f7a4313c43761bddebffd334d0c15b1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-4a562abbc0b9c284",
       "path": "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
-      "sha256": "74328e4cebf71fcbaca90b92f34aaf74ae19df80fcd778b1dc51652178dd3c6b",
+      "sha256": "4108f16793becc7a7845b16353a13edb8e64d7b6278e4c8dd7465bec534448d0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -8784,23 +9451,47 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-57d71f490b9a0d52",
+      "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
+      "sha256": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-RECOVERY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-6b97ed3a68e676f6",
+      "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
+      "sha256": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-RECOVERY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-841726035def3268",
       "path": "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx",
-      "sha256": "576ff07bbafa702eb0e0e56b2099462f3cf5d4c536f2194d2c51a23b6e30a3f9",
+      "sha256": "3c282865ccb25f17391c5240f456968f93e357bd60382f42feefa95d916ae4ef",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-7efdc216a8d713ee",
       "path": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
-      "sha256": "707d6cfa7d2cb48ffcd86cde4d6659deb66046a0cc923d86380ba22efece0e4c",
+      "sha256": "3c7a82107562130a6cd3ea8b905bea2a5a5e55bb84b0f36ea9f40a518e30291e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "b7571f6aacd99ebaea824e8025825c6060d24b81ce133bb885ee98bcb2e52d29",
+      "sha256": "4d36af246d52b7f4a559c23531e508ec9cfa7b5c0daa90b14d04a2aab5d15025",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -8968,7 +9659,7 @@
     {
       "id": "SURFACE-54a41f2ada423353",
       "path": "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx",
-      "sha256": "3d5bd6bf266f3f6dada331ce1a75da311a49f8b90d763d245de662aa06e7cf85",
+      "sha256": "2eec23e0c54e1e493cbbe58c0616d053685967b837cf76ceb2a26f546d8c8b03",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -9337,6 +10028,13 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-85e8012c6e922277",
+      "path": "tdf-hq-ui/src/routes/AppRoutes.tsx",
+      "sha256": "15f7c9fe7f3109ecdf25a03ee99259052b6c3612a8d8318a9f039a5aa702837a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-65b783cd59e6037b",
       "path": "tdf-hq-ui/src/routes/AppShell.test.tsx",
       "sha256": "1c92ba33b7073ae1c39ba640848017f697a2792ff4802eba12303b16fc2bf4db",
@@ -9374,7 +10072,7 @@
     {
       "id": "SURFACE-f6a0ac8526319c29",
       "path": "tdf-hq-ui/src/routes/publicRoutes.tsx",
-      "sha256": "0ccf11d7c9c964a69ffb3d101203ae415dfa641312a649382d0b140d5e17ec98",
+      "sha256": "c047cab7c5948fb406089b510d9db084407f8b1758fe4b5aab55b5be80e6fb06",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -9423,7 +10121,7 @@
     {
       "id": "SURFACE-9cd6316bcfd08c89",
       "path": "tdf-hq-ui/src/session/SessionContext.tsx",
-      "sha256": "32073d2c83221fc7abb75e75851928cf64ac03e9cf53f4e888fb866139aa479f",
+      "sha256": "182f1ef4160cc2e9cbda690f6d49e646ef807b110e6d46eb176ed44ae4d7255c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -9883,6 +10581,30 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-385779829756a659",
+      "path": "tdf-hq-ui/src/utils/providerPaymentResume.test.ts",
+      "sha256": "103a2f73519a73ffb088df88e847789b4fc5f6afd07d9c38bdeafd0dbc4039e9",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-RECOVERY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-02c8cdf3d4eb64fb",
+      "path": "tdf-hq-ui/src/utils/providerPaymentResume.ts",
+      "sha256": "27f2bbb6169784ba41aa14ddf9e2fade00617452594157fe8c74eed64ce3f0ba",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-RECOVERY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-0b134a87ca13d38d",
       "path": "tdf-hq-ui/src/utils/publicBookingRooms.ts",
       "sha256": "bc60e11ab400d7ba4c6496cccc2ac9ef94b69ff720c764d0b613bfa041250db2",
@@ -10152,7 +10874,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "5f4665b6b15488748eb7fa69a585dd88fd7e94c8d5f7437cf99bb161783b28b0",
+      "sha256": "937ec3786fdef97afc5ac11dd93380baa707de14448872a923e07875ca65ee81",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -10231,7 +10953,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "e05910417e0962c3595ab0bea9828b905c5ef077210cdf12678be76484d1e2af",
+      "sha256": "6de5124eee0d2a5fb489a652777c8f13cee45a251049e0446d9f301f2301cb97",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -11926,6 +12648,62 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-ded7c7bc0868d2c9",
+      "path": "tdf-hq/sql/2026-09-11_manual_bank_provider_activation.sql",
+      "sha256": "949ece38874dcf24397d6a5a05f8cdd15f08d167b4989598a95a749fa5984093",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-4958a5647f563296",
+      "path": "tdf-hq/sql/2026-09-11_manual_bank_provider_activation_rollback.sql",
+      "sha256": "1c0f070ceda0b6c6538b7701bda3126b27ea238ea05b5b5840322418d5bad99a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-09856d74b52105ce",
+      "path": "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql",
+      "sha256": "ea101956d6219c27f0ba165ff82b13aab4bee267c8e4d4e398c9759535893ae8",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-45333317f4f44085",
+      "path": "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync_rollback.sql",
+      "sha256": "341af425fddfee376f0a625570cfd08792ad8aeac21e87f6e6d1cf4a3ee0d1ec",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-27194f671f115043",
+      "path": "tdf-hq/sql/2026-09-11_provider_capability_catalog.sql",
+      "sha256": "a54789fb9ffe381be03e040456884845e92044710a4688616660b06564d45235",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-c8600ce6b046e95e",
+      "path": "tdf-hq/sql/2026-09-11_provider_capability_catalog_rollback.sql",
+      "sha256": "2ddc6fe09cba90ddbdf1d4bab114c55bc651903ea6b240490f5fe242d45d41e8",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-0cd61fc798982022",
+      "path": "tdf-hq/sql/2026-09-13_provider_execution_runtime.sql",
+      "sha256": "d420ef7bebf4862f5fd6b1e3754f725e8cb8bf5e1768f94d71a13947f777a51f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-d218cc4c1a7c65e9",
+      "path": "tdf-hq/sql/2026-09-13_provider_execution_runtime_rollback.sql",
+      "sha256": "711fc0bb9e90b955441eaf4aaf5235cd0261eececc1845ffbbb2175d26908900",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-879ac8a337bbef30",
       "path": "tdf-hq/sql/2026-09-14_event_operations_api.sql",
       "sha256": "195908e3dae1923c98ef84b217092b89454fa72027b32a8a5e5dcfd5370ec870",
@@ -12059,6 +12837,20 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-093fa48b0443ae44",
+      "path": "tdf-hq/sql/2026-09-15_provider_query_recovery.sql",
+      "sha256": "8ce7535fcdce37ef5742e8261484e7cbdc42605dee815921c722536b46e8dbe1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-1677021132c22307",
+      "path": "tdf-hq/sql/2026-09-15_provider_query_recovery_rollback.sql",
+      "sha256": "fab67e88a277e3847cbc2d5977543c883c083f7380380f80439603481602fc6f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-8509b4c93568afdf",
       "path": "tdf-hq/sql/2026-09-15_social_v2_chat_api.sql",
       "sha256": "faa8026e41a293c01656120e360590d793ea575af0e12a68c67b916deb86dc52",
@@ -12111,6 +12903,25 @@
       "id": "SURFACE-f42a14fbd0279853",
       "path": "tdf-hq/sql/2026-09-16_event_task_completion_rollback.sql",
       "sha256": "b6e2ef6b2d59e1d528c3f74b8ee3d41d925c8a705d83b89396ba3a4e01cd3b56",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-4ccbed0b9d49f7b7",
+      "path": "tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql",
+      "sha256": "e70e67606e1ff1451ee6cf0404a7cad28b2ede0b72ffa92c16aab9cea9d72cca",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "REF-RECOVERY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-f0b1b19d350a3cdd",
+      "path": "tdf-hq/sql/2026-09-16_payment_intent_refund_sync_rollback.sql",
+      "sha256": "42bfa25b8b71548c1707d8249090c4d8755ad8d5a63ffcbd11688d8445ca1c19",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -12608,7 +13419,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "52899306d6b3d74f542a87ca135c1f8395e0fe5b42a4a1ee6396edc7a38d987c",
+      "sha256": "7f54aa410bfc4a1e9f5430d3bea6e8a9ac2f5f8269793a90733b42c3d1018d56",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -12659,7 +13470,7 @@
     {
       "id": "SURFACE-a4902497bb9c1b53",
       "path": "tdf-hq/src/TDF/API/CommerceOperations.hs",
-      "sha256": "41b097863ec5cb5d2250f380fdc9cb723d986c0528c0804bba599f7927d13ca3",
+      "sha256": "31d894d6f964db163b19e20179fe848cc3c73096a98b03ad76605b183adba9f6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -12818,6 +13629,13 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-7372ceb0e4611b65",
+      "path": "tdf-hq/src/TDF/API/ProviderExecution.hs",
+      "sha256": "e79761e4e026fee86108343d8e0ae9f263d188c537790cce6abad0518c75d004",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-9deb4ef00a69e5d0",
       "path": "tdf-hq/src/TDF/API/Radio.hs",
       "sha256": "5c62e0f4a402225202217be3a8361991127ad1ac093fd0f4366789dd1723357f",
@@ -12848,14 +13666,14 @@
     {
       "id": "SURFACE-a1efa59de0fbb51d",
       "path": "tdf-hq/src/TDF/API/ServiceStorefront.hs",
-      "sha256": "bc8d68a550288e9aaadd751428f153df8d5942b96263ed2630f2c792d578d45e",
+      "sha256": "f998aa5c054881700e3e892958108c8ed9aceee6e3a3220e0247f06cbd28b4aa",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-3738912b4dcfabe6",
       "path": "tdf-hq/src/TDF/API/ServiceStorefrontTypes.hs",
-      "sha256": "2e98e306c7f2f65e9a688219b41fb12b2b5b99b1125d7e3e45869b59a5fcc34f",
+      "sha256": "26441cd3fe8eeb61c91b8dc47671220c2955b815356f0d141472534da7bac921",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -12925,7 +13743,7 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "c8149f53961e8d19d0fd4531e22ddb30da36f2ed7930dee61f0233b2ecb21758",
+      "sha256": "b46e508dc9063332bde265d889a88306585ba3c921ca087345391eff73f17d50",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -13039,11 +13857,15 @@
     {
       "id": "SURFACE-94890265a329cb44",
       "path": "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
-      "sha256": "204bd27888a0e4645a2c107e4d4cba9c0a4db41adfc8f7ed9c76182a8d6b1245",
+      "sha256": "6a0395b16a2bafa271dbc051da42972fe6a51da5db9eb2235bf78a46e47d819d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PAY-CHECKOUT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-FULFILLMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -13124,7 +13946,7 @@
     {
       "id": "SURFACE-8379bf1fb8e3276e",
       "path": "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
-      "sha256": "955ca2a1d362eae9e9a14c7e7a6169df8b4825221f46ba2b4800db03380de481",
+      "sha256": "4e2fb9d4f258dc060804e507d42b1bca93addebf96b6d0a3e2062fe1484d7640",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -13138,67 +13960,124 @@
       ]
     },
     {
+      "id": "SURFACE-f215d4911e9d9bef",
+      "path": "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+      "sha256": "fb4aa6edd05896463245731631b09e5897f9bd9596309f08afece9240a6c1f9c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-1f329e23e5aba24d",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs",
-      "sha256": "9e86b8057b031f34173d365a1e65f80c63b82b0e5a8ea7a91be2d98fc6954d0a",
+      "sha256": "16971d54ba7ab0eccd890a33511cf88b9884599e8b5274cb91ef291736a0a720",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-059d1c74b4946473",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter/Http.hs",
-      "sha256": "981aa98079c1a04228b22e11894ddc2867afa719c9d7a77823f187367987bac5",
+      "sha256": "d8ff38c7077449bc2301a9d42231e115afe00aebb664726e60fe88444d2fe2b6",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-bad06d52157a22f3",
+      "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs",
+      "sha256": "8786d1da2a51c725561b14cf68ffd6f44596858c1a3cfcd32384673bd702c9b3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-9038b2dbdf428e2c",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs",
-      "sha256": "8d8cf254212a71369016f62c1fa591e9d806004ccd1eeb16068d4c06532a7498",
+      "sha256": "901c237849c3a4b102ea5e0bdc16c029bfce1096fec5ccb40d0e8e3aa9d2f5cf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-f3e27f9ed209afef",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs",
-      "sha256": "edb898012c94387346daf7ce4815970ed3921d73f5ebbf2687dafd21734b9d19",
+      "sha256": "58979fe9954101dc83c6ee6f24d61c424d0f5a16258b2eeb3a7e76fff71dcea9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-163048cc75f29b92",
       "path": "tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs",
-      "sha256": "4f1a00c388c58d47db7f452776839bf55d95c7739dbff5bac4b0d5dba669a2cf",
+      "sha256": "f0bcce416a0df53c74183d21292504c356c3374a40bfb00d484164fb16584744",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-d117ca68ab1ef0d1",
       "path": "tdf-hq/src/TDF/Commerce/ProviderCapabilityStore.hs",
-      "sha256": "ff94177cb566cf9a21c58ae413a1d046fb83ce7569a20d36b122048389b953d9",
+      "sha256": "053d58a62c59f6dfbb1a4ded7979c306f1a36c8f11eee6d5dc0b736b1e2d1fd9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-e499402b9aad0cfc",
       "path": "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
-      "sha256": "a9ea194ab8bfcc7b545c8ac2c8bdec0bbace3a465288b9e964977c157b737035",
+      "sha256": "0a73dc704ad356046e3d5db49cd3e64ec726d9684e0915658bb16e270f130f9b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-ec38793d0cc5b091",
       "path": "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
-      "sha256": "9ae5bbc7ad63c5745ba59d28536059fb7a4ed284b5f2f9c1867441a1fe003dcf",
+      "sha256": "57320f3b97d5f82419e1942b769fd4c8ab9766a58cbdd8fc01caff82cd3ca639",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
-      "id": "SURFACE-1ed705f31fa3ad8e",
-      "path": "tdf-hq/src/TDF/Commerce/RefundStore.hs",
-      "sha256": "59fed767ceb957512f8ea825f72ddbbd9ba55560aa76bbc0e24c2456bad344fa",
+      "id": "SURFACE-1d441708a9c7e070",
+      "path": "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
+      "sha256": "213b92a75365d6e85e441a0a3263d3cecfedca98a46d05f83165286158b00f52",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-24ec334e6417bf04",
+      "path": "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
+      "sha256": "6791d94fd7808fd13c8e371122d3f082c7668f78a9ae660297019d0032d0b7c9",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-FULFILLMENT-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-b3ab13afc655164b",
+      "path": "tdf-hq/src/TDF/Commerce/ProviderRuntimeConfig.hs",
+      "sha256": "f872cf68ae160595bdd18782cc55c93d351492b659e2aa60fee93640b208f61e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-dc866f2ee69c9dff",
+      "path": "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
+      "sha256": "f207af0c4782901684ca101b8c9e667c1e127c205ae14f5702a39549da1d6dcf",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "REF-RECOVERY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-1ed705f31fa3ad8e",
+      "path": "tdf-hq/src/TDF/Commerce/RefundStore.hs",
+      "sha256": "e40608b5bc2ce1429c61fbfc6131f4e6e134f599cbf734a62ddd505fab3264b6",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "REF-RECOVERY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-e566657be7de3ed5",
@@ -13721,7 +14600,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "386bb638b562501136ebe40e7c82b245ae1a5aa3852a31551809e28e446093db",
+      "sha256": "2080bf46ca557c501a55e6e8d7cdf1858c540e876f8b4af1388eddbc35aef7aa",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -13748,14 +14627,14 @@
     {
       "id": "SURFACE-5cbf72ef8bf21ded",
       "path": "tdf-hq/src/TDF/Server/CommerceOperations.hs",
-      "sha256": "a1ec22249c8a9541591978f638598adee51001cb60fe24aabc3b7408c3d4d068",
+      "sha256": "fce3e53d4c0335488e7ae5f85f64cc9a85ea655b2419f9fc1b32e3259a661ae7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-2834bdf776fa3c23",
       "path": "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-      "sha256": "6dd5f702768604c8da1d6ea612a7f758a8c2f99fc54089ec1e9d563e107d937b",
+      "sha256": "15af66fb43c21a80f6e41f4ff67755fc0b8dda6867383496a1c6da3a2ab3e70a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -13785,7 +14664,7 @@
     {
       "id": "SURFACE-436c77cb88490332",
       "path": "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
-      "sha256": "43c219ed3e516f7676b93eb0345ecc47aee20e3de1143b37076d4987f40280b2",
+      "sha256": "4ef64ec9d5551e186476039a31b2113c27032e72d14805604c1199c240ecc0ed",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -13799,14 +14678,14 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "ab1b73eff1aecac7fa26c2f75fad375500c16cfca6fd54d2f1ba0b5b8aa0d523",
+      "sha256": "e307cea3bda2439b8d3b79a84624335b4186f608183538ef12fc942322853c32",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
     {
       "id": "SURFACE-51ffa73da4445d45",
       "path": "tdf-hq/src/TDF/Server/Merch.hs",
-      "sha256": "13c1f56a9c8e12d95b93cc8800334c033e942c54cf959c546b0656e9b72a0f5b",
+      "sha256": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -13823,11 +14702,30 @@
       "requirements": []
     },
     {
-      "id": "SURFACE-2c8ed40114d9013d",
-      "path": "tdf-hq/src/TDF/Server/PaymentCapabilities.hs",
-      "sha256": "8c7c0bad03a1925f6de0e07e4e8d35be55676fd56931916d039e97b0bd3f47be",
+      "id": "SURFACE-576775b1139a1557",
+      "path": "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
+      "sha256": "6a159b7cfc3e9ba3f21c74de7191d7cfa6b4fcea2242334bfb055296575f9489",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-2c8ed40114d9013d",
+      "path": "tdf-hq/src/TDF/Server/PaymentCapabilities.hs",
+      "sha256": "27f7ca03fafdeb22b9d2c4cf76a2cffe49ff79d09ba138c6da3bae79cb690c6f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-453bfe4cc742d024",
+      "path": "tdf-hq/src/TDF/Server/ProviderExecution.hs",
+      "sha256": "a8ea11e94ddf018b3955f2c67e86122035731268499b605673a2766e577c0a48",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PAY-RECOVERY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-f67b06f0b5eec0fc",
@@ -13851,7 +14749,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "d1c142f7b54968314c0be1c5897e5a86dca3642c72b980687281baf06349483f",
+      "sha256": "741db65e144f41fc990934d94408df2b66ff9e7cad40b5260cdfb4759e13635c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -14214,7 +15112,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "b5a17355e77ca659d9ccf06e1f16a0719adc9d3419f256a4e1d32c1f4c565aa7",
+      "sha256": "1b8e6387004eb4106e624921814f360aba0d4cb4180c635ac4d7e55f8c5096a0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14268,9 +15166,14 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "89db969444be48ba102e866f2526904d5a5257b0a6217544829f6c55211153cf",
+      "sha256": "d4bf3f4d36c92125cf54c87d6616e9ea76648a85ea5639b73319eb32fe74487e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-RECOVERY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-2ece749119c0d78c",
@@ -14351,9 +15254,49 @@
       ]
     },
     {
+      "id": "SURFACE-9472263a2a388543",
+      "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+      "sha256": "2692643e091e108f1532db0eeb87426dc15cea5d45c258c3945c12052852611a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "REF-RECOVERY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-FULFILLMENT-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-6581f3b9e8ac5e68",
+      "path": "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs",
+      "sha256": "80f70e7556b9aeefcbd1d473e2cd1d1e0b608aaa45964472bc0cb30351295888",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "REF-RECOVERY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-c27282be2474402d",
+      "path": "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs",
+      "sha256": "3cba6f58f8e10f1bed8e92ec2f9e23d33ed0482ce73ab9e431f4f23851e2a1c6",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "REF-RECOVERY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-2c3fc05077df1f30",
       "path": "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
-      "sha256": "7067094ee4570fcf19a80a849b565d01039fbd54d1c474efca1bd7b219e36515",
+      "sha256": "9f59220bac0a97e414f1da8631ab53e33b1626ec7b1cce7ea9921a742a7c9c92",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -14518,6 +15461,13 @@
       ]
     },
     {
+      "id": "SURFACE-c823af87bc95031c",
+      "path": "tdf-hq/test/TDF/Server/PaymentAuditSpec.hs",
+      "sha256": "eb5ef47f63c9a53124d0cac7c5b2bbf6a20ceee47d64a2f028c4d3730443801b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-9c08dc84fc4d951b",
       "path": "tdf-hq/test/TDF/ServerAdminSpec.hs",
       "sha256": "103007ca5c6dfd9f1441476783ef46066308de883f8f35e5799364e22a582d25",
@@ -14651,7 +15601,7 @@
     {
       "id": "SURFACE-c5f338178ef543f2",
       "path": "tdf-hq/test/integration/artist_merch_runtime_fixture.sql",
-      "sha256": "34461993371c89b8a4bb031a7a3a4aec3ff5dff352950cd8005ccff9b93ddeb0",
+      "sha256": "275e60d40bd625485c7d66e850556991fb0afc9d6edc37035ffac04c0bcd986c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -14791,7 +15741,7 @@
     {
       "id": "SURFACE-51ba007a60dd54a1",
       "path": "tdf-hq/test/integration/event_operations_schema_seed.sql",
-      "sha256": "90bdc1f03c82e35983627223177f88579b86bc105b35fb4c601e9ad829bbdf44",
+      "sha256": "0ac9b9a6c620eb40762b6e215a432b55dd9ab6125edfa7d7cb2b1bf3f585357b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -15016,6 +15966,13 @@
       "id": "SURFACE-819a82f0c31c3d37",
       "path": "tdf-hq/test/integration/merch_checkout_expiry_assertions.sql",
       "sha256": "47a5bebb6e41a34ee49fc03c2ca4cef20965c5d090fe53600806599e7bcc3a91",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-bc92817786ba5985",
+      "path": "tdf-hq/test/integration/payment_audit_fixture.sql",
+      "sha256": "4550decba1bf66112720e16c7e6a239111cb1c021428c1b6edf6283c81cac90d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -16499,7 +17456,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "21803ca9542afe64ea67baf50c6ff34008ceca85f787bf82d04edb1940c77927",
+      "sha256": "beb99fbb047fe600e2c922702d52c9c9519c039c39981f4a6b4bc64724b07b14",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -16884,7 +17841,7 @@
     {
       "id": "SURFACE-3cdceeb8afd26986",
       "path": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-      "sha256": "b250d29d8515d9d978f1ce65e63e7a5ab0acf71695c8cdf12b0314e5455f2d57",
+      "sha256": "0aa585495694b2954d6db9a667c497f792a272037e9a66cb11ceb0baaa35a400",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -17598,6 +18555,7 @@
     "SURFACE-46aeee723adfa6c5",
     "SURFACE-ee1bb502b120babb",
     "SURFACE-713c65ca95c0680d",
+    "SURFACE-e4c6bf3c31cac943",
     "SURFACE-d09bf04096bd6964",
     "SURFACE-20231ef140c7dd90",
     "SURFACE-ac7679c947f7408b",
@@ -17608,6 +18566,8 @@
     "SURFACE-0961f93c2cc23e1a",
     "SURFACE-3875378b2b3df521",
     "SURFACE-2661bcd3e8c66ae8",
+    "SURFACE-69900817facd771e",
+    "SURFACE-2f21c1c45f5b1cca",
     "SURFACE-57edc37515705dee",
     "SURFACE-bd35aa30f70923f7",
     "SURFACE-73a4c004bae044bb",
@@ -17661,6 +18621,7 @@
     "SURFACE-12bd2db7cef49569",
     "SURFACE-1c7d386a5185ce43",
     "SURFACE-61ce5bdd849d0317",
+    "SURFACE-09f409fc2f5fdd87",
     "SURFACE-e10a3732c19671ff",
     "SURFACE-7762cc1d53f882c8",
     "SURFACE-bad721e602863a57",
@@ -17829,7 +18790,9 @@
     "SURFACE-b918df4f6cacddc2",
     "SURFACE-78afe29632a7411b",
     "SURFACE-9649a5eac5beddfa",
+    "SURFACE-c135b76cb25cf121",
     "SURFACE-3c9e2b2fae1ee373",
+    "SURFACE-821047b31f93bf41",
     "SURFACE-78456e994088870b",
     "SURFACE-3e964491714d824a",
     "SURFACE-6602092233544384",
@@ -17883,6 +18846,7 @@
     "SURFACE-27c2e340baf13c46",
     "SURFACE-c5154d27c146520e",
     "SURFACE-c2453e0acd284799",
+    "SURFACE-056e006eae5d1a35",
     "SURFACE-72586bea3daa1f56",
     "SURFACE-ddd5bddf37a22b13",
     "SURFACE-0e7ed1b161cff4ca",
@@ -17912,6 +18876,7 @@
     "SURFACE-2e3549439fba7b8e",
     "SURFACE-c8f34cac30980fe7",
     "SURFACE-4e5cd5f9282be11b",
+    "SURFACE-4f1a575585c3cc83",
     "SURFACE-53e830f66e47cd69",
     "SURFACE-84a69840be37d47e",
     "SURFACE-20340c57830b2359",
@@ -17964,11 +18929,15 @@
     "SURFACE-f57fa043e71dbbe2",
     "SURFACE-d8478b8e80f80942",
     "SURFACE-b7a144db5e173cbd",
+    "SURFACE-9e1dbd68b39d926a",
+    "SURFACE-c29a804d309aa3af",
     "SURFACE-26dc290d28b12ef0",
     "SURFACE-eb6186bb49f8e2af",
     "SURFACE-7dc4d85edae3d59f",
     "SURFACE-8b0bf0ba2466b550",
     "SURFACE-9babc79b1a56bd8b",
+    "SURFACE-19d831e818ff64d7",
+    "SURFACE-d3dd73dc1f3e306b",
     "SURFACE-322b94aa1844c92d",
     "SURFACE-cdf54a14bb564ff8",
     "SURFACE-c9774767b7d89167",
@@ -18087,6 +19056,12 @@
     "SURFACE-45942cefd314d415",
     "SURFACE-772702b32840fda1",
     "SURFACE-e1fc722d5c6ece7f",
+    "SURFACE-388d446af04495d3",
+    "SURFACE-65cbecbfc60140c5",
+    "SURFACE-24f155f2a25a5ede",
+    "SURFACE-4bc4cdfae1ab1163",
+    "SURFACE-9fb827f13f2ab951",
+    "SURFACE-cc4546803ae98fba",
     "SURFACE-086f8353dd9f321c",
     "SURFACE-a5cd6f33c8f86f75",
     "SURFACE-907ec3db959e1b75",
@@ -18408,6 +19383,7 @@
     "SURFACE-8d890473e2ac6c09",
     "SURFACE-77460de8941bcdf9",
     "SURFACE-bc010ac9824ecc6f",
+    "SURFACE-85e8012c6e922277",
     "SURFACE-65b783cd59e6037b",
     "SURFACE-e21f5f9f9c9cf3d5",
     "SURFACE-b81f4ee712780e85",
@@ -18767,6 +19743,14 @@
     "SURFACE-0a672b981113157a",
     "SURFACE-f82ff50f228cdf82",
     "SURFACE-4035d7d64f2e02cd",
+    "SURFACE-ded7c7bc0868d2c9",
+    "SURFACE-4958a5647f563296",
+    "SURFACE-09856d74b52105ce",
+    "SURFACE-45333317f4f44085",
+    "SURFACE-27194f671f115043",
+    "SURFACE-c8600ce6b046e95e",
+    "SURFACE-0cd61fc798982022",
+    "SURFACE-d218cc4c1a7c65e9",
     "SURFACE-879ac8a337bbef30",
     "SURFACE-cfa1182847309261",
     "SURFACE-971c851d080a7f42",
@@ -18786,6 +19770,8 @@
     "SURFACE-0a02295dcd28d0a0",
     "SURFACE-27de582f6b3e4ffc",
     "SURFACE-3de3494500040781",
+    "SURFACE-093fa48b0443ae44",
+    "SURFACE-1677021132c22307",
     "SURFACE-8509b4c93568afdf",
     "SURFACE-2f0a948af58ed3dd",
     "SURFACE-7c3b9121009a751a",
@@ -18794,6 +19780,7 @@
     "SURFACE-6c8ee99a692abbfd",
     "SURFACE-75a01b14093ef4d3",
     "SURFACE-f42a14fbd0279853",
+    "SURFACE-f0b1b19d350a3cdd",
     "SURFACE-4dc22d27253fa16c",
     "SURFACE-3b3b8ff06aaf8d20",
     "SURFACE-7aec7097d7a2a23a",
@@ -18887,6 +19874,7 @@
     "SURFACE-e454210d86a70f09",
     "SURFACE-4ec58002d2eff1e2",
     "SURFACE-bab78e6c1c75dd3b",
+    "SURFACE-7372ceb0e4611b65",
     "SURFACE-9deb4ef00a69e5d0",
     "SURFACE-f4f87f692fd74e88",
     "SURFACE-4669c83019e74b2e",
@@ -18923,15 +19911,18 @@
     "SURFACE-27dffd9db92a2065",
     "SURFACE-42d48212b5b3fd40",
     "SURFACE-64cb8366887e5054",
+    "SURFACE-f215d4911e9d9bef",
     "SURFACE-1f329e23e5aba24d",
     "SURFACE-059d1c74b4946473",
+    "SURFACE-bad06d52157a22f3",
     "SURFACE-9038b2dbdf428e2c",
     "SURFACE-f3e27f9ed209afef",
     "SURFACE-163048cc75f29b92",
     "SURFACE-d117ca68ab1ef0d1",
     "SURFACE-e499402b9aad0cfc",
     "SURFACE-ec38793d0cc5b091",
-    "SURFACE-1ed705f31fa3ad8e",
+    "SURFACE-1d441708a9c7e070",
+    "SURFACE-b3ab13afc655164b",
     "SURFACE-e566657be7de3ed5",
     "SURFACE-95011c3eb812e7fd",
     "SURFACE-de7641689e63ad01",
@@ -19006,6 +19997,7 @@
     "SURFACE-06aae7ecd0fab607",
     "SURFACE-7385d5c53761b485",
     "SURFACE-93436e246ed23b35",
+    "SURFACE-576775b1139a1557",
     "SURFACE-2c8ed40114d9013d",
     "SURFACE-c446ba475dccb0e6",
     "SURFACE-f26997e896f3fcbc",
@@ -19059,7 +20051,6 @@
     "SURFACE-347e9f1684b17032",
     "SURFACE-45b71844f2c3aac7",
     "SURFACE-13ed80492a91c67d",
-    "SURFACE-d117cfc262185911",
     "SURFACE-2ece749119c0d78c",
     "SURFACE-112ccf8551193c94",
     "SURFACE-ca7f36927ef07d50",
@@ -19083,6 +20074,7 @@
     "SURFACE-ccb30943a385e6b2",
     "SURFACE-705eb0208602ff31",
     "SURFACE-85348e5ee1e69142",
+    "SURFACE-c823af87bc95031c",
     "SURFACE-9c08dc84fc4d951b",
     "SURFACE-fd889b176c72565e",
     "SURFACE-fa6329758744ce4e",
@@ -19149,6 +20141,7 @@
     "SURFACE-19c109c6a6a1a09a",
     "SURFACE-566ddb427787e37c",
     "SURFACE-819a82f0c31c3d37",
+    "SURFACE-bc92817786ba5985",
     "SURFACE-3347d657952f5c99",
     "SURFACE-520371661a6fbf46",
     "SURFACE-ceea7650ae2e3282",
@@ -20705,6 +21698,22 @@
     }
   ],
   "apiOperations": [
+    {
+      "id": "GET /commerce/payment-capabilities",
+      "operationId": "listPaymentCapabilities",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
     {
       "id": "GET /interactions/reports",
       "operationId": "listInteractionReports",
@@ -25200,6 +26209,48 @@
       "conformance": "not-established-by-client-generation"
     },
     {
+      "id": "GET /admin/services/storefront/refunds/{refundId}/reconcile",
+      "operationId": "adminGetServiceRefundRecovery",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /admin/services/storefront/refunds/{refundId}/reconcile",
+      "operationId": "adminReconcileServiceRefund",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "429",
+        "502",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
       "id": "POST /admin/services/storefront/orders/{orderId}/reconcile",
       "operationId": "adminReconcileServiceStorefrontOrder",
       "source": "tdf-hq/docs/openapi/api.yaml",
@@ -25214,6 +26265,122 @@
         "404",
         "501",
         "502"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /commerce/checkouts/{checkoutId}/payment-sessions",
+      "operationId": "createProviderPaymentSession",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [],
+      "responses": [
+        "202",
+        "400",
+        "404",
+        "409",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /commerce/checkouts/{checkoutId}/payment-sessions/{attemptId}",
+      "operationId": "getProviderPaymentSession",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [],
+      "responses": [
+        "200",
+        "404",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /commerce/provider-notifications/placetopay",
+      "operationId": "receivePlaceToPayNotification",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /commerce/provider-notifications/payphone",
+      "operationId": "receivePayPhoneNotification",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [],
+      "responses": [
+        "200",
+        "400",
+        "409",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /NotificacionPago",
+      "operationId": "receivePayPhoneNotificationCompatibility",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [],
+      "responses": [
+        "200",
+        "400",
+        "409",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /admin/commerce/reconciliation-exceptions",
+      "operationId": "adminListCommerceReconciliationExceptions",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /admin/commerce/provider-queries",
+      "operationId": "adminListCommerceProviderQueries",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /admin/commerce/overview",
+      "operationId": "adminGetCommercePaymentOverview",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "403"
       ],
       "conformance": "not-established-by-client-generation"
     },
@@ -40231,6 +41398,50 @@
       "authority": "client discovery policy; backend denial requires independent verification"
     },
     {
+      "feature": "technical.provider-payment-return",
+      "resource": "/pagos/retorno",
+      "action": "discover",
+      "authentication": "public",
+      "rolesAny": [],
+      "rolesAll": [],
+      "modulesAll": [],
+      "modulesAny": [],
+      "strictAdmin": false,
+      "scope": "none",
+      "condition": {
+        "flag": null,
+        "maturity": "stable"
+      },
+      "mobile": {
+        "kind": "technical",
+        "destination": null,
+        "documentedException": "Provider redirects resume the originating checkout in the web application."
+      },
+      "authority": "client discovery policy; backend denial requires independent verification"
+    },
+    {
+      "feature": "technical.provider-payment-return",
+      "resource": "/pagos/retorno",
+      "action": "view",
+      "authentication": "public",
+      "rolesAny": [],
+      "rolesAll": [],
+      "modulesAll": [],
+      "modulesAny": [],
+      "strictAdmin": false,
+      "scope": "none",
+      "condition": {
+        "flag": null,
+        "maturity": "stable"
+      },
+      "mobile": {
+        "kind": "technical",
+        "destination": null,
+        "documentedException": "Provider redirects resume the originating checkout in the web application."
+      },
+      "authority": "client discovery policy; backend denial requires independent verification"
+    },
+    {
       "feature": "technical.service-payment-return",
       "resource": "/mezcla-mastering/pago-datafast",
       "action": "discover",
@@ -41186,7 +42397,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 27,
+    "PARTIAL": 30,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

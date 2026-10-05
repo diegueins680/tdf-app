@@ -1820,6 +1820,254 @@
         "classification": "PARTIAL",
         "reason": "Pure61 examples/nine controls and SQL30 boundary inserts/three controls pass; final full runtime, PG17 and deployment remain pending."
       }
+    },
+    {
+      "id": "REF-RECOVERY-001",
+      "title": "Held refund recovery preserves execution and accounting evidence",
+      "statement": "A processing refund with an ambiguous provider outcome must retain its held balance, be queried rather than re-executed, and apply verified completion once under current authority.",
+      "domain": "REF",
+      "authority": "approved",
+      "source": "docs/adr/0128-refund-execution-fence.md; docs/adr/0129-atomic-canonical-refund-accounting.md; docs/adr/0130-known-id-refund-query-recovery.md",
+      "property": "Never execute an ambiguous processing refund a second time.; Never duplicate canonical refund accounting.; Never apply an external result using authority checked only before HTTP.",
+      "contract": "formal/event-operations/refund-recovery-correspondence.md",
+      "actors": [
+        "Authorized accounting operator",
+        "Refund query worker",
+        "Payment provider"
+      ],
+      "preconditions": [
+        "Applicable provider, feature and environment gates remain independently enforced; this requirement does not authorize activation."
+      ],
+      "inputs": [
+        "Refund ID and immutable amount/currency/merchant/resource binding",
+        "Provider query outcome",
+        "Current feature/provider authority"
+      ],
+      "state": {
+        "initial": "requested",
+        "intermediate": [
+          "processing with held balance",
+          "provider result available"
+        ],
+        "terminal": [
+          "succeeded; immutable accounting retained"
+        ]
+      },
+      "allowedTransitions": [
+        "Execute admitted request once; retain hold while outcome is ambiguous.",
+        "Query known provider refund; recheck locked state and authority before applying.",
+        "Return already-completed evidence on a duplicate application."
+      ],
+      "forbiddenTransitions": [
+        "Never execute an ambiguous processing refund a second time.",
+        "Never duplicate canonical refund accounting.",
+        "Never apply an external result using authority checked only before HTTP."
+      ],
+      "effects": [
+        "Atomically update refund, checkout balance and canonical payment intent when verified.",
+        "Retain financial/audit history and operator-owned flags on recovery."
+      ],
+      "authorization": "Re-evaluate current runtime and database eligibility after provider HTTP; bounded model abstracts the conjunction of these guards.",
+      "privacy": "Provider payload minimization and encryption remain separate contracts; synthetic tests contain no real customer/provider credentials.",
+      "concurrency": "Two bounded workers may query concurrently; SQL locks and atomic recordVerifiedRefund provide the concrete application boundary.",
+      "idempotency": "Same verified completion is observational after success; ambiguous external outcomes never imply a new execution permission.",
+      "failure": "Keep processing/held state for unverified or ambiguous results; reject changed immutable binding.",
+      "recovery": "Use known-ID query recovery and preserve financial history; nonempty queue rollback must fail.",
+      "observability": "Retain exact candidate SHA, database/model bounds, command, result and named negative-control evidence; never log credentials or raw payment payloads.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs",
+        "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
+        "tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "scripts/test-provider-retry-runtime.sh",
+        "scripts/verify-event-operations-formal.sh",
+        "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs",
+        "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs"
+      ],
+      "formalModels": [
+        "formal/event-operations/RefundRecovery.tla",
+        "formal/event-operations/RefundRecovery.cfg",
+        "formal/event-operations/RefundRecoveryExecution.cfg",
+        "formal/event-operations/RefundRecoveryAccounting.cfg",
+        "formal/event-operations/RefundRecoveryAuthority.cfg"
+      ],
+      "verification": "Existing model/implementation correspondence imported from consolidated main; rerun combined-candidate runtime and bounded checks before claiming conformance.",
+      "evidence": "Exact-revision CI/formal/runtime receipts; prior parent evidence is historical only.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Scoped source correspondence; combined-candidate execution and deployment pending",
+      "ambiguity": [
+        "Bounded two-unit/two-refund model does not prove provider authenticity, network termination, SQL isolation or crash recovery."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Imported implementation and bounded models are mapped; full combined-candidate and deployment evidence remains open."
+      }
+    },
+    {
+      "id": "PAY-FULFILLMENT-001",
+      "title": "Hosted service payment and fulfillment commit together",
+      "statement": "Verified hosted service payment must atomically update its bound service order and canonical checkout, emit one paid audit, and preserve later fulfillment progress on replay.",
+      "domain": "PAY",
+      "authority": "approved",
+      "source": "formal/event-operations/refund-recovery-correspondence.md; docs/payments/stack-integration-2026-09-16.md",
+      "property": "Never commit paid checkout without corresponding fulfillment payment state.; Never duplicate the paid audit on replay.; Never regress fulfillment progress after payment.; Never synchronize an invalid domain/amount binding.",
+      "contract": "formal/event-operations/refund-recovery-correspondence.md",
+      "actors": [
+        "Provider callback/query worker",
+        "Authorized fulfillment operator"
+      ],
+      "preconditions": [
+        "Applicable provider, feature and environment gates remain independently enforced; this requirement does not authorize activation."
+      ],
+      "inputs": [
+        "Verified checkout/provider binding",
+        "Service order identity, amount and current fulfillment state"
+      ],
+      "state": {
+        "initial": "unpaid",
+        "intermediate": [
+          "paid"
+        ],
+        "terminal": [
+          "in_progress within this bounded model"
+        ]
+      },
+      "allowedTransitions": [
+        "Apply verified bound payment and order synchronization in one transaction.",
+        "Advance paid fulfillment; retain that state under repeated payment application."
+      ],
+      "forbiddenTransitions": [
+        "Never commit paid checkout without corresponding fulfillment payment state.",
+        "Never duplicate the paid audit on replay.",
+        "Never regress fulfillment progress after payment.",
+        "Never synchronize an invalid domain/amount binding."
+      ],
+      "effects": [
+        "Canonical paid evidence and service order synchronization commit or roll back together."
+      ],
+      "authorization": "Valid provider binding is necessary; callback verification and operator authorization remain additional backend requirements.",
+      "privacy": "The correspondence does not authorize public order lookup or place lookup capabilities in URLs.",
+      "concurrency": "Two bounded completion workers and one fulfillment transition; real savepoint and row locks must preserve the atomic model boundary.",
+      "idempotency": "A repeated verified result preserves completed accounting and later fulfillment progress.",
+      "failure": "Binding mismatch rejects synchronization; outer transaction rollback also removes payment/order effects.",
+      "recovery": "Retry through durable query/reconciliation without inventing new payment evidence.",
+      "observability": "Retain exact candidate SHA, database/model bounds, command, result and named negative-control evidence; never log credentials or raw payment payloads.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "scripts/test-provider-retry-runtime.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/HostedServicePayment.tla",
+        "formal/event-operations/HostedServicePayment.cfg",
+        "formal/event-operations/HostedServicePaymentAtomic.cfg",
+        "formal/event-operations/HostedServicePaymentReplay.cfg",
+        "formal/event-operations/HostedServicePaymentProgress.cfg"
+      ],
+      "verification": "Existing model/implementation correspondence imported from consolidated main; rerun combined-candidate runtime and bounded checks before claiming conformance.",
+      "evidence": "Exact-revision CI/formal/runtime receipts; prior parent evidence is historical only.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Scoped source correspondence; combined-candidate execution and deployment pending",
+      "ambiguity": [
+        "Model abstracts SQL transaction success and provider verification; no whole-program refinement or liveness claim."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Imported implementation and bounded models are mapped; full combined-candidate and deployment evidence remains open."
+      }
+    },
+    {
+      "id": "PAY-RECOVERY-001",
+      "title": "Checkout-scoped browser payment recovery",
+      "statement": "Starting another checkout in one browser session must preserve prior recovery records; provider returns must select their matching checkout, and completed orders must not capture a new purchase flow.",
+      "domain": "PAY",
+      "authority": "approved",
+      "source": "formal/event-operations/refund-recovery-correspondence.md; docs/payments/stack-integration-2026-09-16.md",
+      "property": "Never overwrite another checkout recovery record on a new start.; Never resume a different checkout from a bound provider return.; Never let a completed order hijack a new purchase.",
+      "contract": "formal/event-operations/refund-recovery-correspondence.md",
+      "actors": [
+        "Browser customer",
+        "Provider redirect",
+        "Backend payment adapter"
+      ],
+      "preconditions": [
+        "Applicable provider, feature and environment gates remain independently enforced; this requirement does not authorize activation."
+      ],
+      "inputs": [
+        "Public checkout selector",
+        "Checkout-scoped pending/resume record",
+        "Server-confirmed completion response"
+      ],
+      "state": {
+        "initial": "no record",
+        "intermediate": [
+          "started with stored recovery",
+          "selected matching return"
+        ],
+        "terminal": [
+          "completed record retained but excluded from new-flow discovery"
+        ]
+      },
+      "allowedTransitions": [
+        "Store each checkout independently in sessionStorage.",
+        "Resolve an exact matching public checkout selector; read compatible historical singleton records.",
+        "Retain completion capabilities but exclude completed candidates from fresh flow discovery."
+      ],
+      "forbiddenTransitions": [
+        "Never overwrite another checkout recovery record on a new start.",
+        "Never resume a different checkout from a bound provider return.",
+        "Never let a completed order hijack a new purchase."
+      ],
+      "effects": [
+        "Preserve retry idempotency keys and recovery lookup capabilities for their original checkout."
+      ],
+      "authorization": "Browser records and public selectors do not grant backend payment authority; backend lookup/session checks remain necessary.",
+      "privacy": "Do not put lookup capabilities in return URLs; sessionStorage is scoped to the originating browser tab, not a cross-tab synchronization guarantee.",
+      "concurrency": "Two bounded checkout records within one browser session; delayed responses and concrete UI scheduling remain component-test obligations.",
+      "idempotency": "Retry the original request/key for pending evidence; do not guess among ambiguous unbound records.",
+      "failure": "Decline ambiguous recovery selection; storage failure/expiry must not be represented as server payment success.",
+      "recovery": "Return to the original checkout record and recover authoritative state; keep completed keys for direct order recovery.",
+      "observability": "Retain exact candidate SHA, database/model bounds, command, result and named negative-control evidence; never log credentials or raw payment payloads.",
+      "implementation": [
+        "tdf-hq-ui/src/utils/providerPaymentResume.ts",
+        "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
+        "tdf-hq/src/TDF/Server/ProviderExecution.hs"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/utils/providerPaymentResume.test.ts",
+        "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
+        "tdf-hq/test/Spec.hs",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/PaymentRecovery.tla",
+        "formal/event-operations/PaymentRecovery.cfg",
+        "formal/event-operations/PaymentRecoveryOverwrite.cfg",
+        "formal/event-operations/PaymentRecoveryReturn.cfg",
+        "formal/event-operations/PaymentRecoveryCompleted.cfg"
+      ],
+      "verification": "Existing model/implementation correspondence imported from consolidated main; rerun combined-candidate runtime and bounded checks before claiming conformance.",
+      "evidence": "Exact-revision CI/formal/runtime receipts; prior parent evidence is historical only.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Scoped source correspondence; combined-candidate execution and deployment pending",
+      "ambiguity": [
+        "Bounded model assumes successful storage and verified responses; expiry, storage failure, cross-device/tab synchronization and native Mobile payment parity are excluded."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Imported implementation and bounded models are mapped; full combined-candidate and deployment evidence remains open."
+      }
     }
   ]
 }

@@ -37,6 +37,25 @@ test('accepts both clean generated clients at the exact Mobile pin', t => {
 });
 
 for (const target of ['web', 'mobile']) {
+  test(`checks the entire ${target} contract beyond the child-process output limit`, t => {
+    const f = fixture(t);
+    const repo = target === 'web' ? f.root : f.mobile;
+    const file = target === 'web' ? f.webFile : f.mobileFile;
+    const contract = '// generated contract\n'.repeat(100_000);
+    f.write(repo, file, contract);
+    f.git(repo, 'add', file);
+    f.git(repo, 'commit', '-qm', 'large generated contract');
+    if (target === 'mobile') {
+      f.git(f.root, 'add', 'tdf-mobile');
+      f.git(f.root, 'commit', '-qm', 'pin large mobile contract');
+    }
+    assert.equal(checkGeneratedApi(f.root).clients, 2);
+    f.write(repo, file, contract + 'export interface Drift {}\n');
+    assert.throws(() => checkGeneratedApi(f.root), /Generated API drift/);
+  });
+}
+
+for (const target of ['web', 'mobile']) {
   test(`rejects staged ${target} drift after regenerating the working tree`, t => {
     const f = fixture(t);
     const repo = target === 'web' ? f.root : f.mobile;

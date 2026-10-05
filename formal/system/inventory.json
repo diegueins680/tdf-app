@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "982ade380e0826dcdad582f8da92023b863b9dfa",
+  "mobileRevision": "705fd75d3c87a31e8086fd6743398b01057676da",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -96,6 +96,7 @@
       "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
       "scripts/__tests__/fixtures/production-schema-20260814.sql",
       "scripts/__tests__/fixtures/production-ticketing-base.sql",
+      "scripts/__tests__/fixtures/provider-retry-ledger-base.sql",
       "scripts/__tests__/formal-methods-audit.test.mjs",
       "scripts/__tests__/generated-api-conformance.test.mjs",
       "scripts/__tests__/identity-http-runtime.mjs",
@@ -110,6 +111,8 @@
       "scripts/__tests__/music-directory-visual-artifacts.test.mjs",
       "scripts/__tests__/navigation-http-runtime.mjs",
       "scripts/__tests__/onboarding-real-browser.mjs",
+      "scripts/__tests__/payment-query-report-contract.test.mjs",
+      "scripts/__tests__/payment-staging-inspection.test.mjs",
       "scripts/__tests__/persona-test-program.test.mjs",
       "scripts/__tests__/production-entrypoint.test.mjs",
       "scripts/__tests__/production-release.test.mjs",
@@ -169,6 +172,7 @@
       "scripts/get-admin-token.sh",
       "scripts/get-instagram-token.mjs",
       "scripts/identity-reconciliation.mjs",
+      "scripts/inspect-payment-staging.mjs",
       "scripts/instagram-lifecycle-artifact.mjs",
       "scripts/instagram-openclaw-cdp.mjs",
       "scripts/install-continuous-improvement-loop-launchd.sh",
@@ -347,8 +351,11 @@
       "scripts/test-notification-navigation-migration.sh",
       "scripts/test-party-selector-rate-limit-scope-migration.sh",
       "scripts/test-payment-arithmetic-verifier.py",
+      "scripts/test-payment-audit-runtime.sh",
       "scripts/test-provider-event-operations-migration.sh",
+      "scripts/test-provider-execution-runtime-migration.sh",
       "scripts/test-provider-identity.sh",
+      "scripts/test-provider-retry-runtime.sh",
       "scripts/test-public-booking-http-concurrency.sh",
       "scripts/test-public-booking-tentative-idempotency-migration.sh",
       "scripts/test-public-ticket-checkout-runtime-migration.sh",
@@ -413,6 +420,7 @@
       "tdf-hq-ui/src/__tests__/publicBookingRooms.test.ts",
       "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
       "tdf-hq-ui/src/analytics/growthAttribution.ts",
+      "tdf-hq-ui/src/analytics/onboardingCompletionAnalytics.ts",
       "tdf-hq-ui/src/analytics/onboardingProgress.test.ts",
       "tdf-hq-ui/src/analytics/onboardingProgress.ts",
       "tdf-hq-ui/src/analytics/partySelectorTelemetry.test.ts",
@@ -442,6 +450,7 @@
       "tdf-hq-ui/src/api/client.ts",
       "tdf-hq-ui/src/api/cms.test.ts",
       "tdf-hq-ui/src/api/cms.ts",
+      "tdf-hq-ui/src/api/commerceOperations.test.ts",
       "tdf-hq-ui/src/api/commerceOperations.ts",
       "tdf-hq-ui/src/api/contracts.ts",
       "tdf-hq-ui/src/api/courses.ts",
@@ -494,11 +503,15 @@
       "tdf-hq-ui/src/api/parties.ts",
       "tdf-hq-ui/src/api/partySelector.test.ts",
       "tdf-hq-ui/src/api/partySelector.ts",
+      "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
+      "tdf-hq-ui/src/api/paymentCapabilities.ts",
       "tdf-hq-ui/src/api/payments.ts",
       "tdf-hq-ui/src/api/pipelines.test.ts",
       "tdf-hq-ui/src/api/pipelines.ts",
       "tdf-hq-ui/src/api/preferences.test.ts",
       "tdf-hq-ui/src/api/preferences.ts",
+      "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
+      "tdf-hq-ui/src/api/providerPaymentSessions.ts",
       "tdf-hq-ui/src/api/queryValidation.test.ts",
       "tdf-hq-ui/src/api/radio.test.ts",
       "tdf-hq-ui/src/api/radio.ts",
@@ -617,6 +630,14 @@
       "tdf-hq-ui/src/components/notificationTarget.ts",
       "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx",
       "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
+      "tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.test.tsx",
+      "tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.tsx",
+      "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
+      "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
+      "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
+      "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+      "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx",
+      "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx",
       "tdf-hq-ui/src/components/reputation/CategoryPriorityPrototype.test.ts",
       "tdf-hq-ui/src/components/reputation/CategoryPriorityPrototype.tsx",
       "tdf-hq-ui/src/components/reputation/ContextualRankingPrototype.test.ts",
@@ -864,6 +885,8 @@
       "tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts",
       "tdf-hq-ui/src/pages/PaymentsPage.partySelector.test.ts",
       "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+      "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
+      "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
       "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx",
       "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
       "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
@@ -943,6 +966,7 @@
       "tdf-hq-ui/src/pages/teachersPageLogic.ts",
       "tdf-hq-ui/src/react-router.d.ts",
       "tdf-hq-ui/src/routes/AppErrorBoundary.tsx",
+      "tdf-hq-ui/src/routes/AppRoutes.tsx",
       "tdf-hq-ui/src/routes/AppShell.test.tsx",
       "tdf-hq-ui/src/routes/AppShell.tsx",
       "tdf-hq-ui/src/routes/RouteLoadingFallback.tsx",
@@ -1021,6 +1045,8 @@
       "tdf-hq-ui/src/utils/optionalBrowserStorage.ts",
       "tdf-hq-ui/src/utils/passwordPolicy.test.ts",
       "tdf-hq-ui/src/utils/passwordPolicy.ts",
+      "tdf-hq-ui/src/utils/providerPaymentResume.test.ts",
+      "tdf-hq-ui/src/utils/providerPaymentResume.ts",
       "tdf-hq-ui/src/utils/publicBookingRooms.ts",
       "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts",
       "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
@@ -1310,6 +1336,14 @@
       "tdf-hq/sql/2026-09-10_party_selector_rate_limit_scopes_rollback.sql",
       "tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql",
       "tdf-hq/sql/2026-09-10_payment_attempt_intent_binding_rollback.sql",
+      "tdf-hq/sql/2026-09-11_manual_bank_provider_activation.sql",
+      "tdf-hq/sql/2026-09-11_manual_bank_provider_activation_rollback.sql",
+      "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql",
+      "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync_rollback.sql",
+      "tdf-hq/sql/2026-09-11_provider_capability_catalog.sql",
+      "tdf-hq/sql/2026-09-11_provider_capability_catalog_rollback.sql",
+      "tdf-hq/sql/2026-09-13_provider_execution_runtime.sql",
+      "tdf-hq/sql/2026-09-13_provider_execution_runtime_rollback.sql",
       "tdf-hq/sql/2026-09-14_event_operations_api.sql",
       "tdf-hq/sql/2026-09-14_event_operations_api_rollback.sql",
       "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
@@ -1329,6 +1363,8 @@
       "tdf-hq/sql/2026-09-15_event_task_revision_rollback.sql",
       "tdf-hq/sql/2026-09-15_event_task_revisioned_read.sql",
       "tdf-hq/sql/2026-09-15_event_task_revisioned_read_rollback.sql",
+      "tdf-hq/sql/2026-09-15_provider_query_recovery.sql",
+      "tdf-hq/sql/2026-09-15_provider_query_recovery_rollback.sql",
       "tdf-hq/sql/2026-09-15_social_v2_chat_api.sql",
       "tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.sql",
       "tdf-hq/sql/2026-09-15_social_v2_profile_reads.sql",
@@ -1337,6 +1373,8 @@
       "tdf-hq/sql/2026-09-16_artist_self_service_rollback.sql",
       "tdf-hq/sql/2026-09-16_event_task_completion.sql",
       "tdf-hq/sql/2026-09-16_event_task_completion_rollback.sql",
+      "tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql",
+      "tdf-hq/sql/2026-09-16_payment_intent_refund_sync_rollback.sql",
       "tdf-hq/sql/2026-09-16_social_v2_fan_effects.sql",
       "tdf-hq/sql/2026-09-16_social_v2_legacy_writes.sql",
       "tdf-hq/sql/2026-09-17_directory_event_privacy_composition.sql",
@@ -1434,6 +1472,7 @@
       "tdf-hq/src/TDF/API/Payments.hs",
       "tdf-hq/src/TDF/API/Pipelines.hs",
       "tdf-hq/src/TDF/API/Proposals.hs",
+      "tdf-hq/src/TDF/API/ProviderExecution.hs",
       "tdf-hq/src/TDF/API/Radio.hs",
       "tdf-hq/src/TDF/API/RecordsIngestion.hs",
       "tdf-hq/src/TDF/API/Reviews.hs",
@@ -1475,14 +1514,20 @@
       "tdf-hq/src/TDF/Commerce/MerchReservationWorker.hs",
       "tdf-hq/src/TDF/Commerce/Money.hs",
       "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
+      "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
       "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs",
       "tdf-hq/src/TDF/Commerce/ProviderAdapter/Http.hs",
+      "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs",
       "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs",
       "tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs",
       "tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs",
       "tdf-hq/src/TDF/Commerce/ProviderCapabilityStore.hs",
       "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
       "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
+      "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
+      "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
+      "tdf-hq/src/TDF/Commerce/ProviderRuntimeConfig.hs",
+      "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
       "tdf-hq/src/TDF/Commerce/RefundStore.hs",
       "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
       "tdf-hq/src/TDF/Commerce/StateMachine.hs",
@@ -1565,7 +1610,9 @@
       "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
       "tdf-hq/src/TDF/Server/Merch.hs",
       "tdf-hq/src/TDF/Server/MerchReputation.hs",
+      "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
       "tdf-hq/src/TDF/Server/PaymentCapabilities.hs",
+      "tdf-hq/src/TDF/Server/ProviderExecution.hs",
       "tdf-hq/src/TDF/Server/RecordsIngestion.hs",
       "tdf-hq/src/TDF/Server/Reviews.hs",
       "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
@@ -1632,6 +1679,9 @@
       "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
       "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs",
       "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs",
+      "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+      "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs",
+      "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs",
       "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
       "tdf-hq/test/TDF/CorsSpec.hs",
       "tdf-hq/test/TDF/CourseIdentitySpec.hs",
@@ -1653,6 +1703,7 @@
       "tdf-hq/test/TDF/Server/EventRelationsSpec.hs",
       "tdf-hq/test/TDF/Server/EventResearchSpec.hs",
       "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
+      "tdf-hq/test/TDF/Server/PaymentAuditSpec.hs",
       "tdf-hq/test/TDF/ServerAdminSpec.hs",
       "tdf-hq/test/TDF/ServerAuthSpec.hs",
       "tdf-hq/test/TDF/ServerExtraSpec.hs",
@@ -1721,6 +1772,7 @@
       "tdf-hq/test/integration/interactions/schema-properties.sql",
       "tdf-hq/test/integration/label_project_notes_backfill_postgres.sql",
       "tdf-hq/test/integration/merch_checkout_expiry_assertions.sql",
+      "tdf-hq/test/integration/payment_audit_fixture.sql",
       "tdf-hq/test/integration/pipeline_authorization_http.sh",
       "tdf-hq/test/integration/pipeline_workflow_cutover_negative.sh",
       "tdf-hq/test/integration/pipeline_workflow_cutover_postgres.sql",
@@ -2121,7 +2173,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "3fd49bf2e145bef8e65f05e2b3c6ad3069c0bda2c40a2b190521beabd46acb5d",
+      "sha256": "973900ec5b05196fd223818aa834641088b5758164a6225563001d7c95c11378",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2361,7 +2413,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "2866c4c75c54716d5c75a2b475add6b5a0654a705322ff9fb0e6084222adf599",
+      "sha256": "37cd0c75903cbad7b4eb4decfd63781e7d7fab1265bb89e5609173cc5527e760",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2427,7 +2479,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "031ec23f9f0e3dd08fcb934b59a5e63215def0b07eb2be9219e738e14daa1574",
+      "sha256": "64921de12e4f6ef21a8a65763da451acdf1492ca897c318019c2e835da140114",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2545,6 +2597,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-e4c6bf3c31cac943",
+      "path": "scripts/__tests__/fixtures/provider-retry-ledger-base.sql",
+      "sha256": "0a896cd95e31b5e08c22624e59d82845dd0dbce4e57b93d25d7e1fcdd6279e4c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-d09bf04096bd6964",
       "path": "scripts/__tests__/formal-methods-audit.test.mjs",
       "sha256": "8c2234cb42c2d631ef9523eb9d15b52908d28b98a8499c7e3e7a79119a2745bc",
@@ -2553,7 +2611,7 @@
     {
       "id": "SURFACE-adc432036f751c55",
       "path": "scripts/__tests__/generated-api-conformance.test.mjs",
-      "sha256": "da6a8039a136268283e11a054c981c16990db543e4154a391a2c3ff90873018e",
+      "sha256": "34ee30eadd4114f8229af92693a01767fa8a7056233758cf0050b38f99e29f6f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2607,7 +2665,7 @@
     {
       "id": "SURFACE-df80d476d03d210a",
       "path": "scripts/__tests__/merch-runtime-safety.test.mjs",
-      "sha256": "3d253d9beed2b434e06d4d217ec83b303097cd2101bd300b04640e8e2826b394",
+      "sha256": "c127989f3a5cbd0d7974eaf9ad9a86d747591a6cc9110ffe0b22689aab45ee01",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2629,6 +2687,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-69900817facd771e",
+      "path": "scripts/__tests__/payment-query-report-contract.test.mjs",
+      "sha256": "a8ea7da17d97eabfd11b8d94f8a948dc336408a916200927475bc70339702ff0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-2f21c1c45f5b1cca",
+      "path": "scripts/__tests__/payment-staging-inspection.test.mjs",
+      "sha256": "acb99cc43fbbdca8d24d3d52b7972b0100c5aa1392959ff5c5b91927677db317",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-57edc37515705dee",
       "path": "scripts/__tests__/persona-test-program.test.mjs",
       "sha256": "7f5842c21cd414c9aa541d41b71a01c3dc9347bf4ffee3c12eda88d8839f3128",
@@ -2643,7 +2713,7 @@
     {
       "id": "SURFACE-73a4c004bae044bb",
       "path": "scripts/__tests__/production-release.test.mjs",
-      "sha256": "8cf7053c7cc6c1f5e6a849d3b5b488900f54d0b40ea181ed2f548c4035bd4d77",
+      "sha256": "5735fff347586aa3a4968a4d3d0c3a36225bf8438993980f50c2ca065dfde797",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2823,7 +2893,7 @@
     {
       "id": "SURFACE-9306a961784ddefa",
       "path": "scripts/check-generated-api.mjs",
-      "sha256": "216256d09571f6fe741460f64541c62f0e341ccbd975db8353964d9b41d8d09c",
+      "sha256": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2980,6 +3050,12 @@
       "id": "SURFACE-61ce5bdd849d0317",
       "path": "scripts/identity-reconciliation.mjs",
       "sha256": "de08f261b6ac2cc4e96b288e6c43276a1ad1f8ca08ff77454ae8cfbf2100d155",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-09f409fc2f5fdd87",
+      "path": "scripts/inspect-payment-staging.mjs",
+      "sha256": "a141c1c20e8c9c0d149c91a6cffec7690fd13388ec5f00a0ecfe0ecc26855317",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3141,7 +3217,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "cb6720651672b221bd0111ad476e9fc00fce6f42a94fecab1f93cfb25def8ead",
+      "sha256": "0e02e1bcf6f8a451860ad5c1f52ac8461effc88659bce690f9ce222875878f71",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3249,7 +3325,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "d193c71b0551cb1bed103f9a30543e87a9e7c21c79bfcd47ae64d940c4323a87",
+      "sha256": "d1b45b55ebb0b86987fcb2c628de2edc1ada2c7abbb046f0f6009325538bdfe3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3261,7 +3337,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "6c23e13ede4d94188bea46f326cfd8bdb59b9f4f4f16836b23cbdfe04884741d",
+      "sha256": "7be0e6a87e50b625239a70858d53d9d3340a409000ea9f1dc475c96585b495d7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3609,7 +3685,7 @@
     {
       "id": "SURFACE-07a18534c1eba4e0",
       "path": "scripts/social/preview.mjs",
-      "sha256": "e33be89eb5dda1b3485f00d58d74393b131d914dcb34c179c337218d998c694d",
+      "sha256": "24a8ab3d7fb8c2ea5b9ac58404b4d6ec2c85a91456b3976751a8b9e8b2ae1da2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3759,7 +3835,7 @@
     {
       "id": "SURFACE-58805fa683558aef",
       "path": "scripts/test-artist-merch-runtime.sh",
-      "sha256": "bb890b3e3e1b4f6e94b039f397b4b3aae33cb456613477491ce565521003050a",
+      "sha256": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3789,7 +3865,7 @@
     {
       "id": "SURFACE-d6c33dc1652ba8f2",
       "path": "scripts/test-canonical-payment-lifecycle-migration.sh",
-      "sha256": "a35365d085e3a46efad4f1ec31662af46f92da71d241b7de59e13b951d145bc5",
+      "sha256": "1067352d6f5c53dfba368a08409c1543e4e23bff26661c125f68f32be1d999d1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4051,9 +4127,21 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-c135b76cb25cf121",
+      "path": "scripts/test-payment-audit-runtime.sh",
+      "sha256": "38e12fa06837ea1a216560df21362d25afcd461e1940517dc97f2a94fbf997d2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-3c9e2b2fae1ee373",
       "path": "scripts/test-provider-event-operations-migration.sh",
       "sha256": "62d337f21e58ec877346901403ae3690d0e9365e69c78d60049d9a72d4f624f1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-821047b31f93bf41",
+      "path": "scripts/test-provider-execution-runtime-migration.sh",
+      "sha256": "0e0f7ba6572b6e8237ab083def7f9f3f63ebfc87016cce3608cf60c7c11b1871",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4063,9 +4151,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-1aa70e99c086e23f",
+      "path": "scripts/test-provider-retry-runtime.sh",
+      "sha256": "fefc986deb95fc2ff2d8ad1af2829d20363128fbc52846fbfffa0ebc65b27353",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-3e964491714d824a",
       "path": "scripts/test-public-booking-http-concurrency.sh",
-      "sha256": "d4825289ef1120438d3201877013ed86883d6f904fcf76e557f32a9c7078f1e6",
+      "sha256": "6bcbfa2634384f4288b10b140c9e1aa0a518c5ffa7beb0347bac988d9b92fb60",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4227,7 +4321,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "63893939763aec0eea4a7c9ffe74c34b0f08b57c2789464136801f2675d29ebc",
+      "sha256": "7cf784520d75e5f8eba5ecc1b9cbbdee3b9d1da536d365f3f55e0e171c0a4c2d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4329,7 +4423,7 @@
     {
       "id": "SURFACE-02bd88f022e926a3",
       "path": "tdf-hq-ui/src/App.tsx",
-      "sha256": "f98e7f54638907305d0f927d9115a08ff29508efdaa17b36a3f9af8f196426fc",
+      "sha256": "4323e995fc9aa15d369a4f1783dcfc69097fa5a8cdb6a1de1f93c72d523a65de",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4389,7 +4483,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "1709240d9bdf9e3d9704ba0abf9b5f9734c356882213b3656e698a28cda05b97",
+      "sha256": "76a8c8c32a9e63001f1981f23da53299cd018899a7f773a40e8859ca4e6d6d48",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4423,6 +4517,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-056e006eae5d1a35",
+      "path": "tdf-hq-ui/src/analytics/onboardingCompletionAnalytics.ts",
+      "sha256": "6fb86614993372675bc7f34ce6b99487421decb416865b157acf938a014ddac5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-72586bea3daa1f56",
       "path": "tdf-hq-ui/src/analytics/onboardingProgress.test.ts",
       "sha256": "6bbde9264b7abf4bafcb5ee60abc63e7f7cc31e5fdf73d347ce6a19af83bdd6a",
@@ -4431,7 +4531,7 @@
     {
       "id": "SURFACE-ddd5bddf37a22b13",
       "path": "tdf-hq-ui/src/analytics/onboardingProgress.ts",
-      "sha256": "141c36716babd9b982a0c4f44ef176c341a67d38c82f8f7f87aa378f20201177",
+      "sha256": "be2b650c76476ef018a3be02ec7832b5bdc59ab96d80ccfd03f783e3734ccee5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4527,7 +4627,7 @@
     {
       "id": "SURFACE-5a383ebf9d6c9038",
       "path": "tdf-hq-ui/src/api/bookings.ts",
-      "sha256": "644247dde5303bdbe38d4eaf558a5062032925aa6eec26c2e9d3b78cab873e44",
+      "sha256": "1479e6fa87025c548757e6bb2100b9a907b97c38f49fdbf1a4b2df904679ce60",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4597,9 +4697,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-4f1a575585c3cc83",
+      "path": "tdf-hq-ui/src/api/commerceOperations.test.ts",
+      "sha256": "24fb56c61fa897f389edf3d2efdf72020f3dd3f16ce53559d8113d3c072c20fa",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-53e830f66e47cd69",
       "path": "tdf-hq-ui/src/api/commerceOperations.ts",
-      "sha256": "c1721a59c14fb4b1e8f2c77217a16fde08ffb8135fea8ddbaba1271f3378848b",
+      "sha256": "ebbfafeaffec0931711e16124eb58d1f3772d8d0c9782d8d99405d4c16abb97c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4611,7 +4717,7 @@
     {
       "id": "SURFACE-20340c57830b2359",
       "path": "tdf-hq-ui/src/api/courses.ts",
-      "sha256": "f0b336210e2b6bebad1f2c0395f7252ac43c4aa9a2b406635a0163ee57c6a7eb",
+      "sha256": "8419d11c42539f59ad7d6ab0af37c4f20c5e13edde6854a1c6ee80c2fc3de836",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4767,7 +4873,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "21803ca9542afe64ea67baf50c6ff34008ceca85f787bf82d04edb1940c77927",
+      "sha256": "beb99fbb047fe600e2c922702d52c9c9519c039c39981f4a6b4bc64724b07b14",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4909,6 +5015,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-9e1dbd68b39d926a",
+      "path": "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
+      "sha256": "8c0afc9528962481e7ce690373d153e32e968b6e0f2f590fb304459d2846e017",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c29a804d309aa3af",
+      "path": "tdf-hq-ui/src/api/paymentCapabilities.ts",
+      "sha256": "0b196cead2b5488ba028997427c4b974f7997bcb57619058545c8554c4c4032f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-26dc290d28b12ef0",
       "path": "tdf-hq-ui/src/api/payments.ts",
       "sha256": "25065609611e3e7fd4c5463acff2f85a8847abc087df04bc4ffd71636f3e9bc3",
@@ -4936,6 +5054,18 @@
       "id": "SURFACE-9babc79b1a56bd8b",
       "path": "tdf-hq-ui/src/api/preferences.ts",
       "sha256": "af75820d8783f712a9f55088b8a05208fd538691a81fd29aa90cbca06547c2b1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-19d831e818ff64d7",
+      "path": "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
+      "sha256": "f71cf7e1b218c9cbbd7099b13ca472ca3a9db773c933c4ea7f8774ee4cb0e4a2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d3dd73dc1f3e306b",
+      "path": "tdf-hq-ui/src/api/providerPaymentSessions.ts",
+      "sha256": "702a5c9cf268fd0a722be1765bd858426ad18f68926b31d9d2d04ff43ec94c43",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5001,13 +5131,13 @@
     {
       "id": "SURFACE-70b5b11efdf99990",
       "path": "tdf-hq-ui/src/api/serviceStorefront.test.ts",
-      "sha256": "dd4136e899499c3dcc0c44fdcecc60345e0ea27efdba6211a6f690c404cd07cf",
+      "sha256": "9e271df5302d80e33b58ad805e9d674a04e8c8301ec8a0e0f5837b9243f406de",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8ad44ff90027d686",
       "path": "tdf-hq-ui/src/api/serviceStorefront.ts",
-      "sha256": "9edddfda4823b34e69cc9692c1804092be9c817520ec49ff764993b50684d6fe",
+      "sha256": "160cc28ed84e8d0ddad9f766aa23d7efcd7990fdcb4e1438fc2373c10f0456d1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5644,6 +5774,54 @@
       "id": "SURFACE-e1fc722d5c6ece7f",
       "path": "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
       "sha256": "079986b30420bd3e88993a37b8936f6cb274d5904a1450ac4502546365d682ff",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-388d446af04495d3",
+      "path": "tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.test.tsx",
+      "sha256": "5e6cac90ffd749dcbd93d2e0673be05e073b7732ada83bae545444df0039de8c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-65cbecbfc60140c5",
+      "path": "tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.tsx",
+      "sha256": "652702467208778aa94a04bead7953ae96a5e4f6458e2aafee69e733c0435b72",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3b9b0b0c805d8c24",
+      "path": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
+      "sha256": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-8ff97ac79f9014bb",
+      "path": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
+      "sha256": "fd6674cc3b97424d868e0f77e681c5fea4362a82f8babc71dff15dc345112589",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-24f155f2a25a5ede",
+      "path": "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
+      "sha256": "20efac1816a623a3c4da1f1d184798805f57df773151ea900b176f652b764cfa",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4bc4cdfae1ab1163",
+      "path": "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.tsx",
+      "sha256": "1a93b9565edd1fde2b85b71c4181f478b3b37e9b38bf43f0784f55adc17b1122",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9fb827f13f2ab951",
+      "path": "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx",
+      "sha256": "51ae6b0d232085def9519c716b62c63e348f5e8920fa356d537e633048af28b5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-cc4546803ae98fba",
+      "path": "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx",
+      "sha256": "9544eb483c5460fde46a93e265f9bf9faf22cfa3c66eaa8e50af93adbac09fd5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6441,13 +6619,13 @@
     {
       "id": "SURFACE-39fe3c9e56197ba9",
       "path": "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
-      "sha256": "f6f222959b034b34183bfd504b313d0e954800e6cfad449538f720d68e3ee9d9",
+      "sha256": "24b4e9da00d5f6f970774d2300d85e78b3b6364988106b64b7226efe19d91c9c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-4863f94a96956295",
       "path": "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
-      "sha256": "b7e04cffb8c658757456255c26b3d38b07dab65ca5c438161eb0020e333e12a5",
+      "sha256": "6f1e8487723dcc8da6f717139f89d71d2c4ffdba924a5709ec170a2a0634168c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6489,7 +6667,7 @@
     {
       "id": "SURFACE-f12bf83921a15e4d",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
-      "sha256": "6bc9eb2f3595d8a8bfd036d0cb6cdab2037c5e91dac4cfd7e421dd573be89acb",
+      "sha256": "d55576b5d8a1679ea7585d7f9cb44f5529ceb11fa0ee9884842ed312088e7a1f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6591,7 +6769,7 @@
     {
       "id": "SURFACE-8f336ec91c101452",
       "path": "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
-      "sha256": "1e382de48cc22a3e637deaed498e433c46c68c92f68b19207f082ac907c6caa7",
+      "sha256": "b996f233c5f720da302ad23091958d5fb57484d30a3198d6c3efa9965ee8a9f0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6909,7 +7087,7 @@
     {
       "id": "SURFACE-2b469a2b395c027a",
       "path": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-      "sha256": "d7e2e4ba531266075903e7aedc88927a6af29745110530347cdb72a3ea9319b8",
+      "sha256": "90a502bdbfe3363efe8d3e0eb0a664bb1c57d118156bb2131c09ba32e885b3ec",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6957,19 +7135,19 @@
     {
       "id": "SURFACE-ae8970a24d4f1f59",
       "path": "tdf-hq-ui/src/pages/MarketplacePage.tsx",
-      "sha256": "9ddd162dc085a11d1dfc4ee5f29eb8efa205caab62d071e950e14b8573c2621c",
+      "sha256": "d4f14d90a03be1ce0edb84e3d646775def21d0cdec1345a398f09247eb9f650a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-b8e4f0b3d0a3ec9f",
       "path": "tdf-hq-ui/src/pages/MerchAdminPage.test.tsx",
-      "sha256": "9a0aa678e697087cd420e838540145995b259db8a52c041ce3a9f153b150e276",
+      "sha256": "2ebb0cc8490fb5df6e2ea0ea8781e9776afbec0e999ddfa5cd9b9d594dd2f725",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-61f97ffdc68a2602",
       "path": "tdf-hq-ui/src/pages/MerchAdminPage.tsx",
-      "sha256": "51c31b52159e474ef5429064c36a4d4940781650eeaf82a33b1fa9e4562edfbc",
+      "sha256": "d55416678e1fcfee6fb9c27e4f9e14a747f4b9360e19b8167670cae3469290c7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7041,13 +7219,13 @@
     {
       "id": "SURFACE-bee40b89d7a09a1d",
       "path": "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx",
-      "sha256": "3a9bc707db534a635ffe09b7d194cfc3c8b96e2ff91a09be9de6f1124711cc1a",
+      "sha256": "fcc7b8e4ac9f7a22000ae8e90d29873e3f7a4313c43761bddebffd334d0c15b1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-4a562abbc0b9c284",
       "path": "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
-      "sha256": "74328e4cebf71fcbaca90b92f34aaf74ae19df80fcd778b1dc51652178dd3c6b",
+      "sha256": "4108f16793becc7a7845b16353a13edb8e64d7b6278e4c8dd7465bec534448d0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7129,21 +7307,33 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-57d71f490b9a0d52",
+      "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
+      "sha256": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6b97ed3a68e676f6",
+      "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
+      "sha256": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-841726035def3268",
       "path": "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx",
-      "sha256": "576ff07bbafa702eb0e0e56b2099462f3cf5d4c536f2194d2c51a23b6e30a3f9",
+      "sha256": "3c282865ccb25f17391c5240f456968f93e357bd60382f42feefa95d916ae4ef",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-7efdc216a8d713ee",
       "path": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
-      "sha256": "707d6cfa7d2cb48ffcd86cde4d6659deb66046a0cc923d86380ba22efece0e4c",
+      "sha256": "3c7a82107562130a6cd3ea8b905bea2a5a5e55bb84b0f36ea9f40a518e30291e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "b7571f6aacd99ebaea824e8025825c6060d24b81ce133bb885ee98bcb2e52d29",
+      "sha256": "4d36af246d52b7f4a559c23531e508ec9cfa7b5c0daa90b14d04a2aab5d15025",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7287,7 +7477,7 @@
     {
       "id": "SURFACE-54a41f2ada423353",
       "path": "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx",
-      "sha256": "3d5bd6bf266f3f6dada331ce1a75da311a49f8b90d763d245de662aa06e7cf85",
+      "sha256": "2eec23e0c54e1e493cbbe58c0616d053685967b837cf76ceb2a26f546d8c8b03",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7603,6 +7793,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-85e8012c6e922277",
+      "path": "tdf-hq-ui/src/routes/AppRoutes.tsx",
+      "sha256": "15f7c9fe7f3109ecdf25a03ee99259052b6c3612a8d8318a9f039a5aa702837a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-65b783cd59e6037b",
       "path": "tdf-hq-ui/src/routes/AppShell.test.tsx",
       "sha256": "1c92ba33b7073ae1c39ba640848017f697a2792ff4802eba12303b16fc2bf4db",
@@ -7635,7 +7831,7 @@
     {
       "id": "SURFACE-f6a0ac8526319c29",
       "path": "tdf-hq-ui/src/routes/publicRoutes.tsx",
-      "sha256": "0ccf11d7c9c964a69ffb3d101203ae415dfa641312a649382d0b140d5e17ec98",
+      "sha256": "c047cab7c5948fb406089b510d9db084407f8b1758fe4b5aab55b5be80e6fb06",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7677,7 +7873,7 @@
     {
       "id": "SURFACE-9cd6316bcfd08c89",
       "path": "tdf-hq-ui/src/session/SessionContext.tsx",
-      "sha256": "32073d2c83221fc7abb75e75851928cf64ac03e9cf53f4e888fb866139aa479f",
+      "sha256": "182f1ef4160cc2e9cbda690f6d49e646ef807b110e6d46eb176ed44ae4d7255c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8071,6 +8267,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-385779829756a659",
+      "path": "tdf-hq-ui/src/utils/providerPaymentResume.test.ts",
+      "sha256": "103a2f73519a73ffb088df88e847789b4fc5f6afd07d9c38bdeafd0dbc4039e9",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-02c8cdf3d4eb64fb",
+      "path": "tdf-hq-ui/src/utils/providerPaymentResume.ts",
+      "sha256": "27f2bbb6169784ba41aa14ddf9e2fade00617452594157fe8c74eed64ce3f0ba",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-0b134a87ca13d38d",
       "path": "tdf-hq-ui/src/utils/publicBookingRooms.ts",
       "sha256": "bc60e11ab400d7ba4c6496cccc2ac9ef94b69ff720c764d0b613bfa041250db2",
@@ -8289,7 +8497,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "5f4665b6b15488748eb7fa69a585dd88fd7e94c8d5f7437cf99bb161783b28b0",
+      "sha256": "937ec3786fdef97afc5ac11dd93380baa707de14448872a923e07875ca65ee81",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8349,7 +8557,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "e05910417e0962c3595ab0bea9828b905c5ef077210cdf12678be76484d1e2af",
+      "sha256": "6de5124eee0d2a5fb489a652777c8f13cee45a251049e0446d9f301f2301cb97",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9793,6 +10001,54 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-ded7c7bc0868d2c9",
+      "path": "tdf-hq/sql/2026-09-11_manual_bank_provider_activation.sql",
+      "sha256": "949ece38874dcf24397d6a5a05f8cdd15f08d167b4989598a95a749fa5984093",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4958a5647f563296",
+      "path": "tdf-hq/sql/2026-09-11_manual_bank_provider_activation_rollback.sql",
+      "sha256": "1c0f070ceda0b6c6538b7701bda3126b27ea238ea05b5b5840322418d5bad99a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-09856d74b52105ce",
+      "path": "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql",
+      "sha256": "ea101956d6219c27f0ba165ff82b13aab4bee267c8e4d4e398c9759535893ae8",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-45333317f4f44085",
+      "path": "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync_rollback.sql",
+      "sha256": "341af425fddfee376f0a625570cfd08792ad8aeac21e87f6e6d1cf4a3ee0d1ec",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-27194f671f115043",
+      "path": "tdf-hq/sql/2026-09-11_provider_capability_catalog.sql",
+      "sha256": "a54789fb9ffe381be03e040456884845e92044710a4688616660b06564d45235",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c8600ce6b046e95e",
+      "path": "tdf-hq/sql/2026-09-11_provider_capability_catalog_rollback.sql",
+      "sha256": "2ddc6fe09cba90ddbdf1d4bab114c55bc651903ea6b240490f5fe242d45d41e8",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0cd61fc798982022",
+      "path": "tdf-hq/sql/2026-09-13_provider_execution_runtime.sql",
+      "sha256": "d420ef7bebf4862f5fd6b1e3754f725e8cb8bf5e1768f94d71a13947f777a51f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d218cc4c1a7c65e9",
+      "path": "tdf-hq/sql/2026-09-13_provider_execution_runtime_rollback.sql",
+      "sha256": "711fc0bb9e90b955441eaf4aaf5235cd0261eececc1845ffbbb2175d26908900",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-879ac8a337bbef30",
       "path": "tdf-hq/sql/2026-09-14_event_operations_api.sql",
       "sha256": "195908e3dae1923c98ef84b217092b89454fa72027b32a8a5e5dcfd5370ec870",
@@ -9907,6 +10163,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-093fa48b0443ae44",
+      "path": "tdf-hq/sql/2026-09-15_provider_query_recovery.sql",
+      "sha256": "8ce7535fcdce37ef5742e8261484e7cbdc42605dee815921c722536b46e8dbe1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-1677021132c22307",
+      "path": "tdf-hq/sql/2026-09-15_provider_query_recovery_rollback.sql",
+      "sha256": "fab67e88a277e3847cbc2d5977543c883c083f7380380f80439603481602fc6f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-8509b4c93568afdf",
       "path": "tdf-hq/sql/2026-09-15_social_v2_chat_api.sql",
       "sha256": "faa8026e41a293c01656120e360590d793ea575af0e12a68c67b916deb86dc52",
@@ -9952,6 +10220,18 @@
       "id": "SURFACE-f42a14fbd0279853",
       "path": "tdf-hq/sql/2026-09-16_event_task_completion_rollback.sql",
       "sha256": "b6e2ef6b2d59e1d528c3f74b8ee3d41d925c8a705d83b89396ba3a4e01cd3b56",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4ccbed0b9d49f7b7",
+      "path": "tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql",
+      "sha256": "e70e67606e1ff1451ee6cf0404a7cad28b2ede0b72ffa92c16aab9cea9d72cca",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f0b1b19d350a3cdd",
+      "path": "tdf-hq/sql/2026-09-16_payment_intent_refund_sync_rollback.sql",
+      "sha256": "42bfa25b8b71548c1707d8249090c4d8755ad8d5a63ffcbd11688d8445ca1c19",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10365,7 +10645,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "52899306d6b3d74f542a87ca135c1f8395e0fe5b42a4a1ee6396edc7a38d987c",
+      "sha256": "7f54aa410bfc4a1e9f5430d3bea6e8a9ac2f5f8269793a90733b42c3d1018d56",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10401,7 +10681,7 @@
     {
       "id": "SURFACE-a4902497bb9c1b53",
       "path": "tdf-hq/src/TDF/API/CommerceOperations.hs",
-      "sha256": "41b097863ec5cb5d2250f380fdc9cb723d986c0528c0804bba599f7927d13ca3",
+      "sha256": "31d894d6f964db163b19e20179fe848cc3c73096a98b03ad76605b183adba9f6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10537,6 +10817,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-7372ceb0e4611b65",
+      "path": "tdf-hq/src/TDF/API/ProviderExecution.hs",
+      "sha256": "e79761e4e026fee86108343d8e0ae9f263d188c537790cce6abad0518c75d004",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-9deb4ef00a69e5d0",
       "path": "tdf-hq/src/TDF/API/Radio.hs",
       "sha256": "5c62e0f4a402225202217be3a8361991127ad1ac093fd0f4366789dd1723357f",
@@ -10563,13 +10849,13 @@
     {
       "id": "SURFACE-a1efa59de0fbb51d",
       "path": "tdf-hq/src/TDF/API/ServiceStorefront.hs",
-      "sha256": "bc8d68a550288e9aaadd751428f153df8d5942b96263ed2630f2c792d578d45e",
+      "sha256": "f998aa5c054881700e3e892958108c8ed9aceee6e3a3220e0247f06cbd28b4aa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-3738912b4dcfabe6",
       "path": "tdf-hq/src/TDF/API/ServiceStorefrontTypes.hs",
-      "sha256": "2e98e306c7f2f65e9a688219b41fb12b2b5b99b1125d7e3e45869b59a5fcc34f",
+      "sha256": "26441cd3fe8eeb61c91b8dc47671220c2955b815356f0d141472534da7bac921",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10629,7 +10915,7 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "c8149f53961e8d19d0fd4531e22ddb30da36f2ed7930dee61f0233b2ecb21758",
+      "sha256": "b46e508dc9063332bde265d889a88306585ba3c921ca087345391eff73f17d50",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10719,7 +11005,7 @@
     {
       "id": "SURFACE-94890265a329cb44",
       "path": "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
-      "sha256": "204bd27888a0e4645a2c107e4d4cba9c0a4db41adfc8f7ed9c76182a8d6b1245",
+      "sha256": "6a0395b16a2bafa271dbc051da42972fe6a51da5db9eb2235bf78a46e47d819d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10779,61 +11065,97 @@
     {
       "id": "SURFACE-8379bf1fb8e3276e",
       "path": "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
-      "sha256": "955ca2a1d362eae9e9a14c7e7a6169df8b4825221f46ba2b4800db03380de481",
+      "sha256": "4e2fb9d4f258dc060804e507d42b1bca93addebf96b6d0a3e2062fe1484d7640",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f215d4911e9d9bef",
+      "path": "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+      "sha256": "fb4aa6edd05896463245731631b09e5897f9bd9596309f08afece9240a6c1f9c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-1f329e23e5aba24d",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs",
-      "sha256": "9e86b8057b031f34173d365a1e65f80c63b82b0e5a8ea7a91be2d98fc6954d0a",
+      "sha256": "16971d54ba7ab0eccd890a33511cf88b9884599e8b5274cb91ef291736a0a720",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-059d1c74b4946473",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter/Http.hs",
-      "sha256": "981aa98079c1a04228b22e11894ddc2867afa719c9d7a77823f187367987bac5",
+      "sha256": "d8ff38c7077449bc2301a9d42231e115afe00aebb664726e60fe88444d2fe2b6",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-bad06d52157a22f3",
+      "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs",
+      "sha256": "8786d1da2a51c725561b14cf68ffd6f44596858c1a3cfcd32384673bd702c9b3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-9038b2dbdf428e2c",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs",
-      "sha256": "8d8cf254212a71369016f62c1fa591e9d806004ccd1eeb16068d4c06532a7498",
+      "sha256": "901c237849c3a4b102ea5e0bdc16c029bfce1096fec5ccb40d0e8e3aa9d2f5cf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f3e27f9ed209afef",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs",
-      "sha256": "edb898012c94387346daf7ce4815970ed3921d73f5ebbf2687dafd21734b9d19",
+      "sha256": "58979fe9954101dc83c6ee6f24d61c424d0f5a16258b2eeb3a7e76fff71dcea9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-163048cc75f29b92",
       "path": "tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs",
-      "sha256": "4f1a00c388c58d47db7f452776839bf55d95c7739dbff5bac4b0d5dba669a2cf",
+      "sha256": "f0bcce416a0df53c74183d21292504c356c3374a40bfb00d484164fb16584744",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-d117ca68ab1ef0d1",
       "path": "tdf-hq/src/TDF/Commerce/ProviderCapabilityStore.hs",
-      "sha256": "ff94177cb566cf9a21c58ae413a1d046fb83ce7569a20d36b122048389b953d9",
+      "sha256": "053d58a62c59f6dfbb1a4ded7979c306f1a36c8f11eee6d5dc0b736b1e2d1fd9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-e499402b9aad0cfc",
       "path": "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
-      "sha256": "a9ea194ab8bfcc7b545c8ac2c8bdec0bbace3a465288b9e964977c157b737035",
+      "sha256": "0a73dc704ad356046e3d5db49cd3e64ec726d9684e0915658bb16e270f130f9b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-ec38793d0cc5b091",
       "path": "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
-      "sha256": "9ae5bbc7ad63c5745ba59d28536059fb7a4ed284b5f2f9c1867441a1fe003dcf",
+      "sha256": "57320f3b97d5f82419e1942b769fd4c8ab9766a58cbdd8fc01caff82cd3ca639",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-1d441708a9c7e070",
+      "path": "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
+      "sha256": "213b92a75365d6e85e441a0a3263d3cecfedca98a46d05f83165286158b00f52",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-24ec334e6417bf04",
+      "path": "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
+      "sha256": "6791d94fd7808fd13c8e371122d3f082c7668f78a9ae660297019d0032d0b7c9",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b3ab13afc655164b",
+      "path": "tdf-hq/src/TDF/Commerce/ProviderRuntimeConfig.hs",
+      "sha256": "f872cf68ae160595bdd18782cc55c93d351492b659e2aa60fee93640b208f61e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-dc866f2ee69c9dff",
+      "path": "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
+      "sha256": "f207af0c4782901684ca101b8c9e667c1e127c205ae14f5702a39549da1d6dcf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-1ed705f31fa3ad8e",
       "path": "tdf-hq/src/TDF/Commerce/RefundStore.hs",
-      "sha256": "59fed767ceb957512f8ea825f72ddbbd9ba55560aa76bbc0e24c2456bad344fa",
+      "sha256": "e40608b5bc2ce1429c61fbfc6131f4e6e134f599cbf734a62ddd505fab3264b6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11259,7 +11581,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "386bb638b562501136ebe40e7c82b245ae1a5aa3852a31551809e28e446093db",
+      "sha256": "2080bf46ca557c501a55e6e8d7cdf1858c540e876f8b4af1388eddbc35aef7aa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11271,13 +11593,13 @@
     {
       "id": "SURFACE-5cbf72ef8bf21ded",
       "path": "tdf-hq/src/TDF/Server/CommerceOperations.hs",
-      "sha256": "a1ec22249c8a9541591978f638598adee51001cb60fe24aabc3b7408c3d4d068",
+      "sha256": "fce3e53d4c0335488e7ae5f85f64cc9a85ea655b2419f9fc1b32e3259a661ae7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2834bdf776fa3c23",
       "path": "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-      "sha256": "6dd5f702768604c8da1d6ea612a7f758a8c2f99fc54089ec1e9d563e107d937b",
+      "sha256": "15af66fb43c21a80f6e41f4ff67755fc0b8dda6867383496a1c6da3a2ab3e70a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11295,7 +11617,7 @@
     {
       "id": "SURFACE-436c77cb88490332",
       "path": "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
-      "sha256": "43c219ed3e516f7676b93eb0345ecc47aee20e3de1143b37076d4987f40280b2",
+      "sha256": "4ef64ec9d5551e186476039a31b2113c27032e72d14805604c1199c240ecc0ed",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11307,13 +11629,13 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "ab1b73eff1aecac7fa26c2f75fad375500c16cfca6fd54d2f1ba0b5b8aa0d523",
+      "sha256": "e307cea3bda2439b8d3b79a84624335b4186f608183538ef12fc942322853c32",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-51ffa73da4445d45",
       "path": "tdf-hq/src/TDF/Server/Merch.hs",
-      "sha256": "13c1f56a9c8e12d95b93cc8800334c033e942c54cf959c546b0656e9b72a0f5b",
+      "sha256": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11323,9 +11645,21 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-576775b1139a1557",
+      "path": "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
+      "sha256": "6a159b7cfc3e9ba3f21c74de7191d7cfa6b4fcea2242334bfb055296575f9489",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-2c8ed40114d9013d",
       "path": "tdf-hq/src/TDF/Server/PaymentCapabilities.hs",
-      "sha256": "8c7c0bad03a1925f6de0e07e4e8d35be55676fd56931916d039e97b0bd3f47be",
+      "sha256": "27f7ca03fafdeb22b9d2c4cf76a2cffe49ff79d09ba138c6da3bae79cb690c6f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-453bfe4cc742d024",
+      "path": "tdf-hq/src/TDF/Server/ProviderExecution.hs",
+      "sha256": "a8ea11e94ddf018b3955f2c67e86122035731268499b605673a2766e577c0a48",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11343,7 +11677,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "d1c142f7b54968314c0be1c5897e5a86dca3642c72b980687281baf06349483f",
+      "sha256": "741db65e144f41fc990934d94408df2b66ff9e7cad40b5260cdfb4759e13635c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11631,7 +11965,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "b5a17355e77ca659d9ccf06e1f16a0719adc9d3419f256a4e1d32c1f4c565aa7",
+      "sha256": "1b8e6387004eb4106e624921814f360aba0d4cb4180c635ac4d7e55f8c5096a0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11673,7 +12007,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "89db969444be48ba102e866f2526904d5a5257b0a6217544829f6c55211153cf",
+      "sha256": "d4bf3f4d36c92125cf54c87d6616e9ea76648a85ea5639b73319eb32fe74487e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11725,9 +12059,27 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-9472263a2a388543",
+      "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+      "sha256": "2692643e091e108f1532db0eeb87426dc15cea5d45c258c3945c12052852611a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6581f3b9e8ac5e68",
+      "path": "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs",
+      "sha256": "80f70e7556b9aeefcbd1d473e2cd1d1e0b608aaa45964472bc0cb30351295888",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c27282be2474402d",
+      "path": "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs",
+      "sha256": "3cba6f58f8e10f1bed8e92ec2f9e23d33ed0482ce73ab9e431f4f23851e2a1c6",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-2c3fc05077df1f30",
       "path": "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
-      "sha256": "7067094ee4570fcf19a80a849b565d01039fbd54d1c474efca1bd7b219e36515",
+      "sha256": "9f59220bac0a97e414f1da8631ab53e33b1626ec7b1cce7ea9921a742a7c9c92",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11851,6 +12203,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-c823af87bc95031c",
+      "path": "tdf-hq/test/TDF/Server/PaymentAuditSpec.hs",
+      "sha256": "eb5ef47f63c9a53124d0cac7c5b2bbf6a20ceee47d64a2f028c4d3730443801b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-9c08dc84fc4d951b",
       "path": "tdf-hq/test/TDF/ServerAdminSpec.hs",
       "sha256": "103007ca5c6dfd9f1441476783ef46066308de883f8f35e5799364e22a582d25",
@@ -11943,7 +12301,7 @@
     {
       "id": "SURFACE-c5f338178ef543f2",
       "path": "tdf-hq/test/integration/artist_merch_runtime_fixture.sql",
-      "sha256": "34461993371c89b8a4bb031a7a3a4aec3ff5dff352950cd8005ccff9b93ddeb0",
+      "sha256": "275e60d40bd625485c7d66e850556991fb0afc9d6edc37035ffac04c0bcd986c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12063,7 +12421,7 @@
     {
       "id": "SURFACE-51ba007a60dd54a1",
       "path": "tdf-hq/test/integration/event_operations_schema_seed.sql",
-      "sha256": "90bdc1f03c82e35983627223177f88579b86bc105b35fb4c601e9ad829bbdf44",
+      "sha256": "0ac9b9a6c620eb40762b6e215a432b55dd9ab6125edfa7d7cb2b1bf3f585357b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12256,6 +12614,12 @@
       "id": "SURFACE-819a82f0c31c3d37",
       "path": "tdf-hq/test/integration/merch_checkout_expiry_assertions.sql",
       "sha256": "47a5bebb6e41a34ee49fc03c2ca4cef20965c5d090fe53600806599e7bcc3a91",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-bc92817786ba5985",
+      "path": "tdf-hq/test/integration/payment_audit_fixture.sql",
+      "sha256": "4550decba1bf66112720e16c7e6a239111cb1c021428c1b6edf6283c81cac90d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13527,7 +13891,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "21803ca9542afe64ea67baf50c6ff34008ceca85f787bf82d04edb1940c77927",
+      "sha256": "beb99fbb047fe600e2c922702d52c9c9519c039c39981f4a6b4bc64724b07b14",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13857,7 +14221,7 @@
     {
       "id": "SURFACE-3cdceeb8afd26986",
       "path": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-      "sha256": "b250d29d8515d9d978f1ce65e63e7a5ab0acf71695c8cdf12b0314e5455f2d57",
+      "sha256": "0aa585495694b2954d6db9a667c497f792a272037e9a66cb11ceb0baaa35a400",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14741,91 +15105,91 @@
       "path": "docs/adr/0100-domain-linked-checkout.md",
       "sha256": "d003b3ea38eddd34d9803d3f5058e953ddafb671a16d1c8ae8b26fd54a26e83a",
       "authority": "approved",
-      "authorityBasis": "Status: Accepted \u2014 2026-08-13",
+      "authorityBasis": "Status: Accepted — 2026-08-13",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/adr/0101-verified-payment-events.md",
       "sha256": "d5d8f2a5d1094b06311c1da4cffe709ce190f5fa7ced414d7831fa344d75c773",
       "authority": "approved",
-      "authorityBasis": "Status: Accepted \u2014 2026-08-13; runtime refinement accepted \u2014 2026-08-14",
+      "authorityBasis": "Status: Accepted — 2026-08-13; runtime refinement accepted — 2026-08-14",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/adr/0102-versioned-money-and-holds.md",
       "sha256": "ed9e8fcda8bc9a0e12516b251698fe8e741addbb6b9ed6d2de637ab369dc2fc0",
       "authority": "approved",
-      "authorityBasis": "Status: Accepted \u2014 2026-08-13",
+      "authorityBasis": "Status: Accepted — 2026-08-13",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/adr/0103-guest-order-capabilities.md",
       "sha256": "4eeaacb700649145716b6dc409193a6abe52c8cadd147117940399f9356c0731",
       "authority": "approved",
-      "authorityBasis": "Status: Accepted \u2014 2026-08-13",
+      "authorityBasis": "Status: Accepted — 2026-08-13",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/adr/0104-immutable-financial-ledger.md",
       "sha256": "1601e4c3270a84a1126ea588915729751d6a99e96d8b4c910e487c20e1fb07ac",
       "authority": "approved",
-      "authorityBasis": "Status: Accepted \u2014 2026-08-13",
+      "authorityBasis": "Status: Accepted — 2026-08-13",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/adr/0105-music-directory-classifieds.md",
       "sha256": "0582cf8ac117448d30275616133066403dedb52534cfaf5be7f71eea713ba923",
       "authority": "approved",
-      "authorityBasis": "Estado: aceptado para implementaci\u00f3n. Fecha: 2026-08-14.",
+      "authorityBasis": "Estado: aceptado para implementación. Fecha: 2026-08-14.",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/adr/0105-private-versioned-assets.md",
       "sha256": "919a8ecff686ca6a89218d32a006fbfa5ccac92eb5f9d6f4f675638e7c1c8e26",
       "authority": "approved",
-      "authorityBasis": "Status: Accepted \u2014 2026-08-13",
+      "authorityBasis": "Status: Accepted — 2026-08-13",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/adr/0106-partner-profiled-ddex.md",
       "sha256": "b4c5d1aa8d5c61239798c0c2efd8620a20f78b675df3b807dd83026ebacf5901",
       "authority": "approved",
-      "authorityBasis": "Status: Accepted \u2014 2026-08-13",
+      "authorityBasis": "Status: Accepted — 2026-08-13",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/adr/0107-marketplace-sale-holds-and-custody.md",
       "sha256": "288daddfa68aaa9e0000b6a430a2e33f5c06769210d824256df8a84e0e6cf2ef",
       "authority": "approved",
-      "authorityBasis": "Status: Accepted \u2014 2026-08-15",
+      "authorityBasis": "Status: Accepted — 2026-08-15",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/adr/0108-marketplace-rental-dates-deposits-and-custody.md",
       "sha256": "8edba1de439e1d5cf5b9664b12447921b2dfbc8cf1a1764eda4bff78c050d4d4",
       "authority": "approved",
-      "authorityBasis": "Status: Accepted \u2014 2026-08-16",
+      "authorityBasis": "Status: Accepted — 2026-08-16",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/adr/0109-service-booking-deposits-and-shared-calendar.md",
       "sha256": "498447a1b1f82315b709f183efb9c3de23ee77fa5640ba15a4b96023a53a897e",
       "authority": "approved",
-      "authorityBasis": "Status: Accepted \u2014 2026-08-17",
+      "authorityBasis": "Status: Accepted — 2026-08-17",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/adr/0110-marketplace-customer-requests-and-deposit-settlement.md",
       "sha256": "c82cc554a1b54a5e75641a4c8c9cf9fd18a240d85d88b3851758213f81a9777b",
       "authority": "approved",
-      "authorityBasis": "Status: Accepted \u2014 2026-08-17",
+      "authorityBasis": "Status: Accepted — 2026-08-17",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/adr/0111-course-seat-holds-and-verified-enrollment.md",
       "sha256": "f5b9bc1ad67f226b5a5e792f2d2796dd4a4e5ca595ea2f660ff3e1dda67ee0fd",
       "authority": "approved",
-      "authorityBasis": "Status: Accepted \u2014 2026-08-18",
+      "authorityBasis": "Status: Accepted — 2026-08-18",
       "kind": "requirement-candidate"
     },
     {
@@ -14857,6 +15221,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/adr/0115-provider-neutral-payment-routing.md",
+      "sha256": "eea5914cd1be37a407ed41d491de8a9731cf98c5abc0a3915c222034b2ceb317",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/adr/0116-bounded-formal-verification.md",
       "sha256": "50f1437db3375b292b40563131852153907d1c29439c7b07b8fa1af2231ef05b",
       "authority": "approved",
@@ -14864,10 +15235,115 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/adr/0116-minimized-provider-notification-evidence.md",
+      "sha256": "c82a9493ccf2cbcc8e1322bbbc5d39d6be039694ec34713e66793b5828f8eb2d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0117-shared-bounded-payment-transport.md",
+      "sha256": "0052edab15b0cc433e53b5acb30934811a94cf51ba590b9251c627b4f9266fd5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/adr/0117-shared-resource-allocation.md",
       "sha256": "0c55db4a0f13f86e3852e2c64a5df9f2351f3adfd09a7b7503a0d73ff1e17d01",
       "authority": "proposed",
       "authorityBasis": "Status: proposed",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0118-signed-payment-notification-identity.md",
+      "sha256": "a8160c4248b12572bdaf8d94c5feee21ea81649ee79902d814fa0014791e58d4",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0119-atomic-provider-query-application.md",
+      "sha256": "8f332602d65927b957ae6fe7ac43787554ac67821928400a6b2344664d3a5739",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0120-durable-provider-query-recovery.md",
+      "sha256": "8a7e9b7ec54d54c4ab2d24b59cdeb6d5d3978630eea1a1728eb0881af9ba4871",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0121-history-preserving-no-charge-reconciliation.md",
+      "sha256": "859d9da97477c4c037e2b20e57b915b1a2cdf27f168fd1632ab6bbc8a2ba73c1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0122-read-only-payment-query-observability.md",
+      "sha256": "fd82b5a851aa8903964e1da237aadf95c7e6fb85270d6ebac2707e3b52f636ea",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0123-idempotent-capture-evidence-and-binding.md",
+      "sha256": "ea5cc2d4dfbf2f230e2c56caa86ddffa14b1cf85ca7aadc3f94d0fe15f58c6d9",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0124-closed-checkout-approval-evidence.md",
+      "sha256": "34e1ba20d677465ef57b9f752f4d7c0fdbfbf8f69d9a8c833a04c7b169312209",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0125-read-only-reconciliation-evidence.md",
+      "sha256": "b42c98c803addb68c1ac4d849a5b145f9476d4d4d98ad9d482c665756822375d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0126-checkout-completion-capability-gates.md",
+      "sha256": "86ce04cfba3e8cb8fbc24f4a6c8b1d9c6a780a6f94b7a8534af3b22aebc339a5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0127-payment-worker-diagnostic-boundaries.md",
+      "sha256": "44b4c7df7b4a5c91e783ec67c8d9982858212c93f7362b6a7ed31363fa67ea8a",
+      "authority": "inferred",
+      "authorityBasis": "Status: implemented and locally regression-tested on a dependent draft branch;",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0128-refund-execution-fence.md",
+      "sha256": "6cf3bed80ed343b7c9df80731e24af98318a987455aa530205eea6f81021b801",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0129-atomic-canonical-refund-accounting.md",
+      "sha256": "4c9fbb7a4ffe2aae05a76ba699706cb26369c146253606111ebd7acd422bfa2f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0130-known-id-refund-query-recovery.md",
+      "sha256": "77381f295932b971424581e6d3c9109f72ff98213dc9871483ec22d51b37e721",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
@@ -14879,7 +15355,7 @@
     },
     {
       "path": "docs/archive/backend-package-legacy.yaml",
-      "sha256": "7fcaf9bb624e6eaa34fbba81cfd5df061012f6056367b44d624332048fd50951",
+      "sha256": "737550ae8285538b4ab9f435c497961a7986a9b82656142c053bc45c9d6bc249",
       "authority": "historical",
       "authorityBasis": "Status: historical; retired by AUTHORITY-011",
       "kind": "requirement-candidate"
@@ -16113,7 +16589,7 @@
       "path": "docs/merch-reputation.md",
       "sha256": "00abf2ebb5228c24afd0c0b63b3ffc6e07970903c76d6d4fa64325e422b79d05",
       "authority": "inferred",
-      "authorityBasis": "Estado: implementaci\u00f3n oscura para datos sint\u00e9ticos locales. Los nueve flags nacen desactivados en `staging` y `production`. No se importan ratings externos, no se env\u00edan mensajes y no se modifica el estado financiero o log\u00edstico de una orden.",
+      "authorityBasis": "Estado: implementación oscura para datos sintéticos locales. Los nueve flags nacen desactivados en `staging` y `production`. No se importan ratings externos, no se envían mensajes y no se modifica el estado financiero o logístico de una orden.",
       "kind": "requirement-candidate"
     },
     {
@@ -16302,12 +16778,40 @@
       "path": "docs/operations/mail-deliverability-2026-09-18.md",
       "sha256": "c7f2e69803c035f7a55bf51373f976aaef5b2f47f36e783f6591a51b39626ef7",
       "authority": "inferred",
-      "authorityBasis": "Estado: diagn\u00f3stico y correcciones verificables, **no resoluci\u00f3n completa del spam**.",
+      "authorityBasis": "Estado: diagnóstico y correcciones verificables, **no resolución completa del spam**.",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/party-selector.md",
       "sha256": "f476842af2e5b18919c68dcdec900774d55e52b7486218f34213e5ab45ea9e01",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/capture-replay-integrity-2026-09-15.md",
+      "sha256": "ef4e6c281729d4d1a5973353c8e802f99f1bce6d83a0181cf632154d9227a0bd",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/closed-checkout-approval-2026-09-15.md",
+      "sha256": "03c6c7aef1c36cb142b7f0ed09a0848d61758c3ea88bab0a88235a9c319b7e24",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/completion-capability-repair-2026-09-15.md",
+      "sha256": "ec37b3c79b88156c786660df2aab6714868096cbdbd7e92f2ed7706bf979f04b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/component-environment-review-2026-09-16.md",
+      "sha256": "e7878f1e3a092bd79f5a3bea0a02359852c7b442108f888dec173aa1a5f20a68",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -16320,8 +16824,176 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/payments/ecuador-payment-platform-audit-2026-09-11.md",
+      "sha256": "819d350d7e7ebc11b344f84f19524af661313c10348a4e4116efd18aade2c26d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/held-refund-query-2026-09-16.md",
+      "sha256": "a04fc729e3da9fb05b729572e1ec731fa76b06c6bbeb7a715081bf5c3800127f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/http-boundary-2026-09-14.md",
+      "sha256": "903b5e49681ac405b534d981ed2a04468075e980d3dd371296a45862f4912604",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/merchant-routing-review-2026-09-16.md",
+      "sha256": "cb13fc6607ee000d985dc2e7d23accef138aaa43eb32d18fedb2d1daa3c5d5a3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/no-charge-replay-2026-09-15.md",
+      "sha256": "f05c7e2e66fd5deec56fbc23f5b17df7a3d294a161f4a1cba1422539c3d6a48a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/notification-identity-2026-09-14.md",
+      "sha256": "6b1a97fdbe7ae17b1a5ddc95d1175bc4bbe54ac34701fd1b4cc457cecd83a093",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/notification-minimization-2026-09-14.md",
+      "sha256": "fa2def1a41471d11348e94c0d5a9ead511f1c5e3dbb1b21569626d6a960be1c6",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/payments/operator-runbooks.md",
-      "sha256": "40007a0d87c5fee600a90e3b6ee79966d44aab02acccbed42f6998c6e82aff94",
+      "sha256": "6463e16da525ad0fe3902be8f8dc02e5e6b6b519f7f07c83baa9f753a0348b5d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/provider-execution-verification-2026-09-14.md",
+      "sha256": "40522cda1d23f1080787b9783a785a0dbdc6bf695c22eebe52a4b389688ff20f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/query-observability-2026-09-15.md",
+      "sha256": "3221134ec174e0e69cb2a79c8f3384601e99d77f166e806e48c68f49982d8f71",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/query-recovery-2026-09-15.md",
+      "sha256": "2bfe8d0285a66a71a8e06a7175242885e37ee0ec05182efaee76a876895549c3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/reconciliation-atomicity-2026-09-14.md",
+      "sha256": "e4d6a850b4518b453b00388a63364721c8733d1771de7bc26e6550f7587d1cc2",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/reconciliation-evidence-2026-09-15.md",
+      "sha256": "ba6356fa6dbe4c93f753ab315058ff4991a0cc3c1a94eef8e1d64336cddb5655",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/recurring-readiness-review-2026-09-16.md",
+      "sha256": "4de14ed2451de3f5b52426fd56906e0797ae38d25b6cb04a42b13ad54d375fa8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/refund-accounting-2026-09-16.md",
+      "sha256": "9aa36ebfa7dd5e5d3650edd8b460cee3cf50de74398e070af7bf6343b9981376",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/refund-execution-safety-2026-09-16.md",
+      "sha256": "75b32f28e15279098a4071d465101eb4c5cd39923b0a97781c9df5511d5e8396",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/retry-reconciliation-safety-2026-09-14.md",
+      "sha256": "d5e50bd1e815a4acc61bb8529e6355ad547711869c25855e38109ef9a4cdf503",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/review-boundaries-2026-09-16.md",
+      "sha256": "763fc017a7b50da8c259811a8e8c67aba0d887494ad178ec36ed3729049c3619",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/review-repair-2026-09-16.md",
+      "sha256": "ddd483eebc74abb603ddbe780b66a5b0859efa9d9b8d6d5df8dc5475f4131ed3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/runtime-review-followup-2026-09-16.md",
+      "sha256": "6f9e3ad8fe4cab3495f92758f738696016154722239f4e61fb86b8b3deb8aebe",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/stack-integration-2026-09-15.md",
+      "sha256": "6655964d5897d882a4312b71cfd1b48dbd385c8c7ba0591a98ef838357f1bff5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/stack-integration-2026-09-16.md",
+      "sha256": "1d5556521dc303e6d92990448f47317c4beb782cd370d6a5e2470416aad539e7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/staging-access-2026-09-14.md",
+      "sha256": "798dc114303924105a48a730c7c9dc852b0a0af31d2b80033d9f75e3ac4c1471",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/terminal-recovery-2026-09-14.md",
+      "sha256": "16f6239d9bab886a25c5e9f41ceee804a393d3e4a15d2e4942ddb5f5ecc6ac8a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/payments/worker-log-safety-2026-09-15.md",
+      "sha256": "6dc02468c1c3952689ed675a5ca26eb6b0e72d611b44ca953c4971bb0859a65e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -16517,7 +17189,7 @@
     },
     {
       "path": "docs/revenue-platform/provider-capability-matrix.md",
-      "sha256": "bd2da1a323e1c83c86fb0172af17cde4b8c0b0c5da1e325e6420feeb1c289629",
+      "sha256": "918eeeba77ab91c11b4ba80c1f8a5f69ecf4206687c61167261c99193bc7a8f2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -17615,6 +18287,41 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/HostedServicePayment.cfg",
+      "sha256": "29663fa3078459cb0abf5de479b7206aa840c6779fc9522f2eefa9d1592d2227",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/HostedServicePayment.tla",
+      "sha256": "675bacb7fce3962a773608e51901383cd41993b0c079fc20989f231e4df928a1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/HostedServicePaymentAtomic.cfg",
+      "sha256": "403e274802ca9eb7d988e0fb1e282acb23acf89a6e953d5dd2856f00b0976f73",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/HostedServicePaymentProgress.cfg",
+      "sha256": "3057b71fcdda169e70e3258b7aa642b73d6105647184c611a46a30fd603a5402",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/HostedServicePaymentReplay.cfg",
+      "sha256": "f69e606679e1d625b2f3d93e89b638da3a2d792f9488646fdca2057c4880e498",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/InvitationSafety.cfg",
       "sha256": "61505b22d7a3915f744f75b8b376137c26c4bb28da08ed56cd91e1485adaa831",
       "authority": "inferred",
@@ -17827,6 +18534,41 @@
     {
       "path": "formal/event-operations/OptionalTokenRecoveryUnsafeStorage.cfg",
       "sha256": "4b0687ca30fc422a8da36336162c85bc135f61f589699763af3977d3494db056",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PaymentRecovery.cfg",
+      "sha256": "31684633da67e4a607058dce9e9dae842c2214ff87ba126fbade01a5c4bbfbdc",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PaymentRecovery.tla",
+      "sha256": "b939b064c407ffa18cd5276d0bd332bb257b7f848b666bc704c8ad1c7394ecb4",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/PaymentRecoveryCompleted.cfg",
+      "sha256": "6098dc9a9461b295d2e546b932ef710099f2a45e5ea502630c646206f81e0b7d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PaymentRecoveryOverwrite.cfg",
+      "sha256": "ceb606c1e65996f2b72bcfc367255e149b22e42c2cc9ef72c2e6a9cd881b205c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/PaymentRecoveryReturn.cfg",
+      "sha256": "ac3bcb7094ab0c465b34347bc6282ec4038ac40dc6f464579ed069690a145643",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -18100,6 +18842,41 @@
     {
       "path": "formal/event-operations/RecoveryExpiryStaleClock.cfg",
       "sha256": "4da264aa9560def6dbb1e10a301a6af59c6b3973b77aa5300c9c8fdf1d030669",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RefundRecovery.cfg",
+      "sha256": "ba10aef6f3933c799a44bff583ad40eae5e62931f5cf3acd98caf6d147c30457",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RefundRecovery.tla",
+      "sha256": "1d8000590ad630f250a1b9e1fcaf5f3e1e8d91613e62daef33fbe8423442ae9e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/RefundRecoveryAccounting.cfg",
+      "sha256": "75e88634e2988c7bb6988d41278280bd1e8c4c25c5f487b087f53584183d0668",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RefundRecoveryAuthority.cfg",
+      "sha256": "4afa03d6529045f942c54f80eb7e15e579e8728b694cd304256a6ced4a7afdec",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/RefundRecoveryExecution.cfg",
+      "sha256": "6882026c6f5cfb3f3e251df3ccc8d9eb6ccc95204440603e6e645668dcc29349",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -18574,6 +19351,13 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/refund-recovery-correspondence.md",
+      "sha256": "f0943b9df96f724b92825ea5b556ab9babbcece9dc3134368e033a17acb4611d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/interactions/README.md",
       "sha256": "83021b52a334e912e0a32f19e05697b3fd7f5b95a65faa56d5492341d1e79cda",
       "authority": "inferred",
@@ -18995,14 +19779,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "bd9a18b7be930228282f2719754206c5f46c8c41846cf353873d7b8305db3f52",
+      "sha256": "70146892a6ba879db767ada967f2049619d87fb893b159f2e6c453f3bfd18a96",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "9be4faac684a9f99e2cf8e959410252a25338ec22b6e325814a374da6d064e84",
+      "sha256": "a783e60fa04bc500a084f3e1d8551bba3e6f354f770cbf9ae5633283ea6c8eb8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -19039,7 +19823,7 @@
       "path": "formal/system/history-2026-09-20.md",
       "sha256": "90cac67147210c90fbb604934c5f6a998d936396d70fec554c235187554d4d53",
       "authority": "historical",
-      "authorityBasis": "Status: historical \u2014 superseded as the current system index by README.md.",
+      "authorityBasis": "Status: historical — superseded as the current system index by README.md.",
       "kind": "requirement-candidate"
     },
     {
@@ -19072,7 +19856,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "96a5a013d0980959144846f6a39256261b7ea855396f6887df34c57cfa560605",
+      "sha256": "37e8f4527cafbb617599381e490eadccc7f128f7e866c2f9d293d471d2208cd3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -19219,7 +20003,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "e05910417e0962c3595ab0bea9828b905c5ef077210cdf12678be76484d1e2af",
+      "sha256": "6de5124eee0d2a5fb489a652777c8f13cee45a251049e0446d9f301f2301cb97",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -19291,7 +20075,7 @@
       "path": "tdf-mobile/README.md",
       "sha256": "e988042a2b7b4a6cd790efc1c5a6b4d477385c2876bcb7361555d820c9624783",
       "authority": "inferred",
-      "authorityBasis": "Status: DEGRADED \u2014 both `-project` and `-workspace` variants exceed 60 s as of 2026-05-16 06:36 UTC.",
+      "authorityBasis": "Status: DEGRADED — both `-project` and `-workspace` variants exceed 60 s as of 2026-05-16 06:36 UTC.",
       "kind": "requirement-candidate"
     },
     {
@@ -19616,8 +20400,8 @@
     },
     {
       "id": "0105-music-directory-classifieds:5235e3c7989c",
-      "statement": "1. `Party` permanece como ra\u00edz de persona/organizaci\u00f3n y due\u00f1o de PII. 2. `directory_profile` es la proyecci\u00f3n p\u00fablica unificada. Cada perfil pertenece a un `Party`, puede representar persona, artista, banda, proyecto, empresa, venue, estudio, sello, agencia, escuela u organizaci\u00f3n y puede enlazar IDs heredados. 3. `directory_profile_manager` concede capacidades expl\u00edcitas a cuentas (`Party` autenticado). No se deriva ownership de membres\u00eda, profesi\u00f3n ni rol textual. 4. Profesi\u00f3n, categor\u00eda de clasificado y compensaci\u00f3n se agregan como cat\u00e1logos tipados al gobierno existente. Instrumento, g\u00e9nero, servicio, pa\u00eds, subdivisi\u00f3n, ciudad e idioma se reutilizan. 5. Eventos y venues no se duplican. Una vista/proyecci\u00f3n p\u00fablica sanitizada participa en b\u00fasqueda; el registro social sigue siendo fuente de fechas, RSVP y ticketing. 6. Chat no se duplica. `directory_conversation_context` enlaza el DM existente con anuncio, postulaci\u00f3n, invitaci\u00f3n o perfil. 7. Clasificados modela matching. Servicios comprables siguen en service marketplace/storefront y se vinculan por ID opcional. 8. B\u00fasqueda usa PostgreSQL `unaccent`, `pg_trgm`, `tsvector` y Haversine. PostGIS es una optimizaci\u00f3n intercambiable, no una precondici\u00f3n de desarrollo. 9. Direcciones/coordenadas exactas viven en una tabla privada. La proyecci\u00f3n p\u00fablica solo usa centroides de ciudad/sector o coordenadas comerciales expresamente publicables. 10. El mapa implementa `DirectoryMapAdapter`; el adaptador inicial usa OpenStreetMap sin credencial y siempre ofrece lista equivalente. Geocodificaci\u00f3n es otro puerto configurable.",
-      "source": "docs/adr/0105-music-directory-classifieds.md#decisi\u00f3n",
+      "statement": "1. `Party` permanece como raíz de persona/organización y dueño de PII. 2. `directory_profile` es la proyección pública unificada. Cada perfil pertenece a un `Party`, puede representar persona, artista, banda, proyecto, empresa, venue, estudio, sello, agencia, escuela u organización y puede enlazar IDs heredados. 3. `directory_profile_manager` concede capacidades explícitas a cuentas (`Party` autenticado). No se deriva ownership de membresía, profesión ni rol textual. 4. Profesión, categoría de clasificado y compensación se agregan como catálogos tipados al gobierno existente. Instrumento, género, servicio, país, subdivisión, ciudad e idioma se reutilizan. 5. Eventos y venues no se duplican. Una vista/proyección pública sanitizada participa en búsqueda; el registro social sigue siendo fuente de fechas, RSVP y ticketing. 6. Chat no se duplica. `directory_conversation_context` enlaza el DM existente con anuncio, postulación, invitación o perfil. 7. Clasificados modela matching. Servicios comprables siguen en service marketplace/storefront y se vinculan por ID opcional. 8. Búsqueda usa PostgreSQL `unaccent`, `pg_trgm`, `tsvector` y Haversine. PostGIS es una optimización intercambiable, no una precondición de desarrollo. 9. Direcciones/coordenadas exactas viven en una tabla privada. La proyección pública solo usa centroides de ciudad/sector o coordenadas comerciales expresamente publicables. 10. El mapa implementa `DirectoryMapAdapter`; el adaptador inicial usa OpenStreetMap sin credencial y siempre ofrece lista equivalente. Geocodificación es otro puerto configurable.",
+      "source": "docs/adr/0105-music-directory-classifieds.md#decisión",
       "status": "approved",
       "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
       "verification": "open",
@@ -19894,6 +20678,51 @@
       "gap": "Per-clause implementation correspondence not discharged by inventory"
     },
     {
+      "id": "0115-provider-neutral-payment-routing:2fde9075f100",
+      "statement": "Use a canonical payment domain and exact provider adapter boundary. Routing requires an environment-specific provider account whose feature, credential-validation, and contract-approval gates are true, plus exact verified payment method and method-capability evidence. Runtime configuration is checked again before a route appears or an attempt starts.",
+      "source": "docs/adr/0115-provider-neutral-payment-routing.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0115-provider-neutral-payment-routing:cf89f268232a",
+      "statement": "Product flow, method, currency, amount, buyer country, operation, and required capabilities are inputs. Marketplace creation additionally requires connected accounts, split settlement, and seller payouts. The shared PlaceToPay/PayPhone create, status, notification, and authenticated-query executor is now present. Operational availability still requires complete runtime configuration, a ready account, approved contract, validated credentials, exact method-capability evidence, and environment flags. PlaceToPay additionally requires an explicit account/site payment-method ID mapping so a method selection cannot open a broader hosted checkout.",
+      "source": "docs/adr/0115-provider-neutral-payment-routing.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0115-provider-neutral-payment-routing:4a48f50cd8c2",
+      "statement": "All monetary values use integer minor units. An attempt binds immutably to its canonical intent and provider resource. Cross-provider fallback is allowed only when the first provider was not contacted, rejected before resource creation, or authoritatively confirmed that no charge exists. Timeout, network loss, unverified return, or unknown provider state requires reconciliation.",
+      "source": "docs/adr/0115-provider-neutral-payment-routing.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0115-provider-neutral-payment-routing:3914a0b9ef65",
+      "statement": "Web and mobile consume server capability decisions. Paid mobile ticket checkout delegates to the canonical responsive web flow; the app does not maintain a second card executor.",
+      "source": "docs/adr/0115-provider-neutral-payment-routing.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0115-provider-neutral-payment-routing:315789b434d8",
+      "statement": "Provider callbacks are typed by immutable evidence. PlaceToPay SHA-256 notifications are `signature_verified`; PayPhone's published external notification has no documented cryptographic signature and is `untrusted_callback`. Both are only triggers for an authenticated query that must match the stored merchant, external resource, merchant reference, amount, currency, checkout, attempt, and intent.",
+      "source": "docs/adr/0115-provider-neutral-payment-routing.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
       "id": "0116-bounded-formal-verification:c4e13ca23e9d",
       "statement": "- Use TLA+ state machines for lifecycle, invitation, task/RACI, contract/payment, and liveness. - Use a PlusCal process model for simultaneous confirmation of overlapping exclusive reservations. - Use Alloy for ownership/coproduction, grants/visibility, RACI/dependencies, invitation conversion, contract acceptance, and booking/override relations. - Pin tool versions/checksums and record exact finite scopes, fairness assumptions, results, counterexamples, changes, and limitations. - Require a satisfiable Alloy scenario as well as assertions with no bounded counterexample. - Translate every critical modeled transition into database constraints/transactions, typed API guards, property/model tests, authorization tests, and concurrency tests.",
       "source": "docs/adr/0116-bounded-formal-verification.md#decision",
@@ -19903,10 +20732,487 @@
       "gap": "Per-clause implementation correspondence not discharged by inventory"
     },
     {
+      "id": "0116-minimized-provider-notification-evidence:aee3d718e776",
+      "statement": "Enforce typed, bounded projections in `ProviderEventStore`, shared by every current inbox writer. Authentication and merchant/transaction binding checks remain in the existing intake and worker paths. Reject unsupported inbox providers and invalid retained field types with fixed error messages. Never return parser input in an error or print decrypted payloads through their `Show` instance.",
+      "source": "docs/adr/0116-minimized-provider-notification-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0116-minimized-provider-notification-evidence:0e05a3b5d1ed",
+      "statement": "| Provider | Retained fields | Trust/processing unchanged | |---|---|---| | PayPal, three handled capture events | Envelope `id`, `event_type`, `create_time`; resource `id`, `status`, amount `value`/`currency_code`, payee `merchant_id`, supplementary related `order_id` | Verify the original event with PayPal before storing; worker validates immutable envelope metadata and capture bindings. Refund/reversal events retain the existing reconciliation-exception behavior, not newly implemented refund execution. | | Other PayPal event types | Envelope identifiers/time and resource ID only | Remain unsupported/ignored. This does not implement disputes, subscriptions, payouts or new event types. | | PlaceToPay | `requestId`, `signature`, status `status`/`date` | Retain the exact signed strings for local re-verification; only an authenticated provider query may establish financial state. The callback's unsigned `reference`, reason and message are not used by the current worker and are discarded. | | PayPhone | Canonical `TransactionId`, `ClientTransactionId`, optional `StoreId` | Normalize supported aliases; drop untrusted status and customer fields. The callback remains an untrusted query trigger and cannot establish payment success. |",
+      "source": "docs/adr/0116-minimized-provider-notification-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0116-minimized-provider-notification-evidence:15d4d6890f4a",
+      "statement": "Strings have bounded sizes and printable ASCII validation; timestamps must parse as RFC 3339. Transaction IDs must be positive `Int64` values. Arbitrary objects cannot survive in an allowlisted scalar field. Financial amount strings retain their original decimal representation; this projection never converts money using floating-point arithmetic.",
+      "source": "docs/adr/0116-minimized-provider-notification-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0116-minimized-provider-notification-evidence:f52f80751580",
+      "statement": "```mermaid flowchart LR A[Original callback] --> B[Existing authentication and binding checks] B --> C[Typed provider-specific field projection] C --> D[Encrypt retained evidence and store its checksum] D --> E[Durable inbox / claim / retries] E --> F[Existing PayPal verified-event processor] E --> G[Hosted provider authenticated status query] F --> H[Canonical payment and fulfillment boundaries] G --> H ```",
+      "source": "docs/adr/0116-minimized-provider-notification-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0117-shared-bounded-payment-transport:4f7750fca04a",
+      "statement": "```text Bookings / tickets / courses / Domo / services / marketplace -> existing Datafast / PayPal remote helpers -----------+ Provider sessions / reconciliation | -> PlaceToPay / PayPhone adapter requests --------------+ v ProviderAdapter.Http (shared boundary) -> provider destination validation -> payment TLS pool, no implicit retries -> no redirects; 15-second total deadline -> streamed, decompressed response <= 1 MiB -> typed JSON or redacted uncertain error ```",
+      "source": "docs/adr/0117-shared-bounded-payment-transport.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0117-shared-bounded-payment-transport:4c4be01b3d37",
+      "statement": "- Preserve the existing JSON/form encodings, immutable merchant references, integer/decimal-string amounts and PayPal request IDs in the active helpers. - Centralize safe URL parsing, validation after headers are attached, HTTP execution, typed JSON decoding and static error messages. Reject HTTP, URL credentials, explicit URL ports, fragments, cross-provider hosts and explicit `Host` header overrides. Malformed UTF-8 host bytes fail closed. - PayPal, PlaceToPay and PayPhone retain exact configured provider host choices. Datafast retains the existing valid-DNS `oppwa.com` origin family and the existing sandbox/production environment check, rather than asserting an unverified universal regional endpoint. Its configured origin is normalized before use. Merchant-specific Datafast endpoints still require qualification. - Use a separate shared TLS manager with normal certificate verification and `managerRetryableException = const False`. All active call sites changed here use it; the unrelated general-purpose manager is untouched. Injected managers are trusted application/test dependencies, not user configuration. - Disable redirects and automatic cookie handling. Enforce both a 15-second response-header timeout and a 15-second total execution deadline, including body reads. Use exception-safe `withResponse` cleanup. Synchronous transport and decompression exceptions are redacted; external asynchronous cancellation is not deliberately swallowed. - Consume successful responses incrementally. Stop on the first chunk exceeding the one-MiB accumulated limit. Non-2xx responses are errors without consuming their bodies. Decode inside the deadline and omit JSON diagnostics from errors. - Validate PayPal access-token length/visible ASCII and Bearer token type before creating a financial request. Never print requests, tokens or response bodies. - Remove only the three unused PayPal HTTP helpers. Keep the active helpers, pure legacy validators, existing public DTOs, endpoints and financial records.",
+      "source": "docs/adr/0117-shared-bounded-payment-transport.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
       "id": "0117-shared-resource-allocation:c1071dc15e7a",
       "statement": "- Bind every exclusively bookable event participant, room, venue, asset, or provider capacity to an existing canonical `resource` identity. - Compute a half-open occupied interval including setup, travel, soundcheck, teardown, and recovery buffers before confirmation. - Route tentative/confirmed event allocation through the shared exclusion/capacity primitive in the same transaction as booking/engagement state, command receipt, audit, and outbox. - Provide an explicit privileged override command with policy, actor, non-empty reason, affected interval, and immutable audit. Ordinary confirmation cannot set an override flag. - Do not infer or overwrite historical bindings. Backfill exact links where provable and report the rest for review.",
       "source": "docs/adr/0117-shared-resource-allocation.md#decision",
       "status": "proposed",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0118-signed-payment-notification-identity:86a096f1514d",
+      "statement": "After original-body authentication, derive:",
+      "source": "docs/adr/0118-signed-payment-notification-identity.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0118-signed-payment-notification-identity:704de4cd6fac",
+      "statement": "```text ptp-v2- + SHA256(UTF8(JSON array[ \"tdf:placetopay:notification:v2\", integer requestId, exact status.status, exact status.date, lowercase signature ])) ```",
+      "source": "docs/adr/0118-signed-payment-notification-identity.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0118-signed-payment-notification-identity:a002436c0e20",
+      "statement": "The versioned array encoding is pinned by an independently computed test golden. It is independent of object ordering, whitespace, equivalent JSON number/key spelling, unsigned fields and signature hex casing. Exact signed status/date strings remain unchanged. Distinct signed tuples or signing-key digests remain distinct; this does not merge statuses, normalize instants or infer a financial transition from a callback. The signature bytes alone are not used as the ID, avoiding ambiguity from the provider's undelimited input concatenation.",
+      "source": "docs/adr/0118-signed-payment-notification-identity.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0118-signed-payment-notification-identity:67adbac5867d",
+      "statement": "`ProviderEventStore` enforces this identity for verified PlaceToPay inserts, regardless of a caller-supplied event ID. It rejects the untrusted-store path for this provider. Identity derivation itself does **not** authenticate anything: the Servant handler still verifies the original message with the configured secret before any inbox persistence. Other providers keep their existing IDs.",
+      "source": "docs/adr/0118-signed-payment-notification-identity.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0118-signed-payment-notification-identity:c437db067e83",
+      "statement": "New retained payloads normalize only the signature's hexadecimal casing. The existing unique `(provider, environment, merchant_account_ref, provider_event_id)` constraint serializes concurrent inserts. Duplicate checks still require matching immutable metadata, trust, resource, timestamp and an allowed payload checksum. Replay never requeues a terminal row. No advisory locks or new schema are needed.",
+      "source": "docs/adr/0118-signed-payment-notification-identity.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0119-atomic-provider-query-application:31d51a93bbb3",
+      "statement": "The caller owns the SQL transaction. An authenticated, adapter-parsed query is applied under a local savepoint:",
+      "source": "docs/adr/0119-atomic-provider-query-application.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0119-atomic-provider-query-application:2dda51a5b3cc",
+      "statement": "```text Caller transaction (and any locks acquired before application) └─ revalidate immutable binding and exact query money/identity/certainty └─ savepoint: provider query application ├─ provider operation ├─ payment attempt + canonical intent/history ├─ checkout payment state ├─ balanced capture ledger + receipt └─ audit / unknown-status exception domain rejection → roll back only this savepoint success/pending → release savepoint, NOT commit caller commits or rolls back all its work SQL exception / interruption → escape to caller; outer transaction rolls back ```",
+      "source": "docs/adr/0119-atomic-provider-query-application.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0119-atomic-provider-query-application:6ab718b1f8e9",
+      "statement": "`applyQueryResult` is an internal Haskell composition boundary, not a public API. Its input must come from an authenticated query parsed against the stored locator. It reloads the immutable binding and rejects changed identifiers or money. It also rejects absent/different amount or currency, a different resource ID, or certainty inconsistent with the typed status. These checks are defense in depth; assembling an `AdapterResult` is not authentication and must never be used to turn callback financial fields into evidence.",
+      "source": "docs/adr/0119-atomic-provider-query-application.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0119-atomic-provider-query-application:6ae761624362",
+      "statement": "The wrapper no longer commits or rolls back the caller's transaction. Domain errors return `Left` after rolling back local partial writes. Database errors are not caught and converted into successful outcomes inside an aborted SQL transaction. Pre-existing caller locks remain held through its commit/rollback. Locks acquired inside a failed savepoint may be released; a future job lease must therefore be locked **before** invoking this helper.",
+      "source": "docs/adr/0119-atomic-provider-query-application.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0119-atomic-provider-query-application:a966372af6ee",
+      "statement": "`processProviderEventIO` remains the production entry point. Its injectable transport/clock variant allows contract tests without bypassing stored callback trust validation, runtime configuration, immutable lookup or adapter parsing. Production still uses the shared bounded/no-implicit-retry HTTP transport. Query application and mismatch timestamps now use the response observation time, not the earlier callback/query-start time. This is local observation time, not a claim about provider settlement time.",
+      "source": "docs/adr/0119-atomic-provider-query-application.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0121-history-preserving-no-charge-reconciliation:49c845b4d3b6",
+      "statement": "Use `AdapterCancelled` for newly queried PayPhone status `2`, retaining `ProviderConfirmedNoCharge` only after authenticated server-side lookup with exact immutable resource, merchant reference, amount and currency matching. Callbacks remain hints; no callback status or browser parameter is charge evidence. Unknown codes remain ambiguous and cannot release fallback.",
+      "source": "docs/adr/0121-history-preserving-no-charge-reconciliation.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0121-history-preserving-no-charge-reconciliation:f8bd1dda32da",
+      "statement": "After the operation outcome is validated and locked, inspect the bound intent and attempt under the existing caller-owned SQL transaction/savepoint:",
+      "source": "docs/adr/0121-history-preserving-no-charge-reconciliation.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0121-history-preserving-no-charge-reconciliation:f6909fc35408",
+      "statement": "| Existing financial state | Result of a confirmed no-charge query | |---|---| | Coherent failed/canceled intent and failed/canceled attempt, zero authorized/captured/refunded money, no posted ledger for that attempt | Return processed without changing intent, attempt, checkout, financial history or its existing failure label. | | Coherent unresolved intent/attempt with zero money and no posted ledger | Apply the first terminal outcome once. New cancellations use canceled intent and attempt states. | | Money/ledger evidence or incoherent/unsupported terminal state | Reject for reconciliation; never silently relabel or clear money. |",
+      "source": "docs/adr/0121-history-preserving-no-charge-reconciliation.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0121-history-preserving-no-charge-reconciliation:fdf2b8eb9718",
+      "statement": "The query still validates current provider evidence. This is not accepting a failed database row as proof of no charge. A previously ambiguous operation can be resolved by authenticated matching evidence; any existing coherent terminal financial label remains unchanged. Success/conflicting no-charge operation guards remain intact.",
+      "source": "docs/adr/0121-history-preserving-no-charge-reconciliation.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0121-history-preserving-no-charge-reconciliation:9b072a7bec1e",
+      "statement": "Canceling a payment attempt does not cancel its order. A first verified cancellation leaves an active checkout retryable (`failed`), while the intent and attempt are `cancelled`. A closed/paid/expired checkout is not reopened. Replays never write checkout state, so a newer processing/paid attempt remains untouched. Historical canceled intents with legacy failed attempts remain compatible; no bulk data migration or backfill changes them.",
+      "source": "docs/adr/0121-history-preserving-no-charge-reconciliation.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0121-history-preserving-no-charge-reconciliation:f5e3c26088cc",
+      "statement": "Existing public session state remains `confirmed_no_charge`, and customer copy continues to say no charge was completed. It does not assert who canceled or that an issuer declined. No new wire enum, generated client or payment method activation is necessary for this classification repair.",
+      "source": "docs/adr/0121-history-preserving-no-charge-reconciliation.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0123-idempotent-capture-evidence-and-binding:e1c8264cddc8",
+      "statement": "Preserve the existing caller-owned transaction and immutable binding validation. Treat a coherent, already-posted capture as an acknowledgement only: return `Right False` (not newly paid) without any financial update, receipt issuance, audit/history append, or fulfillment transition. Require the original successful attempt, full recorded checkout payment, posted attempt capture ledger and an exact matching payment receipt. Post-capture refund/dispute checkout states may acknowledge that original capture without returning the checkout to paid.",
+      "source": "docs/adr/0123-idempotent-capture-evidence-and-binding.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0123-idempotent-capture-evidence-and-binding:15dfb8855fb4",
+      "statement": "Check receipt amount, currency, canonical receipt number, adapter and external resource together. A voided original receipt is still historical capture evidence, not permission to issue a replacement or represent it as a valid fiscal document. Missing, conflicting or partial evidence must require reconciliation instead of being backfilled by a repeated provider result. First captures retain all authoritative-provider, binding, currency and amount gates.",
+      "source": "docs/adr/0123-idempotent-capture-evidence-and-binding.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0123-idempotent-capture-evidence-and-binding:c0b522d1f0de",
+      "statement": "Binding replay must not rewrite a terminal attempt or its timestamps. A binding first validates and locks the exact checkout/attempt pair before any insertion. It can advance an unresolved attempt monotonically; a stage observation is not authority to resurrect failed/canceled/expired/review states or regress a processing attempt. Update the checkout only for a real permitted attempt-stage change. Existing immutable binding fields and stored references are never changed.",
+      "source": "docs/adr/0123-idempotent-capture-evidence-and-binding.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0124-closed-checkout-approval-evidence:cdd60c6720b4",
+      "statement": "After adapter parsing, exact amount/currency/resource validation and a fresh immutable-binding lookup, lock the create operation and then the checkout/attempt. For an approval on `expired` or `cancelled`, append a `verified_payment_on_closed_checkout` reconciliation exception containing the provider, environment, merchant alias, checkout/resource references, exact expected and observed minor units, currency and local observation time. Append a correlated audit event linking the exception, attempt and create operation in the same caller-owned transaction. Do not persist raw query responses or payer data.",
+      "source": "docs/adr/0124-closed-checkout-approval-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0124-closed-checkout-approval-evidence:a8fafd5b701f",
+      "statement": "The exception UUID is UUIDv5 in the URL namespace over the versioned name `urn:tdf:payment-review:closed-checkout:v1:` plus the canonical create-operation UUID. It is an identity key, not a secret or an authentication mechanism. Existing primary-key uniqueness and operation serialization deduplicate callbacks, leases and concurrent queries without a schema migration. A retained row must match the immutable scope and money; conflicting evidence fails closed without rewriting it.",
+      "source": "docs/adr/0124-closed-checkout-approval-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0124-closed-checkout-approval-evidence:9580ae175beb",
+      "statement": "The capture ledger, receipt, checkout, attempt, intent and operation remain unchanged. This record is an unresolved observation, **not booked cash, recognized revenue, a suspense-ledger posting, a settlement or a refund**. The processor returns its existing dead-letter disposition. A scheduled job does not add a second generic review entry for the same recorded approval.",
+      "source": "docs/adr/0124-closed-checkout-approval-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0124-closed-checkout-approval-evidence:284215037636",
+      "statement": "Once this review identity exists, a subsequent matched query cannot automatically release it, including after an exception workflow-label change. The exact-replay and authenticated status readers mask that operation as `ambiguous`, hide its encrypted redirect and disallow fallback using the existing API contract. Stored provider status and references are preserved. This conservative projection means the local payment application needs reconciliation, not that the observed provider approval disappeared. It makes no claim that a worker is currently live.",
+      "source": "docs/adr/0124-closed-checkout-approval-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0124-closed-checkout-approval-evidence:df662ef44c01",
+      "statement": "```text authenticated query + immutable binding + exact money | closed checkout approval | exception + audit, one transaction | hold / no redirect / no fallback | authorized finance investigation (no automated release or refund) ```",
+      "source": "docs/adr/0124-closed-checkout-approval-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0125-read-only-reconciliation-evidence:cc217eb97308",
+      "statement": "Append `GET /admin/commerce/reconciliation-exceptions` to the existing commerce operations API. Apply the existing strict-Admin policy before validating filters or accessing a database. Default to sandbox; permit explicit production reads under that same authorization. Accept four review statuses, an optional canonical checkout UUID, limit 1–100 (default 25) and offset 0–10000 (default 0). Echo every applied filter. Never accept a customer lookup token in this endpoint.",
+      "source": "docs/adr/0125-read-only-reconciliation-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0125-read-only-reconciliation-evidence:b0f1476b5566",
+      "statement": "Read inside a read-only SQL transaction with a three-second per-statement timeout. Require the exception, binding, attempt and checkout tables. Missing tables are reported as `crrSchemaReady=false`, not as a verified empty result. SQL failures, including locks/timeouts or incompatible columns, return a fixed 503 without diagnostics. Successful reports and database-error responses use `no-store`.",
+      "source": "docs/adr/0125-read-only-reconciliation-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0125-read-only-reconciliation-evidence:6aae794d72d1",
+      "statement": "Select one bounded exception page before linking it. Return exception UUID, allowlisted provider/status/reason classifications, nullable exact expected and observed minor units, validated currency text and timestamps. Unknown stored classifications become `unrecognized`. Omit raw exception text, merchant aliases, external references, notes, assignment identities and provider payloads entirely. Amounts are nullable signed-64-bit **decimal strings** in this additive contract; null is unknown, never zero. Existing numeric DTOs are not silently reinterpreted.",
+      "source": "docs/adr/0125-read-only-reconciliation-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0125-read-only-reconciliation-evidence:a34a786995fa",
+      "statement": "Return internal checkout/attempt UUIDs only when there is exactly one matching attempt and its stored binding agrees on provider, environment, merchant and resource; checkout identity/environment and attempt/checkout money must agree with the binding. The exception's legacy text reference is compared as text, never cast to UUID or exposed. These links identify records; they do not authenticate the exception amount or prove a capture/settlement. Missing links are not evidence of no payment. Multiple eligible attempts yield no link rather than a guessed one.",
+      "source": "docs/adr/0125-read-only-reconciliation-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0125-read-only-reconciliation-evidence:b47e5dc37df9",
+      "statement": "```text strict Admin → validate bounded filters → read-only exception page | unique immutable-binding lookup | redacted DTO / nullable exact-money strings / \\ web admin view generated mobile types (read only) (no native admin screen) ```",
+      "source": "docs/adr/0125-read-only-reconciliation-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0125-read-only-reconciliation-evidence:93f3b6e2aaa6",
+      "statement": "Web defaults to sandbox/open, has no mutation controls and uses the generated contract. Hide previous evidence during refresh, request failure, filter-response mismatch or invalid submitted checkout input. Use `BigInt` for exact USD display; other currencies retain explicit integer minor units without assuming a scale. Spanish/English labels, accessible filter controls, responsive cards and neutral review-status chips preserve the distinction between review and payment state. There is no durable browser storage for this report and inactive query data has zero retention time. Live offset pagination is not an immutable accounting export.",
+      "source": "docs/adr/0125-read-only-reconciliation-evidence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0126-checkout-completion-capability-gates:615e302385ee",
+      "statement": "The public runtime boundary applies the following minimum requirements before selecting routes. Caller-supplied requirements are additive and cannot remove these requirements. Existing account, contract, credential, method, product, currency, environment, runtime-configuration and feature checks remain in force.",
+      "source": "docs/adr/0126-checkout-completion-capability-gates.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0126-checkout-completion-capability-gates:1d27148fcabb",
+      "statement": "| Implemented method / operation | Required capability evidence | |---|---| | Public card checkout | `one_time` and `server_verification` | | Public PayPal wallet checkout | `one_time` and `capture` | | Public PlaceToPay bank redirect / DeUna | `one_time` and `server_verification` | | Public PayPhone wallet | `one_time` and `server_verification` | | Independently reviewed manual bank method | Existing `one_time`; no invented remote capture/query operation | | Marketplace flow | All applicable requirements above plus `connected_accounts`, `split_settlement`, `seller_payouts` | | Datafast's historical `capture` attempt | `one_time` and `server_verification`; preserve the historical operation name because it verifies an automatic debit rather than sending a separate capture | | PayPal and other true capture attempts | Existing `capture` requirement, plus applicable marketplace requirements |",
+      "source": "docs/adr/0126-checkout-completion-capability-gates.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0126-checkout-completion-capability-gates:7d12680276e7",
+      "statement": "`loadRuntimeReadyRoutes` is shared by the public capability API, product checkout method lists and the new hosted-session creation gate. Tightening this boundary therefore removes an unqualified method from presentation and rejects a new hosted session requested directly. No client can opt out with an empty required- capabilities array. The pure `routePayments` engine remains usable for specific internal operations; it does not itself assert that a complete public checkout exists. Normalization is idempotent and preserves caller restrictions.",
+      "source": "docs/adr/0126-checkout-completion-capability-gates.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0126-checkout-completion-capability-gates:0bb0db9ce2dd",
+      "statement": "Existing create replay precedes new-session qualification so interrupted clients can still recover the original operation after capability/account revocation. This neither contacts a new provider nor authorizes another charge. Datafast and PayPal create/confirmation attempts remain on the original intent, exact replay preserves identity and a different capture key cannot create another continuation.",
+      "source": "docs/adr/0126-checkout-completion-capability-gates.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0126-checkout-completion-capability-gates:7df5986577c7",
+      "statement": "No provider is enabled. No new method, payment link, native flow, financial transition, external request or migration is added. Payment links and other unimplemented executors remain behind their existing runtime gates; a generic provider profile is not proof that a usable customer flow has been implemented.",
+      "source": "docs/adr/0126-checkout-completion-capability-gates.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0127-payment-worker-diagnostic-boundaries:a5c46e7551a3",
+      "statement": "Use a tested single-iteration boundary for each existing worker loop. Production passes its unchanged tick action, stderr error sink and, where applicable, stdout information sink. Tests replace only actions/sinks, not payment policy.",
+      "source": "docs/adr/0127-payment-worker-diagnostic-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0127-payment-worker-diagnostic-boundaries:7204bf1cb95f",
+      "statement": "- Error events contain only fixed component, level and message fields. Never render, inspect, truncate, hash or append a caught exception. The existing `error` detail field is intentionally removed from the two vulnerable events. - Keep event-processing and expiry counters as integer-only information events; retain the existing silent idle behavior. These counters are not charges, settlements, revenue, worker heartbeats or evidence of merchant qualification. - Catch synchronous diagnostic-write failures without logging their exceptions elsewhere, repeating the tick, changing a lease or altering financial state. The next iteration remains subject to the existing delay and qualification, locking, idempotency and stale-lease rules. - Preserve `safe-exceptions` cancellation semantics for the tick and log sink. Cancellation/shutdown is not a recoverable provider failure and must not be swallowed or relabeled as one. - Make the provider-event startup warning fixed as well; invalid encryption configuration remains disabled and its value never enters a diagnostic.",
+      "source": "docs/adr/0127-payment-worker-diagnostic-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0127-payment-worker-diagnostic-boundaries:d15a98395c63",
+      "statement": "This changes diagnostics only. It does not acknowledge/retry provider events, clear dead letters, enable a worker or provider, mark an order paid, release inventory directly, issue a refund, change an API/client or modify a database. Existing persistent payment audit/history and reconciliation evidence remain authoritative and unchanged.",
+      "source": "docs/adr/0127-payment-worker-diagnostic-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0128-refund-execution-fence:c179b6de8e52",
+      "statement": "Use the existing transaction and locked refund row as a durable, non-expiring execution fence. Only `requested` or `approved` may acquire the first permit, under the existing independent-approver rule. `processing`/`succeeded` replays return the stored record without another permit. `failed` requires reconciliation; it cannot be reissued or cancelled by these application commands. Pre-execution `requested`/`approved` cancellation remains available.",
+      "source": "docs/adr/0128-refund-execution-fence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0128-refund-execution-fence:9a904d8cc7d7",
+      "statement": "```text requested -> approved -> processing -> succeeded | | | +------------+ +-- timeout / mismatch / unknown -> processing (held) v cancelled historical failed -> held for reconciliation ```",
+      "source": "docs/adr/0128-refund-execution-fence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0128-refund-execution-fence:1a020299f08a",
+      "statement": "The legacy function name `recordRefundFailure` is retained for source compatibility, but means a failure to verify completion: record a diagnostic, not a terminal financial conclusion. Keep the amount reserved at checkout and line level. Do not overwrite existing provider references. Do not store arbitrary provider status text as a diagnostic code. Exact verified completion retains the existing ledger/credit-note path and duplicate-evidence protection.",
+      "source": "docs/adr/0128-refund-execution-fence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0128-refund-execution-fence:111ff87d4ef9",
+      "statement": "Perform balance comparisons using unbounded `Integer` arithmetic before accepting an `Int64` minor-unit request. Public amounts and persisted types are unchanged. Overcommitted or negative stored balances fail closed; no rounding or float is used.",
+      "source": "docs/adr/0128-refund-execution-fence.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0129-atomic-canonical-refund-accounting:0fd60ad14336",
+      "statement": "Keep completion in the existing caller-owned SQL transaction:",
+      "source": "docs/adr/0129-atomic-canonical-refund-accounting.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0129-atomic-canonical-refund-accounting:cd6a330475aa",
+      "statement": "```text lock original refund; exact succeeded replay returns without writes -> lock original checkout and attempt; verify immutable binding and payable state -> read committed successful-refund totals after acquiring those locks -> check checkout totals and the original intent's capture/refund totals -> apply PaymentRefundVerified to that intent and append its state history -> complete refund + checkout + ledger + credit-note record + refund audit -> commit all, or roll back all on SQL failure ```",
+      "source": "docs/adr/0129-atomic-canonical-refund-accounting.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0129-atomic-canonical-refund-accounting:04ea98c6f215",
+      "statement": "No recoverable `Left` is returned after a successful intent transition. The remaining writes either succeed or raise an SQL exception that escapes the transaction. Callers must not catch that exception inside the transaction and commit partial work.",
+      "source": "docs/adr/0129-atomic-canonical-refund-accounting.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0129-atomic-canonical-refund-accounting:4a2146b824ff",
+      "statement": "The checkout lock serializes distinct partial refunds. Aggregate checks use a fresh statement after acquiring the lock: a scalar subquery in a waiting `READ COMMITTED` locking statement can retain the earlier statement snapshot. The intent check is scoped to the original attempt, not a replacement payment. Refund replay remains idempotent at the locked refund record; a numeric refund event is never treated as generically replay-idempotent by the intent store.",
+      "source": "docs/adr/0129-atomic-canonical-refund-accounting.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0129-atomic-canonical-refund-accounting:b340f7569ba7",
+      "statement": "Compare sums using unbounded `Integer` before materializing an `Int64` result. Reject negative stored refunded balances. Full/partial classification and all external currency/minor-unit contracts stay unchanged.",
+      "source": "docs/adr/0129-atomic-canonical-refund-accounting.md#decision",
+      "status": "inferred",
       "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
       "verification": "open",
       "gap": "Per-clause implementation correspondence not discharged by inventory"
@@ -21588,7 +22894,7 @@
     },
     {
       "id": "LEGACY-f6698e6ab34b",
-      "statement": "teachers: [\"C\u00e9sar Galarza\",\"Fabricio Alom\u00eda\",\"Juan Ledesma\"]",
+      "statement": "teachers: [\"César Galarza\",\"Fabricio Alomía\",\"Juan Ledesma\"]",
       "source": "specs.yaml:136",
       "status": "historical",
       "deliveryScope": "Legacy v1 candidate; superseded as current system authority by formal/system/README.md; per-clause applicability requires reconciliation",
@@ -22555,6 +23861,74 @@
       "correspondence": "See domain traceability; discovery establishes no refinement"
     },
     {
+      "configuration": "formal/event-operations/HostedServicePayment.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Workers = {callback, recovery}",
+        "  UnsafeAtomic = FALSE",
+        "  UnsafeReplay = FALSE",
+        "  UnsafeProgress = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  NoMissingFulfillment",
+        "  ExactlyOnePaidAudit",
+        "  NoFulfillmentRegression",
+        "  BindingRequired"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/HostedServicePaymentAtomic.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Workers = {callback, recovery}",
+        "  UnsafeAtomic = TRUE",
+        "  UnsafeReplay = FALSE",
+        "  UnsafeProgress = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  NoMissingFulfillment"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/HostedServicePaymentProgress.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Workers = {callback, recovery}",
+        "  UnsafeAtomic = FALSE",
+        "  UnsafeReplay = FALSE",
+        "  UnsafeProgress = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  NoFulfillmentRegression"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/HostedServicePaymentReplay.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Workers = {callback, recovery}",
+        "  UnsafeAtomic = FALSE",
+        "  UnsafeReplay = TRUE",
+        "  UnsafeProgress = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  ExactlyOnePaidAudit"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
       "configuration": "formal/event-operations/InvitationSafety.cfg",
       "declarations": [
         "CONSTANTS",
@@ -22842,6 +24216,73 @@
         "INVARIANTS NoRequestWithoutToken NoInventedToken FragmentPrecedence",
         "PROPERTY RecoverySettles",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PaymentRecovery.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Checkouts = {checkout_a, checkout_b}",
+        "  UnsafeOverwrite = FALSE",
+        "  UnsafeReturn = FALSE",
+        "  UnsafeCompletedFlow = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  TypeOK",
+        "  NoLostRecovery",
+        "  CorrectReturn",
+        "  NoCompletedFlowHijack"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PaymentRecoveryCompleted.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Checkouts = {checkout_a, checkout_b}",
+        "  UnsafeOverwrite = FALSE",
+        "  UnsafeReturn = FALSE",
+        "  UnsafeCompletedFlow = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  NoCompletedFlowHijack"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PaymentRecoveryOverwrite.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Checkouts = {checkout_a, checkout_b}",
+        "  UnsafeOverwrite = TRUE",
+        "  UnsafeReturn = FALSE",
+        "  UnsafeCompletedFlow = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  NoLostRecovery"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/PaymentRecoveryReturn.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Checkouts = {checkout_a, checkout_b}",
+        "  UnsafeOverwrite = FALSE",
+        "  UnsafeReturn = TRUE",
+        "  UnsafeCompletedFlow = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  CorrectReturn"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
@@ -23240,6 +24681,98 @@
         "LegacyFailsClosed",
         "BoundCredential",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RefundRecovery.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Refunds = {refund_a, refund_b}",
+        "  Workers = {worker_a, worker_b}",
+        "  Captured = 2",
+        "  UnsafeExecutionReplay = FALSE",
+        "  UnsafeAccountingReplay = FALSE",
+        "  UnsafeAuthority = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  NoDuplicateExecution",
+        "  NoDuplicateAccounting",
+        "  CurrentAuthorityAtApply",
+        "  ReceiptsMatchAccounting",
+        "  Conservation",
+        "  TypeOK"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RefundRecoveryAccounting.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Refunds = {refund_a, refund_b}",
+        "  Workers = {worker_a, worker_b}",
+        "  Captured = 2",
+        "  UnsafeExecutionReplay = FALSE",
+        "  UnsafeAccountingReplay = TRUE",
+        "  UnsafeAuthority = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  NoDuplicateExecution",
+        "  NoDuplicateAccounting",
+        "  CurrentAuthorityAtApply",
+        "  ReceiptsMatchAccounting",
+        "  Conservation",
+        "  TypeOK"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RefundRecoveryAuthority.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Refunds = {refund_a, refund_b}",
+        "  Workers = {worker_a, worker_b}",
+        "  Captured = 2",
+        "  UnsafeExecutionReplay = FALSE",
+        "  UnsafeAccountingReplay = FALSE",
+        "  UnsafeAuthority = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  NoDuplicateExecution",
+        "  NoDuplicateAccounting",
+        "  CurrentAuthorityAtApply",
+        "  ReceiptsMatchAccounting",
+        "  Conservation",
+        "  TypeOK"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/RefundRecoveryExecution.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Refunds = {refund_a, refund_b}",
+        "  Workers = {worker_a, worker_b}",
+        "  Captured = 2",
+        "  UnsafeExecutionReplay = TRUE",
+        "  UnsafeAccountingReplay = FALSE",
+        "  UnsafeAuthority = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS",
+        "  NoDuplicateExecution",
+        "  NoDuplicateAccounting",
+        "  CurrentAuthorityAtApply",
+        "  ReceiptsMatchAccounting",
+        "  Conservation",
+        "  TypeOK"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
