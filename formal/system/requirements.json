@@ -3313,7 +3313,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -5906,9 +5906,9 @@
       "id": "PRIV-INTAKE-001",
       "title": "Authenticated account-deletion intake with auditable manual resolution",
       "domain": "PRIV",
-      "statement": "Account owners can request deletion without composing an email. Only a live matching account may submit the reserved marker; administrator resolution is immutable and audited and never claims automatic erasure.",
+      "statement": "After explicit qualified backend/web rollout, account owners can request deletion without composing an email; before rollout the verified contact path remains available without API submission. Only a live matching account may submit the reserved marker; administrator resolution is immutable and audited and never claims automatic erasure.",
       "authority": "Product owner mobile release/privacy task; reviewed PR486; manual processing by owner-confirmed info@tdfrecords.net",
-      "source": "docs/mobile-program/account-deletion-operations.md; root PR486",
+      "source": "docs/mobile-program/account-deletion-operations.md; root PR486; docs/mobile-program/account-deletion-rollout.md",
       "contract": "docs/mobile-program/account-deletion-operations.md",
       "actors": [
         "Authenticated account holder",
@@ -5916,7 +5916,8 @@
         "Privacy operator"
       ],
       "preconditions": [
-        "Live matching session, explicit confirmation and published feedback catalog values; strict API deployment is required before the form is operational."
+        "Live matching session, explicit confirmation and published feedback catalog values; strict API deployment is required before the form is operational.",
+        "VITE_ACCOUNT_DELETION_FORM_ENABLED must equal the literal string true to expose either the form or administrator queue; all other values keep them off."
       ],
       "inputs": [
         "Account ID bound to authenticated identity",
@@ -5942,7 +5943,8 @@
         "Simple cross-origin form or hostile Origin submits deletion request",
         "Generic feedback bypasses reserved-marker checks",
         "Completed/rejected request is resolved again",
-        "Successful intake or queue resolution is represented as automatic erasure"
+        "Successful intake or queue resolution is represented as automatic erasure",
+        "A source-only web deployment exposes deletion form/queue against an unqualified backend"
       ],
       "effects": [
         "Existing feedback row and notification on accepted intake",
@@ -5974,7 +5976,10 @@
         "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
         "tdf-hq-ui/src/routes/publicRoutes.tsx",
         "tdf-hq/assets/feature-registry.json",
-        "tdf-hq/docs/openapi/api.yaml"
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/config/accountDeletionRollout.ts",
+        "tdf-hq-ui/src/vite-env.d.ts",
+        "playwright.config.mjs"
       ],
       "tests": [
         "e2e/web/account-deletion.spec.mjs",
@@ -5990,10 +5995,12 @@
         "tdf-mobile/__tests__/featureRegistry.test.ts",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/CorsSpec.hs",
-        "scripts/verify-cors-boundary.py"
+        "scripts/verify-cors-boundary.py",
+        "tdf-hq-ui/src/config/accountDeletionRollout.test.ts",
+        "e2e/web/account-deletion-rollout.spec.mjs"
       ],
       "formalModels": [],
-      "verification": "QuickCheck properties exercise the actual identity/outcome validators and normalization idempotency over arbitrary inputs; disposable PostgreSQL/HTTP controls exercise CSRF and concurrent resolution. No dedicated temporal model or whole-program refinement is claimed for these handlers; the distinct operator lifecycle model does not prove them. Real Servant routing tests bind the CORS proof/origin guard to both the canonical endpoint and its accepted trailing-slash alias.",
+      "verification": "QuickCheck properties exercise the actual identity/outcome validators and normalization idempotency over arbitrary inputs; disposable PostgreSQL/HTTP controls exercise CSRF and concurrent resolution. No dedicated temporal model or whole-program refinement is claimed for these handlers; the distinct operator lifecycle model does not prove them. Real Servant routing tests bind the CORS proof/origin guard to both the canonical endpoint and its accepted trailing-slash alias. Default-off parser, component no-request controls and synthetic browser tests cover both deployment states; this public build flag is not server authorization.",
       "evidence": "Exact revision, command, binary and disposable HTTP/browser receipts retained separately; predecessor passes do not qualify the combined main merge.",
       "status": "specified and implemented",
       "critical": true,

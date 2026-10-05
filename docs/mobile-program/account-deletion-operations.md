@@ -1,5 +1,8 @@
 # Account deletion: authenticated initiation and manual fulfilment
 
+The authenticated form and administrator queue are disabled by default until the backend and web rollout is qualified. The public page retains the verified email contact while disabled. See [account-deletion-rollout.md](account-deletion-rollout.md) for the build switch, acceptance and recovery order.
+
+
 The owner confirmed that `info@tdfrecords.net` handles account/data-deletion
 requests. `/cuenta/eliminar` gives the account holder a dedicated, bilingual
 initiation flow without composing an email or explaining a reason. The mobile

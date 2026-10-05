@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import axe from 'axe-core';
 
 test.use({ serviceWorkers: 'block' });
+test.skip(process.env.PLAYWRIGHT_ACCOUNT_DELETION_FORM_ENABLED === 'false', 'Enabled-workflow fixtures require explicit synthetic rollout.');
 
 async function fixture(page, baseURL, authenticated = true) {
   const origin = new URL(baseURL).origin;

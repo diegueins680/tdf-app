@@ -5907,9 +5907,9 @@
       "id": "PRIV-INTAKE-001",
       "title": "Authenticated account-deletion intake with auditable manual resolution",
       "domain": "PRIV",
-      "statement": "Account owners can request deletion without composing an email. Only a live matching account may submit the reserved marker; administrator resolution is immutable and audited and never claims automatic erasure.",
+      "statement": "After explicit qualified backend/web rollout, account owners can request deletion without composing an email; before rollout the verified contact path remains available without API submission. Only a live matching account may submit the reserved marker; administrator resolution is immutable and audited and never claims automatic erasure.",
       "authority": "Product owner mobile release/privacy task; reviewed PR486; manual processing by owner-confirmed info@tdfrecords.net",
-      "source": "docs/mobile-program/account-deletion-operations.md; root PR486",
+      "source": "docs/mobile-program/account-deletion-operations.md; root PR486; docs/mobile-program/account-deletion-rollout.md",
       "contract": "docs/mobile-program/account-deletion-operations.md",
       "actors": [
         "Authenticated account holder",
@@ -5917,7 +5917,8 @@
         "Privacy operator"
       ],
       "preconditions": [
-        "Live matching session, explicit confirmation and published feedback catalog values; strict API deployment is required before the form is operational."
+        "Live matching session, explicit confirmation and published feedback catalog values; strict API deployment is required before the form is operational.",
+        "VITE_ACCOUNT_DELETION_FORM_ENABLED must equal the literal string true to expose either the form or administrator queue; all other values keep them off."
       ],
       "inputs": [
         "Account ID bound to authenticated identity",
@@ -5943,7 +5944,8 @@
         "Simple cross-origin form or hostile Origin submits deletion request",
         "Generic feedback bypasses reserved-marker checks",
         "Completed/rejected request is resolved again",
-        "Successful intake or queue resolution is represented as automatic erasure"
+        "Successful intake or queue resolution is represented as automatic erasure",
+        "A source-only web deployment exposes deletion form/queue against an unqualified backend"
       ],
       "effects": [
         "Existing feedback row and notification on accepted intake",
@@ -5975,7 +5977,10 @@
         "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
         "tdf-hq-ui/src/routes/publicRoutes.tsx",
         "tdf-hq/assets/feature-registry.json",
-        "tdf-hq/docs/openapi/api.yaml"
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/config/accountDeletionRollout.ts",
+        "tdf-hq-ui/src/vite-env.d.ts",
+        "playwright.config.mjs"
       ],
       "tests": [
         "e2e/web/account-deletion.spec.mjs",
@@ -5991,10 +5996,12 @@
         "tdf-mobile/__tests__/featureRegistry.test.ts",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/CorsSpec.hs",
-        "scripts/verify-cors-boundary.py"
+        "scripts/verify-cors-boundary.py",
+        "tdf-hq-ui/src/config/accountDeletionRollout.test.ts",
+        "e2e/web/account-deletion-rollout.spec.mjs"
       ],
       "formalModels": [],
-      "verification": "QuickCheck properties exercise the actual identity/outcome validators and normalization idempotency over arbitrary inputs; disposable PostgreSQL/HTTP controls exercise CSRF and concurrent resolution. No dedicated temporal model or whole-program refinement is claimed for these handlers; the distinct operator lifecycle model does not prove them. Real Servant routing tests bind the CORS proof/origin guard to both the canonical endpoint and its accepted trailing-slash alias.",
+      "verification": "QuickCheck properties exercise the actual identity/outcome validators and normalization idempotency over arbitrary inputs; disposable PostgreSQL/HTTP controls exercise CSRF and concurrent resolution. No dedicated temporal model or whole-program refinement is claimed for these handlers; the distinct operator lifecycle model does not prove them. Real Servant routing tests bind the CORS proof/origin guard to both the canonical endpoint and its accepted trailing-slash alias. Default-off parser, component no-request controls and synthetic browser tests cover both deployment states; this public build flag is not server authorization.",
       "evidence": "Exact revision, command, binary and disposable HTTP/browser receipts retained separately; predecessor passes do not qualify the combined main merge.",
       "status": "specified and implemented",
       "critical": true,
@@ -6013,11 +6020,12 @@
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
-    ".github/workflows/ci.yml": "f43ddaf0e847ee524739559f2ac242970aaa42bef5ad810249900784ca863d2e",
+    ".github/workflows/ci.yml": "db36c447e424b4dfdd894d805a8c5f732ba7ec5d41b72eaeef88baca349f7f68",
     ".github/workflows/event-operations-formal.yml": "8cdbbb59f539a8394fde147ba38dc4f27260b9ac2c371c731da5b342401077d1",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     "docs/catalog-persistence/catalog-list-decisions.json": "fe2f2c2292abcb06e85cdff2ff8e72902f26a70e3303b8871ce9e0678674ab7a",
-    "e2e/web/account-deletion.spec.mjs": "b31778ac20f8bdbc66232add16556a4334d6e82f8a80b598b544934ea1f34a64",
+    "e2e/web/account-deletion-rollout.spec.mjs": "91c275b05439f70e1bd417b0507e1ba621625920c7fa8dfa186c92f8811ba97a",
+    "e2e/web/account-deletion.spec.mjs": "5239229128b1a639d0e31eddd3ea82bb10911f890e7805f12b3e46deca264aef",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
     "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
@@ -6092,6 +6100,7 @@
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
     "package-lock.json": "591c111bb4548a3f3ce23ae313030d5dcee05f54c10f2161464e789cf2221f4c",
     "package.json": "f3f77a10e1b8aa74e555d9db534dc2c35b404bded3732abefe1cfc21c83d98ac",
+    "playwright.config.mjs": "ffecd92cb0c689ba2c6bada8215811ddfbc2cab4e87c5745453c67197e66825a",
     "scripts/__tests__/artist-enrichment.test.mjs": "ce91b413a5aad2f3c8d5dfc861d352162d7a1bc14236bc7b56424904f9ed7e40",
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
@@ -6211,7 +6220,7 @@
     "streaming/docker-compose.streaming.yml": "27a418566cfbaf8d10fd9da948aecc6bae2b3279b14e67013aae26492e33e249",
     "streaming/mediamtx.yml": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
     "tdf-hq-ui/public/data-deletion.html": "fe759cb4af0642f024ef31d61f55cb890c8d52e1e05c9e00b409d020f3fc1c13",
-    "tdf-hq-ui/public/mobile-app/data-deletion.html": "813ff5df54318e43fd4064004f0d9f2e72ade70140d974a3761d150ed91d5d96",
+    "tdf-hq-ui/public/mobile-app/data-deletion.html": "93271be8eb80d03703b19a71d45625c876b758e7b08636b986c3f83b39425666",
     "tdf-hq-ui/public/mobile-app/index.html": "4e3e201b1ba1cd62fa22d2c487c759cdc55569f0591fdf1e864c6eefd70731c2",
     "tdf-hq-ui/public/mobile-app/privacy.html": "5aadcfc8e72fe83f6ed58999ee0f1963ca3b1eec031212bc7a3fdf1fc51d4f5b",
     "tdf-hq-ui/public/mobile-app/support.html": "56a65c45903c596b908bf49416a1e8e073453accbb6186bb19cc22e9d85191c5",
@@ -6232,26 +6241,28 @@
     "tdf-hq-ui/src/api/inventory.ts": "7462c17a811a3e307b8ff551745b76cf7e2ea7691d1193c9076190c77545a07c",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
     "tdf-hq-ui/src/api/types.ts": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
-    "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx": "f382ffb3931903701e4416dc22f97b4d56c594d972953be5dc9d218bbd619972",
-    "tdf-hq-ui/src/components/AccountDeletionQueue.tsx": "8cef257d699117b94fb7d45b3fd574fb97098a0a6e38ef29d3038fb2b41e49bf",
+    "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx": "43dd3eab1c1b154e6d78becf2af28a160566487f7d6dd4888b9d1738b70bd415",
+    "tdf-hq-ui/src/components/AccountDeletionQueue.tsx": "4fce27d0919e183a0d98ce75f1f32004102491cf2e0ed8ddf7277b0a8e05030b",
     "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx": "7723dd458079bcad7d7c3f39933b2025de76462f8d0fb40a6c6d4e6bd35deb49",
     "tdf-hq-ui/src/components/LazyPaginatedList.tsx": "8c96fc43fa7096d5bf59e0a724c19bd4b73d1f05582a25d99b633ba95f075d91",
     "tdf-hq-ui/src/components/PublicBranding.tsx": "7b611aa98fbd9f7a80236089e593265e6b95f579c8b6b91b38bd72a41e66f1a8",
     "tdf-hq-ui/src/components/TicketCredentialQR.tsx": "0ae153c24a40b2a2688c5eeb93e04a7b7c15f0a37a3cc1414950061bbf556831",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "fd6674cc3b97424d868e0f77e681c5fea4362a82f8babc71dff15dc345112589",
+    "tdf-hq-ui/src/config/accountDeletionRollout.test.ts": "ed27d231bbee533edfa966dc1280060a43622873cf2f9a1c23e2cee2cec17ba0",
+    "tdf-hq-ui/src/config/accountDeletionRollout.ts": "2511ef507040d256a3c6c0690659dc0b7d795c1e8f848bd61f60c0ce023fa7bf",
     "tdf-hq-ui/src/features/featureRegistry.test.ts": "4e3a97254efaf4f01fc0a7e596666f435c95fe4335a363ddeb0fb4900bb0632f",
     "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx": "a4c38b4329431d311a51ae9d9b0ffb2cc67edbd97a6a6e709aa580c7e15fcef1",
-    "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts": "dcfed367027497a13691491f27434050618bdf386d5ae9ad032a9037892a3534",
-    "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts": "31796bc77316bf6d1b90841e6d9454bdeafe75c7e8630713b45c2cc601f0420c",
+    "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts": "9b140670eb9f6df2c142335715b78d6ef6071ac05af5a77e2d432e4e5edb12f1",
+    "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts": "929ed5d207113d203c4c1ec3e736bcffd8fbf942d802bdcebcb1265ba7e10cbf",
     "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "83320844622c1c458265cb4e230d9edeae3d495da2a7d6dcb516d444f88f999f",
     "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "0e4db3d2d183691f42c81fc1bcd0ab6589c8847e04cd0e0e10db3ecc21861ed9",
     "tdf-hq-ui/src/i18n/locales/en.ts": "3f2bad72c74df51d522a433a3c1c97a6ea6b8dcf5b8a9d4657af3515cd6d4ebf",
     "tdf-hq-ui/src/i18n/locales/es.ts": "e7e93c77deb6043f650aeb71e0b10538c480918d702af78e9ab17f756aaabd0b",
     "tdf-hq-ui/src/main.tsx": "36d658b2afc501b4c6729dba8ba333d918c434b5ac16e8d7c8228244c119e626",
     "tdf-hq-ui/src/mobile/MobileApp.test.tsx": "2cda5efe4cfeb77f4e67e629b3aa8b5aec10c617658ddc8042ba01990c6a2c2b",
-    "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx": "2792cf8b46ad3c870fbc52818aa67ee9a5155a10568444faa64d2f01cddb8d04",
-    "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": "f04ca7a62b3ba9d5f293ea988738f357928d8086b56f113803e92f87f353b24c",
+    "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx": "43f9867edc72c0a0c6935f1eafdfa689e9665998464d588bac0bc70e08557210",
+    "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": "c6e038ecc02f4d2f4f7dde5681c34becd33381aac76dfd00a12fed5f78c982f5",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "aad862427b31bb0777586ae09589055043f9346e4eaaa9bf14a521e3d4fed129",
@@ -6276,6 +6287,7 @@
     "tdf-hq-ui/src/utils/providerPaymentResume.test.ts": "103a2f73519a73ffb088df88e847789b4fc5f6afd07d9c38bdeafd0dbc4039e9",
     "tdf-hq-ui/src/utils/providerPaymentResume.ts": "27f2bbb6169784ba41aa14ddf9e2fade00617452594157fe8c74eed64ce3f0ba",
     "tdf-hq-ui/src/utils/roles.ts": "a6e35fb167641efb11ffadea2d23865d3165e495cd59e0644a49e0a20f87b0da",
+    "tdf-hq-ui/src/vite-env.d.ts": "336fca09c41c8bd825239eed59f211e8c6f463b017f7281559907a20e6109fc6",
     "tdf-hq/.env.example": "52c6e873ba21c44a10f7fd7fb1bdb44c0234a806dde3b019cf383a850b06b77a",
     "tdf-hq/Dockerfile": "9d4b6b0747296ff98277153a7fa31ae5e75a14709a0900ffd3abf2588b20cf4f",
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
@@ -9906,6 +9918,24 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/config/accountDeletionRollout.ts": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/vite-env.d.ts": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "playwright.config.mjs": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
     "e2e/web/account-deletion.spec.mjs": [
       {
         "requirement": "PRIV-INTAKE-001",
@@ -9965,6 +9995,18 @@
         "requirement": "PRIV-INTAKE-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq-ui/src/config/accountDeletionRollout.test.ts": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/web/account-deletion-rollout.spec.mjs": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -10016,7 +10058,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "f43ddaf0e847ee524739559f2ac242970aaa42bef5ad810249900784ca863d2e",
+      "sha256": "db36c447e424b4dfdd894d805a8c5f732ba7ec5d41b72eaeef88baca349f7f68",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -10129,9 +10171,21 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-ed82a4ad1ffc2408",
+      "path": "e2e/web/account-deletion-rollout.spec.mjs",
+      "sha256": "91c275b05439f70e1bd417b0507e1ba621625920c7fa8dfa186c92f8811ba97a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-9258b3c42ab418b4",
       "path": "e2e/web/account-deletion.spec.mjs",
-      "sha256": "b31778ac20f8bdbc66232add16556a4334d6e82f8a80b598b544934ea1f34a64",
+      "sha256": "5239229128b1a639d0e31eddd3ea82bb10911f890e7805f12b3e46deca264aef",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14173,7 +14227,7 @@
     {
       "id": "SURFACE-6bf3e8831a095bee",
       "path": "tdf-hq-ui/public/mobile-app/data-deletion.html",
-      "sha256": "813ff5df54318e43fd4064004f0d9f2e72ade70140d974a3761d150ed91d5d96",
+      "sha256": "93271be8eb80d03703b19a71d45625c876b758e7b08636b986c3f83b39425666",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15346,7 +15400,7 @@
     {
       "id": "SURFACE-526786b1dccd2ea9",
       "path": "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
-      "sha256": "f382ffb3931903701e4416dc22f97b4d56c594d972953be5dc9d218bbd619972",
+      "sha256": "43dd3eab1c1b154e6d78becf2af28a160566487f7d6dd4888b9d1738b70bd415",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15358,7 +15412,7 @@
     {
       "id": "SURFACE-d0c4c8db8120be10",
       "path": "tdf-hq-ui/src/components/AccountDeletionQueue.tsx",
-      "sha256": "8cef257d699117b94fb7d45b3fd574fb97098a0a6e38ef29d3038fb2b41e49bf",
+      "sha256": "4fce27d0919e183a0d98ce75f1f32004102491cf2e0ed8ddf7277b0a8e05030b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16126,6 +16180,30 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-d6c9f7b2d3a5a98d",
+      "path": "tdf-hq-ui/src/config/accountDeletionRollout.test.ts",
+      "sha256": "ed27d231bbee533edfa966dc1280060a43622873cf2f9a1c23e2cee2cec17ba0",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-241db15517dc01fb",
+      "path": "tdf-hq-ui/src/config/accountDeletionRollout.ts",
+      "sha256": "2511ef507040d256a3c6c0690659dc0b7d795c1e8f848bd61f60c0ce023fa7bf",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-fbf0f55a9fd055a5",
       "path": "tdf-hq-ui/src/config/apiBase.test.ts",
       "sha256": "7eff07045820dc7207544801c5931298846bbbc58f74c20512399b54632e1927",
@@ -16674,7 +16752,7 @@
     {
       "id": "SURFACE-c97910a5593293cd",
       "path": "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts",
-      "sha256": "dcfed367027497a13691491f27434050618bdf386d5ae9ad032a9037892a3534",
+      "sha256": "9b140670eb9f6df2c142335715b78d6ef6071ac05af5a77e2d432e4e5edb12f1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16686,7 +16764,7 @@
     {
       "id": "SURFACE-5e55534c6210f093",
       "path": "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts",
-      "sha256": "31796bc77316bf6d1b90841e6d9454bdeafe75c7e8630713b45c2cc601f0420c",
+      "sha256": "929ed5d207113d203c4c1ec3e736bcffd8fbf942d802bdcebcb1265ba7e10cbf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16903,7 +16981,7 @@
     {
       "id": "SURFACE-7eb3d6265bbc7ec8",
       "path": "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx",
-      "sha256": "2792cf8b46ad3c870fbc52818aa67ee9a5155a10568444faa64d2f01cddb8d04",
+      "sha256": "43f9867edc72c0a0c6935f1eafdfa689e9665998464d588bac0bc70e08557210",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16915,7 +16993,7 @@
     {
       "id": "SURFACE-c46fe8f1aff9a4d8",
       "path": "tdf-hq-ui/src/pages/AccountDeletionPage.tsx",
-      "sha256": "f04ca7a62b3ba9d5f293ea988738f357928d8086b56f113803e92f87f353b24c",
+      "sha256": "c6e038ecc02f4d2f4f7dde5681c34becd33381aac76dfd00a12fed5f78c982f5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19397,9 +19475,14 @@
     {
       "id": "SURFACE-2f83dbcb131f448c",
       "path": "tdf-hq-ui/src/vite-env.d.ts",
-      "sha256": "e0e7d07962ba4562509ff653f287c7e01d29599d1e2f1e9abcea45f82fcdc870",
+      "sha256": "336fca09c41c8bd825239eed59f211e8c6f463b017f7281559907a20e6109fc6",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-c6c52118ad7a43dd",
@@ -29382,7 +29465,6 @@
     "SURFACE-8b33a680532e58df",
     "SURFACE-2b4be0aef756e7bf",
     "SURFACE-6caada1aa8461942",
-    "SURFACE-2f83dbcb131f448c",
     "SURFACE-c6c52118ad7a43dd",
     "SURFACE-e007cd7fceeead16",
     "SURFACE-4eed20d579cc6943",

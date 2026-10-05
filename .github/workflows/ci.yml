@@ -192,12 +192,20 @@ jobs:
       - name: Run isolated persona web journeys
         run: npm run test:e2e:web
 
+      - name: Verify default-off deletion rollout
+        env:
+          PLAYWRIGHT_ACCOUNT_DELETION_FORM_ENABLED: 'false'
+          PLAYWRIGHT_ARTIFACT_DIR: artifacts/deletion-rollout-off
+        run: npx playwright test e2e/web/account-deletion-rollout.spec.mjs
+
       - name: Upload sanitized browser evidence
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: persona-web-e2e-${{ github.run_id }}
-          path: artifacts/persona-playwright
+          path: |
+            artifacts/persona-playwright
+            artifacts/deletion-rollout-off
           retention-days: 14
 
   mobile-quality:
