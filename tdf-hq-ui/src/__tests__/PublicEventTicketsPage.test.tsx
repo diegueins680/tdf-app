@@ -38,9 +38,8 @@ jest.unstable_mockModule('../contexts/LocalePreferencesContext', () => ({
   useLocalePreferences: () => ({ locale: 'es-EC', timezone: 'America/Guayaquil' }),
 }));
 
-jest.unstable_mockModule('../hooks/useMetaTags', () => ({
-  useMetaTags: jest.fn(),
-}));
+const metaTagsMock = jest.fn<(metadata: Record<string, unknown>) => void>();
+jest.unstable_mockModule('../hooks/useMetaTags', () => ({ useMetaTags: metaTagsMock }));
 
 const qrCanvasMock = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
 jest.unstable_mockModule('qrcode', () => ({ default: { toCanvas: qrCanvasMock } }));
@@ -151,6 +150,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     createCheckoutMock.mockReset().mockResolvedValue(checkoutFixture());
     getCheckoutMock.mockReset();
     confirmDatafastStatusMock.mockReset();
+    metaTagsMock.mockReset();
     queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -191,6 +191,29 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(container.textContent).toContain('Retención temporal de inventario: 15 minutos');
     expect(container.textContent).toContain('Transferencias: permitidas');
     expect(container.textContent).toContain('Versión de términos: event-ticket-terms-v1');
+  });
+
+  it('uses the event canonical and does not advertise a disabled checkout as a priced offer', async () => {
+    getStorefrontMock.mockResolvedValue({ ...storefrontFixture, checkoutAvailable: false });
+    await renderTracking('/eventos/41/entradas?utm_source=artist');
+    await waitForExpectation(() => expect(container.textContent).toContain('Festival TDF'));
+    const metadata = metaTagsMock.mock.calls.at(-1)?.[0];
+    expect(metadata).toMatchObject({
+      title: 'Festival TDF',
+      canonical: `${window.location.origin}/eventos/41`,
+      robots: 'noindex,follow',
+    });
+    expect(metadata).not.toHaveProperty('structuredData');
+  });
+
+  it('keeps a receipt out of search and its order reference out of canonical metadata', async () => {
+    getCheckoutMock.mockResolvedValue(checkoutFixture());
+    await renderTracking('/eventos/41/orden/92');
+    await waitForExpectation(() => expect(container.textContent).toContain('Estado de la orden'));
+    const metadata = metaTagsMock.mock.calls.at(-1)?.[0];
+    expect(metadata).toMatchObject({ canonical: `${window.location.origin}/eventos/41`, robots: 'noindex,follow' });
+    expect(metadata).not.toHaveProperty('structuredData');
+    expect(JSON.stringify(metadata)).not.toContain('secure-lookup-token');
   });
 
   it('shows the server policy limit and rejects an oversized quantity even when HTML validation is bypassed', async () => {

@@ -106,7 +106,7 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
   const reputation = record(value['reputation']);
   const reviewAverage = number(reputation?.['reviewAverage']);
   const reviewCount = number(reputation?.['reviewCount']) ?? 0;
-  const schemaType = kind === 'event' ? 'MusicEvent'
+  const schemaType = kind === 'event' ? 'Event'
     : kind === 'venue' ? 'MusicVenue'
       : kind === 'classified' && categoryCode === 'paid-work' ? 'JobPosting'
         : kind === 'classified' && ['offering-services', 'equipment-sale-rental', 'room-studio-available', 'classes'].includes(categoryCode ?? '') ? 'Offer'
