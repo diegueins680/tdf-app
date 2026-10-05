@@ -2607,7 +2607,7 @@
     "formal/social/SessionBoundary.tla": "f52854a744652bc18f0d9f0fb4c3e6453447d26aff88267dff29ac03924e8ee6",
     "ops/hetzner/compose.production.yaml": "961c19190335ac4033d8932598796394b93c13a040ef07c3ac62660c534e45e7",
     "ops/hetzner/inspect-runtime.py": "6c439dbc8b1e17b96399990cb12d49d4d3f64757a161cffdd3224103082cf2e3",
-    "ops/hetzner/rehearse-postgres-restore.py": "4e4fc381e9b70a2332ed40026c4338edca4f39d77df96c808c98f3127d2dff57",
+    "ops/hetzner/rehearse-postgres-restore.py": "f3af7d2dc1f90f624e5a8445353178d4ccda093c3bb4c5362a059507d6d80723",
     "package-lock.json": "b2663069d0f1901b4d5b76dde885fa0ff107089cf661819ed3500be6443bace4",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/checkout-amount-postgres.mjs": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
@@ -2655,7 +2655,7 @@
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-inspection.py": "bd6d20cea85b0e1c3c29a342bf78e512345b8f224c4d880563d3634ac18c923c",
-    "scripts/test-hetzner-restore.py": "43f512abb577d4e21b03b98f9f7fd2e02654a106216b4a9b366a3d36e2c127af",
+    "scripts/test-hetzner-restore.py": "3651d017c0b7c0b72ea61cca86e32577243c2e3a144d79deb704293226a141cd",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
     "scripts/test-specification-conformance.py": "edd2d8b6b8d46603144d9fb02af2f43850dbf2791f8266a1dd109a1e9e9e19b9",
@@ -4246,7 +4246,7 @@
     {
       "id": "SURFACE-60310758bd18e31e",
       "path": "ops/hetzner/rehearse-postgres-restore.py",
-      "sha256": "4e4fc381e9b70a2332ed40026c4338edca4f39d77df96c808c98f3127d2dff57",
+      "sha256": "f3af7d2dc1f90f624e5a8445353178d4ccda093c3bb4c5362a059507d6d80723",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -6579,7 +6579,7 @@
     {
       "id": "SURFACE-1ecc6d6a29d831c9",
       "path": "scripts/test-hetzner-restore.py",
-      "sha256": "43f512abb577d4e21b03b98f9f7fd2e02654a106216b4a9b366a3d36e2c127af",
+      "sha256": "3651d017c0b7c0b72ea61cca86e32577243c2e3a144d79deb704293226a141cd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

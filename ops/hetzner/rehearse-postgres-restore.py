@@ -27,6 +27,9 @@ DATA = '/var/lib/postgresql/data'
 MAX_DATABASE = 128 * 1024 * 1024
 MAX_ARCHIVE = 256 * 1024 * 1024
 MEMORY_LIMIT = 384 * 1024 * 1024
+POSTGRES_COMMAND = ['postgres', '-c', 'shared_buffers=16MB', '-c', 'max_connections=10',
+                    '-c', 'work_mem=2MB', '-c', 'max_wal_size=64MB', '-c', 'min_wal_size=32MB',
+                    '-c', 'max_locks_per_transaction=1024']
 CAPACITY_SQL = 'SELECT pg_database_size(current_database());'
 # query_to_xml exposes only counts, never table contents, even in subprocess output.
 COUNTS_SQL = """SELECT coalesce(jsonb_object_agg(format('%I.%I',n.nspname,c.relname),
@@ -126,8 +129,7 @@ class IsolatedRestore:
                 '--tmpfs', '/var/run/postgresql:rw,nosuid,nodev,size=16777216',
                 '--tmpfs', '/tmp:rw,nosuid,nodev,size=16777216',
                 '--env', 'POSTGRES_DB=tdf_hq', '--env', 'POSTGRES_HOST_AUTH_METHOD=trust',
-                self.image, 'postgres', '-c', 'shared_buffers=16MB', '-c', 'max_connections=10',
-                '-c', 'work_mem=2MB', '-c', 'max_wal_size=64MB', '-c', 'min_wal_size=32MB']
+                self.image, *POSTGRES_COMMAND]
 
     def admit(self, container):
         target = container.get('Id')
@@ -135,6 +137,7 @@ class IsolatedRestore:
         require(target != self.source and (self.target is None or self.target == target))
         require(container['Config']['Labels'].get(LABEL) == self.nonce)
         require(container['Image'] == self.image_id and container['Config']['Image'] == self.image)
+        require(container['Config']['Cmd'] == POSTGRES_COMMAND)
         host = container['HostConfig']
         require(host['NetworkMode'] == 'none' and not host.get('PortBindings'))
         require(host['ReadonlyRootfs'] and host['Memory'] == MEMORY_LIMIT and host['MemorySwap'] == MEMORY_LIMIT)

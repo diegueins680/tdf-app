@@ -18,7 +18,7 @@ IMAGE, IMAGE_ID = 'pgvector/pgvector@sha256:' + 'd' * 64, 'sha256:' + 'e' * 64
 
 
 def container():
-    return {'Id': TARGET, 'Image': IMAGE_ID, 'Config': {'Image': IMAGE, 'Labels': {restore.LABEL: NONCE}},
+    return {'Id': TARGET, 'Image': IMAGE_ID, 'Config': {'Image': IMAGE, 'Cmd': restore.POSTGRES_COMMAND, 'Labels': {restore.LABEL: NONCE}},
             'HostConfig': {'NetworkMode': 'none', 'PortBindings': {}, 'ReadonlyRootfs': True,
                 'Memory': restore.MEMORY_LIMIT, 'MemorySwap': restore.MEMORY_LIMIT, 'NanoCpus': 500000000,
                 'PidsLimit': 64, 'IpcMode': 'private', 'SecurityOpt': ['no-new-privileges:true'],
@@ -38,6 +38,8 @@ class RestoreBoundaryTests(unittest.TestCase):
         with self.assertRaises(ValueError): self.make().admit(data)
 
     def test_all_unsafe_target_controls_reject(self):
+        data = container(); data['Config']['Cmd'] = ['postgres']
+        with self.assertRaises(ValueError): self.make().admit(data)
         cases = {'NetworkMode': 'host', 'PortBindings': {'5432/tcp': []}, 'ReadonlyRootfs': False,
                  'Memory': 0, 'MemorySwap': -1, 'NanoCpus': 0, 'PidsLimit': 0, 'Privileged': True,
                  'Binds': ['/opt/tdf:/data'], 'VolumesFrom': ['production'], 'Devices': ['/dev/sda'],

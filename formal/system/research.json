@@ -245,6 +245,15 @@
       "applicability": "Production-host isolated restore resource safety",
       "decision": "adopted",
       "rationale": "Use bounded tmpfs, memory/swap/CPU/pids with no host mounts or external network; require host capacity and an exclusive rehearsal lock. Reject source growth rather than silently increasing limits."
+    },
+    {
+      "id": "RES-DEPLOY-009",
+      "source": "https://www.postgresql.org/docs/17/app-pgrestore.html",
+      "title": "Single-transaction restore lock capacity",
+      "recommendation": "A single-transaction restore locks each object and can exhaust the server lock table; provision bounded capacity or explicitly choose smaller transaction groups.",
+      "applicability": "Isolated PostgreSQL17 full production-schema restoration",
+      "decision": "adopted bounded lock capacity",
+      "rationale": "Actual restore with ten connections/default64 locks failed with out-of-shared-memory and the max_locks_per_transaction hint. Retain atomic restore with1024 locks per transaction while preserving the384MiB cgroup limit; do not change production configuration."
     }
   ]
 }

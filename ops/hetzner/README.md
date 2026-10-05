@@ -75,7 +75,9 @@ role is retained from initdb, then its dumped attributes are applied.
 Restoration targets a unique nonce-owned container running the exact production
 PostgreSQL image. It has no external network, published ports, host mounts or
 production credentials, a read-only root filesystem, 256MiB tmpfs data, 384MiB
-memory with no extra swap allowance, half a CPU and 64-process limit. Rehearsal
+memory with no extra swap allowance, half a CPU and 64-process limit. PostgreSQL
+uses ten connections and `max_locks_per_transaction=1024`: a real restore with
+the default64 exhausted its shared lock table. The memory ceiling stays384MiB. Rehearsal
 requires at least 1GiB available memory, 2GiB disk and a source database no larger
 than 128MiB. These conservative bounds deliberately reject growth; do not silently
 raise them on a production host. Archives are each capped at 256MiB.
