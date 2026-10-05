@@ -2122,7 +2122,8 @@
       ],
       "forbiddenTransitions": [
         "Never infer release readiness from a successful observation.",
-        "Never execute the retired Fly production lane."
+        "Never execute the retired Fly production lane.",
+        "Ambient Docker contexts or libpq service/host settings must not redirect inspection or inventory away from the verified local daemon and database socket."
       ],
       "effects": [
         "Record allowlisted runtime/ledger facts; preserve provider flags and production data."
@@ -2154,11 +2155,13 @@
       "property": "Wrong Compose project/directory/image/volume/network or database role/version is rejected; secrets and raw failures are excluded from receipts.",
       "implementation": [
         "ops/hetzner/inspect-runtime.py",
-        "scripts/inspect-hetzner-production.mjs"
+        "scripts/inspect-hetzner-production.mjs",
+        "scripts/production_access.py"
       ],
       "tests": [
         "scripts/test-hetzner-inspection.py",
-        "scripts/__tests__/hetzner-inspection.test.mjs"
+        "scripts/__tests__/hetzner-inspection.test.mjs",
+        "scripts/test_production_access.py"
       ],
       "critical": false
     },
@@ -5532,7 +5535,7 @@
     "scripts/__tests__/event-preview.test.mjs": "6be60be6d0ba8e93ff2292425677c75a84fffd730a86bcbe1472645420ac7330",
     "scripts/__tests__/formal-result-summary.test.mjs": "a3ecce01af25cb49f4b62fc51459ed9b36543f347b8d80cac6d4b1f1abfeca8c",
     "scripts/__tests__/generated-api-conformance.test.mjs": "34ee30eadd4114f8229af92693a01767fa8a7056233758cf0050b38f99e29f6f",
-    "scripts/__tests__/hetzner-inspection.test.mjs": "1c9da69782bfe6776f661bd27429eccdf97d46ffe908ff63de415f792006e2dc",
+    "scripts/__tests__/hetzner-inspection.test.mjs": "21ec6653c818ca31badb7aa7e6f16b485cf7a03abeadc7bc7cf6288906d7e053",
     "scripts/__tests__/hetzner-migration-rehearsal.test.mjs": "8fd637e986cb2ee892a6d07641c1365ed929e1e52b840cfa2ea8f420ac2f9e05",
     "scripts/__tests__/hetzner-preparation.test.mjs": "b8f8b49cf4fa4e19eb84ebb9436033cc7f52d178cc45ed9d0cec6c902a48575f",
     "scripts/__tests__/hetzner-restore.test.mjs": "5670603f31f9ff8aaf7536eae0cde39a96d8f4996922838eb120693ca86c05c4",
@@ -5575,6 +5578,7 @@
     "scripts/privacy-request-ledger.py": "9274444f82bef45844d492c296b6a5ca9410e6000867331adb6d624ddc5af960",
     "scripts/production-migrations.json": "6fb3d4f152c2217e638276654f1670f2d58a124ee0e4c95a747c2fc6a2093868",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
+    "scripts/production_access.py": "2659adcab35caea6b67f99f258dbf6886828f3fa10511dbf9f262a5d3ac6c52e",
     "scripts/quality-backend.sh": "a992ea1ae7653b66cd89dcf8c48faaf112201ff8d7514cdd584858e69b23e87f",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
     "scripts/quality-repo.sh": "165f0857cb4cb05868b433ee2abe803408cbe4b440b142d50a7e9632e8dcc904",
@@ -5606,6 +5610,7 @@
     "scripts/test-ticket-confirmation-lease.py": "9246ce1669f1f6bb32352897b290dd3ef85efa222655bf54680b027dc6129420",
     "scripts/test-ticket-confirmation-smtp.py": "ab36fc612102863669f18a8b12db86ee4192f77d56bbad31b5dc7aa3a5834743",
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
+    "scripts/test_production_access.py": "c925c4dfd27b34a4a73fe52d0edf676753537731e44cbba999882b97f3d6e27f",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "b5ba1d728abbc2181ffd260237e5743f38feb7681cb7fcd4e9cc5c969a2395b0",
     "scripts/verify-event-operations-formal.sh": "d46397ad32d8de80da708b47c115a42d54119da229600dd845bb61bcc0bd2d0a",
@@ -7044,6 +7049,12 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/production_access.py": [
+      {
+        "requirement": "DEPLOY-OBSERVE-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-hetzner-inspection.py": [
       {
         "requirement": "DEPLOY-OBSERVE-001",
@@ -7065,6 +7076,12 @@
       },
       {
         "requirement": "DEPLOY-TARGET-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test_production_access.py": [
+      {
+        "requirement": "DEPLOY-OBSERVE-001",
         "relationship": "tests"
       }
     ],
@@ -9603,7 +9620,7 @@
     {
       "id": "SURFACE-30ba86b00dd5f4d7",
       "path": "scripts/__tests__/hetzner-inspection.test.mjs",
-      "sha256": "1c9da69782bfe6776f661bd27429eccdf97d46ffe908ff63de415f792006e2dc",
+      "sha256": "21ec6653c818ca31badb7aa7e6f16b485cf7a03abeadc7bc7cf6288906d7e053",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -11006,9 +11023,14 @@
     {
       "id": "SURFACE-9e0e512cb2b2396c",
       "path": "scripts/production_access.py",
-      "sha256": "e0b2bd25bbc5460877de7379d9396327c1bb94fc8600a7b7544b2055bfa23ead",
+      "sha256": "2659adcab35caea6b67f99f258dbf6886828f3fa10511dbf9f262a5d3ac6c52e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DEPLOY-OBSERVE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-15c410d46c49b739",
@@ -12513,9 +12535,14 @@
     {
       "id": "SURFACE-3f433a02bd9aa5ff",
       "path": "scripts/test_production_access.py",
-      "sha256": "2dd32acc8e3a98450e7930127b477b99795ee8bc0f9cc2a7c712d5b4f0b81e37",
+      "sha256": "c925c4dfd27b34a4a73fe52d0edf676753537731e44cbba999882b97f3d6e27f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DEPLOY-OBSERVE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-4ab08b8d4e69f343",
@@ -26881,7 +26908,6 @@
     "SURFACE-1ef043656b0c0dd7",
     "SURFACE-6f6080552d114453",
     "SURFACE-5d3cb3a8a35fced1",
-    "SURFACE-9e0e512cb2b2396c",
     "SURFACE-bac1f41447e33768",
     "SURFACE-63149d1c69a3c6a7",
     "SURFACE-0210b80fb6caf081",
@@ -27022,7 +27048,6 @@
     "SURFACE-306ef04f302e88df",
     "SURFACE-773458db4c86e811",
     "SURFACE-dcfbc3e06e8b9e4f",
-    "SURFACE-3f433a02bd9aa5ff",
     "SURFACE-4ab08b8d4e69f343",
     "SURFACE-d71afc2bac6fdf73",
     "SURFACE-7873643aff696047",
@@ -29818,7 +29843,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8d8b00291a89060fa1abe6623971b60c524f82814e9341f66e207db987005d02",
+      "sourceSha256": "9e7043aaa289ed88a7d959686c45cad175bc94ce36ea052f45df6637ecba4756",
       "definition": {
         "states": [
           "absent",

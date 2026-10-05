@@ -231,3 +231,11 @@ The shared access helper also requires the database container to mount the named
 `tdf_production_postgres_data` volume at `/var/lib/postgresql/data`, with no child
 mount shadowing that store. A replacement volume, bind mount or missing mount is
 rejected before metadata, credentials or inventory are returned.
+
+The shared `production_access.py` helper pins the local Docker Unix socket and
+runs Docker with a minimal environment. Inventory psql runs with a cleared
+container environment, explicit `/var/run/postgresql` socket and port5432, and
+read-only transaction defaults. Each SQL connection asserts the database, reader
+role, local transport and server port before coverage or catalog queries. Ambient
+Docker contexts and libpq service/address overrides cannot choose another target.
+These observations remain sequential, not an atomic production snapshot.

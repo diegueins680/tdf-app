@@ -2843,7 +2843,7 @@
     {
       "id": "SURFACE-30ba86b00dd5f4d7",
       "path": "scripts/__tests__/hetzner-inspection.test.mjs",
-      "sha256": "1c9da69782bfe6776f661bd27429eccdf97d46ffe908ff63de415f792006e2dc",
+      "sha256": "21ec6653c818ca31badb7aa7e6f16b485cf7a03abeadc7bc7cf6288906d7e053",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3731,7 +3731,7 @@
     {
       "id": "SURFACE-9e0e512cb2b2396c",
       "path": "scripts/production_access.py",
-      "sha256": "e0b2bd25bbc5460877de7379d9396327c1bb94fc8600a7b7544b2055bfa23ead",
+      "sha256": "2659adcab35caea6b67f99f258dbf6886828f3fa10511dbf9f262a5d3ac6c52e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4763,7 +4763,7 @@
     {
       "id": "SURFACE-3f433a02bd9aa5ff",
       "path": "scripts/test_production_access.py",
-      "sha256": "2dd32acc8e3a98450e7930127b477b99795ee8bc0f9cc2a7c712d5b4f0b81e37",
+      "sha256": "c925c4dfd27b34a4a73fe52d0edf676753537731e44cbba999882b97f3d6e27f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21557,14 +21557,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "8d8b00291a89060fa1abe6623971b60c524f82814e9341f66e207db987005d02",
+      "sha256": "9e7043aaa289ed88a7d959686c45cad175bc94ce36ea052f45df6637ecba4756",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "749e7f1b958a3e541b19c8dd5644aa812ffb08fb37409aab885a59618402ed9a",
+      "sha256": "207484c6a647adce29e21f77613aba5f0f7e09658d0c781505c261c09d3047eb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21627,7 +21627,7 @@
     },
     {
       "path": "ops/hetzner/README.md",
-      "sha256": "89fdc422b787bfa1916cafb5457a1ef6d6ac8e95bf8a6b6b950572315056c414",
+      "sha256": "204b16103a109a6fc265097c7d93c2fa9cd9e1ac148b399ee0bc0e88a3b2acd2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

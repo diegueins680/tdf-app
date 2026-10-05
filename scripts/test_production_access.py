@@ -38,7 +38,7 @@ class AccessTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(result.stdout, '')
 
-    def remote_fixture(self, mode, mutate=None, permissions=0o600, repo_digests=None, sql_override=None, postgres_image='postgres@sha256:manifest', database_repo_digests=None, owner=0, file_type=stat.S_IFREG, open_error=None):
+    def remote_fixture(self, mode, mutate=None, permissions=0o600, repo_digests=None, sql_override=None, postgres_image='postgres@sha256:manifest', database_repo_digests=None, owner=0, file_type=stat.S_IFREG, open_error=None, routing_env=None, remote_source=None):
         def container(service):
             return {'Id': service, 'Image': 'sha256:local-config', 'State': {'Running': True},
                     'Config': {'Image': 'registry/image@sha256:manifest', 'Labels': {'com.docker.compose.project': 'tdf-production',
@@ -54,6 +54,7 @@ class AccessTests(unittest.TestCase):
         calls = []
         def run(args, **kw):
             calls.append((args, kw))
+            args = args[:1] + args[3:] if args[1:3] == ['--host', 'unix:///var/run/docker.sock'] else args
             text = (json.dumps([api if args[-1] == 'tdf-production-api-1' else db]) if args[:2] == ['docker', 'inspect'] else json.dumps([{'RepoDigests': (database_repo_digests if args[-1] == 'sha256:database-config' else repo_digests) or []}]) if args[:3] == ['docker', 'image', 'inspect'] else 't\n' if '-c' in args else '{"kind":"metadata"}\n')
             return SimpleNamespace(returncode=0, stdout=text)
         def read(path, *args, **kw):
@@ -66,10 +67,48 @@ class AccessTests(unittest.TestCase):
              patch.object(os, 'open', return_value=42, side_effect=open_error), \
              patch.object(os, 'fdopen', return_value=credential_stream), \
              patch.object(os, 'fstat', return_value=SimpleNamespace(st_mode=file_type | permissions, st_uid=owner)), \
-             patch.dict(os.environ, {'SSH_CONNECTION': '192.0.2.10 50000 178.105.93.101 22'}), \
+             patch.dict(os.environ, {'SSH_CONNECTION': '192.0.2.10 50000 178.105.93.101 22', **(routing_env or {})}), \
              patch.object(urllib.request, 'urlopen', side_effect=lambda *a, **kw: io.StringIO('{}')), contextlib.redirect_stdout(output), contextlib.redirect_stderr(io.StringIO()):
-            exec(access.REMOTE, {})
+            exec(remote_source or access.REMOTE, {})
         return output.getvalue(), calls
+
+    def assert_local_routing(self, calls):
+        for args, options in calls:
+            self.assertEqual(args[:3], ['docker', '--host', 'unix:///var/run/docker.sock'])
+            self.assertEqual(options['env'], {'PATH': '/usr/local/bin:/usr/bin:/bin', 'LANG': 'C.UTF-8'})
+            if 'psql' not in args:
+                continue
+            self.assertEqual(args[args.index('tdf-production-db-1') + 1:][:2], ['env', '-i'])
+            self.assertEqual(args[args.index('-h') + 1], '/var/run/postgresql')
+            self.assertEqual(args[args.index('-p') + 1], '5432')
+            query = args[args.index('-c') + 1] if '-c' in args else options['input']
+            for guard in ["current_database()<>'tdf_hq'", "current_user<>'tdf_catalog_inventory'",
+                          'inet_server_addr() IS NOT NULL', "current_setting('port')<>'5432'"]:
+                self.assertIn(guard, query)
+            self.assertIn("RAISE EXCEPTION 'Unexpected production database connection'", query)
+
+    def test_hostile_routing_environment_cannot_change_inspection_or_inventory_target(self):
+        hostile = {'DOCKER_HOST': 'tcp://other.invalid:2375', 'DOCKER_CONTEXT': 'other',
+                   'DOCKER_CONFIG': '/untrusted', 'PGHOSTADDR': '192.0.2.40',
+                   'PGSERVICE': 'other', 'PGSERVICEFILE': '/untrusted', 'PGOPTIONS': '-c search_path=other'}
+        for mode in ['metadata', 'inventory', 'credentials']:
+            with self.subTest(mode=mode):
+                _, calls = self.remote_fixture(mode, routing_env=hostile,
+                    mutate=lambda a, d: d['Config']['Env'].extend(k+'='+v for k,v in hostile.items() if k.startswith('PG')))
+                self.assert_local_routing(calls)
+
+    def test_routing_controls_detect_removed_docker_and_database_boundaries(self):
+        for original, broken in [
+            ("args = ['docker', '--host', 'unix:///var/run/docker.sock', *args[1:]]", 'args = args'),
+            ("'tdf-production-db-1', 'env', '-i',", "'tdf-production-db-1', 'env',"),
+            ("'-h', '/var/run/postgresql'", "'-h', 'other.invalid'"),
+            ("inet_server_addr() IS NOT NULL", 'FALSE'),
+        ]:
+            with self.subTest(mutation=original):
+                self.assertIn(original, access.REMOTE)
+                _, calls = self.remote_fixture('inventory', remote_source=access.REMOTE.replace(original, broken, 1))
+                with self.assertRaises(AssertionError):
+                    self.assert_local_routing(calls)
 
     def test_metadata_origin_comes_from_authenticated_ssh_connection(self):
         output, _ = self.remote_fixture('metadata')

@@ -2121,7 +2121,8 @@
       ],
       "forbiddenTransitions": [
         "Never infer release readiness from a successful observation.",
-        "Never execute the retired Fly production lane."
+        "Never execute the retired Fly production lane.",
+        "Ambient Docker contexts or libpq service/host settings must not redirect inspection or inventory away from the verified local daemon and database socket."
       ],
       "effects": [
         "Record allowlisted runtime/ledger facts; preserve provider flags and production data."
@@ -2153,11 +2154,13 @@
       "property": "Wrong Compose project/directory/image/volume/network or database role/version is rejected; secrets and raw failures are excluded from receipts.",
       "implementation": [
         "ops/hetzner/inspect-runtime.py",
-        "scripts/inspect-hetzner-production.mjs"
+        "scripts/inspect-hetzner-production.mjs",
+        "scripts/production_access.py"
       ],
       "tests": [
         "scripts/test-hetzner-inspection.py",
-        "scripts/__tests__/hetzner-inspection.test.mjs"
+        "scripts/__tests__/hetzner-inspection.test.mjs",
+        "scripts/test_production_access.py"
       ],
       "critical": false
     },
@@ -3305,7 +3308,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",

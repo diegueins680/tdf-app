@@ -20,7 +20,8 @@ test('retired Fly preflight and execution stop before any remote tool', t => {
       env: { PATH: `${dir}:${process.env.PATH}`, MARKER: marker }, encoding: 'utf8',
     });
     assert.equal(result.status, 1);
-    assert.match(result.stderr, /Fly production preflight\/release is retired/);
+    assert.match(result.stderr, /The Fly release CLI is retired/);
+    assert.match(result.stderr, /Preparation does not deploy or authorize database changes/);
     assert.equal(existsSync(marker), false);
   }
 });

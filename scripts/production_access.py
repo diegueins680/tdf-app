@@ -16,7 +16,12 @@ REMOTE = r'''
 import hashlib, json, os, pathlib, stat, subprocess, sys, urllib.request
 
 def capture(args, **kwargs):
-    result = subprocess.run(args, capture_output=True, text=True, timeout=180, **kwargs)
+    # Bind every inspection/exec to this SSH host, never an ambient Docker context.
+    if args[0] != 'docker':
+        raise RuntimeError('Unexpected production command')
+    args = ['docker', '--host', 'unix:///var/run/docker.sock', *args[1:]]
+    result = subprocess.run(args, capture_output=True, text=True, timeout=180,
+                            env={'PATH': '/usr/local/bin:/usr/bin:/bin', 'LANG': 'C.UTF-8'}, **kwargs)
     if result.returncode:
         raise RuntimeError('Read-only production command failed')
     return result.stdout
@@ -99,16 +104,17 @@ def main(mode):
         sql = sys.stdin.read()
         if hashlib.sha256(sql.encode()).hexdigest() != 'f4c536d1d4554386817b1f44e6a7281ff7c0eb2a435234a8bd6a8ef9c06d394d':
             raise RuntimeError('Only the reviewed catalog query is permitted')
-        reader = ['docker', 'exec', '-i', '-e', 'PGOPTIONS=-c default_transaction_read_only=on',
-                  'tdf-production-db-1', 'psql', '-X', '-v', 'ON_ERROR_STOP=1',
+        # Clear the container's libpq environment as well as pinning socket/port.
+        # PGHOSTADDR/PGSERVICE can otherwise redirect an apparently local query.
+        reader = ['docker', 'exec', '-i', 'tdf-production-db-1', 'env', '-i',
+                  'PATH=/usr/local/bin:/usr/bin:/bin', 'PGOPTIONS=-c default_transaction_read_only=on',
+                  'PGCONNECT_TIMEOUT=10', 'psql', '-X', '-h', '/var/run/postgresql', '-p', '5432', '-v', 'ON_ERROR_STOP=1',
                   '-qAt', '-U', 'tdf_catalog_inventory', '-d', 'tdf_hq']
-        coverage = capture(reader + ['-c', "SELECT NOT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind IN ('r','p') AND NOT has_table_privilege(current_user,c.oid,'SELECT'))"]).strip()
+        connection_guard = "DO $$ BEGIN IF current_database()<>'tdf_hq' OR current_user<>'tdf_catalog_inventory' OR inet_server_addr() IS NOT NULL OR current_setting('port')<>'5432' THEN RAISE EXCEPTION 'Unexpected production database connection'; END IF; END $$;\n"
+        coverage = capture(reader + ['-c', connection_guard + "SELECT NOT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind IN ('r','p') AND NOT has_table_privilege(current_user,c.oid,'SELECT'))"]).strip()
         if coverage != 't':
             raise RuntimeError('Catalog reader lacks reviewed access to current tables')
-        print(capture(['docker', 'exec', '-i',
-                       '-e', 'PGOPTIONS=-c default_transaction_read_only=on',
-                       'tdf-production-db-1', 'psql', '-X', '-v', 'ON_ERROR_STOP=1',
-                       '-qAt', '-U', 'tdf_catalog_inventory', '-d', 'tdf_hq'], input=sql), end='')
+        print(capture(reader, input=connection_guard + sql), end='')
     else:
         raise RuntimeError('Unsupported read-only operation')
 

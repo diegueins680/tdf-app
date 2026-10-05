@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 \u00a79.2.2",
+      "title": "RFC 9110 §9.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -511,6 +511,17 @@
       "applicability": "Invoice receipt issuance, permission revocation and migration counter admission",
       "decision": "adopted",
       "rationale": "Serialize per-invoice replay and annual allocation locally; negative HTTP/database controls verify selected implementation boundaries. No distributed exactly-once or provider-side claim.",
+      "verifiedAt": "2026-10-05"
+    },
+    {
+      "id": "RES-OBSERVATION-ROUTING-001",
+      "source": "https://www.postgresql.org/docs/17/libpq-envars.html",
+      "supportingSource": "https://docs.docker.com/engine/manage-resources/contexts/",
+      "title": "Explicit local transport for production observations",
+      "recommendation": "Ambient Docker contexts and libpq connection defaults can select a different endpoint; pin the intended transport and exclude inherited routing configuration.",
+      "applicability": "Read-only production metadata and catalog access through the existing SSH host",
+      "decision": "adopted",
+      "rationale": "Use the local Docker Unix socket, a minimal child environment, and a cleared container environment with explicit PostgreSQL socket/port. Assert SQL connection identity before both catalog coverage and inventory queries. This protects observation routing; it is not an atomic fleet snapshot or protection from a compromised host.",
       "verifiedAt": "2026-10-05"
     }
   ]
