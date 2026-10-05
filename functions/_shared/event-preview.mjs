@@ -6,8 +6,9 @@ export function isSafeEventId(value) {
 }
 
 export function safeAbsoluteImage(value, origin = PUBLIC_ORIGIN) {
+  if (typeof value !== 'string' || !value.trim()) return null;
   try {
-    const url = new URL(String(value ?? ''), origin);
+    const url = new URL(value.trim(), origin);
     return url.protocol === 'https:' && !url.username && !url.password ? url.toString() : null;
   } catch {
     return null;
@@ -46,7 +47,7 @@ export function renderEventMetadata(event, eventId, origin = PUBLIC_ORIGIN) {
   const city = String(event.location?.city ?? '').trim();
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'MusicEvent',
+    '@type': 'Event',
     name: title,
     description,
     startDate: event.startTime,
