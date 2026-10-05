@@ -1752,6 +1752,12 @@ BEGIN
     END IF;
   END LOOP;
 
+  IF (SELECT count(*) FROM information_schema.columns
+      WHERE table_schema='public' AND table_name='ddex_validation_issue'
+        AND column_name IN ('severity','layer') AND is_nullable='YES') <> 2 THEN
+    RAISE EXCEPTION 'Canonical DDEX issue writes require nullable retained legacy severity and layer';
+  END IF;
+
   IF (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'ddex_document'
