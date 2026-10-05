@@ -198,6 +198,16 @@ describe('analytics/posthog (web)', () => {
     }
   });
 
+  test('redacts every payment return route including encoded and case variants', () => {
+    const sentinel = 'PRIVATE-PROVIDER-RESOURCE';
+    for (const path of ['/marketplace/pago-datafast', '/mezcla-mastering/pago-datafast',
+      '/pagos/retorno/', '/PAGOS/RETORNO', '/marketplace/%70ago-datafast',
+      '/eventos/141/%6Frden/92']) {
+      expect(redactSensitiveQueryValues(`https://tdf.test${path}?id=${sentinel}&reference=${sentinel}`))
+        .not.toContain(sentinel);
+    }
+  });
+
   test('logs PostHog failures through the app logger', () => {
     testWindow.__ENV__ = { VITE_POSTHOG_KEY: 'phc_unit_test' };
     const resilientAnalyticsClient = getAnalyticsClient();

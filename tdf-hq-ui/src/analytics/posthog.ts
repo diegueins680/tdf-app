@@ -103,12 +103,14 @@ export function redactSensitiveQueryValues(value: string, depth = 0): string {
 
   try {
     const parsed = new URL(value, 'https://analytics.invalid');
+    const decodedPath = decodeURIComponent(parsed.pathname);
     const pathname = parsed.protocol === 'tdf:' && parsed.hostname === 'tickets'
       ? '/[REDACTED]'
-      : privatePath(parsed.pathname);
-    const privateResource = pathname !== parsed.pathname || parsed.pathname === '/pagos/retorno';
+      : privatePath(decodedPath);
+    const privateResource = pathname !== decodedPath
+      || /\/(?:pagos\/retorno|pago-datafast)\/?$/i.test(decodedPath);
     let changed = privateResource || Boolean(parsed.hash) || Boolean(parsed.username || parsed.password);
-    parsed.pathname = pathname;
+    if (pathname !== decodedPath) parsed.pathname = pathname;
     parsed.hash = '';
     parsed.username = '';
     parsed.password = '';
