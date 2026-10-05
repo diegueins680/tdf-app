@@ -188,6 +188,36 @@ describe('analytics/posthog (web)', () => {
       .toBe('https://tdf.test/eventos/141?utm_source=artist');
   });
 
+  test('sanitizes SDK initial and identify person-property envelopes before sending', () => {
+    testWindow.__ENV__ = { VITE_POSTHOG_KEY: 'phc_unit_test' };
+    getAnalyticsClient();
+    interface Event {
+      event: string;
+      properties: Record<string, unknown>;
+      $set?: Record<string, unknown>;
+      $set_once?: Record<string, unknown>;
+    }
+    const initOptions = initMock.mock.calls[0]?.[1] as {
+      before_send: (event: Event | null) => Event | null;
+    };
+    const sentinel = 'PRIVATE-INITIAL-PERSON-URL';
+    const initialUrl = `https://tdf.test/eventos/141/orden/${sentinel}?lookupToken=${sentinel}`;
+    for (const event of ['$pageview', '$identify']) {
+      const outgoing = initOptions.before_send({
+        event,
+        properties: { token: 'phc_unit_test', $current_url: initialUrl },
+        $set: { email: sentinel, landing_url: initialUrl, campaign: 'patch-culture' },
+        $set_once: { $initial_current_url: initialUrl, $initial_referrer: initialUrl,
+          $initial_pathname: `/eventos/141/orden/${sentinel}`, $initial_utm_source: 'artist' },
+      });
+      expect(JSON.stringify(outgoing)).not.toContain(sentinel);
+      expect(outgoing?.properties.token).toBe('phc_unit_test');
+      expect(outgoing?.$set).toMatchObject({ campaign: 'patch-culture' });
+      expect(outgoing?.$set_once).toMatchObject({ $initial_utm_source: 'artist' });
+    }
+    expect(initOptions.before_send(null)).toBeNull();
+  });
+
   test('masks camel-case credentials, fragments and nested redirect URLs', () => {
     const sentinel = 'PRIVATE-LOOKUP-SENTINEL';
     let redirect = `/eventos/141?lookupToken=${sentinel}&buyerEmail=${sentinel}`;
@@ -253,6 +283,19 @@ describe('analytics/posthog (web)', () => {
       .toEqual({ attribution_campaign: '#release' });
     expect(redactSensitiveQueryValues('https://tdf.test/eventos/141#private-token'))
       .not.toContain('private-token');
+  });
+
+  test('preserves question-mark campaign labels while masking relative URL properties', () => {
+    const properties = sanitizeAnalyticsProperties({
+      attribution_campaign: 'fall?sale',
+      $initial_utm_campaign: 'fall?sale',
+      $current_url: 'https://tdf.test/eventos/141?utm_campaign=fall%3Fsale',
+      nested: { returnUrl: 'receipt?lookupToken=PRIVATE-RELATIVE-TOKEN' },
+    });
+    expect(properties.attribution_campaign).toBe('fall?sale');
+    expect(properties.$initial_utm_campaign).toBe('fall?sale');
+    expect(new URL(properties.$current_url).searchParams.get('utm_campaign')).toBe('fall?sale');
+    expect(JSON.stringify(properties)).not.toContain('PRIVATE-RELATIVE-TOKEN');
   });
 
   test('logs PostHog failures through the app logger', () => {

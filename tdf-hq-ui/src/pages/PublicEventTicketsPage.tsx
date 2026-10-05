@@ -160,24 +160,14 @@ export default function PublicEventTicketsPage() {
   const description = storefront.data?.description
     ?? (english ? 'Secure guest ticket checkout from TDF Records.' : 'Checkout seguro de entradas de TDF Records.');
   useMetaTags({
-    title: `${title} · TDF Records`,
+    title,
     description,
-    canonical: typeof window === 'undefined' ? undefined : `${window.location.origin}/eventos/${params.eventId}/entradas`,
+    canonical: validEventId && typeof window !== 'undefined'
+      ? `${window.location.origin}/eventos/${eventId}` : undefined,
     ogType: 'website',
-    structuredData: storefront.data ? {
-      '@context': 'https://schema.org',
-      '@type': 'MusicEvent',
-      name: storefront.data.title,
-      description,
-      startDate: storefront.data.startsAt,
-      ...(storefront.data.endsAt ? { endDate: storefront.data.endsAt } : {}),
-      offers: storefront.data.tiers.map((tier) => ({
-        '@type': 'Offer',
-        price: (tier.unitPriceMinor / 100).toFixed(2),
-        priceCurrency: tier.currency,
-        availability: tier.remaining > 0 ? 'https://schema.org/InStock' : 'https://schema.org/SoldOut',
-      })),
-    } : undefined,
+    // The event detail is the discovery page. Checkout/receipt routes must not
+    // advertise face value as the final price or stock as verified payment access.
+    robots: 'noindex,follow',
   });
 
   const money = (minor: number, currency: string) => new Intl.NumberFormat(locale, {

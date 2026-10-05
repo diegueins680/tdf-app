@@ -101,9 +101,9 @@ const privatePath = (pathname: string): string => pathname.replace(
   '$1[REDACTED]',
 ).replace(/(\/conversacion\/[^/]+\/)[^/]+/gi, '$1[REDACTED]');
 
-export function redactSensitiveQueryValues(value: string, depth = 0): string {
+export function redactSensitiveQueryValues(value: string, depth = 0, relativeUrl = false): string {
   const isAbsolute = /^[a-z][a-z\d+.-]*:/i.test(value);
-  if (!isAbsolute && !value.startsWith('/') && !value.includes('?')) return value;
+  if (!isAbsolute && !value.startsWith('/') && !relativeUrl) return value;
 
   try {
     const parsed = new URL(value, 'https://analytics.invalid');
@@ -146,14 +146,19 @@ export function redactSensitiveQueryValues(value: string, depth = 0): string {
   }
 }
 
-const sanitizeAnalyticsValue = (value: unknown): unknown => {
-  if (typeof value === 'string') return redactSensitiveQueryValues(value);
-  if (Array.isArray(value)) return value.map(sanitizeAnalyticsValue);
+const sanitizeAnalyticsValue = (value: unknown, propertyName = ''): unknown => {
+  if (typeof value === 'string') {
+    // A scalar campaign label may contain "?". Only URL-bearing properties
+    // interpret unrooted relative values as URLs; explicit URLs still redact.
+    const relativeUrl = /(?:url|uri|href|path|pathname|referrer|redirect|returnto)$/.test(normalizePropertyName(propertyName));
+    return redactSensitiveQueryValues(value, 0, relativeUrl);
+  }
+  if (Array.isArray(value)) return value.map((item) => sanitizeAnalyticsValue(item, propertyName));
   if (typeof value !== 'object' || value === null) return value;
   return Object.fromEntries(
     Object.entries(value)
       .filter(([key]) => !isSensitivePropertyName(key))
-      .map(([key, nestedValue]) => [key, sanitizeAnalyticsValue(nestedValue)]),
+      .map(([key, nestedValue]) => [key, sanitizeAnalyticsValue(nestedValue, key)]),
   );
 };
 
@@ -163,7 +168,7 @@ export function sanitizeAnalyticsProperties<T extends Record<string, unknown>>(
   return Object.fromEntries(
     Object.entries(properties)
       .filter(([key]) => !isSensitivePropertyName(key))
-      .map(([key, value]) => [key, sanitizeAnalyticsValue(value)]),
+      .map(([key, value]) => [key, sanitizeAnalyticsValue(value, key)]),
   ) as T;
 }
 
@@ -217,6 +222,10 @@ export function getAnalyticsClient(): AnalyticsClient {
       if (event === null) return null;
       const projectToken = event.properties?.['token'];
       event.properties = sanitizeAnalyticsProperties(event.properties ?? {});
+      // The SDK attaches initial URLs/referrers outside event.properties, and
+      // identify also uses these top-level person-property envelopes.
+      if (event.$set) event.$set = sanitizeAnalyticsProperties(event.$set);
+      if (event.$set_once) event.$set_once = sanitizeAnalyticsProperties(event.$set_once);
       // PostHog injects its public project token at the root; application tokens stay stripped.
       if (projectToken === key) event.properties['token'] = projectToken;
       return event;

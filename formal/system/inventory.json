@@ -53,7 +53,10 @@
       "functions/.well-known/apple-app-site-association.js",
       "functions/.well-known/assetlinks.json.js",
       "functions/_shared/event-preview.mjs",
-      "functions/eventos/[eventId].js"
+      "functions/_shared/ticket-page.mjs",
+      "functions/eventos/[eventId].js",
+      "functions/eventos/[eventId]/entradas.js",
+      "functions/eventos/[eventId]/orden/[orderId].js"
     ],
     "ops": [
       "ops/hetzner/backup-postgres.sh",
@@ -142,6 +145,7 @@
       "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
       "scripts/__tests__/studio-internship-audit.test.mjs",
       "scripts/__tests__/ticket-admission-model.test.mjs",
+      "scripts/__tests__/ticket-page-preview.test.mjs",
       "scripts/__tests__/ui-validation-bundle.test.mjs",
       "scripts/__tests__/ux-quality-audit.test.mjs",
       "scripts/__tests__/ux-review-real-browser.mjs",
@@ -16230,7 +16234,7 @@
     },
     {
       "path": "docs/analytics.md",
-      "sha256": "b3f8af580efa9175ca2138ce86574c117e89138a7b78a7510388238a2d2591f4",
+      "sha256": "7a2837f2227faceb649922c23d962033758afe95f20a8d67054ff2405415dfbf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -17097,6 +17101,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/events/ticket-page-metadata.md",
+      "sha256": "5e8c883379227e5d2c83db23f2ea72f4c8c5595a7af77e5f123e40a160145f3e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/fan-artist-abstraction-plan.md",
       "sha256": "2f2253ff8cd6702406519ac5fcaafee5f239d19b626503bae6d1fda8da319ef6",
       "authority": "inferred",
@@ -17532,7 +17543,7 @@
     },
     {
       "path": "docs/mobile-program/analytics-2026-10-05.md",
-      "sha256": "1ebaba36d09768b4f296eeb717057283af506abd861acb786a15021cfe8cf8d1",
+      "sha256": "8e6d5502fb3958fc99801d14657ec214a486aa480b7dcaf01421a52fd90b8721",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
