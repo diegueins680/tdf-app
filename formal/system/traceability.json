@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "a280e0d53f7cab5410084898c0ae0277c029fe4c",
+  "mobileRevision": "6297e3f137126350aa485690bf89de19e82d3c25",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -4295,8 +4295,8 @@
     {
       "id": "EVT-TICKET-001",
       "title": "Consolidate authoritative ticket admission, inventory and transfer boundaries",
-      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection.",
-      "authority": "Current main b06a4d392 merged reviewed PR480; formal/ticket-admission/README.md",
+      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history.",
+      "authority": "Current main b06a4d392 merged reviewed PR480; formal/ticket-admission/README.md; approved PR482 main9abd8551b",
       "domain": "EVT",
       "actors": [
         "Authenticated event organizer",
@@ -4351,14 +4351,21 @@
         "tdf-hq/sql/2026-10-05_ticket_admission_audit.sql",
         "tdf-hq/sql/2026-10-05_ticket_transfer_deadline.sql",
         "tdf-hq-ui/src/components/TicketCredentialQR.tsx",
-        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx"
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "tdf-hq/src/TDF/Routes/EventTickets.hs",
+        "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit.sql",
+        "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit_rollback.sql",
+        "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history.sql",
+        "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history_rollback.sql"
       ],
       "tests": [
         "tdf-hq/test/TicketAdmissionMain.hs",
         "scripts/test-ticket-admission.sh",
         "scripts/__tests__/ticket-admission-model.test.mjs",
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-        "e2e/web/ticket-credential.spec.mjs"
+        "e2e/web/ticket-credential.spec.mjs",
+        "scripts/test-public-ticket-checkout-runtime-migration.sh",
+        "tdf-hq/test/integration/ticket_order_quantity_limit.sql"
       ],
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"
@@ -4528,45 +4535,60 @@
       "contract": "formal/system/operations-command-boundary.md",
       "critical": true,
       "actors": [
-        "current authenticated operations actor",
-        "independently authorized approver",
-        "operations worker"
+        "Operations background worker",
+        "Deployment operator"
       ],
       "preconditions": [
         "Initialized canonical migrations and active organization/branch where applicable"
       ],
       "inputs": [
-        "Typed Operations API command and current token; worker tick SQL results"
+        "OPERATIONS_WORKER_ENABLED strict true/false or absent",
+        "SQL result counters",
+        "Synchronous/asynchronous tick failures"
       ],
       "state": {
-        "boundary": "formal/system/operations-command-boundary.md",
-        "property": "safe fixed error; cancellation propagation; single invocation"
+        "startup": [
+          "enabled",
+          "paused",
+          "invalid"
+        ],
+        "iteration": [
+          "started",
+          "completed",
+          "failed",
+          "cancelled"
+        ]
       },
       "allowedTransitions": [
-        "Work-item transitions in TDF.Operations.Model with locked expected version",
-        "Approval absent -> pending -> approved or rejected"
+        "Absent/true -> enabled",
+        "false -> paused",
+        "Invalid -> startup failure",
+        "One iteration -> counters or fixed failure; cancellation propagates"
       ],
       "forbiddenTransitions": [
-        "Stale or revoked commit",
-        "Unbound key replay",
-        "Terminal/expired/self approval decision",
-        "Partial effect after rollback"
+        "Silent invalid configuration",
+        "Repeated tick after log failure",
+        "Failure reported as zero work",
+        "Raw private exception persisted/logged"
       ],
       "effects": [
-        "Atomic item/timer/event/stream/audit, or retained approval and decision audit; worker safe counters"
+        "One tick invocation and safe completion/failure evidence"
       ],
-      "authorization": "Current locked token, canonical role snapshot, enabled organization, active branch and scoped memberships; distinct decision actor. See scoped contract.",
+      "authorization": "Deployment configuration controls worker startup; synchronous manual commands retain independent actor admission.",
       "privacy": "Never log arbitrary exception/SQL payload or disclose conflicting receipt.",
-      "concurrency": "PostgreSQL row locks held through commit; token then locked role snapshot, then item/receipt and active scope. Deadlock/serialization conflicts abort.",
-      "idempotency": "Work-item version retries conflict; approval exact bound replay has no new effects; worker logging never repeats the tick.",
-      "failure": "401/403/404/409/422 admission, transactional rollback; sanitized500; asynchronous cancellation propagates.",
-      "recovery": "Reload authoritative state after conflict. No downstream provider/deletion execution inferred.",
+      "concurrency": "Existing per-aggregate order and SKIP LOCKED; logging does not retry business work.",
+      "idempotency": "No exactly-once external delivery claim; deterministic test fixtures explicitly pause the background loop.",
+      "failure": "Invalid configuration rejects startup; malformed result fails; async cancellation escapes; SQL projection diagnostics contain SQLSTATE and fixed text.",
+      "recovery": "Operator may resume worker; preserve pending/dead-letter evidence and inspect unbound legacy manual events.",
       "observability": "Atomic audit/stream for accepted mutations; source-bound HTTP/model/property test receipts.",
       "implementation": [
-        "tdf-hq/src/TDF/Operations/Worker.hs"
+        "tdf-hq/src/TDF/Operations/Worker.hs",
+        "tdf-hq/.env.example",
+        "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql"
       ],
       "tests": [
-        "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs"
+        "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
+        "scripts/lib/operations_conformance.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -4621,7 +4643,8 @@
       "recovery": "Reload authoritative state after conflict. No downstream provider/deletion execution inferred.",
       "observability": "Atomic audit/stream for accepted mutations; source-bound HTTP/model/property test receipts.",
       "implementation": [
-        "tdf-hq/src/TDF/Operations/Server.hs"
+        "tdf-hq/src/TDF/Operations/Server.hs",
+        "tdf-hq/src/TDF/Operations/Model.hs"
       ],
       "tests": [
         "scripts/lib/operations_conformance.py",
@@ -4631,11 +4654,11 @@
       "status": "specified and implemented",
       "confidence": "Source reviewed; exact final runtime validation pending",
       "ambiguity": [
-        "Other Operations routes and production enablement remain separate obligations; no complete refinement or delivery proof."
+        "Mixed-currency aggregate semantics, multi-query freshness and production enablement remain separate obligations."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Confirmed synthetic prior-runtime disclosure; implementation repair awaits exact-candidate HTTP validation. Other read-policy discrepancies remain separate obligations."
+        "reason": "Earlier scoped metrics HTTP passed; new shared-policy candidate requires exact combined verification."
       },
       "verification": "Actual HTTP synthetic Teacher/Engineer hidden-payment and assigned-booking controls, plus authorized Admin positive control. Not formally covered.",
       "evidence": "Exact source/binary hashes and HTTP result.json; Stack test log; formal source/config hashes and TLC invariant counterexamples. Working checks are not deployed evidence."
@@ -5179,6 +5202,243 @@
       "failure": "Stale or unavailable distribution must not be presented as verified current availability.",
       "recovery": "Correct source under review and reverify deployed content and links.",
       "observability": "Source review and deployed static-page/browser checks; no dedicated automated assertion covers all legal disclosure wording."
+    },
+    {
+      "authority": "reconciled",
+      "contract": "formal/system/operations-projection-boundary.md",
+      "critical": true,
+      "source": "docs/operations-control-center/rbac.md; architecture.md; synthetic HTTP counterexamples and independent source review on 2026-10-05",
+      "status": "specified and implemented",
+      "confidence": "Source reviewed and scoped working checks executed; final HTTP/full gates and deployment remain pending",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation and executable checks exist; exact combined candidate runtime and deployed correspondence are not yet established."
+      },
+      "evidence": "Source/binary hashes, actual HTTP and PostgreSQL fixture results, named bounded-model controls where mapped",
+      "observability": "Retain exact command, source/binary/tool identity, result, rollback assertions and sanitized operational audit",
+      "recovery": "Preserve receipts/audit and reload current state; do not bypass authorization or replay with a different identity",
+      "verification": "Actual PostgreSQL/HTTP boundary controls; formal coverage is limited to explicitly mapped abstractions",
+      "id": "OPS-MANUAL-001",
+      "title": "Bound manual receipt and isolated source projection",
+      "domain": "OPS",
+      "statement": "Manual creation must bind its retry key to actor, resolved scope and semantic payload, project only its own server-keyed event and commit receipt, item and evidence atomically without modifying a source item.",
+      "actors": [
+        "Current authorized Operations writer",
+        "Trusted source event producer"
+      ],
+      "preconditions": [
+        "Current locked token and canonical grants",
+        "Active organization/branch membership",
+        "Write visibility for an unassigned result",
+        "Scoped projection migration installed"
+      ],
+      "inputs": [
+        "Client receipt key",
+        "Typed manual payload with empty metadata",
+        "Current actor",
+        "Resolved branch"
+      ],
+      "state": {
+        "receipt": [
+          "absent",
+          "committed"
+        ],
+        "projectionKey": "manual:<server UUID>",
+        "trustedSourceNamespace": "Existing source-specific capture prefixes"
+      },
+      "allowedTransitions": [
+        "absent -> committed after successful targeted projection and decode",
+        "committed -> current item on exact authorized replay without additional effects",
+        "Trusted WhatsApp uncorrelated -> Party association in one same-sender branch thread"
+      ],
+      "forbiddenTransitions": [
+        "Cross-actor/branch/payload replay",
+        "Manual reuse of trusted source correlation",
+        "Control metadata injection",
+        "Partial receipt/evidence commit",
+        "Implicit adoption of unbound legacy receipts"
+      ],
+      "effects": [
+        "One domain receipt/outbox/item/projection audit/stream transaction",
+        "Supported manual fields retained",
+        "No source business action or provider transaction"
+      ],
+      "authorization": "Current write grant must authorize the resulting unassigned domain; ReadOnly never enlarges a write grant; Teacher/Engineer alone cannot create unassigned work.",
+      "privacy": "No conflicting receipt is disclosed; manual metadata must be empty; SQL diagnostics omit arbitrary exception text.",
+      "concurrency": "Unique organization/receipt key serializes simultaneous requests; locks retain session/grants/scope; projection keeps predecessor order and targets only its own event.",
+      "idempotency": "Exact binding returns current item and no new effects; changed binding409; diagnostic IDs excluded from semantic equality.",
+      "failure": "Reject malformed or denied commands; projection/ordering conflict409; any exception or deferred constraint failure rolls back; no placeholder success.",
+      "property": "SourceSeparation; BoundReplay; AtomicCreation",
+      "implementation": [
+        "tdf-hq/src/TDF/Operations/Server.hs",
+        "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql"
+      ],
+      "tests": [
+        "scripts/lib/operations_conformance.py",
+        "scripts/test-booking-conformance.py",
+        "scripts/__tests__/operations-api-schema.test.mjs"
+      ],
+      "formalModels": [
+        "formal/event-operations/OperationsManualReceipt.tla"
+      ],
+      "ambiguity": [
+        "No universal SQL namespace permission proof, UUID/hash collision proof, whole-program refinement or production fulfillment claim."
+      ]
+    },
+    {
+      "authority": "reconciled",
+      "contract": "formal/system/operations-projection-boundary.md",
+      "critical": true,
+      "source": "docs/operations-control-center/rbac.md; architecture.md; synthetic HTTP counterexamples and independent source review on 2026-10-05",
+      "status": "specified and implemented",
+      "confidence": "Source reviewed and scoped working checks executed; final HTTP/full gates and deployment remain pending",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation and executable checks exist; exact combined candidate runtime and deployed correspondence are not yet established."
+      },
+      "evidence": "Source/binary hashes, actual HTTP and PostgreSQL fixture results, named bounded-model controls where mapped",
+      "observability": "Retain exact command, source/binary/tool identity, result, rollback assertions and sanitized operational audit",
+      "recovery": "Preserve receipts/audit and reload current state; do not bypass authorization or replay with a different identity",
+      "verification": "Actual PostgreSQL/HTTP boundary controls; formal coverage is limited to explicitly mapped abstractions",
+      "id": "AUTH-OPS-READ-001",
+      "title": "One action-specific Operations read capability policy",
+      "domain": "AUTH",
+      "statement": "Detail, list, stream and aggregate reads must apply the same union of explicit domain grants, assignment restrictions and branch membership; ReadOnly must not grant write visibility.",
+      "actors": [
+        "Scoped Operations reader",
+        "Multi-role actor"
+      ],
+      "preconditions": [
+        "Authenticated reader admitted to an enabled active scope"
+      ],
+      "inputs": [
+        "Current role set",
+        "Assignment",
+        "Entity kind",
+        "Organization/branch selectors"
+      ],
+      "state": {
+        "authority": "TDF.Operations.Model.visibleEntityTypes",
+        "composition": "Union for the read action; exclude ReadOnly from write visibility"
+      },
+      "allowedTransitions": [
+        "Read visible projection",
+        "Combine explicit role grants for the same action"
+      ],
+      "forbiddenTransitions": [
+        "Unknown role fallback grants",
+        "Non-admin security disclosure",
+        "Hidden domain counted or streamed",
+        "ReadOnly plus narrow writer becomes broad writer"
+      ],
+      "effects": [
+        "Read-only projection"
+      ],
+      "authorization": "Canonical explicit domains; security Admin-only; specialists assigned; unknown producer domains deny; active scoped membership required.",
+      "privacy": "Other branches and hidden entities excluded from item/failure projections and totals.",
+      "concurrency": "Individual PostgreSQL snapshots; no linearizable multi-query read or instantaneous cross-device revocation guarantee.",
+      "idempotency": "Read-only; no receipt.",
+      "failure": "Denied detail404 or scope403; malformed/unavailable projection errors rather than invented state.",
+      "property": "List/detail/stream/aggregate agree on action-specific visible domain set",
+      "implementation": [
+        "tdf-hq/src/TDF/Operations/Model.hs",
+        "tdf-hq/src/TDF/Operations/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Operations/ModelSpec.hs",
+        "scripts/lib/operations_conformance.py",
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [],
+      "ambiguity": [
+        "Producer/A&R/live-producer domain policy remains undeclared and defaults to deny; new grants require explicit specification.",
+        "SQL/role conformance is empirical; not formally covered."
+      ]
+    },
+    {
+      "authority": "reconciled",
+      "contract": "formal/system/operations-projection-boundary.md",
+      "critical": true,
+      "source": "docs/operations-control-center/rbac.md; architecture.md; synthetic HTTP counterexamples and independent source review on 2026-10-05",
+      "status": "specified and implemented",
+      "confidence": "Source reviewed and scoped working checks executed; final HTTP/full gates and deployment remain pending",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation and executable checks exist; exact combined candidate runtime and deployed correspondence are not yet established."
+      },
+      "evidence": "Source/binary hashes, actual HTTP and PostgreSQL fixture results, named bounded-model controls where mapped",
+      "observability": "Retain exact command, source/binary/tool identity, result, rollback assertions and sanitized operational audit",
+      "recovery": "Preserve receipts/audit and reload current state; do not bypass authorization or replay with a different identity",
+      "verification": "Actual PostgreSQL/HTTP boundary controls; formal coverage is limited to explicitly mapped abstractions",
+      "id": "OPS-AUX-WRITE-001",
+      "title": "Current authority and atomic evidence for auxiliary Operations mutations",
+      "domain": "OPS",
+      "statement": "Notes, failure retry, saved views and push registration must revalidate current session, role and active scope under transaction locks and commit their result and audit together.",
+      "actors": [
+        "Authorized note author",
+        "Scoped manager",
+        "Preference owner",
+        "Push subscription owner"
+      ],
+      "preconditions": [
+        "Current token/grants",
+        "Active scoped membership",
+        "Current item assignment where applicable",
+        "Configured encryption for push"
+      ],
+      "inputs": [
+        "Typed note/retry/view/subscription payload",
+        "Current actor",
+        "Target item or failure"
+      ],
+      "state": {
+        "failure": [
+          "open",
+          "dead_letter",
+          "retrying",
+          "resolved"
+        ],
+        "note": "append-only creation",
+        "view": "owner/name replacement",
+        "subscription": "owner/token-digest upsert"
+      },
+      "allowedTransitions": [
+        "open or dead_letter -> retrying once",
+        "Append authorized note and mentions",
+        "Replace owned view",
+        "Register/reactivate encrypted owned token"
+      ],
+      "forbiddenTransitions": [
+        "Revoked or disabled-scope commit",
+        "Retry already retrying or resolved",
+        "Note after losing assignment",
+        "Partial audit/state commit",
+        "Unencrypted push token persistence"
+      ],
+      "effects": [
+        "Atomic note/mentions/stream/audit",
+        "Atomic retry count/state/audit with actual previous status",
+        "Atomic owned preference/subscription update and audit"
+      ],
+      "authorization": "Locked current grant and scope; notes require write-domain visibility and active mentioned memberships; failure retry requires manager grant; preference/subscription ownership is actor-bound.",
+      "privacy": "No private exception data or plaintext device token in receipts/logs; shared layouts do not grant data permissions.",
+      "concurrency": "Locks serialize failure retries and retain note assignment; same-owner upsert uniqueness serializes preferences; transaction decode precedes commit.",
+      "idempotency": "Failure retry repeats409 after admission; notes are append commands without receipt; preference/token replacements can produce an additional audit on repeat.",
+      "failure": "Reject invalid, denied or conflicting command with no effects; missing push key503; exception/decode/audit failure rolls back.",
+      "property": "Current authority; atomic result/audit; one retry admission per eligible failure state",
+      "implementation": [
+        "tdf-hq/src/TDF/Operations/Server.hs"
+      ],
+      "tests": [
+        "scripts/lib/operations_conformance.py",
+        "scripts/test-booking-conformance.py",
+        "scripts/__tests__/operations-api-schema.test.mjs"
+      ],
+      "formalModels": [],
+      "ambiguity": [
+        "Downstream failure replay execution and actual push delivery are not established.",
+        "Note success replay, cross-owner token rotation and deletion remain separate obligations; not formally covered."
+      ]
     }
   ],
   "sourceFingerprints": {
@@ -5186,7 +5446,7 @@
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/ci.yml": "b5f123f33695eb912cf9f3956a4b2620add70006c42d86f8a52755c663ccc0c3",
     ".github/workflows/event-operations-formal.yml": "8cdbbb59f539a8394fde147ba38dc4f27260b9ac2c371c731da5b342401077d1",
-    "docs/catalog-persistence/catalog-list-decisions.json": "4ded77d6358aa2416bb76258e176697a0d3740a685c85d4dac4af757e5f61d8b",
+    "docs/catalog-persistence/catalog-list-decisions.json": "49b7f526170a1d3a5aa54d7e65e366fb4d8805c888c16c0dd901789309dd6c69",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
     "formal/event-operations/CatalogReorder.tla": "ab228ae812143f050feac4035e9724fb647a1072cb7816d500894ea1ba335c5d",
@@ -5205,6 +5465,7 @@
     "formal/event-operations/NativeArtistFollow.tla": "1a4bdcf27bbf69e0aa3c58bb6742290cd6dcdd64d0ad4dc8b196e8c38519d4ef",
     "formal/event-operations/OperationsApproval.tla": "471ee2b49075d444febc4883a7c7269a347a571eecd7bfbd80df3efa2072e49e",
     "formal/event-operations/OperationsCommandFence.tla": "58bde50248ca2dd62ab496c251d6596bc8f6a6289db144951458870b1e93436b",
+    "formal/event-operations/OperationsManualReceipt.tla": "c237e50899bfc85f725da69dc2956b3c7d32f52174bf42d313b86b4222f55011",
     "formal/event-operations/PaymentRecovery.cfg": "31684633da67e4a607058dce9e9dae842c2214ff87ba126fbade01a5c4bbfbdc",
     "formal/event-operations/PaymentRecovery.tla": "b939b064c407ffa18cd5276d0bd332bb257b7f848b666bc704c8ad1c7394ecb4",
     "formal/event-operations/PaymentRecoveryCompleted.cfg": "6098dc9a9461b295d2e546b932ef710099f2a45e5ea502630c646206f81e0b7d",
@@ -5249,7 +5510,7 @@
     "formal/system/compiled-api-surface.json": "e42c7becdc4bfeb4966dc7eeed09952b56a9420f1f1937ec4975cedb0181f012",
     "ops/hetzner/catalog-readonly-role.sql": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
     "ops/hetzner/compose.production.yaml": "1191a5773dc83807be2364340f8cb9f0feb33af4ed45d6e0bfbefe9f3bc42db8",
-    "ops/hetzner/inspect-runtime.py": "9e83d408bcc97c4978854c3b3d137eb4dae384c919e9b57cf96a0abbd825a524",
+    "ops/hetzner/inspect-runtime.py": "bb868383fb81310589acf5ccb4fc760c7958a530b6324c2f7f3b3bbbe9450292",
     "ops/hetzner/rehearse-postgres-restore.py": "4794f49c34ed9042fc58450020ea844dc1dae57852c6a2607c4f8d5d23a0176e",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
     "package-lock.json": "591c111bb4548a3f3ce23ae313030d5dcee05f54c10f2161464e789cf2221f4c",
@@ -5268,7 +5529,7 @@
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/formal-result-summary.test.mjs": "a3ecce01af25cb49f4b62fc51459ed9b36543f347b8d80cac6d4b1f1abfeca8c",
     "scripts/__tests__/generated-api-conformance.test.mjs": "34ee30eadd4114f8229af92693a01767fa8a7056233758cf0050b38f99e29f6f",
-    "scripts/__tests__/hetzner-inspection.test.mjs": "1c9da69782bfe6776f661bd27429eccdf97d46ffe908ff63de415f792006e2dc",
+    "scripts/__tests__/hetzner-inspection.test.mjs": "187ccdcd600b56df382fdeb6ed8d3156cd245c07982e1e7b3a83b91c911fbf59",
     "scripts/__tests__/hetzner-migration-rehearsal.test.mjs": "8fd637e986cb2ee892a6d07641c1365ed929e1e52b840cfa2ea8f420ac2f9e05",
     "scripts/__tests__/hetzner-preparation.test.mjs": "b8f8b49cf4fa4e19eb84ebb9436033cc7f52d178cc45ed9d0cec6c902a48575f",
     "scripts/__tests__/hetzner-restore.test.mjs": "5670603f31f9ff8aaf7536eae0cde39a96d8f4996922838eb120693ca86c05c4",
@@ -5277,7 +5538,7 @@
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
     "scripts/__tests__/merch-commission-postgres.mjs": "91dd370bf08dfe2ab871c6a617d4e2871717c9f5ff27676e692c6d776c9721c3",
     "scripts/__tests__/merch-runtime-safety.test.mjs": "7e8b8f27e40d6b1d2f329aac504096451783587ee12a827f9d3e03da64aedcfa",
-    "scripts/__tests__/operations-api-schema.test.mjs": "42d3f42f1ac5d5e33892499b29b429bab8319294d2b8543994b894077dda7365",
+    "scripts/__tests__/operations-api-schema.test.mjs": "6c1146cf1240e2a90f0f8e62da8e9e7f8abf12440eb4a3bf466e090b93e50f1f",
     "scripts/__tests__/payment-readiness-helper.test.mjs": "bddad0df011362abedc3cb346688ab3beead734f4e3dc787828ffd057f204a03",
     "scripts/__tests__/persistent-uploads.test.mjs": "0dc864d08b90d8731f0ddcb056dad5c7990c5e07dab80084396e87f62ee76df6",
     "scripts/__tests__/production-catalog-inventory.test.mjs": "364bebeddbef85604ac275967b974b79d6f855e997877c867e491770fdd2ae16",
@@ -5308,7 +5569,7 @@
     "scripts/lib/hetzner-migration-rehearsal.mjs": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a",
     "scripts/lib/hetzner-preparation.mjs": "c0e96de12b4949cea0115e8d8ea8fe85dad2dfdd1f8496fb8b110f9e5240abc0",
     "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
-    "scripts/lib/operations_conformance.py": "b6fcaac5d3cd90020e2ddde083a00c24d52e274e439582c4f3c7048b6a8c7c7f",
+    "scripts/lib/operations_conformance.py": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
     "scripts/lib/production-release.mjs": "d7ae6bd22a1863de06d0925eca7d0a48fe8e27512a06700928b89b0d3066fbf6",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
@@ -5317,7 +5578,7 @@
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
     "scripts/privacy-request-ledger.py": "9274444f82bef45844d492c296b6a5ca9410e6000867331adb6d624ddc5af960",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "52e9035e8fb279005ce0bece2077d22e2ef9d6c8c10fb57f5d0b42d8cd579e80",
+    "scripts/production-migrations.json": "42f9e43fe0e5ae29961c43419db8924dc4fcae82917d5b47d42b5117afd23ad9",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "e0b2bd25bbc5460877de7379d9396327c1bb94fc8600a7b7544b2055bfa23ead",
     "scripts/quality-backend.sh": "7be0e6a87e50b625239a70858d53d9d3340a409000ea9f1dc475c96585b495d7",
@@ -5334,7 +5595,7 @@
     "scripts/specification-inventory.py": "5d84634a34efe3e9f619063656e2f63a0cae7d71dfacbb4fd8ea035ca5008502",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-booking-conformance.py": "98d340c3221582626d45459e89d2402fe032e00d5aee0333d3996e1089c4e681",
+    "scripts/test-booking-conformance.py": "982521d7e19285665d480aa2c4f4e037052aec2a1b6a45e01b171cc646aa8b33",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-inspection.py": "560125d36d6469b3f2f2ca1dea30ba0bf452dc9e9e373f2e0521256052c0ed98",
     "scripts/test-hetzner-restore.py": "279906ce3fca58619f1a4c361c475c810bb666263418ca45a975ee0ad4fd8e41",
@@ -5344,6 +5605,7 @@
     "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
+    "scripts/test-public-ticket-checkout-runtime-migration.sh": "4ccbd1a730f24c26df9b78d717a0662452e41e4d985062336496a3fa6d379914",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
@@ -5354,7 +5616,7 @@
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "836906067ac620b64214922f9390c012848abf5bc1c4ca6f15a02757986bcddd",
-    "scripts/verify-event-operations-formal.sh": "fbd72b085f58f5256a1b5303a661b5f25b15518c2cef9179334e1ec9de9b32b1",
+    "scripts/verify-event-operations-formal.sh": "3eaae93784afcc6bed1af5017e373f1748ce675d08e25c68f822c5f0d2f755b3",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
     "scripts/verify-system-evidence.mjs": "7aa7ac054cebe9a16f39a21afce1b36588c889493716baf3c7629880565e3e3f",
@@ -5372,7 +5634,7 @@
     "tdf-hq-ui/src/api/bookings.ts": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
     "tdf-hq-ui/src/api/client.test.ts": "eaec88fe099c62f7d68c2c350eb1b3493a71e132b7324e25e588b34ec76aed56",
     "tdf-hq-ui/src/api/client.ts": "3cbd9d209c184f0892451f4957721be0a55f65e922df33090c4a8b1e00ccfd13",
-    "tdf-hq-ui/src/api/generated/types.ts": "c75c0d3b6ed4ec50a816765521a0f7a92972940a9981f595537dc74f52ea39eb",
+    "tdf-hq-ui/src/api/generated/types.ts": "cc567cc305996039f30cba0b75d1cbec4ba4380b6cc2c1d79176121814e47869",
     "tdf-hq-ui/src/api/inventory.ts": "7462c17a811a3e307b8ff551745b76cf7e2ea7691d1193c9076190c77545a07c",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
     "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx": "7723dd458079bcad7d7c3f39933b2025de76462f8d0fb40a6c6d4e6bd35deb49",
@@ -5406,11 +5668,12 @@
     "tdf-hq-ui/src/utils/providerPaymentResume.test.ts": "103a2f73519a73ffb088df88e847789b4fc5f6afd07d9c38bdeafd0dbc4039e9",
     "tdf-hq-ui/src/utils/providerPaymentResume.ts": "27f2bbb6169784ba41aa14ddf9e2fade00617452594157fe8c74eed64ce3f0ba",
     "tdf-hq-ui/src/utils/roles.ts": "a6e35fb167641efb11ffadea2d23865d3165e495cd59e0644a49e0a20f87b0da",
+    "tdf-hq/.env.example": "52c6e873ba21c44a10f7fd7fb1bdb44c0234a806dde3b019cf383a850b06b77a",
     "tdf-hq/Dockerfile": "9d4b6b0747296ff98277153a7fa31ae5e75a14709a0900ffd3abf2588b20cf4f",
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/assets/feature-registry.json": "7388f163749d305fb7bc12b0ada9c4f7f988c878a1db006437db835555cbe3af",
-    "tdf-hq/docs/openapi/api.yaml": "f01e2291f4c9305058b2639942d7c2a7bd6b09d52219bc61a774fd0b84ab251b",
+    "tdf-hq/docs/openapi/api.yaml": "568ba2f5cf08b2f3112fa36a8b99cb732088b74cadf1f5789bd00ddccb7407ca",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/persistent-uploads.sh": "89c251d96be949d638941d45d4a8994f09c8157a04bea786ee93aefde90cbd44",
     "tdf-hq/production-entrypoint.sh": "9cf124a277a19e2d5c0d7769cfc8a2d16dc2d21f09e93406b3ebfa293e0416b4",
@@ -5423,7 +5686,12 @@
     "tdf-hq/sql/2026-10-04_merch_commission_exact.sql": "36a4432d9e20442107f570228e4477cb93072433f5752f9dd7d32106d60c4b1d",
     "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql": "ff27157ab7ad9b9ba559d80ff40b88f11c8c0f6857bdce0aa0ff58966e8be98d",
     "tdf-hq/sql/2026-10-05_ddex_validation_legacy_nullability.sql": "5df84ed2bf411ee976d39907845970e0d9e4defedca25142d1c51cca59624f6e",
+    "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql": "e8d5332a38c0a71bc7ffadf328ced88bf55bddbd04eaaa7a6b8efabdebfee71d",
     "tdf-hq/sql/2026-10-05_ticket_admission_audit.sql": "c2cd877a90fdf81447b2aba23141f8936f4e9e9bdb1133bd4e379dfe863c2a07",
+    "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit.sql": "0d3a8a75abbf07f9dfa0f6744daa6137f2611e10822e66ef8afe9fa666386342",
+    "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit_rollback.sql": "339e5714c731c5619938653a916c1f89bcda88aa629e4b081fe9cf8823219a48",
+    "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history.sql": "866c5c2381ebe7a416b2ab45f0451feac119d60e1e90a099016257425c8d7d7f",
+    "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history_rollback.sql": "c8980f0d236a67886457fbf60e67fed32c347fea123242d22b52500edd023866",
     "tdf-hq/sql/2026-10-05_ticket_transfer_deadline.sql": "fbc22ce153e447bcf9d6f464fb0995d99a11e7104f6c1adb3a89e771f44de04b",
     "tdf-hq/src/TDF/API.hs": "3b1f027ffe718dd547fc2299f6aa8977b9db9915736d4210dc1df235cb1372bc",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
@@ -5450,12 +5718,13 @@
     "tdf-hq/src/TDF/Directory/Policy.hs": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
     "tdf-hq/src/TDF/Meta.hs": "6c88c68baafb43517dea472ccec61343625a63b697fed0951c977740c293e48d",
     "tdf-hq/src/TDF/Operations/API.hs": "747cadac15423971a9516d9d30f542d2c7124213debbefb0c09d9ca196dd1bdb",
-    "tdf-hq/src/TDF/Operations/Model.hs": "d5245e42f9ab4ee1cf2926eb4f0343032a92cfaa6e9c720ed6527a97abb9ba69",
-    "tdf-hq/src/TDF/Operations/Server.hs": "5e08cf5679bc9705ff95964717f8cedebf3a7c455d4a2d1b1d6c1ff902dbcc33",
+    "tdf-hq/src/TDF/Operations/Model.hs": "4a969e669fe0335f36ce78a0409364550fc0bf9f3ade682f81b36f0715c846cd",
+    "tdf-hq/src/TDF/Operations/Server.hs": "fc4ac1518a27099d8108e733f4e693c7d463c32b8788c9131c18b595db9aef65",
     "tdf-hq/src/TDF/Operations/Types.hs": "58208ae55c81f29ca48073762e766661784a6e956ca54cb3869fb5b039d5fc6f",
-    "tdf-hq/src/TDF/Operations/Worker.hs": "1a72f95139a6a7f8d016599660c568eb0d1d99c9a5e32fd5936a52f7cc676019",
+    "tdf-hq/src/TDF/Operations/Worker.hs": "89af3688de99bc05bfe00d2bbf8337fc89ee0394fdc1c57a11e2f19d675e5bed",
     "tdf-hq/src/TDF/RagStore.hs": "80b5f523542cb71119551dbb64bd5e0c0e3e880622997a496e496e4d7fbeb912",
     "tdf-hq/src/TDF/Routes/Courses.hs": "750e7304fa71dfccdce5132c24fbb077043087b5b0d8fe17e2ca6dcbb5384fcb",
+    "tdf-hq/src/TDF/Routes/EventTickets.hs": "3557aa7feb725075e3cbc97f69fdd34f0de1b9b59f6545f91df80850b80f3914",
     "tdf-hq/src/TDF/Server.hs": "4313691a6623bdc602b8cabb3838c1a6ba582773bd9e5fe436fd9a2ee4c1e674",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
@@ -5489,19 +5758,21 @@
     "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "90b0a50e1d7415dc82be95fdf4c985fbb825737d09e0c87d2d185414cb154fd2",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "6d6019cff6baa80c82fb421c02bddf5e609b88451ad73ef0b31fcd4fb35fe7f6",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "bc9e5e0920de51b7b8c16d764991911c9eabb087cd024f2405aeb98174c57563",
-    "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "1654d960b82e533a43ebc953153d0d7edf0da96d2475b44d94c2fa0d2451527b",
+    "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
     "tdf-hq/test/TDF/CorsSpec.hs": "ca283c34c7b4368f59ba7af790950482e527747e95574afbbd22c1ce0e6a4245",
     "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "e68face714495ad762b3ccb8eec7b38ce6047274c44fd6977dc44abfd56f9439",
     "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs": "dd1168717766515274065c45da50d0f6da23e824ccc7a2e49055e2977fb95ddd",
     "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs": "cdf133bc96409a0c3a56abb7a2023b0d3dc9dd0237bdb50d9a4f46b97f72ab55",
     "tdf-hq/test/TDF/DisposableTicketDatabase.hs": "2628a95fd9d158d26ec981c0f3195391d47d9a2a9725a4e43ea20332a4237091",
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "d4b897b67a0f57930ebc316016eaec1e68787f0c0eb7a821e181332a89ac3964",
+    "tdf-hq/test/TDF/Operations/ModelSpec.hs": "9fa9b661b1fd42969a1acb304074b1b3ce5dfed35a19062427779c394ff73f2b",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "39c92770f1830489ecb1c909dfbefa7c1a11857f3f002ce89da5283c06c69a0b",
     "tdf-hq/test/TDF/ServerSpec.hs": "a205ac4f0400b0972d1fc3280cc6ed7913da633cbed670d919de38bfc96a4f45",
     "tdf-hq/test/TicketAdmissionMain.hs": "42ca67dad504ceaf6998ec067f3088f0d4cb4f06f8dc9162b8f96de60a8537d2",
     "tdf-hq/test/TicketDatabaseRoutingMain.hs": "2f389f2ddab6718c96414d96aa86a02d07d20f0303657a385f71443a95b22001",
+    "tdf-hq/test/integration/ticket_order_quantity_limit.sql": "3b0644e828f65673d57532ecb8d27a26df155c3a0d9399337be5a58af5aa7548",
     "tdf-mobile/.github/workflows/android-release-build.yml": "4d2938e8c0220ed323b6f8e639c729d97e091afe113509d87fd14140c340df3e",
     "tdf-mobile/.github/workflows/datadog-synthetics.yml": "09ce9584ea2fd8fbce95bf0d720be7594457e809f0b46dbcd2e0feb788564d98",
     "tdf-mobile/.github/workflows/ios-release-build.yml": "27823e8b817628542e37d318486b3acec9c183989737717675a9d41a26f9d81c",
@@ -5548,7 +5819,7 @@
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
     "tdf-mobile/src/api/events.ts": "a6014149f81240e56023471ea987fc8ac8245fc06d3034fb0382750e818d2b1e",
-    "tdf-mobile/src/api/generated/types.ts": "c75c0d3b6ed4ec50a816765521a0f7a92972940a9981f595537dc74f52ea39eb",
+    "tdf-mobile/src/api/generated/types.ts": "cc567cc305996039f30cba0b75d1cbec4ba4380b6cc2c1d79176121814e47869",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/components/EventCard.tsx": "4eaba1e6a6ac76b67bbc7f5a6a8d24e0e14e81ebb0eb29041da70265dacd21a2",
@@ -7205,6 +7476,18 @@
       {
         "requirement": "OPS-METRICS-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-MANUAL-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "AUTH-OPS-READ-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-AUX-WRITE-001",
+        "relationship": "tests"
       }
     ],
     "formal/event-operations/StudioBookingScope.tla": [
@@ -7957,6 +8240,36 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/src/TDF/Routes/EventTickets.hs": [
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit.sql": [
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit_rollback.sql": [
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history.sql": [
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history_rollback.sql": [
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/__tests__/ticket-admission-model.test.mjs": [
       {
         "requirement": "EVT-TICKET-001",
@@ -7979,6 +8292,18 @@
         "relationship": "tests"
       }
     ],
+    "scripts/test-public-ticket-checkout-runtime-migration.sh": [
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/integration/ticket_order_quantity_limit.sql": [
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/src/TDF/Operations/Server.hs": [
       {
         "requirement": "OPS-COMMAND-001",
@@ -7991,6 +8316,18 @@
       {
         "requirement": "OPS-METRICS-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "OPS-MANUAL-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-OPS-READ-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "OPS-AUX-WRITE-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Operations/Model.hs": [
@@ -8000,6 +8337,14 @@
       },
       {
         "requirement": "OPS-APPROVAL-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "OPS-METRICS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-OPS-READ-001",
         "relationship": "implementation"
       }
     ],
@@ -8029,7 +8374,23 @@
         "relationship": "tests"
       },
       {
+        "requirement": "OPS-WORKER-001",
+        "relationship": "tests"
+      },
+      {
         "requirement": "OPS-METRICS-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-MANUAL-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "AUTH-OPS-READ-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-AUX-WRITE-001",
         "relationship": "tests"
       }
     ],
@@ -8040,6 +8401,14 @@
       },
       {
         "requirement": "OPS-APPROVAL-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-MANUAL-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-AUX-WRITE-001",
         "relationship": "tests"
       }
     ],
@@ -8058,6 +8427,22 @@
     "tdf-hq/src/TDF/Operations/Worker.hs": [
       {
         "requirement": "OPS-WORKER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/.env.example": [
+      {
+        "requirement": "OPS-WORKER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql": [
+      {
+        "requirement": "OPS-WORKER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "OPS-MANUAL-001",
         "relationship": "implementation"
       }
     ],
@@ -8490,6 +8875,18 @@
         "requirement": "MOB-PUBLIC-001",
         "relationship": "implementation"
       }
+    ],
+    "formal/event-operations/OperationsManualReceipt.tla": [
+      {
+        "requirement": "OPS-MANUAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "tdf-hq/test/TDF/Operations/ModelSpec.hs": [
+      {
+        "requirement": "AUTH-OPS-READ-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -8889,7 +9286,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "9e83d408bcc97c4978854c3b3d137eb4dae384c919e9b57cf96a0abbd825a524",
+      "sha256": "bb868383fb81310589acf5ccb4fc760c7958a530b6324c2f7f3b3bbbe9450292",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -9313,7 +9710,7 @@
     {
       "id": "SURFACE-30ba86b00dd5f4d7",
       "path": "scripts/__tests__/hetzner-inspection.test.mjs",
-      "sha256": "1c9da69782bfe6776f661bd27429eccdf97d46ffe908ff63de415f792006e2dc",
+      "sha256": "187ccdcd600b56df382fdeb6ed8d3156cd245c07982e1e7b3a83b91c911fbf59",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -9506,7 +9903,7 @@
     {
       "id": "SURFACE-fd328f1caf2cf339",
       "path": "scripts/__tests__/operations-api-schema.test.mjs",
-      "sha256": "42d3f42f1ac5d5e33892499b29b429bab8319294d2b8543994b894077dda7365",
+      "sha256": "6c1146cf1240e2a90f0f8e62da8e9e7f8abf12440eb4a3bf466e090b93e50f1f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -9515,6 +9912,14 @@
         },
         {
           "requirement": "OPS-APPROVAL-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-MANUAL-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-AUX-WRITE-001",
           "relationship": "tests"
         }
       ]
@@ -10429,7 +10834,7 @@
     {
       "id": "SURFACE-3239206d050f7bd9",
       "path": "scripts/lib/operations_conformance.py",
-      "sha256": "b6fcaac5d3cd90020e2ddde083a00c24d52e274e439582c4f3c7048b6a8c7c7f",
+      "sha256": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -10441,7 +10846,23 @@
           "relationship": "tests"
         },
         {
+          "requirement": "OPS-WORKER-001",
+          "relationship": "tests"
+        },
+        {
           "requirement": "OPS-METRICS-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-MANUAL-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "AUTH-OPS-READ-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-AUX-WRITE-001",
           "relationship": "tests"
         }
       ]
@@ -10666,7 +11087,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "52e9035e8fb279005ce0bece2077d22e2ef9d6c8c10fb57f5d0b42d8cd579e80",
+      "sha256": "42f9e43fe0e5ae29961c43419db8924dc4fcae82917d5b47d42b5117afd23ad9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -11439,7 +11860,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "98d340c3221582626d45459e89d2402fe032e00d5aee0333d3996e1089c4e681",
+      "sha256": "982521d7e19285665d480aa2c4f4e037052aec2a1b6a45e01b171cc646aa8b33",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -11496,6 +11917,18 @@
         },
         {
           "requirement": "OPS-METRICS-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-MANUAL-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "AUTH-OPS-READ-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-AUX-WRITE-001",
           "relationship": "tests"
         }
       ]
@@ -11970,7 +12403,12 @@
       "path": "scripts/test-public-ticket-checkout-runtime-migration.sh",
       "sha256": "4ccbd1a730f24c26df9b78d717a0662452e41e4d985062336496a3fa6d379914",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-29ef09e19740f877",
@@ -12248,7 +12686,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "fbd72b085f58f5256a1b5303a661b5f25b15518c2cef9179334e1ec9de9b32b1",
+      "sha256": "3eaae93784afcc6bed1af5017e373f1748ce675d08e25c68f822c5f0d2f755b3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -13116,7 +13554,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "c75c0d3b6ed4ec50a816765521a0f7a92972940a9981f595537dc74f52ea39eb",
+      "sha256": "cc567cc305996039f30cba0b75d1cbec4ba4380b6cc2c1d79176121814e47869",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -17743,7 +18181,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "f01e2291f4c9305058b2639942d7c2a7bd6b09d52219bc61a774fd0b84ab251b",
+      "sha256": "568ba2f5cf08b2f3112fa36a8b99cb732088b74cadf1f5789bd00ddccb7407ca",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20247,6 +20685,22 @@
       ]
     },
     {
+      "id": "SURFACE-d4dd8fd05fd6c7a9",
+      "path": "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql",
+      "sha256": "e8d5332a38c0a71bc7ffadf328ced88bf55bddbd04eaaa7a6b8efabdebfee71d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "OPS-WORKER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "OPS-MANUAL-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-44638a7659553f40",
       "path": "tdf-hq/sql/2026-10-05_ticket_admission_audit.sql",
       "sha256": "c2cd877a90fdf81447b2aba23141f8936f4e9e9bdb1133bd4e379dfe863c2a07",
@@ -20298,28 +20752,48 @@
       "path": "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit.sql",
       "sha256": "0d3a8a75abbf07f9dfa0f6744daa6137f2611e10822e66ef8afe9fa666386342",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-45c133c91e4ba42b",
       "path": "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit_rollback.sql",
       "sha256": "339e5714c731c5619938653a916c1f89bcda88aa629e4b081fe9cf8823219a48",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-827c82a820edaee2",
       "path": "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history.sql",
       "sha256": "866c5c2381ebe7a416b2ab45f0451feac119d60e1e90a099016257425c8d7d7f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-06bc10cd817549c3",
       "path": "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history_rollback.sql",
       "sha256": "c8980f0d236a67886457fbf60e67fed32c347fea123242d22b52500edd023866",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-d3e82544e1757e3e",
@@ -21549,23 +22023,7 @@
     {
       "id": "SURFACE-f72b95815330661b",
       "path": "tdf-hq/src/TDF/Operations/Model.hs",
-      "sha256": "d5245e42f9ab4ee1cf2926eb4f0343032a92cfaa6e9c720ed6527a97abb9ba69",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "OPS-COMMAND-001",
-          "relationship": "implementation"
-        },
-        {
-          "requirement": "OPS-APPROVAL-001",
-          "relationship": "implementation"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-c2d996c338d294aa",
-      "path": "tdf-hq/src/TDF/Operations/Server.hs",
-      "sha256": "5e08cf5679bc9705ff95964717f8cedebf3a7c455d4a2d1b1d6c1ff902dbcc33",
+      "sha256": "4a969e669fe0335f36ce78a0409364550fc0bf9f3ade682f81b36f0715c846cd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21578,6 +22036,42 @@
         },
         {
           "requirement": "OPS-METRICS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-OPS-READ-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-c2d996c338d294aa",
+      "path": "tdf-hq/src/TDF/Operations/Server.hs",
+      "sha256": "fc4ac1518a27099d8108e733f4e693c7d463c32b8788c9131c18b595db9aef65",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "OPS-COMMAND-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "OPS-APPROVAL-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "OPS-METRICS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "OPS-MANUAL-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-OPS-READ-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "OPS-AUX-WRITE-001",
           "relationship": "implementation"
         }
       ]
@@ -21601,7 +22095,7 @@
     {
       "id": "SURFACE-3760e982b560b6c3",
       "path": "tdf-hq/src/TDF/Operations/Worker.hs",
-      "sha256": "1a72f95139a6a7f8d016599660c568eb0d1d99c9a5e32fd5936a52f7cc676019",
+      "sha256": "89af3688de99bc05bfe00d2bbf8337fc89ee0394fdc1c57a11e2f19d675e5bed",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -21678,7 +22172,12 @@
       "path": "tdf-hq/src/TDF/Routes/EventTickets.hs",
       "sha256": "3557aa7feb725075e3cbc97f69fdd34f0de1b9b59f6545f91df80850b80f3914",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-6076c182710c4ad6",
@@ -22568,7 +23067,7 @@
     {
       "id": "SURFACE-2c3fc05077df1f30",
       "path": "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
-      "sha256": "1654d960b82e533a43ebc953153d0d7edf0da96d2475b44d94c2fa0d2451527b",
+      "sha256": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22715,9 +23214,14 @@
     {
       "id": "SURFACE-6a29d13f6d4fe9a5",
       "path": "tdf-hq/test/TDF/Operations/ModelSpec.hs",
-      "sha256": "41e95713215aa728160428f9971263ff7c4e593a55b6e28b68918112b37b57aa",
+      "sha256": "9fa9b661b1fd42969a1acb304074b1b3ce5dfed35a19062427779c394ff73f2b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-OPS-READ-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-ee92e76c443dc34b",
@@ -23418,7 +23922,12 @@
       "path": "tdf-hq/test/integration/ticket_order_quantity_limit.sql",
       "sha256": "3b0644e828f65673d57532ecb8d27a26df155c3a0d9399337be5a58af5aa7548",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-2156981b9c95285d",
@@ -25130,7 +25639,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "c75c0d3b6ed4ec50a816765521a0f7a92972940a9981f595537dc74f52ea39eb",
+      "sha256": "cc567cc305996039f30cba0b75d1cbec4ba4380b6cc2c1d79176121814e47869",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -26595,7 +27104,6 @@
     "SURFACE-78456e994088870b",
     "SURFACE-3e964491714d824a",
     "SURFACE-6602092233544384",
-    "SURFACE-73f84c14f54480df",
     "SURFACE-29ef09e19740f877",
     "SURFACE-28c67c7120c30700",
     "SURFACE-b888f3a6579f797c",
@@ -27635,10 +28143,6 @@
     "SURFACE-e04c14f78e16cd69",
     "SURFACE-68bcbf29fe0dc36b",
     "SURFACE-f706917cf71c0fdd",
-    "SURFACE-ed48d78fa40594c9",
-    "SURFACE-45c133c91e4ba42b",
-    "SURFACE-827c82a820edaee2",
-    "SURFACE-06bc10cd817549c3",
     "SURFACE-dd062802b0652474",
     "SURFACE-7c4cd603babd8c4c",
     "SURFACE-b4cc3e91d4f2bb58",
@@ -27767,7 +28271,6 @@
     "SURFACE-6f37d3a5f8237996",
     "SURFACE-08cd86a43181517d",
     "SURFACE-21573408c23f618c",
-    "SURFACE-a6d0775d20903e98",
     "SURFACE-6076c182710c4ad6",
     "SURFACE-5cbf72ef8bf21ded",
     "SURFACE-2834bdf776fa3c23",
@@ -27832,7 +28335,6 @@
     "SURFACE-b7c5b68652826d3d",
     "SURFACE-5c7c5fe961161133",
     "SURFACE-14c41dc429bf98d1",
-    "SURFACE-6a29d13f6d4fe9a5",
     "SURFACE-ee92e76c443dc34b",
     "SURFACE-ccb30943a385e6b2",
     "SURFACE-705eb0208602ff31",
@@ -27919,7 +28421,6 @@
     "SURFACE-2a3469a3736ce761",
     "SURFACE-4ef57ef7a6773dd8",
     "SURFACE-c42c54b3727ace66",
-    "SURFACE-797e095cf9630adf",
     "SURFACE-2156981b9c95285d",
     "SURFACE-fff0fc437764ddd9",
     "SURFACE-d3c3c6a421007e12",
@@ -28257,7 +28758,9 @@
     "MOB-BUILD-001",
     "OPS-CLIENT-001",
     "PRIV-ANALYTICS-001",
-    "MEDIA-INVENTORY-001"
+    "MEDIA-INVENTORY-001",
+    "AUTH-OPS-READ-001",
+    "OPS-AUX-WRITE-001"
   ],
   "stateMachines": [
     {
@@ -29378,6 +29881,217 @@
     }
   ],
   "apiOperations": [
+    {
+      "id": "GET /operations/work-items",
+      "operationId": "operationsWorkItems",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "422",
+        "500"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /operations/work-items",
+      "operationId": "operationsManualWorkItem",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "422",
+        "500"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /operations/work-items/{workItemId}",
+      "operationId": "operationsWorkItem",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "422",
+        "500"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /operations/work-items/{workItemId}/notes",
+      "operationId": "operationsWorkItemNote",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "422",
+        "500"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /operations/integration-failures",
+      "operationId": "operationsIntegrationFailures",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "422",
+        "500"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /operations/integration-failures/{failureId}/replay",
+      "operationId": "operationsReplayFailure",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "202",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "422",
+        "500"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /operations/events",
+      "operationId": "operationsStreamEvents",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "422",
+        "500"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /operations/saved-views",
+      "operationId": "operationsSavedViews",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "422",
+        "500"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /operations/saved-views",
+      "operationId": "operationsSaveView",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "422",
+        "500"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /operations/push-subscriptions",
+      "operationId": "operationsPushSubscription",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "201",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409",
+        "422",
+        "500",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
     {
       "id": "GET /operations/metrics",
       "operationId": "operationsMetrics",
@@ -50819,7 +51533,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 70,
+    "PARTIAL": 73,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

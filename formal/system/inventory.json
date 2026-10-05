@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "a280e0d53f7cab5410084898c0ae0277c029fe4c",
+  "mobileRevision": "6297e3f137126350aa485690bf89de19e82d3c25",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -1523,6 +1523,7 @@
       "tdf-hq/sql/2026-10-04_merch_commission_exact.sql",
       "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql",
       "tdf-hq/sql/2026-10-05_ddex_validation_legacy_nullability.sql",
+      "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql",
       "tdf-hq/sql/2026-10-05_ticket_admission_audit.sql",
       "tdf-hq/sql/2026-10-05_ticket_admission_audit_rollback.sql",
       "tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql",
@@ -2550,7 +2551,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "9e83d408bcc97c4978854c3b3d137eb4dae384c919e9b57cf96a0abbd825a524",
+      "sha256": "bb868383fb81310589acf5ccb4fc760c7958a530b6324c2f7f3b3bbbe9450292",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2808,7 +2809,7 @@
     {
       "id": "SURFACE-30ba86b00dd5f4d7",
       "path": "scripts/__tests__/hetzner-inspection.test.mjs",
-      "sha256": "1c9da69782bfe6776f661bd27429eccdf97d46ffe908ff63de415f792006e2dc",
+      "sha256": "187ccdcd600b56df382fdeb6ed8d3156cd245c07982e1e7b3a83b91c911fbf59",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2904,7 +2905,7 @@
     {
       "id": "SURFACE-fd328f1caf2cf339",
       "path": "scripts/__tests__/operations-api-schema.test.mjs",
-      "sha256": "42d3f42f1ac5d5e33892499b29b429bab8319294d2b8543994b894077dda7365",
+      "sha256": "6c1146cf1240e2a90f0f8e62da8e9e7f8abf12440eb4a3bf466e090b93e50f1f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3528,7 +3529,7 @@
     {
       "id": "SURFACE-3239206d050f7bd9",
       "path": "scripts/lib/operations_conformance.py",
-      "sha256": "b6fcaac5d3cd90020e2ddde083a00c24d52e274e439582c4f3c7048b6a8c7c7f",
+      "sha256": "f9a3b8d15005a7f97884c86a4b9bbf29aff7b158e17c7b74ca9d3ca8b482ee53",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3672,7 +3673,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "52e9035e8fb279005ce0bece2077d22e2ef9d6c8c10fb57f5d0b42d8cd579e80",
+      "sha256": "42f9e43fe0e5ae29961c43419db8924dc4fcae82917d5b47d42b5117afd23ad9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4224,7 +4225,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "98d340c3221582626d45459e89d2402fe032e00d5aee0333d3996e1089c4e681",
+      "sha256": "982521d7e19285665d480aa2c4f4e037052aec2a1b6a45e01b171cc646aa8b33",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4746,7 +4747,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "fbd72b085f58f5256a1b5303a661b5f25b15518c2cef9179334e1ec9de9b32b1",
+      "sha256": "3eaae93784afcc6bed1af5017e373f1748ce675d08e25c68f822c5f0d2f755b3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5382,7 +5383,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "c75c0d3b6ed4ec50a816765521a0f7a92972940a9981f595537dc74f52ea39eb",
+      "sha256": "cc567cc305996039f30cba0b75d1cbec4ba4380b6cc2c1d79176121814e47869",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9168,7 +9169,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "f01e2291f4c9305058b2639942d7c2a7bd6b09d52219bc61a774fd0b84ab251b",
+      "sha256": "568ba2f5cf08b2f3112fa36a8b99cb732088b74cadf1f5789bd00ddccb7407ca",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11248,6 +11249,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-d4dd8fd05fd6c7a9",
+      "path": "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql",
+      "sha256": "e8d5332a38c0a71bc7ffadf328ced88bf55bddbd04eaaa7a6b8efabdebfee71d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-44638a7659553f40",
       "path": "tdf-hq/sql/2026-10-05_ticket_admission_audit.sql",
       "sha256": "c2cd877a90fdf81447b2aba23141f8936f4e9e9bdb1133bd4e379dfe863c2a07",
@@ -12204,13 +12211,13 @@
     {
       "id": "SURFACE-f72b95815330661b",
       "path": "tdf-hq/src/TDF/Operations/Model.hs",
-      "sha256": "d5245e42f9ab4ee1cf2926eb4f0343032a92cfaa6e9c720ed6527a97abb9ba69",
+      "sha256": "4a969e669fe0335f36ce78a0409364550fc0bf9f3ade682f81b36f0715c846cd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-c2d996c338d294aa",
       "path": "tdf-hq/src/TDF/Operations/Server.hs",
-      "sha256": "5e08cf5679bc9705ff95964717f8cedebf3a7c455d4a2d1b1d6c1ff902dbcc33",
+      "sha256": "fc4ac1518a27099d8108e733f4e693c7d463c32b8788c9131c18b595db9aef65",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12222,7 +12229,7 @@
     {
       "id": "SURFACE-3760e982b560b6c3",
       "path": "tdf-hq/src/TDF/Operations/Worker.hs",
-      "sha256": "1a72f95139a6a7f8d016599660c568eb0d1d99c9a5e32fd5936a52f7cc676019",
+      "sha256": "89af3688de99bc05bfe00d2bbf8337fc89ee0394fdc1c57a11e2f19d675e5bed",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12804,7 +12811,7 @@
     {
       "id": "SURFACE-2c3fc05077df1f30",
       "path": "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs",
-      "sha256": "1654d960b82e533a43ebc953153d0d7edf0da96d2475b44d94c2fa0d2451527b",
+      "sha256": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12900,7 +12907,7 @@
     {
       "id": "SURFACE-6a29d13f6d4fe9a5",
       "path": "tdf-hq/test/TDF/Operations/ModelSpec.hs",
-      "sha256": "41e95713215aa728160428f9971263ff7c4e593a55b6e28b68918112b37b57aa",
+      "sha256": "9fa9b661b1fd42969a1acb304074b1b3ce5dfed35a19062427779c394ff73f2b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14730,7 +14737,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "c75c0d3b6ed4ec50a816765521a0f7a92972940a9981f595537dc74f52ea39eb",
+      "sha256": "cc567cc305996039f30cba0b75d1cbec4ba4380b6cc2c1d79176121814e47869",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17658,7 +17665,7 @@
     },
     {
       "path": "docs/operations-control-center/rbac.md",
-      "sha256": "165c418036bd3ae435bae592a44e4338117e4938989a599b597b9b27f2b6a285",
+      "sha256": "6a082c8a1222341826d24c377d54f2b82f1b59e6b4c5908a37a7b059e6951eaa",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -19575,6 +19582,41 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/OperationsManualReceipt.cfg",
+      "sha256": "820d12fd1b64ee18fa993985770f6335be573af0780a6ba01ef02d360029350c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/OperationsManualReceipt.tla",
+      "sha256": "c237e50899bfc85f725da69dc2956b3c7d32f52174bf42d313b86b4222f55011",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/OperationsManualReceiptPartialCommit.cfg",
+      "sha256": "0b91b46b09d2da43e4606ad70918ecef5f46e88563576ef987aedbf6f0849129",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/OperationsManualReceiptReuseSourceKey.cfg",
+      "sha256": "699be1c569e31129446722ec50a92e39062ed29863d76db0246522271c778cc7",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/OperationsManualReceiptUnboundReplay.cfg",
+      "sha256": "456846d1b15b1fb0afe0e120f21fad3a02cd04ef72b7dc3411dc5fd379f964aa",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/OptionalTokenRecovery.cfg",
       "sha256": "f3ca0562255d81aaac483b10f2a7e2b7bc832ff2f5a0ccd6ea3f8d75ef2a4809",
       "authority": "inferred",
@@ -21109,14 +21151,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "4ada4889cd62773f12ece60f9fb29e552b94b0a6bcfd57ef42e691b16146f108",
+      "sha256": "df684cf1716ebddbe67b6fe41d036cf4bcd7e74a40a40e88e682d2b6a769ad03",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "612ae788fdbb7f5842ee1883025e21dad9aa01393b41f803b8e22cb56d866d17",
+      "sha256": "fc8b67c46dfaa189ce5b2f5aca41051f3ef6b9cf3c7b651c06edf90129cca6de",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21270,7 +21312,14 @@
     },
     {
       "path": "formal/system/operations-command-boundary.md",
-      "sha256": "d61fbe34ffb50310ae609294e729903f5681c19939fb438d237d62759caedd91",
+      "sha256": "b8b856db3313d417afb450cc04f38f41b7f557f2da6b092b209e25b5d0630663",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/operations-projection-boundary.md",
+      "sha256": "6cc025d34eda6b461d94bc1b7a0d3fa668415fc4b853370af452fb4763eb050c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21298,7 +21347,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "d9526a6d6039fdc355784b20f873ac6d7506a1299cce18df51db97a3f82db6ee",
+      "sha256": "8e81cc21ac6109219ce9d1edbd02de800f37fa1971f39434aea8832d25173d61",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -21606,7 +21655,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "f01e2291f4c9305058b2639942d7c2a7bd6b09d52219bc61a774fd0b84ab251b",
+      "sha256": "568ba2f5cf08b2f3112fa36a8b99cb732088b74cadf1f5789bd00ddccb7407ca",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -29840,6 +29889,62 @@
         "  AllowRevoked = FALSE",
         "  LeakEffect = TRUE",
         "INVARIANTS NoStaleCommit NoRevokedCommit AtomicEvidence",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/OperationsManualReceipt.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  ReuseSourceKey = FALSE",
+        "  UnboundReplay = FALSE",
+        "  PartialCommit = FALSE",
+        "INVARIANTS SourceSeparation BoundReplay AtomicCreation",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/OperationsManualReceiptPartialCommit.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  ReuseSourceKey = FALSE",
+        "  UnboundReplay = FALSE",
+        "  PartialCommit = TRUE",
+        "INVARIANTS SourceSeparation BoundReplay AtomicCreation",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/OperationsManualReceiptReuseSourceKey.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  ReuseSourceKey = TRUE",
+        "  UnboundReplay = FALSE",
+        "  PartialCommit = FALSE",
+        "INVARIANTS SourceSeparation BoundReplay AtomicCreation",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/OperationsManualReceiptUnboundReplay.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  ReuseSourceKey = FALSE",
+        "  UnboundReplay = TRUE",
+        "  PartialCommit = FALSE",
+        "INVARIANTS SourceSeparation BoundReplay AtomicCreation",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
