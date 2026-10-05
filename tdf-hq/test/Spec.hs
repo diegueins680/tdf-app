@@ -13370,12 +13370,12 @@ main = hspec $ do
         it "uses fallback bases only when transmission env vars are absent" $ do
             resolveRadioTransmissionEnvBase
                 "RADIO_PUBLIC_BASE"
-                "https://tdf-hq.fly.dev/live"
+                "https://api.tdfrecords.net/live"
                 Nothing
-                `shouldBe` Right "https://tdf-hq.fly.dev/live"
+                `shouldBe` Right "https://api.tdfrecords.net/live"
             resolveRadioTransmissionEnvBase
                 "RADIO_PUBLIC_BASE"
-                "https://tdf-hq.fly.dev/live"
+                "https://api.tdfrecords.net/live"
                 (Just "  https://radio.example.com/live  ")
                 `shouldBe` Right "https://radio.example.com/live"
 

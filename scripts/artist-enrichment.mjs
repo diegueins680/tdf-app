@@ -16,7 +16,7 @@ import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
 
 const execFileAsync = promisify(execFile);
-const DEFAULT_API_BASE = 'https://tdf-hq.fly.dev';
+const DEFAULT_API_BASE = 'https://api.tdfrecords.net';
 const DRIVE_API = 'https://www.googleapis.com/drive/v3';
 const DRIVE_UPLOAD_API = 'https://www.googleapis.com/upload/drive/v3';
 const SECRET_KEY_PATTERN = /(token|secret|password|authorization|api[-_]?key)/i;
@@ -610,6 +610,7 @@ function isTdfManagedImageUrl(rawUrl) {
     return host === 'drive.google.com'
       || host.endsWith('.googleusercontent.com')
       || host === 'tdf-hq.fly.dev'
+      || host === 'api.tdfrecords.net'
       || host === 'tdfrecords.com'
       || host.endsWith('.tdfrecords.com');
   } catch {

@@ -1,6 +1,16 @@
 # Deployment Guide - TDF Records Platform
 
-This guide covers deployment procedures for all components of the TDF Records platform.
+The canonical API endpoint for current web and mobile configuration is
+`https://api.tdfrecords.net`. Check its health with:
+
+```bash
+curl -fsS https://api.tdfrecords.net/health
+```
+
+The Koyeb and Fly backend procedures below are historical hosting references,
+including their provider-specific health checks. They are not the deployment
+procedure for the canonical API. The frontend environment examples below use
+the canonical endpoint.
 
 ## Overview
 
@@ -8,7 +18,7 @@ The TDF platform consists of three deployable components:
 
 | Component | Technology | Deployment Target | Status |
 |-----------|-----------|-------------------|--------|
-| **Backend API** | Haskell + PostgreSQL | Koyeb / Fly.io | Production |
+| **Backend API** | Haskell + PostgreSQL | Koyeb / Fly.io | Historical reference |
 | **Web UI** | React/Vite SPA | Cloudflare Pages / Vercel | Production |
 | **Mobile App** | Expo/React Native | App Store / Play Store | Development |
 
@@ -35,7 +45,7 @@ The TDF platform consists of three deployable components:
 
 ---
 
-## Backend Deployment (Koyeb)
+## Legacy Backend Deployment (Koyeb)
 
 ### Option 1: Dockerfile Deployment (Recommended)
 
@@ -188,9 +198,9 @@ server {
 
 ---
 
-## Backend Deployment (Fly.io)
+## Legacy Backend Deployment (Fly.io)
 
-Fly powers the production `tdf-hq` API. Production releases must use the guarded release lane; do not run `fly deploy` or `scripts/deploy-stripe-ticketing.sh production` directly.
+Fly previously hosted the production `tdf-hq` API. The following guarded release lane applies only to that legacy deployment; do not use it to deploy the canonical API or run `fly deploy` or `scripts/deploy-stripe-ticketing.sh production` directly.
 
 Application startup never owns production schema changes. `RUN_MIGRATIONS`,
 `CONTEXTUAL_REPUTATION_ENABLED`, `REPUTATION_AGGREGATION_WORKER_ENABLED`, and
@@ -268,7 +278,7 @@ The API provides a health check endpoint at `/health` that returns:
 }
 ```
 
-After deploying or updating secrets, verify the service is healthy:
+For the historical Fly deployment only, verify that Fly service after deployment or secret updates:
 
 ```bash
 # Check health endpoint
@@ -320,7 +330,7 @@ Add in Cloudflare Pages settings:
 
 ```env
 NODE_VERSION=20.19.4
-VITE_API_BASE=https://tdf-hq.fly.dev
+VITE_API_BASE=https://api.tdfrecords.net
 VITE_TZ=America/Guayaquil
 VITE_PAYPAL_CLIENT_ID=your-paypal-client-id
 VITE_GOOGLE_CLIENT_ID=your-google-client-id
@@ -375,7 +385,7 @@ Vercel is a great alternative with similar features.
 Add in Vercel project settings:
 
 ```env
-VITE_API_BASE=https://tdf-hq.fly.dev
+VITE_API_BASE=https://api.tdfrecords.net
 VITE_TZ=America/Guayaquil
 VITE_PAYPAL_CLIENT_ID=your-paypal-client-id
 VITE_GOOGLE_CLIENT_ID=your-google-client-id

@@ -52,7 +52,7 @@ database warnings and errors remain enabled.
 
 - `ADMIN_TOKEN` (or `API_TOKEN`): active bearer token for a strict Admin with the
   Admin module.
-- `TDF_API_BASE`: defaults to `https://tdf-hq.fly.dev`.
+- `TDF_API_BASE`: defaults to `https://api.tdfrecords.net`.
 - `TDF_API_TIMEOUT_MS`: protected TDF API request timeout; defaults to 180000 ms
   and is 300000 ms in the daily workflow so full discovery can complete. This
   does not relax the shorter timeouts used for external providers.
@@ -174,7 +174,7 @@ Disable the external job by disabling the `Daily artist enrichment` workflow.
 Rerun it with `workflow_dispatch`; default manual mode is dry-run. GitHub schedule
 activation requires this workflow to exist on the default branch.
 
-Cloudflare Pages must target `https://tdf-hq.fly.dev`. The UI deliberately
+Cloudflare Pages must target `https://api.tdfrecords.net`. The UI deliberately
 ignores the retired `https://the-dream-factory.koyeb.app` value when that stale
 value is injected into a `*.tdf-app.pages.dev` build, while retaining other
 explicit API overrides for local or alternate deployments. Remove the retired
@@ -205,7 +205,7 @@ Before a production migration or data write:
 Useful read-only checks:
 
 ```bash
-curl -fsS https://tdf-hq.fly.dev/health
+curl -fsS https://api.tdfrecords.net/health
 flyctl status --app tdf-hq
 flyctl releases --app tdf-hq
 flyctl volumes list --app tdf-hq-db

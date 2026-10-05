@@ -7990,7 +7990,7 @@ resolveLiveBroadcastStreamEndpoints streamKey = do
         either throwError pure $
             resolveRadioTransmissionEnvBase
                 "RADIO_PUBLIC_BASE"
-                "https://tdf-hq.fly.dev/live"
+                "https://api.tdfrecords.net/live"
                 mListenBaseRaw
     listenBase <- either throwError pure (validateRadioTransmissionPublicBase listenBaseRaw)
     let fallbackIngest = deriveLiveBroadcastBase listenBase "rtmp" "/live"

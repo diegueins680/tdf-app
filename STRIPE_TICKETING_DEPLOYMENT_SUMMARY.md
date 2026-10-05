@@ -48,7 +48,7 @@ VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_key_here
 2. Click **+ Add endpoint**
 3. Enter URL:
    ```
-   https://tdf-hq.fly.dev/social-events/stripe/webhook
+   https://api.tdfrecords.net/social-events/stripe/webhook
    ```
 4. Select events:
    - ✅ `payment_intent.succeeded`
@@ -76,7 +76,7 @@ In Cloudflare Pages dashboard:
 2. Add:
    ```
    VITE_STRIPE_PUBLISHABLE_KEY=pk_live_your_key
-   VITE_API_BASE=https://tdf-hq.fly.dev
+   VITE_API_BASE=https://api.tdfrecords.net
    ```
 3. Redeploy frontend
 

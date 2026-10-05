@@ -27,7 +27,7 @@ This guide covers deploying the TDF Stripe Ticketing System to production.
 2. Click **+ Add endpoint**
 3. Enter endpoint URL:
    ```
-   https://tdf-hq.fly.dev/social-events/stripe/webhook
+   https://api.tdfrecords.net/social-events/stripe/webhook
    ```
 4. Select events to listen to:
    - ✅ `payment_intent.succeeded`
@@ -74,7 +74,7 @@ In Cloudflare Pages dashboard:
 2. Add:
    ```
    VITE_STRIPE_PUBLISHABLE_KEY=pk_live_your_publishable_key
-   VITE_API_BASE=https://tdf-hq.fly.dev
+   VITE_API_BASE=https://api.tdfrecords.net
    ```
 
 ### 3.2 Build and Deploy
@@ -95,10 +95,10 @@ Or push to git for auto-deployment.
 
 ```bash
 # Check backend is running
-curl https://tdf-hq.fly.dev/health
+curl https://api.tdfrecords.net/health
 
 # Check Stripe config is loaded
-curl https://tdf-hq.fly.dev/version
+curl https://api.tdfrecords.net/version
 ```
 
 ### 4.2 Test Payment Flow
@@ -139,7 +139,7 @@ Backend (Fly.io secrets):
 
 Frontend (Cloudflare Pages):
 - [ ] `VITE_STRIPE_PUBLISHABLE_KEY` - Publishable key (pk_live_...)
-- [ ] `VITE_API_BASE` - Backend URL (https://tdf-hq.fly.dev)
+- [ ] `VITE_API_BASE` - Backend URL (https://api.tdfrecords.net)
 
 ### Stripe Configuration
 - [ ] Webhook endpoint configured
@@ -267,7 +267,7 @@ PR.
 
 ```sh
 # 1. Backend boots and the new endpoints are reachable
-curl -X POST https://tdf-hq.fly.dev/public/courses/UNKNOWN/registrations/1/payment-intent \
+curl -X POST https://api.tdfrecords.net/public/courses/UNKNOWN/registrations/1/payment-intent \
   -H "Content-Type: application/json" -d '{}'
 # expect 404 "Registro no encontrado" (the endpoint is wired)
 

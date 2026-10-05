@@ -1956,7 +1956,7 @@
     },
     {
       "path": "DEPLOYMENT_GUIDE.md",
-      "sha256": "0a1a1fd9462ee37ba234d2eb78a3b394bdefdb7fb37046b724dd87ec97e465b4",
+      "sha256": "5214c46cc9cace0e76ea2fc0d78873b26142a2f29c2df63641595ce104358cb1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -2033,7 +2033,7 @@
     },
     {
       "path": "PAYMENT_AUDIT.md",
-      "sha256": "6f5d108457acab6a3be3dbcd24f285ac8532a503b7a29852b5a7cf5793401374",
+      "sha256": "c9363055624fce0e4a70faf7b37074cedb836e230856b994e10b912d6ea90637",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -2082,28 +2082,28 @@
     },
     {
       "path": "SERVICE_STOREFRONT_DEPLOYMENT.md",
-      "sha256": "7389913502871d283a8427c4e9e9771eed2eb4ae405fdfff961d2957861c809c",
+      "sha256": "64a1d975c34a35ec18a6a3df5028fb2156ea5bd04366ce9d31b9bcfe3b9c1ef9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "STRIPE_DEPLOYMENT_GUIDE.md",
-      "sha256": "0e4a55eeabd81cd50724b5ff6796c473158b470fd49dbb884704e5e32698b40d",
+      "sha256": "457834385b0be84c23a4596386d23288f0cd45d84bd079d0b40789b34df7fed3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "STRIPE_TICKETING_CHECKLIST.md",
-      "sha256": "5e6b745d79276b66ddaec925ecade60e1d83c8cb5db49c7d1629c5dbe3689588",
+      "sha256": "24f270562acecbf2d1fdf41af7b85aba97ca9e9baf6940cd1a2024246164a541",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "STRIPE_TICKETING_DEPLOYMENT_SUMMARY.md",
-      "sha256": "233c8f6d7ae87da8a2ca1ecfa3790bf7c35e73847328618c805303cdb6f0217b",
+      "sha256": "f37302609f389807c6f03a6bd65ca348517286c153c8f984259e1bb2e4813c10",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -2159,7 +2159,7 @@
     },
     {
       "path": "VERIFICATION.md",
-      "sha256": "9fb5bedf943d7060f5eb1a80c8792220de83c1062bc291346cc6221801bf370d",
+      "sha256": "01ab6f671cbeae8454d94f228c55644536682ca4db2940e82b830302d016571e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -2502,7 +2502,7 @@
     },
     {
       "path": "docs/artist-enrichment-runbook.md",
-      "sha256": "c565efa9c0e2c9798339db6895c9c4f406c6a335197ecea8d03331bc399619a2",
+      "sha256": "611f999cb8e9006a29f1b7c95051516b0e2d9f13ae2bd68eec68d3d2e9829a69",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -2747,7 +2747,7 @@
     },
     {
       "path": "docs/courses/README.md",
-      "sha256": "6a9be3fa06e8d5d611330bdd93576f6d54748233a85fdab29126a6812a1741ff",
+      "sha256": "b1ae3130c896f1f62029896cf158018bea1a2b3c067e22ecd81aada48652712e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -4665,7 +4665,7 @@
     },
     {
       "path": "docs/venue-manager/domo-del-pululahua-financial-plan.md",
-      "sha256": "506a41e377b235bc6a955fc11e095ca406574ebe8a7e1dbc655f27555e448039",
+      "sha256": "93b3efef6a84d6db5dbf21d8d61e8c9891ee9038d1dd8b0aa848bb00b962b4d6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

@@ -52,12 +52,12 @@ async function main() {
 
   if (!igSub) {
     console.log('\n🔧 To fix Instagram subscription:');
-    console.log(`  curl -X POST "https://graph.facebook.com/v18.0/${APP_ID}/subscriptions?object=instagram&callback_url=https%3A%2F%2Ftdf-hq.fly.dev%2Finstagram%2Fwebhook&fields=messages&verify_token=${IG_VERIFY_TOKEN || 'YOUR_VERIFY_TOKEN'}&access_token=${APP_ID}|${APP_SECRET}"`);
+    console.log(`  curl -X POST "https://graph.facebook.com/v18.0/${APP_ID}/subscriptions?object=instagram&callback_url=https%3A%2F%2Fapi.tdfrecords.net%2Finstagram%2Fwebhook&fields=messages&verify_token=${IG_VERIFY_TOKEN || 'YOUR_VERIFY_TOKEN'}&access_token=${APP_ID}|${APP_SECRET}"`);
   }
 
   if (!fbSub) {
     console.log('\n🔧 To fix Facebook subscription:');
-    console.log(`  curl -X POST "https://graph.facebook.com/v18.0/${APP_ID}/subscriptions?object=page&callback_url=https%3A%2F%2Ftdf-hq.fly.dev%2Ffacebook%2Fwebhook&fields=messages&verify_token=${FB_MSG_TOKEN || 'YOUR_VERIFY_TOKEN'}&access_token=${APP_ID}|${APP_SECRET}"`);
+    console.log(`  curl -X POST "https://graph.facebook.com/v18.0/${APP_ID}/subscriptions?object=page&callback_url=https%3A%2F%2Fapi.tdfrecords.net%2Ffacebook%2Fwebhook&fields=messages&verify_token=${FB_MSG_TOKEN || 'YOUR_VERIFY_TOKEN'}&access_token=${APP_ID}|${APP_SECRET}"`);
   }
 
   // 3. Instagram messaging token
