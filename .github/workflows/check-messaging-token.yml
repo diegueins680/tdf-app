@@ -13,7 +13,6 @@ on:
         type: choice
         options:
           - check
-          - refresh
 
 permissions:
   contents: read
@@ -28,7 +27,7 @@ jobs:
           REQUESTED_ACTION: ${{ inputs.action }}
         run: |
           case "$WORKFLOW_EVENT:$REQUESTED_ACTION" in
-            schedule:|workflow_dispatch:check|workflow_dispatch:refresh) ;;
+            schedule:|workflow_dispatch:check) ;;
             *) echo '::error::Unsupported messaging-token action'; exit 1 ;;
           esac
 
@@ -40,12 +39,7 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install Fly CLI
-        if: github.event_name == 'schedule' || inputs.action == 'refresh'
-        uses: superfly/flyctl-actions/setup-flyctl@master
-
       - name: Check Messaging Token (read-only)
-        if: github.event_name == 'workflow_dispatch' && inputs.action == 'check'
         env:
           FACEBOOK_APP_ID: ${{ secrets.FACEBOOK_APP_ID || secrets.META_APP_ID || '1098715965613487' }}
           FACEBOOK_APP_SECRET: ${{ secrets.FACEBOOK_APP_SECRET || secrets.META_APP_SECRET }}
@@ -53,24 +47,13 @@ jobs:
           FACEBOOK_MESSAGING_TOKEN: ${{ secrets.FACEBOOK_MESSAGING_TOKEN }}
         run: node scripts/check-messaging-token.mjs --check
 
-      - name: Check/Refresh Messaging Token
-        if: github.event_name == 'schedule' || inputs.action == 'refresh'
-        env:
-          FACEBOOK_APP_ID: ${{ secrets.FACEBOOK_APP_ID || secrets.META_APP_ID || '1098715965613487' }}
-          FACEBOOK_APP_SECRET: ${{ secrets.FACEBOOK_APP_SECRET || secrets.META_APP_SECRET }}
-          INSTAGRAM_MESSAGING_TOKEN: ${{ secrets.INSTAGRAM_MESSAGING_TOKEN }}
-          FACEBOOK_MESSAGING_TOKEN: ${{ secrets.FACEBOOK_MESSAGING_TOKEN }}
-          FLY_APP_NAME: ${{ secrets.FLY_APP_NAME || 'tdf-hq' }}
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-        run: node scripts/check-messaging-token.mjs
-
       - name: Notify on Failure
         if: failure()
         uses: slackapi/slack-github-action@v1.24.0
         with:
           payload: |
             {
-              "text": "🚨 Messaging token check/refresh failed! Manual intervention required.\nApp: tdf-hq\nWorkflow: ${{ github.workflow }}\nRun: ${{ github.run_id }}"
+              "text": "🚨 Messaging token health check failed! Rotate credentials in the current Hetzner deployment and synchronize the GitHub check credentials; Fly refresh is retired.\nApp: tdf-hq\nWorkflow: ${{ github.workflow }}\nRun: ${{ github.run_id }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

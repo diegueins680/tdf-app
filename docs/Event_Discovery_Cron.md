@@ -202,12 +202,11 @@ tdf-hq/sql/2026-07-30_event_city_subscriptions.sql
 tdf-hq/sql/2026-09-27_event_ingestion_boundaries.sql
 ```
 
-Use the guarded backend release lane:
+Prepare the reviewed release/recovery bundle, then follow the canonical
+[Hetzner procedure](../ops/hetzner/README.md). Preparation does not deploy:
 
 ```bash
-npm run release:backend:plan -- --sha <full-sha>
-npm run release:backend:preflight -- --sha <full-sha>
-npm run release:backend -- --sha <full-sha> --execute --confirm <full-sha>
+npm run release:backend:prepare -- FULL_RELEASE_SHA FULL_RECOVERY_SHA NEW_PRIVATE_DIRECTORY
 ```
 
 After rollout, verify `/health`, `/version`, the exact release SHA, and

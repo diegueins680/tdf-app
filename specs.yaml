@@ -1,3 +1,7 @@
+# Original CRM web v1 requirements, retained for provenance.
+# Current platform, runtime, migration and authorization authorities are mapped
+# in README.md and formal/system/README.md; these legacy values are not a
+# whole-product release inventory or permission to change business policy.
 organization:
   name: "TDF"
   timezone: "America/Guayaquil"

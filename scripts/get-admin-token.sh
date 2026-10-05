@@ -5,7 +5,7 @@ set -euo pipefail
 #
 # Usage:
 #   ./scripts/get-admin-token.sh
-#   API_BASE=https://tdf-hq.fly.dev TDF_USERNAME=admin TDF_PASSWORD=... ./scripts/get-admin-token.sh
+#   API_BASE=https://api.tdfrecords.net TDF_USERNAME=admin TDF_PASSWORD=... ./scripts/get-admin-token.sh
 #   ADMIN_TOKEN=$(./scripts/get-admin-token.sh)
 #
 # Options:

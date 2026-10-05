@@ -1,11 +1,87 @@
-# Hetzner restore evidence — 2026-09-28
+# Hetzner cutover evidence — 2026-09-28
 
-## Result
+## Live transition — validation incomplete
 
-An isolated CPX12 restore serves trusted HTTPS health/version checks at
-`https://api.tdfrecords.net`. Production remains on Fly. The production Pages
-environment still uses `https://tdf-hq.fly.dev`; no live traffic or database
-writes have been moved.
+The authorized web-first traffic and writer transition occurred on 2026-09-28.
+Cutover validation remains **incomplete** pending deployment and an unmodified
+browser rerun of the upload repair. Google interactive login passed on 2026-10-05. No waiver of
+those gates is recorded here. Production
+`https://www.tdfrecords.net` now uses `https://api.tdfrecords.net` on the dedicated
+Hetzner CPX12. Cloudflare deployment
+`4f1e7744-460e-46c7-bdd9-b47d6ae706ad` succeeded at 14:42:14 UTC with frontend
+merge `7e7106b36e7ac427711c2f64af650527d619f9ce` from reviewed PR #467.
+Both production API bindings changed; all sixteen other bindings were preserved.
+The backend runs the reviewed video-ingestion release `cc244b1f86603055997b51379b297baebfd3e7ce`.
+All six post-merge main workflows completed successfully.
+
+| Final cutover check | Observed result |
+| --- | --- |
+| Old writers | TDF source role NOLOGIN; zero TDF connections; both old API machines stopped and cordoned |
+| Shared Fly database | Retained running for Trader; four Trader connections observed after cleanup |
+| Final export | 10,215,235 bytes; SHA256 `b94ed77e2de06f57be280691c5e197b5eecfbf19480798c38b21b30c20e52541` |
+| Restore equivalence | All 616 original tables / 33,189 rows match by sorted row-content hash before migrations |
+| Guarded schema | 115 ledger entries, 623 public tables; schema and emergency database-readiness checks passed |
+| Assets | 62 uploaded files / 15,399,112 bytes preserved; all 37 referenced local image URLs returned HTTPS 200 |
+| Final restricted canary | 64/64 reads passed; concurrency 8; median 165.69 ms, p95 279.26 ms; outbound access blocked |
+| Live writer transition | Canary stopped, reader NOLOGIN, production role LOGIN with fresh credentials; live health and exact version passed |
+| Browser | Directory search and video feed use the new API with HTTP 200; records page 11 images, zero broken |
+| Event preview | `/directory/events/24` and canonical `/eventos/24` return 200; event-specific title and canonical metadata present |
+| Payment callbacks | Existing PayPal and Stripe webhook URLs updated; IDs, secrets and subscribed event types preserved |
+| Signature rejection | Invalid Stripe signature 400; invalid PayPal signature 401; no real charge created |
+| Mail | SMTP STARTTLS and credential authentication passed without sending a message |
+| Release leases | This migration's exact token removed on both databases; both lease tables empty |
+| Obsolete staging | TDF staging API stopped and cordoned; its TDF-only database stopped; volumes retained |
+| Backup | Daily logical timer active; first backup independently restored and schema-verified; hash-verified off-host copy retained |
+
+The first production logical backup is 10,440,643 bytes, SHA256
+`229c3b61a22a27865c2fda8e2ee62ed93fb0951547c4d5bf5038a03258faa868`.
+Its separate verification database passed the 115-entry schema check before
+being dropped. Native Hetzner backups are enabled; this does not assert a
+post-cutover server snapshot has already completed.
+
+New writes have been enabled. **Do not reopen the old Fly TDF role or route
+traffic back to its stale database.** Application recovery must use the tested
+compatible image against the current Hetzner database. A provider reversal
+requires another write freeze and fresh reverse migration.
+
+Older installed mobile builds still point at Fly and need an updated release;
+the operator explicitly accepted that downtime. The original cutover did not exercise Google interactive login or authenticated
+uploads; the later verification below records their current status.
+No real payment was made. Database emergency-access checks are not evidence
+of a manual login. Video ingestion was disabled at cutover and was activated in the verified
+follow-up below. Event discovery and automatic publication remain disabled. Event PRs #460/#463/#464
+remain separate review and rollout work.
+
+The operator explicitly authorized retaining Trader and the shared Fly database.
+Hetzner's account-specific estimate is USD 16.788/month including backups and
+IPv4, **not a realized total-bill saving**. Retained Fly storage and the shared
+running database continue to incur charges; total spend can temporarily increase.
+
+## Video-ingestion activation follow-up — 15:27 UTC
+
+The operator reported that the two latest official uploads were still missing.
+The deployed importer had neither a configured YouTube source nor its global
+switch enabled. The authenticated administration API verified the official
+`UCx9Jpaw_XDrMtIdzWYlU51g` channel as TDF Records and approved source 137 for
+the existing recordings collection. No role or permission grants were changed.
+
+A dry run completed with 38 eligible videos and one review-only item. After
+enabling hourly synchronization, the full import completed: two resources
+created, 36 refreshed, and one item retained for review. Its known-resource
+pass found all 38 verified resources unchanged. A repeat of the same execution
+key returned the completed run without applying it again.
+
+The first two public recordings are now `0W4KdgkQD5w` (Llama Este Pez part 2)
+and `0hYDXQ5hWfo` (part 1), ordered by YouTube publication time. Both are
+available and their provider thumbnails return HTTP 200 / image/jpeg.
+The next hourly slot is 16:00 UTC; full reconciliation is weekly on Sunday.
+The two removed legacy uploads retain their unavailable status.
+
+## Earlier isolated rehearsal
+
+The following observations describe the rehearsal before production cutover.
+The production credentials and live public routes described above supersede
+this rehearsal's restricted state.
 
 | Check | Observed result |
 | --- | --- |
@@ -45,7 +121,7 @@ The rehearsal role cannot write business records; expected worker permission
 errors are logged. Only two catalog usage-counter columns are writable for
 startup validation. Production provider credentials were not copied.
 
-## DNS and cutover status
+## DNS and transition history
 
 The existing eleven editable Webador records were backed up and compared
 before adding the previously absent `api` A record, TTL 900. The new hostname
@@ -64,4 +140,32 @@ accepted downtime for older installed mobile clients until updated.
 Private database archives, asset tarballs, credentials, machine snapshots,
 and unsanitized logs are intentionally outside this repository. The operator
 holds those files locally and in the root-only restore directory on the
-dedicated host. Full cutover still requires the gates in [README.md](README.md).
+dedicated host. The repeatable deployment and recovery procedure is in [README.md](README.md).
+
+## Interactive verification — 2026-10-05
+
+At 04:57 UTC, a fresh Google account-chooser login at `www.tdfrecords.net`
+returned to the protected application; `/session` returned HTTP 200 with a
+non-null party identity. No password or session token was recorded.
+
+The unmodified deployed inventory upload returned HTTP 401. Its XMLHttpRequest
+omitted `withCredentials`, unlike the shared API client, so Google HttpOnly
+session cookies were absent. A single instrumented request with the candidate
+`withCredentials=true` fix returned HTTP 200. The resulting 99-byte synthetic
+PNG was publicly retrieved with identical SHA256
+`56d68744198d24e94ed47dc334f6ae2c18992d6c1c6ca9bc9a162b0d0af28983`.
+Only that diagnostic file was written; no inventory record was saved. This
+confirms the API/storage path, **not deployment of the client fix**. The gate
+remains open until the repaired bundle passes in an unmodified production tab.
+
+The same surface exposed HTTP 400 from `pageSize=200`; the API limit is 100.
+The repair loads bounded pages until the inventory is complete instead of
+silently truncating the catalogue. No production migrations or feature flags
+were changed by these checks.
+
+The new credential-file guard also detected that production `api.env` was owned
+by UID 501 despite mode `0600`. On 2026-10-05, ownership was corrected to root
+through the existing authenticated SSH connection. An opened-descriptor check
+verified unchanged file bytes and mode `0600`; the protected reader then passed
+its owner/type/mode checks and matched the running API mail configuration.
+No credential values were logged or rotated by this ownership repair.

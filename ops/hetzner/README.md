@@ -1,9 +1,25 @@
-# TDF portable restore rehearsal
+# TDF portable deployment and recovery
 
-This configuration deploys a quarantined copy of TDF on a dedicated Hetzner
-host. It does **not** switch production writers, frontend traffic, payment
-callbacks, or mobile clients. Never promote the rehearsal database: take a
-fresh consistent export after quiescing every production writer.
+The live TDF web API moved to Hetzner on 2026-09-28; see the
+[cutover evidence and outstanding validation](validation-2026-09-28.md). Trader and its shared Fly
+database remain running. Older mobile builds require a new release.
+Google interactive login passed on 2026-10-05. Cutover validation remains
+incomplete until the authenticated-upload client repair is deployed and passes
+without browser instrumentation; see the validation record.
+
+The rehearsal configuration deploys a quarantined copy and does not switch
+production writers or traffic. Never promote that rehearsal database: take a
+fresh consistent export after quiescing every production writer. Production is
+already accepting writes on Hetzner; never restore service from the stale Fly
+copy without a new freeze and reverse migration.
+
+The old `release:backend`, `release:backend:plan` and
+`release:backend:preflight` npm commands are retired. Direct invocation of
+`scripts/production-release.mjs` also exits before contacting any provider or
+database. Its imported source/artifact validation helpers remain in use by
+`npm run release:backend:prepare -- FULL_RELEASE_SHA FULL_RECOVERY_SHA NEW_PRIVATE_DIRECTORY`.
+That preparation command does not deploy; follow the guarded procedure below
+and preserve the live Hetzner database for application recovery.
 
 ## Host selection and cost
 
@@ -95,13 +111,17 @@ Pricing references: [Hetzner billing](https://docs.hetzner.com/cloud/billing/faq
     and version, then restore and verify the target image. Preserve the
     reports outside the secret bundle.
 
-## Cutover gates
+## Original cutover gates and outstanding validation
 
 The operator explicitly chose a web-first cutover on 2026-09-28 and accepted
 downtime for older installed mobile clients until updated. Preserve this
-decision: no temporary Fly forwarding service is required. Keep production
-traffic on Fly until the following implementation and verification steps are
-ready and the repository's required review/checks pass.
+decision: no temporary Fly forwarding service is required. The following is the
+original cutover checklist, retained for recovery and evidence. Production now
+accepts writes on Hetzner; these historical instructions do not authorize moving
+traffic back to Fly. Google login and authenticated upload validation remain
+outstanding, as stated above. Subsequent releases must preserve the current
+database and use reviewed immutable images, canonical migration checks, backups,
+the release lease and a compatible recovery image.
 
 - Preserve the existing release lease and security-emergency readiness
   checks. Capture old machine configurations, runtime gates, immutable
@@ -168,5 +188,92 @@ backup precedes the host's 10:00–14:00 UTC snapshot window. Run and restore
 the first logical backup before declaring cutover complete. Backup retention
 is deliberate; monitor free space and preserve an off-host verified copy.
 
-The event ingestion changes in PRs #460, #463, and #464 remain separate from
-this hosting configuration and require their own review and rollout.
+Event ingestion changes originally tracked in PRs #460, #463 and #464 have
+entered main through their reviewed successors, including #475 and #465.
+Repository integration does not establish their production rollout or authorize
+enabling ingestion or event operations flags.
+
+## Remaining operational follow-up
+
+Daily artist enrichment and the course publisher target `https://api.tdfrecords.net`.
+The hourly messaging workflow now performs the existing read-only token check:
+missing, invalid, expired, or soon-expiring credentials still fail and notify.
+It cannot exchange credentials or update the retired Fly app. Automatic token
+rotation for Hetzner is pending a reviewed integration with the current secret
+store. Until then, an authorized operator must rotate credentials in the current
+Hetzner deployment and synchronize the GitHub health-check credentials; a check
+of GitHub credentials alone does not verify the running service's credentials.
+Do not use the legacy no-argument Fly refresh command after this cutover.
+
+Datadog API synthetic test `r2d-i82-3jy` now targets
+`https://api.tdfrecords.net/health`: root workflow run `37209188359` on
+2026-10-04 passed that request and web test `rv2-x2n-epx`, with zero critical
+errors. The web test still targets `https://tdf-app.pages.dev/`; its owner must
+verify coverage of the canonical `https://www.tdfrecords.net` surface as well.
+Mobile's separate Datadog credentials were rejected with HTTP 403 in run
+`37184643181`; its green status was caused by disabled critical-error failure,
+not successful synthetic tests. Correct those credentials and require critical
+errors to fail before treating Mobile's synthetic result as release evidence.
+These repository changes do not deploy, rotate production credentials, or
+claim that the pending authentication/upload gates have been performed.
+
+## Read-only operational tools after cutover
+
+The catalog inventory and daily mail monitor use the existing dedicated TDF SSH
+connection through `scripts/production_access.py`. The recorded connection is
+`root@178.105.93.101` with `~/.ssh/tdf_hetzner_deploy_20260928`; set
+`TDF_PRODUCTION_SSH_HOST` / `TDF_PRODUCTION_SSH_KEY` only when moving that
+already-authorized connection. Strict host-key checking, batch authentication
+and the dedicated identity are required. Never disable host verification.
+
+Both tools require the running `tdf-production` API and database under
+`/opt/tdf/production`, their expected database/network binding, and the configured
+immutable API and PostgreSQL images (`TDF_IMAGE` and `POSTGRES_IMAGE`). Both
+references must match the running container or its registry digest. They fail
+closed instead of falling back to Fly or the
+quarantined restore database. Catalog inventory also compares the public API
+commit/health with the inspected deployment before and after its existing bounded,
+anonymized read-only SQL, making fresh DNS/TLS/peer-bound public requests on both
+sides of the query. PostgreSQL defaults to read-only before the transaction;
+statement/lock timeouts and sensitive-column exclusions remain in force.
+
+The mail monitor reads only `SMTP_USERNAME` and `SMTP_PASSWORD` from the protected
+mode-0600 `api.env` into memory and requires agreement with the running API.
+Neither subprocess diagnostics nor credentials are logged. It retains read-only
+IMAP selection, BODY.PEEK, size limits, aggregate-only reports and error status.
+The installed LaunchAgent copy needs both `monitor.py` (from
+`scripts/mail-deliverability-monitor.py`) and `production_access.py` alongside it;
+verify their hashes and a read-only run after an update. Updating these local
+tools does not deploy the application or rotate runtime credentials.
+
+
+Catalog SQL runs as the dedicated `tdf_catalog_inventory` role, never `postgres`.
+Its reviewed operational setup is `catalog-readonly-role.sql`: no superuser,
+role/database creation, inherited roles or row-security bypass; SELECT only in
+public, with no password or new network access. Provisioning an existing role
+name fails instead of changing it. Existing roles retain their effective CREATE capability explicitly before the
+ambient PUBLIC schema-CREATE grant is removed. Their login, membership and other
+privileges remain unchanged; the new reader cannot create persistent objects.
+The helper also accepts only the exact reviewed inventory SQL digest and refuses
+coverage gaps after new tables are added. Review SELECT grants for those tables
+before the next inventory; do not silently omit them or use the application role.
+An explicit read-write transaction must still receive permission denied on a
+zero-row UPDATE probe. The live setup/negative control is recorded by the audit.
+
+Immutable-image checks compare `TDF_IMAGE` with the container's configured image
+reference or the image's matching registry RepoDigest. Docker's local image/config
+ID is recorded for race detection, but is not assumed to equal a manifest digest.
+The root-level legacy Instagram diagnostic is also retired; use the existing
+read-only `scripts/check-messaging-token.mjs` instead.
+
+The catalog public health/version reads require normal certificate/hostname TLS
+validation and require every DNS answer and the actual HTTPS socket peer to match
+the server address reported by the authenticated SSH connection. A healthy copy of
+the same Git SHA on another host is rejected before the inventory query runs.
+Introducing a CDN or load balancer requires a reviewed replacement for this direct
+origin binding; the inventory intentionally fails closed in that topology.
+
+The shared access helper also requires the database container to mount the named
+`tdf_production_postgres_data` volume at `/var/lib/postgresql/data`, with no child
+mount shadowing that store. A replacement volume, bind mount or missing mount is
+rejected before metadata, credentials or inventory are returned.
