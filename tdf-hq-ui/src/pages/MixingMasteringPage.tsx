@@ -54,7 +54,9 @@ import {
   type ServiceStorefrontOrderDTO,
   type ServiceStorefrontPackageDTO,
 } from '../api/serviceStorefront';
+import { loadAvailableCheckoutMethods } from '../api/paymentCapabilities';
 import ExperienceReviews from '../components/reviews/ExperienceReviews';
+import HostedProviderCheckout from '../components/payments/HostedProviderCheckout';
 
 const IMPORT_META_ENV = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
 
@@ -161,6 +163,7 @@ export default function MixingMasteringPage() {
   const [lookupToken, setLookupToken] = useState<string | null>(null);
   const [confirmedOrder, setConfirmedOrder] = useState<ServiceStorefrontOrderDTO | null>(null);
   const [paymentBusy, setPaymentBusy] = useState(false);
+  const [hostedPaymentLocked, setHostedPaymentLocked] = useState(false);
   const [datafastDialogOpen, setDatafastDialogOpen] = useState(false);
   const [datafastCheckout, setDatafastCheckout] = useState<Awaited<ReturnType<typeof ServiceStorefront.createDatafastCheckout>> | null>(null);
   const [datafastWidgetKey, setDatafastWidgetKey] = useState(0);
@@ -186,6 +189,28 @@ export default function MixingMasteringPage() {
   });
 
   const packages = useMemo(() => (apiPackages ?? []).map(mapPackageDTO), [apiPackages]);
+
+  const paymentMethodsQuery = useQuery({
+    queryKey: [
+      'serviceStorefrontPaymentMethods',
+      selectedPackage?.currency ?? '',
+      selectedPackage?.priceUsdCents ?? 0,
+    ],
+    enabled: Boolean(selectedPackage),
+    retry: false,
+    queryFn: () => loadAvailableCheckoutMethods({
+      currency: selectedPackage?.currency ?? 'USD',
+      amountMinor: selectedPackage?.priceUsdCents ?? 0,
+      productFlow: 'professional_service',
+    }),
+  });
+  const availablePaymentMethods = paymentMethodsQuery.data;
+  const hostedPaymentMethods = useMemo(() => [
+    ...(availablePaymentMethods?.placeToPayCard ? ['placetopay_card'] : []),
+    ...(availablePaymentMethods?.placeToPayBankRedirect ? ['placetopay_bank_redirect'] : []),
+    ...(availablePaymentMethods?.placeToPayDeunaQr ? ['placetopay_deuna_qr'] : []),
+    ...(availablePaymentMethods?.payPhoneWallet ? ['payphone_wallet'] : []),
+  ], [availablePaymentMethods]);
 
   const filteredPackages = useMemo(() => {
     if (serviceFilter === 'all') return packages;
@@ -574,8 +599,8 @@ export default function MixingMasteringPage() {
               </AccordionSummary>
               <AccordionDetails>
                 <Typography variant="body2">
-                  Aceptamos tarjetas de crédito/débito (Visa, Mastercard, Diners), PayPal,
-                  y transferencias bancarias. Todos los pagos son procesados de forma segura.
+                  Los métodos disponibles se verifican para cada compra antes de mostrarse.
+                  Si no aparece ninguno, el comercio todavía no está habilitado para cobrar.
                 </Typography>
               </AccordionDetails>
             </Accordion>
@@ -728,42 +753,67 @@ export default function MixingMasteringPage() {
 
           {/* Payment Methods */}
           <Typography variant="subtitle2" gutterBottom>Método de pago</Typography>
-          <Stack spacing={2} sx={{ mb: 3 }}>
-            <Button
+          {paymentMethodsQuery.isLoading && <CircularProgress size={24} aria-label="Verificando métodos de pago" />}
+          <Stack spacing={2} sx={{ my: 3 }}>
+            {availablePaymentMethods?.datafast && <Button
               variant="outlined"
               size="large"
               fullWidth
               sx={{ justifyContent: 'flex-start', py: 2 }}
               onClick={() => { void handleDatafastPayment(); }}
-              disabled={paymentBusy}
+              disabled={paymentBusy || hostedPaymentLocked}
             >
               💳 Tarjeta de crédito/débito (Datafast)
-            </Button>
-            <Button
+            </Button>}
+            {availablePaymentMethods?.paypal && <Button
               variant="outlined"
               size="large"
               fullWidth
               sx={{ justifyContent: 'flex-start', py: 2 }}
               onClick={() => { void handlePaypalPayment(); }}
-              disabled={paymentBusy || !paypalClientId || !paypalReady}
+              disabled={paymentBusy || hostedPaymentLocked || !paypalClientId || !paypalReady}
             >
               🅿️ PayPal
-            </Button>
-            <Button
+            </Button>}
+            {availablePaymentMethods?.bankTransfer && <Button
               variant="outlined"
               size="large"
               fullWidth
               sx={{ justifyContent: 'flex-start', py: 2 }}
               onClick={() => { void handleManualPayment(); }}
-              disabled={paymentBusy}
+              disabled={paymentBusy || hostedPaymentLocked}
             >
               🏦 Transferencia bancaria
-            </Button>
+            </Button>}
+            <HostedProviderCheckout
+              offeredMethods={hostedPaymentMethods}
+              disabled={paymentBusy || datafastDialogOpen || paypalDialogOpen}
+              initialBuyerPhone={formData.buyerPhone}
+              pendingReturnPathPrefix="/mezcla-mastering/pedido/"
+              onSafetyLockChange={setHostedPaymentLocked}
+              prepareCheckout={async () => {
+                const { order, token } = await createServiceOrder();
+                if (!order.ssoCheckoutId) {
+                  throw new Error('El servidor no entregó el checkout canónico. No se inició ningún cobro.');
+                }
+                return {
+                  checkoutId: order.ssoCheckoutId,
+                  lookupToken: token,
+                  returnPath: `/mezcla-mastering/pedido/${encodeURIComponent(order.ssoOrderNumber)}`,
+                };
+              }}
+            />
           </Stack>
 
-          {!paypalClientId && (
-            <Alert severity="info" sx={{ mb: 2 }}>
-              PayPal no está habilitado para este comercio. Datafast y transferencia permanecen disponibles.
+          {(paymentMethodsQuery.isError || (
+            !paymentMethodsQuery.isLoading
+            && !availablePaymentMethods?.datafast
+            && !availablePaymentMethods?.paypal
+            && !availablePaymentMethods?.bankTransfer
+            && hostedPaymentMethods.length === 0
+          )) && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              No hay un método de pago verificado y operativo para este pedido. No se creó ningún cobro.
             </Alert>
           )}
 

@@ -14741,91 +14741,91 @@
       "path": "docs/adr/0100-domain-linked-checkout.md",
       "sha256": "d003b3ea38eddd34d9803d3f5058e953ddafb671a16d1c8ae8b26fd54a26e83a",
       "authority": "approved",
-      "authorityBasis": "Status: Accepted — 2026-08-13",
+      "authorityBasis": "Status: Accepted \u2014 2026-08-13",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/adr/0101-verified-payment-events.md",
       "sha256": "d5d8f2a5d1094b06311c1da4cffe709ce190f5fa7ced414d7831fa344d75c773",
       "authority": "approved",
-      "authorityBasis": "Status: Accepted — 2026-08-13; runtime refinement accepted — 2026-08-14",
+      "authorityBasis": "Status: Accepted \u2014 2026-08-13; runtime refinement accepted \u2014 2026-08-14",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/adr/0102-versioned-money-and-holds.md",
       "sha256": "ed9e8fcda8bc9a0e12516b251698fe8e741addbb6b9ed6d2de637ab369dc2fc0",
       "authority": "approved",
-      "authorityBasis": "Status: Accepted — 2026-08-13",
+      "authorityBasis": "Status: Accepted \u2014 2026-08-13",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/adr/0103-guest-order-capabilities.md",
       "sha256": "4eeaacb700649145716b6dc409193a6abe52c8cadd147117940399f9356c0731",
       "authority": "approved",
-      "authorityBasis": "Status: Accepted — 2026-08-13",
+      "authorityBasis": "Status: Accepted \u2014 2026-08-13",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/adr/0104-immutable-financial-ledger.md",
       "sha256": "1601e4c3270a84a1126ea588915729751d6a99e96d8b4c910e487c20e1fb07ac",
       "authority": "approved",
-      "authorityBasis": "Status: Accepted — 2026-08-13",
+      "authorityBasis": "Status: Accepted \u2014 2026-08-13",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/adr/0105-music-directory-classifieds.md",
       "sha256": "0582cf8ac117448d30275616133066403dedb52534cfaf5be7f71eea713ba923",
       "authority": "approved",
-      "authorityBasis": "Estado: aceptado para implementación. Fecha: 2026-08-14.",
+      "authorityBasis": "Estado: aceptado para implementaci\u00f3n. Fecha: 2026-08-14.",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/adr/0105-private-versioned-assets.md",
       "sha256": "919a8ecff686ca6a89218d32a006fbfa5ccac92eb5f9d6f4f675638e7c1c8e26",
       "authority": "approved",
-      "authorityBasis": "Status: Accepted — 2026-08-13",
+      "authorityBasis": "Status: Accepted \u2014 2026-08-13",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/adr/0106-partner-profiled-ddex.md",
       "sha256": "b4c5d1aa8d5c61239798c0c2efd8620a20f78b675df3b807dd83026ebacf5901",
       "authority": "approved",
-      "authorityBasis": "Status: Accepted — 2026-08-13",
+      "authorityBasis": "Status: Accepted \u2014 2026-08-13",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/adr/0107-marketplace-sale-holds-and-custody.md",
       "sha256": "288daddfa68aaa9e0000b6a430a2e33f5c06769210d824256df8a84e0e6cf2ef",
       "authority": "approved",
-      "authorityBasis": "Status: Accepted — 2026-08-15",
+      "authorityBasis": "Status: Accepted \u2014 2026-08-15",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/adr/0108-marketplace-rental-dates-deposits-and-custody.md",
       "sha256": "8edba1de439e1d5cf5b9664b12447921b2dfbc8cf1a1764eda4bff78c050d4d4",
       "authority": "approved",
-      "authorityBasis": "Status: Accepted — 2026-08-16",
+      "authorityBasis": "Status: Accepted \u2014 2026-08-16",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/adr/0109-service-booking-deposits-and-shared-calendar.md",
       "sha256": "498447a1b1f82315b709f183efb9c3de23ee77fa5640ba15a4b96023a53a897e",
       "authority": "approved",
-      "authorityBasis": "Status: Accepted — 2026-08-17",
+      "authorityBasis": "Status: Accepted \u2014 2026-08-17",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/adr/0110-marketplace-customer-requests-and-deposit-settlement.md",
       "sha256": "c82cc554a1b54a5e75641a4c8c9cf9fd18a240d85d88b3851758213f81a9777b",
       "authority": "approved",
-      "authorityBasis": "Status: Accepted — 2026-08-17",
+      "authorityBasis": "Status: Accepted \u2014 2026-08-17",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/adr/0111-course-seat-holds-and-verified-enrollment.md",
       "sha256": "f5b9bc1ad67f226b5a5e792f2d2796dd4a4e5ca595ea2f660ff3e1dda67ee0fd",
       "authority": "approved",
-      "authorityBasis": "Status: Accepted — 2026-08-18",
+      "authorityBasis": "Status: Accepted \u2014 2026-08-18",
       "kind": "requirement-candidate"
     },
     {
@@ -16113,7 +16113,7 @@
       "path": "docs/merch-reputation.md",
       "sha256": "00abf2ebb5228c24afd0c0b63b3ffc6e07970903c76d6d4fa64325e422b79d05",
       "authority": "inferred",
-      "authorityBasis": "Estado: implementación oscura para datos sintéticos locales. Los nueve flags nacen desactivados en `staging` y `production`. No se importan ratings externos, no se envían mensajes y no se modifica el estado financiero o logístico de una orden.",
+      "authorityBasis": "Estado: implementaci\u00f3n oscura para datos sint\u00e9ticos locales. Los nueve flags nacen desactivados en `staging` y `production`. No se importan ratings externos, no se env\u00edan mensajes y no se modifica el estado financiero o log\u00edstico de una orden.",
       "kind": "requirement-candidate"
     },
     {
@@ -16302,7 +16302,7 @@
       "path": "docs/operations/mail-deliverability-2026-09-18.md",
       "sha256": "c7f2e69803c035f7a55bf51373f976aaef5b2f47f36e783f6591a51b39626ef7",
       "authority": "inferred",
-      "authorityBasis": "Estado: diagnóstico y correcciones verificables, **no resolución completa del spam**.",
+      "authorityBasis": "Estado: diagn\u00f3stico y correcciones verificables, **no resoluci\u00f3n completa del spam**.",
       "kind": "requirement-candidate"
     },
     {
@@ -19039,7 +19039,7 @@
       "path": "formal/system/history-2026-09-20.md",
       "sha256": "90cac67147210c90fbb604934c5f6a998d936396d70fec554c235187554d4d53",
       "authority": "historical",
-      "authorityBasis": "Status: historical — superseded as the current system index by README.md.",
+      "authorityBasis": "Status: historical \u2014 superseded as the current system index by README.md.",
       "kind": "requirement-candidate"
     },
     {
@@ -19291,7 +19291,7 @@
       "path": "tdf-mobile/README.md",
       "sha256": "e988042a2b7b4a6cd790efc1c5a6b4d477385c2876bcb7361555d820c9624783",
       "authority": "inferred",
-      "authorityBasis": "Status: DEGRADED — both `-project` and `-workspace` variants exceed 60 s as of 2026-05-16 06:36 UTC.",
+      "authorityBasis": "Status: DEGRADED \u2014 both `-project` and `-workspace` variants exceed 60 s as of 2026-05-16 06:36 UTC.",
       "kind": "requirement-candidate"
     },
     {
@@ -19616,8 +19616,8 @@
     },
     {
       "id": "0105-music-directory-classifieds:5235e3c7989c",
-      "statement": "1. `Party` permanece como raíz de persona/organización y dueño de PII. 2. `directory_profile` es la proyección pública unificada. Cada perfil pertenece a un `Party`, puede representar persona, artista, banda, proyecto, empresa, venue, estudio, sello, agencia, escuela u organización y puede enlazar IDs heredados. 3. `directory_profile_manager` concede capacidades explícitas a cuentas (`Party` autenticado). No se deriva ownership de membresía, profesión ni rol textual. 4. Profesión, categoría de clasificado y compensación se agregan como catálogos tipados al gobierno existente. Instrumento, género, servicio, país, subdivisión, ciudad e idioma se reutilizan. 5. Eventos y venues no se duplican. Una vista/proyección pública sanitizada participa en búsqueda; el registro social sigue siendo fuente de fechas, RSVP y ticketing. 6. Chat no se duplica. `directory_conversation_context` enlaza el DM existente con anuncio, postulación, invitación o perfil. 7. Clasificados modela matching. Servicios comprables siguen en service marketplace/storefront y se vinculan por ID opcional. 8. Búsqueda usa PostgreSQL `unaccent`, `pg_trgm`, `tsvector` y Haversine. PostGIS es una optimización intercambiable, no una precondición de desarrollo. 9. Direcciones/coordenadas exactas viven en una tabla privada. La proyección pública solo usa centroides de ciudad/sector o coordenadas comerciales expresamente publicables. 10. El mapa implementa `DirectoryMapAdapter`; el adaptador inicial usa OpenStreetMap sin credencial y siempre ofrece lista equivalente. Geocodificación es otro puerto configurable.",
-      "source": "docs/adr/0105-music-directory-classifieds.md#decisión",
+      "statement": "1. `Party` permanece como ra\u00edz de persona/organizaci\u00f3n y due\u00f1o de PII. 2. `directory_profile` es la proyecci\u00f3n p\u00fablica unificada. Cada perfil pertenece a un `Party`, puede representar persona, artista, banda, proyecto, empresa, venue, estudio, sello, agencia, escuela u organizaci\u00f3n y puede enlazar IDs heredados. 3. `directory_profile_manager` concede capacidades expl\u00edcitas a cuentas (`Party` autenticado). No se deriva ownership de membres\u00eda, profesi\u00f3n ni rol textual. 4. Profesi\u00f3n, categor\u00eda de clasificado y compensaci\u00f3n se agregan como cat\u00e1logos tipados al gobierno existente. Instrumento, g\u00e9nero, servicio, pa\u00eds, subdivisi\u00f3n, ciudad e idioma se reutilizan. 5. Eventos y venues no se duplican. Una vista/proyecci\u00f3n p\u00fablica sanitizada participa en b\u00fasqueda; el registro social sigue siendo fuente de fechas, RSVP y ticketing. 6. Chat no se duplica. `directory_conversation_context` enlaza el DM existente con anuncio, postulaci\u00f3n, invitaci\u00f3n o perfil. 7. Clasificados modela matching. Servicios comprables siguen en service marketplace/storefront y se vinculan por ID opcional. 8. B\u00fasqueda usa PostgreSQL `unaccent`, `pg_trgm`, `tsvector` y Haversine. PostGIS es una optimizaci\u00f3n intercambiable, no una precondici\u00f3n de desarrollo. 9. Direcciones/coordenadas exactas viven en una tabla privada. La proyecci\u00f3n p\u00fablica solo usa centroides de ciudad/sector o coordenadas comerciales expresamente publicables. 10. El mapa implementa `DirectoryMapAdapter`; el adaptador inicial usa OpenStreetMap sin credencial y siempre ofrece lista equivalente. Geocodificaci\u00f3n es otro puerto configurable.",
+      "source": "docs/adr/0105-music-directory-classifieds.md#decisi\u00f3n",
       "status": "approved",
       "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
       "verification": "open",
@@ -21588,7 +21588,7 @@
     },
     {
       "id": "LEGACY-f6698e6ab34b",
-      "statement": "teachers: [\"César Galarza\",\"Fabricio Alomía\",\"Juan Ledesma\"]",
+      "statement": "teachers: [\"C\u00e9sar Galarza\",\"Fabricio Alom\u00eda\",\"Juan Ledesma\"]",
       "source": "specs.yaml:136",
       "status": "historical",
       "deliveryScope": "Legacy v1 candidate; superseded as current system authority by formal/system/README.md; per-clause applicability requires reconciliation",

@@ -156,6 +156,7 @@ test('production migration manifest uses immutable full commit SHAs', () => {
 
   const migrationIndex = (id) => manifest.migrations.findIndex((migration) => migration.id === id);
   for (const [prerequisite, dependent] of [
+    ['2026-09-01_contextual_reputation', '2026-09-04_contextual_reputation_integrity'],
     ['2026-09-28_interaction_integrity', '2026-09-29_interaction_review_repairs'],
     ['2026-09-29_interaction_review_repairs', '2026-09-29_interaction_publication_authority'],
     ['2026-09-29_interaction_publication_authority', '2026-09-29_interaction_reaction_withdrawal'],
@@ -168,6 +169,8 @@ test('production migration manifest uses immutable full commit SHAs', () => {
     ['2026-09-17_directory_event_privacy_composition', '2026-10-03_discovery_ownership_metadata_boundary'],
     ['2026-09-07_artist_merch_storefronts', '2026-09-08_merch_reputation'],
     ['2026-09-09_canonical_payment_lifecycle', '2026-09-10_payment_attempt_intent_binding'],
+    ['2026-09-10_payment_attempt_intent_binding', '2026-09-11_payment_intent_runtime_sync'],
+    ['2026-09-11_manual_bank_provider_activation', '2026-09-11_provider_capability_catalog'],
   ]) {
     assert.ok(migrationIndex(prerequisite) >= 0, `${prerequisite} must be registered`);
     assert.ok(
@@ -1050,6 +1053,14 @@ test('buildSchemaVerificationSql fails closed over every registered runtime sche
     'commerce_payment_attempt',
     'commerce_provider_binding',
     'commerce_provider_event_inbox',
+    'commerce_provider_operation',
+    'evidence_type',
+    'ck_commerce_provider_event_evidence',
+    'commerce_guard_provider_operation_immutable',
+    'trg_commerce_provider_operation_immutable',
+    'idx_commerce_provider_event_untrusted_work',
+    'idx_commerce_provider_operation_reconciliation',
+    'uq_commerce_provider_operation_create',
     'commerce_refund',
     'commerce_refund_allocation',
     'commerce_refund_reason_code',
@@ -1116,6 +1127,8 @@ test('buildSchemaVerificationSql fails closed over every registered runtime sche
     'checkout.paypal.refunds',
     'checkout.datafast.webhooks',
     'checkout.datafast.refunds',
+    'checkout.placetopay.webhooks',
+    'checkout.payphone.notifications',
     'catalog_definition',
     'catalog_backfill_run',
     'security_permission',

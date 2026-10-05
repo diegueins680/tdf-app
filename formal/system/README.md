@@ -63,6 +63,16 @@ Mobile `main` at `d2fd9399126e3b456c310497fb7d9edba09f981d` contains additional
 payment flows/contracts absent from this root baseline. Compatible Mobile fixes
 must descend from the shipped pin; merging that newer Mobile line is out of scope.
 
+During reconciliation, root main advanced to
+`fdac8e76523befee1603f49f6c7cf7d00762931b` through payment consolidation PR #414.
+The audit integrates that root revision while preserving the explicit Mobile
+lineage decision. Mobile receives generated API types and feature metadata for
+the consolidated backend; native provider payment flows are not inferred from
+those types. The provider-return feature remains a technical web callback with
+no native destination. The combined manifest retains all 166 entries from that
+main and appends the three audit migrations, for 169 entries. Earlier receipts
+remain evidence for their recorded trees, not this combined candidate.
+
 The public frontend bundle identifies that root SHA. Public `/version` and
 container inspection independently identify production backend
 `645f56fcc44f81609fbfd0e03d683b40376ce77a`, version `0.1.0.0`, on Hetzner.

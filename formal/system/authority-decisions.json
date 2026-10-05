@@ -153,6 +153,17 @@
       "conflict": "Generic parent-subtotal equality would reject shipped merchandise shipping represented as both header fee and payable line. Fixed-width arithmetic can disagree with exact monetary equations.",
       "authority": "formal/system/checkout-arithmetic.md",
       "resolution": "Require exact payable-total equality at the database boundary; preserve existing shipping representation and floor commission while repairing unchecked intermediates. Historical applied SQL remains unchanged; use additive migrations."
+    },
+    {
+      "id": "AUTHORITY-016",
+      "sources": [
+        "formal/system/README.md",
+        "tdf-mobile/src/api/generated/types.ts",
+        "scripts/production-migrations.json"
+      ],
+      "conflict": "Consolidated main fdac8e765 adds provider payment behavior and a Mobile gitlink that competes with the explicit shipped-lineage decision. Prior audit evidence describes the pre-consolidation tree.",
+      "authority": "formal/system/README.md",
+      "resolution": "Integrate current root main and retain all six added payment migrations with historical introduction SHAs; append the three audit migrations. Keep Mobile descended from ede1f2a and regenerate compatible API and feature metadata only. Preserve prior receipts as historical evidence and rerun candidate checks; do not infer native payment parity or enable providers."
     }
   ]
 }

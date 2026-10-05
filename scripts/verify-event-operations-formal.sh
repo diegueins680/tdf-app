@@ -146,6 +146,18 @@ expect_counterexample() {
   fi
   echo "Expected mutation counterexample: ${config}: ${invariant}"
 }
+run_tlc PaymentRecovery.tla PaymentRecovery.cfg payment-recovery
+expect_counterexample PaymentRecoveryOverwrite.cfg NoLostRecovery payment-recovery-overwrite PaymentRecovery.tla
+expect_counterexample PaymentRecoveryReturn.cfg CorrectReturn payment-recovery-return PaymentRecovery.tla
+expect_counterexample PaymentRecoveryCompleted.cfg NoCompletedFlowHijack payment-recovery-completed PaymentRecovery.tla
+run_tlc HostedServicePayment.tla HostedServicePayment.cfg hosted-service-payment
+expect_counterexample HostedServicePaymentAtomic.cfg NoMissingFulfillment hosted-service-atomic HostedServicePayment.tla
+expect_counterexample HostedServicePaymentReplay.cfg ExactlyOnePaidAudit hosted-service-replay HostedServicePayment.tla
+expect_counterexample HostedServicePaymentProgress.cfg NoFulfillmentRegression hosted-service-progress HostedServicePayment.tla
+run_tlc RefundRecovery.tla RefundRecovery.cfg refund-recovery
+expect_counterexample RefundRecoveryExecution.cfg NoDuplicateExecution refund-recovery-execution RefundRecovery.tla
+expect_counterexample RefundRecoveryAccounting.cfg NoDuplicateAccounting refund-recovery-accounting RefundRecovery.tla
+expect_counterexample RefundRecoveryAuthority.cfg CurrentAuthorityAtApply refund-recovery-authority RefundRecovery.tla
 expect_counterexample TaskCommitEarlyValidation.cfg NoBlockedCompletion early-validation
 expect_counterexample TaskCommitWriteSkew.cfg NoOrphanResponsibilities write-skew
 run_tlc TaskCompletion.tla TaskCompletion.cfg task-completion

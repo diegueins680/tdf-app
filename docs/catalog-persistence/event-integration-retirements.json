@@ -125,8 +125,8 @@
         "kind": "array",
         "name": "mobileFeatureRegistry"
       },
-      "replacementId": "e9fb532f768747ee20c0",
-      "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
+      "replacementId": "714645381e4ae8080a3a",
+      "reason": "The shipped Mobile lineage receives only generated API types and the combined 159-entry feature mirror: strict-admin video settings remain concealed, and the new provider-return route remains technical with no native destination. This does not import newer Mobile payment flows. Backend capability enforcement and provider activation gates remain authoritative.",
       "previousReplacementId": "21babc54d68f0c44d55e",
       "currentResolution": {
         "mainRevision": "a3d3541be976b565c1dafc6ddfd338444991c11e",
@@ -143,7 +143,152 @@
             "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
           }
         }
-      ]
+      ],
+      "consolidatedMainResolution": {
+        "originalDecision": {
+          "id": "ffb84e8fd3972fd0730d",
+          "classification": "security-system-registry",
+          "disposition": "generated-consumer-pending-governance-cutover",
+          "specializedModel": "navigation_item, navigation_item_permission",
+          "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
+          "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
+          "reviewed": true
+        },
+        "originalDecisionSha256": "ca75b1f83031506d03f2f90bf69c9aaa72201004886b2028627448ea7ff5db5f",
+        "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+        "source": {
+          "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+          "kind": "array",
+          "name": "mobileFeatureRegistry"
+        },
+        "replacementId": "0eafdd9f0a8bbebf9a23",
+        "reason": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged.",
+        "previousReplacementId": "21babc54d68f0c44d55e",
+        "currentResolution": {
+          "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+          "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+          "valueCount": 157,
+          "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+        },
+        "previousResolution": {
+          "originalDecision": {
+            "id": "ffb84e8fd3972fd0730d",
+            "classification": "security-system-registry",
+            "disposition": "generated-consumer-pending-governance-cutover",
+            "specializedModel": "navigation_item, navigation_item_permission",
+            "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
+            "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
+            "reviewed": true
+          },
+          "originalDecisionSha256": "ca75b1f83031506d03f2f90bf69c9aaa72201004886b2028627448ea7ff5db5f",
+          "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+          "source": {
+            "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+            "kind": "array",
+            "name": "mobileFeatureRegistry"
+          },
+          "replacementId": "5147eb2751a01d8b4c73",
+          "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
+          "previousReplacementId": "21babc54d68f0c44d55e",
+          "currentResolution": {
+            "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+            "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+            "valueCount": 157,
+            "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+          }
+        }
+      },
+      "previousResolution": {
+        "originalDecision": {
+          "id": "ffb84e8fd3972fd0730d",
+          "classification": "security-system-registry",
+          "disposition": "generated-consumer-pending-governance-cutover",
+          "specializedModel": "navigation_item, navigation_item_permission",
+          "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
+          "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
+          "reviewed": true
+        },
+        "originalDecisionSha256": "ca75b1f83031506d03f2f90bf69c9aaa72201004886b2028627448ea7ff5db5f",
+        "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+        "source": {
+          "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+          "kind": "array",
+          "name": "mobileFeatureRegistry"
+        },
+        "replacementId": "e9fb532f768747ee20c0",
+        "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
+        "previousReplacementId": "21babc54d68f0c44d55e",
+        "currentResolution": {
+          "mainRevision": "a3d3541be976b565c1dafc6ddfd338444991c11e",
+          "mobileRevision": "2fa26ea20e75498d20df97e917900aabc90e7491",
+          "reason": "Reviewed admin.video-sources strict-admin concealed client mirror; prior 157 entries unchanged."
+        },
+        "previousResolutions": [
+          {
+            "replacementId": "5147eb2751a01d8b4c73",
+            "currentResolution": {
+              "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+              "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+              "valueCount": 157,
+              "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+            }
+          }
+        ],
+        "consolidatedMainResolution": {
+          "originalDecision": {
+            "id": "ffb84e8fd3972fd0730d",
+            "classification": "security-system-registry",
+            "disposition": "generated-consumer-pending-governance-cutover",
+            "specializedModel": "navigation_item, navigation_item_permission",
+            "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
+            "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
+            "reviewed": true
+          },
+          "originalDecisionSha256": "ca75b1f83031506d03f2f90bf69c9aaa72201004886b2028627448ea7ff5db5f",
+          "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+          "source": {
+            "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+            "kind": "array",
+            "name": "mobileFeatureRegistry"
+          },
+          "replacementId": "0eafdd9f0a8bbebf9a23",
+          "reason": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged.",
+          "previousReplacementId": "21babc54d68f0c44d55e",
+          "currentResolution": {
+            "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+            "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+            "valueCount": 157,
+            "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+          },
+          "previousResolution": {
+            "originalDecision": {
+              "id": "ffb84e8fd3972fd0730d",
+              "classification": "security-system-registry",
+              "disposition": "generated-consumer-pending-governance-cutover",
+              "specializedModel": "navigation_item, navigation_item_permission",
+              "risk": "Client navigation metadata must not grant reputation consent access or replace server authorization.",
+              "justification": "The 144-entry mobileFeatureRegistry is generated from tdf-hq/assets/feature-registry.json and adds reputation.consents. Routes, roles and permissions form a security-sensitive client mirror, not technical constants. Backend checks remain required; persisted navigation governance is not certified complete.",
+              "reviewed": true
+            },
+            "originalDecisionSha256": "ca75b1f83031506d03f2f90bf69c9aaa72201004886b2028627448ea7ff5db5f",
+            "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+            "source": {
+              "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+              "kind": "array",
+              "name": "mobileFeatureRegistry"
+            },
+            "replacementId": "5147eb2751a01d8b4c73",
+            "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
+            "previousReplacementId": "21babc54d68f0c44d55e",
+            "currentResolution": {
+              "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+              "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+              "valueCount": 157,
+              "reason": "Current merged mobile adds the community.discussion contextual route; all existing 156 generated feature definitions are retained."
+            }
+          }
+        }
+      }
     },
     {
       "originalDecision": {
@@ -245,8 +390,8 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "057297148d42a39ced43",
-      "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
+      "replacementId": "0e9db026aa88326fa7fd",
+      "reason": "The 169-entry consolidated manifest preserves all 166 current-main migrations and their introduction SHAs, then appends the three audit compatibility migrations unchanged. No historical SQL is modified. Both parent decisions remain provenance; migration ordering, ledger checksums and new constraint compatibility require execution against this candidate.",
       "previousReplacementId": "07da55e81a186d26df37",
       "currentResolution": {
         "mainRevision": "57315f2d4b3aafac8ec7242c5913028f157dff8d",
@@ -271,8 +416,170 @@
           "kind": "json-array",
           "name": "migrations"
         },
-        "replacementId": "dc6d60d733c6eb69ebbf",
+        "replacementId": "057297148d42a39ced43",
         "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
+        "previousReplacementId": "07da55e81a186d26df37",
+        "currentResolution": {
+          "mainRevision": "57315f2d4b3aafac8ec7242c5913028f157dff8d",
+          "mobileRevision": "36d3f6cfc187b05e11be78399e1782bb928f47de",
+          "valueCount": 161,
+          "reason": "Append credential-bound recovery metadata without changing prior SQL or reinterpreting historical retirement decisions."
+        },
+        "previousResolution": {
+          "originalDecision": {
+            "id": "7578a30aa3cc5aa23870",
+            "classification": "security-system-registry",
+            "disposition": "retain-reviewed-deployment-manifest",
+            "specializedModel": "production migration manifest and applied migration ledger",
+            "risk": "Reordering prerequisites, changing applied SQL or duplicating IDs can corrupt deployment history.",
+            "justification": "The manifest contains 98 ordered entries, seven more than the retired fingerprint, and moves contextual reputation before Party selector indexes. This is a deployment execution registry, not business data. Immutable-SHA, checksum and ordering tests remain required; classification does not authorize executing or activating migrations.",
+            "reviewed": true
+          },
+          "originalDecisionSha256": "3b61d93605a1690f72015ff3120fb06931b292221d6c4f53c6d9a2ccddb4339d",
+          "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+          "source": {
+            "file": "scripts/production-migrations.json",
+            "kind": "json-array",
+            "name": "migrations"
+          },
+          "replacementId": "dc6d60d733c6eb69ebbf",
+          "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
+          "previousReplacementId": "07da55e81a186d26df37",
+          "currentResolution": {
+            "mainRevision": "f8925e339447cb593f7cce5d86403d1396aaf5a5",
+            "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+            "valueCount": 160,
+            "reason": "The reviewed forward discovery ownership migration follows all 159 unchanged production entries. Preserve the full prior retirement and mapping, including the original decision hash."
+          },
+          "previousResolution": {
+            "originalDecision": {
+              "id": "7578a30aa3cc5aa23870",
+              "classification": "security-system-registry",
+              "disposition": "retain-reviewed-deployment-manifest",
+              "specializedModel": "production migration manifest and applied migration ledger",
+              "risk": "Reordering prerequisites, changing applied SQL or duplicating IDs can corrupt deployment history.",
+              "justification": "The manifest contains 98 ordered entries, seven more than the retired fingerprint, and moves contextual reputation before Party selector indexes. This is a deployment execution registry, not business data. Immutable-SHA, checksum and ordering tests remain required; classification does not authorize executing or activating migrations.",
+              "reviewed": true
+            },
+            "originalDecisionSha256": "3b61d93605a1690f72015ff3120fb06931b292221d6c4f53c6d9a2ccddb4339d",
+            "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+            "source": {
+              "file": "scripts/production-migrations.json",
+              "kind": "json-array",
+              "name": "migrations"
+            },
+            "replacementId": "7bf93825f1431a6d52d6",
+            "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
+            "previousReplacementId": "07da55e81a186d26df37",
+            "currentResolution": {
+              "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+              "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+              "valueCount": 159,
+              "reason": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+            }
+          }
+        },
+        "consolidatedMainResolution": {
+          "originalDecision": {
+            "id": "7578a30aa3cc5aa23870",
+            "classification": "security-system-registry",
+            "disposition": "retain-reviewed-deployment-manifest",
+            "specializedModel": "production migration manifest and applied migration ledger",
+            "risk": "Reordering prerequisites, changing applied SQL or duplicating IDs can corrupt deployment history.",
+            "justification": "The manifest contains 98 ordered entries, seven more than the retired fingerprint, and moves contextual reputation before Party selector indexes. This is a deployment execution registry, not business data. Immutable-SHA, checksum and ordering tests remain required; classification does not authorize executing or activating migrations.",
+            "reviewed": true
+          },
+          "originalDecisionSha256": "3b61d93605a1690f72015ff3120fb06931b292221d6c4f53c6d9a2ccddb4339d",
+          "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+          "source": {
+            "file": "scripts/production-migrations.json",
+            "kind": "json-array",
+            "name": "migrations"
+          },
+          "replacementId": "c6915506d0f7b802519d",
+          "reason": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged.",
+          "previousReplacementId": "07da55e81a186d26df37",
+          "currentResolution": {
+            "mainRevision": "f8925e339447cb593f7cce5d86403d1396aaf5a5",
+            "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+            "valueCount": 160,
+            "reason": "The reviewed forward discovery ownership migration follows all 159 unchanged production entries. Preserve the full prior retirement and mapping, including the original decision hash."
+          },
+          "previousResolution": {
+            "originalDecision": {
+              "id": "7578a30aa3cc5aa23870",
+              "classification": "security-system-registry",
+              "disposition": "retain-reviewed-deployment-manifest",
+              "specializedModel": "production migration manifest and applied migration ledger",
+              "risk": "Reordering prerequisites, changing applied SQL or duplicating IDs can corrupt deployment history.",
+              "justification": "The manifest contains 98 ordered entries, seven more than the retired fingerprint, and moves contextual reputation before Party selector indexes. This is a deployment execution registry, not business data. Immutable-SHA, checksum and ordering tests remain required; classification does not authorize executing or activating migrations.",
+              "reviewed": true
+            },
+            "originalDecisionSha256": "3b61d93605a1690f72015ff3120fb06931b292221d6c4f53c6d9a2ccddb4339d",
+            "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+            "source": {
+              "file": "scripts/production-migrations.json",
+              "kind": "json-array",
+              "name": "migrations"
+            },
+            "replacementId": "dc6d60d733c6eb69ebbf",
+            "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
+            "previousReplacementId": "07da55e81a186d26df37",
+            "currentResolution": {
+              "mainRevision": "f8925e339447cb593f7cce5d86403d1396aaf5a5",
+              "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+              "valueCount": 160,
+              "reason": "The reviewed forward discovery ownership migration follows all 159 unchanged production entries. Preserve the full prior retirement and mapping, including the original decision hash."
+            },
+            "previousResolution": {
+              "originalDecision": {
+                "id": "7578a30aa3cc5aa23870",
+                "classification": "security-system-registry",
+                "disposition": "retain-reviewed-deployment-manifest",
+                "specializedModel": "production migration manifest and applied migration ledger",
+                "risk": "Reordering prerequisites, changing applied SQL or duplicating IDs can corrupt deployment history.",
+                "justification": "The manifest contains 98 ordered entries, seven more than the retired fingerprint, and moves contextual reputation before Party selector indexes. This is a deployment execution registry, not business data. Immutable-SHA, checksum and ordering tests remain required; classification does not authorize executing or activating migrations.",
+                "reviewed": true
+              },
+              "originalDecisionSha256": "3b61d93605a1690f72015ff3120fb06931b292221d6c4f53c6d9a2ccddb4339d",
+              "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+              "source": {
+                "file": "scripts/production-migrations.json",
+                "kind": "json-array",
+                "name": "migrations"
+              },
+              "replacementId": "7bf93825f1431a6d52d6",
+              "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
+              "previousReplacementId": "07da55e81a186d26df37",
+              "currentResolution": {
+                "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+                "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+                "valueCount": 159,
+                "reason": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+              }
+            }
+          }
+        }
+      },
+      "consolidatedMainResolution": {
+        "originalDecision": {
+          "id": "7578a30aa3cc5aa23870",
+          "classification": "security-system-registry",
+          "disposition": "retain-reviewed-deployment-manifest",
+          "specializedModel": "production migration manifest and applied migration ledger",
+          "risk": "Reordering prerequisites, changing applied SQL or duplicating IDs can corrupt deployment history.",
+          "justification": "The manifest contains 98 ordered entries, seven more than the retired fingerprint, and moves contextual reputation before Party selector indexes. This is a deployment execution registry, not business data. Immutable-SHA, checksum and ordering tests remain required; classification does not authorize executing or activating migrations.",
+          "reviewed": true
+        },
+        "originalDecisionSha256": "3b61d93605a1690f72015ff3120fb06931b292221d6c4f53c6d9a2ccddb4339d",
+        "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+        "source": {
+          "file": "scripts/production-migrations.json",
+          "kind": "json-array",
+          "name": "migrations"
+        },
+        "replacementId": "c6915506d0f7b802519d",
+        "reason": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged.",
         "previousReplacementId": "07da55e81a186d26df37",
         "currentResolution": {
           "mainRevision": "f8925e339447cb593f7cce5d86403d1396aaf5a5",
@@ -297,14 +604,41 @@
             "kind": "json-array",
             "name": "migrations"
           },
-          "replacementId": "7bf93825f1431a6d52d6",
+          "replacementId": "dc6d60d733c6eb69ebbf",
           "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
           "previousReplacementId": "07da55e81a186d26df37",
           "currentResolution": {
-            "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+            "mainRevision": "f8925e339447cb593f7cce5d86403d1396aaf5a5",
             "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
-            "valueCount": 159,
-            "reason": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+            "valueCount": 160,
+            "reason": "The reviewed forward discovery ownership migration follows all 159 unchanged production entries. Preserve the full prior retirement and mapping, including the original decision hash."
+          },
+          "previousResolution": {
+            "originalDecision": {
+              "id": "7578a30aa3cc5aa23870",
+              "classification": "security-system-registry",
+              "disposition": "retain-reviewed-deployment-manifest",
+              "specializedModel": "production migration manifest and applied migration ledger",
+              "risk": "Reordering prerequisites, changing applied SQL or duplicating IDs can corrupt deployment history.",
+              "justification": "The manifest contains 98 ordered entries, seven more than the retired fingerprint, and moves contextual reputation before Party selector indexes. This is a deployment execution registry, not business data. Immutable-SHA, checksum and ordering tests remain required; classification does not authorize executing or activating migrations.",
+              "reviewed": true
+            },
+            "originalDecisionSha256": "3b61d93605a1690f72015ff3120fb06931b292221d6c4f53c6d9a2ccddb4339d",
+            "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+            "source": {
+              "file": "scripts/production-migrations.json",
+              "kind": "json-array",
+              "name": "migrations"
+            },
+            "replacementId": "7bf93825f1431a6d52d6",
+            "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint.",
+            "previousReplacementId": "07da55e81a186d26df37",
+            "currentResolution": {
+              "mainRevision": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+              "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+              "valueCount": 159,
+              "reason": "Current main appends event ingestion boundaries and 43 reviewed social/interaction migrations; all original 115 entries retain their order and introduction commits."
+            }
           }
         }
       }

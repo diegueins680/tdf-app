@@ -9,13 +9,12 @@ module TDF.Server.PaymentCapabilities
   ) where
 
 import           Control.Monad.IO.Class (liftIO)
-import           Control.Monad.Reader (ReaderT, ask)
+import           Control.Monad.Reader (ReaderT)
 import qualified Data.ByteString.Lazy as BL
 import           Data.Int (Int64)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import           Database.Persist.Sql (runSqlPool)
 import           Servant
 import           System.Environment (lookupEnv)
 
@@ -27,19 +26,17 @@ import           TDF.Commerce.CheckoutStore
   , resolveCheckoutEnvironment
   )
 import           TDF.Commerce.ProviderCapabilities
-import           TDF.Commerce.ProviderCapabilityStore (loadProviderActivations)
 import           TDF.DB (Env(..))
+import           TDF.Server.PaymentAvailability (loadRuntimeReadyRoutes)
 
 type AppM = ReaderT Env Handler
 
 paymentCapabilitiesServer :: ServerT PaymentCapabilitiesAPI AppM
 paymentCapabilitiesServer buyerCountry currency amountMinor method flow required = do
-  Env{..} <- ask
   environment <- loadEnvironment
   request <- either (throwError . badRequest) pure $
     buildRequest environment buyerCountry currency amountMinor method flow required
-  activations <- liftIO $ flip runSqlPool envPool $
-    loadProviderActivations environment
+  routes <- loadRuntimeReadyRoutes request
   pure PaymentCapabilityResponseDTO
     { pcrEnvironment = checkoutEnvironmentText environment
     , pcrBuyerCountry = T.toUpper (T.strip buyerCountry)
@@ -47,7 +44,7 @@ paymentCapabilitiesServer buyerCountry currency amountMinor method flow required
     , pcrAmountMinor = amountMinor
     , pcrPaymentMethod = paymentMethodText (prMethod request)
     , pcrProductFlow = productFlowText (prFlow request)
-    , pcrRoutes = map routeToDTO (routePayments activations request)
+    , pcrRoutes = map routeToDTO routes
     , pcrFallbackPolicy = "Fallback requires authoritative confirmation that no charge was or will be created; ambiguous outcomes must be reconciled first."
     }
 

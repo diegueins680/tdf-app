@@ -42,11 +42,14 @@ import           System.Environment (lookupEnv)
 import qualified TDF.API.Types as APITypes
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.CourseCheckout as CourseDomain
-import           TDF.DB (Env(..), sharedTlsManager)
+import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
+import           TDF.DB (Env(..))
+import           TDF.Commerce.ProviderAdapter.Http (sharedProviderManager)
 import qualified TDF.Internationalization as Internationalization
 import qualified TDF.ModelsExtra as ME
 import qualified TDF.Routes.Courses as Courses
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
+import qualified TDF.Server.PaymentAvailability as PaymentAvailability
 import qualified TDF.Trials.Models as Trials
 
 type AppM = ReaderT Env Handler
@@ -664,22 +667,12 @@ loadPublicCoursePaymentMethods runtime = do
             Checkout.domainEnabledForEnvironment environment "courses"
           if not domainEnabled
             then pure []
-            else do
-              datafastEnabled <- ((\datafast -> do
-                  if ServiceStorefront.sdfEnvironment datafast /= environment
-                    then pure False
-                    else runDB $ Checkout.providerEnabledForEnvironment
-                      environment Checkout.ProviderDatafast)
-                =<< ServiceStorefront.loadServiceDatafastEnv)
-                `catchError` const (pure False)
-              paypalEnabled <- ((\(_, _, _, paypalEnvironment, _) -> do
-                  if paypalEnvironment /= environment
-                    then pure False
-                    else runDB $ Checkout.providerEnabledForEnvironment
-                      environment Checkout.ProviderPayPal)
-                =<< ServiceStorefront.loadPaypalEnvForService)
-                `catchError` const (pure False)
-              pure $ ["datafast" | datafastEnabled] <> ["paypal" | paypalEnabled]
+            else PaymentAvailability.availableImplementedPaymentMethods
+              environment
+              PaymentAvailability.FlowCourse
+              (ccrvDueNowMinor runtime)
+              (ccrvCurrency runtime)
+              False
 
 courseLookupNotFound :: ServerError
 courseLookupNotFound = err404 { errBody = "Course order not found" }
@@ -866,7 +859,7 @@ beginCoursePaymentAttempt
   -> AppM Checkout.PaymentAttemptReference
 beginCoursePaymentAttempt context provider operation merchantRef operationLabel = do
   now <- liftIO getCurrentTime
-  result <- runDB $ Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+  result <- runDB $ PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
     { Checkout.pacCheckout = cpcCheckout context
     , Checkout.pacProvider = provider
     , Checkout.pacEnvironment = cpcEnvironment context
@@ -1122,6 +1115,7 @@ confirmPublicCourseDatafastStatus rawSlug rawRegistrationId mLookupToken rawReso
             , Checkout.vpProviderResource = checkoutId
             , Checkout.vpProviderResourcePath = Just resourcePath
             , Checkout.vpOrderReference = orderReference
+            , Checkout.vpProviderReference = orderReference
             , Checkout.vpAmountMinor = cpcDueNowMinor context
             , Checkout.vpCurrency = cpcCurrency context
             , Checkout.vpEvidence = "server_to_server"
@@ -1160,7 +1154,7 @@ createPublicCoursePaypalOrder rawSlug rawRegistrationId mLookupToken = do
   (paypalOrderId, approvalUrl) <- case existing of
     Just (storedOrderId, _) -> pure (storedOrderId, Nothing)
     Nothing -> ServiceStorefront.createPaypalOrderRemoteForService
-      sharedTlsManager clientId clientSecret baseUrl (registrationReference context)
+      sharedProviderManager clientId clientSecret baseUrl (registrationReference context)
       (fromIntegral (cpcDueNowMinor context)) (cpcCurrency context)
       (cpcBuyerName context) (cpcBuyerEmail context)
       `catchError` failCoursePaymentAttempt context attempt
@@ -1213,7 +1207,7 @@ capturePublicCoursePaypalOrder rawSlug rawRegistrationId mLookupToken request = 
       attempt <- beginCoursePaymentAttempt context Checkout.ProviderPayPal
         Checkout.OperationCapture merchantRef "capture"
       outcome <- ServiceStorefront.capturePaypalOrderRemoteForService
-        sharedTlsManager clientId clientSecret baseUrl suppliedOrderId
+        sharedProviderManager clientId clientSecret baseUrl suppliedOrderId
         `catchError` failCoursePaymentAttempt context attempt
           Checkout.ProviderPayPal "paypal_capture_request"
       now <- liftIO getCurrentTime
@@ -1263,6 +1257,7 @@ capturePublicCoursePaypalOrder rawSlug rawRegistrationId mLookupToken request = 
             , Checkout.vpProviderResourcePath = Just
                 ("/v2/checkout/orders/" <> suppliedOrderId <> "/capture")
             , Checkout.vpOrderReference = orderReference
+            , Checkout.vpProviderReference = orderReference
             , Checkout.vpAmountMinor = cpcDueNowMinor context
             , Checkout.vpCurrency = cpcCurrency context
             , Checkout.vpEvidence = "server_to_server"

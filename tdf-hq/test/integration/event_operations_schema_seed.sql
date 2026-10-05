@@ -7,7 +7,9 @@ LANGUAGE plpgsql AS $$ BEGIN
 END $$;
 
 SELECT event_rehearsal.check_that(
-  (SELECT count(*)=8 AND bool_and(NOT enabled AND status='disabled'
+  -- Four hosted providers plus manual bank transfer, each in two environments.
+  -- The payment manifest registers the additional rail without activating it.
+  (SELECT count(*)=10 AND bool_and(NOT enabled AND status='disabled'
     AND contract_status='unverified' AND credential_status='absent') FROM commerce_provider_account),
   'registered canonical provider accounts remain disabled and unverified');
 SELECT event_rehearsal.check_that(

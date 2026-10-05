@@ -43,12 +43,14 @@ module TDF.Server.ServiceStorefront
   , buildPaypalWebhookVerificationBody
   , parsePaypalRefundOutcome
   , processPaypalWebhookEventIO
+  , providerRequest
+  , providerResponse
   ) where
 
 import           Control.Monad (when, unless)
 import           Control.Monad.Except (catchError)
 import           Control.Monad.IO.Class (liftIO)
-import           Control.Monad.Reader (ReaderT, ask)
+import           Control.Monad.Reader (ReaderT, ask, runReaderT)
 import           Control.Exception.Safe (tryAny)
 import           Crypto.Hash (Digest, SHA256, hash)
 import           Data.Aeson (Result(..), eitherDecode, FromJSON(..), Value(..), (.=), (.:), (.:?), object, withObject)
@@ -72,9 +74,7 @@ import           Data.UUID (UUID, fromText, toText)
 import           Data.UUID.V4 (nextRandom)
 import           Database.Persist (PersistValue(..), selectList, get, insert, insertUnique, getBy, replace, update, Entity(..), (==.), (=.), SelectOpt(..))
 import           Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool)
-import           Network.HTTP.Client (httpLbs, parseRequest, responseBody, responseStatus, method, requestBody, requestHeaders, Request(..), RequestBody(..), Manager)
-import           Network.HTTP.Client.TLS (newTlsManager)
-import           Network.HTTP.Types (statusCode)
+import           Network.HTTP.Client (Request(..), RequestBody(..), Manager)
 import           Servant
 import           System.Environment (lookupEnv)
 import           Web.PathPieces (fromPathPiece, toPathPiece)
@@ -84,8 +84,12 @@ import           TDF.API.ServiceStorefrontTypes
 import           TDF.API.Types (DatafastCheckoutDTO(..), PaypalCreateDTO(..))
 import           TDF.Auth (AuthedUser(..), hasStrictAdminAccess)
 import qualified TDF.Commerce.CheckoutStore as Checkout
+import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import qualified TDF.Commerce.ProviderEventStore as ProviderEvent
+import qualified TDF.Commerce.ProviderAdapter.Http as ProviderHttp
 import qualified TDF.Commerce.RefundStore as Refund
+import qualified TDF.Commerce.RefundReconciliation as RefundRecovery
+import qualified TDF.Commerce.ProviderAdapter.PayPalRefund as RefundQuery
 import           TDF.Config (defaultCurrency, defaultLocale, supportedCurrencies)
 import           TDF.DB (Env(..))
 import           TDF.Internationalization (formatMinorUnitsDecimal, formatMoney, normalizeCurrencyCode)
@@ -124,6 +128,8 @@ serviceStorefrontAdminServer user =
   :<|> (\orderId idempotency request ->
           requireAccess *> requestServiceRefundHandler user orderId idempotency request)
   :<|> (\refundId -> requireAccess *> approveServiceRefundHandler user refundId)
+  :<|> (\refundId -> requireAccess *> (addHeader "no-store" <$> serviceRefundRecoveryHandler user False refundId))
+  :<|> (\refundId -> requireAccess *> (addHeader "no-store" <$> serviceRefundRecoveryHandler user True refundId))
   :<|> (\orderId -> requireAccess *> reconcileServiceOrderHandler orderId)
   where
     requireAccess = unless (hasStrictAdminAccess user) $
@@ -441,7 +447,9 @@ confirmDatafastStatusHandler mOrderId mResourcePath mLookupToken = do
                 (sdfpsPaymentId paymentStatus)
               (checkout, attempt) <- beginCanonicalPaymentAttempt
                 oid order (sdfEnvironment dfEnv) Checkout.ProviderDatafast
-                Checkout.OperationCapture (sdfEntityId dfEnv) "capture"
+                -- Datafast DB checkout already charges at the hosted widget;
+                -- this GET verifies that original sale, it does not capture.
+                Checkout.OperationCreate (sdfEntityId dfEnv) "create"
               case validation of
                 Left message -> providerVerificationMismatch
                   checkout attempt Checkout.ProviderDatafast (sdfEnvironment dfEnv)
@@ -479,6 +487,7 @@ confirmDatafastStatusHandler mOrderId mResourcePath mLookupToken = do
                       , Checkout.vpProviderResource = paymentId
                       , Checkout.vpProviderResourcePath = Just resourcePath
                       , Checkout.vpOrderReference = toPathPiece oid
+                      , Checkout.vpProviderReference = toPathPiece oid
                       , Checkout.vpAmountMinor = fromIntegral totalCents
                       , Checkout.vpCurrency = currency
                       , Checkout.vpEvidence = "server_to_server"
@@ -517,7 +526,7 @@ confirmDatafastStatusHandler mOrderId mResourcePath mLookupToken = do
               else do
                 (checkout, attempt) <- beginCanonicalPaymentAttempt
                   oid order (sdfEnvironment dfEnv) Checkout.ProviderDatafast
-                  Checkout.OperationCapture (sdfEntityId dfEnv) "capture"
+                  Checkout.OperationCreate (sdfEntityId dfEnv) "create"
                 liftIO $ flip runSqlPool envPool $ do
                   Checkout.recordPaymentFailure checkout attempt Checkout.ProviderDatafast
                     ("datafast_" <> resultCode)
@@ -571,7 +580,7 @@ createPaypalOrderHandler orderIdText mLookupToken = do
       (ppOrderId, approvalUrl) <- case (status, ME.serviceStorefrontOrderPaypalOrderId order) of
         ("paypal_pending", Just existingOrderId) -> pure (existingOrderId, Nothing)
         _ -> do
-          manager <- liftIO newTlsManager
+          let manager = ProviderHttp.sharedProviderManager
           createPaypalOrderRemoteForService
             manager cid sec baseUrl (toPathPiece oid) totalCents currency buyerName buyerEmail
             `catchError` failCanonicalPaymentAttempt
@@ -635,7 +644,7 @@ capturePaypalHandler mLookupToken ServiceStorefrontPaypalCaptureReq{..} = do
           (checkout, attempt) <- beginCanonicalPaymentAttempt
             oid order paypalEnvironment Checkout.ProviderPayPal
             Checkout.OperationCapture merchantRef "capture"
-          manager <- liftIO newTlsManager
+          let manager = ProviderHttp.sharedProviderManager
           captureOutcome <- capturePaypalOrderRemoteForService
             manager cid sec baseUrl pcCapturePaypalId
             `catchError` failCanonicalPaymentAttempt
@@ -702,6 +711,7 @@ capturePaypalHandler mLookupToken ServiceStorefrontPaypalCaptureReq{..} = do
                       , Checkout.vpProviderResourcePath = Just
                           ("/v2/checkout/orders/" <> pcCapturePaypalId <> "/capture")
                       , Checkout.vpOrderReference = toPathPiece oid
+                      , Checkout.vpProviderReference = toPathPiece oid
                       , Checkout.vpAmountMinor = fromIntegral
                           (ME.serviceStorefrontOrderPriceUsdCents order)
                       , Checkout.vpCurrency = ME.serviceStorefrontOrderCurrency order
@@ -787,7 +797,7 @@ paypalWebhookHandler transmissionId transmissionTime certUrl authAlgo transmissi
     Checkout.capabilityEnabledForEnvironment paypalEnvironment "checkout.paypal.webhooks"
   unless enabled $
     throwError err503 { errBody = "PayPal webhook processing is disabled for this environment" }
-  manager <- liftIO newTlsManager
+  let manager = ProviderHttp.sharedProviderManager
   signatureVerified <- verifyPaypalWebhookRemote
     manager cid sec baseUrl webhookId headers rawBody
   unless signatureVerified $
@@ -926,6 +936,7 @@ processPaypalWebhookEventIO env@Env{envPool = pool} environment merchantRef enve
                           , Checkout.vpProviderResourcePath = Just
                               ("/v2/checkout/orders/" <> pwcPaypalOrderId capture <> "/capture")
                           , Checkout.vpOrderReference = bpcDomainOrderId bound
+                          , Checkout.vpProviderReference = bpcDomainOrderId bound
                           , Checkout.vpAmountMinor = bpcExpectedAmount bound
                           , Checkout.vpCurrency = bpcCurrency bound
                           , Checkout.vpEvidence = "signature_verified_webhook"
@@ -1325,6 +1336,74 @@ updateOrderAdminHandler orderIdText ServiceStorefrontOrderUpdate{..} = do
         replace oid updatedOrder
       pure (orderToDTO oid updatedOrder)
 
+-- GET reads local readiness only. POST may finalize exact positive evidence but
+-- never issues a capture/refund POST to the provider. No browser payload is evidence.
+serviceRefundRecoveryHandler
+  :: AuthedUser -> Bool -> Text -> AppM ServiceStorefrontRefundRecoveryDTO
+serviceRefundRecoveryHandler user shouldQuery rawId = do
+  env@Env{..} <- ask
+  ref <- parseRefundReference rawId
+  let configured binding = do
+        result <- runHandler (runReaderT (refundQueryConfigured binding) env)
+        pure (either (const False) id result)
+      query binding = do
+        result <- runHandler (runReaderT (getPaypalRefundRemote binding) env)
+        pure (either (const (Left RefundRecovery.RefundRecoveryQueryFailed)) Right result)
+  result <- liftIO $ if shouldQuery
+    then RefundRecovery.reconcileKnownRefund envPool ref (fromSqlKey (auPartyId user))
+      configured query
+    else RefundRecovery.readRefundRecovery envPool ref configured
+  view <- either (throwError . refundRecoveryError) pure result
+  let record = RefundRecovery.rrvRefund view
+  pure ServiceStorefrontRefundRecoveryDTO
+    { ssrrRefundId = Refund.refundReferenceId (Refund.rrReference record)
+    , ssrrEnvironment = Refund.rrEnvironment record, ssrrStatus = Refund.rrStatus record
+    , ssrrAmountMinor = T.pack (show (Refund.rrAmountMinor record))
+    , ssrrCurrency = Refund.rrCurrency record, ssrrCanQuery = RefundRecovery.rrvCanQuery view
+    , ssrrOutcome = RefundRecovery.rrvOutcome view
+    , ssrrCheckedAt = RefundRecovery.rrvCheckedAt view
+    }
+
+refundRecoveryError :: RefundRecovery.RefundRecoveryError -> ServerError
+refundRecoveryError problem = case problem of
+  RefundRecovery.RefundRecoveryNotFound -> err404 { errBody = "Refund not found" }
+  RefundRecovery.RefundRecoveryUnavailable -> err503
+    { errBody = "Refund reconciliation is unavailable; funds remain reserved" }
+  RefundRecovery.RefundRecoveryConflict -> err409
+    { errBody = "Refund evidence requires review; do not issue another refund" }
+  RefundRecovery.RefundRecoveryRateLimited -> err429
+    { errBody = "Provider query limit reached; wait before checking again"
+    , errHeaders = [("Retry-After", "10")] }
+  RefundRecovery.RefundRecoveryQueryFailed -> err502
+    { errBody = "Provider refund could not be verified; funds remain reserved" }
+
+refundQueryConfigured :: RefundQuery.RefundQueryBinding -> AppM Bool
+refundQueryConfigured binding = do
+  enabled <- liftIO (lookupEnv "PAYPAL_REFUND_RECONCILIATION_ENABLED")
+  if enabled /= Just "true" then pure False else
+    (do
+      (_, _, _, environment, merchant) <- loadPaypalEnvForService
+      pure (environment == RefundQuery.rqbEnvironment binding
+        && merchant == RefundQuery.rqbMerchantId binding)) `catchError` (const (pure False))
+
+getPaypalRefundRemote :: RefundQuery.RefundQueryBinding -> AppM RefundQuery.RefundQueryOutcome
+getPaypalRefundRemote binding = do
+  ready <- refundQueryConfigured binding
+  unless ready $ throwError err503 { errBody = "Refund query configuration is unavailable" }
+  (cid, secret, baseUrl, _, _) <- loadPaypalEnvForService
+  -- Validate path/money before obtaining a credentialed provider token.
+  _ <- either (const (throwError (refundRecoveryError RefundRecovery.RefundRecoveryConflict))) pure
+    (RefundQuery.validateRefundQueryBinding binding)
+  let manager = ProviderHttp.sharedProviderManager
+  token <- paypalAccessTokenForService manager cid secret baseUrl
+  request <- either (const (throwError (refundRecoveryError RefundRecovery.RefundRecoveryUnavailable)))
+    pure (RefundQuery.buildRefundQuery token binding)
+  response <- liftIO (ProviderHttp.executeAdapterRequest manager request)
+  value <- either (const (throwError (refundRecoveryError RefundRecovery.RefundRecoveryQueryFailed)))
+    pure response
+  either (const (throwError (refundRecoveryError RefundRecovery.RefundRecoveryConflict))) pure
+    (RefundQuery.parseRefundQuery binding value)
+
 listServiceRefundsHandler :: Text -> AppM [ServiceStorefrontRefundDTO]
 listServiceRefundsHandler orderNumber = do
   Env{..} <- ask
@@ -1423,7 +1502,7 @@ approveServiceRefundHandler user rawRefundId = do
   if not shouldIssue
     then pure (serviceRefundToDTO orderNumber refundRecord)
     else do
-      manager <- liftIO newTlsManager
+      let manager = ProviderHttp.sharedProviderManager
       outcome <- issuePaypalRefundRemote
         manager cid sec baseUrl (spcProviderResource paidCheckout) refundRecord
       let actualMinor = fromIntegral <$> either (const Nothing) Just
@@ -1458,11 +1537,19 @@ approveServiceRefundHandler user rawRefundId = do
           pending <- liftIO $ flip runSqlPool envPool $
             Refund.recordRefundPending refundRef (proRefundId outcome) now
           either (throwError . refundConflictError) (const (pure ())) pending
-        providerStatus -> do
-          liftIO $ flip runSqlPool envPool $
-            Refund.recordRefundFailure
-              refundRef ("paypal_" <> T.toLower providerStatus) now
-          throwError err502 { errBody = "PayPal did not complete the refund" }
+        _ -> do
+          -- Retain a matched refund ID for read-only reconciliation. An unknown
+          -- outcome must not release funds or permit another refund POST.
+          held <- liftIO $ flip runSqlPool envPool $ do
+            pending <- Refund.recordRefundPending refundRef (proRefundId outcome) now
+            case pending of
+              Left message -> pure (Left message)
+              Right () -> do
+                Refund.recordRefundFailure refundRef "paypal_refund_status_unverified" now
+                pure (Right ())
+          either (throwError . refundConflictError) (const (pure ())) held
+          throwError err502
+            { errBody = "Refund outcome requires reconciliation; do not resubmit" }
       updated <- liftIO $ flip runSqlPool envPool $ Refund.loadRefund refundRef
       maybe (throwError err500 { errBody = "Refund could not be reloaded" })
         (pure . serviceRefundToDTO orderNumber) updated
@@ -1488,7 +1575,7 @@ reconcileServiceOrderHandler orderNumber = do
         pure (ME.serviceStorefrontOrderPaypalOrderId order)
       (cid, sec, baseUrl, environment, merchantRef) <- loadPaypalEnvForService
       requireReconciliationBinding paidCheckout environment merchantRef
-      manager <- liftIO newTlsManager
+      let manager = ProviderHttp.sharedProviderManager
       outcome <- getPaypalOrderRemoteForService manager cid sec baseUrl paypalOrderId
       let actualMinor = spcoAmount outcome >>= either (const Nothing) Just . parseDatafastCents
           matched = spcoStatus outcome == "COMPLETED"
@@ -1798,6 +1885,7 @@ orderToDTOWithLookupToken lookupToken oid order = ServiceStorefrontOrderDTO
   , ssoCurrency = ME.serviceStorefrontOrderCurrency order
   , ssoStatus = ME.serviceStorefrontOrderStatus order
   , ssoPaymentProvider = ME.serviceStorefrontOrderPaymentProvider order
+  , ssoCheckoutId = toText <$> ME.serviceStorefrontOrderCheckoutId order
   , ssoLookupToken = lookupToken
   , ssoPaidAt = ME.serviceStorefrontOrderPaidAt order
   , ssoGenre = ME.serviceStorefrontOrderGenre order
@@ -1955,7 +2043,7 @@ beginCanonicalPaymentAttempt orderId order providerEnvironment provider operatio
       { errBody = "Payment provider is disabled for this checkout environment" }
   now <- liftIO getCurrentTime
   result <- liftIO $ flip runSqlPool envPool $
-    Checkout.beginPaymentAttempt Checkout.PaymentAttemptCreation
+    PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
       { Checkout.pacCheckout = checkout
       , Checkout.pacProvider = provider
       , Checkout.pacEnvironment = storedEnvironment
@@ -2104,7 +2192,7 @@ loadServiceDatafastEnv = do
   testMode <- case mTest of
     Nothing -> pure Nothing
     Just _ -> Just <$> loadRequiredSafeEnv "DATAFAST_TEST_MODE" 128
-  let baseUrl = T.unpack baseUrlText
+  let baseUrl = T.unpack (T.toLower baseUrlText)
   environment <- either (throwError . configurationError) pure
     (Checkout.resolveCheckoutEnvironment mEnvironment)
   either (throwError . configurationError) pure
@@ -2131,7 +2219,7 @@ requestDatafastCheckoutForService
   -> AppM (Text, String)  -- ^ (checkoutId, widgetUrl)
 requestDatafastCheckoutForService txnId totalCents currency name email mPhone = do
   dfEnv <- loadServiceDatafastEnv
-  manager <- liftIO $ newTlsManager
+  let manager = ProviderHttp.sharedProviderManager
   let amountTxt = T.pack $ show (totalCents `div` 100) <> "." <> pad2 (totalCents `mod` 100)
       currencyTxt = T.toUpper (T.strip currency)
       (givenName, surname) = splitBuyerName name
@@ -2151,7 +2239,7 @@ requestDatafastCheckoutForService txnId totalCents currency name email mPhone = 
       allParams = baseParams <> phoneParam <> testModeParam
       body = renderFormBody allParams
       baseUrlClean = stripTrailingSlash (sdfBaseUrl dfEnv)
-  req0 <- liftIO $ parseRequest (baseUrlClean ++ "/v1/checkouts")
+  req0 <- providerRequest Checkout.ProviderDatafast (baseUrlClean ++ "/v1/checkouts")
   let req = req0
         { method = "POST"
         , requestBody = RequestBodyBS body
@@ -2160,24 +2248,18 @@ requestDatafastCheckoutForService txnId totalCents currency name email mPhone = 
             , ("Content-Type", "application/x-www-form-urlencoded")
             ]
         }
-  resp <- liftIO $ httpLbs req manager
-  when (statusCode (responseStatus resp) >= 400) $
-    throwError err502 { errBody = "Datafast checkout request failed." }
-  case eitherDecode (responseBody resp) of
-    Left err -> throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 ("Invalid Datafast response: " <> T.pack err)) }
-    Right dfResp -> do
-      let mCheckoutId = extractCheckoutId dfResp
-          mResultCode = extractResultCode dfResp
-      case mResultCode of
-        Just code | isDatafastCheckoutCreationSuccess code -> pure ()
-        Just code ->
-          throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 ("Datafast rejected checkout: " <> code)) }
-        Nothing -> throwError err502 { errBody = "Datafast checkout response omitted the result code" }
-      checkoutId <- maybe (throwError err502 { errBody = "No checkout ID in response" }) pure mCheckoutId
-      unless (isProviderReference checkoutId) $
-        throwError err502 { errBody = "Datafast returned an invalid checkout ID" }
-      let widgetUrl = baseUrlClean ++ "/v1/paymentWidgets.js?checkoutId=" ++ T.unpack checkoutId
-      pure (checkoutId, widgetUrl)
+  dfResp <- providerResponse manager Checkout.ProviderDatafast req
+  let mCheckoutId = extractCheckoutId dfResp
+      mResultCode = extractResultCode dfResp
+  case mResultCode of
+    Just code | isDatafastCheckoutCreationSuccess code -> pure ()
+    Just _ -> throwError err502 { errBody = "Datafast rejected checkout." }
+    Nothing -> throwError err502 { errBody = "Datafast checkout response omitted the result code" }
+  checkoutId <- maybe (throwError err502 { errBody = "No checkout ID in response" }) pure mCheckoutId
+  unless (isProviderReference checkoutId) $
+    throwError err502 { errBody = "Datafast returned an invalid checkout ID" }
+  let widgetUrl = baseUrlClean ++ "/v1/paymentWidgets.js?checkoutId=" ++ T.unpack checkoutId
+  pure (checkoutId, widgetUrl)
   where
     pad2 n = if n < 10 then "0" <> show n else show n
 
@@ -2203,23 +2285,18 @@ instance FromJSON ServiceDatafastPaymentStatus where
 checkDatafastPaymentStatus :: Text -> AppM ServiceDatafastPaymentStatus
 checkDatafastPaymentStatus resourcePath = do
   dfEnv <- loadServiceDatafastEnv
-  manager <- liftIO $ newTlsManager
+  let manager = ProviderHttp.sharedProviderManager
   let baseUrlClean = stripTrailingSlash (sdfBaseUrl dfEnv)
       rp = T.unpack resourcePath
       basePath = baseUrlClean ++ rp
       sep = if '?' `elem` basePath then "&" else "?"
       fullUrl = basePath ++ sep ++ "entityId=" ++ T.unpack (sdfEntityId dfEnv)
-  req0 <- liftIO $ parseRequest fullUrl
+  req0 <- providerRequest Checkout.ProviderDatafast fullUrl
   let req = req0
         { method = "GET"
         , requestHeaders = [("Authorization", "Bearer " <> TE.encodeUtf8 (sdfBearerToken dfEnv))]
         }
-  resp <- liftIO $ httpLbs req manager
-  when (statusCode (responseStatus resp) >= 400) $
-    throwError err502 { errBody = "Datafast status check failed." }
-  case eitherDecode (responseBody resp) of
-    Left err -> throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 ("Invalid Datafast status response: " <> T.pack err)) }
-    Right dfResp -> pure dfResp
+  providerResponse manager Checkout.ProviderDatafast req
 
 -- | Extract checkout ID from Datafast response.
 extractCheckoutId :: Value -> Maybe Text
@@ -2417,7 +2494,7 @@ parsePaypalWebhookEnvelope rawBody
   | BL.null rawBody = Left "PayPal webhook body is empty"
   | BL.length rawBody > 1024 * 1024 = Left "PayPal webhook body exceeds 1048576 bytes"
   | otherwise = do
-      value <- either (Left . ("Invalid PayPal webhook JSON: " <>) . T.pack) Right
+      value <- either (const (Left "Invalid PayPal webhook JSON")) Right
         (eitherDecode rawBody :: Either String Value)
       case value of
         Object obj -> do
@@ -2604,6 +2681,23 @@ loadProviderEventEncryptionKey = do
       { errBody = "COMMERCE_EVENT_ENCRYPTION_KEY must contain at least 32 characters" }
   pure encryptionKey
 
+-- Shared with legacy product entrypoints while retaining their public contracts.
+-- A transport failure is uncertain evidence, never confirmation of no charge.
+providerRequest :: Checkout.PaymentProvider -> String -> AppM Request
+providerRequest provider url = do
+  result <- liftIO (ProviderHttp.parseProviderRequest provider url)
+  either (throwError . providerTransportError) pure result
+
+providerResponse :: FromJSON a => Manager -> Checkout.PaymentProvider -> Request -> AppM a
+providerResponse manager provider request = do
+  result <- liftIO (ProviderHttp.executeProviderRequest manager provider request)
+  either (throwError . providerTransportError) pure result
+
+providerTransportError :: ProviderHttp.AdapterTransportError -> ServerError
+providerTransportError failure = err502
+  { errBody = BL.fromStrict (TE.encodeUtf8
+      (ProviderHttp.adapterTransportPublicMessage failure)) }
+
 verifyPaypalWebhookRemote
   :: Manager
   -> Text
@@ -2615,7 +2709,7 @@ verifyPaypalWebhookRemote
   -> AppM Bool
 verifyPaypalWebhookRemote manager cid sec baseUrl webhookId headers rawBody = do
   token <- paypalAccessTokenForService manager cid sec baseUrl
-  req0 <- liftIO $ parseRequest (baseUrl ++ "/v1/notifications/verify-webhook-signature")
+  req0 <- providerRequest Checkout.ProviderPayPal (baseUrl ++ "/v1/notifications/verify-webhook-signature")
   let req = req0
         { method = "POST"
         , requestBody = RequestBodyLBS
@@ -2625,24 +2719,16 @@ verifyPaypalWebhookRemote manager cid sec baseUrl webhookId headers rawBody = do
             , ("Authorization", "Bearer " <> TE.encodeUtf8 token)
             ]
         }
-  result <- liftIO (tryAny (httpLbs req manager))
-  resp <- case result of
-    Left _ -> throwError err503 { errBody = "PayPal webhook verification is temporarily unavailable" }
-    Right value -> pure value
-  let responseCode = statusCode (responseStatus resp)
-  when (responseCode >= 500) $
-    throwError err503 { errBody = "PayPal webhook verification is temporarily unavailable" }
-  when (responseCode >= 400) $
-    throwError err502 { errBody = "PayPal rejected the webhook verification request" }
-  case eitherDecode (responseBody resp) of
-    Right (Object obj) ->
+  response <- providerResponse manager Checkout.ProviderPayPal req
+  case response of
+    Object obj ->
       pure (lookupObjectText "verification_status" obj == Just "SUCCESS")
     _ -> throwError err502 { errBody = "Invalid PayPal webhook verification response" }
 
 -- | Get PayPal access token.
 paypalAccessTokenForService :: Manager -> Text -> Text -> String -> AppM Text
 paypalAccessTokenForService manager cid sec baseUrl = do
-  req0 <- liftIO $ parseRequest (baseUrl ++ "/v1/oauth2/token")
+  req0 <- providerRequest Checkout.ProviderPayPal (baseUrl ++ "/v1/oauth2/token")
   let req = req0
         { method = "POST"
         , requestBody = RequestBodyBS "grant_type=client_credentials"
@@ -2651,14 +2737,14 @@ paypalAccessTokenForService manager cid sec baseUrl = do
             , ("Content-Type", "application/x-www-form-urlencoded")
             ]
         }
-  resp <- liftIO $ httpLbs req manager
-  when (statusCode (responseStatus resp) >= 400) $
-    throwError err502 { errBody = "PayPal token request failed." }
-  case eitherDecode (responseBody resp) of
-    Left err -> throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 ("Invalid PayPal token response: " <> T.pack err)) }
-    Right (Object obj) -> case KM.lookup "access_token" obj of
-      Just (String token) -> pure token
-      _ -> throwError err502 { errBody = "No access_token in PayPal response" }
+  response <- providerResponse manager Checkout.ProviderPayPal req
+  case response of
+    Object obj -> case (KM.lookup "access_token" obj, KM.lookup "token_type" obj) of
+      (Just (String token), Just (String tokenType))
+        | not (T.null token) && T.length token <= 4096
+        , T.all (\c -> c >= '!' && c <= '~') token
+        , T.toLower tokenType == "bearer" -> pure token
+      _ -> throwError err502 { errBody = "Invalid PayPal access token or token type" }
     _ -> throwError err502 { errBody = "Invalid PayPal token response format" }
 
 -- | Create a PayPal order remotely.
@@ -2687,7 +2773,7 @@ createPaypalOrderRemoteForService manager cid sec baseUrl internalOrderId totalC
         , "application_context" .= object
             [ "shipping_preference" .= ("NO_SHIPPING" :: Text) ]
         ]
-  req0 <- liftIO $ parseRequest (baseUrl ++ "/v2/checkout/orders")
+  req0 <- providerRequest Checkout.ProviderPayPal (baseUrl ++ "/v2/checkout/orders")
   let req = req0
         { method = "POST"
         , requestBody = RequestBodyLBS (Aeson.encode body)
@@ -2697,12 +2783,9 @@ createPaypalOrderRemoteForService manager cid sec baseUrl internalOrderId totalC
             , ("PayPal-Request-Id", TE.encodeUtf8 (paypalRequestId "create" internalOrderId))
             ]
         }
-  resp <- liftIO $ httpLbs req manager
-  when (statusCode (responseStatus resp) >= 400) $
-    throwError err502 { errBody = "PayPal create order failed." }
-  case eitherDecode (responseBody resp) of
-    Left err -> throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 ("Invalid PayPal response: " <> T.pack err)) }
-    Right (Object obj) -> do
+  response <- providerResponse manager Checkout.ProviderPayPal req
+  case response of
+    Object obj -> do
       ppOrderId <- case KM.lookup "id" obj of
         Just (String s) -> pure s
         _ -> throwError err502 { errBody = "No order ID in PayPal response" }
@@ -2732,7 +2815,7 @@ capturePaypalOrderRemoteForService
   -> AppM ServicePaypalCaptureOutcome
 capturePaypalOrderRemoteForService manager cid sec baseUrl ppOrderId = do
   token <- paypalAccessTokenForService manager cid sec baseUrl
-  req0 <- liftIO $ parseRequest (baseUrl ++ "/v2/checkout/orders/" ++ T.unpack ppOrderId ++ "/capture")
+  req0 <- providerRequest Checkout.ProviderPayPal (baseUrl ++ "/v2/checkout/orders/" ++ T.unpack ppOrderId ++ "/capture")
   let req = req0
         { method = "POST"
         , requestBody = RequestBodyBS "{}"
@@ -2742,15 +2825,8 @@ capturePaypalOrderRemoteForService manager cid sec baseUrl ppOrderId = do
             , ("PayPal-Request-Id", TE.encodeUtf8 (paypalRequestId "capture" ppOrderId))
             ]
         }
-  resp <- liftIO $ httpLbs req manager
-  when (statusCode (responseStatus resp) >= 400) $
-    throwError err502 { errBody = "PayPal capture failed." }
-  case eitherDecode (responseBody resp) of
-    Left err -> throwError err502 { errBody = BL.fromStrict (TE.encodeUtf8 ("Invalid PayPal capture response: " <> T.pack err)) }
-    Right value -> either
-      (throwError . providerValidationError)
-      pure
-      (parsePaypalCaptureOutcome value)
+  value <- providerResponse manager Checkout.ProviderPayPal req
+  either (throwError . providerValidationError) pure (parsePaypalCaptureOutcome value)
 
 getPaypalOrderRemoteForService
   :: Manager
@@ -2761,27 +2837,14 @@ getPaypalOrderRemoteForService
   -> AppM ServicePaypalCaptureOutcome
 getPaypalOrderRemoteForService manager cid sec baseUrl paypalOrderId = do
   token <- paypalAccessTokenForService manager cid sec baseUrl
-  req0 <- liftIO $ parseRequest
+  req0 <- providerRequest Checkout.ProviderPayPal
     (baseUrl ++ "/v2/checkout/orders/" ++ T.unpack paypalOrderId)
   let req = req0
         { method = "GET"
         , requestHeaders =
             [("Authorization", "Bearer " <> TE.encodeUtf8 token)]
         }
-  result <- liftIO (tryAny (httpLbs req manager))
-  resp <- case result of
-    Left _ -> throwError err503
-      { errBody = "PayPal reconciliation is temporarily unavailable" }
-    Right value -> pure value
-  let responseCode = statusCode (responseStatus resp)
-  when (responseCode >= 500) $
-    throwError err503 { errBody = "PayPal reconciliation is temporarily unavailable" }
-  when (responseCode >= 400) $
-    throwError err502 { errBody = "PayPal rejected the reconciliation request" }
-  value <- either
-    (const (throwError err502 { errBody = "Invalid PayPal reconciliation response" }))
-    pure
-    (eitherDecode (responseBody resp) :: Either String Value)
+  value <- providerResponse manager Checkout.ProviderPayPal req
   either (throwError . providerValidationError) pure
     (parsePaypalCaptureOutcome value)
 
@@ -2795,7 +2858,7 @@ issuePaypalRefundRemote
   -> AppM PaypalRefundOutcome
 issuePaypalRefundRemote manager cid sec baseUrl captureId refundRecord = do
   token <- paypalAccessTokenForService manager cid sec baseUrl
-  req0 <- liftIO $ parseRequest
+  req0 <- providerRequest Checkout.ProviderPayPal
     (baseUrl ++ "/v2/payments/captures/" ++ T.unpack captureId ++ "/refund")
   let body = object
         [ "amount" .= object
@@ -2816,21 +2879,7 @@ issuePaypalRefundRemote manager cid sec baseUrl captureId refundRecord = do
             , ("Prefer", "return=representation")
             ]
         }
-  result <- liftIO (tryAny (httpLbs req manager))
-  resp <- case result of
-    Left _ -> throwError err503
-      { errBody = "PayPal refund is temporarily unavailable; retry with the same refund ID" }
-    Right value -> pure value
-  let responseCode = statusCode (responseStatus resp)
-  when (responseCode >= 500) $
-    throwError err503
-      { errBody = "PayPal refund is temporarily unavailable; retry with the same refund ID" }
-  when (responseCode >= 400) $
-    throwError err502 { errBody = "PayPal rejected the refund request" }
-  value <- either
-    (const (throwError err502 { errBody = "Invalid PayPal refund response" }))
-    pure
-    (eitherDecode (responseBody resp) :: Either String Value)
+  value <- providerResponse manager Checkout.ProviderPayPal req
   either (throwError . providerValidationError) pure (parsePaypalRefundOutcome value)
 
 parsePaypalCaptureOutcome :: Value -> Either Text ServicePaypalCaptureOutcome
