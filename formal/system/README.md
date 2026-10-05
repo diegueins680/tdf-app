@@ -7,6 +7,8 @@ Historical green results are not current-candidate evidence.
 
 ## Canonical package
 
+- [isolated-canary.md](isolated-canary.md): candidate startup/identity/failure-recovery on a disconnected disposable restore, with explicit deployment exclusions.
+
 - [readiness.md](readiness.md): fresh database probe, fixed unavailable responses and cancellation/deadline controls.
 
 - [logical-backup.md](logical-backup.md): scheduled archive source admission, private completion evidence and explicit recovery exclusions.

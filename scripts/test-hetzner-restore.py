@@ -222,7 +222,14 @@ class RestoreOrchestrationTests(unittest.TestCase):
                 held.assert_not_called()
                 target.assert_not_called()
 
-    def exercise(self, failure=None):
+    def test_orphan_application_blocks_even_when_database_label_is_absent(self):
+        runtime=MagicMock()
+        with patch.object(restore,'execute',side_effect=['', 'owned-app-id\n']) as run:
+            with self.assertRaises(ValueError):restore.rehearse_locked(runtime)
+            self.assertEqual(run.call_count,2)
+            runtime.inspect.assert_not_called()
+
+    def exercise(self, failure=None, canary_mode=False):
         with tempfile.TemporaryDirectory() as temporary, ExitStack() as stack:
             base = Path(temporary)
             snapshot = {'containers': {'db': {'containerId': SOURCE, 'image': IMAGE, 'imageId': IMAGE_ID}},
@@ -259,7 +266,7 @@ class RestoreOrchestrationTests(unittest.TestCase):
                 destination.write_bytes(b'CREATE ROLE postgres;\n' if destination.name == 'roles.sql' else b'synthetic archive')
             stack.enter_context(patch.object(restore, 'bounded_archive', side_effect=archive))
             def execute(command, **kw):
-                if command == restore.DOCKER + ['ps', '--all', '--quiet', '--filter', 'label=' + restore.LABEL]: return ''
+                if command in [restore.DOCKER + ['ps', '--all', '--quiet', '--filter', 'label=' + label] for label in [restore.LABEL, 'net.tdf.application-canary']]: return ''
                 if kw.get('input') == restore.CAPACITY_SQL: return '100'
                 if command == ['synthetic-create']:
                     self.assertTrue((base / restore.PENDING_NAME).is_file())
@@ -278,19 +285,39 @@ class RestoreOrchestrationTests(unittest.TestCase):
             if failure == 'cleanup': target.cleanup.side_effect = RuntimeError('injected cleanup failure')
             if failure == 'uncertain-create': target.cleanup.side_effect = RuntimeError('no visible container yet')
             if failure == 'ledger': runtime.summarize_database.return_value = {'migrations': ['changed-ledger']}
+            options = {}
+            application = MagicMock()
+            application.creation_attempted = True
+            application.paused = False
+            application.run.return_value = {'sourceRevision': 'e'*40}
+            application.cleanup.side_effect = lambda: setattr(application, 'creation_attempted', False)
+            if canary_mode:
+                module = MagicMock(); module.Canary.return_value = application
+                options = {'candidate': {'sourceRevision': 'e'*40}, 'canary_module': module,
+                           'canary_image': 'diegueins680/tdf-hq@sha256:'+'f'*64}
+                stack.enter_context(patch.object(restore, 'rehearse_candidate', return_value={'applications':2}))
+                if failure == 'canary-run': application.run.side_effect = RuntimeError('canary failed')
+                if failure == 'canary-cleanup': application.cleanup.side_effect = RuntimeError('uncertain application cleanup')
             if failure:
-                with self.assertRaises((ValueError, RuntimeError)): restore.rehearse_locked(runtime)
+                with self.assertRaises((ValueError, RuntimeError)): restore.rehearse_locked(runtime, **options)
                 self.assertEqual(list(base.glob('*/receipt.json')), [])
                 self.assertEqual(len(list(base.glob('*/failure.json'))), 1)
-                self.assertEqual((base / restore.PENDING_NAME).exists(), failure in ('cleanup', 'uncertain-create'))
+                self.assertEqual((base / restore.PENDING_NAME).exists(), failure in ('cleanup', 'uncertain-create', 'canary-cleanup'))
             else:
-                result = restore.rehearse_locked(runtime)
+                result = restore.rehearse_locked(runtime, **options)
+                if canary_mode: self.assertTrue(result['applicationCanary']['applicationRemoved'])
                 self.assertEqual(result['status'], 'isolated-database-restore-passed')
                 self.assertTrue(result['isolateRemoved'])
                 self.assertFalse(result['productionDatabaseWritten'])
                 self.assertFalse((base / restore.PENDING_NAME).exists())
             held.close.assert_called_once()
-            self.assertGreaterEqual(target.cleanup.call_count, 1)
+            if failure == 'canary-cleanup': target.cleanup.assert_not_called()
+            else: self.assertGreaterEqual(target.cleanup.call_count, 1)
+            if canary_mode: self.assertGreaterEqual(application.cleanup.call_count, 1)
+
+    def test_application_failure_and_uncertain_cleanup_preserve_restore_reservation(self):
+        for failure in [None, 'canary-run', 'canary-cleanup']:
+            with self.subTest(failure=failure): self.exercise(failure, canary_mode=True)
 
     def test_success_and_injected_failures_never_skip_cleanup_or_emit_false_pass(self):
         for failure in [None, 'dump', 'roles', 'restore', 'counts', 'ledger', 'cleanup', 'interrupt', 'uncertain-create']:
