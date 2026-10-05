@@ -331,6 +331,17 @@
       "conflict": "Existing Drive key/folder lookup silently returns a prior file for different bytes, name, MIME or actor and then attempts public sharing.",
       "authority": "formal/system/drive-replay.md",
       "resolution": "Treat conflicting success as a request-integrity bug. Bind newly created entries to actor and request; preserve legacy objects but reject their implicit adoption. Retain worker key format and explicit provider-concurrency exclusions."
+    },
+    {
+      "id": "AUTHORITY-032",
+      "sources": [
+        "tdf-hq-ui/src/main.tsx",
+        "tdf-hq-ui/src/session/SessionContext.tsx",
+        "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx"
+      ],
+      "conflict": "Long-lived actor-independent query cache survives logout; actual component reproduction displays prior Party private response under next Party.",
+      "authority": "formal/system/session-query-isolation.md",
+      "resolution": "Replace and remount cache per security-scope occurrence. Preserve current query defaults but retire old client state. Bind auth expiration to request epoch; do not convert cached disclosure into intentional offline behavior."
     }
   ]
 }

@@ -3961,6 +3961,86 @@
         "reason": "Repair and deterministic transport checks require exact compiled execution; concurrency and deployed correspondence remain open."
       },
       "critical": true
+    },
+    {
+      "id": "PRIV-CACHE-001",
+      "title": "Isolate private web data and auth failures by session occurrence",
+      "statement": "A new security-scope occurrence must never render or cache a prior occurrence response, and a stale request authentication failure must not expire the current occurrence.",
+      "authority": "authorized privacy defect repair with local reproduction",
+      "domain": "PRIV",
+      "actors": [
+        "Web user",
+        "Previous account on shared browser",
+        "Asynchronous query or mutation callback"
+      ],
+      "preconditions": [
+        "Production SessionProviders composition surrounds every query consumer; backend responses are scoped correctly."
+      ],
+      "inputs": [
+        "Session identity, token, roles, modules, flags and authentication occurrence",
+        "Private query responses, mutation callbacks and session-auth errors"
+      ],
+      "state": {
+        "boundary": "Mounted application QueryClient and auth request epoch",
+        "states": [
+          "anonymous occurrence",
+          "authenticated occurrence",
+          "retired occurrence with pending work"
+        ]
+      },
+      "allowedTransitions": [
+        "login/logout/bootstrap/token/scope change -> new occurrence and fresh QueryClient subtree",
+        "old completion -> retired client only",
+        "matching-epoch invalid-session error -> local logout"
+      ],
+      "forbiddenTransitions": [
+        "old cached or late response -> current private view",
+        "old mutation callback -> current QueryClient",
+        "stale401/403 -> expire a newer occurrence"
+      ],
+      "effects": [
+        "Reset query/component/toast state at session boundary; retain prior staleness/retry defaults."
+      ],
+      "authorization": "Cache isolation complements backend authorization and does not approve a mutation. Role/feature changes rotate the security scope.",
+      "privacy": "Private cached data is not reused across session occurrences, even for the same returning actor; no credentials in React keys or new persisted cache.",
+      "concurrency": "Synchronous scope selection precedes child commit; pending work retains its old client. Request-epoch equality gates auth-expiration events.",
+      "idempotency": "No mutation retry behavior is added. A new session occurrence always allocates a new client, including A->B->A.",
+      "failure": "The original request retains its HTTP error; a stale auth failure emits no current-session expiration. Cache misses refetch under current authority.",
+      "recovery": "User may authenticate again; the returned actor receives a fresh cache. Already-started backend/provider mutation is not rolled back by logout.",
+      "observability": "Synthetic component and API tests retain exact revisions and forbid prior private sentinel display; bounded model logs include named negative controls.",
+      "source": "main.tsx shared QueryClient; SessionContext lifecycle; internal-feedback actorless keys; AUTHORITY-032; synthetic9f reproduction",
+      "property": "PrivateProjection and CurrentExpiry",
+      "contract": "formal/system/session-query-isolation.md",
+      "implementation": [
+        "tdf-hq-ui/src/main.tsx",
+        "tdf-hq-ui/src/session/SessionProviders.tsx",
+        "tdf-hq-ui/src/session/SessionQueryProvider.tsx",
+        "tdf-hq-ui/src/session/SessionContext.tsx",
+        "tdf-hq-ui/src/session/authEvents.ts",
+        "tdf-hq-ui/src/api/client.ts"
+      ],
+      "verification": "Actual SessionProvider/TanStack components, actual pending mutation callbacks, fake HTTP auth error and bounded three-occurrence TLA model.",
+      "evidence": "SessionQueryProvider/SessionProviders/client tests and SessionCacheIsolation configurations; final-candidate execution required.",
+      "status": "specified and implemented",
+      "historicalStatus": "observed-defect-repaired-awaiting-final-gates",
+      "critical": true,
+      "tests": [
+        "tdf-hq-ui/src/session/SessionQueryProvider.test.tsx",
+        "tdf-hq-ui/src/session/SessionProviders.test.tsx",
+        "tdf-hq-ui/src/api/client.test.ts"
+      ],
+      "formalModels": [
+        "formal/event-operations/SessionCacheIsolation.tla"
+      ],
+      "confidence": "Local forbidden behavior reproduced; working component fixes pass; exact final integration/deployment pending.",
+      "ambiguity": [
+        "Cross-tab/device revocation and non-QueryClient storage need separate conformance.",
+        "Mobile late-mutation behavior is not established by this web-only model."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Working implementation and bounded model require final combined checks and deployed verification; broader storage/device boundaries remain open."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -4006,6 +4086,7 @@
     "formal/event-operations/RestoreIsolationNoLock.cfg": "31837374a28551c5aa52ce6a5289a9eb3f588d2574cc7b36c9d4e027a3b4d678",
     "formal/event-operations/RestoreIsolationOrphanRetry.cfg": "4e0b0c9f842bdf6d7ecdbe2c8f68ac3898446ec632c1cb15dd76383e26b87168",
     "formal/event-operations/RestoreIsolationSourceTarget.cfg": "2855814fc67299069d73cf6430c98a2ed486c3ffd265676e315d3843fa90e1c5",
+    "formal/event-operations/SessionCacheIsolation.tla": "49a1e4d7f27a1845ed6bfd0865fa37df54bdb54bafa1680cfbe2d929e18bdb02",
     "formal/event-operations/SignupIdentity.tla": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
     "formal/event-operations/StudioBookingProjection.tla": "748b67ec68ef7f53e990adc6a20afff804f739a1acbd02afabf7d221c17a738a",
     "formal/event-operations/StudioBookingScope.tla": "e8bbb4fdbc1a9ba60576bf0f4d211a1717c9de5ac8d4eaa4565e25ab05b5fb40",
@@ -4101,11 +4182,13 @@
     "scripts/test-specification-inventory.py": "429bfd7c6ee6600e4010394f476c1247597d3c6c1a88f1fbd5e738c96b221df8",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "836906067ac620b64214922f9390c012848abf5bc1c4ca6f15a02757986bcddd",
-    "scripts/verify-event-operations-formal.sh": "6a1abf57b00f231e4578f25031492dc838e011a16a188d56a3463a6bf4735fda",
+    "scripts/verify-event-operations-formal.sh": "c96fdf3e940694b8172242fd38a2fec799b1cfdba5e60a291084f1d6c587a66a",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
     "scripts/verify-system-evidence.mjs": "7aa7ac054cebe9a16f39a21afce1b36588c889493716baf3c7629880565e3e3f",
     "tdf-hq-ui/src/api/bookings.ts": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
+    "tdf-hq-ui/src/api/client.test.ts": "eaec88fe099c62f7d68c2c350eb1b3493a71e132b7324e25e588b34ec76aed56",
+    "tdf-hq-ui/src/api/client.ts": "3cbd9d209c184f0892451f4957721be0a55f65e922df33090c4a8b1e00ccfd13",
     "tdf-hq-ui/src/api/generated/types.ts": "95e41fe43d6987a0f692d207c896fa585616c9f93feae5e5579d3f9d7fa1e161",
     "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx": "7723dd458079bcad7d7c3f39933b2025de76462f8d0fb40a6c6d4e6bd35deb49",
     "tdf-hq-ui/src/components/LazyPaginatedList.tsx": "8c96fc43fa7096d5bf59e0a724c19bd4b73d1f05582a25d99b633ba95f075d91",
@@ -4115,6 +4198,7 @@
     "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx": "a4c38b4329431d311a51ae9d9b0ffb2cc67edbd97a6a6e709aa580c7e15fcef1",
     "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "83320844622c1c458265cb4e230d9edeae3d495da2a7d6dcb516d444f88f999f",
     "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "0e4db3d2d183691f42c81fc1bcd0ab6589c8847e04cd0e0e10db3ecc21861ed9",
+    "tdf-hq-ui/src/main.tsx": "36d658b2afc501b4c6729dba8ba333d918c434b5ac16e8d7c8228244c119e626",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "aad862427b31bb0777586ae09589055043f9346e4eaaa9bf14a521e3d4fed129",
@@ -4123,6 +4207,12 @@
     "tdf-hq-ui/src/pages/LoginPage.tsx": "78885e7bb418d22f98657a2823effb36743857f0edc8b4fa9849a219e9aa3c3b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
+    "tdf-hq-ui/src/session/SessionContext.tsx": "57281da0da41ea04116422cad679e7f7052f55b1e0e3054feeab4438e83c0b5b",
+    "tdf-hq-ui/src/session/SessionProviders.test.tsx": "db255bb28b7788b5090883abd8b33769fb1507bf0c353a66f097725024f74de1",
+    "tdf-hq-ui/src/session/SessionProviders.tsx": "0a75819f91321403b981874eef2d44482d6a0fd90e3bfbc009daa7b925d8082f",
+    "tdf-hq-ui/src/session/SessionQueryProvider.test.tsx": "5109459ac552aec840246f08366bf65ec95a0fe26579b7664cee39dcfdae6250",
+    "tdf-hq-ui/src/session/SessionQueryProvider.tsx": "a210c0bdf2b574603474abe4c839e7a6bed0d3b3c4eff9fc679495ad41a0e74b",
+    "tdf-hq-ui/src/session/authEvents.ts": "7eb5599167ba8a097912f600c0b88a472c9d56e98b0115bba05aa3734249e977",
     "tdf-hq-ui/src/utils/__tests__/roles.test.ts": "f5aa3c92f8f8f71fc7690ef46a1be60b768c4d0ea40a714da39b04c817d272fd",
     "tdf-hq-ui/src/utils/providerPaymentResume.test.ts": "103a2f73519a73ffb088df88e847789b4fc5f6afd07d9c38bdeafd0dbc4039e9",
     "tdf-hq-ui/src/utils/providerPaymentResume.ts": "27f2bbb6169784ba41aa14ddf9e2fade00617452594157fe8c74eed64ce3f0ba",
@@ -6227,6 +6317,66 @@
       {
         "requirement": "MEDIA-DRIVE-001",
         "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/main.tsx": [
+      {
+        "requirement": "PRIV-CACHE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/session/SessionProviders.tsx": [
+      {
+        "requirement": "PRIV-CACHE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/session/SessionQueryProvider.tsx": [
+      {
+        "requirement": "PRIV-CACHE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/session/SessionContext.tsx": [
+      {
+        "requirement": "PRIV-CACHE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/session/authEvents.ts": [
+      {
+        "requirement": "PRIV-CACHE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/client.ts": [
+      {
+        "requirement": "PRIV-CACHE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/session/SessionQueryProvider.test.tsx": [
+      {
+        "requirement": "PRIV-CACHE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/session/SessionProviders.test.tsx": [
+      {
+        "requirement": "PRIV-CACHE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/api/client.test.ts": [
+      {
+        "requirement": "PRIV-CACHE-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/SessionCacheIsolation.tla": [
+      {
+        "requirement": "PRIV-CACHE-001",
+        "relationship": "formalModels"
       }
     ]
   },
@@ -9666,7 +9816,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "6a1abf57b00f231e4578f25031492dc838e011a16a188d56a3463a6bf4735fda",
+      "sha256": "c96fdf3e940694b8172242fd38a2fec799b1cfdba5e60a291084f1d6c587a66a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -10143,16 +10293,26 @@
     {
       "id": "SURFACE-d70122a61e623064",
       "path": "tdf-hq-ui/src/api/client.test.ts",
-      "sha256": "dde8c0cbc27828338bc2c5b194b875e970c3ad38a6e373dabb5a8ab3d2c25ea6",
+      "sha256": "eaec88fe099c62f7d68c2c350eb1b3493a71e132b7324e25e588b34ec76aed56",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-CACHE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-2e3549439fba7b8e",
       "path": "tdf-hq-ui/src/api/client.ts",
-      "sha256": "09d51aff41126f9468c27d1f093048cbd7bec4d719696ac2e7a84713e3879700",
+      "sha256": "3cbd9d209c184f0892451f4957721be0a55f65e922df33090c4a8b1e00ccfd13",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-CACHE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-c8f34cac30980fe7",
@@ -12211,9 +12371,14 @@
     {
       "id": "SURFACE-dfd1359e6fe03cbc",
       "path": "tdf-hq-ui/src/main.tsx",
-      "sha256": "a4b37c95ed1aeb7e0e74ca510c6612c734c2e48609059b3fff2d6f5558bbbebd",
+      "sha256": "36d658b2afc501b4c6729dba8ba333d918c434b5ac16e8d7c8228244c119e626",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-CACHE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-faf0ef2a53a46622",
@@ -14044,9 +14209,14 @@
     {
       "id": "SURFACE-9cd6316bcfd08c89",
       "path": "tdf-hq-ui/src/session/SessionContext.tsx",
-      "sha256": "182f1ef4160cc2e9cbda690f6d49e646ef807b110e6d46eb176ed44ae4d7255c",
+      "sha256": "57281da0da41ea04116422cad679e7f7052f55b1e0e3054feeab4438e83c0b5b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-CACHE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-d936df90f5c3e6d3",
@@ -14056,11 +14226,64 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-85c277bbf0d40f06",
+      "path": "tdf-hq-ui/src/session/SessionProviders.test.tsx",
+      "sha256": "db255bb28b7788b5090883abd8b33769fb1507bf0c353a66f097725024f74de1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PRIV-CACHE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-10caedec4015767f",
+      "path": "tdf-hq-ui/src/session/SessionProviders.tsx",
+      "sha256": "0a75819f91321403b981874eef2d44482d6a0fd90e3bfbc009daa7b925d8082f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PRIV-CACHE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-dd9e646b4f4e6cec",
+      "path": "tdf-hq-ui/src/session/SessionQueryProvider.test.tsx",
+      "sha256": "5109459ac552aec840246f08366bf65ec95a0fe26579b7664cee39dcfdae6250",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PRIV-CACHE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-223459b3ba4d1f45",
+      "path": "tdf-hq-ui/src/session/SessionQueryProvider.tsx",
+      "sha256": "a210c0bdf2b574603474abe4c839e7a6bed0d3b3c4eff9fc679495ad41a0e74b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PRIV-CACHE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-3acc1be5abd0e8e7",
       "path": "tdf-hq-ui/src/session/authEvents.ts",
-      "sha256": "6e436f80bf03533f064b4f09670f935d34cfaaa996cc3c9c120903066b7c4000",
+      "sha256": "7eb5599167ba8a097912f600c0b88a472c9d56e98b0115bba05aa3734249e977",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-CACHE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-5a62836ec9be3e4a",
@@ -23208,8 +23431,6 @@
     "SURFACE-da3aff3231206d1a",
     "SURFACE-3a42ae2d793c9b60",
     "SURFACE-b690ccffe85ff16b",
-    "SURFACE-d70122a61e623064",
-    "SURFACE-2e3549439fba7b8e",
     "SURFACE-c8f34cac30980fe7",
     "SURFACE-4e5cd5f9282be11b",
     "SURFACE-4f1a575585c3cc83",
@@ -23488,7 +23709,6 @@
     "SURFACE-eb51f33c8df76f33",
     "SURFACE-b354b9104200a96e",
     "SURFACE-f2804d98461b2053",
-    "SURFACE-dfd1359e6fe03cbc",
     "SURFACE-faf0ef2a53a46622",
     "SURFACE-7bc3d01f19102b0f",
     "SURFACE-c466dd3a2779a06d",
@@ -23735,9 +23955,7 @@
     "SURFACE-d27bbf0d78d3b017",
     "SURFACE-500218fd281ada1d",
     "SURFACE-176a7b6b111d489c",
-    "SURFACE-9cd6316bcfd08c89",
     "SURFACE-d936df90f5c3e6d3",
-    "SURFACE-3acc1be5abd0e8e7",
     "SURFACE-5a62836ec9be3e4a",
     "SURFACE-871a4dfd1fad6997",
     "SURFACE-62cd0df91e626da5",
@@ -47161,7 +47379,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 54,
+    "PARTIAL": 55,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

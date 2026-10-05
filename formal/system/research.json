@@ -408,6 +408,24 @@
       "applicability": "Drive helper previously returned stale content on a conflicting retry.",
       "decision": "adopted narrowly",
       "rationale": "Fingerprint authenticated actor and normalized request before reuse. Do not claim provider creation is exactly once: lookup/create is separate and crash recovery needs a durable coordination design."
+    },
+    {
+      "id": "RES-WEB-CACHE-001",
+      "source": "https://react.dev/learn/preserving-and-resetting-state",
+      "title": "React state identity and keys",
+      "recommendation": "Use distinct component identity to reset state at a changed user boundary.",
+      "applicability": "Private state and query observers must not survive actor/session replacement.",
+      "decision": "adopted",
+      "rationale": "Numeric occurrence keys remount the application cache subtree; use fresh occurrences rather than a reusable Party-keyed cache."
+    },
+    {
+      "id": "RES-WEB-CACHE-002",
+      "source": "https://tanstack.com/query/latest/docs/framework/react/reference/classes/QueryClient",
+      "title": "TanStack QueryClient cache lifecycle",
+      "recommendation": "Manage cached data through QueryClient and clear retired caches.",
+      "applicability": "Old queries/mutations may still hold client references.",
+      "decision": "adopted with boundary",
+      "rationale": "Clear the retired cache for cancellation/retention, but use different actual client objects to isolate late callbacks. Do not equate client cleanup with canceling backend effects."
     }
   ]
 }

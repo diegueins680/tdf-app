@@ -92,6 +92,10 @@ run_negative_tlc() {
   fi
   printf 'TDF_TLC_RESULT negative %s %s\n' "${module}" "${config}"
 }
+run_tlc SessionCacheIsolation.tla SessionCacheIsolation.cfg session-cache
+run_negative_tlc SessionCacheShared.cfg session-cache-shared "Invariant PrivateProjection is violated" SessionCacheIsolation.tla
+run_negative_tlc SessionCacheActorReuse.cfg session-cache-actor-reuse "Invariant PrivateProjection is violated" SessionCacheIsolation.tla
+run_negative_tlc SessionCacheStaleExpiry.cfg session-cache-stale-expiry "Invariant CurrentExpiry is violated" SessionCacheIsolation.tla
 run_tlc CatalogReorder.tla CatalogReorder.cfg catalog-reorder
 run_negative_tlc CatalogReorderPartialRollback.cfg catalog-reorder-partialrollback 'Invariant NoRejectedEffect is violated' CatalogReorder.tla
 run_negative_tlc CatalogReorderStaleRevision.cfg catalog-reorder-stalerevision 'Invariant NoStaleCommit is violated' CatalogReorder.tla

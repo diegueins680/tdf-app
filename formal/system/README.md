@@ -7,6 +7,8 @@ Historical green results are not current-candidate evidence.
 
 ## Canonical package
 
+- [session-query-isolation.md](session-query-isolation.md): web account-switch cache isolation, request epochs and bounded negative controls.
+
 - [drive-replay.md](drive-replay.md): actor/request-bound Drive retry admission and provider concurrency exclusions.
 
 - [meta-webhook-admission.md](meta-webhook-admission.md): fail-closed key configuration and exact-body authentication for all supported aliases.

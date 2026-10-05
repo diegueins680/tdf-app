@@ -1023,6 +1023,10 @@
       "tdf-hq-ui/src/session/SessionContext.test.ts",
       "tdf-hq-ui/src/session/SessionContext.tsx",
       "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
+      "tdf-hq-ui/src/session/SessionProviders.test.tsx",
+      "tdf-hq-ui/src/session/SessionProviders.tsx",
+      "tdf-hq-ui/src/session/SessionQueryProvider.test.tsx",
+      "tdf-hq-ui/src/session/SessionQueryProvider.tsx",
       "tdf-hq-ui/src/session/authEvents.ts",
       "tdf-hq-ui/src/session/onboardingIntentRecovery.test.ts",
       "tdf-hq-ui/src/session/onboardingIntentRecovery.ts",
@@ -4557,7 +4561,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "6a1abf57b00f231e4578f25031492dc838e011a16a188d56a3463a6bf4735fda",
+      "sha256": "c96fdf3e940694b8172242fd38a2fec799b1cfdba5e60a291084f1d6c587a66a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4917,13 +4921,13 @@
     {
       "id": "SURFACE-d70122a61e623064",
       "path": "tdf-hq-ui/src/api/client.test.ts",
-      "sha256": "dde8c0cbc27828338bc2c5b194b875e970c3ad38a6e373dabb5a8ab3d2c25ea6",
+      "sha256": "eaec88fe099c62f7d68c2c350eb1b3493a71e132b7324e25e588b34ec76aed56",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2e3549439fba7b8e",
       "path": "tdf-hq-ui/src/api/client.ts",
-      "sha256": "09d51aff41126f9468c27d1f093048cbd7bec4d719696ac2e7a84713e3879700",
+      "sha256": "3cbd9d209c184f0892451f4957721be0a55f65e922df33090c4a8b1e00ccfd13",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6651,7 +6655,7 @@
     {
       "id": "SURFACE-dfd1359e6fe03cbc",
       "path": "tdf-hq-ui/src/main.tsx",
-      "sha256": "a4b37c95ed1aeb7e0e74ca510c6612c734c2e48609059b3fff2d6f5558bbbebd",
+      "sha256": "36d658b2afc501b4c6729dba8ba333d918c434b5ac16e8d7c8228244c119e626",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8181,7 +8185,7 @@
     {
       "id": "SURFACE-9cd6316bcfd08c89",
       "path": "tdf-hq-ui/src/session/SessionContext.tsx",
-      "sha256": "182f1ef4160cc2e9cbda690f6d49e646ef807b110e6d46eb176ed44ae4d7255c",
+      "sha256": "57281da0da41ea04116422cad679e7f7052f55b1e0e3054feeab4438e83c0b5b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8191,9 +8195,33 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-85c277bbf0d40f06",
+      "path": "tdf-hq-ui/src/session/SessionProviders.test.tsx",
+      "sha256": "db255bb28b7788b5090883abd8b33769fb1507bf0c353a66f097725024f74de1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-10caedec4015767f",
+      "path": "tdf-hq-ui/src/session/SessionProviders.tsx",
+      "sha256": "0a75819f91321403b981874eef2d44482d6a0fd90e3bfbc009daa7b925d8082f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-dd9e646b4f4e6cec",
+      "path": "tdf-hq-ui/src/session/SessionQueryProvider.test.tsx",
+      "sha256": "5109459ac552aec840246f08366bf65ec95a0fe26579b7664cee39dcfdae6250",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-223459b3ba4d1f45",
+      "path": "tdf-hq-ui/src/session/SessionQueryProvider.tsx",
+      "sha256": "a210c0bdf2b574603474abe4c839e7a6bed0d3b3c4eff9fc679495ad41a0e74b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-3acc1be5abd0e8e7",
       "path": "tdf-hq-ui/src/session/authEvents.ts",
-      "sha256": "6e436f80bf03533f064b4f09670f935d34cfaaa996cc3c9c120903066b7c4000",
+      "sha256": "7eb5599167ba8a097912f600c0b88a472c9d56e98b0115bba05aa3734249e977",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19477,6 +19505,41 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/SessionCacheActorReuse.cfg",
+      "sha256": "a67bf510dafa80fe3c2ceb050c346c4c178e3806992c90b645c215eb38d4a3f8",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/SessionCacheIsolation.cfg",
+      "sha256": "5f56615b039996337098e8887f3e64b1c90450f662e09cb4ff938ec4585f137c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/SessionCacheIsolation.tla",
+      "sha256": "49a1e4d7f27a1845ed6bfd0865fa37df54bdb54bafa1680cfbe2d929e18bdb02",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/SessionCacheShared.cfg",
+      "sha256": "f74933f9f108b2b6ea0bb01fa076ed267545aa013310ce5bcda56158a5616c0a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/SessionCacheStaleExpiry.cfg",
+      "sha256": "a983ce3cc1d979a0cbde0d00531016bdf68c29efd49dc735cc62301212be82f1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/SessionFence.cfg",
       "sha256": "35110db7a0007b753f31e7fc8002a588eb9258f580b3f24d0ceebb15d3afe8d8",
       "authority": "inferred",
@@ -20451,14 +20514,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "b6c41e008b9b6e9a06e83f6fd2be6a853522c305ef5f1bab1dfcc26f4341465e",
+      "sha256": "bb9b757bf76805dd8711206c52bb9f125684a4523b486d2cdc4b62426d9a1259",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "dc5a3be2f83423577e35f68e72a84fbf863a7b31899105bbb5226c3c781918ae",
+      "sha256": "2cdd98c2e60a7eab9747be902df2fbfa82bd0007db6254a82e23bcf56df6cdcf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20612,14 +20675,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "6db0e8d4ed1cfa2c4601f83aec675bc9af0181ebef6877a6d4f9ec51efce1284",
+      "sha256": "a3eda3754151917659a8bfc7ae8273c1d4dd7992324b312557374d1d2906c5c8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "3fbe5c9cf3c6436700fbef2c08ade8ff5080f3c73f25743e37e9f5a5e6384374",
+      "sha256": "a9595c633d78ff92b2bdf111f5d4e00bae72e8f2798ddf19551a8481302321fe",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20634,6 +20697,13 @@
     {
       "path": "formal/system/routed-read-boundaries.md",
       "sha256": "e104edf8ce9bebda7c241b2c3bc9c7b5f7d6950342f8877886450a1396115352",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/session-query-isolation.md",
+      "sha256": "70a43c716c0d91a9047d802d0f5eb60977d81f0a7f875425bcfa05ec0a7d0f5c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29742,6 +29812,50 @@
         "  IsolatedTarget = FALSE",
         "  VerifiedReceipt = TRUE",
         "INVARIANTS TypeOK ExclusiveOwners NoSourceMutation AtMostOneIsolate ReceiptSound"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/SessionCacheActorReuse.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS SeparateCache = TRUE ReuseActorClients = TRUE BindExpiryEpoch = TRUE",
+        "INVARIANTS TypeOK PrivateProjection CurrentExpiry"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/SessionCacheIsolation.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS SeparateCache = TRUE ReuseActorClients = FALSE BindExpiryEpoch = TRUE",
+        "INVARIANTS TypeOK PrivateProjection CurrentExpiry"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/SessionCacheShared.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS SeparateCache = FALSE ReuseActorClients = FALSE BindExpiryEpoch = TRUE",
+        "INVARIANTS TypeOK PrivateProjection CurrentExpiry"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/SessionCacheStaleExpiry.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS SeparateCache = TRUE ReuseActorClients = FALSE BindExpiryEpoch = FALSE",
+        "INVARIANTS TypeOK PrivateProjection CurrentExpiry"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

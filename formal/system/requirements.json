@@ -3960,6 +3960,86 @@
         "reason": "Repair and deterministic transport checks require exact compiled execution; concurrency and deployed correspondence remain open."
       },
       "critical": true
+    },
+    {
+      "id": "PRIV-CACHE-001",
+      "title": "Isolate private web data and auth failures by session occurrence",
+      "statement": "A new security-scope occurrence must never render or cache a prior occurrence response, and a stale request authentication failure must not expire the current occurrence.",
+      "authority": "authorized privacy defect repair with local reproduction",
+      "domain": "PRIV",
+      "actors": [
+        "Web user",
+        "Previous account on shared browser",
+        "Asynchronous query or mutation callback"
+      ],
+      "preconditions": [
+        "Production SessionProviders composition surrounds every query consumer; backend responses are scoped correctly."
+      ],
+      "inputs": [
+        "Session identity, token, roles, modules, flags and authentication occurrence",
+        "Private query responses, mutation callbacks and session-auth errors"
+      ],
+      "state": {
+        "boundary": "Mounted application QueryClient and auth request epoch",
+        "states": [
+          "anonymous occurrence",
+          "authenticated occurrence",
+          "retired occurrence with pending work"
+        ]
+      },
+      "allowedTransitions": [
+        "login/logout/bootstrap/token/scope change -> new occurrence and fresh QueryClient subtree",
+        "old completion -> retired client only",
+        "matching-epoch invalid-session error -> local logout"
+      ],
+      "forbiddenTransitions": [
+        "old cached or late response -> current private view",
+        "old mutation callback -> current QueryClient",
+        "stale401/403 -> expire a newer occurrence"
+      ],
+      "effects": [
+        "Reset query/component/toast state at session boundary; retain prior staleness/retry defaults."
+      ],
+      "authorization": "Cache isolation complements backend authorization and does not approve a mutation. Role/feature changes rotate the security scope.",
+      "privacy": "Private cached data is not reused across session occurrences, even for the same returning actor; no credentials in React keys or new persisted cache.",
+      "concurrency": "Synchronous scope selection precedes child commit; pending work retains its old client. Request-epoch equality gates auth-expiration events.",
+      "idempotency": "No mutation retry behavior is added. A new session occurrence always allocates a new client, including A->B->A.",
+      "failure": "The original request retains its HTTP error; a stale auth failure emits no current-session expiration. Cache misses refetch under current authority.",
+      "recovery": "User may authenticate again; the returned actor receives a fresh cache. Already-started backend/provider mutation is not rolled back by logout.",
+      "observability": "Synthetic component and API tests retain exact revisions and forbid prior private sentinel display; bounded model logs include named negative controls.",
+      "source": "main.tsx shared QueryClient; SessionContext lifecycle; internal-feedback actorless keys; AUTHORITY-032; synthetic9f reproduction",
+      "property": "PrivateProjection and CurrentExpiry",
+      "contract": "formal/system/session-query-isolation.md",
+      "implementation": [
+        "tdf-hq-ui/src/main.tsx",
+        "tdf-hq-ui/src/session/SessionProviders.tsx",
+        "tdf-hq-ui/src/session/SessionQueryProvider.tsx",
+        "tdf-hq-ui/src/session/SessionContext.tsx",
+        "tdf-hq-ui/src/session/authEvents.ts",
+        "tdf-hq-ui/src/api/client.ts"
+      ],
+      "verification": "Actual SessionProvider/TanStack components, actual pending mutation callbacks, fake HTTP auth error and bounded three-occurrence TLA model.",
+      "evidence": "SessionQueryProvider/SessionProviders/client tests and SessionCacheIsolation configurations; final-candidate execution required.",
+      "status": "specified and implemented",
+      "historicalStatus": "observed-defect-repaired-awaiting-final-gates",
+      "critical": true,
+      "tests": [
+        "tdf-hq-ui/src/session/SessionQueryProvider.test.tsx",
+        "tdf-hq-ui/src/session/SessionProviders.test.tsx",
+        "tdf-hq-ui/src/api/client.test.ts"
+      ],
+      "formalModels": [
+        "formal/event-operations/SessionCacheIsolation.tla"
+      ],
+      "confidence": "Local forbidden behavior reproduced; working component fixes pass; exact final integration/deployment pending.",
+      "ambiguity": [
+        "Cross-tab/device revocation and non-QueryClient storage need separate conformance.",
+        "Mobile late-mutation behavior is not established by this web-only model."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Working implementation and bounded model require final combined checks and deployed verification; broader storage/device boundaries remain open."
+      }
     }
   ]
 }
