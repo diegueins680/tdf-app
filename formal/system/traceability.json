@@ -2741,7 +2741,7 @@
     }
   ],
   "sourceFingerprints": {
-    ".github/workflows/ci.yml": "d11e060bfb0debe3f1a3ddea8fabd5442a5ebcc72d1a98f148a883a32091f125",
+    ".github/workflows/ci.yml": "5eb478b94a578de93cbf8fcf70bdeba1cbed2526aeac8244a1eea393efeb0021",
     ".github/workflows/event-operations-formal.yml": "8cdbbb59f539a8394fde147ba38dc4f27260b9ac2c371c731da5b342401077d1",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
     "formal/event-operations/ChatMutationBoundary.cfg": "dc76bf1caa1a43de6891a51256da9efc4264ac45b882fef969bc15895068e0fa",
@@ -2832,7 +2832,7 @@
     "scripts/specification-inventory.py": "d2fd062de80b6aacf832714799d7596f13cabf101d2d7073192b2cd6ec6ff275",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-booking-conformance.py": "c2c63b10dd70b32fdadf2e78397923fba72c47092a6d290c232cf227ca5fd98c",
+    "scripts/test-booking-conformance.py": "0c2d1fd2118efcd3fc01293c701dc5bef307e77ddb44d11c17c9e9118401bd6e",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-inspection.py": "bd6d20cea85b0e1c3c29a342bf78e512345b8f224c4d880563d3634ac18c923c",
     "scripts/test-hetzner-restore.py": "29c865489be16fb0510927b5fe6815498dde82dc74197365ac37bfbe28c79cf4",
@@ -4254,7 +4254,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "d11e060bfb0debe3f1a3ddea8fabd5442a5ebcc72d1a98f148a883a32091f125",
+      "sha256": "5eb478b94a578de93cbf8fcf70bdeba1cbed2526aeac8244a1eea393efeb0021",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -6736,7 +6736,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "c2c63b10dd70b32fdadf2e78397923fba72c47092a6d290c232cf227ca5fd98c",
+      "sha256": "0c2d1fd2118efcd3fc01293c701dc5bef307e77ddb44d11c17c9e9118401bd6e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

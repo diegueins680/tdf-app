@@ -286,6 +286,16 @@ jobs:
       - name: Build and test backend once
         run: bash scripts/quality-backend.sh
 
+      - name: Verify booking object scope and concurrent resource calendar
+        env:
+          TDF_BOOKING_TEST_PG_HOST: postgres
+          TDF_BOOKING_TEST_PG_PORT: '5432'
+          TDF_BOOKING_TEST_PG_ROLE: postgres
+          TDF_BOOKING_TEST_PG_PASSWORD: postgres
+          TDF_BOOKING_TEST_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
+          TDF_BOOKING_TEST_OUTPUT: ${{ runner.temp }}/booking-conformance
+        run: python3 scripts/test-booking-conformance.py
+
       - name: Verify artist self-service transactions and migration
         env:
           PGHOST: postgres
@@ -431,16 +441,6 @@ jobs:
           TDF_EXPERIMENT_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
         run: node scripts/__tests__/experiment-http-runtime.mjs
 
-      - name: Verify booking object scope and concurrent resource calendar
-        env:
-          TDF_BOOKING_TEST_PG_HOST: postgres
-          TDF_BOOKING_TEST_PG_PORT: '5432'
-          TDF_BOOKING_TEST_PG_ROLE: postgres
-          TDF_BOOKING_TEST_PG_PASSWORD: postgres
-          TDF_BOOKING_TEST_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
-          TDF_BOOKING_TEST_OUTPUT: ${{ runner.temp }}/booking-conformance
-        run: python3 scripts/test-booking-conformance.py
-
       - name: Exercise public booking HTTP idempotency and resource conflicts
         env:
           TDF_PUBLIC_BOOKING_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
@@ -454,6 +454,15 @@ jobs:
           PGPASSWORD: postgres
           TDF_INTERACTION_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
         run: bash scripts/interactions/test-http.sh
+
+      - name: Retain synthetic booking conformance evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: booking-conformance-${{ github.sha }}
+          path: ${{ runner.temp }}/booking-conformance
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Upload tested backend executable
         if: inputs.publish_backend_artifact == true || (github.event_name == 'workflow_dispatch' && inputs.native_android_run != '')

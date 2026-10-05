@@ -106,7 +106,7 @@ try:
     actors = {role: actor(role) for role in roles}
     owner = actor('artist', 'owner')
     resource = sql("INSERT INTO resource(name,slug,resource_type,capacity,active) VALUES ('Fixture room','booking-conformance-room','Room',1,true) RETURNING id")
-    first = booking(owner, 'First', '10:00', '11:00')
+    first = booking(owner, 'First', '10:00', '11:00', engineer=owner)
     second = booking(owner, 'Second', '12:00', '13:00')
     with socket.socket() as sock:
         sock.bind(('127.0.0.1', 0)); http_port = sock.getsockname()[1]
@@ -144,6 +144,8 @@ try:
             status, _ = request('/bookings/' + first, {'ubNotes': 'UNAUTHORIZED'}, token='fixture-' + role)
             check(role + ' cannot mutate foreign booking', status in (401, 403, 404))
     for selector in ['partyId=' + owner, 'engineerPartyId=' + owner, 'partyId=' + owner + '&engineerPartyId=' + owner]:
+        status, body = request('/bookings?' + selector)
+        check('filtered calendar positive control ' + selector, status == 200 and 'PRIVATE_SYNTHETIC_NOTE' in body)
         status, body = request('/bookings?' + selector, token='fixture-artist')
         check('foreign filtered calendar denied ' + selector, status == 200 and 'PRIVATE_SYNTHETIC_NOTE' not in body)
     status, body = request('/bookings?bookingId=' + first, token='fixture-owner')
@@ -156,6 +158,29 @@ try:
     check('explicitly assigned engineer can update', status == 200 and sql('SELECT notes FROM booking WHERE id=' + first) == 'ASSIGNED')
     status, _ = request('/bookings/' + second, {'ubEngineerPartyId': int(actors['student'])}, token='fixture-student')
     check('request cannot confer assignment authority', status == 404 and sql('SELECT engineer_party_id IS NULL FROM booking WHERE id=' + second) == 't')
+
+    # CRM admission must not expose foreign booking projections through either
+    # customer/engineer lists or a class-session link. Use an actual matching row
+    # and a distinct booking status so a missing filter cannot pass vacuously.
+    crm_booking = booking(owner, 'CRM_PRIVATE_BOOKING', '20:00', '21:00', engineer=owner, status='Cancelled')
+    subject = sql("INSERT INTO subject(name,active) VALUES ('Synthetic CRM subject',true) RETURNING id")
+    class_id = sql("INSERT INTO class_session(student_id,teacher_id,subject_id,start_at,end_at,room_id,booking_id,attended) VALUES (" + owner + "," + actors['teacher'] + "," + subject + ",'2035-01-01 20:00+00','2035-01-01 21:00+00'," + resource + "," + crm_booking + ",false) RETURNING id")
+    def crm_projection(token):
+        status, body = request('/parties/' + owner + '/related', token=token)
+        check('CRM projection request admitted ' + token, status == 200)
+        projection = json.loads(body)
+        sessions = [row for row in projection['prClassSessions'] if str(row['prcClassSessionId']) == class_id]
+        check('CRM class positive fixture exists ' + token, len(sessions) == 1)
+        return projection, sessions[0]
+    projection, session = crm_projection('fixture-producer')
+    check('CRM admission cannot expose foreign customer or engineer booking', projection['prBookings'] == [])
+    check('CRM class cannot expose foreign booking identity or status', session['prcBookingId'] is None and session['prcStatus'] == 'programada')
+    projection, session = crm_projection('fixture-admin')
+    check('staff CRM retains both booking relationships', len([row for row in projection['prBookings'] if str(row['prbBookingId']) == crm_booking]) == 2)
+    check('staff CRM retains linked booking identity and status', str(session['prcBookingId']) == crm_booking and session['prcStatus'] == 'cancelada')
+    sql('UPDATE booking SET engineer_party_id=' + actors['producer'] + ' WHERE id=' + crm_booking)
+    projection, session = crm_projection('fixture-producer')
+    check('assigned CRM actor retains authorized booking projection', any(str(row['prbBookingId']) == crm_booking for row in projection['prBookings']) and str(session['prcBookingId']) == crm_booking and session['prcStatus'] == 'cancelada')
 
     status, _ = request('/bookings/' + second, {'ubStartsAt': '2035-01-01T10:30:00Z', 'ubEndsAt': '2035-01-01T11:30:00Z'})
     check('overlapping move conflicts at HTTP boundary', status == 409)

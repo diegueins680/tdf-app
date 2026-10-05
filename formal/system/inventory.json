@@ -2215,7 +2215,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "d11e060bfb0debe3f1a3ddea8fabd5442a5ebcc72d1a98f148a883a32091f125",
+      "sha256": "5eb478b94a578de93cbf8fcf70bdeba1cbed2526aeac8244a1eea393efeb0021",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4015,7 +4015,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "c2c63b10dd70b32fdadf2e78397923fba72c47092a6d290c232cf227ca5fd98c",
+      "sha256": "0c2d1fd2118efcd3fc01293c701dc5bef307e77ddb44d11c17c9e9118401bd6e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
