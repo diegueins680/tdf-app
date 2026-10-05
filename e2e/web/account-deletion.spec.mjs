@@ -45,7 +45,7 @@ for (const width of [390, 412, 834, 1280]) {
     expect(await submit.evaluate(el => getComputedStyle(el).outlineStyle)).not.toBe('none');
     expect((await submit.boundingBox()).height).toBeGreaterThanOrEqual(44);
     await page.addScriptTag({ content: axe.source });
-    expect(await page.evaluate(async () => (await axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'] } })).violations.map(v => v.id))).toEqual([]);
+    expect(await page.evaluate(async () => (await axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'] } })).violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => ({ target: n.target, summary: n.failureSummary })) })))).toEqual([]);
     await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     const readsBefore = state.sessionReads;

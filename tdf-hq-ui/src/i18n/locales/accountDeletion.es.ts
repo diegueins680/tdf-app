@@ -15,4 +15,5 @@ export default {
   retry: 'Reintentar',
   loading: 'Verificando tu sesión…',
   privacy: 'Consultar la política de privacidad',
+  operatorRecord: 'Solicitud {{requestId}} · Cuenta autenticada registrada por el servidor: {{partyId}}. Compara esta identidad con la solicitud antes de tramitarla; un registro sin identidad no autoriza eliminar una cuenta.',
 };

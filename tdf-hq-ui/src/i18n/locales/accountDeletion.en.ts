@@ -15,4 +15,5 @@ export default {
   retry: 'Try again',
   loading: 'Verifying your session…',
   privacy: 'Read the privacy policy',
+  operatorRecord: 'Request {{requestId}} · Authenticated account recorded by the server: {{partyId}}. Match this identity to the request before processing; an unidentified record does not authorize account deletion.',
 };

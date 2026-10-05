@@ -39,7 +39,7 @@ function DeletionForm({ partyId, username }: { partyId: number; username: string
     <FormControlLabel control={<Checkbox checked={confirmed} onChange={event => setConfirmed(event.target.checked)} />} label={t('accountDeletion.confirm')} />
     {(catalogs.isError || (catalogs.isSuccess && (!categoryId || !severityId))) && <Alert severity="error">{t('accountDeletion.unavailable')} <Button onClick={() => void catalogs.refetch()}>{t('accountDeletion.retry')}</Button></Alert>}
     {mutation.isError && <Alert severity="error">{t('accountDeletion.error')}</Alert>}
-    <Button type="submit" color="error" variant="contained" disabled={!confirmed || !categoryId || !severityId || mutation.isPending}>{t(mutation.isPending ? 'accountDeletion.sending' : 'accountDeletion.submit')}</Button>
+    <Button type="submit" color="error" variant="contained" disableRipple sx={{ bgcolor: 'error.dark', color: 'common.white', '&:hover': { bgcolor: 'error.dark' }, '@media (prefers-reduced-motion: reduce)': { transition: 'none' } }} disabled={!confirmed || !categoryId || !severityId || mutation.isPending}>{t(mutation.isPending ? 'accountDeletion.sending' : 'accountDeletion.submit')}</Button>
   </Stack>;
 }
 

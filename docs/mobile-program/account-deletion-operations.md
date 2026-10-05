@@ -19,7 +19,10 @@ manual with the already stated target of 30 days and a completion confirmation.
 1. Find the `account_deletion_request` in the existing internal feedback queue
    (the normal feedback notification also reaches the confirmed inbox).
 2. Verify the authoritative database/queue `feedbackCreatedBy` is present and
-   matches `requested_account_party_id`. The feedback endpoint also accepts
+   matches `requested_account_party_id`. The administrator view shows the
+   server-recorded account and request IDs beside these requests; the protected
+   `GET /feedback/internal/legacy` response exposes them as `lfdCreatedBy` and
+   `lfdId`. The feedback endpoint also accepts
    anonymous feedback: a body, email, title or claimed ID alone is **not**
    authority to delete an account. Reject mismatched requests for fulfilment;
    ask the account holder to use the authenticated flow again if needed.
