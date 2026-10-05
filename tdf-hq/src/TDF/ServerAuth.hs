@@ -53,7 +53,8 @@ module TDF.ServerAuth
   ) where
 
 import Control.Applicative ((<|>))
-import Control.Exception (SomeException, displayException, try)
+import Control.Exception.Safe (SomeException, try)
+import TDF.App.FailureBoundary (bestEffortActivity)
 import Control.Monad (forM, forM_, guard, join, unless, void, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, ask, asks)
@@ -1251,7 +1252,7 @@ recordAuthActivity actionName LoginResponse{partyId = responsePartyId} acceptedT
   Env pool _ <- ask
   let actorId = toSqlKey responsePartyId :: PartyId
       entityId = T.pack (show responsePartyId)
-  result <- liftIO $ try $
+  liftIO $ bestEffortActivity (LogBuf.addLog LogBuf.LogWarning) $
     flip runSqlPool pool $
       recordUserActivity
         (Just actorId)
@@ -1263,17 +1264,6 @@ recordAuthActivity actionName LoginResponse{partyId = responsePartyId} acceptedT
           , "termsVersion" .= acceptedTermsVersion
           , "marketingOptIn" .= marketingConsent
           ]))
-  case result of
-    Left (err :: SomeException) -> do
-      let msg =
-            "[Auth][Activity] Failed to record "
-              <> actionName
-              <> " for partyId="
-              <> entityId
-              <> ": "
-              <> T.pack (displayException err)
-      liftIO $ LogBuf.addLog LogBuf.LogWarning msg
-    Right () -> pure ()
 
 recordAccountCreationConsent :: PartyId -> Text -> Text -> Maybe Bool -> SqlPersistT IO ()
 recordAccountCreationConsent actorId signupMethod acceptedTermsVersion marketingConsent = do

@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "candidate": "53918ca8a1e98ac3cec961a7e74780ea54f2072d",
+  "hostedSyntheticMerge": "056fa914047e0f35124570254e837c4c1d6193d2",
+  "equalTree": "292d1224b15eb1d0b8d0769ca26eca058f040771",
+  "workflow": "https://github.com/diegueins680/tdf-app/actions/runs/37337254975",
+  "formalWorkflow": "https://github.com/diegueins680/tdf-app/actions/runs/37337255303",
+  "backend": {
+    "result": "PASS",
+    "examples": 3825,
+    "failures": 0,
+    "pending": 7,
+    "pendingReason": "The default suite defers seven PostgreSQL groups to their separate isolated runners in the same hosted backend job."
+  },
+  "personaBrowser": {
+    "result": "FAIL",
+    "test": "[webkit-critical] PW-PER-LOCALE en signup and recovery retain language and destination",
+    "observation": "Recovery email remained empty after fill; Enter produced required-email validation instead of reaching the mocked network failure. No single cause established by trace."
+  },
+  "requestFailureBoundary": {
+    "candidate": "3ad3d8a8bbfd07e5b3d3fad318dd7f479560037f",
+    "examples": 13,
+    "invalidVariantsDetected": 3,
+    "scope": "Actual Haskell middleware/unit source; not full application or deployment."
+  },
+  "artifactSha256": {
+    "http-result.json": "2b1dce7c56360eca32f06362d5b66dd34f9565f5d5f2a2ef484552b0ddca5e98",
+    "formal-result.json": "3a8e19243466dc5df24a8b825726ef12f298907b18f80f791d61234391e2a41f",
+    "migration-rehearsal.json": "fd305c8a3b00bc8350aba0242c4d2dfa6928c753ffac00cb5f349ab38717ae9e",
+    "request-failure-controls.json": "1c0b57f3eef75c7f021f248ddaa0cd452fce4efca5758fcda470a4446907f311"
+  },
+  "limitations": [
+    "These are recorded candidate results, not evidence for later source changes.",
+    "No audit merge or deployment; no production database writes or real-money verification.",
+    "Whole-system specification reconciliation and semantic traceability remain incomplete."
+  ]
+}

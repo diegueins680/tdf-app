@@ -491,6 +491,16 @@
       "rationale": "A unique order intent and fenced retry preserve local authority; SMTP cannot participate in the transaction. No exactly-once inbox claim or AWS infrastructure dependency.",
       "verifiedAt": "2026-10-05",
       "supportingSource": "https://www.postgresql.org/docs/17/sql-select.html#SQL-FOR-UPDATE-SHARE"
+    },
+    {
+      "id": "RES-HTTP-ERROR-001",
+      "source": "https://hackage-content.haskell.org/package/warp-3.4.9/src/Network/Wai/Handler/Warp/Settings.hs",
+      "title": "Installed Warp3.4.9 default exception response source",
+      "recommendation": "Stock fallback returns fixed400/413/431/500 bodies and propagates asynchronous exceptions; default logging renders application exceptions.",
+      "applicability": "Boot request fallback and Warp diagnostic logger",
+      "decision": "adopted",
+      "rationale": "Retain stock safe protocol responses without wildcard CORS; replace raw diagnostic rendering with a fixed identifier. Exact installed version checked with Stack ghc-pkg.",
+      "verifiedAt": "2026-10-05"
     }
   ]
 }

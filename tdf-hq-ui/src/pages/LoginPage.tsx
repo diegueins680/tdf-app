@@ -645,7 +645,11 @@ export default function LoginPage() {
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
-      identifierInputRef.current?.focus();
+      // A dialog or user interaction may take focus before this deferred frame.
+      // Do not redirect pending keyboard input into the background login form.
+      if (document.activeElement === document.body && !document.querySelector('[role="dialog"]')) {
+        identifierInputRef.current?.focus();
+      }
     });
     return () => window.cancelAnimationFrame(frame);
   }, []);

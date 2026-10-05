@@ -442,6 +442,7 @@
       "scripts/verify-event-operations-pluscal.mjs",
       "scripts/verify-improvement-loop.mjs",
       "scripts/verify-payment-arithmetic.py",
+      "scripts/verify-request-failures.py",
       "scripts/verify-simulator-health.sh",
       "scripts/verify-system-evidence.mjs",
       "scripts/wrap-catalog-canonical-schema.mjs"
@@ -1593,6 +1594,7 @@
       "tdf-hq/src/TDF/API/Types.hs",
       "tdf-hq/src/TDF/API/WhatsApp.hs",
       "tdf-hq/src/TDF/App/Boot.hs",
+      "tdf-hq/src/TDF/App/FailureBoundary.hs",
       "tdf-hq/src/TDF/App/StartupResponse.hs",
       "tdf-hq/src/TDF/Artists/Enrichment.hs",
       "tdf-hq/src/TDF/Artists/Promotion.hs",
@@ -1804,6 +1806,7 @@
       "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
       "tdf-hq/test/TDF/EventOperations/SessionFenceSpec.hs",
       "tdf-hq/test/TDF/EventOperations/TypesSpec.hs",
+      "tdf-hq/test/TDF/FailureBoundarySpec.hs",
       "tdf-hq/test/TDF/LiveIntakeIdentitySpec.hs",
       "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
       "tdf-hq/test/TDF/Operations/ModelSpec.hs",
@@ -3722,7 +3725,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "7be0e6a87e50b625239a70858d53d9d3340a409000ea9f1dc475c96585b495d7",
+      "sha256": "c45d2bf141efa9ef71097dc2721d60c3c0f00a8f31e7b44fac940bb8def1b752",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4778,7 +4781,7 @@
     {
       "id": "SURFACE-da360911414286b5",
       "path": "scripts/verify-cors-boundary.py",
-      "sha256": "836906067ac620b64214922f9390c012848abf5bc1c4ca6f15a02757986bcddd",
+      "sha256": "b5ba1d728abbc2181ffd260237e5743f38feb7681cb7fcd4e9cc5c969a2395b0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4803,6 +4806,12 @@
       "id": "SURFACE-0ae5496c9a8acae5",
       "path": "scripts/verify-payment-arithmetic.py",
       "sha256": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-fa1f8b855944ecc5",
+      "path": "scripts/verify-request-failures.py",
+      "sha256": "962304b68f710adb12c87a530fa4676da0aca761a4c60dbb4f6615b9b934d439",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7706,13 +7715,13 @@
     {
       "id": "SURFACE-2b469a2b395c027a",
       "path": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-      "sha256": "f88e22a6253b0cefe744d8e09b7edc088c2f45c52934855eba384365af88cac0",
+      "sha256": "173a82881bf1ee9764582a56a82ea72c9e6aede174eab68ffbfbc77f8bfb6db7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f46d0ae001744f15",
       "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
-      "sha256": "78885e7bb418d22f98657a2823effb36743857f0edc8b4fa9849a219e9aa3c3b",
+      "sha256": "a08e02310726ed8c9a9306b106fdb65419ecb93e27d8b35efa6da847bdabf049",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11672,7 +11681,13 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "22ce86fa5329425e5239fcf100dbe34e6f20e02ba722a8db09ebe0389f1aad1d",
+      "sha256": "129faabf08605150ee2e8854be2d94e8da42eb3c42ee82c9aaabc8707a9af4d1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4893f1464484dd6a",
+      "path": "tdf-hq/src/TDF/App/FailureBoundary.hs",
+      "sha256": "604d4d6670667d5da5c6a3e34c891dffaa0f7be05feef73671f56897fb41ac07",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12464,7 +12479,7 @@
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "f2e6388e573818567db451d3770b88442741fbf5b3724104fc4126346f1aaa36",
+      "sha256": "4b53165a764b1d6dd083f193ad1f0d752b42d10ef48bcab2ac9337fb791288e7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12524,7 +12539,7 @@
     {
       "id": "SURFACE-5a72b47f8b63ff19",
       "path": "tdf-hq/src/TDF/ServerRadio.hs",
-      "sha256": "26aab8d39dba5eb065a6acfc37f3f3b4c277e5d3bb80b4ce9645912b970d96bb",
+      "sha256": "964189f5f5c8b06bbbbfca51d5ed4329e29d81d4f71012ad672343d1f6e7b319",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12746,7 +12761,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "83130e83f967345b7de337d808879fb7210ab95e1e5cadcbaea743c6a71390f1",
+      "sha256": "c2f2de27bae619934ebd0f05e680e15c4990f5101478ba08587786d94f9a240c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12788,7 +12803,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "3678e5005a2fd52dcbab8ee279824b7827a97805bb2f0912eaa4247cd4da0883",
+      "sha256": "b142c0195c1fac1707c9318fe946bd9ee82448607872990f67f4845139bdf47d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12939,6 +12954,12 @@
       "id": "SURFACE-b7c5b68652826d3d",
       "path": "tdf-hq/test/TDF/EventOperations/TypesSpec.hs",
       "sha256": "b8ae8271535758e9e40efcd106b9abfd9b3775ed9f55f51a9022039bce8e169a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d7524ac1e833fed0",
+      "path": "tdf-hq/test/TDF/FailureBoundarySpec.hs",
+      "sha256": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18407,7 +18428,7 @@
     },
     {
       "path": "docs/ux-ui-audit/2026-09-17/locale-recovery.md",
-      "sha256": "c98e0956e2c2ca5f466e5fe57d70c2fc532a20c32ca01d167031ac50d0027d03",
+      "sha256": "de3a6105ac46b00767d209d48334dfa5c83922de7b2b7505f6f342c756851447",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21249,7 +21270,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "9d375957077b10e711f3dface8485d9e5d48f882a26012cea60364c812d97681",
+      "sha256": "ab8eee78c899073dad98f363f8b287d3e851e61d3b8bef1df8891318eeb91ecc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21444,15 +21465,22 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/request-failure-boundary.md",
+      "sha256": "4162fd62469608976edd1ddf661615154dfe81493be128632059513a6e4b3b86",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/requirements.json",
-      "sha256": "05babd5fca4a08cceaf9be297bc8e217c62a619b3005dfbb199675809bd12c02",
+      "sha256": "219cb1eedd50c37a3b7695a134a5ea46dff94086efcb587fd7af69a4286e624d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "a5c74e36fbeb8e8d5d20856c7aa53f7a56b80cec7b381609c8927da84640a59d",
+      "sha256": "26828686bbfd6589bef04cd59f46d20bece2e9725259536d2b449f52d6570dea",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

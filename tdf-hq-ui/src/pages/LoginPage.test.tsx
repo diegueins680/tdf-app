@@ -365,6 +365,76 @@ describe('LoginPage Google signup consent flow', () => {
       await cleanup();
     }
   }, 15_000);
+  it('focuses the login identifier when the initial page is still idle', async () => {
+    const frames: FrameRequestCallback[] = [];
+    const requestFrame = jest.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
+      frames.push(callback);
+      return frames.length;
+    });
+    const cleanup = await renderLoginPage();
+    try {
+      expect(document.activeElement).toBe(document.body);
+      expect(frames.length).toBeGreaterThan(0);
+      await act(async () => { frames.splice(0).forEach(frame => frame(0)); });
+      expect(document.activeElement).toBe(document.querySelector('input[autocomplete="username"]'));
+    } finally {
+      requestFrame.mockRestore();
+      await cleanup();
+    }
+  });
+
+  it('does not focus the background identifier while an opening dialog has not taken focus', async () => {
+    const frames: FrameRequestCallback[] = [];
+    const requestFrame = jest.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
+      frames.push(callback);
+      return frames.length;
+    });
+    const cleanup = await renderLoginPage('/login?recover=1');
+    try {
+      expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+      const identifier = document.querySelector<HTMLInputElement>('input[autocomplete="username"]')!;
+      const focusIdentifier = jest.spyOn(identifier, 'focus');
+      await act(async () => {
+        (document.activeElement as HTMLElement).blur();
+        expect(document.activeElement).toBe(document.body);
+        frames.splice(0).forEach(frame => frame(0));
+        expect(focusIdentifier).not.toHaveBeenCalled();
+      });
+      focusIdentifier.mockRestore();
+    } finally {
+      requestFrame.mockRestore();
+      await cleanup();
+    }
+  });
+
+  it.each(['/login?recover=1', '/login?signup=1', '/login'])(
+    'does not let delayed initial autofocus steal the current interaction at %s',
+    async (entry) => {
+      const frames: FrameRequestCallback[] = [];
+      const requestFrame = jest.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
+        frames.push(callback);
+        return frames.length;
+      });
+      const cleanup = await renderLoginPage(entry);
+      try {
+        const field = entry.includes('recover')
+          ? document.querySelector<HTMLInputElement>('[role="dialog"] input[name="email"]')
+          : entry.includes('signup')
+            ? document.querySelector<HTMLInputElement>('[role="dialog"] input[name="givenName"]')
+            : document.querySelector<HTMLInputElement>('input[autocomplete="current-password"]');
+        expect(field).not.toBeNull();
+        await act(async () => { field?.focus(); });
+        expect(document.activeElement).toBe(field);
+        expect(frames.length).toBeGreaterThan(0);
+        await act(async () => { frames.splice(0).forEach(frame => frame(0)); });
+        expect(document.activeElement).toBe(field);
+      } finally {
+        requestFrame.mockRestore();
+        await cleanup();
+      }
+    },
+  );
+
   it('unmounts a dismissed recovery dialog without waiting for an exit animation', async () => {
     const cleanup = await renderLoginPage('/login?recover=1&redirect=%2Ffans&lang=es');
     const dialog = () => document.querySelector('[role="dialog"][aria-labelledby="login-reset-dialog-title"]');

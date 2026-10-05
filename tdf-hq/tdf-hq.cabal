@@ -13,6 +13,7 @@ executable tdf-hq-exe
   other-modules:
     TDF.App.Boot
     TDF.App.StartupResponse
+    TDF.App.FailureBoundary
     TDF.API.Admin
     TDF.API
     TDF.API.Bands
@@ -312,12 +313,14 @@ test-suite tdf-hq-test
     TDF.Commerce.PaymentArithmeticSpec
     TDF.EmailHeadersSpec
     TDF.CorsSpec
+    TDF.FailureBoundarySpec
     TDF.TicketConfirmationSpec
     Paths_tdf_hq
     TDF.API
     TDF.API.Admin
     TDF.App.Boot
     TDF.App.StartupResponse
+    TDF.App.FailureBoundary
     TDF.API.Bands
     TDF.API.Facebook
     TDF.API.Future
