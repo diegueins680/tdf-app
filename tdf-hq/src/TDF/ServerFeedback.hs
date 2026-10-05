@@ -12,6 +12,7 @@ module TDF.ServerFeedback
   , validateAccountDeletionOutcome
   , normalizeAccountDeletionDescription
   , accountDeletionOwnerMatches
+  , feedbackNotificationRecipients
   , normalizeOptionalFeedbackText
   , validateFeedbackDescription
   , validateFeedbackTitle
@@ -178,11 +179,15 @@ feedbackServer authorizationHeader cookieHeader =
             , feedbackCreatedAt    = now
             }
       accepted <- liftIO $ runSqlPool (case expectedAccount of
-        Nothing -> Just <$> insertRequest
-        Just _ -> maybe (pure Nothing) (\owner -> withCurrentAuthSession owner insertRequest) creator) envPool
-      feedbackKey <- maybe (throwError err401) pure accepted
+        Nothing -> do
+          key <- insertRequest
+          pure (Just (key, True))
+        Just _ -> maybe (pure Nothing) (\owner -> withCurrentAuthSession owner
+          (reuseActiveAccountDeletion (auPartyId owner) insertRequest)) creator) envPool
+      (feedbackKey, inserted) <- maybe (throwError err401) pure accepted
 
-      liftIO $ notify emailSvc title body (Just categoryLabel) (Just severityLabel) contactEmail attachmentPath
+      when inserted $ liftIO $ notify expectedAccount emailSvc title body
+        (Just categoryLabel) (Just severityLabel) contactEmail attachmentPath
 
       pure $ case expectedAccount of
         Nothing -> Nothing
@@ -1763,6 +1768,29 @@ withPool
   -> m a
 withPool action = asks envPool >>= liftIO . runSqlPool action
 
+-- Serialize intake by owner across distinct live sessions. A lost response is
+-- retried against the oldest unresolved receipt without resetting its deadline,
+-- inserting another row or sending another notification. Resolution may overlap
+-- this read; returning its existing receipt still denotes accepted intake only.
+reuseActiveAccountDeletion
+  :: M.PartyId
+  -> SqlPersistT IO ME.FeedbackId
+  -> SqlPersistT IO (ME.FeedbackId, Bool)
+reuseActiveAccountDeletion owner insertRequest = do
+  _ <- (rawSql
+    "SELECT 1::bigint FROM (SELECT pg_advisory_xact_lock(hashtextextended(?, 0))) locked"
+    [PersistText ("account-deletion-intake:" <> toPathPiece owner)]
+    :: SqlPersistT IO [Single Int64])
+  rows <- (rawSql
+    "SELECT ?? FROM feedback WHERE created_by = ? AND left(description, 25) = ? AND NOT EXISTS (SELECT 1 FROM audit_log a WHERE a.entity = 'account_deletion_request' AND a.entity_id = feedback.id::text AND a.action IN ('completed', 'rejected')) ORDER BY created_at ASC, id ASC LIMIT 1"
+    [toPersistValue owner, PersistText "account_deletion_request\n"]
+    :: SqlPersistT IO [Entity ME.Feedback])
+  case rows of
+    Entity key _ : _ -> pure (key, False)
+    [] -> do
+      key <- insertRequest
+      pure (key, True)
+
 accountDeletionHistory :: ME.FeedbackId -> SqlPersistT IO [AccountDeletionActionDTO]
 accountDeletionHistory feedbackKey = do
   rows <- selectList
@@ -2256,8 +2284,18 @@ internalFeedbackUploadRoot = do
     Just value | not (null value) -> value
     _ -> "uploads" </> "feedback" </> "internal"
 
-notify :: EmailSvc.EmailService -> Text -> Text -> Maybe Text -> Maybe Text -> Maybe Text -> Maybe FilePath -> IO ()
-notify emailSvc title body mCat mSev mContact attachmentPath = do
+-- The confirmed privacy inbox is the sole intake notification authority.
+-- General feedback recipients are intentionally not inherited by privacy intake.
+feedbackNotificationRecipients :: Maybe Int64 -> [(Text, Text)]
+feedbackNotificationRecipients (Just _) = [("Equipo TDF", "info@tdfrecords.net")]
+feedbackNotificationRecipients Nothing =
+  [ ("Diego Saa", "diego@tdfrecords.net")
+  , ("Equipo TDF", "info@tdfrecords.net")
+  , ("TDF Estudio", "tdfestudiodegrabacion@gmail.com")
+  ]
+
+notify :: Maybe Int64 -> EmailSvc.EmailService -> Text -> Text -> Maybe Text -> Maybe Text -> Maybe Text -> Maybe FilePath -> IO ()
+notify expectedAccount emailSvc title body mCat mSev mContact attachmentPath = do
   let subject = "[TDF Feedback] " <> title
       catLine = maybe "" (\c -> "Categoría: " <> c) mCat
       sevLine = maybe "" (\s -> "Severidad: " <> s) mSev
@@ -2273,11 +2311,7 @@ notify emailSvc title body mCat mSev mContact attachmentPath = do
           , "Descripción:"
           , body
           ]
-      recipients =
-        [ ("Diego Saa", "diego@tdfrecords.net")
-        , ("Equipo TDF", "info@tdfrecords.net")
-        , ("TDF Estudio", "tdfestudiodegrabacion@gmail.com")
-        ]
+      recipients = feedbackNotificationRecipients expectedAccount
   forM_ recipients $ \(name, email) -> do
     sendResult <- try $
       EmailSvc.sendTestEmail emailSvc name email subject bodyLines Nothing

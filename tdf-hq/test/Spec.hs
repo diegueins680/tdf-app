@@ -327,6 +327,7 @@ import TDF.ServerFeedback
       validateAccountDeletionOutcome,
       normalizeAccountDeletionDescription,
       accountDeletionOwnerMatches,
+      feedbackNotificationRecipients,
       normalizeOptionalFeedbackText,
       sanitizeFeedbackAttachmentFileName,
       validateEnvironment,
@@ -9586,6 +9587,14 @@ main = hspec $ do
                 let normalized = normalizeAccountDeletionDescription (Data.Text.pack raw)
                 in normalizeAccountDeletionDescription normalized == normalized
                     && not (Data.Text.any (== '\r') normalized)
+
+    describe "feedbackNotificationRecipients" $ do
+        it "restricts every authenticated deletion notice to the confirmed privacy inbox" $
+            QC.property $ \owner ->
+                map snd (feedbackNotificationRecipients (Just owner)) == ["info@tdfrecords.net"]
+        it "preserves the ordinary feedback audience independently" $
+            map snd (feedbackNotificationRecipients Nothing) `shouldBe`
+                ["diego@tdfrecords.net", "info@tdfrecords.net", "tdfestudiodegrabacion@gmail.com"]
 
     describe "validateAccountDeletionOutcome" $ do
         it "accepts exactly a first valid resolution with ownership required for completion" $

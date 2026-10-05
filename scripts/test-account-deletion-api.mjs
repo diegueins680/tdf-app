@@ -34,11 +34,29 @@ export async function verifyAccountDeletion({ request: rawRequest, requestStatus
   await request(endpoint, { token: admin.token, method: 'POST', body: form(), expected: 403 });
   assert.deepEqual(await request(queue, { token: admin.token }), before, 'Rejected identities must not create requests');
   await request(queue, { token: account.token, expected: 403 });
-  const accepted = [];
-  for (let index = 0; index < 21; index += 1) {
-    const receipt = await request(endpoint, { ...(index === 0 ? { headers: { ...cookie, Origin: 'http://localhost:5173' } } : { token: account.token }), method: 'POST', body: form(index) });
+  // Concurrent first requests, including cookie and bearer transports, share
+  // one owner receipt even when responses are ambiguous. They preserve its age.
+  const concurrent = await Promise.all(Array.from({ length: 8 }, (_, index) => request(endpoint, {
+    ...(index % 2 === 0 ? { headers: { ...cookie, Origin: 'http://localhost:5173' } } : { token: account.token }),
+    method: 'POST', body: form(index),
+  })));
+  assert.ok(concurrent.every(receipt => receipt.adrCreatedBy === account.partyId && receipt.adrRequestId));
+  assert.equal(new Set(concurrent.map(receipt => receipt.adrRequestId)).size, 1, 'Concurrent owner requests must return one pending receipt');
+  const accepted = [concurrent[0].adrRequestId];
+  const received = await request(queue, { token: admin.token });
+  const original = received.find(record => record.lfdId === accepted[0]);
+  assert.ok(original);
+  assert.equal(received.filter(record => record.lfdCreatedBy === account.partyId && record.lfdDeletionHistory.length === 0).length, 1);
+  const retry = await request(endpoint, { token: account.token, method: 'POST', body: form(99) });
+  assert.equal(retry.adrRequestId, accepted[0]);
+  assert.deepEqual(await request(queue, { token: admin.token }), received, 'Retry must preserve receipt, content, original timestamp and history');
+  // Exercise pagination with a history of resolved cases, not 21 duplicate
+  // pending requests. A new case is allowed only after terminal resolution.
+  for (let index = 1; index < 21; index += 1) {
+    await request(`/feedback/internal/account-deletion/${accepted.at(-1)}`, { token: admin.token, method: 'POST', json: { adrOutcome: 'rejected', adrNote: 'Synthetic historical case; no erasure.' } });
+    const receipt = await request(endpoint, { token: account.token, method: 'POST', body: form(index) });
     assert.equal(receipt.adrCreatedBy, account.partyId);
-    assert.ok(receipt.adrRequestId);
+    assert.ok(receipt.adrRequestId && !accepted.includes(receipt.adrRequestId));
     accepted.push(receipt.adrRequestId);
   }
   // New ordinary feedback must not occupy the privacy queue's first page.
@@ -55,7 +73,7 @@ export async function verifyAccountDeletion({ request: rawRequest, requestStatus
   assert.equal(new Set(visible.map(record => record.lfdId)).size, visible.length, 'Page boundaries must not repeat records');
   assert.ok(visible.every(record => record.lfdDescription.startsWith('account_deletion_request\n')));
   await request('/feedback/internal/legacy?accountDeletionOnly=true&offset=-1', { token: admin.token, expected: 400 });
-  const resolutionPath = `/feedback/internal/account-deletion/${accepted[0]}`;
+  const resolutionPath = `/feedback/internal/account-deletion/${accepted.at(-1)}`;
   const resolution = { adrOutcome: 'completed', adrNote: 'Synthetic fulfilment verified; no real account erased.' };
   await request(resolutionPath, { method: 'POST', json: resolution, expected: 401 });
   await request(resolutionPath, { token: account.token, method: 'POST', json: resolution, expected: 403 });
@@ -66,13 +84,17 @@ export async function verifyAccountDeletion({ request: rawRequest, requestStatus
   assert.equal(receipt.adaOutcome, 'completed');
   await request(resolutionPath, { token: admin.token, method: 'POST', json: { ...resolution, adrOutcome: 'rejected' }, expected: 409 });
   const refreshed = [...await request(queue, { token: admin.token }), ...await request('/feedback/internal/legacy?accountDeletionOnly=true&offset=20', { token: admin.token })];
-  const history = refreshed.find(record => record.lfdId === accepted[0]).lfdDeletionHistory;
+  const history = refreshed.find(record => record.lfdId === accepted.at(-1)).lfdDeletionHistory;
   assert.equal(history.length, 1);
   assert.equal(history[0].adaNote, resolution.adrNote);
   assert.equal(history[0].adaActor, admin.partyId);
-  const rejected = await request(`/feedback/internal/account-deletion/${accepted[1]}`, { token: admin.token, method: 'POST', json: { adrOutcome: 'rejected', adrNote: 'Synthetic invalid ownership evidence.' } });
+  const newRejected = await request(endpoint, { token: account.token, method: 'POST', body: form(21) });
+  assert.ok(!accepted.includes(newRejected.adrRequestId));
+  const rejected = await request(`/feedback/internal/account-deletion/${newRejected.adrRequestId}`, { token: admin.token, method: 'POST', json: { adrOutcome: 'rejected', adrNote: 'Synthetic invalid ownership evidence.' } });
   assert.equal(rejected.adaOutcome, 'rejected');
-  const racePath = `/feedback/internal/account-deletion/${accepted[2]}`;
+  const newRaced = await request(endpoint, { token: account.token, method: 'POST', body: form(22) });
+  assert.notEqual(newRaced.adrRequestId, newRejected.adrRequestId);
+  const racePath = `/feedback/internal/account-deletion/${newRaced.adrRequestId}`;
   const raced = await Promise.all([
     requestStatus(racePath, { token: admin.token, method: 'POST', json: resolution }),
     requestStatus(racePath, { token: admin.token, method: 'POST', json: { ...resolution, adrOutcome: 'rejected' } }),

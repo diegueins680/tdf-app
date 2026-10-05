@@ -5951,9 +5951,9 @@
         "Append-only resolution audit in the same transaction as the terminal state"
       ],
       "authorization": "Cookie identity is reloaded before submission; server withCurrentAuthSession lock spans insertion. Required non-simple header and trusted Origin guard precede general CORS. Administrator capability and current session protect resolution.",
-      "privacy": "No diagnostics, attachments or analytics on the deletion form. Identity and request content remain in authenticated queues/private evidence; no public tester/account list.",
-      "concurrency": "Current-session lock serializes intake against revocation. PostgreSQL FOR UPDATE serializes terminal resolution; exactly one concurrent resolution succeeds and the loser returns409.",
-      "idempotency": "Terminal resolution is immutable; repeated resolution returns409. Intake has no exactly-once retry-key guarantee; network ambiguity must not be described as confirmed submission.",
+      "privacy": "No diagnostics, attachments or analytics on the deletion form. Identity and request content remain in authenticated queues/private evidence; no public tester/account list. Deletion notification audience is exclusively the confirmed info@tdfrecords.net privacy inbox, independent of ordinary feedback recipients.",
+      "concurrency": "Current-session lock serializes intake against revocation. PostgreSQL FOR UPDATE serializes terminal resolution; exactly one concurrent resolution succeeds and the loser returns409. Owner advisory lock spans pending receipt lookup/insertion; different owners have separate keys. Resolution overlapping lookup can return the existing receipt without asserting erasure.",
+      "idempotency": "Owner-scoped transaction advisory lock serializes pending receipt lookup and insertion across sessions. Ambiguous retries reuse the oldest pending receipt and original timestamp/content without duplicate notification. After terminal resolution a new request is allowed; no permanent client-key deduplication is claimed. Existing legacy duplicates require operator reconciliation.",
       "failure": "Reject absent/mismatched receipt; preserve cached terminal receipt if refresh fails. Failed validation performs no insertion/notification. Operator execution failure remains unfinished under PRIV-DELETE-001.",
       "recovery": "Reload authenticated receipt and private evidence; never infer erasure from a queue flag. Preserve earliest receipt/deadline in the existing operator ledger.",
       "observability": "Scoped unit/browser tests and unmodified FormData/HTTP tests with disposable PostgreSQL cover identity, CSRF, spoofing, pagination, audit and concurrent200/409. No real deletion or extra notification is used for QA.",
@@ -5999,8 +5999,14 @@
         "tdf-hq-ui/src/config/accountDeletionRollout.test.ts",
         "e2e/web/account-deletion-rollout.spec.mjs"
       ],
-      "formalModels": [],
-      "verification": "QuickCheck properties exercise the actual identity/outcome validators and normalization idempotency over arbitrary inputs; disposable PostgreSQL/HTTP controls exercise CSRF and concurrent resolution. No dedicated temporal model or whole-program refinement is claimed for these handlers; the distinct operator lifecycle model does not prove them. Real Servant routing tests bind the CORS proof/origin guard to both the canonical endpoint and its accepted trailing-slash alias. Default-off parser, component no-request controls and synthetic browser tests cover both deployment states; this public build flag is not server authorization.",
+      "formalModels": [
+        "formal/event-operations/AccountDeletionIntake.tla",
+        "formal/event-operations/AccountDeletionIntake.cfg",
+        "formal/event-operations/AccountDeletionIntakeNoOwnerLock.cfg",
+        "formal/event-operations/AccountDeletionIntakeReplayNotification.cfg",
+        "formal/event-operations/AccountDeletionIntakeGeneralAudience.cfg"
+      ],
+      "verification": "QuickCheck exercises actual identity/outcome/recipient validators and normalization. Disposable PostgreSQL/HTTP controls cover CSRF, eight concurrent cookie/bearer intakes, ambiguous receipt reuse, preserved timestamps and concurrent resolution. AccountDeletionIntake adds one-owner/three-attempt bounded checking with three named negative controls; no refinement, resolution, crashes or delivery proof. Actual Servant CORS tests include trailing-slash aliases.",
       "evidence": "Exact revision, command, binary and disposable HTTP/browser receipts retained separately; predecessor passes do not qualify the combined main merge.",
       "status": "specified and implemented",
       "critical": true,
@@ -6008,7 +6014,7 @@
       "ambiguity": [
         "Physical iPhone OAuth and Apple Beta Review are independent release gates.",
         "Operational assignment, monitoring, per-service erasure and delivered completion notice require actual operator evidence.",
-        "No dedicated formal intake model currently exists."
+        "The bounded intake model excludes terminal resolution, legacy duplicate cleanup, crash recovery and SMTP delivery."
       ],
       "conformance": {
         "classification": "PARTIAL",

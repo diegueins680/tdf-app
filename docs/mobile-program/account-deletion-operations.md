@@ -90,3 +90,28 @@ with 21 privacy requests followed by ordinary feedback. The harness checks
 unauthenticated/foreign-owner rejection, authoritative request IDs and both
 queue pages. These tests do not establish manual fulfilment or physical-device
 behaviour.
+
+## Intake retries and notification audience
+
+The authenticated owner has one unresolved receipt. Intake holds a transaction-scoped,
+owner-specific PostgreSQL advisory lock across lookup and insertion, including requests
+from different live sessions. A retry returns the oldest pending receipt without changing
+its original timestamp/content or sending another notification. Existing duplicate legacy
+records are retained for operator reconciliation, not deleted. After terminal resolution,
+a new request may create a new receipt; there is no permanent client-key idempotency
+promise across completed cases. Concurrent resolution can overlap receipt lookup; the
+returned receipt establishes intake only, never completed erasure.
+
+New deletion notices go only to the owner-confirmed `info@tdfrecords.net` inbox. Ordinary
+feedback retains its separate audience. The server sends a notice only for a newly inserted
+receipt; transport delivery is still best effort and requires operator queue monitoring.
+No test or abstract model proves actual inbox delivery or fulfilment.
+
+`AccountDeletionIntake.tla` checks three bounded concurrent attempts for one already
+authenticated owner, with an abstract owner mutex and no terminal resolution or crashes.
+It checks one pending receipt, notices only for new receipts, and the privacy audience.
+Three negative configurations remove the mutex, notify replays, or use the general audience;
+each must violate its named invariant. These finite abstractions are not a proof of SQL,
+SMTP, session validation, crash recovery or whole-system refinement. The actual disposable
+HTTP harness separately races eight cookie/bearer submissions, checks receipt/time reuse,
+then verifies new requests after terminal resolution, pagination and concurrent resolution.
