@@ -17721,7 +17721,7 @@
     },
     {
       "path": "docs/mobile-program/README.md",
-      "sha256": "5f5a898deb0cc04dd7a603fcb915f22b0f2cbe4ad8f1e4ebdf30ece78da2707f",
+      "sha256": "f7aeb1eec88c29b26c00ef22a9a0c2216da233b0f9d292ec803070e08f45bcef",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -17742,7 +17742,7 @@
     },
     {
       "path": "docs/mobile-program/analytics-2026-10-05.md",
-      "sha256": "56b1097cc312d5cc262b9eda8679491d52d68acfd30848ba083d1e91afada51d",
+      "sha256": "56b566c2cbabb5105052b84a76dbcb3ddbd0bfd4413d2b1c11a25e2df5890f03",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

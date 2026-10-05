@@ -107,7 +107,7 @@ that page to lead to `/cuenta/eliminar`: an authenticated, bilingual request for
 account without composing an email. The owner processes the request manually;
 submission is not completed erasure. See the [operator procedure and identity
 checks](account-deletion-operations.md). No actual deletion is claimed by QA. The strict backend endpoint and queue
-must be deployed before this new flow is considered operational.
+must be deployed before this new flow is considered operational. The web form and administrator queue stay off unless `VITE_ACCOUNT_DELETION_FORM_ENABLED` is exactly `true`; the disabled page retains the confirmed email contact. Enable only after qualifying the deployed backend, as described in the [rollout procedure](account-deletion-rollout.md).
 Authenticated App Store Connect readback confirms User ID, Device ID and Product
 Interaction are already declared for analytics linked to the user's identity.
 The native party selector also emits latency/error classifications: Performance
@@ -126,15 +126,15 @@ with Apple flow. Physical iPhone login proof and resolution of 4.8 remain public
 App Store release gates; Beta App Review is a separate process. No App Review
 resubmission or message to Apple was sent.
 
-Play's corrected account-creation, analytics/feedback data and canonical deletion
-answers, plus the canonical privacy URL, are saved for review. The changes do not
-mean Google has approved them. Submit them after the updated disclosure deploys.
+Before the 20:06UTC submission, Play's corrected account-creation, analytics/feedback data and canonical deletion
+answers, plus the canonical privacy URL, were saved for review. Saved declarations alone did not
+mean Google had approved them. The later submission and 21:13UTC availability receipts below supersede this intermediate state; do not repeat the upload.
 EAS remote counters were read back as iOS32 / Android24 to avoid reusing numbers.
 iOS32 was uploaded through EAS submission `85446118-dba6-457d-93bd-018c39d1d674`
 and is VALID/internal, awaiting Beta App Review, with ES/EN test notes saved.
 An Android24 edit validated, but Google rejected withholding
-review via `changesNotSentForReview=true`; the failed edit was deleted. Retry the
-normal existing closed-testing submission only after the disclosure is deployed.
+review via `changesNotSentForReview=true`; the failed edit was deleted. The
+normal existing closed-testing submission proceeded after the disclosure deployed, as recorded below. The failed edit was not reused.
 
 ## Dashboard semantics
 
