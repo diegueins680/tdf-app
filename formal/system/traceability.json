@@ -5517,15 +5517,18 @@
       "tests": [
         "scripts/test-hetzner-backup.py",
         "scripts/test-hetzner-inspection.py",
-        "scripts/quality-repo.sh"
+        "scripts/quality-repo.sh",
+        "scripts/verify-event-operations-formal.sh"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/LogicalBackup.tla"
+      ],
       "status": "specified and implemented",
       "confidence": "Source-derived contract and controlled failure tests; production installation unverified.",
       "ambiguity": [
         "Off-host retention destination and coordinated release recovery remain unresolved."
       ],
-      "verification": "Implementation fault-injection and target controls; not a universal proof.",
+      "verification": "Bounded two-run TLA+ safety with three negative controls; actual parent-kill/process-failure/source-replacement tests. No filesystem, transport or database refinement proof.",
       "conformance": {
         "classification": "PARTIAL",
         "reason": "New scheduler implementation and controls await exact-head review, installed-run validation and independent recovery evidence."
@@ -5554,6 +5557,7 @@
     "formal/event-operations/HostedServicePaymentProgress.cfg": "3057b71fcdda169e70e3258b7aa642b73d6105647184c611a46a30fd603a5402",
     "formal/event-operations/HostedServicePaymentReplay.cfg": "f69e606679e1d625b2f3d93e89b638da3a2d792f9488646fdca2057c4880e498",
     "formal/event-operations/InvoiceReceipt.tla": "a9a175e907bcb0278088a2131636f4327e3d4a1dcadd86cfd3b2ac09e43c7933",
+    "formal/event-operations/LogicalBackup.tla": "2335f3679acd4a56c9f5daff8188e13f3a4608a50d3dab13610e4636ac4a4ebb",
     "formal/event-operations/NotificationLease.tla": "e3ee096b8c79eca3fe93d5f0fab0345312d2295dfe5ab3ded75a92bd41050a5a",
     "formal/event-operations/OperationsApproval.tla": "471ee2b49075d444febc4883a7c7269a347a571eecd7bfbd80df3efa2072e49e",
     "formal/event-operations/OperationsCommandFence.tla": "58bde50248ca2dd62ab496c251d6596bc8f6a6289db144951458870b1e93436b",
@@ -5707,7 +5711,7 @@
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "b5ba1d728abbc2181ffd260237e5743f38feb7681cb7fcd4e9cc5c969a2395b0",
-    "scripts/verify-event-operations-formal.sh": "d46397ad32d8de80da708b47c115a42d54119da229600dd845bb61bcc0bd2d0a",
+    "scripts/verify-event-operations-formal.sh": "911c387b86596d3d039eafcaaaef4bb58a17a3b56b96dc8e2f3d82661ed51737",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -5998,6 +6002,10 @@
       },
       {
         "requirement": "PAY-INVOICE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-BACKUP-001",
         "relationship": "tests"
       }
     ],
@@ -8893,6 +8901,12 @@
       {
         "requirement": "DEPLOY-BACKUP-001",
         "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/LogicalBackup.tla": [
+      {
+        "requirement": "DEPLOY-BACKUP-001",
+        "relationship": "formalModels"
       }
     ]
   },
@@ -12773,7 +12787,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "d46397ad32d8de80da708b47c115a42d54119da229600dd845bb61bcc0bd2d0a",
+      "sha256": "911c387b86596d3d039eafcaaaef4bb58a17a3b56b96dc8e2f3d82661ed51737",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -12814,6 +12828,10 @@
         },
         {
           "requirement": "PAY-INVOICE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-BACKUP-001",
           "relationship": "tests"
         }
       ]
@@ -28897,8 +28915,7 @@
     "SYS-CI-001",
     "PRIV-ERROR-001",
     "PRIV-ANALYTICS-001",
-    "EVT-PRESENTATION-001",
-    "DEPLOY-BACKUP-001"
+    "EVT-PRESENTATION-001"
   ],
   "stateMachines": [
     {
@@ -30020,7 +30037,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3c102da994fbbf3bf28a1ac0ddb645af56b4f4cd05393956312688df78163b0e",
+      "sourceSha256": "2bfb5681da0d77c297bc2ca73d45c2c2681a16069fcb339fec4b59a256180303",
       "definition": {
         "states": [
           "absent",

@@ -4813,7 +4813,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "d46397ad32d8de80da708b47c115a42d54119da229600dd845bb61bcc0bd2d0a",
+      "sha256": "911c387b86596d3d039eafcaaaef4bb58a17a3b56b96dc8e2f3d82661ed51737",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19533,6 +19533,41 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/LogicalBackup.cfg",
+      "sha256": "1a53b72214e54e3ebd7a6003690f01da66ff49882cd3e8c42e7f11703ad38a7b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/LogicalBackup.tla",
+      "sha256": "2335f3679acd4a56c9f5daff8188e13f3a4608a50d3dab13610e4636ac4a4ebb",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/LogicalBackupChangedSource.cfg",
+      "sha256": "12645d3bebf25ddd50c850f8f50f46504b78fde0e4a2aef3263fb0c976ffd1a9",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/LogicalBackupFailedWork.cfg",
+      "sha256": "d3f6ce5e17bd966ff5ecf3ea5b65e107f95df033e677a67cb14c64a7803cbbda",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/LogicalBackupLostParent.cfg",
+      "sha256": "40f50103cd7267bf3e4a63f734eab0ec6957b611235d076925fff9ff8abd8826",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/MarketplaceCatalogRead.cfg",
       "sha256": "ff3cba8eea1f68fff31c447fec96b80a799900b982807069bfb45ce64be6fe8b",
       "authority": "inferred",
@@ -21501,7 +21536,7 @@
     },
     {
       "path": "formal/system/logical-backup.md",
-      "sha256": "f777bfa36e2a944ecfd3abcb4137d7b29b3becf48c95813bd48c8775acab8e53",
+      "sha256": "6e9a051e06010386e846bfbce451fa3f229c273cb10f7f9953423c0be77779ac",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21578,7 +21613,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "3c102da994fbbf3bf28a1ac0ddb645af56b4f4cd05393956312688df78163b0e",
+      "sha256": "2bfb5681da0d77c297bc2ca73d45c2c2681a16069fcb339fec4b59a256180303",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -29856,6 +29891,66 @@
         "INVARIANTS ExplicitAuthority CurrentReceipt PersistedReceipt",
         "PROPERTY Settles",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/LogicalBackup.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Runs = {one, two}",
+        "  HonorPending = TRUE",
+        "  RequireCompletedWork = TRUE",
+        "  BindSource = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK OneInflightBackup CompletedReceipt SourceBoundReceipt"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/LogicalBackupChangedSource.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Runs = {one, two}",
+        "  HonorPending = TRUE",
+        "  RequireCompletedWork = TRUE",
+        "  BindSource = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK OneInflightBackup CompletedReceipt SourceBoundReceipt"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/LogicalBackupFailedWork.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Runs = {one, two}",
+        "  HonorPending = TRUE",
+        "  RequireCompletedWork = FALSE",
+        "  BindSource = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK OneInflightBackup CompletedReceipt SourceBoundReceipt"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/LogicalBackupLostParent.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Runs = {one, two}",
+        "  HonorPending = FALSE",
+        "  RequireCompletedWork = TRUE",
+        "  BindSource = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK OneInflightBackup CompletedReceipt SourceBoundReceipt"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

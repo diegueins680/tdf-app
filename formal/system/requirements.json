@@ -5516,15 +5516,18 @@
       "tests": [
         "scripts/test-hetzner-backup.py",
         "scripts/test-hetzner-inspection.py",
-        "scripts/quality-repo.sh"
+        "scripts/quality-repo.sh",
+        "scripts/verify-event-operations-formal.sh"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/event-operations/LogicalBackup.tla"
+      ],
       "status": "specified and implemented",
       "confidence": "Source-derived contract and controlled failure tests; production installation unverified.",
       "ambiguity": [
         "Off-host retention destination and coordinated release recovery remain unresolved."
       ],
-      "verification": "Implementation fault-injection and target controls; not a universal proof.",
+      "verification": "Bounded two-run TLA+ safety with three negative controls; actual parent-kill/process-failure/source-replacement tests. No filesystem, transport or database refinement proof.",
       "conformance": {
         "classification": "PARTIAL",
         "reason": "New scheduler implementation and controls await exact-head review, installed-run validation and independent recovery evidence."

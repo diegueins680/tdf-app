@@ -72,6 +72,24 @@ tests reject alternate mounts/configuration and false effective-storage evidence
 These tests check implementation branches; no whole-system formal proof or
 scheduled production success is claimed.
 
+`LogicalBackup.tla` checks two distinct runs with one request per run. Starting
+work abstracts successful lock acquisition, durable reservation and child launch;
+child completion abstracts the conjunction of both dumps and readable metadata.
+Parent death releases the lock while the child may continue. Operator recovery
+assumes it can establish that the old child has ended. Publishing abstracts final
+source checks and successful durable receipt publication; arbitrary concurrent
+privileged source changes within that step are excluded. No fairness is assumed
+and no eventual completion or recovery is claimed. Filesystem fsync semantics,
+PostgreSQL consistency, archive contents, network transport, off-host copies and
+the full process-to-model refinement are not proved by this model.
+
+Safety requires at most one in-flight backup, completed work behind every receipt,
+and source agreement at publication. Three controlled variants respectively ignore
+the durable pending marker after parent death, admit failed work, and omit source
+binding. TLC must fail each with its specific invariant. The actual parent-kill,
+process-failure and companion-replacement tests exercise the corresponding code
+boundaries. The finite result is bounded verification, not a universal proof.
+
 Primary guidance: PostgreSQL17 [pg_dump](https://www.postgresql.org/docs/17/app-pgdump.html),
 [pg_dumpall](https://www.postgresql.org/docs/17/app-pg-dumpall.html) and
 [pg_restore](https://www.postgresql.org/docs/17/app-pgrestore.html).

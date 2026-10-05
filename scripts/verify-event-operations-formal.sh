@@ -97,6 +97,10 @@ run_negative_tlc OperationsCommandFenceAllowStale.cfg operationscommandfenceallo
 run_negative_tlc OperationsCommandFenceAllowRevoked.cfg operationscommandfenceallowrevoked 'Invariant NoRevokedCommit is violated' OperationsCommandFence.tla
 run_negative_tlc OperationsCommandFenceLeakEffect.cfg operationscommandfenceleakeffect 'Invariant AtomicEvidence is violated' OperationsCommandFence.tla
 run_tlc InvoiceReceipt.tla InvoiceReceipt.cfg invoicereceipt
+run_tlc LogicalBackup.tla LogicalBackup.cfg logicalbackup
+run_negative_tlc LogicalBackupLostParent.cfg logicalbackuplostparent 'Invariant OneInflightBackup is violated' LogicalBackup.tla
+run_negative_tlc LogicalBackupFailedWork.cfg logicalbackupfailedwork 'Invariant CompletedReceipt is violated' LogicalBackup.tla
+run_negative_tlc LogicalBackupChangedSource.cfg logicalbackupchangedsource 'Invariant SourceBoundReceipt is violated' LogicalBackup.tla
 run_negative_tlc InvoiceReceiptIgnoreInvoiceLock.cfg invoicereceiptnolock 'Invariant UniqueInvoice is violated' InvoiceReceipt.tla
 run_negative_tlc InvoiceReceiptStaleCounter.cfg invoicereceiptstalecounter 'Invariant UniqueNumber is violated' InvoiceReceipt.tla
 run_negative_tlc InvoiceReceiptIgnoreReplayBinding.cfg invoicereceiptunbound 'Invariant BoundReplay is violated' InvoiceReceipt.tla
