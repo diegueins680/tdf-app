@@ -235,6 +235,19 @@ describe('analytics/posthog (web)', () => {
       .not.toContain(sentinel);
   });
 
+  test('masks arbitrary navigation queries while retaining reviewed attribution parameters', () => {
+    const sentinel = 'PRIVATE-NOTIFICATION-IDENTIFIER';
+    for (const key of ['application', 'invitation', 'review', 'alert', 'request', 'futurePrivateKey']) {
+      const value = redactSensitiveQueryValues(`https://tdf.test/mis-clasificados?${key}=${sentinel}&utm_source=artist&ref=partner&referral_code=artist-code`);
+      expect(value).not.toContain(sentinel);
+      expect(new URL(value).searchParams.get('utm_source')).toBe('artist');
+      expect(new URL(value).searchParams.get('ref')).toBe('partner');
+      expect(new URL(value).searchParams.get('referral_code')).toBe('artist-code');
+    }
+    const campaign = redactSensitiveQueryValues('https://tdf.test/eventos/141?utm_campaign=%23release');
+    expect(new URL(campaign).searchParams.get('utm_campaign')).toBe('#release');
+  });
+
   test('preserves ordinary fragment-like campaign names outside URL values', () => {
     expect(sanitizeAnalyticsProperties({ attribution_campaign: '#release' }))
       .toEqual({ attribution_campaign: '#release' });
