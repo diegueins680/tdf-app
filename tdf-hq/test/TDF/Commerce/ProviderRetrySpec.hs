@@ -401,7 +401,8 @@ spec = do
         captureReplaySpec
         manualCaptureReplaySpec
         completionCapabilityIntegrationSpec
-        RefundSafety.databaseSpec captureFixture
+        RefundSafety.databaseSpec $ \pool provider amounts ->
+          captureFixtureForDomainWithLines "service_booking" "payment" Checkout.AttemptProcessing amounts pool provider
         RefundRecovery.databaseSpec
           (captureFixtureForDomain "mixing_mastering" "capture" Checkout.AttemptProcessing)
         it "serializes different keys and permits only one active attempt" $ \pool -> do
@@ -2332,8 +2333,14 @@ captureFixtureWithStage = captureFixtureForDomain "service_booking" "payment"
 captureFixtureForDomain
   :: Text -> Text -> Checkout.PaymentAttemptStage -> ConnectionPool
   -> Checkout.PaymentProvider -> IO Checkout.VerifiedPayment
-captureFixtureForDomain domain resourceType stage pool provider = do
-  seed <- newCheckoutForDomain domain pool
+captureFixtureForDomain domain resourceType stage =
+  captureFixtureForDomainWithLines domain resourceType stage [12515]
+
+captureFixtureForDomainWithLines
+  :: Text -> Text -> Checkout.PaymentAttemptStage -> [Int64] -> ConnectionPool
+  -> Checkout.PaymentProvider -> IO Checkout.VerifiedPayment
+captureFixtureForDomainWithLines domain resourceType stage amounts pool provider = do
+  seed <- newCheckoutForDomainWithLines domain amounts pool
   let creation = seed { Checkout.pacProvider = provider }
       method = case provider of
         Checkout.ProviderPayPal -> MethodPayPalWallet
@@ -3128,7 +3135,14 @@ newCheckout :: ConnectionPool -> IO Checkout.PaymentAttemptCreation
 newCheckout = newCheckoutForDomain "event_ticket_order"
 
 newCheckoutForDomain :: Text -> ConnectionPool -> IO Checkout.PaymentAttemptCreation
-newCheckoutForDomain domain pool = do
+newCheckoutForDomain domain = newCheckoutForDomainWithLines domain [12515]
+
+-- Construct the immutable checkout snapshot once, before any payment attempt.
+-- Refund fixtures may split its fixed total, but cannot append a second snapshot.
+newCheckoutForDomainWithLines :: Text -> [Int64] -> ConnectionPool -> IO Checkout.PaymentAttemptCreation
+newCheckoutForDomainWithLines domain amounts pool = do
+  unless (all (> 0) amounts && sum (map toInteger amounts) == 12515) $
+    fail "Synthetic checkout lines must sum exactly to 12515"
   checkoutId <- toText <$> nextRandom
   now <- getCurrentTime
   runSqlPool (do
@@ -3139,11 +3153,12 @@ newCheckoutForDomain domain pool = do
     \ 'synthetic@example.test',?,?,?)"
       [PersistText checkoutId, PersistText domain, PersistText checkoutId, PersistText checkoutId, PersistText checkoutId,
         PersistUTCTime (addUTCTime 1800 now)]
-    rawExecute
+    forM_ (zip [1..] amounts) $ \(lineNumber, amount) -> rawExecute
       "INSERT INTO commerce_checkout_line_item(checkout_id,line_number,product_type,product_id,\
       \ product_version,description,quantity,unit_amount_minor,subtotal_minor,total_minor,snapshot)\
-      \ VALUES (?::uuid,1,?,?,'synthetic-v1','Provider retry fixture',1,12515,12515,12515,'{}'::jsonb)"
-      [PersistText checkoutId, PersistText domain, PersistText checkoutId]
+      \ VALUES (?::uuid,?,?,?,'synthetic-v1','Provider retry fixture',1,?,?,?,'{}'::jsonb)"
+      ([PersistText checkoutId, PersistInt64 lineNumber, PersistText domain, PersistText checkoutId]
+        <> replicate 3 (PersistInt64 amount))
     ) pool
   pure Checkout.PaymentAttemptCreation
     { Checkout.pacCheckout = Checkout.CheckoutReference checkoutId
