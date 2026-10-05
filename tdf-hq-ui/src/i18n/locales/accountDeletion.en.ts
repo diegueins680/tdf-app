@@ -1,0 +1,18 @@
+export default {
+  title: 'Delete your TDF account',
+  intro: 'Request deletion of your entire account and personal data, including content you published. You do not need to send an email or explain your reason.',
+  timing: 'The team processes deletion manually. We aim to complete requests within 30 days and confirm the outcome through your verified account contact. Receiving a request does not mean the account has already been deleted.',
+  retention: 'Records we must retain for legal, tax, security or dispute obligations are handled separately. We will explain which records and why.',
+  login: 'Sign in to continue',
+  loginHelp: 'Verify your identity using the account you want to delete. If your app session is not available in this browser, sign in here with the same account.',
+  account: 'Account: {{username}}',
+  confirm: 'I want this entire account and its personal data deleted. I understand that deletion cannot be undone once processed.',
+  submit: 'Request deletion of this account',
+  sending: 'Sending request…',
+  received: 'Deletion request received. The team will verify ownership, process deletion and confirm the outcome. You do not need to submit it again or send an email to initiate it.',
+  error: 'We could not confirm submission. Check that your session is still active and try again. No deletion has been confirmed.',
+  unavailable: 'We could not verify your session or load the form. No request was sent.',
+  retry: 'Try again',
+  loading: 'Verifying your session…',
+  privacy: 'Read the privacy policy',
+};

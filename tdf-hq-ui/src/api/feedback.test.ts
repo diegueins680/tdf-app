@@ -27,6 +27,14 @@ describe('feedback api', () => {
     (globalThis as unknown as { fetch: typeof fetch }).fetch = fetchMock;
   });
 
+  it('can preserve a freshly verified cookie identity without a stale bearer override', async () => {
+    buildAuthorizationHeaderMock.mockReturnValue('Bearer stale-other-account');
+    fetchMock.mockResolvedValueOnce(successfulResponse);
+    await submitFeedback({ title: 'Account deletion', description: 'Explicit request', categoryId: 'category', severityId: 'severity', consent: true }, { sessionCookieOnly: true });
+    expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({ credentials: 'include', headers: undefined });
+    expect(buildAuthorizationHeaderMock).not.toHaveBeenCalled();
+  });
+
   it('allows anonymous submissions while including the session cookie when available', async () => {
     fetchMock.mockResolvedValueOnce(successfulResponse);
 

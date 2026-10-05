@@ -73,9 +73,11 @@ A build finishing successfully does not resolve this release boundary.
 The owner confirmed that `info@tdfrecords.net` will handle account-deletion
 requests. All five public mobile legal/support pages now use that real inbox
 and the canonical `www.tdfrecords.net` URLs. Legacy Pages URLs remain served.
-The existing native About screen links to the deletion page; it now provides
-Spanish and English instructions and asks only for the account email and
-requested deletion scope, not unnecessary identity or credential data.
+The existing native About screen links to the deletion page, which now leads
+to `/cuenta/eliminar`: an authenticated, bilingual request for the entire
+account without composing an email. The owner processes the request manually;
+submission is not completed erasure. See the [operator procedure and identity
+checks](account-deletion-operations.md). No actual deletion is claimed by QA.
 Authenticated App Store Connect readback confirms User ID, Device ID and Product
 Interaction are already declared for analytics linked to the user's identity.
 The native party selector also emits latency/error classifications: Performance

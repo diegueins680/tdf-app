@@ -8,9 +8,9 @@ export interface FeedbackPayload extends Omit<FeedbackWirePayload, 'attachment'>
   attachment?: File | null;
 }
 
-export async function submitFeedback(payload: FeedbackPayload): Promise<void> {
+export async function submitFeedback(payload: FeedbackPayload, options?: { sessionCookieOnly?: boolean }): Promise<void> {
   const base = resolveApiBase();
-  const authHeader = buildAuthorizationHeader();
+  const authHeader = options?.sessionCookieOnly ? undefined : buildAuthorizationHeader();
 
   const form = new FormData();
   form.append('title', payload.title);

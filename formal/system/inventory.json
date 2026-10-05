@@ -446,6 +446,8 @@
       "tdf-hq-ui/src/analytics/useAnalytics.ts",
       "tdf-hq-ui/src/analytics/webVitals.ts",
       "tdf-hq-ui/src/api/accessRequests.ts",
+      "tdf-hq-ui/src/api/accountDeletion.test.ts",
+      "tdf-hq-ui/src/api/accountDeletion.ts",
       "tdf-hq-ui/src/api/admin.ts",
       "tdf-hq-ui/src/api/ads.ts",
       "tdf-hq-ui/src/api/artistEnrichment.test.ts",
@@ -744,6 +746,8 @@
       "tdf-hq-ui/src/hooks/useNavigationPreferences.ts",
       "tdf-hq-ui/src/hooks/useOffline.ts",
       "tdf-hq-ui/src/i18n/index.ts",
+      "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts",
+      "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts",
       "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
       "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
       "tdf-hq-ui/src/i18n/locales/de.ts",
@@ -769,6 +773,8 @@
       "tdf-hq-ui/src/pages/AboutPage.tsx",
       "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
       "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
+      "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx",
+      "tdf-hq-ui/src/pages/AccountDeletionPage.tsx",
       "tdf-hq-ui/src/pages/AdminDiagnosticsPage.test.tsx",
       "tdf-hq-ui/src/pages/AdminDiagnosticsPage.tsx",
       "tdf-hq-ui/src/pages/AdminTokenPage.tsx",
@@ -3783,14 +3789,21 @@
     },
     {
       "path": "docs/mobile-program/README.md",
-      "sha256": "df0a067dd63abe59f013bae91b465e106ca0daf343b9aace825d5c28d99ceacd",
+      "sha256": "2a5988a5bf00ccf385b3171a1c97cf4118027aea25dfeedfc9ff038f15b68a1e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/mobile-program/account-deletion-operations.md",
+      "sha256": "591e20ed8ebce9b149672ba56dabb71574961dfdaf1ba859a10fb74a51d3ca93",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/mobile-program/analytics-2026-10-05.md",
-      "sha256": "8e6d5502fb3958fc99801d14657ec214a486aa480b7dcaf01421a52fd90b8721",
+      "sha256": "83963e982ed436e78e56c78b8f408bbdb9098be64c2845e0f116bbebc0a77343",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

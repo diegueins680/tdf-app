@@ -1,6 +1,12 @@
 # TDF Mobile: adquisición y programa de testers
 
-Registro de implementación y distribución. La actualización del 5 de octubre siguiente sustituye los estados anteriores; se conserva el historial para trazabilidad.
+Registro de implementación y distribución. La actualización de analytics siguiente sustituye las observaciones anteriores de PostHog; se conserva el historial con sus horas para trazabilidad.
+
+## Analytics y privacidad — 5 de octubre, actualización posterior a las 17:00 UTC
+
+El propietario autorizó crear la organización TDF Records y el proyecto **TDF Production EU 294698** con `info@tdfrecords.net`. El proyecto existe, sus cinco consultas de dashboard funcionan y hay recepción comprobada de eventos de QA desde una preview. **Esto no acredita analytics en producción:** la clave web continúa pendiente del despliegue de las protecciones y avisos, y los builds firmados iOS32/Android24 no equivalen a distribución externa aprobada. [Informe canónico de configuración, fuentes de artefactos y límites de medición](analytics-2026-10-05.md).
+
+La web añade `/cuenta/eliminar`, una solicitud autenticada y específica de eliminación completa, enlazada desde la página legal que abre la app. Reutiliza la cola existente; no obliga a enviar un email ni afirma eliminación inmediata. [Procedimiento de verificación de identidad, tramitación manual y confirmación](account-deletion-operations.md). El propietario confirmó que gestionará estas solicitudes en `info@tdfrecords.net`. La publicación pública en App Store sigue bloqueada por el rechazo vigente y la evidencia física pendiente; este cambio no la autoriza ni afirma aprobación de Apple.
 
 ## Admisión Android comprobada en Console — 5 de octubre, 12:37 UTC
 
@@ -12,7 +18,7 @@ La landing conserva la solicitud consentida y añade **“Ya tengo acceso: abrir
 
 Se guardó y envió a revisión el canal de feedback de Play: `https://www.tdfrecords.net/app?feedback=1&utm_source=google_play&utm_medium=closed_testing`. Fue el único cambio pendiente en Publishing overview; no se envió una release de producción. El backend existente recibe solicitudes y feedback; el operador admite solo los correos consentidos en la lista seleccionada, sin reemplazar miembros ni cargar CSV que sobrescriba la lista. La aprobación de una solicitud y la inscripción efectiva en Play son pasos distintos.
 
-PostHog se comprobó también mediante el login Google existente, tanto en EU como US: ambas regiones llevan a creación de organización, sin proyecto accesible. No se creó organización ni se aceptaron nuevos términos. Sigue faltando acceso al proyecto real; no se afirma recepción productiva de analytics.
+En la observación de las 12:37 UTC, PostHog todavía no mostraba una organización accesible. Ese estado histórico quedó sustituido por la creación autorizada y la evidencia descritas en la actualización de analytics anterior; la recepción en producción se verifica por separado.
 
 Fuentes oficiales: [admisión por correo, límites y feedback de Google Play](https://support.google.com/googleplay/android-developer/answer/9845334), [requisitos de producción y Open Testing](https://support.google.com/googleplay/android-developer/answer/14151465). Evidencia agregada: [distribution-2026-10-05.json](distribution-2026-10-05.json). Los apartados siguientes conservan las observaciones históricas, sustituidas por esta actualización donde difieran.
 
@@ -28,7 +34,7 @@ Las instrucciones de prueba de build 31 están en español e inglés. La privaci
 
 El certificado de firma real de los APK generados por Play para code 23 (`08:76:…:8E:B0`) coincide con `assetlinks.json` desplegado, comprobado mediante `generatedApks`. Esto valida la asociación declarada; no sustituye abrir un enlace en un dispositivo real.
 
-**Analytics:** la instrumentación existe y sus payloads se verificaron mediante transporte interceptado, pero no se encontró una clave productiva de PostHog en las configuraciones accesibles. Los tokens del historial Git eran exclusivamente `phc_unit_test`. No se creó otro proveedor ni se afirma recepción productiva de eventos o atribución de instalaciones.
+**Analytics, observación histórica previa a la creación autorizada:** entonces solo se había verificado transporte interceptado y no se había encontrado una clave productiva. Ese bloqueo de acceso quedó resuelto; el [informe de activación posterior](analytics-2026-10-05.md) distingue el proyecto y los eventos de preview comprobados de la activación productiva y las instalaciones aún no acreditadas.
 
 [Evidencia resumida sin datos personales](distribution-2026-10-05.json). Los siete días de vigencia del manifiesto se cuentan desde cada observación real; al vencer, la UI deriva al formulario. No existe una sincronización automática con cuentas privadas de tiendas. La siguiente actualización exige repetir la comprobación de estado, grupo/capacidad y destino.
 

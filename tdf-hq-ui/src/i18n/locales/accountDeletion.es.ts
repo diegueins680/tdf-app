@@ -1,0 +1,18 @@
+export default {
+  title: 'Eliminar tu cuenta TDF',
+  intro: 'Puedes solicitar aquí la eliminación de tu cuenta completa y sus datos personales, incluido el contenido que publicaste. No necesitas enviar un correo ni explicar el motivo.',
+  timing: 'El equipo tramita la eliminación manualmente. Nuestro objetivo es completar la solicitud en 30 días y confirmar el resultado por el contacto verificado de tu cuenta. Recibir la solicitud no significa que la cuenta ya esté eliminada.',
+  retention: 'Los registros que debamos conservar por obligaciones legales, fiscales, de seguridad o disputas se tratarán por separado; te explicaremos cuáles y por qué.',
+  login: 'Iniciar sesión para continuar',
+  loginHelp: 'Confirma tu identidad con la cuenta que deseas eliminar. Si tu sesión de la app no está abierta en este navegador, inicia sesión aquí con la misma cuenta.',
+  account: 'Cuenta: {{username}}',
+  confirm: 'Quiero eliminar esta cuenta completa y sus datos personales. Entiendo que, una vez tramitada, la eliminación no se puede deshacer.',
+  submit: 'Solicitar eliminación de esta cuenta',
+  sending: 'Enviando solicitud…',
+  received: 'Solicitud de eliminación recibida. El equipo verificará la titularidad, tramitará la eliminación y te confirmará el resultado. No necesitas enviarla otra vez ni escribir un correo para iniciarla.',
+  error: 'No pudimos confirmar el envío. Verifica que tu sesión siga activa e inténtalo de nuevo. No hemos confirmado una eliminación.',
+  unavailable: 'No pudimos verificar tu sesión o cargar el formulario. No se envió ninguna solicitud.',
+  retry: 'Reintentar',
+  loading: 'Verificando tu sesión…',
+  privacy: 'Consultar la política de privacidad',
+};
