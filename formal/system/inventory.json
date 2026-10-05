@@ -264,6 +264,7 @@
       "scripts/sync-concerts-with-apis.py",
       "scripts/sync-country-reference.mjs",
       "scripts/test-access-request-notification-migration.sh",
+      "scripts/test-account-deletion-api.mjs",
       "scripts/test-artist-claim-target-http.sh",
       "scripts/test-artist-merch-runtime.sh",
       "scripts/test-artist-merch-storefronts-migration.sh",
@@ -566,6 +567,8 @@
       "tdf-hq-ui/src/assets/tdf-logo-alt.svg",
       "tdf-hq-ui/src/assets/tdf-logo-wordmark.svg",
       "tdf-hq-ui/src/assets/tdf-ui/esteban-munoz.jpg",
+      "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
+      "tdf-hq-ui/src/components/AccountDeletionQueue.tsx",
       "tdf-hq-ui/src/components/AdminUserCommunicationDialog.test.tsx",
       "tdf-hq-ui/src/components/AdminUserCommunicationDialog.tsx",
       "tdf-hq-ui/src/components/ApiActivityIndicator.test.tsx",
@@ -3789,14 +3792,14 @@
     },
     {
       "path": "docs/mobile-program/README.md",
-      "sha256": "2a5988a5bf00ccf385b3171a1c97cf4118027aea25dfeedfc9ff038f15b68a1e",
+      "sha256": "89b969e176558389b23a68ff7ace9eb219b9e4b9c7b124e3824e9b783218c603",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/mobile-program/account-deletion-operations.md",
-      "sha256": "74125c7f4447063d2145be22c65f16eb47b0b5758e46c016ca69790696dbe487",
+      "sha256": "51ee16776817e0d116988f6851036d4c81be276fb0b4025ffba2dab58c173b26",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -6967,7 +6970,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "e5b862a2d4e750a57f00cab3a3365dd1f50fd44cbe0bf64619e69723545b108f",
+      "sha256": "f7111b3d06cc1bc6d63a143e9070aa314b8121b9a94d889a52615a5f648e4b13",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"

@@ -1,0 +1,32 @@
+import { useState } from 'react';
+import { Alert, Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { InternalFeedback } from '../api/internalFeedback';
+
+/** Admin-only server query; ordinary feedback cannot displace privacy requests. */
+export default function AccountDeletionQueue() {
+  const { t } = useTranslation();
+  const [offset, setOffset] = useState(0);
+  const requests = useQuery({
+    queryKey: ['internal-feedback', 'account-deletion', offset],
+    queryFn: () => InternalFeedback.listLegacy({ accountDeletionOnly: true, offset }),
+  });
+  return <Card variant="outlined"><CardContent><Stack spacing={2}>
+    <Typography component="h2" variant="h6">{t('accountDeletion.queueTitle')}</Typography>
+    {requests.isError && <Alert severity="error">{t('accountDeletion.queueError')}</Alert>}
+    {requests.isSuccess && requests.data.length === 0 && <Typography>{t('accountDeletion.queueEmpty')}</Typography>}
+    {requests.data?.map(item => <Box key={item.lfdId}>
+      <Typography fontWeight={700}>{item.lfdTitle}</Typography>
+      <Typography sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{item.lfdDescription}</Typography>
+      <Alert severity={item.lfdCreatedBy ? 'info' : 'error'}>{t('accountDeletion.operatorRecord', { requestId: item.lfdId, partyId: item.lfdCreatedBy ?? '—' })}</Alert>
+      <Typography variant="caption">{new Date(item.lfdCreatedAt).toLocaleString()}</Typography>
+    </Box>)}
+    <Stack direction="row" gap={1} flexWrap="wrap" alignItems="center" sx={{ '& .MuiButton-root': { minHeight: 44 } }}>
+      <Button disabled={offset === 0 || requests.isFetching} onClick={() => setOffset(value => Math.max(0, value - 20))}>{t('accountDeletion.previous')}</Button>
+      <Typography>{t('accountDeletion.page', { page: offset / 20 + 1 })}</Typography>
+      <Button disabled={requests.isFetching || !requests.data || requests.data.length < 20} onClick={() => setOffset(value => value + 20)}>{t('accountDeletion.next')}</Button>
+      <Button disabled={requests.isFetching} onClick={() => void requests.refetch()}>{t('accountDeletion.refresh')}</Button>
+    </Stack>
+  </Stack></CardContent></Card>;
+}

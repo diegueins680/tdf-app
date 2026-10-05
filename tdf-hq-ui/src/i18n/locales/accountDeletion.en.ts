@@ -1,4 +1,12 @@
 export default {
+  queueTitle: 'Account deletion requests',
+  queueEmpty: 'There are no requests on this page.',
+  queueError: 'Could not load account deletion requests.',
+  previous: 'Previous',
+  next: 'Next',
+  page: 'Page {{page}}',
+  refresh: 'Refresh',
+
   title: 'Delete your TDF account',
   intro: 'Request deletion of your entire account and personal data, including content you published. You do not need to send an email or explain your reason.',
   timing: 'The team processes deletion manually. We aim to complete requests within 30 days and confirm the outcome through your verified account contact. Receiving a request does not mean the account has already been deleted.',

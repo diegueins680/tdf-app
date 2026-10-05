@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import assert from 'node:assert/strict';
+import { verifyAccountDeletion } from './test-account-deletion-api.mjs';
 
 const apiBase = (process.env.TDF_AUDIT_E2E_API_BASE ?? '').replace(/\/$/, '');
 const password = process.env.TDF_AUDIT_E2E_PASSWORD ?? '';
@@ -98,6 +99,7 @@ publicFeedback.append('consent', 'true');
 await request('/feedback', { method: 'POST', body: publicFeedback, expected: 200 });
 const legacyFeedback = await request('/feedback/internal/legacy', { token: admin.token });
 assert.ok(legacyFeedback.some((entry) => entry.lfdTitle === 'E2E — compatibilidad del feedback público'));
+await verifyAccountDeletion({ request, admin, account: intern, categoryId: ideaCategory.id, severityId: severity.id });
 
 const activeProject = await request('/internships/projects', {
   token: admin.token,

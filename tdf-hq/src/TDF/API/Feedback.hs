@@ -9,6 +9,7 @@ module TDF.API.Feedback
   ( FeedbackAPI
   , InternalFeedbackAPI
   , FeedbackPayload(..)
+  , AccountDeletionReceipt(..)
   , InternalFeedbackCreate(..)
   , InternalFeedbackUpdate(..)
   , InternalFeedbackDTO(..)
@@ -48,7 +49,10 @@ type FeedbackAPI =
   Header "Authorization" Text :>
     Header "Cookie" Text :>
       "feedback" :>
-        ( MultipartForm Tmp FeedbackPayload :> Post '[JSON] NoContent )
+        ( MultipartForm Tmp FeedbackPayload :> Post '[JSON] NoContent
+        :<|> "account-deletion" :> QueryParam' '[Required, Strict] "accountId" Int64
+               :> MultipartForm Tmp FeedbackPayload :> Post '[JSON] AccountDeletionReceipt
+        )
 
 type InternalFeedbackAPI =
        QueryParam "state" Text
@@ -58,7 +62,7 @@ type InternalFeedbackAPI =
          :> Get '[JSON] [InternalFeedbackSummaryDTO]
   :<|> "export.csv" :> QueryParam "state" Text :> QueryParam "module" Text :> Get '[PlainText] Text
   :<|> "export.json" :> QueryParam "state" Text :> QueryParam "module" Text :> Get '[JSON] [InternalFeedbackSummaryDTO]
-  :<|> "legacy" :> Get '[JSON] [LegacyFeedbackDTO]
+  :<|> "legacy" :> QueryParam "accountDeletionOnly" Bool :> QueryParam "offset" Int :> Get '[JSON] [LegacyFeedbackDTO]
   :<|> ReqBody '[JSON] InternalFeedbackCreate :> PostCreated '[JSON] InternalFeedbackDTO
   :<|> Capture "reportId" Text :>
          (    Get '[JSON] InternalFeedbackDTO
@@ -71,6 +75,13 @@ type InternalFeedbackAPI =
                 :> Get '[OctetStream] (Headers '[Header "Content-Disposition" Text] BL.ByteString)
          :<|> "retests" :> ReqBody '[JSON] InternalFeedbackRetestCreate :> PostCreated '[JSON] InternalFeedbackRetestDTO
          )
+
+data AccountDeletionReceipt = AccountDeletionReceipt
+  { adrRequestId :: Text
+  , adrCreatedBy :: Int64
+  } deriving (Show, Generic)
+instance ToJSON AccountDeletionReceipt
+instance FromJSON AccountDeletionReceipt
 
 data FeedbackPayload = FeedbackPayload
   { fpTitle        :: Text

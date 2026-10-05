@@ -8,6 +8,7 @@
 module TDF.ServerFeedback
   ( feedbackServer
   , internalFeedbackServer
+  , validateAccountDeletionIdentity
   , normalizeOptionalFeedbackText
   , validateFeedbackDescription
   , validateFeedbackTitle
@@ -83,6 +84,15 @@ import           TDF.Catalog.Security        (selectCanonicalPartyIdsByRole)
 import qualified TDF.Email.Service          as EmailSvc
 import           TDF.UserActivity            (recordUserActivity)
 
+-- The POST itself authenticates the owner. A preceding /session response is
+-- not authority when its cookie has expired or been revoked in between.
+validateAccountDeletionIdentity :: Int64 -> Maybe Int64 -> Either ServerError ()
+validateAccountDeletionIdentity expected actual
+  | expected <= 0 = Left err400
+  | actual == Nothing = Left err401
+  | actual /= Just expected = Left err403
+  | otherwise = Right ()
+
 feedbackServer
   :: forall m.
      ( MonadReader Env m
@@ -90,10 +100,16 @@ feedbackServer
      , MonadError ServerError m
      )
   => ServerT FeedbackAPI m
-feedbackServer authorizationHeader cookieHeader = submitFeedback
+feedbackServer authorizationHeader cookieHeader =
+  (\payload -> submitFeedback Nothing payload >> pure NoContent)
+  :<|> (\accountId payload -> do
+    receipt <- submitFeedback (Just accountId) payload
+    case receipt of
+      Just value -> pure value
+      Nothing -> throwError err401)
   where
-    submitFeedback :: FeedbackPayload -> m NoContent
-    submitFeedback FeedbackPayload{..} = do
+    submitFeedback :: Maybe Int64 -> FeedbackPayload -> m (Maybe AccountDeletionReceipt)
+    submitFeedback expectedAccount FeedbackPayload{..} = do
       title <- either throwError pure (validateFeedbackTitle fpTitle)
       body <- either throwError pure (validateFeedbackDescription fpDescription)
       (categoryId, categoryLabel) <- resolvePublishedFeedbackCategory fpCategoryId
@@ -102,7 +118,6 @@ feedbackServer authorizationHeader cookieHeader = submitFeedback
       contactEmail <- either throwError pure (validateOptionalFeedbackContactEmail fpContactEmail)
 
       now <- liftIO getCurrentTime
-      attachmentPath <- traverse validateAndStoreAttachment fpAttachment
 
       Env{..} <- ask
       let emailSvc = EmailSvc.mkEmailService envConfig
@@ -112,7 +127,16 @@ feedbackServer authorizationHeader cookieHeader = submitFeedback
         Right token ->
           liftIO $ runSqlPool (loadAuthedUser token) envPool
 
-      _ <- liftIO $ runSqlPool
+      case expectedAccount of
+        Nothing -> pure ()
+        Just expected -> do
+          either throwError pure (validateAccountDeletionIdentity expected (fromSqlKey . auPartyId <$> creator))
+          unless ("account_deletion_request\n" `T.isPrefixOf` body)
+            (throwError err400 { errBody = "Account deletion request marker required" })
+          when (isJust fpAttachment)
+            (throwError err400 { errBody = "Account deletion requests do not accept attachments" })
+      attachmentPath <- traverse validateAndStoreAttachment fpAttachment
+      feedbackKey <- liftIO $ runSqlPool
         (insert Feedback
           { feedbackTitle        = title
           , feedbackDescription  = body
@@ -130,7 +154,9 @@ feedbackServer authorizationHeader cookieHeader = submitFeedback
 
       liftIO $ notify emailSvc title body (Just categoryLabel) (Just severityLabel) contactEmail attachmentPath
 
-      pure NoContent
+      pure $ case expectedAccount of
+        Nothing -> Nothing
+        Just expected -> Just (AccountDeletionReceipt (toPathPiece feedbackKey) expected)
 
     resolvePublishedFeedbackCategory :: Text -> m (Catalog.FeedbackCategoryId, Text)
     resolvePublishedFeedbackCategory rawId = do
@@ -254,14 +280,22 @@ internalFeedbackServer user =
         : map summaryCsv rows
         )
 
-    listLegacyFeedbackH = do
+    listLegacyFeedbackH deletionOnly offset = do
       ensureAdmin
-      rows <- withPool $ selectList [] [Desc ME.FeedbackCreatedAt, LimitTo 1000]
+      let requestedOffset = fromMaybe 0 offset
+      when (requestedOffset < 0) (throwError err400 { errBody = "offset must be non-negative" })
+      -- Filter before pagination: newer ordinary feedback must never evict a
+      -- privacy request. The stable tie-breaker makes equal timestamps safe.
+      rows <- withPool $ if deletionOnly == Just True
+        then rawSql
+          "SELECT ?? FROM feedback WHERE left(description, 25) = ? ORDER BY created_at DESC, id DESC LIMIT 20 OFFSET ?"
+          [PersistText "account_deletion_request\n", PersistInt64 (fromIntegral requestedOffset)]
+        else selectList [] [Desc ME.FeedbackCreatedAt, Desc ME.FeedbackId, LimitTo 1000, OffsetBy requestedOffset]
       fmap catMaybes $ forM rows $ \(Entity feedbackKey feedback) -> do
         normalized <- withPool $ getBy (ME.UniqueInternalFeedbackReport feedbackKey)
         pure $ case normalized of
-          Just _ -> Nothing
-          Nothing -> Just LegacyFeedbackDTO
+          Just _ | deletionOnly /= Just True -> Nothing
+          _ -> Just LegacyFeedbackDTO
             { lfdId = toPathPiece feedbackKey
             , lfdTitle = feedbackTitle feedback
             , lfdDescription = feedbackDescription feedback

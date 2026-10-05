@@ -20,7 +20,7 @@ import {
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import AccountDeletionQueue from '../components/AccountDeletionQueue';
 import { Link as RouterLink, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Catalogs, type CatalogItem, type CatalogPage } from '../api/catalogs';
 import {
@@ -412,7 +412,6 @@ function ReportDetail({ reportId }: { reportId: string }) {
 }
 
 function ReportsList() {
-  const { t } = useTranslation();
   const { session } = useSession();
   const listCatalogs = useFeedbackCatalogs();
   const canAdministerList = hasInternshipsAdminAccess(session?.roles, session?.modules);
@@ -425,7 +424,7 @@ function ReportsList() {
   });
   const legacyQuery = useQuery({
     queryKey: ['internal-feedback', 'legacy'],
-    queryFn: InternalFeedback.listLegacy,
+    queryFn: () => InternalFeedback.listLegacy(),
     enabled: canAdministerList,
   });
   const modules = useMemo(() => [...new Set((reportsQuery.data ?? []).map((item) => item.ifsModuleName))].sort(), [reportsQuery.data]);
@@ -444,7 +443,8 @@ function ReportsList() {
         {reportsQuery.error && <Alert severity="error">{errorMessage(reportsQuery.error, 'No se pudieron cargar los reportes.')}</Alert>}
         {!reportsQuery.isLoading && !reportsQuery.data?.length && <EmptyState title="No hay reportes" description={canAdministerList ? 'Los borradores y reportes enviados aparecerán aquí.' : 'Crea reportes desde un caso de tu plan de auditoría activo para conservar su trazabilidad.'} actionLabel={canAdministerList ? 'Crear reporte' : undefined} actionHref={canAdministerList ? '/feedback/interno/nuevo' : undefined} />}
         <Grid container spacing={2}>{reportsQuery.data?.map((report) => <Grid item xs={12} md={6} key={report.ifsId}><Card variant="outlined"><CardContent><Stack spacing={1}><Stack direction="row" justifyContent="space-between" gap={1}><Typography variant="h6">{report.ifsTitle}</Typography><Chip size="small" label={STATE_LABELS[report.ifsState]} color={report.ifsBlocking ? 'error' : 'default'} /></Stack><Typography variant="body2">{internalReportTypeLabel(listCatalogs.categories, report.ifsReportType)} · {report.ifsModuleName}{report.ifsFeatureName ? ` / ${report.ifsFeatureName}` : ''}</Typography>{canAdministerList && <Typography variant="caption">Reportó: {report.ifsReporterName}</Typography>}<Button component={RouterLink} to={`/feedback/interno/${report.ifsId}`} variant="outlined">Abrir seguimiento</Button></Stack></CardContent></Card></Grid>)}</Grid>
-        {canAdministerList && Boolean(legacyQuery.data?.length) && <Card variant="outlined"><CardContent><Stack spacing={1}><Typography variant="h6">Feedback público anterior</Typography><Typography variant="body2">Estos {legacyQuery.data?.length} registros continúan legibles para administradores y no se convirtieron silenciosamente en reportes internos.</Typography>{legacyQuery.data?.slice(0, 10).map((item) => <Box key={item.lfdId}><Typography fontWeight={700}>{item.lfdTitle}</Typography><Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{item.lfdDescription}</Typography>{item.lfdDescription.startsWith('account_deletion_request\n') && <Alert severity={item.lfdCreatedBy ? 'info' : 'error'}>{t('accountDeletion.operatorRecord', { requestId: item.lfdId, partyId: item.lfdCreatedBy ?? '—' })}</Alert>}<Typography variant="caption">{new Date(item.lfdCreatedAt).toLocaleString()} · consentimiento: {item.lfdConsent ? 'sí' : 'no'} · adjunto: {item.lfdHasAttachment ? 'sí' : 'no'}</Typography></Box>)}</Stack></CardContent></Card>}
+        {canAdministerList && <AccountDeletionQueue />}
+        {canAdministerList && Boolean(legacyQuery.data?.length) && <Card variant="outlined"><CardContent><Stack spacing={1}><Typography variant="h6">Feedback público anterior</Typography><Typography variant="body2">Estos {legacyQuery.data?.length} registros continúan legibles para administradores y no se convirtieron silenciosamente en reportes internos.</Typography>{legacyQuery.data?.slice(0, 10).map((item) => <Box key={item.lfdId}><Typography fontWeight={700}>{item.lfdTitle}</Typography><Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{item.lfdDescription}</Typography><Typography variant="caption">{new Date(item.lfdCreatedAt).toLocaleString()} · consentimiento: {item.lfdConsent ? 'sí' : 'no'} · adjunto: {item.lfdHasAttachment ? 'sí' : 'no'}</Typography></Box>)}</Stack></CardContent></Card>}
       </Stack>
     </PageShell>
   );

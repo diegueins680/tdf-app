@@ -4486,6 +4486,31 @@ paths:
           description: Feedback accepted
         '400':
           description: Invalid multipart data, catalog reference, consent, or attachment
+  /feedback/account-deletion:
+    post:
+      tags: [Feedback]
+      summary: Initiate manual account deletion with authenticated acceptance
+      description: >-
+        Requires a live authenticated session belonging to accountId. Rejects expired,
+        anonymous or mismatched sessions before insertion or notification. Returns
+        the authoritative owner and request ID; does not erase the account.
+      operationId: requestAccountDeletion
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { $ref: '#/components/schemas/FeedbackMultipart' }
+      responses:
+        '200':
+          description: Authenticated request accepted for manual fulfilment
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccountDeletionReceipt' }
+        '400': { description: Invalid request, catalog reference, marker or attachment }
+        '401': { description: Active authentication required }
+        '403': { description: Authenticated account does not match accountId }
   /feedback/internal:
     get:
       tags: [Internal feedback]
@@ -4537,6 +4562,9 @@ paths:
       tags: [Internal feedback]
       summary: Read legacy public feedback without exposing storage paths
       operationId: listLegacyFeedbackForAdmin
+      parameters:
+        - { name: accountDeletionOnly, in: query, description: Filter privacy requests before pagination; returns up to 20 records including normalized ones., schema: { type: boolean } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
       responses:
         '200': { description: Legacy feedback, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/LegacyFeedback' } } } } }
         '403': { description: Administrator access required }
@@ -14827,6 +14855,12 @@ components:
         ifsApprovedAt: { type: string, format: date-time, nullable: true }
         ifsCreatedAt: { type: string, format: date-time }
         ifsUpdatedAt: { type: string, format: date-time }
+    AccountDeletionReceipt:
+      type: object
+      required: [adrRequestId, adrCreatedBy]
+      properties:
+        adrRequestId: { type: string, minLength: 1 }
+        adrCreatedBy: { type: integer, format: int64, minimum: 1 }
     FeedbackMultipart:
       type: object
       additionalProperties: false

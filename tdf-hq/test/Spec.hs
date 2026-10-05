@@ -319,6 +319,7 @@ import TDF.ServerFeedback
     ( csvField,
       filterInternalReportSummaries,
       internalReportTypeForCategoryCode,
+      validateAccountDeletionIdentity,
       normalizeOptionalFeedbackText,
       sanitizeFeedbackAttachmentFileName,
       validateEnvironment,
@@ -9545,6 +9546,20 @@ main = hspec $ do
                 ( validateWhatsAppOptOutReason
                     (Just (Data.Text.replicate 501 "x"))
                 )
+
+    describe "validateAccountDeletionIdentity" $ do
+        it "accepts exactly positive matching authenticated identities for arbitrary account IDs" $
+            QC.property $ \expected actual ->
+                either (const False) (const True) (validateAccountDeletionIdentity expected actual)
+                    == (expected > 0 && actual == Just expected)
+        it "requires authentication at acceptance, even after a prior successful session read" $
+            fmap errHTTPCode (either Just (const Nothing) (validateAccountDeletionIdentity 42 Nothing)) `shouldBe` Just 401
+        it "rejects a different authenticated owner" $
+            fmap errHTTPCode (either Just (const Nothing) (validateAccountDeletionIdentity 42 (Just 43))) `shouldBe` Just 403
+        it "rejects invalid account identifiers" $
+            fmap errHTTPCode (either Just (const Nothing) (validateAccountDeletionIdentity 0 (Just 42))) `shouldBe` Just 400
+        it "accepts only the authenticated requested owner" $
+            either (const False) (const True) (validateAccountDeletionIdentity 42 (Just 42)) `shouldBe` True
 
     describe "normalizeOptionalFeedbackText" $ do
         it "trims meaningful optional feedback metadata values" $ do

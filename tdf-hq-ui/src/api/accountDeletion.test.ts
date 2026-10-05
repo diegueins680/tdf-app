@@ -25,7 +25,7 @@ it('requests whole-account manual deletion for the verified owner, with cookie a
   expect(submit).toHaveBeenCalledWith(expect.objectContaining({
     consent: true, categoryId: 'category', severityId: 'severity', contactEmail: 'owner@example.com',
     description: expect.stringContaining('requested_account_party_id: 42'),
-  }), { sessionCookieOnly: true });
+  }), { sessionCookieOnly: true, accountDeletionPartyId: 42 });
   const payload = submit.mock.calls[0]?.[0] as { description: string };
   expect(payload.description).toContain('entire account');
   expect(payload.description).toContain('feedbackCreatedBy');
@@ -35,5 +35,5 @@ it('does not invent an email for username-only accounts and propagates submissio
   snapshot.mockResolvedValue({ partyId: 42, username: 'account-name' } as SessionResponseDTO);
   submit.mockRejectedValue(new Error('unavailable'));
   await expect(requestAccountDeletion(input)).rejects.toThrow('unavailable');
-  expect(submit).toHaveBeenCalledWith(expect.objectContaining({ contactEmail: undefined }), { sessionCookieOnly: true });
+  expect(submit).toHaveBeenCalledWith(expect.objectContaining({ contactEmail: undefined }), { sessionCookieOnly: true, accountDeletionPartyId: 42 });
 });

@@ -8,8 +8,11 @@ existing legal page. Both canonical and old legal URLs remain supported.
 
 The form shows the current account, requires an explicit confirmation, reloads
 the live cookie session before submission and refuses a missing/different
-account. It sends the request through the existing feedback API using that
-cookie, without a potentially stale bearer-token override. No credentials,
+account. It sends the request to `/feedback/account-deletion?accountId=…` using that
+cookie, without a potentially stale bearer-token override. The POST itself
+requires a live matching account before insertion or notification. The client
+validates the returned `adrCreatedBy` and `adrRequestId` before acknowledging
+receipt; an expired session or an old backend cannot produce a false success. No credentials,
 attachments, diagnostic logs or analytics events are added. A successful
 response means **request received**, never **account deleted**. Processing is
 manual with the already stated target of 30 days and a completion confirmation.
@@ -21,8 +24,10 @@ manual with the already stated target of 30 days and a completion confirmation.
 2. Verify the authoritative database/queue `feedbackCreatedBy` is present and
    matches `requested_account_party_id`. The administrator view shows the
    server-recorded account and request IDs beside these requests; the protected
-   `GET /feedback/internal/legacy` response exposes them as `lfdCreatedBy` and
-   `lfdId`. The feedback endpoint also accepts
+   `GET /feedback/internal/legacy?accountDeletionOnly=true&offset=0` response exposes them as `lfdCreatedBy` and
+   `lfdId`. The dedicated administrator queue filters requests before pagination
+   and exposes pages of 20 with next/previous controls; ordinary feedback does
+   not evict privacy requests. The general feedback endpoint also accepts
    anonymous feedback: a body, email, title or claimed ID alone is **not**
    authority to delete an account. Reject mismatched requests for fulfilment;
    ask the account holder to use the authenticated flow again if needed.
@@ -47,3 +52,15 @@ but requires initiation without a mandatory support email for this kind of app.
 See [Apple's account-deletion guidance](https://developer.apple.com/help/app-review/guideline-reference/5-1-1-account-deletion).
 The separate App Store 2.1/4.8 rejection and physical-iPhone authentication gate
 remain open; this implementation is not a claim of App Review approval.
+
+Deploy the backend receipt route and paginated queue before considering the web
+form operational. A missing route fails closed; no request is acknowledged by
+an old API. No database migration is required.
+
+Verification covers arbitrary positive/mismatched/missing identity inputs with
+QuickCheck, rejected/mismatched/missing receipts in the client, a cookie revoked
+between preflight and POST in the browser fixture, and a disposable API harness
+with 21 privacy requests followed by ordinary feedback. The harness checks
+unauthenticated/foreign-owner rejection, authoritative request IDs and both
+queue pages. These tests do not establish manual fulfilment or physical-device
+behaviour.

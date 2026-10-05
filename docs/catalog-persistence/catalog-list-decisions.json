@@ -15230,6 +15230,16 @@
         "line": 12
       },
       "reviewBatch": "ticket-confirmation-2026-10-05"
+    },
+    {
+      "id": "fc51071aba7b60b06bfb",
+      "classification": "security-system-registry",
+      "disposition": "keep-static",
+      "specializedModel": "Published feedback-category selection policy; catalog UUIDs remain authoritative",
+      "priority": "P2-security",
+      "risk": "A privacy request must fail closed when no compatible active published category exists.",
+      "justification": "These codes are lookup preferences for the account-deletion request workflow, not a replacement catalog. The form fetches canonical published items and sends only their persisted UUIDs; users cannot create arbitrary categories through this list.",
+      "reviewed": true
     }
   ]
 }

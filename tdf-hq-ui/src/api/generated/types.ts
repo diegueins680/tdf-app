@@ -3453,6 +3453,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/feedback/account-deletion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Initiate manual account deletion with authenticated acceptance
+         * @description Requires a live authenticated session belonging to accountId. Rejects expired, anonymous or mismatched sessions before insertion or notification. Returns the authoritative owner and request ID; does not erase the account.
+         */
+        post: operations["requestAccountDeletion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/feedback/internal": {
         parameters: {
             query?: never;
@@ -13241,6 +13261,11 @@ export interface components {
             /** Format: date-time */
             ifsUpdatedAt: string;
         };
+        AccountDeletionReceipt: {
+            adrRequestId: string;
+            /** Format: int64 */
+            adrCreatedBy: number;
+        };
         FeedbackMultipart: {
             title: string;
             description: string;
@@ -22531,6 +22556,53 @@ export interface operations {
             };
         };
     };
+    requestAccountDeletion: {
+        parameters: {
+            query: {
+                accountId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["FeedbackMultipart"];
+            };
+        };
+        responses: {
+            /** @description Authenticated request accepted for manual fulfilment */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountDeletionReceipt"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Active authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authenticated account does not match accountId */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listInternalFeedback: {
         parameters: {
             query?: {
@@ -22649,7 +22721,11 @@ export interface operations {
     };
     listLegacyFeedbackForAdmin: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Filter privacy requests before pagination; returns up to 20 records including normalized ones. */
+                accountDeletionOnly?: boolean;
+                offset?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;

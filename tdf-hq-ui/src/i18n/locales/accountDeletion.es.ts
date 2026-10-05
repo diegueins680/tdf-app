@@ -1,4 +1,12 @@
 export default {
+  queueTitle: 'Solicitudes de eliminación de cuenta',
+  queueEmpty: 'No hay solicitudes en esta página.',
+  queueError: 'No se pudieron cargar las solicitudes de eliminación.',
+  previous: 'Anterior',
+  next: 'Siguiente',
+  page: 'Página {{page}}',
+  refresh: 'Actualizar',
+
   title: 'Eliminar tu cuenta TDF',
   intro: 'Puedes solicitar aquí la eliminación de tu cuenta completa y sus datos personales, incluido el contenido que publicaste. No necesitas enviar un correo ni explicar el motivo.',
   timing: 'El equipo tramita la eliminación manualmente. Nuestro objetivo es completar la solicitud en 30 días y confirmar el resultado por el contacto verificado de tu cuenta. Recibir la solicitud no significa que la cuenta ya esté eliminada.',

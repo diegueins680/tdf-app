@@ -27,5 +27,5 @@ export async function requestAccountDeletion(input: {
     severityId: input.severityId,
     consent: true,
     contactEmail: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(current.username) ? current.username : undefined,
-  }, { sessionCookieOnly: true });
+  }, { sessionCookieOnly: true, accountDeletionPartyId: current.partyId });
 }

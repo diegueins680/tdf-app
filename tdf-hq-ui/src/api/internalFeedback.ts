@@ -71,7 +71,7 @@ export interface InternalFeedbackUpdate {
   ifuVideoLinks?: string | null;
 }
 
-const queryString = (filters: Record<string, string | boolean | undefined>) => {
+const queryString = (filters: Record<string, string | boolean | number | undefined>) => {
   const query = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== undefined && value !== '') query.set(key, String(value));
@@ -83,7 +83,7 @@ const queryString = (filters: Record<string, string | boolean | undefined>) => {
 export const InternalFeedback = {
   list: (filters: { state?: string; module?: string; q?: string; mine?: boolean } = {}) =>
     get<InternalFeedbackSummaryDTO[]>(`/feedback/internal${queryString(filters)}`),
-  listLegacy: () => get<LegacyFeedbackDTO[]>('/feedback/internal/legacy'),
+  listLegacy: (filters: { accountDeletionOnly?: boolean; offset?: number } = {}) => get<LegacyFeedbackDTO[]>(`/feedback/internal/legacy${queryString(filters)}`),
   get: (reportId: string) =>
     get<InternalFeedbackDTO>(`/feedback/internal/${encodeURIComponent(reportId)}`),
   create: (payload: InternalFeedbackCreate) =>

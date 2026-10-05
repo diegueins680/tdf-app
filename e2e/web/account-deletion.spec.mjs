@@ -8,6 +8,7 @@ async function fixture(page, baseURL, authenticated = true) {
   const state = {
     session: authenticated ? { username: 'synthetic@example.test', displayName: 'Synthetic QA', partyId: 424242, roles: [], modules: [], featureFlags: [] } : null,
     submissions: [],
+    rejectPost: false,
     sessionReads: 0,
   };
   await page.route('**/*', async route => {
@@ -16,9 +17,10 @@ async function fixture(page, baseURL, authenticated = true) {
     const path = url.pathname.replace(/^\/api(?=\/)/, '');
     if (path === '/session') { state.sessionReads += 1; return route.fulfill({ json: state.session }); }
     if (path === '/session/onboarding') return route.fulfill({ json: { eligible: false } });
-    if (path === '/feedback' && request.method() === 'POST') {
+    if (path === '/feedback/account-deletion' && request.method() === 'POST') {
+      if (state.rejectPost) return route.fulfill({ status: 401, body: 'Session revoked' });
       state.submissions.push({ body: request.postData(), authorization: request.headers().authorization });
-      return route.fulfill({ status: 204 });
+      return route.fulfill({ json: { adrRequestId: 'synthetic-request', adrCreatedBy: state.session?.partyId } });
     }
     if (path.startsWith('/catalogs/')) return route.fulfill({ json: { catalogs: [
       { catalog: { code: 'feedback-categories' }, items: [{ id: '10000000-0000-4000-8000-000000000001', code: 'idea', name: 'Idea', active: true, workflowState: 'published' }], defaults: [] },
@@ -79,5 +81,17 @@ test('Account deletion refuses an expired session before submission @critical', 
   await expect(submit).toBeEnabled(); state.session = null;
   await submit.click();
   await expect(page.getByRole('alert')).toContainText('No pudimos confirmar el envío');
+  expect(state.submissions).toHaveLength(0);
+});
+
+
+test('Account deletion refuses authentication lost between session read and POST @critical', async ({ page, baseURL }) => {
+  const state = await fixture(page, baseURL);
+  await page.goto('/cuenta/eliminar');
+  await page.getByRole('checkbox').check();
+  state.rejectPost = true;
+  await page.getByRole('button', { name: 'Solicitar eliminación de esta cuenta', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('No pudimos confirmar el envío');
+  await expect(page.getByRole('status')).toHaveCount(0);
   expect(state.submissions).toHaveLength(0);
 });

@@ -8,7 +8,7 @@ export interface FeedbackPayload extends Omit<FeedbackWirePayload, 'attachment'>
   attachment?: File | null;
 }
 
-export async function submitFeedback(payload: FeedbackPayload, options?: { sessionCookieOnly?: boolean }): Promise<void> {
+export async function submitFeedback(payload: FeedbackPayload, options?: { sessionCookieOnly?: boolean; accountDeletionPartyId?: number }): Promise<void> {
   const base = resolveApiBase();
   const authHeader = options?.sessionCookieOnly ? undefined : buildAuthorizationHeader();
 
@@ -23,7 +23,10 @@ export async function submitFeedback(payload: FeedbackPayload, options?: { sessi
     form.append('attachment', payload.attachment);
   }
 
-  const res = await fetch(`${base}/feedback`, {
+  const accountId = options?.accountDeletionPartyId;
+  if (accountId !== undefined && (!Number.isSafeInteger(accountId) || accountId <= 0)) throw new Error('Invalid account');
+  const endpoint = accountId === undefined ? '/feedback' : `/feedback/account-deletion?accountId=${accountId}`;
+  const res = await fetch(`${base}${endpoint}`, {
     method: 'POST',
     body: form,
     headers: authHeader ? { Authorization: authHeader } : undefined,
@@ -33,5 +36,12 @@ export async function submitFeedback(payload: FeedbackPayload, options?: { sessi
   if (!res.ok) {
     const text = await res.text();
     throw new Error(text || 'No se pudo enviar tu feedback.');
+  }
+  if (accountId !== undefined) {
+    const receipt: unknown = await res.json();
+    if (!receipt || typeof receipt !== 'object' || !('adrCreatedBy' in receipt) || receipt.adrCreatedBy !== accountId
+      || !('adrRequestId' in receipt) || typeof receipt.adrRequestId !== 'string' || !receipt.adrRequestId.trim()) {
+      throw new Error('The server did not confirm an authenticated deletion request');
+    }
   }
 }
