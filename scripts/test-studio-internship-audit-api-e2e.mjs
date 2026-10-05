@@ -10,8 +10,8 @@ const otherInternEmail = process.env.TDF_AUDIT_E2E_OTHER_INTERN_EMAIL ?? '';
 assert.match(apiBase, /^http:\/\/(127\.0\.0\.1|localhost):\d+$/, 'E2E API must be an explicit loopback HTTP endpoint');
 assert.ok(password.length >= 16, 'A runtime-only synthetic-persona password is required');
 
-async function request(path, { token, method = 'GET', json, body, expected = 200 } = {}) {
-  const headers = {};
+async function request(path, { token, method = 'GET', json, body, expected = 200, headers: extraHeaders = {} } = {}) {
+  const headers = { ...extraHeaders };
   if (token) headers.Authorization = `Bearer ${token}`;
   if (json !== undefined) headers['Content-Type'] = 'application/json';
   const response = await fetch(`${apiBase}${path}`, {

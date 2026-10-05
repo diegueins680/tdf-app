@@ -113,6 +113,7 @@ import qualified TDF.Artists.PromotionSpec as ArtistPromotionSpec
 import qualified TDF.Artists.EnrichmentSpec as ArtistEnrichmentSpec
 import TDF.Cors
     ( corsPolicy,
+      isAccountDeletionRequestAllowed,
       deriveCorsOriginFromAppBase,
       isTrustedPreviewOrigin,
       lookupFirstNonEmptyEnv )
@@ -322,6 +323,7 @@ import TDF.ServerFeedback
       validateAccountDeletionIdentity,
       validateAccountDeletionOutcome,
       normalizeAccountDeletionDescription,
+      accountDeletionOwnerMatches,
       normalizeOptionalFeedbackText,
       sanitizeFeedbackAttachmentFileName,
       validateEnvironment,
@@ -9548,6 +9550,23 @@ main = hspec $ do
                 ( validateWhatsAppOptOutReason
                     (Just (Data.Text.replicate 501 "x"))
                 )
+
+    describe "isAccountDeletionRequestAllowed" $ do
+        it "rejects simple forms, hostile and opaque origins even with a wildcard setting" $ do
+            isAccountDeletionRequestAllowed ["*"] Nothing Nothing `shouldBe` False
+            isAccountDeletionRequestAllowed ["*"] (Just "https://attacker.example") (Just "TDF-Account-Deletion") `shouldBe` False
+            isAccountDeletionRequestAllowed ["*"] (Just "null") (Just "TDF-Account-Deletion") `shouldBe` False
+        it "requires the non-simple header for trusted web clients and originless API clients" $ do
+            isAccountDeletionRequestAllowed ["https://www.tdfrecords.net"] (Just "https://www.tdfrecords.net") (Just "TDF-Account-Deletion") `shouldBe` True
+            isAccountDeletionRequestAllowed [] Nothing (Just "TDF-Account-Deletion") `shouldBe` True
+            isAccountDeletionRequestAllowed [] (Just "https://preview.tdf-app.pages.dev") Nothing `shouldBe` False
+
+    describe "accountDeletionOwnerMatches" $ do
+        it "rejects mismatched, missing and duplicated owner claims, including legacy generic records" $ do
+            accountDeletionOwnerMatches 42 "account_deletion_request\nrequested_account_party_id: 43\n" `shouldBe` False
+            accountDeletionOwnerMatches 42 "account_deletion_request\n" `shouldBe` False
+            accountDeletionOwnerMatches 42 "account_deletion_request\nrequested_account_party_id: 42\nrequested_account_party_id: 43\n" `shouldBe` False
+            accountDeletionOwnerMatches 42 "account_deletion_request\r\nrequested_account_party_id: 42\r\n" `shouldBe` True
 
     describe "normalizeAccountDeletionDescription" $ do
         it "accepts the browser multipart CRLF representation and stores the canonical marker" $

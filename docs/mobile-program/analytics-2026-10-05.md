@@ -82,10 +82,10 @@ The web pin additionally preserves generated ticket/deletion contracts and the
 shared discovery registry. These generated changes do not alter the exact
 source of the already signed artifacts. Mobile PR141 merged the authenticated
 receipt contract while preserving current mobile main; discovery synchronization
-is reviewed separately in PR142 at `49dad502fc6526e3fdd2393a916562eda32a1d7f`.
-Its generated-only compatible ancestor is `b65cf5a36bdbccd47a7d3c96a285366052186b25`;
+is reviewed separately in PR142 at `3a6a84ee741ae58a4b6431a8c33fc822a42ab093`.
+Its generated-only compatible ancestor is `e6c935e5d717c0e700fede2ec6803294ad232295`;
 The preceding discovery head passed 95 suites / 611 tests and Expo Doctor 17/17.
-The new audit-contract synchronization passes local release and discovery checks;
+The new audit/CSRF-header contract synchronization passes local typechecking;
 its hosted checks must qualify the updated head before merge.
 This qualification is separate from the signed-artifact source above.
 
@@ -160,3 +160,9 @@ from previously released iOS31 / Android23.
 See the current delivery evidence for deployment receipts and exact signed
 artifact sources. Configuration alone is not a successful deployment, store
 submission, installation or real native analytics receipt.
+
+## Android review submission — 20:06 UTC
+
+Google's [official account-deletion FAQ](https://support.google.com/googleplay/android-developer/answer/13327111?hl=en) permits an in-app link to a branded web resource with a customer-service email. The currently deployed page and owner-confirmed inbox satisfy that request path independently of Apple's no-email initiation requirement. All ten canonical/legacy legal pages were rechecked against main `c0a154cd4`.
+
+Play received the corrected Data safety and privacy URL declarations plus signed Android24 in the existing closed alpha track. The API validated and committed edit `04449850881532326500` and returned the expected artifact hash. Console shows the three changes in review, initially running quick checks. API `completed` does not establish availability: build23 remains the last verified tester release until Console confirms24 is available. No countries, tester lists or public/open tracks changed. iOS32 still waits for the authenticated deletion flow to be deployed and Beta App Review.

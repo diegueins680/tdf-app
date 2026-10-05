@@ -59,3 +59,18 @@ it('does not claim resolution when a concurrent update rejects the action', asyn
   expect((await screen.findByText(es.resolutionError)).textContent).toBe(es.resolutionError);
   expect(screen.queryByText(es.rejected)).toBeNull();
 });
+
+it('retains the authoritative terminal receipt when the subsequent queue refresh fails', async () => {
+  const receipt: AccountDeletionActionDTO = { adaOutcome: 'completed', adaNote: 'Verified synthetic fulfilment', adaActor: 40, adaCreatedAt: '2026-10-05T15:00:00Z' };
+  list.mockResolvedValueOnce([record(1)]).mockRejectedValue(new Error('refresh unavailable'));
+  resolve.mockResolvedValue(receipt);
+  await show(); await screen.findByText('Deletion 1');
+  fireEvent.change(screen.getByLabelText(es.resolutionNote), { target: { value: receipt.adaNote } });
+  fireEvent.click(screen.getByRole('button', { name: es.markCompleted }));
+  await screen.findByText(es.queueError);
+  expect(screen.getByText(es.completed)).toBeTruthy();
+  expect(screen.getByText(receipt.adaNote)).toBeTruthy();
+  expect(screen.queryByRole('button', { name: es.markCompleted })).toBeNull();
+  expect(screen.queryByRole('button', { name: es.markRejected })).toBeNull();
+  expect(resolve).toHaveBeenCalledTimes(1);
+});

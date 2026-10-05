@@ -4,8 +4,10 @@ module TDF.Cors
   , deriveCorsOriginFromAppBase
   , isTrustedPreviewOrigin
   , lookupFirstNonEmptyEnv
+  , isAccountDeletionRequestAllowed
   ) where
-import Network.Wai (Middleware, Request, requestHeaders)
+import Network.Wai (Middleware, Request, requestHeaders, requestMethod, pathInfo, responseLBS)
+import Network.HTTP.Types.Status (status403)
 import Network.Wai.Middleware.Cors
 import System.Environment (lookupEnv)
 import qualified Data.ByteString.Char8 as BS
@@ -98,7 +100,23 @@ corsPolicy = do
           <> (if null deduped && includeDefaults && not allowAll then " (fallback to defaults)" else "")
   putStrLn $ "[cors] origins=" <> originLog <> notes
   putStrLn $ "[cors] trusted preview wildcard=" <> show allowPagesDevWildcard
-  pure (cors choosePolicy)
+  -- Multipart forms are simple cross-origin requests. Require a non-simple
+  -- header as well as a trusted Origin; a permissive CORS development setting
+  -- must never opt this cookie-authenticated action into arbitrary origins.
+  let deletionGuard app req respond
+        | requestMethod req == "POST"
+          && pathInfo req == ["feedback", "account-deletion"]
+          && not (isAccountDeletionRequestAllowed (map BS.pack effective)
+                    (lookup "origin" (requestHeaders req))
+                    (lookup "x-requested-with" (requestHeaders req))) =
+            respond (responseLBS status403 [("Content-Type", "text/plain"), ("Cache-Control", "no-store")] "Account deletion request origin proof required")
+        | otherwise = app req respond
+  pure (deletionGuard . cors choosePolicy)
+
+isAccountDeletionRequestAllowed :: [BS.ByteString] -> Maybe BS.ByteString -> Maybe BS.ByteString -> Bool
+isAccountDeletionRequestAllowed origins origin proof =
+  proof == Just "TDF-Account-Deletion"
+    && maybe True (\value -> value /= "null" && (value `elem` filter (/= "*") origins || isTrustedPreviewOrigin value)) origin
 
 -- | Allow credentialed preview origins only for known TDF Pages projects.
 isTrustedPreviewOrigin :: BS.ByteString -> Bool

@@ -29,7 +29,10 @@ export async function submitFeedback(payload: FeedbackPayload, options?: { sessi
   const res = await fetch(`${base}${endpoint}`, {
     method: 'POST',
     body: form,
-    headers: authHeader ? { Authorization: authHeader } : undefined,
+    headers: accountId !== undefined ? {
+      ...(authHeader ? { Authorization: authHeader } : {}),
+      ...(accountId !== undefined ? { 'X-Requested-With': 'TDF-Account-Deletion' } : {}),
+    } : authHeader ? { Authorization: authHeader } : undefined,
     credentials: 'include',
   });
 

@@ -89,7 +89,7 @@ describe('feedback api', () => {
   it('accepts only an authoritative receipt for the same authenticated account', async () => {
     fetchMock.mockResolvedValue({ ok: true, json: async () => ({ adrRequestId: 'request-1', adrCreatedBy: 42 }) } as Response);
     await submitFeedback(deletionPayload, { sessionCookieOnly: true, accountDeletionPartyId: 42 });
-    expect(fetchMock).toHaveBeenCalledWith('/feedback/account-deletion?accountId=42', expect.objectContaining({ credentials: 'include', headers: undefined }));
+    expect(fetchMock).toHaveBeenCalledWith('/feedback/account-deletion?accountId=42', expect.objectContaining({ credentials: 'include', headers: { 'X-Requested-With': 'TDF-Account-Deletion' } }));
   });
   it.each([null, {}, { adrRequestId: 'request-1', adrCreatedBy: null }, { adrRequestId: 'request-1', adrCreatedBy: 43 }, { adrRequestId: '', adrCreatedBy: 42 }])('rejects absent or mismatched acceptance: %j', async receipt => {
     fetchMock.mockResolvedValue({ ok: true, json: async () => receipt } as Response);

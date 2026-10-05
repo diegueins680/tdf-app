@@ -4494,9 +4494,12 @@ paths:
         Requires a live authenticated session belonging to accountId. Rejects expired,
         anonymous or mismatched sessions before insertion or notification. Returns
         the authoritative owner and request ID; does not erase the account.
+        Requires the non-simple X-Requested-With header and validates any Origin
+        against configured TDF origins, independently of permissive CORS settings.
       operationId: requestAccountDeletion
       parameters:
         - { name: accountId, in: query, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+        - { name: X-Requested-With, in: header, required: true, schema: { type: string, enum: [TDF-Account-Deletion] } }
       requestBody:
         required: true
         content:
@@ -4510,7 +4513,7 @@ paths:
               schema: { $ref: '#/components/schemas/AccountDeletionReceipt' }
         '400': { description: 'Invalid request, catalog reference, marker or attachment' }
         '401': { description: Active authentication required }
-        '403': { description: Authenticated account does not match accountId }
+        '403': { description: Authenticated account mismatch or invalid request origin proof }
   /feedback/internal:
     get:
       tags: [Internal feedback]

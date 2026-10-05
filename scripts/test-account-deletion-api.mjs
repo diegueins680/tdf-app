@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 
 /** Called only by the existing disposable, loopback API harness. No real deletion. */
-export async function verifyAccountDeletion({ request, requestStatus, admin, account, categoryId, severityId }) {
+export async function verifyAccountDeletion({ request: rawRequest, requestStatus, admin, account, categoryId, severityId }) {
+  const proof = { 'X-Requested-With': 'TDF-Account-Deletion' };
+  const request = (path, options = {}) => rawRequest(path, { ...options, headers: { ...proof, ...options.headers } });
   const form = (index = 0) => {
     const body = new FormData();
     body.append('title', `Synthetic account deletion ${index}`);
@@ -14,6 +16,16 @@ export async function verifyAccountDeletion({ request, requestStatus, admin, acc
   const endpoint = `/feedback/account-deletion?accountId=${account.partyId}`;
   const queue = '/feedback/internal/legacy?accountDeletionOnly=true&offset=0';
   const before = await request(queue, { token: admin.token });
+  const cookie = { Cookie: `tdf_session=${account.token}` };
+  await rawRequest(endpoint, { headers: { ...cookie, Origin: 'https://attacker.example' }, method: 'POST', body: form(), expected: 403 });
+  await rawRequest(endpoint, { headers: cookie, method: 'POST', body: form(), expected: 403 });
+  await rawRequest(endpoint, { token: account.token, method: 'POST', body: form(), expected: 403 });
+  await request(endpoint, { token: account.token, headers: { Origin: 'https://attacker.example' }, method: 'POST', body: form(), expected: 403 });
+  const spoof = form();
+  spoof.set('description', `account_deletion_request\nrequested_account_party_id: ${admin.partyId}\nSynthetic spoof`);
+  await request(endpoint, { token: account.token, method: 'POST', body: spoof, expected: 400 });
+  await request('/feedback', { token: account.token, method: 'POST', body: form(), expected: 400 });
+  await request('/feedback', { token: account.token, method: 'POST', body: spoof, expected: 400 });
   await request(endpoint, { method: 'POST', body: form(), expected: 401 });
   await request(endpoint, { token: 'expired-synthetic-token', method: 'POST', body: form(), expected: 401 });
   await request(endpoint, { token: admin.token, method: 'POST', body: form(), expected: 403 });
@@ -21,7 +33,7 @@ export async function verifyAccountDeletion({ request, requestStatus, admin, acc
   await request(queue, { token: account.token, expected: 403 });
   const accepted = [];
   for (let index = 0; index < 21; index += 1) {
-    const receipt = await request(endpoint, { token: account.token, method: 'POST', body: form(index) });
+    const receipt = await request(endpoint, { ...(index === 0 ? { headers: { ...cookie, Origin: 'http://localhost:5173' } } : { token: account.token }), method: 'POST', body: form(index) });
     assert.equal(receipt.adrCreatedBy, account.partyId);
     assert.ok(receipt.adrRequestId);
     accepted.push(receipt.adrRequestId);

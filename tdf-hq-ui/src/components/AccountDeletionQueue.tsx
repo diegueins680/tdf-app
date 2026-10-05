@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Alert, Box, Button, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { InternalFeedback } from '../api/internalFeedback';
-import type { LegacyFeedbackDTO } from '../api/types';
+import type { AccountDeletionActionDTO, LegacyFeedbackDTO } from '../api/types';
 
-function Resolution({ item, refresh }: { item: LegacyFeedbackDTO; refresh: () => Promise<unknown> }) {
+function Resolution({ item, refresh, onResolved }: { item: LegacyFeedbackDTO; refresh: () => Promise<unknown>; onResolved: (action: AccountDeletionActionDTO) => void }) {
   const { t } = useTranslation();
   const [note, setNote] = useState('');
   const [pending, setPending] = useState(false);
@@ -13,7 +13,11 @@ function Resolution({ item, refresh }: { item: LegacyFeedbackDTO; refresh: () =>
   const history = item.lfdDeletionHistory ?? [];
   const resolve = async (outcome: 'completed' | 'rejected') => {
     setPending(true); setFailed(false);
-    try { await InternalFeedback.resolveDeletion(item.lfdId, outcome, note.trim()); await refresh(); }
+    try {
+      const action = await InternalFeedback.resolveDeletion(item.lfdId, outcome, note.trim());
+      onResolved(action);
+      await refresh();
+    }
     catch { setFailed(true); }
     finally { setPending(false); }
   };
@@ -37,6 +41,7 @@ function Resolution({ item, refresh }: { item: LegacyFeedbackDTO; refresh: () =>
 /** Admin-only server query; ordinary feedback cannot displace privacy requests. */
 export default function AccountDeletionQueue() {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const [offset, setOffset] = useState(0);
   const requests = useQuery({
     queryKey: ['internal-feedback', 'account-deletion', offset],
@@ -51,7 +56,10 @@ export default function AccountDeletionQueue() {
       <Typography sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{item.lfdDescription}</Typography>
       <Alert severity={item.lfdCreatedBy ? 'info' : 'error'}>{t('accountDeletion.operatorRecord', { requestId: item.lfdId, partyId: item.lfdCreatedBy ?? '—' })}</Alert>
       <Typography variant="caption">{new Date(item.lfdCreatedAt).toLocaleString()}</Typography>
-      <Resolution item={item} refresh={() => requests.refetch()} />
+      <Resolution item={item} refresh={() => requests.refetch()} onResolved={action => {
+        queryClient.setQueryData<LegacyFeedbackDTO[]>(['internal-feedback', 'account-deletion', offset], rows =>
+          rows?.map(row => row.lfdId === item.lfdId ? { ...row, lfdDeletionHistory: [action] } : row));
+      }} />
     </Box>)}
     <Stack direction="row" gap={1} flexWrap="wrap" alignItems="center" sx={{ '& .MuiButton-root': { minHeight: 44 } }}>
       <Button disabled={offset === 0 || requests.isFetching} onClick={() => setOffset(value => Math.max(0, value - 20))}>{t('accountDeletion.previous')}</Button>

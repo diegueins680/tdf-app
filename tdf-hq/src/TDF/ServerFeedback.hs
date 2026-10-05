@@ -11,6 +11,7 @@ module TDF.ServerFeedback
   , validateAccountDeletionIdentity
   , validateAccountDeletionOutcome
   , normalizeAccountDeletionDescription
+  , accountDeletionOwnerMatches
   , normalizeOptionalFeedbackText
   , validateFeedbackDescription
   , validateFeedbackTitle
@@ -101,6 +102,13 @@ validateAccountDeletionIdentity expected actual
 normalizeAccountDeletionDescription :: Text -> Text
 normalizeAccountDeletionDescription = T.replace "\r" "\n" . T.replace "\r\n" "\n"
 
+accountDeletionOwnerMatches :: Int64 -> Text -> Bool
+accountDeletionOwnerMatches owner description =
+  owner > 0 && "account_deletion_request\n" `T.isPrefixOf` normalized
+    && filter ("requested_account_party_id:" `T.isPrefixOf`) (T.lines normalized)
+         == ["requested_account_party_id: " <> T.pack (show owner)]
+  where normalized = normalizeAccountDeletionDescription description
+
 -- Terminal outcomes are immutable; completed requires an authenticated owner.
 validateAccountDeletionOutcome :: Bool -> Bool -> Text -> Either ServerError ()
 validateAccountDeletionOutcome resolved identified outcome
@@ -147,11 +155,12 @@ feedbackServer authorizationHeader cookieHeader =
           liftIO $ runSqlPool (loadAuthedUser token) envPool
 
       case expectedAccount of
-        Nothing -> pure ()
+        Nothing -> when ("account_deletion_request" `T.isPrefixOf` T.stripStart (normalizeAccountDeletionDescription body))
+          (throwError err400 { errBody = "Account deletion requires the authenticated account-deletion endpoint" })
         Just expected -> do
           either throwError pure (validateAccountDeletionIdentity expected (fromSqlKey . auPartyId <$> creator))
-          unless ("account_deletion_request\n" `T.isPrefixOf` body)
-            (throwError err400 { errBody = "Account deletion request marker required" })
+          unless (accountDeletionOwnerMatches expected body)
+            (throwError err400 { errBody = "Account deletion request must identify the authenticated owner" })
           when (isJust fpAttachment)
             (throwError err400 { errBody = "Account deletion requests do not accept attachments" })
       attachmentPath <- traverse validateAndStoreAttachment fpAttachment
@@ -314,7 +323,7 @@ internalFeedbackServer user =
           [PersistText "account_deletion_request\n", PersistInt64 (fromIntegral requestedOffset)]
         else selectList [] [Desc ME.FeedbackCreatedAt, Desc ME.FeedbackId, LimitTo 1000, OffsetBy requestedOffset]
       fmap catMaybes $ forM rows $ \(Entity feedbackKey feedback) -> do
-        history <- withPool $ accountDeletionHistory feedbackKey
+        history <- if deletionOnly == Just True then withPool $ accountDeletionHistory feedbackKey else pure []
         normalized <- withPool $ getBy (ME.UniqueInternalFeedbackReport feedbackKey)
         pure $ case normalized of
           Just _ | deletionOnly /= Just True -> Nothing
@@ -345,7 +354,8 @@ internalFeedbackServer user =
         case rows of
           [Entity _ feedback] | "account_deletion_request\n" `T.isPrefixOf` feedbackDescription feedback -> do
             previous <- accountDeletionHistory feedbackKey
-            case validateAccountDeletionOutcome (not (null previous)) (isJust (feedbackCreatedBy feedback)) adrOutcome of
+            let ownerMatches = maybe False (\owner -> accountDeletionOwnerMatches (fromSqlKey owner) (feedbackDescription feedback)) (feedbackCreatedBy feedback)
+            case validateAccountDeletionOutcome (not (null previous)) ownerMatches adrOutcome of
               Left problem -> pure (Left problem)
               Right () -> do
                 now <- liftIO getCurrentTime

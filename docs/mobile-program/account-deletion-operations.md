@@ -9,7 +9,10 @@ existing legal page. Both canonical and old legal URLs remain supported.
 The form shows the current account, requires an explicit confirmation, reloads
 the live cookie session before submission and refuses a missing/different
 account. It sends the request to `/feedback/account-deletion?accountId=…` using that
-cookie, without a potentially stale bearer-token override. The POST itself
+cookie, without a potentially stale bearer-token override. The non-simple
+`X-Requested-With: TDF-Account-Deletion` header is required and any browser Origin
+is checked against configured TDF origins even when general CORS is permissive.
+A cross-site multipart form with the session cookie is rejected. The POST itself
 normalizes browser multipart CRLF to a canonical newline before validating the
 request marker, requires a live matching account before insertion or notification, and reuses
 `withCurrentAuthSession` to hold the existing token-row lock through insertion.
@@ -30,7 +33,9 @@ manual with the already stated target of 30 days and a completion confirmation.
    `GET /feedback/internal/legacy?accountDeletionOnly=true&offset=0` response exposes them as `lfdCreatedBy` and
    `lfdId`. The dedicated administrator queue filters requests before pagination
    and exposes pages of 20 with next/previous controls; ordinary feedback does
-   not evict privacy requests. The general feedback endpoint also accepts
+   not evict privacy requests. The general feedback endpoint rejects the reserved
+account-deletion marker, and resolution checks the single claimed owner against
+the stored authenticated creator, including old records. It still accepts
    anonymous feedback: a body, email, title or claimed ID alone is **not**
    authority to delete an account. Reject mismatched requests for fulfilment;
    ask the account holder to use the authenticated flow again if needed.
@@ -46,12 +51,13 @@ manual with the already stated target of 30 days and a completion confirmation.
    completed/rejected actions require a note and append the operator identity and
    timestamp to the existing audit table. Requests begin pending; concurrent or
    repeated resolution returns 409 without overwriting the first result. These
-   actions record work already performed and never erase data. Do not expose the request, identity
+   actions record work already performed and never erase data. The UI retains the
+   authoritative terminal receipt even if reloading the queue fails. Do not expose the request, identity
    or result to other users or product analytics.
 
 This change does not automate erasure or prove a production account has been
 deleted. No real account-deletion request is submitted for QA. Tests use
-synthetic identities and intercepted requests. Actual fulfilment remains the
+synthetic identities, intercepted browser requests and a disposable PostgreSQL/API. Actual fulfilment remains the
 owner's confirmed operational responsibility.
 
 Apple allows manual processing with a clear timeframe and completion notice,

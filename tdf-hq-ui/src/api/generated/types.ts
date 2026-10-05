@@ -3464,7 +3464,7 @@ export interface paths {
         put?: never;
         /**
          * Initiate manual account deletion with authenticated acceptance
-         * @description Requires a live authenticated session belonging to accountId. Rejects expired, anonymous or mismatched sessions before insertion or notification. Returns the authoritative owner and request ID; does not erase the account.
+         * @description Requires a live authenticated session belonging to accountId. Rejects expired, anonymous or mismatched sessions before insertion or notification. Returns the authoritative owner and request ID; does not erase the account. Requires the non-simple X-Requested-With header and validates any Origin against configured TDF origins, independently of permissive CORS settings.
          */
         post: operations["requestAccountDeletion"];
         delete?: never;
@@ -22591,7 +22591,9 @@ export interface operations {
             query: {
                 accountId: number;
             };
-            header?: never;
+            header: {
+                "X-Requested-With": "TDF-Account-Deletion";
+            };
             path?: never;
             cookie?: never;
         };
@@ -22624,7 +22626,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Authenticated account does not match accountId */
+            /** @description Authenticated account mismatch or invalid request origin proof */
             403: {
                 headers: {
                     [name: string]: unknown;
