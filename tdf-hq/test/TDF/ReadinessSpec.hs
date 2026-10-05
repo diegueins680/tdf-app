@@ -1,7 +1,15 @@
+{-# LANGUAGE OverloadedStrings #-}
 module TDF.ReadinessSpec (spec, main) where
 
-import Control.Concurrent (threadDelay)
-import Control.Exception (AsyncException(..), Exception, SomeException, fromException, throwIO, try)
+import Control.Concurrent (newEmptyMVar, putMVar, takeMVar, threadDelay)
+import Control.Concurrent.Async (wait, withAsync)
+import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Logger (runNoLoggingT)
+import Data.Pool (destroyAllResources)
+import Database.Persist.Sql (runSqlPool)
+import Database.Persist.Sqlite (createSqlitePool)
+import Control.Exception (AsyncException(..), Exception, SomeException, bracket, fromException, throwIO, try)
+import System.Timeout (timeout)
 import Test.Hspec
 import TDF.App.Readiness (databaseReady, withinReadinessDeadline)
 
@@ -22,6 +30,16 @@ spec = describe "database readiness boundary" $ do
     withinReadinessDeadline 1000000 (throwIO PrivateFailure) `shouldReturn` False
   it "includes unavailable pool acquisition in the failure boundary" $
     databaseReady (error "PRIVATE_POOL_DETAILS") `shouldReturn` False
+  it "times out an exhausted real pool and recovers after its connection is released" $
+    bracket (runNoLoggingT (createSqlitePool ":memory:" 1)) destroyAllResources $ \pool -> do
+      acquired <- newEmptyMVar
+      release <- newEmptyMVar
+      withAsync (runSqlPool (liftIO (putMVar acquired () >> takeMVar release)) pool) $ \holder -> do
+        takeMVar acquired
+        timeout 5000000 (databaseReady pool) `shouldReturn` Just False
+        putMVar release ()
+        wait holder
+        databaseReady pool `shouldReturn` True
   it "rejects work that exceeds its deadline" $
     withinReadinessDeadline 1000 (threadDelay 100000 >> pure True) `shouldReturn` False
   it "rejects a zero deadline" $

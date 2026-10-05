@@ -36,7 +36,7 @@ def verify():
                        'exec', '--', 'runghc', '-i', '-i'+str(work/'tdf-hq/src'), str(work/TEST)]
             result = subprocess.run(command, cwd=work, text=True, capture_output=True, timeout=120)
             summary = re.search(r'(\d+) examples?, (\d+) failures?', result.stdout)
-            if not summary or int(summary[1]) != 8: raise RuntimeError('Readiness tests did not complete: '+result.stderr)
+            if not summary or int(summary[1]) != 9: raise RuntimeError('Readiness tests did not complete: '+result.stderr)
             if expected:
                 assert result.returncode != 0 and int(summary[2]) > 0
                 assert expected in result.stdout.partition('Failures:')[2]

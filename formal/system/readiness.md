@@ -17,7 +17,7 @@ to the public response. The SQL is fixed, non-mutating and cannot be supplied by
 caller. Each request probes anew; one success says nothing about later requests.
 
 Actual Haskell tests cover success, false results, private synchronous errors,
-unavailable pool acquisition, deadline expiry and cancellation. The source-bound
+unavailable pool acquisition, real pool exhaustion and recovery, deadline expiry and cancellation. The source-bound
 `scripts/verify-readiness.py` also requires three broken implementations to fail:
 removed query, removed deadline and swallowed cancellation. Handler tests traverse
 the real HTTP application with a failed pool and a real SQLite query. PostgreSQL

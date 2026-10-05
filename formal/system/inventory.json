@@ -4852,7 +4852,7 @@
     {
       "id": "SURFACE-d633e5d8beb4a8d8",
       "path": "scripts/verify-readiness.py",
-      "sha256": "b60658cd6a530235192ccf9a9afa2d2efb464153e8ec68939b4bd1b8a99cb6c2",
+      "sha256": "f6b86597d38d3bcd168cbcbc593ad048e8072ab8e5b98dacd1371e2914a74b32",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13072,7 +13072,7 @@
     {
       "id": "SURFACE-e54fcc9334870c9b",
       "path": "tdf-hq/test/TDF/ReadinessSpec.hs",
-      "sha256": "10d021192d9a45ed9d91e04e51923f9a844c8013f7fcccab280c27070e8b799d",
+      "sha256": "7abdcd34ff9e775b2bd88a4e7e4e6049be604cca70bdbfdf0f73a939cf3ad998",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21627,7 +21627,7 @@
     },
     {
       "path": "formal/system/readiness.md",
-      "sha256": "c415f9b6abe9711b504a76e5597792135c42c0027e876013088ddc51ef9ba2c0",
+      "sha256": "412601984c81617cf0371dda03e7345b6829fd333b560265d8c38cb9e2fb958b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
