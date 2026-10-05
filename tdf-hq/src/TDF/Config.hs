@@ -2089,9 +2089,9 @@ resolveAssetsRootDir Nothing = do
   pure $ fromMaybe "assets" (listToMaybe existing)
 
 defaultAppBase :: Text
-defaultAppBase = "https://tdf-app.pages.dev"
+defaultAppBase = "https://www.tdfrecords.net"
 defaultAssetsBase :: Text
-defaultAssetsBase = "https://tdf-hq.fly.dev/assets/serve"
+defaultAssetsBase = "https://api.tdfrecords.net/assets/serve"
 
 sanitizeBaseUrl :: Text -> Text
 sanitizeBaseUrl base =

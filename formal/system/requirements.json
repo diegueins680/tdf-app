@@ -3315,7 +3315,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -6254,8 +6254,8 @@
     {
       "id": "OPS-CLIENT-001",
       "title": "Canonical operational clients and retired credential helpers",
-      "statement": "Operational clients default to the current canonical API while retaining explicit test/operator overrides. Retired token helpers fail before credential disclosure or provider writes; scheduled messaging checks are explicitly read-only. Health readiness must not claim a payment transaction was exercised.",
-      "property": "Operational clients default to the current canonical API while retaining explicit test/operator overrides. Retired token helpers fail before credential disclosure or provider writes; scheduled messaging checks are explicitly read-only. Health readiness must not claim a payment transaction was exercised.",
+      "statement": "Operational clients default to the current canonical API while retaining explicit test/operator overrides. Retired token helpers fail before credential disclosure or provider writes; scheduled messaging checks are explicitly read-only. Health readiness must not claim a payment transaction was exercised. Backend-generated public web and asset links default to the canonical www/API origins; explicit validated deployment overrides remain authoritative.",
+      "property": "Operational clients default to the current canonical API while retaining explicit test/operator overrides. Retired token helpers fail before credential disclosure or provider writes; scheduled messaging checks are explicitly read-only. Health readiness must not claim a payment transaction was exercised. Backend-generated public web and asset links default to the canonical www/API origins; explicit validated deployment overrides remain authoritative.",
       "domain": "OPS",
       "authority": "Reviewed source changes preserved from root #468/#485/#486/#484; final consolidated correspondence requires current independent review",
       "source": "docs/INSTAGRAM_TOKEN_SETUP.md; reviewed #468 helper/provider-cutover decisions",
@@ -6301,13 +6301,17 @@
         "scripts/refresh-messaging-token.mjs",
         "scripts/test-stripe-integration.sh",
         "scripts/upsert-course.mjs",
-        "tdf-hq/scripts/create_artists_from_list.sh"
+        "tdf-hq/scripts/create_artists_from_list.sh",
+        "tdf-hq/src/TDF/Config.hs"
       ],
       "tests": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/retired-messaging-refresher.test.mjs",
         "scripts/__tests__/payment-readiness-helper.test.mjs",
-        "scripts/__tests__/artist-import-idempotency.test.mjs"
+        "scripts/__tests__/artist-import-idempotency.test.mjs",
+        "scripts/__tests__/diagnose-social.test.mjs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx"
       ],
       "formalModels": [],
       "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
