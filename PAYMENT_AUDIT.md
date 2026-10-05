@@ -248,6 +248,11 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 
 ### Webhook Endpoints to Configure
 
+The canonical API moved to Hetzner on 2026-09-28. Preserve the existing provider
+account, webhook IDs, enabled events and signature verification; these addresses
+do not authorize a new payment activation or credential change. Follow the
+[current guarded runbook](ops/hetzner/README.md) before changing provider configuration.
+
 | Provider | URL | Events |
 |----------|-----|--------|
 | Stripe | `https://api.tdfrecords.net/social-events/stripe/webhook` | `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded` |

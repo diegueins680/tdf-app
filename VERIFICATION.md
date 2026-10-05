@@ -1,5 +1,16 @@
 # Verification Guide - PayPal & Fly Configuration
 
+**Historical reference — retired as a production procedure on 2026-09-28.**
+The live API is `https://api.tdfrecords.net` on Hetzner. Use the
+[current guarded deployment and recovery runbook](ops/hetzner/README.md) and
+[current payment configuration guidance](STRIPE_DEPLOYMENT_GUIDE.md).
+The Fly webhook, secret, deployment, restart and frontend examples below record
+an earlier environment; do not execute them against the live or retired service.
+Do not reactivate old Fly writers or change the retained Trader/shared database.
+Preserve existing provider account/webhook identity and signature validation;
+these historical instructions do not authorize payment activation or bypass
+migration, review, backup, authentication or upload gates.
+
 This document provides steps to verify the PayPal client ID configuration and Fly deployment are working correctly.
 
 ## 1. Verify Fly Configuration

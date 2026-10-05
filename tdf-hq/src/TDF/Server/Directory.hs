@@ -42,6 +42,7 @@ import TDF.Auth (AuthedUser(..), ModuleAccess(..), hasModuleAccess)
 import qualified TDF.CMS.Models as CMS
 import TDF.DB (Env(..))
 import TDF.Directory.Policy
+import TDF.Models (RoleEnum(Admin))
 import qualified TDF.Models.SocialEventsModels as Social
 
 type AppM = ReaderT Env Handler
@@ -1260,7 +1261,7 @@ validateReportTarget kind identifier = do
     throwError err400 {errBody="invalid report targetId"}
 
 requireDirectoryAdmin :: AuthedUser -> AppM ()
-requireDirectoryAdmin user = unless (isDirectoryAdmin user) (throwError err403 {errBody="directory administration requires the Admin module"})
+requireDirectoryAdmin user = unless (isDirectoryAdmin user) (throwError err403 {errBody="directory administration requires the Admin role and module"})
 
 listAdminClaims user = do
   requireDirectoryAdmin user
@@ -1268,19 +1269,36 @@ listAdminClaims user = do
 
 changeClaimStatus user claimId DirectoryStatusRequest{status=newStatus,reason=statusReason} = do
   requireDirectoryAdmin user
-  current <- jsonOne err404 "SELECT to_jsonb(status) FROM directory_claim WHERE id=?" [toPersistValue claimId]
-  oldStatus <- case current of String value -> pure value; _ -> throwError err500
-  unless (claimTransitionAllowed oldStatus newStatus) $ throwError err409 {errBody="undeclared claim transition"}
-  runDB $ do
-    rawExecute "UPDATE directory_claim SET status=?,reviewer_party_id=?,reviewer_notes=?,reviewed_at=CASE WHEN ? IN ('approved','rejected') THEN now() ELSE reviewed_at END WHERE id=?" [PersistText newStatus,toPersistValue (auPartyId user),optionalText statusReason,PersistText newStatus,toPersistValue claimId]
-    when (newStatus=="approved") $ rawExecute "INSERT INTO directory_profile_manager(profile_id,account_party_id,can_view_private,can_edit,can_publish,can_contact,can_manage,active,granted_by,source_claim_id) SELECT profile_id,claimant_party_id,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,?,id FROM directory_claim WHERE id=? AND status='approved' ON CONFLICT(profile_id,account_party_id) DO UPDATE SET active=TRUE,can_edit=TRUE,can_publish=TRUE,can_contact=TRUE,can_manage=TRUE,granted_by=EXCLUDED.granted_by,source_claim_id=EXCLUDED.source_claim_id,revoked_at=NULL,version=directory_profile_manager.version+1" [toPersistValue (auPartyId user),toPersistValue claimId]
-  jsonOne err404 "SELECT jsonb_build_object('id',id,'profileId',profile_id,'claimantPartyId',claimant_party_id,'claimType',claim_type,'status',status,'reviewedAt',reviewed_at) FROM directory_claim WHERE id=?" [toPersistValue claimId]
-
-claimTransitionAllowed from to = from == to || (from,to) `Set.member` Set.fromList
-  [ ("submitted","under_review"), ("submitted","withdrawn")
-  , ("under_review","approved"), ("under_review","rejected"), ("under_review","withdrawn")
-  , ("rejected","submitted")
-  ]
+  result <- runDB $ do
+    current <- rawSql
+      "SELECT status,claimant_party_id FROM directory_claim WHERE id=? FOR UPDATE"
+      [toPersistValue claimId] :: SqlPersistT IO [(Single Text, Single Int64)]
+    case current of
+      [] -> pure (Left err404)
+      [(Single oldStatus, Single claimant)]
+        | claimant == fromSqlKey (auPartyId user) ->
+            pure (Left err403 {errBody="claim review requires a distinct administrator"})
+        | not (allowedClaimTransition oldStatus newStatus) ->
+            pure (Left err409 {errBody="undeclared claim transition"})
+        | otherwise -> do
+            -- An identical-state retry is observational: it cannot rewrite the
+            -- reviewer or resurrect a manager grant revoked after approval.
+            when (oldStatus /= newStatus) $ do
+              rawExecute "UPDATE directory_claim SET status=?,reviewer_party_id=?,reviewer_notes=?,reviewed_at=CASE WHEN ? IN ('approved','rejected') THEN now() ELSE reviewed_at END,updated_at=now(),version=version+1 WHERE id=?"
+                [PersistText newStatus,toPersistValue (auPartyId user),optionalText statusReason,PersistText newStatus,toPersistValue claimId]
+              when (newStatus=="approved") $ rawExecute "INSERT INTO directory_profile_manager(profile_id,account_party_id,can_view_private,can_edit,can_publish,can_contact,can_manage,active,granted_by,source_claim_id) SELECT profile_id,claimant_party_id,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,?,id FROM directory_claim WHERE id=? AND status='approved' ON CONFLICT(profile_id,account_party_id) DO UPDATE SET active=TRUE,can_view_private=TRUE,can_edit=TRUE,can_publish=TRUE,can_contact=TRUE,can_manage=TRUE,granted_by=EXCLUDED.granted_by,source_claim_id=EXCLUDED.source_claim_id,revoked_at=NULL,version=directory_profile_manager.version+1"
+                [toPersistValue (auPartyId user),toPersistValue claimId]
+              rawExecute
+                "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,previous_state,new_state,correlation_id,metadata) SELECT ?,'claim.reviewed','claim',id::text,?,?,('claim-review-'||id::text||'-'||version::text),jsonb_build_object('version',version,'reason',?::text) FROM directory_claim WHERE id=?"
+                [toPersistValue (auPartyId user),PersistText oldStatus,PersistText newStatus,optionalText statusReason,toPersistValue claimId]
+            rows <- rawSql
+              "SELECT jsonb_build_object('id',id,'profileId',profile_id,'claimantPartyId',claimant_party_id,'claimType',claim_type,'status',status,'reviewedAt',reviewed_at) FROM directory_claim WHERE id=?"
+              [toPersistValue claimId] :: SqlPersistT IO [Single CMS.AesonValue]
+            case rows of
+              [Single value] -> pure (Right (CMS.unAesonValue value))
+              _ -> liftIO (fail "Claim receipt missing inside review transaction")
+      _ -> pure (Left err500)
+  either throwError pure result
 
 listAdminVerifications user = do
   requireDirectoryAdmin user
@@ -1388,7 +1406,7 @@ notifyClassifiedAuthor classifiedId applicationId notificationType notificationT
 
 notifyProfile profileIdValue invitationId notificationType notificationTitle notificationBody = runDB $ rawExecute "INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,target_key,is_read,created_at) SELECT DISTINCT manager.account_party_id,?,?,?,'directory_invitation',?::text,FALSE,now() FROM directory_profile_manager manager WHERE manager.profile_id=? AND manager.active AND manager.can_contact" [PersistText notificationType,PersistText notificationTitle,PersistText notificationBody,toPersistValue invitationId,toPersistValue profileIdValue]
 
-isDirectoryAdmin user = hasModuleAccess ModuleAdmin user
+isDirectoryAdmin user = Admin `elem` auRoles user && hasModuleAccess ModuleAdmin user
 
 refreshProfileDB :: UUID -> SqlPersistT IO ()
 refreshProfileDB profileId = do

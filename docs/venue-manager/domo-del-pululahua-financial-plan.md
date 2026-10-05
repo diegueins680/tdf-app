@@ -93,8 +93,8 @@ Ingresos secundarios:
 
 Página objetivo implementada:
 
-- Ruta canónica: `https://tdf-app.pages.dev/domo-del-pululahua`
-- Ruta alterna con redirección: `https://tdf-app.pages.dev/venues/domo-del-pululahua`
+- Ruta canónica: `https://www.tdfrecords.net/domo-del-pululahua`
+- Ruta alterna con redirección: `https://www.tdfrecords.net/venues/domo-del-pululahua`
 - API usada para ingreso de reservas: `POST https://api.tdfrecords.net/bookings/public`
 - La lógica de cotización está actualmente en el cliente, por lo que la página pública funciona contra el API desplegado sin requerir un release de backend.
 

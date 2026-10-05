@@ -18,9 +18,12 @@ const GRAPH_BASE = process.env.FACEBOOK_GRAPH_BASE || process.env.FACEBOOK_MESSA
 
 // Never echo configured credentials, including provider metadata that reflects
 // a submitted token. Raw fetch/JSON exceptions are not safe diagnostics either.
-const privateValues = [APP_SECRET, IG_MSG_TOKEN, FB_MSG_TOKEN,
-  process.env.INSTAGRAM_VERIFY_TOKEN, process.env.FACEBOOK_VERIFY_TOKEN]
-  .filter(Boolean).flatMap(value => [value, encodeURIComponent(value)]);
+const privateValues = ['FACEBOOK_APP_SECRET', 'META_APP_SECRET',
+  'INSTAGRAM_MESSAGING_TOKEN', 'FACEBOOK_MESSAGING_TOKEN', 'FACEBOOK_PAGE_ACCESS_TOKEN',
+  'INSTAGRAM_VERIFY_TOKEN', 'IG_VERIFY_TOKEN', 'FACEBOOK_VERIFY_TOKEN']
+  .map(name => process.env[name]).filter(Boolean)
+  .flatMap(value => [value, encodeURIComponent(value)])
+  .sort((a, b) => b.length - a.length);
 function safeLog(message) {
   let output = String(message);
   for (const value of privateValues) output = output.replaceAll(value, '[redacted]');
@@ -102,12 +105,15 @@ async function main() {
       }
     }
 
-    if (!debug.error || debug.error.code !== 190) {
+    if (!IG_ACCOUNT_ID) {
+      check('INSTAGRAM_MESSAGING_ACCOUNT_ID configured', false, 'not set');
+    } else if (!debug.error || debug.error.code !== 190) {
       const acct = await graph(`/${IG_ACCOUNT_ID}?fields=username`, IG_MSG_TOKEN);
       if (acct.error) {
         check('Can read IG account', false, 'provider rejected account metadata');
       } else {
-        check('Can read IG account', true, `@${acct.username}`);
+        check('Can read IG account', typeof acct.username === 'string' && acct.username.length > 0,
+          typeof acct.username === 'string' ? `@${acct.username}` : 'missing account metadata');
       }
 
       safeLog('Message delivery not tested: this diagnostic performs only read requests.');

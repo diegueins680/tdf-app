@@ -154,14 +154,34 @@ Both tokens must pass the existing health checks without needing maintenance.
 Missing, invalid, expired, soon-expiring tokens or failed provider checks return
 a nonzero status; read-only mode never exchanges tokens, retrieves replacement
 Page tokens, or calls Fly. In Actions, this step receives only the messaging
-tokens and Meta inspector credentials; Fly credentials and CLI installation are
-limited to maintenance. Failure notifications retain their existing behavior.
+tokens and Meta inspector credentials. The hourly schedule and manual
+`action=check` now use this same read-only path. The workflow has no Fly CLI or
+Fly credentials; `action=refresh` is rejected. Failure notifications are retained.
+Do not run the legacy no-argument `check-messaging-token.mjs` command after the
+cutover: it still belongs to the retired Fly maintenance implementation.
 
-The hourly schedule and explicit `action=refresh` retain the existing
-refresh-when-needed behavior, including final verification and failure exits.
-They invoke `node scripts/check-messaging-token.mjs` without arguments, which can
-exchange tokens and update both Fly messaging secrets. Manual `refresh` is not
-an unconditional rotation and requires separate production-maintenance approval.
+### Messaging credential rotation after the cutover
+
+Automatic rotation into the current Hetzner secret store is not implemented.
+A failing health check requires authorized operator maintenance; it does not
+rotate credentials or prove the running service has the GitHub check's values.
+
+1. Obtain and validate a replacement for the correct Meta app/page through the
+   approved provider flow; preserve required messaging scopes and account binding.
+   Keep credentials in the secure operator environment, outside arguments/logs.
+2. Use the current production secret-management/deployment procedure to update
+   both messaging credentials in the root-only `/opt/tdf/production/api.env`.
+   Preserve permissions, unrelated secrets, image identity and release/recovery
+   controls. Applying changed runtime credentials is a separately authorized
+   operation under [the current deployment runbook](../ops/hetzner/README.md).
+   Do not update or restart the retired Fly application.
+3. Verify both live messaging paths after application, then synchronize the
+   GitHub messaging-check secrets securely. Run the read-only check and retain
+   redacted evidence. A check of repository secrets alone is not live validation.
+4. Keep the operation incomplete if account validation, secure persistence or
+   live verification fails; do not silence expiry/failure notifications. A
+   reviewed automated secret-store integration remains pending.
+
 Unknown CLI arguments and workflow actions fail instead of falling through to
 maintenance. Do not pass token values as arguments or paste them into logs.
 
@@ -169,3 +189,8 @@ No schema migration or application deployment is needed for this change.
 Reverting it restores the old, potentially mutating manual `check` behavior;
 stop using manual checks on a reverted revision. Reverting code does not undo
 any separately authorized credential update.
+
+The standalone `scripts/refresh-messaging-token.mjs` is retired in both manual
+and `--auto` modes. It exits before exchanging or displaying tokens and cannot
+write secrets or restart any service. Use the protected current-host procedure
+above; automatic persistence remains unimplemented.

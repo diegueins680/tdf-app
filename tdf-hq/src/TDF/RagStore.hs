@@ -38,8 +38,8 @@ import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
 import           Data.Time              (UTCTime, addUTCTime, diffUTCTime, getCurrentTime)
 import           Data.Time.Format       (defaultTimeLocale, formatTime)
-import           Database.Persist       (Entity(..), SelectOpt(..), selectList, entityKey, entityVal, (==.), (!=.), (<-.), (>=.), (<=.))
-import           Database.Persist.Sql   (PersistValue(..), Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool, transactionSave, transactionUndo)
+import           Database.Persist       (Entity(..), Key, SelectOpt(..), getEntity, selectList, entityKey, entityVal, (==.), (!=.), (<-.), (>=.), (<=.))
+import           Database.Persist.Sql   (PersistValue(..), Single(..), SqlPersistT, fromSqlKey, toSqlKey, rawExecute, rawSql, runSqlPool, transactionSave, transactionUndo)
 import           GHC.Generics           (Generic)
 import           Network.HTTP.Client    (Request(..), Response, httpLbs, parseRequest, responseBody, responseStatus, RequestBody(..))
 import           Network.HTTP.Types.Status (statusCode)
@@ -750,9 +750,17 @@ selectRagChunks cfg embedding =
       then pure []
       else do
         rows <- rawSql
-          "SELECT content FROM rag_chunk ORDER BY embedding <=> ?::vector LIMIT ?"
-          [PersistText vector, PersistInt64 limitVal] :: SqlPersistT IO [Single Text]
-        pure [val | Single val <- rows]
+          -- Current callers produce customer-facing replies. Internal chunks
+          -- have no object authority here. Use the index only to rank public
+          -- course IDs; render current public fields, never cached raw content.
+          "SELECT c.id FROM rag_chunk chunk JOIN course c ON c.slug = chunk.source_id\
+          \ WHERE chunk.source = 'course'\
+          \ ORDER BY embedding <=> ?::vector LIMIT ?"
+          [PersistText vector, PersistInt64 limitVal] :: SqlPersistT IO [Single Int64]
+        docs <- forM rows $ \(Single courseId) -> do
+          course <- getEntity (toSqlKey courseId :: Key Trials.Course)
+          pure (rdContent . courseToDoc <$> course)
+        pure (catMaybes docs)
 
 embedTexts :: AppConfig -> [Text] -> IO (Either Text [[Double]])
 embedTexts cfg inputs

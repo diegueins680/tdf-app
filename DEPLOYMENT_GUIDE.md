@@ -1,16 +1,22 @@
-# Deployment Guide - TDF Records Platform
+# Historical platform deployment reference
 
-The canonical API endpoint for current web and mobile configuration is
-`https://api.tdfrecords.net`. Check its health with:
+**Retired as a production procedure on 2026-09-28.** The current TDF backend
+runs on Hetzner at `https://api.tdfrecords.net`. Use the
+[current deployment and recovery runbook](ops/hetzner/README.md) and its
+[cutover evidence and outstanding validation](ops/hetzner/validation-2026-09-28.md).
+Current deployment identities and interactive acceptance results are recorded in that runbook.
 
-```bash
-curl -fsS https://api.tdfrecords.net/health
-```
+The provider setup, secret writes, migration, ticketing and rollback commands
+below are historical reference, not authorization or instructions for the live
+service. Do not reactivate the old Fly API, restore its stale TDF database, or
+modify the retained Trader/shared Fly database. Follow the current runbook's
+writer-freeze, migration-ancestry, backup and recovery safeguards. Do not use
+this document to enable financial writes or bypass the guarded release lane.
 
-The Koyeb and Fly backend procedures below are historical hosting references,
-including their provider-specific health checks. They are not the deployment
-procedure for the canonical API. The frontend environment examples below use
-the canonical endpoint.
+Frontend production builds must use `VITE_API_BASE=https://api.tdfrecords.net`;
+the Cloudflare Pages and Vercel examples below reflect that canonical API.
+Mobile release verification follows the companion repository's current release
+guide; updating an example does not update an installed binary.
 
 ## Overview
 
@@ -18,7 +24,7 @@ The TDF platform consists of three deployable components:
 
 | Component | Technology | Deployment Target | Status |
 |-----------|-----------|-------------------|--------|
-| **Backend API** | Haskell + PostgreSQL | Koyeb / Fly.io | Historical reference |
+| **Backend API** | Haskell + PostgreSQL | Koyeb / Fly.io | Historical; see current runbook |
 | **Web UI** | React/Vite SPA | Cloudflare Pages / Vercel | Production |
 | **Mobile App** | Expo/React Native | App Store / Play Store | Development |
 
@@ -200,7 +206,7 @@ server {
 
 ## Legacy Backend Deployment (Fly.io)
 
-Fly previously hosted the production `tdf-hq` API. The following guarded release lane applies only to that legacy deployment; do not use it to deploy the canonical API or run `fly deploy` or `scripts/deploy-stripe-ticketing.sh production` directly.
+Fly formerly powered the production `tdf-hq` API; this section is historical. Production releases must use the guarded release lane; do not run `fly deploy` or `scripts/deploy-stripe-ticketing.sh production` directly.
 
 Application startup never owns production schema changes. `RUN_MIGRATIONS`,
 `CONTEXTUAL_REPUTATION_ENABLED`, `REPUTATION_AGGREGATION_WORKER_ENABLED`, and
@@ -344,7 +350,7 @@ Bearer credentials must never be configured as `VITE_*` variables because Vite e
 the public browser bundle. Use authenticated sessions for staff access and the purpose-built
 public APIs for guest flows.
 
-**Important:** The `VITE_PAYPAL_CLIENT_ID` must be set in Cloudflare Pages environment variables for PayPal buttons to appear in the Marketplace. This is separate from the Fly secret since the UI is built and served by Cloudflare Pages.
+**Important:** The `VITE_PAYPAL_CLIENT_ID` must be set in Cloudflare Pages environment variables for PayPal buttons to appear in the Marketplace. This public client identifier is separate from the protected backend credentials; the UI is built and served by Cloudflare Pages.
 
 #### 4. Deploy
 

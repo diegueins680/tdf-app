@@ -1,5 +1,14 @@
 # TDF Service Storefront - Deployment Checklist
 
+> Current hosting (2026-09-28): the live API is `https://api.tdfrecords.net`.
+> Use [the current guarded deployment/recovery procedure](ops/hetzner/README.md)
+> for runtime secrets, releases, backups and logs. Former Fly deployment steps
+> below are historical and must not be executed against the retired app/database.
+> Preserve existing provider webhook IDs/signing secrets when changing callback
+> URLs; inspect existing endpoints before creating a replacement. Existing
+> provider/environment restrictions and payment-validation gates still apply.
+
+
 ## Pre-Deployment
 
 ### Database

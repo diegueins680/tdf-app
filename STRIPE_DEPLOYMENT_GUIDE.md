@@ -1,5 +1,14 @@
 # Stripe Ticketing System - Deployment Guide
 
+> Current hosting (2026-09-28): the live API is `https://api.tdfrecords.net`.
+> Use [the current guarded deployment/recovery procedure](ops/hetzner/README.md)
+> for runtime secrets, releases, backups and logs. Former Fly deployment steps
+> below are historical and must not be executed against the retired app/database.
+> Preserve existing provider webhook IDs/signing secrets when changing callback
+> URLs; inspect existing endpoints before creating a replacement. Existing
+> provider/environment restrictions and payment-validation gates still apply.
+
+
 ## Overview
 
 This guide covers deploying the TDF Stripe Ticketing System to production.
@@ -23,47 +32,25 @@ This guide covers deploying the TDF Stripe Ticketing System to production.
 
 ### 1.2 Configure Webhook Endpoint
 
-1. Go to **Developers** → **Webhooks**
-2. Click **+ Add endpoint**
-3. Enter endpoint URL:
+1. Select the existing TDF webhook in the correct Stripe account and environment; record its endpoint ID before editing.
+2. Verify or edit that existing endpoint's URL to:
    ```
    https://api.tdfrecords.net/social-events/stripe/webhook
    ```
-4. Select events to listen to:
-   - ✅ `payment_intent.succeeded`
-   - ✅ `payment_intent.payment_failed`
-   - ✅ `charge.refunded` (optional, for refund tracking)
-5. Click **Add endpoint**
-6. Copy the **Signing secret** (`whsec_...`)
+3. Preserve the existing endpoint ID, signing secret and approved event subscriptions. The ticketing integration expects `payment_intent.succeeded` and `payment_intent.payment_failed`; retain any separately approved refund subscriptions.
+4. Save the existing endpoint and verify its delivery status. Do not add a duplicate, rotate its secret, or disable another endpoint as part of a hostname correction. If no matching endpoint exists, stop and reconcile the recorded cutover with the provider configuration before provisioning anything.
+
+Stripe supports [updating an existing webhook endpoint URL](https://docs.stripe.com/api/webhook_endpoints/update). These instructions make no provider change themselves.
 
 ## Step 2: Deploy Backend
 
-### 2.1 Set Fly.io Secrets
-
-```bash
-# Set Stripe secrets
-flyctl secrets set STRIPE_SECRET_KEY=sk_live_your_secret_key --app tdf-hq
-flyctl secrets set STRIPE_PUBLISHABLE_KEY=pk_live_your_publishable_key --app tdf-hq
-flyctl secrets set STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret --app tdf-hq
-
-# Verify secrets are set
-flyctl secrets list --app tdf-hq
-```
-
-### 2.2 Deploy
-
-```bash
-cd ~/GitHub/tdf-app
-./scripts/deploy-stripe-ticketing.sh production
-```
-
-Or manually:
-
-```bash
-cd ~/GitHub/tdf-app/tdf-hq
-stack build
-flyctl deploy --app tdf-hq
-```
+Set the Stripe configuration in the current protected backend environment
+through the authorized procedure in [ops/hetzner/README.md](ops/hetzner/README.md).
+Preserve unrelated secrets, the configured provider environment, signing
+secrets, immutable image identity and release/recovery checks. Do not use
+`deploy-stripe-ticketing.sh` or Fly secret/deployment commands after cutover.
+Verify the current release and callbacks through that procedure before marking
+this deployment complete; setting environment values alone is not verification.
 
 ## Step 3: Deploy Frontend
 
@@ -103,7 +90,7 @@ curl https://api.tdfrecords.net/version
 
 ### 4.2 Test Payment Flow
 
-1. Open frontend: https://tdf-app.pages.dev
+1. Use the approved isolated Stripe test environment; the canonical public web is https://www.tdfrecords.net, but live production is not a test-card target.
 2. Create a test event (or use existing)
 3. Click **Buy Tickets**
 4. Use test card: `4242 4242 4242 4242`
@@ -132,7 +119,7 @@ In Stripe Dashboard:
 
 ### Environment Variables
 
-Backend (Fly.io secrets):
+Backend (current protected runtime environment):
 - [ ] `STRIPE_SECRET_KEY` - Secret key (sk_live_...)
 - [ ] `STRIPE_PUBLISHABLE_KEY` - Publishable key (pk_live_...)
 - [ ] `STRIPE_WEBHOOK_SECRET` - Webhook signing secret (whsec_...)
@@ -161,12 +148,12 @@ Frontend (Cloudflare Pages):
 ## Troubleshooting
 
 ### Webhook Returns 401
-- Verify `STRIPE_WEBHOOK_SECRET` is correctly set in Fly.io
+- Verify `STRIPE_WEBHOOK_SECRET` is correctly set in the current backend environment
 - Ensure you're using the signing secret from the correct webhook endpoint
 - Check for extra whitespace in secrets
 
 ### Webhook Returns 500
-- Check Fly.io logs: `flyctl logs --app tdf-hq`
+- Inspect current Hetzner API logs through the guarded deployment runbook
 - Verify database connection
 - Check Stripe payment intent exists in database
 
@@ -191,7 +178,7 @@ Frontend (Cloudflare Pages):
 ## Support
 
 - Stripe docs: https://stripe.com/docs/webhooks
-- TDF issues: Check backend logs with `flyctl logs --app tdf-hq`
+- TDF issues: Inspect current backend logs through `ops/hetzner/README.md`
 - Database: Verify webhook events table has records
 
 ---
@@ -272,7 +259,7 @@ curl -X POST https://api.tdfrecords.net/public/courses/UNKNOWN/registrations/1/p
 # expect 404 "Registro no encontrado" (the endpoint is wired)
 
 # 2. Webhook still verifies signatures
-flyctl logs --app tdf-hq | grep 'stripe-webhook'
+# Inspect the current Hetzner API logs through ops/hetzner/README.md; verify stripe-webhook events.
 
 # 3. Customer object created on first authenticated checkout
 psql $DATABASE_URL -c "SELECT COUNT(*) FROM party WHERE stripe_customer_id IS NOT NULL;"

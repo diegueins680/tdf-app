@@ -55,6 +55,15 @@ identity requirements. The model does not prove SQL receipt contents, Git, Fly, 
 Commit ancestry assumes descendants do not deliberately revert the contract; an intentional
 revert requires a new reviewed policy, not automatic approval from this ancestry check.
 
-Reproduce with `node --test scripts/__tests__/provider-rollback.test.mjs`, the existing pinned
-formal runner, and `node scripts/production-release.mjs plan --sha <full-reviewed-sha>`.
+Reproduce the classification and recovery guards without contacting a provider:
+
+```sh
+node --test scripts/__tests__/provider-rollback.test.mjs scripts/__tests__/production-release.test.mjs
+```
+
+Use the existing pinned formal runner for the bounded protocol configurations.
+The historical Fly release CLI is retired in every mode, including `plan`; its
+importable classification helpers remain covered by these non-mutating tests.
+Current Hetzner source/ledger preparation is documented in
+[`ops/hetzner/README.md`](../../ops/hetzner/README.md) and does not authorize execution.
 No migrations, identity merges, receipt deletion, or production cleanup are part of this repair.

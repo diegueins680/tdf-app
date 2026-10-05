@@ -1,25 +1,9 @@
 name: CI
 
 on:
+  # Every PR must reach source admission, including new runtime/ops roots and
+  # canonical specification-only edits. Component jobs are selected below.
   pull_request:
-    paths:
-      - 'tdf-hq/**'
-      - 'tdf-hq-ui/**'
-      - 'tdf-mobile'
-      - 'tdf-mobile/**'
-      - 'scripts/**'
-      - 'test/personas/**'
-      - 'test/internships/**'
-      - 'e2e/web/**'
-      - 'playwright.config.mjs'
-      - 'docs/persona-testing/**'
-      - 'docs/internships/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - '.npmrc'
-      - '.dockerignore'
-      - '.github/workflows/**'
-      - 'fly.toml'
   workflow_dispatch:
     inputs:
       inspect_payment_staging:
@@ -125,8 +109,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        env:
+          GIT_CONFIG_COUNT: '1'
+          GIT_CONFIG_KEY_0: submodule.tdf-mobile.update
+          GIT_CONFIG_VALUE_0: checkout
         with:
           fetch-depth: 0
+          submodules: recursive
 
       - name: Setup Node
         uses: actions/setup-node@v7
@@ -137,8 +126,28 @@ jobs:
       - name: Install root dependencies
         run: npm ci
 
+      - name: Install image conformance tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffmpeg -version
+          ffprobe -version
+
       - name: Run repository checks
         run: npm run quality:repo
+
+      - name: Require canonical mappings for new implementation surfaces
+        env:
+          SPECIFICATION_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
+        run: |
+          if [ -z "$SPECIFICATION_BASE_SHA" ] || [ "$SPECIFICATION_BASE_SHA" = '0000000000000000000000000000000000000000' ]; then
+            SPECIFICATION_BASE_SHA="$(git merge-base origin/main HEAD)"
+          fi
+          python3 scripts/check-new-specification-surfaces.py --base "$SPECIFICATION_BASE_SHA"
+
+      - name: Verify private upload persistence across container replacement
+        timeout-minutes: 8
+        run: python3 scripts/test-persistent-uploads-container.py
 
   ui-quality:
     needs: changes
@@ -256,7 +265,21 @@ jobs:
       - name: Install native build dependencies
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends libpq-dev postgresql-client nodejs python3 pkg-config git curl ca-certificates
+          apt-get install -y --no-install-recommends libpq-dev postgresql-client python3 pkg-config git curl ca-certificates
+
+      - name: Trust the exact container checkout for evidence Git reads
+        # Container paths resolve to /__w while checkout may trust the host alias.
+        # Never disable the ownership check with a wildcard.
+        run: git config --global --add safe.directory "$(pwd -P)"
+
+      - name: Setup backend verification Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install backend verification dependencies
+        run: npm ci --ignore-scripts
 
       - name: Restore immutable Stack dependencies
         uses: actions/cache@v6
@@ -276,6 +299,21 @@ jobs:
 
       - name: Build and test backend once
         run: bash scripts/quality-backend.sh
+
+      - name: Inspect the compiled Servant API against documented operations
+        run: |
+          mkdir -p tmp/specification
+          node scripts/inspect-compiled-api.mjs --binary "$BACKEND_BINARY_OUT" --output tmp/specification/compiled-api
+
+      - name: Verify booking object scope and concurrent resource calendar
+        env:
+          TDF_BOOKING_TEST_PG_HOST: postgres
+          TDF_BOOKING_TEST_PG_PORT: '5432'
+          TDF_BOOKING_TEST_PG_ROLE: postgres
+          TDF_BOOKING_TEST_PG_PASSWORD: postgres
+          TDF_BOOKING_TEST_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
+          TDF_BOOKING_TEST_OUTPUT: tmp/specification/booking-conformance
+        run: python3 scripts/test-booking-conformance.py
 
       - name: Verify artist self-service transactions and migration
         env:
@@ -401,7 +439,15 @@ jobs:
         env:
           TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
           TDF_IDENTITY_HTTP_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
-        run: node scripts/__tests__/identity-http-runtime.mjs
+        run: |
+          bash scripts/test-auth-recovery-migration.sh
+          node scripts/__tests__/identity-http-runtime.mjs
+          sh scripts/test-credential-lifecycle.sh
+
+      - name: Verify checkout monetary snapshots and invalid-schema controls
+        env:
+          TDF_CHECKOUT_AMOUNT_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: node scripts/__tests__/checkout-amount-postgres.mjs
 
       - name: Verify artist claim preparation concurrency and privacy
         env:
@@ -445,6 +491,24 @@ jobs:
           PGPASSWORD: postgres
           TDF_INTERACTION_SERVER_BIN: ${{ env.BACKEND_BINARY_OUT }}
         run: bash scripts/interactions/test-http.sh
+
+      - name: Retain compiler-derived API discovery evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: compiled-api-${{ github.sha }}
+          path: tmp/specification/compiled-api/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Retain synthetic booking conformance evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: booking-conformance-${{ github.sha }}
+          path: tmp/specification/booking-conformance
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Upload tested backend executable
         if: inputs.publish_backend_artifact == true || (github.event_name == 'workflow_dispatch' && inputs.native_android_run != '')
@@ -630,7 +694,7 @@ jobs:
         run: npm run generate:api
 
       - name: Verify generated clients are committed
-        run: git diff --exit-code -- tdf-hq-ui/src/api/generated/types.ts tdf-mobile/src/api/generated/types.ts
+        run: node scripts/check-generated-api.mjs
 
   api-contracts:
     if: always()

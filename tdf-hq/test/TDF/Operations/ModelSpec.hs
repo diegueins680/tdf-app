@@ -49,6 +49,15 @@ spec = do
       canViewEntityType [Teacher] True "course_registration" `shouldBe` True
       canViewEntityType [Engineer] True "invoice" `shouldBe` False
 
+    it "composes read grants without losing a role to list precedence" $ do
+      canViewEntityType [Teacher, Maintenance] False "maintenance_ticket" `shouldBe` True
+      canViewEntityType [Teacher, Accounting] True "booking" `shouldBe` True
+      canViewEntityType [ReadOnly] False "payment" `shouldBe` True
+      canViewEntityType [ReadOnly] False "security_incident" `shouldBe` False
+      canViewEntityType [Producer] True "payment" `shouldBe` False
+      canViewEntityType [Teacher] True "maintenance_ticket" `shouldBe` False
+      canViewEntityType [Engineer] True "course_registration" `shouldBe` False
+
     it "classifies every consequential financial action for dual approval" $ do
       map (\action -> requiresTwoPersonApproval action Nothing 0)
         [ "refund", "payment_reversal", "payment_void", "chargeback_resolution"

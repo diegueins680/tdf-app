@@ -880,6 +880,46 @@
       "id": "2026-10-05_ticket_confirmation_lease_index",
       "path": "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index.sql",
       "introducedBy": "73fae64015f3058d40f7c237010f7ea975290e7f"
+    },
+    {
+      "id": "2026-10-04_auth_recovery_expiry",
+      "path": "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql",
+      "introducedBy": "57315f2d4b3aafac8ec7242c5913028f157dff8d"
+    },
+    {
+      "id": "2026-10-04_checkout_amount_correspondence",
+      "path": "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql",
+      "introducedBy": "c57fdab05d59b30ce4505e022267b627c18663c6"
+    },
+    {
+      "id": "2026-10-04_merch_commission_exact",
+      "path": "tdf-hq/sql/2026-10-04_merch_commission_exact.sql",
+      "introducedBy": "f8494a20a11e5b9df7b0a948cddbdfeac4930519"
+    },
+    {
+      "id": "2026-10-05_booking_calendar_projection",
+      "path": "tdf-hq/sql/2026-10-05_booking_calendar_projection.sql",
+      "introducedBy": "04925a10d769499192b3a1bc289d11c39a91fc05"
+    },
+    {
+      "id": "2026-10-05_ddex_validation_legacy_nullability",
+      "path": "tdf-hq/sql/2026-10-05_ddex_validation_legacy_nullability.sql",
+      "introducedBy": "58f095cf863fafed7dcb3232e2bb3f728ac6867b"
+    },
+    {
+      "id": "2026-10-05_operations_scoped_projection",
+      "path": "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql",
+      "introducedBy": "53e4011a7c86046abb96350681aa105ac565c6c1"
+    },
+    {
+      "id": "2026-10-05_ticket_confirmation_lease_clock",
+      "path": "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_clock.sql",
+      "introducedBy": "7e1ea290626cce735b642f33b79bcedd631e0327"
+    },
+    {
+      "id": "2026-10-05_ticket_confirmation_claim_clock",
+      "path": "tdf-hq/sql/2026-10-05_ticket_confirmation_claim_clock.sql",
+      "introducedBy": "56b55a5703e943958d5d5f00f19bfb15afae80e1"
     }
   ]
 }

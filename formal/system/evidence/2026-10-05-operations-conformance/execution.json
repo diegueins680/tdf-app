@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "revision": "c48a75004a875fec727958b6147392bb9caf1a2e",
+  "mobileRevision": "e7cb33eb7409d000ddef0bdee989a8b1498f79e2",
+  "scope": "Historical exact clean predecessor execution; not current combined candidate or deployed proof.",
+  "formal": {
+    "positive": 68,
+    "expectedNegative": 164,
+    "alloy": "passed within documented finite bounds",
+    "universalProof": false
+  },
+  "logs": [
+    {
+      "name": "backend-c48a75004.log",
+      "sha256": "661da84411d79d7e41074f729c33719ac2d505fb9cbdfd831911d4a432120760",
+      "exitCode": 0
+    },
+    {
+      "name": "http-c48a75004.log",
+      "sha256": "a318e4f587d0ae72028037670791c52d3eeff4af31b1160ac775c640d47a454e",
+      "exitCode": 0
+    },
+    {
+      "name": "formal-c48a75004.log",
+      "sha256": "84af6055d8fa49148217633cc3f129ce510349bf0903fc9574b650e6c608660d",
+      "exitCode": 0
+    },
+    {
+      "name": "repo-c48a75004.log",
+      "sha256": "b32015c34a9f1aa7841471b1e4b56059be9ffa82008228e988743e3340f15d32",
+      "exitCode": 0
+    },
+    {
+      "name": "catalog-c48a75004-reviewed.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0
+    }
+  ],
+  "commands": [
+    "STACK_ROOT=<shared audited Stack root> stack --no-terminal build tdf-hq:exe:tdf-hq-exe",
+    "PATH=<PostgreSQL16>:$PATH TDF_BOOKING_TEST_PG_PORT=55473 TDF_BOOKING_TEST_PG_ROLE=postgres TDF_BOOKING_TEST_SERVER_BIN=<exact built executable> TDF_BOOKING_TEST_OUTPUT=<new receipt directory> python3 scripts/test-booking-conformance.py",
+    "JAVA_BIN=<pinned Java21> TLA2TOOLS_JAR=<checksum-pinned jar> ALLOY_JAR=<checksum-pinned jar> PATH=<audit Python environment>:$PATH bash scripts/verify-event-operations-formal.sh",
+    "npm run quality:repo",
+    "node scripts/catalog-list-audit.mjs --decisions docs/catalog-persistence/catalog-list-decisions.json --fail-on-unreviewed --output <new receipt>"
+  ],
+  "productionMutation": false
+}

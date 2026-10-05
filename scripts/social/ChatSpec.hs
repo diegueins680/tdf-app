@@ -5,10 +5,13 @@
 module ChatSpec (chatSpec) where
 
 import Control.Exception (bracket_)
+import Control.Monad (forM_)
 import Control.Monad.Reader (ReaderT, runReaderT)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BL
 import Data.Aeson (Value(..), decode)
+import Data.Text (Text)
+import qualified Data.Text as T
 import qualified Data.Aeson.KeyMap as KM
 import qualified Data.Vector as V
 import Database.Persist.Sql (rawExecute, rawSql, Single(..), SqlPersistT, runSqlPool)
@@ -133,9 +136,38 @@ chatSpec env = before_ reset $ describe "legacy chat adapter with actual bearer 
     errHTTPCode (mapChatSqlError (dbError "40P01" "deadlock detected")) `shouldBe` 503
     errHTTPCode (mapChatSqlError (dbError "42501" "unexpected table permission")) `shouldBe` 500
     BS.isInfixOf "private" (BL.toStrict (errBody (mapChatSqlError (dbError "23505" "private")))) `shouldBe` False
+  forM_ [("{}",500), ("null",500), ("{\"result\":{}}",500),
+         ("{\"error\":\"forbidden\"}",403), ("{\"error\":\"unavailable\"}",404),
+         ("{\"error\":\"private database detail\"}",500),
+         ("{\"result\":{},\"error\":\"forbidden\"}",500)] $ \(envelope,code) ->
+    it ("rolls back a sent message and thread timestamp before returning rejected envelope " <> envelope) $ do
+      before <- chatSnapshot
+      bracket_
+        (do
+          sql "ALTER FUNCTION social_v2_chat_send(bigint,bigint,text,boolean) RENAME TO social_fixture_original_send"
+          sql ("CREATE FUNCTION social_v2_chat_send(actor bigint,thread bigint,message text,legacy_admin boolean) " <>
+            "RETURNS jsonb LANGUAGE plpgsql AS $fixture$ BEGIN " <>
+            "PERFORM social_fixture_original_send(actor,thread,message,legacy_admin); RETURN '" <>
+            T.pack envelope <> "'::jsonb; END $fixture$"))
+        (do
+          sql "DROP FUNCTION social_v2_chat_send(bigint,bigint,text,boolean)"
+          sql "ALTER FUNCTION social_fixture_original_send(bigint,bigint,text,boolean) RENAME TO social_v2_chat_send") $
+          withApp Nothing $ \call -> do
+            response <- call "synthetic-1" "POST" "/chat/threads/1/messages" "{\"csmBody\":\"must roll back\"}"
+            status response `shouldBe` code
+            BS.isInfixOf "private database detail" (BL.toStrict (HTTP.responseBody response)) `shouldBe` False
+            chatSnapshot >>= (`shouldBe` before)
+      withApp Nothing $ \call -> do
+        status <$> call "synthetic-1" "POST" "/chat/threads/1/messages" "{\"csmBody\":\"accepted after repair\"}" >>= (`shouldBe` 200)
+      messageCount >>= (`shouldBe` 4)
   where
     run action = runSqlPool action (envPool env)
     sql statement = run (rawExecute statement [])
+    chatSnapshot = do
+      [Single snapshot] <- run (rawSql
+        "SELECT jsonb_build_object('threads',(SELECT jsonb_agg(to_jsonb(t) ORDER BY id) FROM chat_thread t),'messages',(SELECT jsonb_agg(to_jsonb(m) ORDER BY id) FROM chat_message m))::text"
+        [] :: SqlPersistT IO [Single Text])
+      pure snapshot
     messageCount = do
       [Single n] <- run (rawSql "SELECT count(*) FROM chat_message" [] :: SqlPersistT IO [Single Int])
       pure n

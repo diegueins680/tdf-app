@@ -1,0 +1,1177 @@
+{
+  "startedAt": "2026-10-05T03:28:22.578Z",
+  "completedAt": "2026-10-05T03:28:39.011Z",
+  "revision": "bea8cd79147254fd41f139a03732155c5a487040",
+  "dirty": false,
+  "sources": {
+    "ops/hetzner/inspect-runtime.py": "6c439dbc8b1e17b96399990cb12d49d4d3f64757a161cffdd3224103082cf2e3",
+    "ops/hetzner/rehearse-postgres-restore.py": "9d35791e9c215de5252ca1bd9637e8d1ae69387c72b420df34ee60e7ff8d49cf",
+    "scripts/rehearse-hetzner-restore.mjs": "eba3bfe18eafcbd4e5f84e71bd817d8b8ede458658c447a060b7af2c9fe559b7",
+    "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
+    "scripts/lib/production-release.mjs": "0e02e1bcf6f8a451860ad5c1f52ac8461effc88659bce690f9ce222875878f71",
+    "scripts/lib/hetzner-migration-rehearsal.mjs": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a"
+  },
+  "transmittedSha256": "afc8f17bdeca2e354b2ed2f35a77e46c77a4d2a8d242483d3035152a22ed7917",
+  "snapshot": {
+    "schemaVersion": 1,
+    "status": "isolated-database-restore-passed",
+    "sourceBackend": {
+      "name": "tdf-hq",
+      "commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a",
+      "version": "0.1.0.0"
+    },
+    "databaseImage": "pgvector/pgvector@sha256:3e8b3adfd27b5707128f60956f62a793c3c9326ea8cfaf0eab7adccb5d700b21",
+    "sourceDatabaseBytes": 80729779,
+    "archiveSha256": "262dedbc425e45d9fee3322cf3d5e5a84f6eed23afef422ec96a28ab0fa6b0ef",
+    "rolesSha256": "7ffb92147fdc6e40ab9eaeb4e49c8e993a0c571e842783930dd0b67ded695ffd",
+    "archiveBytes": 10896197,
+    "hostArchiveDirectory": "/opt/tdf/backups/rehearsal-5f35dfa3ca72451295fdd4e3a418c21a",
+    "tableCounts": {
+      "public.tag": 0,
+      "public.band": 0,
+      "public.room": 9,
+      "public.asset": 61,
+      "public.genre": 21,
+      "public.party": 280,
+      "public.venue": 20,
+      "public.cohort": 2,
+      "public.course": 20,
+      "public.booking": 8,
+      "public.country": 0,
+      "public.invoice": 1,
+      "public.payment": 5,
+      "public.receipt": 1,
+      "public.session": 1,
+      "public.subject": 3,
+      "public.campaign": 0,
+      "public.ddex_job": 0,
+      "public.fan_club": 6,
+      "public.feedback": 1,
+      "public.proposal": 0,
+      "public.resource": 11,
+      "public.api_token": 725,
+      "public.audit_log": 201,
+      "public.ddex_code": 0,
+      "public.input_row": 21,
+      "public.rag_chunk": 56,
+      "public.recording": 107,
+      "public.artist_tip": 0,
+      "public.attendance": 0,
+      "public.classified": 0,
+      "public.commission": 0,
+      "public.event_city": 2,
+      "public.event_rsvp": 0,
+      "public.event_type": 15,
+      "public.fan_follow": 64,
+      "public.input_list": 1,
+      "public.instrument": 12,
+      "public.merch_cart": 0,
+      "public.party_role": 295,
+      "public.profession": 20,
+      "public.promo_code": 0,
+      "public.service_ad": 0,
+      "public.stock_item": 0,
+      "public.ad_creative": 0,
+      "public.asset_audit": 0,
+      "public.band_member": 0,
+      "public.chat_thread": 3,
+      "public.cms_content": 6,
+      "public.ddex_export": 0,
+      "public.fan_profile": 66,
+      "public.intern_task": 25,
+      "public.intern_todo": 0,
+      "public.label_track": 0,
+      "public.merch_order": 0,
+      "public.merch_store": 0,
+      "public.academy_user": 0,
+      "public.artist_genre": 4,
+      "public.booking_type": 5,
+      "public.catalog_deal": 0,
+      "public.chat_message": 3,
+      "public.content_type": 6,
+      "public.ddex_partner": 0,
+      "public.event_artist": 91,
+      "public.event_moment": 0,
+      "public.event_ticket": 0,
+      "public.invoice_line": 1,
+      "public.merch_review": 0,
+      "public.notification": 99,
+      "public.party_follow": 118,
+      "public.radio_stream": 501,
+      "public.receipt_line": 1,
+      "public.room_feature": 0,
+      "public.session_room": 0,
+      "public.social_event": 138,
+      "public.artist_follow": 3,
+      "public.catalog_asset": 0,
+      "public.class_session": 12,
+      "public.creator_badge": 0,
+      "public.ddex_document": 0,
+      "public.fan_club_post": 5,
+      "public.fan_club_vote": 0,
+      "public.lead_interest": 0,
+      "public.merch_product": 0,
+      "public.payment_split": 0,
+      "public.pipeline_card": 4,
+      "public.reaction_type": 3,
+      "public.referral_code": 2,
+      "public.security_role": 31,
+      "public.service_order": 0,
+      "public.trial_request": 9,
+      "public.academy_lesson": 5,
+      "public.artist_profile": 55,
+      "public.artist_release": 65,
+      "public.asset_checkout": 0,
+      "public.catalog_credit": 0,
+      "public.city_reference": 1,
+      "public.commerce_quote": 0,
+      "public.event_waitlist": 0,
+      "public.fan_club_event": 0,
+      "public.intern_profile": 3,
+      "public.intern_project": 4,
+      "public.merch_favorite": 0,
+      "public.merch_shipment": 0,
+      "public.package_ledger": 0,
+      "public.record_release": 67,
+      "public.referral_claim": 0,
+      "public.service_escrow": 0,
+      "public.social_v2_pair": 1,
+      "public.stock_movement": 0,
+      "public.ticket_qr_code": 0,
+      "public.trial_throttle": 0,
+      "public.workflow_state": 97,
+      "public.boosted_content": 0,
+      "public.catalog_release": 0,
+      "public.commerce_payout": 0,
+      "public.commerce_refund": 0,
+      "public.ddex_import_run": 0,
+      "public.ddex_vocabulary": 0,
+      "public.directory_claim": 0,
+      "public.dropdown_option": 15,
+      "public.fan_club_memory": 0,
+      "public.merch_cart_item": 0,
+      "public.navigation_item": 0,
+      "public.operations_note": 0,
+      "public.package_catalog": 1,
+      "public.package_product": 15,
+      "public.role_permission": 116,
+      "public.security_action": 16,
+      "public.security_module": 8,
+      "public.service_ad_slot": 0,
+      "public.service_catalog": 15,
+      "public.session_invoice": 0,
+      "public.social_sync_run": 0,
+      "public.teacher_student": 1,
+      "public.teacher_subject": 7,
+      "public.ticket_transfer": 0,
+      "public.user_credential": 120,
+      "public.academy_progress": 0,
+      "public.asset_kit_member": 0,
+      "public.authored_content": 2,
+      "public.booking_resource": 10,
+      "public.catalog_resource": 0,
+      "public.catalog_revision": 0,
+      "public.classified_genre": 0,
+      "public.commerce_dispute": 0,
+      "public.commerce_receipt": 0,
+      "public.content_category": 0,
+      "public.ddex_import_plan": 0,
+      "public.directory_review": 0,
+      "public.engagement_event": 8,
+      "public.event_invitation": 156,
+      "public.facebook_message": 375,
+      "public.fan_club_officer": 0,
+      "public.intern_test_case": 0,
+      "public.locale_reference": 5,
+      "public.marketplace_cart": 5,
+      "public.merch_order_line": 0,
+      "public.merch_settlement": 0,
+      "public.package_purchase": 0,
+      "public.proposal_version": 0,
+      "public.service_category": 6,
+      "public.service_offering": 11,
+      "public.social_sync_post": 0,
+      "public.trial_assignment": 0,
+      "public.artist_promo_slot": 0,
+      "public.campaign_delivery": 0,
+      "public.cohort_enrollment": 0,
+      "public.compensation_type": 5,
+      "public.country_reference": 249,
+      "public.ddex_message_type": 1,
+      "public.directory_profile": 3,
+      "public.event_budget_line": 5,
+      "public.event_ticket_tier": 1,
+      "public.experience_review": 0,
+      "public.external_provider": 2,
+      "public.fan_club_election": 0,
+      "public.feedback_category": 4,
+      "public.feedback_severity": 4,
+      "public.instagram_message": 965,
+      "public.interaction_audit": 4,
+      "public.interaction_event": 47,
+      "public.intern_audit_plan": 0,
+      "public.intern_time_entry": 66,
+      "public.live_session_song": 0,
+      "public.marketplace_order": 21,
+      "public.merch_audit_event": 0,
+      "public.merch_order_issue": 0,
+      "public.merch_refund_case": 0,
+      "public.metropolitan_area": 1,
+      "public.operations_branch": 1,
+      "public.operations_outbox": 3841,
+      "public.recording_session": 5,
+      "public.release_recording": 67,
+      "public.room_default_gear": 0,
+      "public.royalty_statement": 0,
+      "public.session_recording": 5,
+      "public.social_v2_command": 2,
+      "public.social_v2_runtime": 1,
+      "public.tdf_release_lease": 0,
+      "public.whats_app_consent": 1,
+      "public.whats_app_message": 3,
+      "public.artist_media_asset": 0,
+      "public.catalog_definition": 51,
+      "public.catalog_identifier": 0,
+      "public.catalog_import_job": 0,
+      "public.catalog_slug_alias": 2,
+      "public.collection_release": 67,
+      "public.collection_session": 5,
+      "public.course_email_event": 325,
+      "public.creator_badge_type": 3,
+      "public.currency_reference": 7,
+      "public.ddex_import_change": 0,
+      "public.ddex_job_operation": 4,
+      "public.directory_favorite": 0,
+      "public.event_research_run": 2,
+      "public.event_ticket_order": 1,
+      "public.external_event_ref": 49,
+      "public.external_venue_ref": 12,
+      "public.fan_club_candidacy": 0,
+      "public.input_list_version": 1,
+      "public.interaction_report": 0,
+      "public.interaction_target": 25,
+      "public.label_project_note": 0,
+      "public.language_reference": 5,
+      "public.maintenance_ticket": 0,
+      "public.merch_review_image": 0,
+      "public.merch_store_member": 0,
+      "public.merch_store_policy": 0,
+      "public.operations_holiday": 0,
+      "public.operations_mention": 0,
+      "public.record_contributor": 55,
+      "public.studio_brain_entry": 2,
+      "public.tax_rate_reference": 1,
+      "public.academy_microcourse": 1,
+      "public.artist_field_change": 22,
+      "public.campaign_automation": 0,
+      "public.campaign_enrollment": 0,
+      "public.catalog_audit_event": 529,
+      "public.catalog_source_link": 0,
+      "public.catalog_usage_daily": 0,
+      "public.classified_category": 15,
+      "public.classified_location": 0,
+      "public.commerce_commission": 0,
+      "public.commerce_quote_line": 0,
+      "public.commerce_settlement": 0,
+      "public.course_registration": 22,
+      "public.ddex_message_header": 0,
+      "public.ddex_validation_run": 0,
+      "public.distribution_payout": 0,
+      "public.event_finance_entry": 0,
+      "public.external_artist_ref": 0,
+      "public.input_list_template": 0,
+      "public.interaction_comment": 29,
+      "public.interaction_request": 83,
+      "public.interaction_runtime": 1,
+      "public.live_session_intake": 3,
+      "public.marketplace_listing": 57,
+      "public.merch_product_image": 0,
+      "public.merch_shipping_zone": 0,
+      "public.party_security_role": 333,
+      "public.release_contributor": 67,
+      "public.reputation_category": 8,
+      "public.security_permission": 30,
+      "public.session_contributor": 5,
+      "public.session_deliverable": 0,
+      "public.social_sync_account": 124,
+      "public.workflow_definition": 16,
+      "public.workflow_transition": 295,
+      "public.catalog_backfill_run": 176,
+      "public.catalog_search_alias": 18,
+      "public.collection_recording": 35,
+      "public.course_session_model": 84,
+      "public.course_syllabus_item": 84,
+      "public.directory_invitation": 0,
+      "public.directory_rate_limit": 38,
+      "public.distribution_package": 0,
+      "public.editorial_collection": 3,
+      "public.event_live_broadcast": 0,
+      "public.event_logistics_plan": 0,
+      "public.event_moment_comment": 0,
+      "public.identity_ads_request": 0,
+      "public.interaction_reaction": 0,
+      "public.intern_daily_summary": 0,
+      "public.intern_final_summary": 0,
+      "public.operations_sla_timer": 231,
+      "public.operations_work_item": 77,
+      "public.party_radio_presence": 0,
+      "public.reputation_audit_log": 1,
+      "public.revenue_feature_flag": 74,
+      "public.security_audit_event": 318,
+      "public.social_v2_preference": 15,
+      "public.stripe_webhook_event": 0,
+      "public.supported_currencies": 7,
+      "public.tdf_schema_migration": 159,
+      "public.teacher_availability": 60,
+      "public.artist_enrichment_run": 114,
+      "public.classified_attachment": 0,
+      "public.classified_instrument": 0,
+      "public.classified_profession": 0,
+      "public.commerce_ledger_entry": 0,
+      "public.commerce_payment_link": 0,
+      "public.commerce_payment_void": 0,
+      "public.content_reaction_type": 6,
+      "public.ddex_import_operation": 3,
+      "public.ddex_standard_support": 4,
+      "public.ddex_standard_version": 4,
+      "public.ddex_validation_issue": 0,
+      "public.ddex_validation_layer": 4,
+      "public.directory_audit_event": 6,
+      "public.directory_idempotency": 7,
+      "public.directory_interaction": 0,
+      "public.directory_legacy_link": 0,
+      "public.domo_quote_rate_limit": 0,
+      "public.event_logistics_place": 0,
+      "public.event_moment_reaction": 0,
+      "public.event_research_change": 21,
+      "public.google_calendar_event": 0,
+      "public.intern_test_execution": 0,
+      "public.live_session_musician": 0,
+      "public.marketplace_cart_item": 5,
+      "public.merch_analytics_event": 0,
+      "public.merch_product_variant": 0,
+      "public.merch_review_revision": 0,
+      "public.merch_seller_response": 0,
+      "public.operations_saved_view": 0,
+      "public.promo_code_redemption": 0,
+      "public.recording_contributor": 105,
+      "public.reputation_evaluation": 0,
+      "public.service_booking_event": 0,
+      "public.service_pricing_model": 5,
+      "public.service_status_change": 0,
+      "public.social_artist_profile": 50,
+      "public.social_v2_publication": 0,
+      "public.stripe_payment_intent": 0,
+      "public.subdivision_reference": 1,
+      "public.ticket_refund_request": 0,
+      "public.appearance_mode_option": 3,
+      "public.artist_research_source": 196,
+      "public.auth_provider_identity": 2,
+      "public.catalog_deal_territory": 0,
+      "public.catalog_scoped_default": 5,
+      "public.class_package_purchase": 1,
+      "public.classified_application": 0,
+      "public.course_checkout_policy": 12,
+      "public.ddex_validation_result": 3,
+      "public.directory_backfill_run": 0,
+      "public.directory_saved_search": 6,
+      "public.directory_verification": 0,
+      "public.domo_quote_state_event": 0,
+      "public.event_discovery_source": 10,
+      "public.event_logistics_member": 0,
+      "public.external_provider_code": 0,
+      "public.fan_club_inbox_message": 0,
+      "public.fan_club_memory_report": 0,
+      "public.fan_club_post_reaction": 0,
+      "public.google_calendar_config": 0,
+      "public.identity_merge_history": 2,
+      "public.identity_party_archive": 3,
+      "public.identity_trial_request": 0,
+      "public.maintenance_attachment": 0,
+      "public.marketplace_order_item": 29,
+      "public.merch_reputation_event": 0,
+      "public.merch_settlement_order": 0,
+      "public.metropolitan_area_city": 1,
+      "public.operations_admin_audit": 3841,
+      "public.radio_auto_stop_option": 6,
+      "public.recording_session_type": 4,
+      "public.release_type_reference": 8,
+      "public.reputation_interaction": 0,
+      "public.workflow_default_state": 16,
+      "public.ad_conversation_example": 0,
+      "public.artist_genre_membership": 2,
+      "public.catalog_dependency_rule": 0,
+      "public.catalog_merge_operation": 0,
+      "public.commerce_payment_intent": 0,
+      "public.course_enrollment_event": 0,
+      "public.ddex_code_applicability": 0,
+      "public.directory_age_assurance": 2,
+      "public.directory_profile_block": 0,
+      "public.directory_profile_genre": 0,
+      "public.distribution_submission": 0,
+      "public.distribution_usage_line": 0,
+      "public.event_city_subscription": 11,
+      "public.fan_club_member_profile": 11,
+      "public.feature_access_requests": 12,
+      "public.input_list_template_row": 0,
+      "public.interaction_entity_kind": 11,
+      "public.merch_commission_policy": 0,
+      "public.merch_fulfillment_event": 0,
+      "public.merch_reputation_appeal": 0,
+      "public.merch_reputation_report": 0,
+      "public.merch_reputation_review": 0,
+      "public.operations_backfill_run": 0,
+      "public.operations_domain_event": 3841,
+      "public.operations_organization": 1,
+      "public.operations_scope_member": 20,
+      "public.operations_sla_reminder": 790,
+      "public.operations_stream_event": 3841,
+      "public.records_ingestion_quota": 7,
+      "public.security_grant_revision": 5,
+      "public.social_discovery_review": 0,
+      "public.subject_room_preference": 6,
+      "public.user_locale_preferences": 138,
+      "public.campaign_automation_step": 0,
+      "public.catalog_item_translation": 11,
+      "public.catalog_release_resource": 0,
+      "public.commerce_payment_attempt": 1,
+      "public.commerce_payment_capture": 0,
+      "public.commerce_payment_mandate": 0,
+      "public.commerce_product_version": 1,
+      "public.ddex_validation_severity": 3,
+      "public.directory_alert_delivery": 0,
+      "public.directory_profile_credit": 0,
+      "public.domo_event_quote_runtime": 0,
+      "public.event_logistics_activity": 0,
+      "public.event_research_candidate": 20,
+      "public.event_route_verification": 0,
+      "public.fan_club_memory_reaction": 0,
+      "public.identity_contact_request": 18,
+      "public.interaction_notification": 22,
+      "public.interaction_subscription": 12,
+      "public.internal_feedback_report": 0,
+      "public.internal_feedback_retest": 0,
+      "public.marketplace_rental_event": 0,
+      "public.merch_review_media_asset": 0,
+      "public.record_external_resource": 110,
+      "public.recording_type_reference": 2,
+      "public.records_ingestion_change": 198,
+      "public.reputation_consent_event": 0,
+      "public.reputation_consent_state": 0,
+      "public.reputation_legacy_signal": 0,
+      "public.royalty_allocation_event": 0,
+      "public.service_storefront_order": 0,
+      "public.user_onboarding_progress": 9,
+      "public.artist_identity_candidate": 61,
+      "public.artist_profile_enrichment": 54,
+      "public.catalog_migration_mapping": 983,
+      "public.commerce_checkout_session": 1,
+      "public.commerce_provider_account": 8,
+      "public.commerce_provider_binding": 1,
+      "public.commerce_rate_card_review": 1,
+      "public.commerce_reservation_hold": 0,
+      "public.currency_conversion_audit": 0,
+      "public.directory_analytics_event": 1247,
+      "public.directory_merge_operation": 0,
+      "public.directory_moderation_case": 0,
+      "public.directory_profile_manager": 3,
+      "public.directory_profile_service": 6,
+      "public.directory_search_document": 3,
+      "public.distribution_usage_report": 0,
+      "public.external_calendar_mapping": 0,
+      "public.interaction_comment_total": 22,
+      "public.intern_permission_request": 0,
+      "public.internal_feedback_comment": 0,
+      "public.internal_feedback_history": 0,
+      "public.merch_notification_outbox": 0,
+      "public.merch_reputation_evidence": 0,
+      "public.operations_business_hours": 5,
+      "public.pipeline_workflow_binding": 11,
+      "public.records_ingestion_control": 1,
+      "public.release_external_resource": 67,
+      "public.reputation_worker_control": 3,
+      "public.session_external_resource": 5,
+      "public.workflow_state_capability": 11,
+      "public.artist_inventory_reference": 460,
+      "public.commerce_connected_account": 0,
+      "public.commerce_payout_allocation": 0,
+      "public.commerce_refund_allocation": 0,
+      "public.directory_backfill_mapping": 0,
+      "public.directory_private_location": 0,
+      "public.directory_profile_language": 0,
+      "public.directory_profile_location": 3,
+      "public.distribution_version_asset": 0,
+      "public.event_logistics_assignment": 0,
+      "public.event_logistics_dependency": 0,
+      "public.event_research_pilot_audit": 1,
+      "public.interaction_legacy_cutover": 1,
+      "public.interaction_legacy_mapping": 0,
+      "public.interaction_reaction_total": 8,
+      "public.interaction_target_mention": 0,
+      "public.internal_feedback_evidence": 0,
+      "public.merch_reputation_aggregate": 0,
+      "public.merch_reputation_dimension": 6,
+      "public.merch_reputation_risk_case": 0,
+      "public.operations_inbound_receipt": 0,
+      "public.operations_provider_config": 13,
+      "public.operations_work_item_event": 3841,
+      "public.reputation_aggregation_run": 0,
+      "public.reputation_evaluation_rank": 0,
+      "public.reputation_formula_version": 1,
+      "public.reputation_private_ranking": 0,
+      "public.service_storefront_package": 9,
+      "public.user_experiment_assignment": 0,
+      "public.workflow_migration_mapping": 92,
+      "public.catalog_import_review_entry": 0,
+      "public.commerce_checkout_line_item": 1,
+      "public.commerce_idempotency_record": 0,
+      "public.commerce_ledger_transaction": 0,
+      "public.commerce_refund_reason_code": 6,
+      "public.course_registration_receipt": 1,
+      "public.directory_moderation_report": 0,
+      "public.distribution_product_review": 7,
+      "public.identity_complementary_link": 1,
+      "public.interaction_comment_mention": 0,
+      "public.interaction_migration_state": 2,
+      "public.interaction_reaction_choice": 4,
+      "public.merch_inventory_reservation": 0,
+      "public.operations_approval_request": 0,
+      "public.recording_external_resource": 107,
+      "public.reputation_public_aggregate": 0,
+      "public.service_storefront_revision": 0,
+      "public.artist_enrichment_suggestion": 77,
+      "public.collection_external_resource": 3,
+      "public.commerce_provider_capability": 0,
+      "public.deployment_locale_enablement": 5,
+      "public.directory_contact_preference": 0,
+      "public.directory_profile_instrument": 1,
+      "public.directory_profile_membership": 0,
+      "public.directory_profile_profession": 1,
+      "public.distribution_partner_profile": 0,
+      "public.distribution_product_version": 14,
+      "public.distribution_release_version": 0,
+      "public.distribution_status_evidence": 0,
+      "public.event_research_pilot_control": 1,
+      "public.event_ticket_checkout_policy": 1,
+      "public.external_event_discovery_run": 321,
+      "public.fan_profile_genre_membership": 10,
+      "public.identity_live_intake_request": 0,
+      "public.identity_reconciliation_case": 18,
+      "public.marketplace_customer_request": 0,
+      "public.merch_reputation_audit_event": 0,
+      "public.merch_reputation_badge_award": 0,
+      "public.merch_reputation_idempotency": 0,
+      "public.operations_outbound_delivery": 0,
+      "public.operations_push_subscription": 0,
+      "public.commerce_checkout_audit_event": 3,
+      "public.commerce_provider_event_inbox": 0,
+      "public.commerce_seller_balance_entry": 0,
+      "public.course_registration_follow_up": 18,
+      "public.ddex_partner_standard_version": 0,
+      "public.directory_moderation_decision": 0,
+      "public.distribution_delivery_attempt": 0,
+      "public.distribution_recipient_status": 0,
+      "public.distribution_split_allocation": 0,
+      "public.event_rsvp_migration_evidence": 0,
+      "public.event_ticket_checkout_runtime": 1,
+      "public.merch_reputation_feature_flag": 27,
+      "public.merch_reputation_line_receipt": 0,
+      "public.merch_reputation_risk_measure": 0,
+      "public.merch_reputation_source_event": 0,
+      "public.merch_review_dimension_rating": 0,
+      "public.operations_aggregate_sequence": 77,
+      "public.records_ingestion_admin_audit": 7,
+      "public.reputation_aggregation_outbox": 0,
+      "public.commerce_payment_authorization": 0,
+      "public.commerce_payment_state_history": 0,
+      "public.commerce_provider_event_action": 0,
+      "public.commerce_settlement_allocation": 0,
+      "public.course_checkout_policy_history": 12,
+      "public.deployment_currency_enablement": 7,
+      "public.directory_conversation_context": 0,
+      "public.event_logistics_alert_delivery": 0,
+      "public.event_rsvp_mutation_rate_limit": 0,
+      "public.event_ticket_fulfillment_event": 2,
+      "public.feature_access_request_history": 29,
+      "public.feature_navigation_preferences": 75,
+      "public.interaction_comment_attachment": 0,
+      "public.interaction_notification_actor": 22,
+      "public.marketplace_sale_order_runtime": 0,
+      "public.merch_reputation_priority_item": 0,
+      "public.merch_seller_response_revision": 0,
+      "public.operations_integration_failure": 0,
+      "public.radio_stream_genre_observation": 5,
+      "public.reputation_aggregate_candidate": 0,
+      "public.reputation_evaluation_category": 0,
+      "public.reputation_personal_preference": 0,
+      "public.artist_profile_genre_membership": 0,
+      "public.distribution_rights_declaration": 0,
+      "public.merch_reputation_exposure_daily": 0,
+      "public.merch_review_privacy_preference": 0,
+      "public.reputation_private_ranking_item": 0,
+      "public.security_role_assignment_policy": 11,
+      "public.service_booking_commerce_policy": 6,
+      "public.service_resource_selection_mode": 2,
+      "public.commerce_manual_payment_evidence": 0,
+      "public.event_ticket_checkout_rate_limit": 1,
+      "public.interaction_target_comment_total": 12,
+      "public.intern_audit_notification_outbox": 0,
+      "public.marketplace_rental_listing_terms": 0,
+      "public.marketplace_rental_order_runtime": 0,
+      "public.merch_reputation_formula_version": 1,
+      "public.merch_reputation_moderation_case": 0,
+      "public.merch_reputation_order_integrity": 0,
+      "public.notification_navigation_backfill": 1,
+      "public.radio_stream_country_observation": 5,
+      "public.service_booking_checkout_runtime": 0,
+      "public.commerce_payment_amount_component": 0,
+      "public.commerce_reconciliation_exception": 0,
+      "public.marketplace_rental_cart_selection": 0,
+      "public.merch_reputation_badge_definition": 5,
+      "public.merch_reputation_priority_profile": 0,
+      "public.merch_settlement_payment_evidence": 0,
+      "public.reputation_aggregation_run_result": 0,
+      "public.reputation_preference_idempotency": 0,
+      "public.service_booking_tentative_request": 0,
+      "public.service_offering_default_resource": 0,
+      "public.catalog_ddex_export_cutover_source": 0,
+      "public.marketplace_customer_request_event": 0,
+      "public.marketplace_sale_fulfillment_event": 0,
+      "public.merch_reputation_order_buyer_claim": 0,
+      "public.merch_reputation_priority_revision": 0,
+      "public.reputation_pilot_cohort_membership": 0,
+      "public.catalog_ddex_partner_cutover_source": 0,
+      "public.interaction_notification_preference": 0,
+      "public.merch_reputation_operational_signal": 0,
+      "public.reputation_aggregation_event_action": 0,
+      "public.service_booking_resource_allocation": 10,
+      "public.catalog_creator_badge_cutover_source": 0,
+      "public.catalog_ddex_document_cutover_source": 0,
+      "public.course_registration_checkout_runtime": 0,
+      "public.event_discovery_publication_approval": 0,
+      "public.event_ticket_checkout_policy_history": 1,
+      "public.identity_course_registration_request": 0,
+      "public.merch_reputation_category_suggestion": 0,
+      "public.merch_reputation_dimension_aggregate": 0,
+      "public.merch_reputation_moderation_decision": 0,
+      "public.merch_reputation_notification_outbox": 0,
+      "public.merch_reputation_risk_policy_version": 1,
+      "public.marketplace_rental_deposit_settlement": 0,
+      "public.catalog_input_reference_cutover_source": 21,
+      "public.merch_reputation_projection_checkpoint": 0,
+      "public.reputation_aggregation_source_coverage": 1,
+      "public.service_storefront_order_status_change": 0,
+      "public.catalog_content_reaction_cutover_source": 0,
+      "public.catalog_ddex_operational_cutover_source": 0,
+      "public.distribution_beneficiary_payout_profile": 0,
+      "public.reputation_personal_preference_category": 0,
+      "public.service_booking_commerce_policy_history": 6,
+      "public.catalog_pipeline_workflow_cutover_source": 4,
+      "public.catalog_social_event_type_cutover_source": 88,
+      "public.marketplace_rental_listing_terms_history": 0,
+      "public.merch_reputation_notification_preference": 0,
+      "public.radio_stream_genre_observation_candidate": 0,
+      "public.catalog_feedback_reference_cutover_source": 1,
+      "public.notification_navigation_constraint_history": 1,
+      "public.radio_stream_country_observation_candidate": 3,
+      "public.marketplace_rental_deposit_settlement_event": 0,
+      "public.catalog_event_moment_reaction_cutover_source": 0,
+      "public.catalog_social_event_workflow_cutover_source": 88,
+      "public.catalog_live_session_reference_cutover_source": 0,
+      "public.catalog_ddex_validation_reference_cutover_source": 0
+    },
+    "migrationCount": 159,
+    "productionDatabaseWritten": false,
+    "candidateMigrations": {
+      "sourceRevision": "bea8cd79147254fd41f139a03732155c5a487040",
+      "manifestSha256": "d1b45b55ebb0b86987fcb2c628de2edc1ada2c7abbb046f0f6009325538bdfe3",
+      "sqlSha256": "cb84deea8d8e04e7cc771558102df39b15a7488f51a27f1d8f3b8d748758cf7e",
+      "applications": 2,
+      "pendingBefore": 10,
+      "migrationCount": 169,
+      "schemaVerification": "passed by canonical batch",
+      "controlChanges": {
+        "revenueFlags": {
+          "before": [
+            {
+              "flag": "checkout.bank_transfer",
+              "enabled": true
+            },
+            {
+              "flag": "checkout.cash",
+              "enabled": true
+            },
+            {
+              "flag": "checkout.datafast",
+              "enabled": false
+            },
+            {
+              "flag": "checkout.datafast.refunds",
+              "enabled": false
+            },
+            {
+              "flag": "checkout.datafast.webhooks",
+              "enabled": false
+            },
+            {
+              "flag": "checkout.paypal",
+              "enabled": true
+            },
+            {
+              "flag": "checkout.paypal.refunds",
+              "enabled": false
+            },
+            {
+              "flag": "checkout.paypal.webhooks",
+              "enabled": true
+            },
+            {
+              "flag": "checkout.payphone",
+              "enabled": false
+            },
+            {
+              "flag": "checkout.placetopay",
+              "enabled": false
+            },
+            {
+              "flag": "checkout.pos",
+              "enabled": true
+            },
+            {
+              "flag": "checkout.provider_event_worker",
+              "enabled": true
+            },
+            {
+              "flag": "commerce.course_recurring_billing",
+              "enabled": false
+            },
+            {
+              "flag": "commerce.courses",
+              "enabled": false
+            },
+            {
+              "flag": "commerce.domo_quotes",
+              "enabled": false
+            },
+            {
+              "flag": "commerce.event_tickets",
+              "enabled": true
+            },
+            {
+              "flag": "commerce.event_ticket_settlements",
+              "enabled": false
+            },
+            {
+              "flag": "commerce.marketplace_connected_accounts",
+              "enabled": false
+            },
+            {
+              "flag": "commerce.marketplace_manual_deposit_settlement",
+              "enabled": true
+            },
+            {
+              "flag": "commerce.marketplace_rentals",
+              "enabled": true
+            },
+            {
+              "flag": "commerce.marketplace_sales",
+              "enabled": true
+            },
+            {
+              "flag": "commerce.mixing_mastering",
+              "enabled": false
+            },
+            {
+              "flag": "commerce.payment_links",
+              "enabled": false
+            },
+            {
+              "flag": "commerce.recurring_payments",
+              "enabled": false
+            },
+            {
+              "flag": "commerce.service_bookings",
+              "enabled": false
+            },
+            {
+              "flag": "distribution.automatic_payouts",
+              "enabled": false
+            },
+            {
+              "flag": "distribution.dsr_ingestion",
+              "enabled": false
+            },
+            {
+              "flag": "distribution.ern_delivery",
+              "enabled": false
+            },
+            {
+              "flag": "distribution.intake",
+              "enabled": false
+            },
+            {
+              "flag": "distribution.manual_payouts",
+              "enabled": false
+            },
+            {
+              "flag": "distribution.partner_delivery",
+              "enabled": false
+            },
+            {
+              "flag": "distribution.public_storefront",
+              "enabled": false
+            },
+            {
+              "flag": "domo.authoritative_quotes",
+              "enabled": false
+            },
+            {
+              "flag": "domo.checkout",
+              "enabled": false
+            },
+            {
+              "flag": "merch.checkout",
+              "enabled": false
+            },
+            {
+              "flag": "merch.checkout.datafast",
+              "enabled": false
+            },
+            {
+              "flag": "merch.checkout.manual",
+              "enabled": false
+            },
+            {
+              "flag": "merch.checkout.paypal",
+              "enabled": false
+            },
+            {
+              "flag": "merch.checkout.runtime_ready",
+              "enabled": false
+            },
+            {
+              "flag": "merch.disputes",
+              "enabled": false
+            },
+            {
+              "flag": "merch.experimental",
+              "enabled": false
+            },
+            {
+              "flag": "merch.notifications",
+              "enabled": false
+            },
+            {
+              "flag": "merch.public_catalog",
+              "enabled": false
+            },
+            {
+              "flag": "merch.refunds",
+              "enabled": false
+            },
+            {
+              "flag": "merch.reviews",
+              "enabled": false
+            },
+            {
+              "flag": "merch.seller_applications",
+              "enabled": false
+            },
+            {
+              "flag": "merch.storefronts",
+              "enabled": false
+            }
+          ],
+          "after": [
+            {
+              "flag": "checkout.bank_transfer",
+              "enabled": true
+            },
+            {
+              "flag": "checkout.cash",
+              "enabled": true
+            },
+            {
+              "flag": "checkout.datafast",
+              "enabled": false
+            },
+            {
+              "flag": "checkout.datafast.refunds",
+              "enabled": false
+            },
+            {
+              "flag": "checkout.datafast.webhooks",
+              "enabled": false
+            },
+            {
+              "flag": "checkout.paypal",
+              "enabled": true
+            },
+            {
+              "flag": "checkout.paypal.refunds",
+              "enabled": false
+            },
+            {
+              "flag": "checkout.paypal.webhooks",
+              "enabled": true
+            },
+            {
+              "flag": "checkout.payphone",
+              "enabled": false
+            },
+            {
+              "flag": "checkout.payphone.notifications",
+              "enabled": false
+            },
+            {
+              "flag": "checkout.placetopay",
+              "enabled": false
+            },
+            {
+              "flag": "checkout.placetopay.webhooks",
+              "enabled": false
+            },
+            {
+              "flag": "checkout.pos",
+              "enabled": true
+            },
+            {
+              "flag": "checkout.provider_event_worker",
+              "enabled": true
+            },
+            {
+              "flag": "checkout.provider_query_recovery",
+              "enabled": false
+            },
+            {
+              "flag": "commerce.course_recurring_billing",
+              "enabled": false
+            },
+            {
+              "flag": "commerce.courses",
+              "enabled": false
+            },
+            {
+              "flag": "commerce.domo_quotes",
+              "enabled": false
+            },
+            {
+              "flag": "commerce.event_tickets",
+              "enabled": true
+            },
+            {
+              "flag": "commerce.event_ticket_settlements",
+              "enabled": false
+            },
+            {
+              "flag": "commerce.marketplace_connected_accounts",
+              "enabled": false
+            },
+            {
+              "flag": "commerce.marketplace_manual_deposit_settlement",
+              "enabled": true
+            },
+            {
+              "flag": "commerce.marketplace_rentals",
+              "enabled": true
+            },
+            {
+              "flag": "commerce.marketplace_sales",
+              "enabled": true
+            },
+            {
+              "flag": "commerce.mixing_mastering",
+              "enabled": false
+            },
+            {
+              "flag": "commerce.payment_links",
+              "enabled": false
+            },
+            {
+              "flag": "commerce.recurring_payments",
+              "enabled": false
+            },
+            {
+              "flag": "commerce.service_bookings",
+              "enabled": false
+            },
+            {
+              "flag": "distribution.automatic_payouts",
+              "enabled": false
+            },
+            {
+              "flag": "distribution.dsr_ingestion",
+              "enabled": false
+            },
+            {
+              "flag": "distribution.ern_delivery",
+              "enabled": false
+            },
+            {
+              "flag": "distribution.intake",
+              "enabled": false
+            },
+            {
+              "flag": "distribution.manual_payouts",
+              "enabled": false
+            },
+            {
+              "flag": "distribution.partner_delivery",
+              "enabled": false
+            },
+            {
+              "flag": "distribution.public_storefront",
+              "enabled": false
+            },
+            {
+              "flag": "domo.authoritative_quotes",
+              "enabled": false
+            },
+            {
+              "flag": "domo.checkout",
+              "enabled": false
+            },
+            {
+              "flag": "merch.checkout",
+              "enabled": false
+            },
+            {
+              "flag": "merch.checkout.datafast",
+              "enabled": false
+            },
+            {
+              "flag": "merch.checkout.manual",
+              "enabled": false
+            },
+            {
+              "flag": "merch.checkout.paypal",
+              "enabled": false
+            },
+            {
+              "flag": "merch.checkout.runtime_ready",
+              "enabled": false
+            },
+            {
+              "flag": "merch.disputes",
+              "enabled": false
+            },
+            {
+              "flag": "merch.experimental",
+              "enabled": false
+            },
+            {
+              "flag": "merch.notifications",
+              "enabled": false
+            },
+            {
+              "flag": "merch.public_catalog",
+              "enabled": false
+            },
+            {
+              "flag": "merch.refunds",
+              "enabled": false
+            },
+            {
+              "flag": "merch.reviews",
+              "enabled": false
+            },
+            {
+              "flag": "merch.seller_applications",
+              "enabled": false
+            },
+            {
+              "flag": "merch.storefronts",
+              "enabled": false
+            }
+          ]
+        },
+        "providerAccounts": {
+          "before": [
+            {
+              "provider": "datafast",
+              "status": "disabled",
+              "contract_status": "unverified",
+              "credential_status": "absent",
+              "enabled": false,
+              "featureFlag": "checkout.datafast"
+            },
+            {
+              "provider": "paypal",
+              "status": "disabled",
+              "contract_status": "unverified",
+              "credential_status": "absent",
+              "enabled": false,
+              "featureFlag": "checkout.paypal"
+            },
+            {
+              "provider": "payphone",
+              "status": "disabled",
+              "contract_status": "unverified",
+              "credential_status": "absent",
+              "enabled": false,
+              "featureFlag": "checkout.payphone"
+            },
+            {
+              "provider": "placetopay",
+              "status": "disabled",
+              "contract_status": "unverified",
+              "credential_status": "absent",
+              "enabled": false,
+              "featureFlag": "checkout.placetopay"
+            }
+          ],
+          "after": [
+            {
+              "provider": "bank_transfer",
+              "status": "disabled",
+              "contract_status": "unverified",
+              "credential_status": "absent",
+              "enabled": false,
+              "featureFlag": "checkout.bank_transfer"
+            },
+            {
+              "provider": "datafast",
+              "status": "disabled",
+              "contract_status": "unverified",
+              "credential_status": "absent",
+              "enabled": false,
+              "featureFlag": "checkout.datafast"
+            },
+            {
+              "provider": "paypal",
+              "status": "disabled",
+              "contract_status": "unverified",
+              "credential_status": "absent",
+              "enabled": false,
+              "featureFlag": "checkout.paypal"
+            },
+            {
+              "provider": "payphone",
+              "status": "disabled",
+              "contract_status": "unverified",
+              "credential_status": "absent",
+              "enabled": false,
+              "featureFlag": "checkout.payphone"
+            },
+            {
+              "provider": "placetopay",
+              "status": "disabled",
+              "contract_status": "unverified",
+              "credential_status": "absent",
+              "enabled": false,
+              "featureFlag": "checkout.placetopay"
+            }
+          ]
+        }
+      },
+      "deploymentAuthorized": false
+    },
+    "limitations": [
+      "Online database snapshot only; assets and globals are not snapshot-coordinated.",
+      "No deployment, restore over production, payment, worker, or API canary was executed.",
+      "Role credentials excluded; secret recovery and off-host recovery are separate obligations.",
+      "Counts and successful archive replay are not byte-for-byte logical data equivalence."
+    ],
+    "isolateRemoved": true
+  }
+}

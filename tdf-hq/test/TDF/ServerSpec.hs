@@ -24,7 +24,7 @@ import qualified Data.Set as Set
 import Data.Time (fromGregorian)
 import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffTime)
 import Database.Persist
-    ( Entity(..), Key, PersistValue(PersistText), count, get, getJust, insert, insert_, insertKey
+    ( Entity(..), Key, PersistValue(PersistText, PersistUTCTime), count, get, getJust, insert, insert_, insertKey
     , selectList, toPersistValue, update, (=.), (==.)
     )
 import Database.Persist.Sql
@@ -8815,9 +8815,11 @@ spec = describe "TDF.Server helpers" $ do
                 `shouldSatisfy` isLeft
 
     describe "validateOptionalSignupClaimArtistId" $ do
-        it "preserves omission and accepts positive artist ids for explicit profile claims" $ do
+        it "preserves independent signup but forbids anonymous artist adoption" $ do
             validateOptionalSignupClaimArtistId Nothing `shouldBe` Right Nothing
-            validateOptionalSignupClaimArtistId (Just 42) `shouldBe` Right (Just 42)
+            case validateOptionalSignupClaimArtistId (Just 42) of
+                Left serverErr -> errHTTPCode serverErr `shouldBe` 403
+                Right _ -> expectationFailure "Anonymous signup must not adopt an artist"
 
         it "rejects zero or negative artist ids instead of silently dropping the requested claim" $ do
             let assertInvalid result = case result of
@@ -9164,6 +9166,9 @@ spec = describe "TDF.Server helpers" $ do
                     , apiTokenLabel = Just "password-reset:user@example.com"
                     , apiTokenActive = True
                     }
+                rawExecute
+                    "INSERT INTO auth_recovery_challenge(api_token_id,credential_id,issued_at_epoch,expires_at_epoch) VALUES (?,?,CAST(strftime('%s','now') AS INTEGER),CAST(strftime('%s','now') AS INTEGER)+900)"
+                    [toPersistValue tokenId, toPersistValue credId]
                 result <- runPasswordResetConfirm "reset-token" "new-password-123"
                 updatedCred <- get credId
                 updatedToken <- get tokenId
@@ -9211,6 +9216,9 @@ spec = describe "TDF.Server helpers" $ do
                     , apiTokenLabel = Just "password-reset:user@example.com"
                     , apiTokenActive = True
                     }
+                rawExecute
+                    "INSERT INTO auth_recovery_challenge(api_token_id,credential_id,issued_at_epoch,expires_at_epoch) VALUES (?,?,CAST(strftime('%s','now') AS INTEGER),CAST(strftime('%s','now') AS INTEGER)+900)"
+                    [toPersistValue tokenId, toPersistValue credId]
                 result <- runPasswordResetConfirm "reset-token" "new-password-123"
                 updatedCred <- get credId
                 updatedToken <- get tokenId
@@ -12305,6 +12313,38 @@ spec = describe "TDF.Server helpers" $ do
 
                     resolved `shouldBe` [liveRoomId]
 
+        it "uses authoritative allocation status and half-open time boundaries" $ do
+            let startsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 54000)
+                endsAt = addUTCTime 3600 startsAt
+                cases =
+                    [ ("holding", startsAt, endsAt, True)
+                    , ("reserved", startsAt, endsAt, True)
+                    , ("holding", addUTCTime (-3600) startsAt, startsAt, False)
+                    , ("reserved", endsAt, addUTCTime 3600 endsAt, False)
+                    , ("holding", addUTCTime (-1) startsAt, addUTCTime 1 startsAt, True)
+                    , ("reserved", addUTCTime (-1) endsAt, addUTCTime 1 endsAt, True)
+                    , ("released", startsAt, endsAt, False)
+                    , ("completed", startsAt, endsAt, False)
+                    , ("cancelled", startsAt, endsAt, False)
+                    ]
+            forM_ cases $ \(allocationStatus, allocatedStart, allocatedEnd, conflict) -> do
+                result <- try $ runResourceSqlite $ do
+                    roomId <- insertBookingResourceFixture "Control Room" "room-control"
+                    -- No legacy Booking row: a paid runtime hold alone must block.
+                    rawExecute
+                        "INSERT INTO service_booking_resource_allocation (resource_id, allocation_status, starts_at, ends_at) VALUES (?, ?, ?, ?)"
+                        [toPersistValue roomId, PersistText allocationStatus,
+                         PersistUTCTime allocatedStart, PersistUTCTime allocatedEnd]
+                    resolved <- resolveResourcesForBooking Nothing ["room-control"] startsAt endsAt
+                    pure (roomId, resolved)
+                case result of
+                    Left serverErr -> do
+                        conflict `shouldBe` True
+                        errHTTPCode serverErr `shouldBe` 409
+                    Right (roomId, resolved) -> do
+                        conflict `shouldBe` False
+                        resolved `shouldBe` [roomId]
+
         it "rejects unknown explicit room ids instead of silently falling back to default room selection" $ do
             let startsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 54000)
                 endsAt = UTCTime (fromGregorian 2026 4 20) (secondsToDiffTime 61200)
@@ -12331,28 +12371,8 @@ spec = describe "TDF.Server helpers" $ do
             result <- try $
                 runResourceSqlite $ do
                     controlRoomId <- insertBookingResourceFixture "Control Room" "room-control"
-                    bookingId <- insert Booking
-                        { bookingTitle = "Existing booking"
-                        , bookingServiceOrderId = Nothing
-                        , bookingPartyId = Nothing
-                        , bookingServiceType = Just "mixing"
-                        , bookingEngineerPartyId = Nothing
-                        , bookingEngineerName = Nothing
-                        , bookingStartsAt = startsAt
-                        , bookingEndsAt = endsAt
-                        , bookingStatus = Confirmed
-                        , bookingCreatedBy = Nothing
-                        , bookingNotes = Nothing
-                        , bookingServiceOfferingId = Nothing
-                        , bookingBookingTypeId = Nothing
-                        , bookingWorkflowStateId = Nothing
-                        , bookingCreatedAt = startsAt
-                        }
-                    _ <- insert BookingResource
-                        { bookingResourceBookingId = bookingId
-                        , bookingResourceResourceId = controlRoomId
-                        , bookingResourceRole = "primary"
-                        }
+                    insertBookingResourceHoldFixture
+                        "Existing booking" controlRoomId startsAt endsAt
                     resolveResourcesForBooking
                         Nothing
                         ["room-control"]
@@ -16041,6 +16061,9 @@ initializeAuthSchema = do
         \)"
         []
     rawExecute
+        "CREATE TABLE IF NOT EXISTS auth_recovery_challenge (api_token_id INTEGER PRIMARY KEY REFERENCES api_token(id),credential_id INTEGER NOT NULL REFERENCES user_credential(id),issued_at_epoch INTEGER NOT NULL,expires_at_epoch INTEGER NOT NULL,CHECK(expires_at_epoch-issued_at_epoch=900))"
+        []
+    rawExecute
         "CREATE TABLE IF NOT EXISTS \"course_registration\" (\
         \\"id\" INTEGER PRIMARY KEY,\
         \\"course_slug\" VARCHAR NOT NULL,\
@@ -16192,6 +16215,11 @@ initializeChatSchema = do
 initializeResourceSchema :: SqlPersistT IO ()
 initializeResourceSchema = do
     rawExecute "PRAGMA foreign_keys = ON" []
+    -- Resolver unit fixture only: PostgreSQL migration/trigger/concurrency
+    -- correspondence is exercised by test-booking-conformance.py.
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS service_booking_resource_allocation (resource_id INTEGER NOT NULL, allocation_status VARCHAR NOT NULL, starts_at TIMESTAMP NOT NULL, ends_at TIMESTAMP NOT NULL)"
+        []
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"room\" (\
         \\"id\" VARCHAR PRIMARY KEY,\
@@ -16376,6 +16404,9 @@ insertBookingResourceHoldFixture bookingTitleVal resourceId startsAt endsAt = do
         , bookingResourceResourceId = resourceId
         , bookingResourceRole = "primary"
         }
+    rawExecute
+        "INSERT INTO service_booking_resource_allocation (resource_id, allocation_status, starts_at, ends_at) VALUES (?, 'reserved', ?, ?)"
+        [toPersistValue resourceId, PersistUTCTime startsAt, PersistUTCTime endsAt]
     pure ()
 
 fixtureInstagramMessage

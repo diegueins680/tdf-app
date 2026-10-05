@@ -1,0 +1,231 @@
+{
+  "schemaVersion": 1,
+  "authority": "AUTHORITY-026; MKT-REPUTATION-001. Explicitly deferred contract declarations; no activation authorization.",
+  "deferredOperations": [
+    {
+      "id": "GET /merch/admin/reputation/cases",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    },
+    {
+      "id": "GET /merch/admin/reputation/category-suggestions",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    },
+    {
+      "id": "GET /merch/artists/{}/stores",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    },
+    {
+      "id": "GET /merch/orders/{}/reviews/eligibility",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    },
+    {
+      "id": "GET /merch/products/{}/reputation",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    },
+    {
+      "id": "GET /merch/products/{}/reviews",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    },
+    {
+      "id": "GET /merch/reputation/formula",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    },
+    {
+      "id": "GET /merch/reputation/notification-preferences",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    },
+    {
+      "id": "GET /merch/reputation/preferences/{}",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    },
+    {
+      "id": "GET /merch/seller/stores/{}/reputation",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    },
+    {
+      "id": "GET /merch/stores/{}/reputation",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    },
+    {
+      "id": "GET /merch/stores/{}/reviews",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    },
+    {
+      "id": "POST /merch/admin/reputation/appeals/{}/decision",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    },
+    {
+      "id": "POST /merch/admin/reputation/cases/{}/decision",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    },
+    {
+      "id": "POST /merch/admin/reputation/cases/{}/workflow",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    },
+    {
+      "id": "POST /merch/admin/reputation/category-suggestions/{}/decision",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    },
+    {
+      "id": "POST /merch/reputation/category-suggestions",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    },
+    {
+      "id": "POST /merch/reputation/decisions/{}/appeal",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    },
+    {
+      "id": "POST /merch/reputation/reports",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    },
+    {
+      "id": "PUT /merch/orders/{}/lines/{}/product-review",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    },
+    {
+      "id": "PUT /merch/orders/{}/review-buyer-claim",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    },
+    {
+      "id": "PUT /merch/orders/{}/store-review",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    },
+    {
+      "id": "PUT /merch/reputation/notification-preferences",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    },
+    {
+      "id": "PUT /merch/reputation/preferences/{}",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    },
+    {
+      "id": "PUT /merch/reviews/{}/response",
+      "requirement": "MKT-REPUTATION-001",
+      "reason": "Synthetic local-only merchandise-reputation implementation is intentionally absent from the served CombinedAPI.",
+      "sources": [
+        "docs/merch-reputation.md",
+        "tdf-hq/src/TDF/API/MerchReputation.hs"
+      ]
+    }
+  ]
+}

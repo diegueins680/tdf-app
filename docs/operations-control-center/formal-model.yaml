@@ -1,3 +1,5 @@
+# Scoped reconciliation: formal/system/operations-command-boundary.md is authoritative for commands and approvals.
+# This historical transition list is abbreviated; broad invariants below are obligations, not verified claims.
 version: 1
 feature: operations.control-center
 source_of_truth: existing_business_entities

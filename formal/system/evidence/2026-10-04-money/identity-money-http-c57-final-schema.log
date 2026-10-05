@@ -1,0 +1,7 @@
+Artist signup HTTP: anonymous claims denied without effects; independent account submits a claim without ownership.
+Recovery expiry HTTP: missing metadata, elapsed deadline, future issuance, owner binding and expiry during a token lock wait passed.
+Directory claim graph: 56 real HTTP pairs conform to the declared relation.
+Directory review HTTP: Admin-role enforcement, multi-role composition, separated reviewer, serialized decisions and read-only replay passed.
+Credential lifecycle HTTP: disable, re-enable, password replacement, scoped revocation, deterministic reset race and issuance rollback passed.
+Checkout arithmetic HTTP: typed invalid-data conflicts, exact valid totals and rejected-mutation rollback passed.
+Identity HTTP: authorization, concurrent replay, actor scope, shared details, archival, canonical access and rollback passed.

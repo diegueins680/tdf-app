@@ -27,11 +27,12 @@ globalThis.fetch = async (input, options = {}) => {
     ? { error: { code: 190, message: process.env.INSTAGRAM_MESSAGING_TOKEN } }
     : { data: { is_valid: process.env.MODE !== 'invalid', app_id: 'fixture-app', type: 'PAGE',
       scopes: [process.env.FACEBOOK_MESSAGING_TOKEN, encodeURIComponent(process.env.FACEBOOK_APP_SECRET)], expires_at: 1900000000 } } };
-  return { json: async () => ({ username: process.env.INSTAGRAM_VERIFY_TOKEN }) };
+  return { json: async () => ({ username: [process.env.INSTAGRAM_VERIFY_TOKEN, process.env.IG_VERIFY_TOKEN,
+    process.env.META_APP_SECRET, process.env.FACEBOOK_PAGE_ACCESS_TOKEN].filter(Boolean).join(',') }) };
 };
 `;
 
-function run(mode) {
+function run(mode, overrides = {}) {
   const dir = mkdtempSync(path.join(os.tmpdir(), 'tdf-social-diagnostic-'));
   try {
     const fixture = path.join(dir, 'fetch.mjs');
@@ -43,7 +44,7 @@ function run(mode) {
         FACEBOOK_GRAPH_BASE: mode === 'wrong-host' ? 'https://example.test/v25.0' : 'https://graph.facebook.com/v25.0',
         FACEBOOK_APP_SECRET: secrets[0], INSTAGRAM_MESSAGING_TOKEN: secrets[1],
         FACEBOOK_MESSAGING_TOKEN: secrets[2], INSTAGRAM_VERIFY_TOKEN: secrets[3],
-        INSTAGRAM_MESSAGING_ACCOUNT_ID: 'fixture-instagram', FACEBOOK_PAGE_ID: 'fixture-page' },
+        INSTAGRAM_MESSAGING_ACCOUNT_ID: 'fixture-instagram', FACEBOOK_PAGE_ID: 'fixture-page', ...overrides },
     });
     assert.ifError(result.error);
     const output = result.stdout + result.stderr;
@@ -51,7 +52,7 @@ function run(mode) {
       assert.ok(!output.includes(secret), 'configured credential leaked');
     }
     const calls = existsSync(requests) ? readFileSync(requests, 'utf8').trim().split('\n').map(JSON.parse) : [];
-    if (mode === 'wrong-host') assert.equal(calls.length, 0);
+    if (mode === 'wrong-host' || mode === 'missing-config') assert.equal(calls.length, 0);
     else assert.ok(calls.length > 0);
     assert.ok(calls.every(call => call.method === 'GET' && call.redirect === 'error' && call.bounded));
     assert.ok(calls.every(call => !call.path.endsWith('/messages')));
@@ -79,3 +80,37 @@ for (const mode of ['rejected', 'invalid', 'inactive', 'wrong-callback', 'wrong-
     assert.doesNotMatch(result.output, /All checks passed/);
   });
 }
+
+
+test('backend credential aliases work without exposing overridden or encoded secrets', () => {
+  for (const aliasesOnly of [true, false]) {
+    const aliasSecrets = ['alias-app/+?=', 'alias-page/+?=', 'alias-verify/+?='];
+    const result = run('valid', {
+      ...(aliasesOnly ? { FACEBOOK_APP_ID: '', FACEBOOK_APP_SECRET: '',
+        FACEBOOK_MESSAGING_TOKEN: '', FACEBOOK_GRAPH_BASE: '' } : {}),
+      META_APP_ID: 'fixture-app', META_APP_SECRET: aliasSecrets[0],
+      FACEBOOK_PAGE_ACCESS_TOKEN: aliasSecrets[1], IG_VERIFY_TOKEN: aliasSecrets[2],
+      FACEBOOK_MESSAGING_API_BASE: 'https://graph.facebook.com/v25.0',
+    });
+    assert.equal(result.status, 0, result.output);
+    for (const secret of aliasSecrets.flatMap(value => [value, encodeURIComponent(value)])) {
+      assert.ok(!result.output.includes(secret), 'alias credential leaked');
+    }
+  }
+});
+
+test('missing app credentials or explicit graph version fail before any provider call', () => {
+  for (const overrides of [{ FACEBOOK_APP_ID: '' }, { FACEBOOK_APP_SECRET: '' },
+    { FACEBOOK_GRAPH_BASE: '' }]) {
+    const result = run('missing-config', overrides);
+    assert.equal(result.status, 1);
+    assert.doesNotMatch(result.output, /All checks passed/);
+  }
+});
+
+test('missing account ID fails without probing an undefined account', () => {
+  const result = run('valid', { INSTAGRAM_MESSAGING_ACCOUNT_ID: '' });
+  assert.equal(result.status, 1);
+  assert.match(result.output, /INSTAGRAM_MESSAGING_ACCOUNT_ID configured: not set/);
+  assert.ok(result.calls.every(call => !call.path.includes('undefined') && !call.path.endsWith('/fixture-instagram')));
+});

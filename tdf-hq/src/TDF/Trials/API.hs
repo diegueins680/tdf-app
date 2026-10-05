@@ -34,7 +34,8 @@ type PrivateTrialsAPI =
         :> Get '[JSON] [TrialAvailabilitySlotDTO]
   :<|> "trial-availability" :> ReqBody '[JSON] TrialAvailabilityUpsert :> Post '[JSON] TrialAvailabilitySlotDTO
   :<|> "trial-availability" :> Capture "id" Int :> Delete '[JSON] NoContent
-  :<|> "subjects" :> QueryParam "includeInactive" Bool :> Get '[JSON] [SubjectDTO]
+  -- A distinct path is required: the public exact /subjects GET wins before auth.
+  :<|> "subjects" :> "catalog" :> QueryParam "includeInactive" Bool :> Get '[JSON] [SubjectDTO]
   :<|> "subjects" :> ReqBody '[JSON] SubjectCreate :> PostCreated '[JSON] SubjectDTO
   :<|> "subjects" :> Capture "id" Int :> ReqBody '[JSON] SubjectUpdate :> Patch '[JSON] SubjectDTO
   :<|> "subjects" :> Capture "id" Int :> Delete '[JSON] NoContent

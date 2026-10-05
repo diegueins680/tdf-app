@@ -25,6 +25,8 @@ BEGIN
       VALUES (order_key,'Synthetic guest','manual-identity@example.test',1000,'USD','pending',now(),now());
     INSERT INTO commerce_checkout_session(id,domain_type,domain_order_id,status,environment,currency,subtotal_minor,total_minor,customer_email,lookup_token_hash,idempotency_key,expires_at)
       VALUES (checkout_key,'marketplace_sale',order_key::text,'awaiting_payment','sandbox','USD',1000,1000,'manual-identity@example.test',md5(checkout_key::text)||md5(checkout_key::text),'manual-identity-checkout-'||fixture_index,now()+interval '15 minutes');
+    INSERT INTO commerce_checkout_line_item(checkout_id,line_number,product_type,product_id,product_version,description,quantity,unit_amount_minor,subtotal_minor,total_minor,snapshot)
+      VALUES (checkout_key,1,'synthetic',order_key::text,'1','Synthetic identity fixture',1,1000,1000,1000,'{}');
     INSERT INTO marketplace_sale_order_runtime(order_id,checkout_id,lookup_token_hash,create_idempotency_key,create_request_sha256,fulfillment_method,fulfillment_status,recipient_name,hold_expires_at)
       VALUES (order_key,checkout_key,md5(order_key::text)||md5(order_key::text),'manual-identity-order-'||fixture_index,repeat('a',64),'pickup','on_hold','Synthetic guest',now()+interval '15 minutes');
     IF fixture_index > 1 THEN
