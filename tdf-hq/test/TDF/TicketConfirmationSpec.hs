@@ -24,6 +24,7 @@ spec = describe "web ticket confirmation" $ do
           Email.sendWaitlistNotificationEmail Nothing private private private private private 1 private private (Just private)
           Email.sendRefundConfirmationEmail Nothing private private private private private (Just private) (Just private)
           ) `finally` (hFlush stdout >> hDuplicateTo original stdout)
+        hClose handle
         TIO.readFile path
     output `shouldSatisfy` (not . T.isInfixOf private)
     T.count "not sent" output `shouldBe` 4
