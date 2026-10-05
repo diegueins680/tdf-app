@@ -118,6 +118,8 @@ try:
            bool_and((a.s <= b.e AND a.e >= b.s) = (tstzrange(a.s,a.e,'[)') && tstzrange(b.s,b.e,'[)')))
     FROM windows a CROSS JOIN windows b"""
     check('half-open overlap matches PostgreSQL ranges; inclusive mutation fails on adjacent windows', sql(interval_cases) == 't|f')
+    # Only this owned synthetic database receives a fixture encryption setting.
+    sql(f"""ALTER DATABASE "{NAME}" SET tdf.push_encryption_key = 'synthetic-operations-conformance-key'""")
     roles = sql('SELECT code FROM security_role WHERE active ORDER BY code').splitlines()
     assert all(all(c.islower() or c == '-' for c in role) for role in roles)
     actors = {role: actor(role) for role in roles}
@@ -129,6 +131,7 @@ try:
         sock.bind(('127.0.0.1', 0)); http_port = sock.getsockname()[1]
     assets = OUTPUT / 'assets'; assets.mkdir()
     server_env = {'PATH': ENV['PATH'], 'APP_ENV': 'test', 'DATABASE_URL': URL,
+                 'OPERATIONS_WORKER_ENABLED': 'false',  # SQL worker behavior has separate explicit controls.
                  'GHCRTS': '-N2',  # Bound synthetic fixture workers independently of host core count.
                  'APP_PORT': str(http_port), 'RESET_DB': 'false', 'RUN_MIGRATIONS': 'false',
                  'AUTO_APPLY_PRODUCTION_MIGRATIONS': 'false', 'SEED_DB': 'false',

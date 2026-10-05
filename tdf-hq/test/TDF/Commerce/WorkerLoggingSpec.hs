@@ -36,6 +36,12 @@ emptyEvents = Events.ProviderEventWorkerStats 0 0 0 0 0
 
 spec :: Spec
 spec = describe "payment worker logging boundary" $ do
+  it "preserves Operations worker default and requires explicit valid configuration" $ do
+    Operations.operationsWorkerEnabled Nothing `shouldBe` Right True
+    Operations.operationsWorkerEnabled (Just "true") `shouldBe` Right True
+    Operations.operationsWorkerEnabled (Just "false") `shouldBe` Right False
+    Operations.operationsWorkerEnabled (Just "flase") `shouldBe` Left "OPERATIONS_WORKER_ENABLED must be true or false"
+
   failureBoundary "operations control center"
     (\tick -> Operations.operationsWorkerIterationWith (tick >> pure (Operations.OperationsWorkerStats 0 0 0 0 0 0)))
     "operations-worker" "tick failed"

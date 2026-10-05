@@ -321,6 +321,80 @@
           "reason": "The combined 160-entry Mobile registry already preserves both shipped and audit parent decisions."
         }
       ]
+    },
+    "shippedTicketConsolidationRetiredDecisions": {
+      "sourceRevision": "9abd8551b",
+      "reason": "Retain these exact incoming historical decisions as provenance. Their source surfaces already have reviewed replacements or removals in the audit; they are not active fingerprints of the consolidated tree.",
+      "decisions": [
+        {
+          "id": "82181bc7a177bc6f96f4",
+          "classification": "security-system-registry",
+          "disposition": "retain-in-code",
+          "specializedModel": "navigation_item, navigation_item_permission",
+          "priority": "P3-retain",
+          "risk": "Changing navigation or UI constants could break rendering or user experience.",
+          "justification": "UI navigation items and display constants are client-side presentation mechanics, not governed business catalog data.",
+          "reviewed": true
+        },
+        {
+          "id": "ec1a316784aa9992384a",
+          "classification": "governed-reference-data",
+          "disposition": "migrate-and-remove-authority-from-code",
+          "specializedModel": "ddex_standard_version, ddex_message_type, ddex_vocabulary, ddex_code",
+          "priority": "P0-cutover",
+          "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
+          "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
+          "reviewed": true
+        },
+        {
+          "id": "44c80a6dd2f154d0d59a",
+          "classification": "security-system-registry",
+          "disposition": "migrate-and-remove-authority-from-code",
+          "specializedModel": "navigation_item, navigation_item_permission",
+          "priority": "P0-security",
+          "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+          "justification": "The 158-entry generated mobile registry preserves all 157 reviewed navigation definitions and adds only the non-discoverable provider-payment return route from the canonical backend feature registry. Authentication, roles, server authorization and disabled payment activation gates remain authoritative; this technical callback is neither a menu item nor an independent grant. The canonical tester landing adds one public discovery destination while retaining all 158 definitions from the merged payment main, with no authorization grants changed.",
+          "reviewed": true,
+          "reviewMethod": "manual-source-review",
+          "reviewBatch": "mobile-program-current-main-2026-10-04",
+          "evidence": {
+            "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+            "line": 55
+          },
+          "previousDecision": {
+            "id": "0eafdd9f0a8bbebf9a23",
+            "classification": "security-system-registry",
+            "disposition": "migrate-and-remove-authority-from-code",
+            "specializedModel": "navigation_item, navigation_item_permission",
+            "priority": "P0-security",
+            "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+            "justification": "The 158-entry generated mobile registry preserves all 157 reviewed navigation definitions and adds only the non-discoverable provider-payment return route from the canonical backend feature registry. Authentication, roles, server authorization and disabled payment activation gates remain authoritative; this technical callback is neither a menu item nor an independent grant.",
+            "reviewed": true,
+            "reviewMethod": "deterministic-policy-v3",
+            "reviewBatch": "universal-interactions-2026-09-28",
+            "evidence": {
+              "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+              "line": 55
+            },
+            "previousDecision": {
+              "id": "5147eb2751a01d8b4c73",
+              "classification": "security-system-registry",
+              "disposition": "migrate-and-remove-authority-from-code",
+              "specializedModel": "navigation_item, navigation_item_permission",
+              "priority": "P0-security",
+              "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
+              "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
+              "reviewed": true,
+              "reviewMethod": "deterministic-policy-v3",
+              "reviewBatch": "universal-interactions-2026-09-28",
+              "evidence": {
+                "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
+                "line": 55
+              }
+            }
+          }
+        }
+      ]
     }
   },
   "decisions": [
@@ -15314,74 +15388,6 @@
       "risk": "A stale or enlarged static role adapter could admit unauthorized work-item mutations.",
       "justification": "Extracts the existing Operations mutating-role allowlist without adding roles; grants are resolved from locked canonical assignment and role rows. OPS-COMMAND-001 and real HTTP controls own this policy boundary.",
       "reviewed": true
-    },
-    {
-      "id": "82181bc7a177bc6f96f4",
-      "classification": "security-system-registry",
-      "disposition": "retain-in-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P3-retain",
-      "risk": "Changing navigation or UI constants could break rendering or user experience.",
-      "justification": "UI navigation items and display constants are client-side presentation mechanics, not governed business catalog data.",
-      "reviewed": true
-    },
-    {
-      "id": "ec1a316784aa9992384a",
-      "classification": "governed-reference-data",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "ddex_standard_version, ddex_message_type, ddex_vocabulary, ddex_code",
-      "priority": "P0-cutover",
-      "risk": "Standards drift, provider rejection, invalid external codes, or incompatible client caches.",
-      "justification": "The dataset must be database-authoritative and updated through a versioned standards/provider import rather than independent code allowlists.",
-      "reviewed": true
-    },
-    {
-      "id": "44c80a6dd2f154d0d59a",
-      "classification": "security-system-registry",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "navigation_item, navigation_item_permission",
-      "priority": "P0-security",
-      "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-      "justification": "The 158-entry generated mobile registry preserves all 157 reviewed navigation definitions and adds only the non-discoverable provider-payment return route from the canonical backend feature registry. Authentication, roles, server authorization and disabled payment activation gates remain authoritative; this technical callback is neither a menu item nor an independent grant. The canonical tester landing adds one public discovery destination while retaining all 158 definitions from the merged payment main, with no authorization grants changed.",
-      "reviewed": true,
-      "reviewMethod": "manual-source-review",
-      "reviewBatch": "mobile-program-current-main-2026-10-04",
-      "evidence": {
-        "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-        "line": 55
-      },
-      "previousDecision": {
-        "id": "0eafdd9f0a8bbebf9a23",
-        "classification": "security-system-registry",
-        "disposition": "migrate-and-remove-authority-from-code",
-        "specializedModel": "navigation_item, navigation_item_permission",
-        "priority": "P0-security",
-        "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-        "justification": "The 158-entry generated mobile registry preserves all 157 reviewed navigation definitions and adds only the non-discoverable provider-payment return route from the canonical backend feature registry. Authentication, roles, server authorization and disabled payment activation gates remain authoritative; this technical callback is neither a menu item nor an independent grant.",
-        "reviewed": true,
-        "reviewMethod": "deterministic-policy-v3",
-        "reviewBatch": "universal-interactions-2026-09-28",
-        "evidence": {
-          "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-          "line": 55
-        },
-        "previousDecision": {
-          "id": "5147eb2751a01d8b4c73",
-          "classification": "security-system-registry",
-          "disposition": "migrate-and-remove-authority-from-code",
-          "specializedModel": "navigation_item, navigation_item_permission",
-          "priority": "P0-security",
-          "risk": "Privilege escalation, silent unknown grants, self-approval, or administrator lockout.",
-          "justification": "Assignments and selectable grants must be database-authoritative, audited, approval-gated, and validated against the exhaustive backend capability registry.",
-          "reviewed": true,
-          "reviewMethod": "deterministic-policy-v3",
-          "reviewBatch": "universal-interactions-2026-09-28",
-          "evidence": {
-            "file": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-            "line": 55
-          }
-        }
-      }
     },
     {
       "id": "9cb3eff190af8cb02c6f",

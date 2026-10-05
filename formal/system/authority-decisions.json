@@ -397,6 +397,28 @@
       "conflict": "Teacher list hides a synthetic payment and detail returns404, while metrics returns its12345 minor-unit amount and unassigned count.",
       "authority": "formal/system/operations-command-boundary.md",
       "resolution": "Treat totals/counts as protected projections, reuse list scope/role filter, and restrict integration-failure aggregate to the selected branch and its manager actors. Preserve supported assigned-specialist workflow; no feature activation."
+    },
+    {
+      "id": "AUTHORITY-038",
+      "sources": [
+        "docs/operations-control-center/architecture.md",
+        "tdf-hq/src/TDF/Operations/Server.hs",
+        "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql"
+      ],
+      "conflict": "Synthetic Teacher manual creation returned201 with hidden other-branch payment amount and changed its operational title/status; arbitrary client correlation and metadata entered the trusted projector.",
+      "authority": "formal/system/operations-projection-boundary.md",
+      "resolution": "Separate client receipt keys from server projection keys, bind actor/scope/payload, reject control metadata and unassigned specialist creation, target one event, verify successful projection before commit. Preserve explicitly trusted same-thread WhatsApp identity progression and historical SQL."
+    },
+    {
+      "id": "AUTHORITY-039",
+      "sources": [
+        "docs/operations-control-center/rbac.md",
+        "tdf-hq/src/TDF/Operations/Model.hs",
+        "tdf-hq/src/TDF/Operations/Server.hs"
+      ],
+      "conflict": "ReadOnly list and detail disagree; incidental producer fallback and role precedence differ across reads; failure list leaks other branches and notes/retries use stale admission.",
+      "authority": "formal/system/operations-projection-boundary.md",
+      "resolution": "Use one explicit read-domain policy with action-specific union, preserve documented ReadOnly read but not write authority, default unknown producer domain grants to deny, and revalidate auxiliary command scope/current roles in the atomic transaction."
     }
   ]
 }

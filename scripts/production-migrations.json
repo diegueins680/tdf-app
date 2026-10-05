@@ -895,6 +895,11 @@
       "id": "2026-10-05_ticket_policy_lifecycle_history",
       "path": "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history.sql",
       "introducedBy": "604c2366edfd2a86478e9d0177dcfeee2dd21678"
+    },
+    {
+      "id": "2026-10-05_operations_scoped_projection",
+      "path": "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql",
+      "introducedBy": "53e4011a7c86046abb96350681aa105ac565c6c1"
     }
   ]
 }

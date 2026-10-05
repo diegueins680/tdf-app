@@ -9,6 +9,472 @@ servers:
     description: Development server
 
 paths:
+  /operations/work-items:
+    get:
+      operationId: operationsWorkItems
+      tags:
+      - Operations
+      summary: List visible scoped work
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationsWorkItemPage'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid current session
+        '403':
+          description: Role or active scope denied
+        '404':
+          description: Resource missing or not visible
+        '409':
+          description: Conflicting replay or state; no command effects committed
+        '422':
+          description: Invalid command representation
+        '500':
+          description: Operational data unavailable; command transaction rolled back
+      parameters:
+      - name: cursor
+        in: query
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: integer
+      - name: q
+        in: query
+        schema:
+          type: string
+      - name: seen
+        in: query
+        schema:
+          type: boolean
+      - name: entityType
+        in: query
+        schema:
+          type: string
+      - name: status
+        in: query
+        schema:
+          type: string
+      - name: priority
+        in: query
+        schema:
+          type: string
+      - name: slaState
+        in: query
+        schema:
+          type: string
+      - name: assigneePartyId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: customerPartyId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: service
+        in: query
+        schema:
+          type: string
+      - name: from
+        in: query
+        schema:
+          type: string
+      - name: to
+        in: query
+        schema:
+          type: string
+      - name: minAmountMinor
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: maxAmountMinor
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: paymentState
+        in: query
+        schema:
+          type: string
+      - name: organizationId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: branchId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: sourceChannel
+        in: query
+        schema:
+          type: string
+    post:
+      operationId: operationsManualWorkItem
+      tags:
+      - Operations
+      summary: Create a bound manual work item
+      security:
+      - bearerAuth: []
+      responses:
+        '201':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationsWorkItem'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid current session
+        '403':
+          description: Role or active scope denied
+        '404':
+          description: Resource missing or not visible
+        '409':
+          description: Conflicting replay or state; no command effects committed
+        '422':
+          description: Invalid command representation
+        '500':
+          description: Operational data unavailable; command transaction rolled back
+      description: correlationKey is an organization-scoped idempotency key bound to current actor, resolved
+        branch and semantic payload. The returned projection uses a server-generated manual UUID key. Exact authorized
+        replay returns the current item without new effects; changed binding or unbound legacy keys reject. Metadata
+        must be empty. Unassigned specialists cannot create work they may not operate. Receipt, targeted projection,
+        audit and response decoding commit together.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationsManualWorkItemCreate'
+  /operations/work-items/{workItemId}:
+    get:
+      operationId: operationsWorkItem
+      tags:
+      - Operations
+      summary: Read one visible work item with history
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationsWorkItemDetail'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid current session
+        '403':
+          description: Role or active scope denied
+        '404':
+          description: Resource missing or not visible
+        '409':
+          description: Conflicting replay or state; no command effects committed
+        '422':
+          description: Invalid command representation
+        '500':
+          description: Operational data unavailable; command transaction rolled back
+      parameters: &id001
+      - name: workItemId
+        in: path
+        schema:
+          type: string
+          format: uuid
+        required: true
+  /operations/work-items/{workItemId}/notes:
+    post:
+      operationId: operationsWorkItemNote
+      tags:
+      - Operations
+      summary: Append an authorized note atomically
+      security:
+      - bearerAuth: []
+      responses:
+        '201':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationsNote'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid current session
+        '403':
+          description: Role or active scope denied
+        '404':
+          description: Resource missing or not visible
+        '409':
+          description: Conflicting replay or state; no command effects committed
+        '422':
+          description: Invalid command representation
+        '500':
+          description: Operational data unavailable; command transaction rolled back
+      description: Current session, roles, assignment and active scope are locked through commit, including mentioned
+        memberships. This is an append command without a replay receipt; an ambiguous response requires reconciliation
+        before retry.
+      parameters: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationsNoteCreate'
+  /operations/integration-failures:
+    get:
+      operationId: operationsIntegrationFailures
+      tags:
+      - Operations
+      summary: List manager-visible failures in the selected branch
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OperationsIntegrationFailure'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid current session
+        '403':
+          description: Role or active scope denied
+        '404':
+          description: Resource missing or not visible
+        '409':
+          description: Conflicting replay or state; no command effects committed
+        '422':
+          description: Invalid command representation
+        '500':
+          description: Operational data unavailable; command transaction rolled back
+      description: Selects the earliest active scoped membership, as other default-scoped Operations reads. Other
+        branches and unscoped failures are excluded.
+      parameters:
+      - &id002
+        name: organizationId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: status
+        in: query
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: integer
+  /operations/integration-failures/{failureId}/replay:
+    post:
+      operationId: operationsReplayFailure
+      tags:
+      - Operations
+      summary: Request one retry of an eligible integration failure
+      security:
+      - bearerAuth: []
+      responses:
+        '202':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationsIntegrationFailure'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid current session
+        '403':
+          description: Role or active scope denied
+        '404':
+          description: Resource missing or not visible
+        '409':
+          description: Conflicting replay or state; no command effects committed
+        '422':
+          description: Invalid command representation
+        '500':
+          description: Operational data unavailable; command transaction rolled back
+      description: Current manager grant and active scoped membership are locked. Only retryable open or dead_letter
+        failures enter retrying; resolved or already retrying rows reject409. State and audit commit once. This
+        records retry admission, not provider delivery.
+      parameters:
+      - name: failureId
+        in: path
+        schema:
+          type: string
+          format: uuid
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationsReplayCommand'
+  /operations/events:
+    get:
+      operationId: operationsStreamEvents
+      tags:
+      - Operations
+      summary: Read visible scoped stream records
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationsStreamBatch'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid current session
+        '403':
+          description: Role or active scope denied
+        '404':
+          description: Resource missing or not visible
+        '409':
+          description: Conflicting replay or state; no command effects committed
+        '422':
+          description: Invalid command representation
+        '500':
+          description: Operational data unavailable; command transaction rolled back
+      parameters:
+      - *id002
+      - name: afterId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: limit
+        in: query
+        schema:
+          type: integer
+  /operations/saved-views:
+    get:
+      operationId: operationsSavedViews
+      tags:
+      - Operations
+      summary: List own and explicitly shared organization views
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OperationsSavedView'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid current session
+        '403':
+          description: Role or active scope denied
+        '404':
+          description: Resource missing or not visible
+        '409':
+          description: Conflicting replay or state; no command effects committed
+        '422':
+          description: Invalid command representation
+        '500':
+          description: Operational data unavailable; command transaction rolled back
+      parameters:
+      - *id002
+    post:
+      operationId: operationsSaveView
+      tags:
+      - Operations
+      summary: Save an owned organization view
+      security:
+      - bearerAuth: []
+      responses:
+        '201':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationsSavedView'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid current session
+        '403':
+          description: Role or active scope denied
+        '404':
+          description: Resource missing or not visible
+        '409':
+          description: Conflicting replay or state; no command effects committed
+        '422':
+          description: Invalid command representation
+        '500':
+          description: Operational data unavailable; command transaction rolled back
+      description: Owner and name identify the replaceable layout. Shared layouts are organization-visible. Stored
+        filters and columns are presentation preferences and never expand source authorization. Each accepted
+        replacement has an audit; no requestId replay deduplication is promised.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationsSavedViewCreate'
+  /operations/push-subscriptions:
+    post:
+      operationId: operationsPushSubscription
+      tags:
+      - Operations
+      summary: Register an encrypted owned push subscription
+      security:
+      - bearerAuth: []
+      responses:
+        '201':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationsPushSubscription'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid current session
+        '403':
+          description: Role or active scope denied
+        '404':
+          description: Resource missing or not visible
+        '409':
+          description: Conflicting replay or state; no command effects committed
+        '422':
+          description: Invalid command representation
+        '500':
+          description: Operational data unavailable; command transaction rolled back
+        '503':
+          description: Push encryption is not configured; no subscription committed
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationsPushSubscriptionCreate'
   /operations/metrics:
     get:
       operationId: operationsMetrics
@@ -16511,12 +16977,11 @@ components:
     OperationsNoteCreate:
       type: object
       required: [body, mentionedPartyIds, requestId, sourceClient]
-      additionalProperties: false
       properties:
         body: { type: string, minLength: 1, maxLength: 5000 }
         mentionedPartyIds: { type: array, items: { type: integer, format: int64 } }
-        requestId: { type: string }
-        sourceClient: { type: string }
+        requestId: { type: string, minLength: 1 }
+        sourceClient: { type: string, minLength: 1 }
     OperationsManualWorkItemCreate:
       type: object
       required: [organizationId, entityType, uncorrelated, correlationKey, titleEs, titleEn, descriptionEs, descriptionEn, priority, metadata, requestId, sourceClient]
@@ -16526,7 +16991,7 @@ components:
         entityType: { type: string }
         entityId: { type: string, nullable: true }
         uncorrelated: { type: boolean }
-        correlationKey: { type: string }
+        correlationKey: { type: string, minLength: 1, maxLength: 320 }
         titleEs: { type: string }
         titleEn: { type: string }
         descriptionEs: { type: string }
@@ -16535,11 +17000,11 @@ components:
         responsibleTeam: { type: string, nullable: true }
         customerPartyId: { type: integer, format: int64, nullable: true }
         serviceKey: { type: string, nullable: true }
-        amountMinor: { type: integer, format: int64, nullable: true }
-        currency: { type: string, nullable: true }
-        metadata: { type: object, additionalProperties: true }
-        requestId: { type: string }
-        sourceClient: { type: string }
+        amountMinor: { type: integer, format: int64, minimum: 0, nullable: true }
+        currency: { type: string, pattern: '^[A-Z]{3}$', nullable: true }
+        metadata: { type: object, maxProperties: 0 }
+        requestId: { type: string, minLength: 1 }
+        sourceClient: { type: string, minLength: 1 }
     OperationsApprovalCreate:
       type: object
       required: [organizationId, actionType, targetEntityType, targetEntityId, reason, idempotencyKey, requestId, sourceClient]
@@ -16614,8 +17079,8 @@ components:
       required: [reason, requestId, sourceClient]
       properties:
         reason: { type: string, minLength: 1 }
-        requestId: { type: string }
-        sourceClient: { type: string }
+        requestId: { type: string, minLength: 1 }
+        sourceClient: { type: string, minLength: 1 }
     OperationsStreamEvent:
       type: object
       required: [id, eventType, payload, createdAt]
@@ -16657,8 +17122,8 @@ components:
         columns: { type: array, items: { type: string } }
         widgets: { type: array, items: { type: string } }
         subscribedEventTypes: { type: array, items: { type: string } }
-        requestId: { type: string }
-        sourceClient: { type: string }
+        requestId: { type: string, minLength: 1 }
+        sourceClient: { type: string, minLength: 1 }
     OperationsPushSubscriptionCreate:
       type: object
       required: [organizationId, platform, deviceToken, requestId, sourceClient]
@@ -16666,8 +17131,8 @@ components:
         organizationId: { type: string, format: uuid }
         platform: { type: string, enum: [ios, android, web] }
         deviceToken: { type: string, minLength: 16, maxLength: 4096, writeOnly: true }
-        requestId: { type: string, minLength: 1, maxLength: 200 }
-        sourceClient: { type: string, minLength: 1, maxLength: 100 }
+        requestId: { type: string, minLength: 1 }
+        sourceClient: { type: string, minLength: 1 }
     OperationsPushSubscription:
       type: object
       required: [id, organizationId, platform, active, updatedAt]
