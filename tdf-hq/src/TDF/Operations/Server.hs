@@ -450,7 +450,7 @@ metricsHandler user organizationFilter branchFilter = do
     [(Single configuredTimezone, Single configuredCurrency)] -> pure (configuredTimezone, configuredCurrency)
     _ -> throwError err500 {errBody = "Operations locale configuration is unavailable"}
   rows <- runOperationsDb $ rawSql
-    "SELECT jsonb_build_object( \
+    ("SELECT jsonb_build_object( \
     \ 'newRegistrations', count(*) FILTER (WHERE entity_type = 'course_registration' AND status = 'new'), \
     \ 'registrationsRequiringAttention', count(*) FILTER (WHERE entity_type = 'course_registration' AND status NOT IN ('resolved','archived')), \
     \ 'reservationsAwaitingConfirmation', count(*) FILTER (WHERE entity_type = 'booking' AND status NOT IN ('resolved','archived')), \
@@ -464,16 +464,18 @@ metricsHandler user organizationFilter branchFilter = do
     \ 'slaBreaches', count(*) FILTER (WHERE sla_breached_at IS NOT NULL AND status NOT IN ('resolved','archived')), \
     \ 'averageFirstResponseSeconds', avg(extract(epoch FROM (first_seen_at - created_at))) FILTER (WHERE first_seen_at IS NOT NULL), \
     \ 'averageResolutionSeconds', avg(extract(epoch FROM (resolved_at - created_at))) FILTER (WHERE resolved_at IS NOT NULL), \
-    \ 'integrationFailures', (SELECT count(*) FROM operations_integration_failure failure WHERE failure.organization_id = ?::uuid AND failure.status IN ('open','retrying','dead_letter')), \
+    \ 'integrationFailures', (SELECT count(*) FROM operations_integration_failure failure WHERE failure.organization_id = ?::uuid AND failure.branch_id = ?::uuid AND ?::boolean AND failure.status IN ('open','retrying','dead_letter')), \
     \ 'currency', ?::text, 'calculatedAt', ?::timestamptz)::text \
-    \FROM operations_work_item WHERE organization_id = ?::uuid AND branch_id = ?::uuid"
+    \FROM operations_work_item item WHERE item.organization_id = ?::uuid AND item.branch_id = ?::uuid" <> scopeFilterSql)
     [ PersistText timezone, PersistText timezone
     , PersistText timezone, PersistText timezone
-    , uuidValue (scopeOrganizationId scope)
+    , uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope)
+    , PersistBool (any (`elem` auRoles user) [Admin, Manager, StudioManager])
     , PersistText currency
     , PersistUTCTime now
     , uuidValue (scopeOrganizationId scope)
     , uuidValue (scopeBranchId scope)
+    , PersistText (roleMode user), partyIdValue user, PersistBool (Admin `elem` auRoles user)
     ] :: OperationsM [Single Text]
   case rows of
     [Single payload] -> decodeJsonText payload
@@ -656,12 +658,12 @@ transitionHandler original itemId command =
       [uuidValue itemId]
     updateCount <- rawExecuteCount
       "UPDATE operations_work_item SET status = ?::text, \
-      \ waiting_started_at = CASE WHEN ?::boolean THEN ? ELSE NULL END, \
+      \ waiting_started_at = CASE WHEN ?::boolean THEN ?::timestamptz ELSE NULL END, \
       \ waiting_reason = CASE WHEN ?::boolean THEN ?::text ELSE NULL END, \
       \ waiting_external_dependency = CASE WHEN ?::boolean THEN ?::boolean ELSE FALSE END, \
-      \ resume_at = CASE WHEN ?::boolean THEN ? ELSE NULL END, \
-      \ resolved_at = CASE WHEN ?::boolean THEN ? ELSE CASE WHEN ?::boolean THEN NULL ELSE resolved_at END END, \
-      \ archived_at = CASE WHEN ?::boolean THEN ? ELSE CASE WHEN ?::boolean THEN NULL ELSE archived_at END END, \
+      \ resume_at = CASE WHEN ?::boolean THEN ?::timestamptz ELSE NULL END, \
+      \ resolved_at = CASE WHEN ?::boolean THEN ?::timestamptz ELSE CASE WHEN ?::boolean THEN NULL ELSE resolved_at END END, \
+      \ archived_at = CASE WHEN ?::boolean THEN ?::timestamptz ELSE CASE WHEN ?::boolean THEN NULL ELSE archived_at END END, \
       \ updated_at = ?, version = version + 1 WHERE id = ?::uuid AND version = ?"
       [ PersistText (Ops.workStatusText target)
       , PersistBool isWaiting, PersistUTCTime now

@@ -1,6 +1,6 @@
 # Operations command and approval authority
 
-Requirements: OPS-COMMAND-001, OPS-APPROVAL-001, OPS-WORKER-001.
+Requirements: OPS-COMMAND-001, OPS-APPROVAL-001, OPS-WORKER-001, OPS-METRICS-001.
 This contract refines the existing operations architecture and lifecycle; it does
 not certify all Operations routes, source business actions, or production enablement.
 
@@ -58,6 +58,18 @@ reopen; terminal retries, self decisions and expiry return409 with no effects.
 The receipt records approval; it does not execute money movement or deletion.
 Cancellation and expiry materialization workers, downstream execution authority,
 and provider outcomes are not established by this contract.
+
+## Aggregate privacy
+
+Metrics aggregate the same scope/role/assignment-filtered item relation as the
+list. Teacher/Engineer totals include only assigned supported domains; hidden
+payments contribute neither amount nor counts. Authorized managers retain their
+scoped financial totals. Integration failures contribute only in the selected
+branch and only for Admin, Manager or StudioManager. Query snapshots are ordinary
+PostgreSQL read snapshots; cross-request real-time consistency is not promised.
+Other list/detail policy differences are not silently resolved by this repair.
+Actual synthetic HTTP negative and positive controls cover this boundary; there
+is no formal model of aggregate SQL or currency mixing in these dashboard totals.
 
 ## Worker failure semantics
 

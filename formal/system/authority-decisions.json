@@ -387,6 +387,16 @@
       "conflict": "Actual concurrent HTTP accepted eight same-version writes and emitted eight audit rows for one update; approval conflict lookup was unbound and terminal decisions could reopen.",
       "authority": "formal/system/operations-command-boundary.md",
       "resolution": "Retain intended version/current-scope/dual-approval requirements and repair transactional handlers. Historical abbreviated lifecycle and broad invariants are incomplete obligations, not proof. Request IDs remain diagnostic; approval keys require full semantic binding."
+    },
+    {
+      "id": "AUTHORITY-037",
+      "sources": [
+        "docs/operations-control-center/architecture.md",
+        "tdf-hq/src/TDF/Operations/Server.hs"
+      ],
+      "conflict": "Teacher list hides a synthetic payment and detail returns404, while metrics returns its12345 minor-unit amount and unassigned count.",
+      "authority": "formal/system/operations-command-boundary.md",
+      "resolution": "Treat totals/counts as protected projections, reuse list scope/role filter, and restrict integration-failure aggregate to the selected branch and its manager actors. Preserve supported assigned-specialist workflow; no feature activation."
     }
   ]
 }

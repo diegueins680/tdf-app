@@ -79,6 +79,26 @@ def verify_operations(sql, request, check, env, database, output, actors):
                     release()
                 return [future.result() for future in futures]
 
+    # Aggregates must not reveal payments excluded from the specialist's list.
+    for role in ['teacher', 'engineer']:
+        sql("INSERT INTO operations_scope_member(organization_id,branch_id,party_id) VALUES (" + q(org) + "," + q(branches[0]) + "," + actors[role] + ")")
+    payment = item()
+    sql("UPDATE operations_work_item SET entity_type='payment',amount_minor=12345,currency='USD',payment_state='completed' WHERE id=" + q(payment))
+    assigned = item()
+    sql("UPDATE operations_work_item SET entity_type='booking',assignee_party_id=" + actors['teacher'] + " WHERE id=" + q(assigned))
+    metrics_path = '/operations/metrics?organizationId=' + org + '&branchId=' + branches[0]
+    for role, expected_bookings in [('teacher', 1), ('engineer', 0)]:
+        response = request(metrics_path, token='fixture-' + role)
+        check('operations ' + role + ' metrics use visible assigned items only', response[0] == 200
+              and json.loads(response[1])['revenueReceivedTodayMinor'] == 0
+              and json.loads(response[1])['unassignedWork'] == 0
+              and json.loads(response[1])['reservationsAwaitingConfirmation'] == expected_bookings)
+        check('operations ' + role + ' cannot read hidden payment detail',
+              request('/operations/work-items/' + payment, token='fixture-' + role)[0] == 404)
+    response = request(metrics_path)
+    check('operations manager metrics retain authorized financial totals', response[0] == 200
+          and json.loads(response[1])['revenueReceivedTodayMinor'] == 12345)
+
     for kind, arguments in [('priority', {}), ('seen', {}), ('assignment', {'assigneePartyId': int(actors['manager'])}),
                             ('transition', {'targetStatus': 'resolved'})]:
         key = item()
@@ -87,6 +107,7 @@ def verify_operations(sql, request, check, env, database, output, actors):
                   command(kind, key, **arguments, **invalid)()[0] == 422 and effects(key) == (0, 0, 0))
         responses = race('SELECT id FROM operations_work_item WHERE id=' + q(key) + ' FOR UPDATE',
                          [command(kind, key, **arguments) for _ in range(8)])
+        (output / ('operations-' + kind + '-responses.json')).write_text(json.dumps(responses, indent=2) + '\n')
         check('operations ' + kind + ' same-version race has one winner', sorted(r[0] for r in responses) == [200] + [409] * 7)
         check('operations ' + kind + ' commits exactly one version and evidence set',
               sql('SELECT version FROM operations_work_item WHERE id=' + q(key)) == '2' and effects(key) == (1, 1, 1))

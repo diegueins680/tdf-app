@@ -717,5 +717,7 @@ finally:
     if owned:
         run(['dropdb', NAME], capture_output=True, text=True)
 
+check('operations SQL failure logs omit arbitrary exception payloads after server exit',
+      'synthetic private data must not be logged' not in (OUTPUT / 'backend.log').read_text())
 result['ownedDatabaseDropped'] = True
 (OUTPUT / 'result.json').write_text(json.dumps(result, indent=2) + '\n')

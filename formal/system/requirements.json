@@ -4571,6 +4571,65 @@
       },
       "verification": "Actual isolated HTTP/PostgreSQL races and rollback checks; actual worker iteration Hspec/QuickCheck; bounded safety models with required negative controls where mapped.",
       "evidence": "Exact source/binary hashes and HTTP result.json; Stack test log; formal source/config hashes and TLC invariant counterexamples. Working checks are not deployed evidence."
+    },
+    {
+      "id": "OPS-METRICS-001",
+      "title": "Operations aggregate visibility",
+      "statement": "Operations metrics must aggregate only work items admitted by the same role/assignment/scope filter as the list; integration failure counts are branch-scoped and manager-only.",
+      "domain": "OPS",
+      "authority": "reconciled",
+      "source": "docs/operations-control-center/architecture.md sections authorization; synthetic HTTP metrics reproduction 2026-10-05",
+      "property": "Hidden payment amounts and unassigned specialist work do not contribute to specialist metrics.",
+      "contract": "formal/system/operations-command-boundary.md",
+      "critical": true,
+      "actors": [
+        "Current authenticated scoped operations reader"
+      ],
+      "preconditions": [
+        "Initialized canonical migrations and active organization/branch where applicable"
+      ],
+      "inputs": [
+        "Optional organization and branch UUID selectors"
+      ],
+      "state": {
+        "boundary": "formal/system/operations-command-boundary.md",
+        "property": "Aggregates use visible item projection"
+      },
+      "allowedTransitions": [
+        "Read-only projection of scoped work items"
+      ],
+      "forbiddenTransitions": [
+        "Hidden rows contributing financial totals or counts"
+      ],
+      "effects": [
+        "Read-only aggregate; no mutation"
+      ],
+      "authorization": "Existing Operations role admission and active organization/branch membership; same scopeFilterSql as list; failure counts restricted to managers in the selected branch.",
+      "privacy": "Never log arbitrary exception/SQL payload or disclose conflicting receipt.",
+      "concurrency": "PostgreSQL statement snapshot; current read request admission. No cross-query or linearizable multi-query snapshot guarantee.",
+      "idempotency": "Read-only; no receipt or effect.",
+      "failure": "Unavailable or invalid data must fail rather than fabricate authoritative totals.",
+      "recovery": "Reload authoritative state after conflict. No downstream provider/deletion execution inferred.",
+      "observability": "Atomic audit/stream for accepted mutations; source-bound HTTP/model/property test receipts.",
+      "implementation": [
+        "tdf-hq/src/TDF/Operations/Server.hs"
+      ],
+      "tests": [
+        "scripts/lib/operations_conformance.py",
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Source reviewed; exact final runtime validation pending",
+      "ambiguity": [
+        "Other Operations routes and production enablement remain separate obligations; no complete refinement or delivery proof."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Confirmed synthetic prior-runtime disclosure; implementation repair awaits exact-candidate HTTP validation. Other read-policy discrepancies remain separate obligations."
+      },
+      "verification": "Actual HTTP synthetic Teacher/Engineer hidden-payment and assigned-booking controls, plus authorized Admin positive control. Not formally covered.",
+      "evidence": "Exact source/binary hashes and HTTP result.json; Stack test log; formal source/config hashes and TLC invariant counterexamples. Working checks are not deployed evidence."
     }
   ]
 }

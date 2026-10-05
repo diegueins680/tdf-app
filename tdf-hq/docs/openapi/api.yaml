@@ -9,6 +9,29 @@ servers:
     description: Development server
 
 paths:
+  /operations/metrics:
+    get:
+      operationId: operationsMetrics
+      tags: [Operations]
+      summary: Read metrics over visible operational work
+      description: >-
+        Uses the same role, assignment, organization and branch filter as the item
+        list. Integration-failure counts are manager-only and branch-scoped.
+        Amounts are dashboard projections, not reconciled accounting evidence.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: organizationId, in: query, schema: { type: string, format: uuid } }
+        - { name: branchId, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Scoped metrics
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OperationsMetrics' }
+        '400': { description: Malformed scope selector }
+        '401': { description: Invalid session }
+        '403': { description: Role or active scope denied }
+        '500': { description: Metrics unavailable }
   /operations/work-items/{workItemId}/seen:
     patch:
       operationId: operationsWorkItemSeen

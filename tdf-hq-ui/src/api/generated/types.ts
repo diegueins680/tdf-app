@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/operations/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read metrics over visible operational work
+         * @description Uses the same role, assignment, organization and branch filter as the item list. Integration-failure counts are manager-only and branch-scoped. Amounts are dashboard projections, not reconciled accounting evidence.
+         */
+        get: operations["operationsMetrics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/operations/work-items/{workItemId}/seen": {
         parameters: {
             query?: never;
@@ -15413,6 +15433,57 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    operationsMetrics: {
+        parameters: {
+            query?: {
+                organizationId?: string;
+                branchId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Scoped metrics */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsMetrics"];
+                };
+            };
+            /** @description Malformed scope selector */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid session */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role or active scope denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Metrics unavailable */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     operationsWorkItemSeen: {
         parameters: {
             query?: never;
