@@ -23,7 +23,8 @@ container-layer filesystems. Production migration-only precheck may omit the
 mount because it does not start an application. Development startup remains
 available. The helper does not accept an environment-selected mount table.
 
-Compose binds the pre-existing host directory and sets `create_host_path: false`:
+Both Compose application services (`api` and the historical shared-database
+`canary`) bind the pre-existing host directory and set `create_host_path: false`:
 a missing directory must fail instead of silently becoming a root-owned empty
 folder. Runtime inspection separately reports whether the canonical source bind is
 present and writable. Missing observations remain unknown. A correct mount is

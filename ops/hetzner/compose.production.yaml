@@ -52,6 +52,11 @@ services:
     security_opt: [no-new-privileges:true]
     volumes:
       - ./assets:/data/assets
+      - type: bind
+        source: ./uploads
+        target: /app/uploads
+        bind:
+          create_host_path: false
     networks: [database]
     # Probe from the host using the container's internal address over SSH.
     # Keep absent: published ports, external networks, production credentials.

@@ -40,13 +40,19 @@ test('the actual shell guard admits one writable mount and rejects ephemeral/amb
   assert.equal(run(row()).status, 1, 'A claimed mount with no directory cannot pass');
 });
 
-test('canonical API persists private uploads without silently creating a root-owned host directory', () => {
+test('every configured production application service persists private uploads', () => {
   const compose = parse(readFileSync(path.join(root, 'ops/hetzner/compose.production.yaml'), 'utf8'));
-  const mounts = compose.services.api.volumes.filter(value => typeof value === 'object' && value.target === '/app/uploads');
-  assert.equal(mounts.length, 1);
-  assert.equal(mounts[0].type, 'bind');
-  assert.equal(mounts[0].source, './uploads');
-  assert.equal(mounts[0].bind.create_host_path, false);
+  const applications = Object.entries(compose.services).filter(([, service]) =>
+    service.environment?.APP_ENV === 'production' && service.environment?.TDF_MIGRATION_PRECHECK_ONLY !== 'true');
+  assert.deepEqual(applications.map(([name]) => name).sort(), ['api', 'canary']);
+  for (const [name, service] of applications) {
+    const mounts = service.volumes.filter(value => typeof value === 'object' && value.target === '/app/uploads');
+    assert.equal(mounts.length, 1, `${name}: exactly one private upload mount`);
+    assert.equal(mounts[0].type, 'bind', name);
+    assert.equal(mounts[0].source, './uploads', name);
+    assert.equal(mounts[0].bind.create_host_path, false, name);
+    assert.notEqual(mounts[0].read_only, true, `${name}: application requires writable storage`);
+  }
   for (const name of ['Dockerfile', 'Dockerfile.runtime']) {
     assert.match(readFileSync(path.join(root, 'tdf-hq', name), 'utf8'),
       /^COPY tdf-hq\/persistent-uploads\.sh \/app\/persistent-uploads\.sh$/m);

@@ -2576,7 +2576,7 @@
     {
       "id": "SURFACE-93a9612c9f1fea9b",
       "path": "ops/hetzner/compose.production.yaml",
-      "sha256": "1191a5773dc83807be2364340f8cb9f0feb33af4ed45d6e0bfbefe9f3bc42db8",
+      "sha256": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2966,7 +2966,7 @@
     {
       "id": "SURFACE-9f80dbca9b5074c0",
       "path": "scripts/__tests__/persistent-uploads.test.mjs",
-      "sha256": "0dc864d08b90d8731f0ddcb056dad5c7990c5e07dab80084396e87f62ee76df6",
+      "sha256": "3fa7cfdf56ccf0533240f6b9028970915897af0147023e9e305c77303d19e889",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21487,7 +21487,7 @@
     },
     {
       "path": "formal/system/private-upload-persistence.md",
-      "sha256": "e03474bf3029a4b23e1ecc0b9818483fb693331ca2df667e7f0fe58ba82e7896",
+      "sha256": "f9df2f2590f3136486125ceb63a0ac6a36c329cd89d4063a6d7c34882d46a9cc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21578,7 +21578,7 @@
     },
     {
       "path": "ops/hetzner/README.md",
-      "sha256": "89fdc422b787bfa1916cafb5457a1ef6d6ac8e95bf8a6b6b950572315056c414",
+      "sha256": "cd16e210ac3fda1e970fc2d804f1314c95faa5624b6d415588c1100dafb5a65c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21592,7 +21592,7 @@
     },
     {
       "path": "ops/hetzner/compose.production.yaml",
-      "sha256": "1191a5773dc83807be2364340f8cb9f0feb33af4ed45d6e0bfbefe9f3bc42db8",
+      "sha256": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
