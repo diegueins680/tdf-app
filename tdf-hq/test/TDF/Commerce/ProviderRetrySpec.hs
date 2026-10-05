@@ -399,6 +399,7 @@ spec = do
         hostedServiceOrderSpec
         closedCheckoutEvidenceSpec
         captureReplaySpec
+        ticketLedgerSpec
         manualCaptureReplaySpec
         completionCapabilityIntegrationSpec
         RefundSafety.databaseSpec $ \pool provider amounts ->
@@ -2210,6 +2211,29 @@ assertClosedPaymentEvidence pool payment = do
     Single (Execution.bppCurrency payment),Single (Checkout.paymentProviderText (Execution.bppProvider payment)),
     Single "sandbox",Single (Execution.bppMerchantRef payment),Single notificationTime,Single 1)]
   where checkoutId = Checkout.checkoutReferenceId (Execution.bppCheckout payment)
+
+-- Zero commercial fees are valid; zero-valued journal lines are not.
+ticketLedgerSpec :: SpecWith ConnectionPool
+ticketLedgerSpec = describe "ticket capture ledger" $
+  forM_ [(0,0),(0,261),(100,0),(100,261)] $ \(fee,tax) ->
+    it ("conserves money and replays once with fee/tax " <> show (fee,tax)) $ \pool -> do
+      payment <- captureFixtureForDomain "event_ticket_order" "capture" Checkout.AttemptProcessing pool Checkout.ProviderPayPal
+      runSqlPool (rawExecute
+        "INSERT INTO event_ticket_checkout_runtime(checkout_id,platform_fee_minor,organizer_payable_minor,tax_minor) VALUES (?::uuid,?,?,?)"
+        [captureCheckoutParameter payment,PersistInt64 fee,PersistInt64 (12515-fee-tax),PersistInt64 tax]) pool
+      runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right True
+      entries <- runSqlPool (rawSql
+        "SELECT entry.account_code,entry.amount_minor FROM commerce_ledger_entry entry JOIN commerce_ledger_transaction txn ON txn.id=entry.transaction_id WHERE txn.source_id=? ORDER BY entry.account_code"
+        [PersistText (Checkout.paymentAttemptReferenceId (Checkout.vpAttempt payment))]) pool
+          :: IO [(Single Text, Single Int64)]
+      entries `shouldBe`
+        ([(Single "cash.paypal",Single 12515),(Single "liability.event_organizer_payable",Single (negate (12515-fee-tax)))]
+        ++ [(Single "liability.sales_tax",Single (negate tax)) | tax>0]
+        ++ [(Single "revenue.event_ticket_order",Single (negate fee)) | fee>0])
+      sum [amount | (_,Single amount)<-entries] `shouldBe` 0
+      snapshot <- runSqlPool (captureSnapshot payment) pool
+      runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right False
+      runSqlPool (captureSnapshot payment) pool `shouldReturn` snapshot
 
 captureReplaySpec :: SpecWith ConnectionPool
 captureReplaySpec = describe "verified capture replay integrity" $

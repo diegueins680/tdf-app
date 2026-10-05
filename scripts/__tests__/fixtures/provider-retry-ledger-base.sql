@@ -1,6 +1,7 @@
 -- Disposable provider-retry database only. These are the ORM-owned base
 -- dependencies from test-marketplace-rental-checkout-runtime-migration.sh,
--- not replacements for any commerce/runtime table or production schema.
+-- not a production schema. The final minimal ticket projection exists only
+-- to exercise canonical capture-ledger posting, not ticket inventory or issuance.
 -- The harness applies the real sale/rental migrations afterwards because
 -- CheckoutStore's capture ledger queries their runtime even for TDF services.
 \set ON_ERROR_STOP on
@@ -51,3 +52,12 @@ CREATE TABLE marketplace_order_item (
   unit_price_usd_cents BIGINT NOT NULL, subtotal_usd_cents BIGINT NOT NULL
 );
 COMMIT;
+
+-- Minimal immutable ticket monetary projection for canonical ledger integration.
+-- Full ticket inventory/issuance constraints are covered by the ticket runtime suite.
+CREATE TABLE event_ticket_checkout_runtime (
+ checkout_id uuid PRIMARY KEY,
+ platform_fee_minor bigint NOT NULL CHECK(platform_fee_minor>=0),
+ organizer_payable_minor bigint NOT NULL CHECK(organizer_payable_minor>=0),
+ tax_minor bigint NOT NULL CHECK(tax_minor>=0)
+);

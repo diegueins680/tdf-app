@@ -2825,7 +2825,7 @@
     {
       "id": "SURFACE-e4c6bf3c31cac943",
       "path": "scripts/__tests__/fixtures/provider-retry-ledger-base.sql",
-      "sha256": "0a896cd95e31b5e08c22624e59d82845dd0dbce4e57b93d25d7e1fcdd6279e4c",
+      "sha256": "68b93057610625f4d12ef71fb128f58950e6efb3d871b0e7d244c177c2858629",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11813,7 +11813,7 @@
     {
       "id": "SURFACE-94890265a329cb44",
       "path": "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
-      "sha256": "6a0395b16a2bafa271dbc051da42972fe6a51da5db9eb2235bf78a46e47d819d",
+      "sha256": "d39023fa8fabf5b78f94a3028c688057d56c6eeb51248c2e78da9c3f3ae30685",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12893,7 +12893,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "90b0a50e1d7415dc82be95fdf4c985fbb825737d09e0c87d2d185414cb154fd2",
+      "sha256": "d2b57dfe9b444402acc6b9b81ab4caecbff847ed5f75464aa1b55888cfa937d2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17217,7 +17217,7 @@
     },
     {
       "path": "docs/events/paypal-refund-admission.md",
-      "sha256": "e13f698c20c61d3ff99cd286882432325ae0afcffbcaab5f1315f8262bdf289c",
+      "sha256": "f2f26628ea85673259a8f866428a3ccb1cc5a835584622beb33f622b35a7c3ff",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21543,7 +21543,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "30cf30dbb6bf7c67d45163e2771c8ee3853a213f25802cac31c19b51d88c5ae2",
+      "sha256": "4e3572eea7d7c2cc9625b0a2703481a751d2b98e3363043c8c0463c38a3b699d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

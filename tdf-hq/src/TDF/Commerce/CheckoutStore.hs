@@ -902,7 +902,7 @@ postPaymentLedger VerifiedPayment{..} = do
       \ 'Ticket platform fees recognized on verified payment'\
       \ FROM commerce_checkout_session checkout\
       \ JOIN event_ticket_checkout_runtime runtime ON runtime.checkout_id = checkout.id\
-      \ WHERE checkout.id = ?::uuid"
+      \ WHERE checkout.id = ?::uuid AND runtime.platform_fee_minor > 0"
       [PersistText ledgerId, PersistText (checkoutReferenceId vpCheckout)]
     else rawExecute
       "INSERT INTO commerce_ledger_entry (\

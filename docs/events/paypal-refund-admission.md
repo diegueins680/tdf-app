@@ -12,9 +12,12 @@ success, and retry retains the original capture idempotency key.
 This regression was found in the actual isolated TDF API: web created a held USD20
 order; the provider captured USD20; TDF returned 502 for missing binding and issued
 zero tickets. The captured sandbox funds were submitted for full refund as test
-cleanup. Signature-verified capture processing also entered retry in this combined
-runtime, so issuance and financial reconciliation still require a full rerun after
-the fixes. Do not treat provider capture as successful TDF fulfillment.
+cleanup. Signature-verified capture processing also retried because a zero platform fee
+created an invalid zero-valued ledger entry. The fee posting now omits zero values
+like the existing tax and organizer postings; ledger constraints remain unchanged.
+The actual Haskell posting function was exercised on the isolated checkout under
+rollback: three entries, sum zero, zero zero-valued entries, no persisted test
+journal. Full issuance and financial reconciliation still require a combined rerun. Do not treat provider capture as successful TDF fulfillment.
 
 ## External refund admission fence
 
