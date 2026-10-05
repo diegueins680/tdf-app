@@ -159,6 +159,7 @@
       "scripts/check-dependency-security.mjs",
       "scripts/check-generated-api.mjs",
       "scripts/check-messaging-token.mjs",
+      "scripts/check-new-specification-surfaces.py",
       "scripts/ci-change-scope.mjs",
       "scripts/codex-logical-correctness-loop.sh",
       "scripts/codex-loop-worker.sh",
@@ -372,6 +373,7 @@
       "scripts/test-merch-reputation-migration.sh",
       "scripts/test-music-directory-contract.mjs",
       "scripts/test-music-directory-migration.sh",
+      "scripts/test-new-specification-surfaces.py",
       "scripts/test-notification-alert-context.mjs",
       "scripts/test-notification-navigation-migration.sh",
       "scripts/test-party-selector-rate-limit-scope-migration.sh",
@@ -2221,7 +2223,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "a995cf94e401612ee0460b96ad72320c5951f2c232cd309031804031df72961a",
+      "sha256": "d7797c5a430274f8735b8c5deae2253a472a98027ca4d41a1fe8d333652a96c7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3023,6 +3025,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-04e9e43c20bee09d",
+      "path": "scripts/check-new-specification-surfaces.py",
+      "sha256": "b1ea5a96edaedd17c6b0f3b2795723599291fd8ac260d2d519c12d268313a040",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
       "sha256": "6e1bf4833fec7e1e51e230ccc830dca80470c0c2dcad18a2c329ad9defdf1379",
@@ -3529,7 +3537,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "9ca4d1af4a59d5e6d10e2d4d8436e4497baa566e6bddec4a77c28b541e2d62a3",
+      "sha256": "5c9bb5c144b06729f6cc14331a1f329985e7fc0559c0c904c6291c945d8bca2e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4298,6 +4306,12 @@
       "id": "SURFACE-6cb409b4ac8481c5",
       "path": "scripts/test-music-directory-migration.sh",
       "sha256": "5c19d11bb7e1017c1691eca7104aa0bf564efd66c6fbef567862a9484080e8db",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d2e7c2d31e94f861",
+      "path": "scripts/test-new-specification-surfaces.py",
+      "sha256": "eaeb84d80d79ac2eee08371df79633d5b5ce8b071c3024378bd447ed8ad2b1ee",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20276,7 +20290,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "da87a8d00e9b9d4a8bc116099fb2700ee620d79ea6adc9420336cded173c9ca2",
+      "sha256": "f1f20a24d565b0494bb0844a9e2924e9cbc3b2fe4ec952b9f5fb0e4926246de6",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -20345,6 +20359,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/fixture-routing.md",
+      "sha256": "718bf6972a07a21859e30b22d32edfb3faa519a3e2f1e036e26d03ab8c8444e6",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/history-2026-09-20.md",
       "sha256": "90cac67147210c90fbb604934c5f6a998d936396d70fec554c235187554d4d53",
       "authority": "historical",
@@ -20395,7 +20416,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "7bd36ef929d1131b24a7fffc9e841416dabff7821ca75b445e9c105524fed56a",
+      "sha256": "6dd2a858f3c64f1acf420b07f716fc3d6fe693e64ef46b9bbb552716bb2cf1bc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

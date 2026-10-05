@@ -901,7 +901,8 @@
         "failed, missing or stale input -> admitted"
       ],
       "effects": [
-        "Reject missing fields, invalid status, duplicate IDs, escaping or missing paths, and hand-authored PASS assertions."
+        "Reject missing fields, invalid status, duplicate IDs, escaping or missing paths, and hand-authored PASS assertions.",
+        "Reject every newly added material implementation/test file without a canonical mapping, including renames and additions between the exact Mobile gitlinks."
       ],
       "authorization": "Client capability predicates are discovery policy; backend authorization must be separately verified.",
       "privacy": "Only repository code and sanitized metadata enter receipts; no credentials.",
@@ -915,10 +916,12 @@
       "property": "Reject missing fields, invalid status, duplicate IDs, escaping or missing paths, and hand-authored PASS assertions.",
       "contract": "formal/system/README.md",
       "implementation": [
-        "scripts/specification-conformance.py"
+        "scripts/specification-conformance.py",
+        "scripts/check-new-specification-surfaces.py"
       ],
       "tests": [
-        "scripts/test-specification-conformance.py"
+        "scripts/test-specification-conformance.py",
+        "scripts/test-new-specification-surfaces.py"
       ],
       "formalModels": [],
       "verification": "Executable conformance and mutation tests; not a whole-program proof.",
@@ -927,7 +930,8 @@
       "critical": true,
       "confidence": "high for tooling boundary; domain semantics require separate correspondence",
       "ambiguity": [
-        "Unmapped surfaces remain explicit debt until their semantics and tests are reviewed."
+        "Unmapped surfaces remain explicit debt until their semantics and tests are reviewed.",
+        "New-file admission does not establish semantic correctness or close existing unmapped debt; edits to existing files still require domain review."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -3048,10 +3052,82 @@
       "contract": "formal/system/compiled-api-boundary.md",
       "verification": "Actual Stack/GHC type reflection, Hspec mutation controls, Node decoder controls and exact-candidate executable inspection in CI.",
       "evidence": "Revision-scoped compiled-api artifact; probe and test results do not substitute for complete executable conformance."
+    },
+    {
+      "id": "SYS-VERIFY-004",
+      "title": "Disposable PostgreSQL fixture routing admission",
+      "statement": "Destructive SQL fixture runners that use the shared URL validator must reject non-local hosts, libpq URL overrides and service/host-address environment overrides before their first SQL command; approved CI may address only its postgres service.",
+      "domain": "SYS",
+      "actors": [
+        "Developer",
+        "CI fixture runner"
+      ],
+      "preconditions": [
+        "Operator has selected an owned disposable PostgreSQL database; URL validation alone does not establish ownership."
+      ],
+      "inputs": [
+        "Explicit PostgreSQL URL",
+        "CI mode",
+        "libpq environment"
+      ],
+      "state": {
+        "states": [
+          "unvalidated",
+          "routing admitted",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Local URL with a plain database name ending _test and no routing overrides -> routing admitted.",
+        "CI postgres service URL with the same restrictions -> routing admitted."
+      ],
+      "forbiddenTransitions": [
+        "Remote host or query/fragment override -> SQL execution.",
+        "PGHOSTADDR, PGSERVICE or PGSERVICEFILE override -> SQL execution."
+      ],
+      "effects": [
+        "Fail before fixture SQL when routing admission fails."
+      ],
+      "authorization": "Existing local PostgreSQL credentials still determine database privileges; the validator grants no database authority.",
+      "privacy": "Test bodies are synthetic; failure logs must not disclose real database credentials.",
+      "concurrency": "Validation occurs before SQL in each runner. Database ownership and exclusive execution remain separate runner/operator obligations.",
+      "idempotency": "Repeated validation of identical inputs has no SQL side effect.",
+      "failure": "Reject before invoking psql; never fall back to another target.",
+      "recovery": "Correct the explicit disposable database target and rerun; never weaken admission for a production host.",
+      "observability": "Negative inputs cannot reach an instrumented SQL sentinel; an approved synthetic URL reaches the deliberately stopped sentinel.",
+      "authority": "approved",
+      "source": "User conformance instruction sections 1, 11, 15 and 24; actual fixture URL override defect discovered during this audit.",
+      "property": "Invalid routing inputs never reach fixture SQL.",
+      "contract": "formal/system/fixture-routing.md",
+      "implementation": [
+        "scripts/lib/disposable-postgres-url.mjs",
+        "scripts/test-artist-merch-runtime.sh",
+        "scripts/test-provider-retry-runtime.sh",
+        "scripts/test-auth-recovery-migration.sh",
+        "scripts/test-credential-lifecycle.sh"
+      ],
+      "tests": [
+        "scripts/__tests__/disposable-postgres-url.test.mjs",
+        "scripts/__tests__/merch-runtime-safety.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "URL property cases and actual runner SQL-sentinel controls; not proof of database ownership or all-runner isolation.",
+      "evidence": "Fresh candidate test receipts under formal/system/evidence or externally retained run directory.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "high for tested URL routing admission; ownership and unintegrated runners remain separate",
+      "ambiguity": [
+        "A loopback host and _test suffix do not prove database ownership.",
+        "Actual first-SQL sentinel checks cover merchandise/provider-retry runners; other consumers require their own execution evidence."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Shared routing rejection and selected actual runner controls exist; whole-system fixture ownership/isolation is not established."
+      }
     }
   ],
   "sourceFingerprints": {
-    ".github/workflows/ci.yml": "a995cf94e401612ee0460b96ad72320c5951f2c232cd309031804031df72961a",
+    ".github/workflows/ci.yml": "d7797c5a430274f8735b8c5deae2253a472a98027ca4d41a1fe8d333652a96c7",
     ".github/workflows/event-operations-formal.yml": "8cdbbb59f539a8394fde147ba38dc4f27260b9ac2c371c731da5b342401077d1",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
     "formal/event-operations/ChatMutationBoundary.cfg": "dc76bf1caa1a43de6891a51256da9efc4264ac45b882fef969bc15895068e0fa",
@@ -3102,6 +3178,7 @@
     "scripts/__tests__/ci-pipeline.test.mjs": "64921de12e4f6ef21a8a65763da451acdf1492ca897c318019c2e835da140114",
     "scripts/__tests__/compiled-api-surface.test.mjs": "b6292e9aff2ca8d24c10d0a4887aae8b0081410e0fba7198a5a0b037b9be9eba",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
+    "scripts/__tests__/disposable-postgres-url.test.mjs": "35c802c14c16ca2e53492845b7023715ed22aea775e39b7e237603d164fbb374",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/formal-result-summary.test.mjs": "a3ecce01af25cb49f4b62fc51459ed9b36543f347b8d80cac6d4b1f1abfeca8c",
     "scripts/__tests__/generated-api-conformance.test.mjs": "34ee30eadd4114f8229af92693a01767fa8a7056233758cf0050b38f99e29f6f",
@@ -3112,6 +3189,7 @@
     "scripts/__tests__/identity-http-runtime.mjs": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
     "scripts/__tests__/merch-commission-postgres.mjs": "91dd370bf08dfe2ab871c6a617d4e2871717c9f5ff27676e692c6d776c9721c3",
+    "scripts/__tests__/merch-runtime-safety.test.mjs": "c127989f3a5cbd0d7974eaf9ad9a86d747591a6cc9110ffe0b22689aab45ee01",
     "scripts/__tests__/persistent-uploads.test.mjs": "0dc864d08b90d8731f0ddcb056dad5c7990c5e07dab80084396e87f62ee76df6",
     "scripts/__tests__/production-entrypoint.test.mjs": "c4e1d14cc296c80c9724b1ec4d4c3a4986e9be3f732b615813ad4d5af8e2de53",
     "scripts/__tests__/production-release.test.mjs": "5735fff347586aa3a4968a4d3d0c3a36225bf8438993980f50c2ca065dfde797",
@@ -3121,10 +3199,12 @@
     "scripts/check-build-trust.mjs": "1f1486dd10e0edb906926a3ff419b765fdca8c263d3fa8065e5353d50992e61e",
     "scripts/check-dependency-security.mjs": "4326c36055405ed802ea31a31fbb54c9843f02fbe3656a7ea43e3a3d60ec3475",
     "scripts/check-generated-api.mjs": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
+    "scripts/check-new-specification-surfaces.py": "b1ea5a96edaedd17c6b0f3b2795723599291fd8ac260d2d519c12d268313a040",
     "scripts/ci-change-scope.mjs": "6e1bf4833fec7e1e51e230ccc830dca80470c0c2dcad18a2c329ad9defdf1379",
     "scripts/inspect-compiled-api.mjs": "da86cd9d992fbfcd232c10bdd956ea2b8280e5353e3ff9f52eac50503f6562f4",
     "scripts/inspect-hetzner-production.mjs": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
     "scripts/lib/compiled-api-surface.mjs": "d1b96bf4d98ecf156b46ca59a7d7905fa16b4b9a61d87faff23af5eb5a29a96b",
+    "scripts/lib/disposable-postgres-url.mjs": "49cdbc947485d89de6be08f23c888c686c4255de9cb73a331fc573352738fdb4",
     "scripts/lib/formal-result-summary.mjs": "fa378d768a1c4e8ff6fe67e8d18d61367cd1b272339107e71c497798fb657167",
     "scripts/lib/hetzner-migration-rehearsal.mjs": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a",
     "scripts/lib/hetzner-preparation.mjs": "b3c9f1da219779c1d1d62190569108077112af6695d95bd9ecc3c5da92cf0e5c",
@@ -3136,7 +3216,7 @@
     "scripts/production-migrations.json": "78c020063a9657ca07d6021373d3d77b08f89aa9705f0860fcd4a7121d296fd5",
     "scripts/production-release.mjs": "1643997b7b3ac422214725f4078b7b4db25f09d1df6ae5cebe8285cd257e0d59",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "9ca4d1af4a59d5e6d10e2d4d8436e4497baa566e6bddec4a77c28b541e2d62a3",
+    "scripts/quality-repo.sh": "5c9bb5c144b06729f6cc14331a1f329985e7fc0559c0c904c6291c945d8bca2e",
     "scripts/rehearse-hetzner-restore.mjs": "eba3bfe18eafcbd4e5f84e71bd817d8b8ede458658c447a060b7af2c9fe559b7",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
@@ -3151,6 +3231,7 @@
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-inspection.py": "65bfd55b856baf7ded66010a5fc809bb762384078fd36f1b28eade998b263bab",
     "scripts/test-hetzner-restore.py": "29c865489be16fb0510927b5fe6815498dde82dc74197365ac37bfbe28c79cf4",
+    "scripts/test-new-specification-surfaces.py": "eaeb84d80d79ac2eee08371df79633d5b5ce8b071c3024378bd447ed8ad2b1ee",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
@@ -3617,7 +3698,19 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/check-new-specification-surfaces.py": [
+      {
+        "requirement": "SYS-TRACE-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-specification-conformance.py": [
+      {
+        "requirement": "SYS-TRACE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-new-specification-surfaces.py": [
       {
         "requirement": "SYS-TRACE-001",
         "relationship": "tests"
@@ -3805,6 +3898,10 @@
       {
         "requirement": "ID-SESSION-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-VERIFY-004",
+        "relationship": "implementation"
       }
     ],
     "formal/event-operations/CredentialLifecycle.tla": [
@@ -3863,6 +3960,10 @@
       {
         "requirement": "ID-SESSION-003",
         "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-VERIFY-004",
+        "relationship": "implementation"
       }
     ],
     "formal/event-operations/RecoveryExpiry.tla": [
@@ -4019,6 +4120,10 @@
       {
         "requirement": "PAY-CHECKOUT-003",
         "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-VERIFY-004",
+        "relationship": "implementation"
       }
     ],
     "scripts/__tests__/merch-commission-postgres.mjs": [
@@ -4063,6 +4168,10 @@
       {
         "requirement": "PAY-FULFILLMENT-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-VERIFY-004",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": [
@@ -4686,6 +4795,24 @@
         "requirement": "SYS-API-003",
         "relationship": "tests"
       }
+    ],
+    "scripts/lib/disposable-postgres-url.mjs": [
+      {
+        "requirement": "SYS-VERIFY-004",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/disposable-postgres-url.test.mjs": [
+      {
+        "requirement": "SYS-VERIFY-004",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/merch-runtime-safety.test.mjs": [
+      {
+        "requirement": "SYS-VERIFY-004",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -4727,7 +4854,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "a995cf94e401612ee0460b96ad72320c5951f2c232cd309031804031df72961a",
+      "sha256": "d7797c5a430274f8735b8c5deae2253a472a98027ca4d41a1fe8d333652a96c7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -5237,7 +5364,12 @@
       "path": "scripts/__tests__/disposable-postgres-url.test.mjs",
       "sha256": "35c802c14c16ca2e53492845b7023715ed22aea775e39b7e237603d164fbb374",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-004",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-d42db507e3322402",
@@ -5561,7 +5693,12 @@
       "path": "scripts/__tests__/merch-runtime-safety.test.mjs",
       "sha256": "c127989f3a5cbd0d7974eaf9ad9a86d747591a6cc9110ffe0b22689aab45ee01",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-004",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-0961f93c2cc23e1a",
@@ -5912,6 +6049,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-04e9e43c20bee09d",
+      "path": "scripts/check-new-specification-surfaces.py",
+      "sha256": "b1ea5a96edaedd17c6b0f3b2795723599291fd8ac260d2d519c12d268313a040",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-TRACE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
       "sha256": "6e1bf4833fec7e1e51e230ccc830dca80470c0c2dcad18a2c329ad9defdf1379",
@@ -6251,7 +6400,12 @@
       "path": "scripts/lib/disposable-postgres-url.mjs",
       "sha256": "49cdbc947485d89de6be08f23c888c686c4255de9cb73a331fc573352738fdb4",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-004",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-6f9017626e33d004",
@@ -6613,7 +6767,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "9ca4d1af4a59d5e6d10e2d4d8436e4497baa566e6bddec4a77c28b541e2d62a3",
+      "sha256": "5c9bb5c144b06729f6cc14331a1f329985e7fc0559c0c904c6291c945d8bca2e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -7239,6 +7393,10 @@
         {
           "requirement": "PAY-CHECKOUT-003",
           "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-VERIFY-004",
+          "relationship": "implementation"
         }
       ]
     },
@@ -7265,6 +7423,10 @@
         {
           "requirement": "ID-SESSION-003",
           "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-VERIFY-004",
+          "relationship": "implementation"
         }
       ]
     },
@@ -7346,6 +7508,10 @@
         {
           "requirement": "ID-SESSION-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-VERIFY-004",
+          "relationship": "implementation"
         }
       ]
     },
@@ -7613,6 +7779,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-d2e7c2d31e94f861",
+      "path": "scripts/test-new-specification-surfaces.py",
+      "sha256": "eaeb84d80d79ac2eee08371df79633d5b5ce8b071c3024378bd447ed8ad2b1ee",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-TRACE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-b918df4f6cacddc2",
       "path": "scripts/test-notification-alert-context.mjs",
       "sha256": "565581534b06e7eb7d1ca4a3d86467d21c50384fd3c6a6b19a96902af9f4596a",
@@ -7702,6 +7880,10 @@
         {
           "requirement": "PAY-FULFILLMENT-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-VERIFY-004",
+          "relationship": "implementation"
         }
       ]
     },
@@ -20880,7 +21062,6 @@
     "SURFACE-d96822f506e6f794",
     "SURFACE-d41c5a6a64677381",
     "SURFACE-2a6db69bcc12b984",
-    "SURFACE-df96f3139c1e5e5b",
     "SURFACE-d42db507e3322402",
     "SURFACE-fb39164e1682672b",
     "SURFACE-c1036edc5aa530c7",
@@ -20904,7 +21085,6 @@
     "SURFACE-aaf6250f3ecffcca",
     "SURFACE-e12f540d456f8d56",
     "SURFACE-ed51dd1c0fc53a51",
-    "SURFACE-df80d476d03d210a",
     "SURFACE-0961f93c2cc23e1a",
     "SURFACE-3875378b2b3df521",
     "SURFACE-2661bcd3e8c66ae8",
@@ -20978,7 +21158,6 @@
     "SURFACE-4738d9e01ae03383",
     "SURFACE-596444d6be3be153",
     "SURFACE-5d55ff4fc614658c",
-    "SURFACE-7e5d877bbcc438aa",
     "SURFACE-6f9017626e33d004",
     "SURFACE-16c0274ca9b29448",
     "SURFACE-a38198fb9ee3c45e",
@@ -22860,7 +23039,8 @@
     "DEPLOY-MIGRATION-001",
     "PRIV-RAG-001",
     "MEDIA-PERSIST-001",
-    "SYS-API-003"
+    "SYS-API-003",
+    "SYS-VERIFY-004"
   ],
   "stateMachines": [
     {
@@ -44838,7 +45018,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 43,
+    "PARTIAL": 44,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

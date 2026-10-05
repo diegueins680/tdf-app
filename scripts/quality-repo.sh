@@ -14,6 +14,7 @@ run_npm() {
 
 echo "▶ Verifying repository-wide invariants"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-requirement-declarations.py"
+PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-new-specification-surfaces.py"
 node --test "$ROOT/scripts/__tests__/compiled-api-surface.test.mjs"
 node "$ROOT/scripts/check-dependency-security.mjs"
 node --test "$ROOT/scripts/__tests__/dependency-security.test.mjs"

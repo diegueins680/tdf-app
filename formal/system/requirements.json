@@ -900,7 +900,8 @@
         "failed, missing or stale input -> admitted"
       ],
       "effects": [
-        "Reject missing fields, invalid status, duplicate IDs, escaping or missing paths, and hand-authored PASS assertions."
+        "Reject missing fields, invalid status, duplicate IDs, escaping or missing paths, and hand-authored PASS assertions.",
+        "Reject every newly added material implementation/test file without a canonical mapping, including renames and additions between the exact Mobile gitlinks."
       ],
       "authorization": "Client capability predicates are discovery policy; backend authorization must be separately verified.",
       "privacy": "Only repository code and sanitized metadata enter receipts; no credentials.",
@@ -914,10 +915,12 @@
       "property": "Reject missing fields, invalid status, duplicate IDs, escaping or missing paths, and hand-authored PASS assertions.",
       "contract": "formal/system/README.md",
       "implementation": [
-        "scripts/specification-conformance.py"
+        "scripts/specification-conformance.py",
+        "scripts/check-new-specification-surfaces.py"
       ],
       "tests": [
-        "scripts/test-specification-conformance.py"
+        "scripts/test-specification-conformance.py",
+        "scripts/test-new-specification-surfaces.py"
       ],
       "formalModels": [],
       "verification": "Executable conformance and mutation tests; not a whole-program proof.",
@@ -926,7 +929,8 @@
       "critical": true,
       "confidence": "high for tooling boundary; domain semantics require separate correspondence",
       "ambiguity": [
-        "Unmapped surfaces remain explicit debt until their semantics and tests are reviewed."
+        "Unmapped surfaces remain explicit debt until their semantics and tests are reviewed.",
+        "New-file admission does not establish semantic correctness or close existing unmapped debt; edits to existing files still require domain review."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -3047,6 +3051,78 @@
       "contract": "formal/system/compiled-api-boundary.md",
       "verification": "Actual Stack/GHC type reflection, Hspec mutation controls, Node decoder controls and exact-candidate executable inspection in CI.",
       "evidence": "Revision-scoped compiled-api artifact; probe and test results do not substitute for complete executable conformance."
+    },
+    {
+      "id": "SYS-VERIFY-004",
+      "title": "Disposable PostgreSQL fixture routing admission",
+      "statement": "Destructive SQL fixture runners that use the shared URL validator must reject non-local hosts, libpq URL overrides and service/host-address environment overrides before their first SQL command; approved CI may address only its postgres service.",
+      "domain": "SYS",
+      "actors": [
+        "Developer",
+        "CI fixture runner"
+      ],
+      "preconditions": [
+        "Operator has selected an owned disposable PostgreSQL database; URL validation alone does not establish ownership."
+      ],
+      "inputs": [
+        "Explicit PostgreSQL URL",
+        "CI mode",
+        "libpq environment"
+      ],
+      "state": {
+        "states": [
+          "unvalidated",
+          "routing admitted",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Local URL with a plain database name ending _test and no routing overrides -> routing admitted.",
+        "CI postgres service URL with the same restrictions -> routing admitted."
+      ],
+      "forbiddenTransitions": [
+        "Remote host or query/fragment override -> SQL execution.",
+        "PGHOSTADDR, PGSERVICE or PGSERVICEFILE override -> SQL execution."
+      ],
+      "effects": [
+        "Fail before fixture SQL when routing admission fails."
+      ],
+      "authorization": "Existing local PostgreSQL credentials still determine database privileges; the validator grants no database authority.",
+      "privacy": "Test bodies are synthetic; failure logs must not disclose real database credentials.",
+      "concurrency": "Validation occurs before SQL in each runner. Database ownership and exclusive execution remain separate runner/operator obligations.",
+      "idempotency": "Repeated validation of identical inputs has no SQL side effect.",
+      "failure": "Reject before invoking psql; never fall back to another target.",
+      "recovery": "Correct the explicit disposable database target and rerun; never weaken admission for a production host.",
+      "observability": "Negative inputs cannot reach an instrumented SQL sentinel; an approved synthetic URL reaches the deliberately stopped sentinel.",
+      "authority": "approved",
+      "source": "User conformance instruction sections 1, 11, 15 and 24; actual fixture URL override defect discovered during this audit.",
+      "property": "Invalid routing inputs never reach fixture SQL.",
+      "contract": "formal/system/fixture-routing.md",
+      "implementation": [
+        "scripts/lib/disposable-postgres-url.mjs",
+        "scripts/test-artist-merch-runtime.sh",
+        "scripts/test-provider-retry-runtime.sh",
+        "scripts/test-auth-recovery-migration.sh",
+        "scripts/test-credential-lifecycle.sh"
+      ],
+      "tests": [
+        "scripts/__tests__/disposable-postgres-url.test.mjs",
+        "scripts/__tests__/merch-runtime-safety.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "URL property cases and actual runner SQL-sentinel controls; not proof of database ownership or all-runner isolation.",
+      "evidence": "Fresh candidate test receipts under formal/system/evidence or externally retained run directory.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "high for tested URL routing admission; ownership and unintegrated runners remain separate",
+      "ambiguity": [
+        "A loopback host and _test suffix do not prove database ownership.",
+        "Actual first-SQL sentinel checks cover merchandise/provider-retry runners; other consumers require their own execution evidence."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Shared routing rejection and selected actual runner controls exist; whole-system fixture ownership/isolation is not established."
+      }
     }
   ]
 }

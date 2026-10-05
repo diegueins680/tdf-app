@@ -125,8 +125,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        env:
+          GIT_CONFIG_COUNT: '1'
+          GIT_CONFIG_KEY_0: submodule.tdf-mobile.update
+          GIT_CONFIG_VALUE_0: checkout
         with:
           fetch-depth: 0
+          submodules: recursive
 
       - name: Setup Node
         uses: actions/setup-node@v7
@@ -139,6 +144,15 @@ jobs:
 
       - name: Run repository checks
         run: npm run quality:repo
+
+      - name: Require canonical mappings for new implementation surfaces
+        env:
+          SPECIFICATION_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
+        run: |
+          if [ -z "$SPECIFICATION_BASE_SHA" ] || [ "$SPECIFICATION_BASE_SHA" = '0000000000000000000000000000000000000000' ]; then
+            SPECIFICATION_BASE_SHA="$(git merge-base origin/main HEAD)"
+          fi
+          python3 scripts/check-new-specification-surfaces.py --base "$SPECIFICATION_BASE_SHA"
 
       - name: Verify private upload persistence across container replacement
         timeout-minutes: 8
@@ -261,6 +275,11 @@ jobs:
         run: |
           apt-get update
           apt-get install -y --no-install-recommends libpq-dev postgresql-client python3 pkg-config git curl ca-certificates
+
+      - name: Trust the exact container checkout for evidence Git reads
+        # Container paths resolve to /__w while checkout may trust the host alias.
+        # Never disable the ownership check with a wildcard.
+        run: git config --global --add safe.directory "$(pwd -P)"
 
       - name: Setup backend verification Node
         uses: actions/setup-node@v7

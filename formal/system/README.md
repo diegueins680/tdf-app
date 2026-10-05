@@ -204,3 +204,20 @@ only under each model's stated bounds, fairness, assumptions and exclusions.
 Whole-system refinement remains open.
 
 Studio booking scope, resource projection, bounded models and remaining exclusions: [bookings.md](bookings.md).
+
+## Admission of new implementation surfaces
+
+CI runs `python3 scripts/check-new-specification-surfaces.py --base <full-base-SHA>`
+on immutable Git trees. Every newly added material implementation or test file
+must have a source fingerprint and a bidirectional relationship to the canonical
+requirement register. Renames are evaluated as additions; changes to the Mobile
+pin are compared inside the actual repository between both committed gitlinks.
+Missing Mobile history, a mismatched checkout, symlink source, missing mapping or
+stale source hash fails admission. Unit and real temporary-Git controls exercise
+omission, forged mappings, rename bypass and wrong Mobile checkout rejection.
+
+This gate stops new orphan files. It does not declare existing unmapped surfaces
+conformant, detect semantic defects in a plausible mapping, or replace review of
+edits to existing implementation. Existing debt remains listed in traceability.
+[fixture-routing.md](fixture-routing.md) records the separate test database routing
+boundary and the ownership guarantees it does not provide.
