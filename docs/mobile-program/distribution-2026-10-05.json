@@ -18,7 +18,7 @@
     "physicalGoogleOAuthVerified": false
   },
   "android": {
-    "checkedAt": "2026-10-05T04:53:48.922Z",
+    "checkedAt": "2026-10-05T05:27:05.674Z",
     "packageName": "com.tdf.records",
     "tracks": [
       {
@@ -31,14 +31,18 @@
         "track": "alpha",
         "releases": [
           {
-            "name": "1.0.1 (22) - TDF interactions",
+            "name": "1.0.1 (23) - TDF tester feedback",
             "versionCodes": [
-              "22"
+              "23"
             ],
             "releaseNotes": [
               {
                 "language": "en-US",
-                "text": "React to content, join conversations, reply and mention people. Edit or delete your comments, manage discussion notifications, and open the exact reply from a link. Includes updated service connectivity and accessibility improvements."
+                "text": "Help improve TDF. Send a bug, UX issue, idea or comment from Profile or About. Technical details and screenshots are optional. Testing invitations respect dismissal and opt-out."
+              },
+              {
+                "language": "es-419",
+                "text": "Ayuda a mejorar TDF. Env\u00eda errores, problemas de UX, ideas o comentarios desde Perfil o Acerca de. La informaci\u00f3n t\u00e9cnica y las capturas son opcionales. Las invitaciones respetan tu decisi\u00f3n de descartarlas o desactivarlas."
               }
             ],
             "status": "completed"
@@ -74,8 +78,8 @@
     "inspectionEditsDeleted": true,
     "publicAvailabilityVerified": false,
     "playSigningAssociation": {
-      "checkedAt": "2026-10-05T05:01:53.488Z",
-      "versionCode": 22,
+      "checkedAt": "2026-10-05T05:29:38.101Z",
+      "versionCode": 23,
       "status": 200,
       "certificateSha256Hashes": [
         "08:76:1D:24:F5:A8:45:2C:89:11:65:82:C7:C8:5D:0A:E2:B1:A7:24:C1:B4:8B:C0:7B:B1:9F:A2:8A:80:8E:B0"
@@ -83,7 +87,13 @@
       "assetlinksStatus": 200,
       "allCertificatesAssociated": true,
       "physicalHandoffVerified": false
-    }
+    },
+    "sourceCommit23": "7a1fca3696dada4263c70716c70b763e492807cc",
+    "artifact23Sha256": "28aed605fa104b2b0c0867f01262c2403cb0a2badc8b77691375d36375547aa0",
+    "build23Run": "https://github.com/diegueins680/TDF-mobile/actions/runs/37265560883",
+    "closedTrackCommitAccepted": true,
+    "reviewRequested": true,
+    "reviewApprovalVerified": false
   },
   "analytics": {
     "existingProvider": "PostHog",
