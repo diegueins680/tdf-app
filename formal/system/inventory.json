@@ -66,6 +66,7 @@
       "ops/hetzner/compose.production.yaml",
       "ops/hetzner/compose.restore.yaml",
       "ops/hetzner/inspect-runtime.py",
+      "ops/hetzner/isolated-application-canary.py",
       "ops/hetzner/migrate-owned-urls.sql",
       "ops/hetzner/rehearse-postgres-restore.py",
       "ops/privacy/request-workflow.json"
@@ -388,6 +389,7 @@
       "scripts/test-hetzner-restore.py",
       "scripts/test-identity-reconciliation.sh",
       "scripts/test-invitation-update-concurrency.sh",
+      "scripts/test-isolated-application-canary.py",
       "scripts/test-live-intake-identity.sh",
       "scripts/test-marketplace-contact-identity.sh",
       "scripts/test-marketplace-operations-migration.sh",
@@ -2600,6 +2602,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-cf51ae79e61fc20d",
+      "path": "ops/hetzner/isolated-application-canary.py",
+      "sha256": "6c3e861e6f177da093f39eb84366872e42c46f248a73bc196e7e29a800d5f36f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-b85ac3ceaf40e5fb",
       "path": "ops/hetzner/migrate-owned-urls.sql",
       "sha256": "e32a6610db6a6432b2fb5d404a0b9251cd343165d2c43872effb9a204854bad0",
@@ -2608,7 +2616,7 @@
     {
       "id": "SURFACE-60310758bd18e31e",
       "path": "ops/hetzner/rehearse-postgres-restore.py",
-      "sha256": "4794f49c34ed9042fc58450020ea844dc1dae57852c6a2607c4f8d5d23a0176e",
+      "sha256": "66d134bd4510328d824375cfd72c25a89380b7c1360e0b00ca295bef78d6af7a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2872,7 +2880,7 @@
     {
       "id": "SURFACE-edbe02ea68dc09c3",
       "path": "scripts/__tests__/hetzner-restore.test.mjs",
-      "sha256": "5670603f31f9ff8aaf7536eae0cde39a96d8f4996922838eb120693ca86c05c4",
+      "sha256": "d13b746d0d264c4e710a16cd81ff2f7532876d4520e9ff1ed85d8daf623b5a25",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3766,7 +3774,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "3cc845e9e6bf8b5ec13bc22be0010ae79e3dd1fd1fd25005bddef17d317a340d",
+      "sha256": "9bdae3c8c78460ef950c4f2f9913ffea1505eeebaddba8d7b74ddde768991f25",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3790,7 +3798,7 @@
     {
       "id": "SURFACE-d71c43a36310a429",
       "path": "scripts/rehearse-hetzner-restore.mjs",
-      "sha256": "eba3bfe18eafcbd4e5f84e71bd817d8b8ede458658c447a060b7af2c9fe559b7",
+      "sha256": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4480,7 +4488,7 @@
     {
       "id": "SURFACE-1ecc6d6a29d831c9",
       "path": "scripts/test-hetzner-restore.py",
-      "sha256": "25496b629c15b61896ae762bc107f2c74c271e0fed6609ef05ae07a688f76d81",
+      "sha256": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4493,6 +4501,12 @@
       "id": "SURFACE-180b5ac69cd86e73",
       "path": "scripts/test-invitation-update-concurrency.sh",
       "sha256": "adb36bdec82345f1e78c77ea9af6563320ec2fd91adc247d216bfeed5039de6a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b6d8e853f9192b94",
+      "path": "scripts/test-isolated-application-canary.py",
+      "sha256": "434a9ca07c7aa04ccfc21177742babbc1e548a8128fab80e9898403911e21f40",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4816,7 +4830,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "911c387b86596d3d039eafcaaaef4bb58a17a3b56b96dc8e2f3d82661ed51737",
+      "sha256": "4269c0a915b01b4b4905c88f233ba699bd082fc8f2cb83439c8944a9891f4f40",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18840,6 +18854,41 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/ApplicationCanary.cfg",
+      "sha256": "58e2f0b12d433c32d4c8c483cd3526ba9f2edbc04003d7991b69717dfaca1986",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ApplicationCanary.tla",
+      "sha256": "0aa431a595b11112508c1042b88d5ba787f630798f6762d51cdc924bf7f879d1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/ApplicationCanaryCleanup.cfg",
+      "sha256": "dee7cfc258b02c3352db23e409256df51c463fcffa5567a5ba72522c31334650",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ApplicationCanaryFalseGreen.cfg",
+      "sha256": "d4302711fb2f0d614815ccc4c4f245f85a84202cc160b49218a9809f815020f3",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ApplicationCanaryNetwork.cfg",
+      "sha256": "2d5e74a5306a8843324f107fce7f8d544e5317387692d0673041224401cd373d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/ArtistActivation.cfg",
       "sha256": "ba58e8206d929c869b2ad2b869126c220abf63fe3c29993b8ad3698eb038741c",
       "authority": "inferred",
@@ -21417,14 +21466,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "41e1a028bdd3da319ad58cb900304ebd7f7f4be8d18f59de09a01bfa45f76632",
+      "sha256": "f19eb15bbab1d2686aeb1ee643b72c873c10c500219c1339a6835ba8a1439bc7",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "9a1f76de3a6814fddd77e9238b9d4715f67a3d4f4cc6d570e207449f845cf553",
+      "sha256": "aae308437dbde2a62bb8f10185e55782ffe3713e1ead1519c5fc48268f0b5cf0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21549,6 +21598,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/isolated-canary.md",
+      "sha256": "ceb93ed955ee554fafc78030be6ccf2b09f3a2fbff66bad30c04a8ac17cf8041",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/legacy-escrow.md",
       "sha256": "d5f18da10f1d568df9866184f79f6a70739f8ae5ee375f42777ed7a1ad0b22b0",
       "authority": "inferred",
@@ -21641,14 +21697,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "28e840e77825291e392cdb6e4990c5bff49185d3ad08830fef9c54a48883ef0e",
+      "sha256": "06f745ba5946ba9f00c2a0a9d7881e48bd19f9ab8677e1e7e70c9dbb2c5ad4d0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "638bc18a64b4da8c4c173966fd24c1d0e5f35413da1040ee6aa0c99b655e62da",
+      "sha256": "6838fbe491da2c51d2eaed2a2b69eccec1cce342c73ed82371a1e16d109b5b94",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21711,7 +21767,7 @@
     },
     {
       "path": "ops/hetzner/README.md",
-      "sha256": "a283a14b5606f8a14fce3bbc8e6ec43e98a3afad05fe78bbe6c117757d75492c",
+      "sha256": "cd3cce4dcf4226b0f6f0f1f43f128bf05783c6ecac2eb22e8c9c41052cb08071",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28787,6 +28843,66 @@
         "INVARIANTS CurrentCredential VerifiedAccount",
         "PROPERTY Terminates",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ApplicationCanary.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Runs = {one, two}",
+        "  RequireIsolation = TRUE",
+        "  RequireRemoved = TRUE",
+        "  RequireVerified = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK NoProductionConnectivity DatabaseOutlivesApp ReservationCoversApp VerifiedReceipt OneCanary"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ApplicationCanaryCleanup.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Runs = {one, two}",
+        "  RequireIsolation = TRUE",
+        "  RequireRemoved = FALSE",
+        "  RequireVerified = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK NoProductionConnectivity DatabaseOutlivesApp ReservationCoversApp VerifiedReceipt OneCanary"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ApplicationCanaryFalseGreen.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Runs = {one, two}",
+        "  RequireIsolation = TRUE",
+        "  RequireRemoved = TRUE",
+        "  RequireVerified = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK NoProductionConnectivity DatabaseOutlivesApp ReservationCoversApp VerifiedReceipt OneCanary"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ApplicationCanaryNetwork.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  Runs = {one, two}",
+        "  RequireIsolation = FALSE",
+        "  RequireRemoved = TRUE",
+        "  RequireVerified = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK NoProductionConnectivity DatabaseOutlivesApp ReservationCoversApp VerifiedReceipt OneCanary"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

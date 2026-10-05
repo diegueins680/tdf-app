@@ -542,6 +542,17 @@
       "decision": "adopted",
       "rationale": "Use cooperative timeout with cancellation propagation, explicitly exclude universal wall-clock guarantees and require an independent HTTP deadline. Do not treat timeout alone as provider or release conformance.",
       "verifiedAt": "2026-10-05"
+    },
+    {
+      "id": "RES-CANARY-001",
+      "source": "https://docs.docker.com/engine/network/drivers/none/",
+      "supportingSource": "https://docs.docker.com/engine/network/#container-networks",
+      "title": "Disconnected shared container namespace for candidate verification",
+      "recommendation": "The none driver provides only loopback; a container can share another container network namespace. Network identity must be checked independently of application configuration.",
+      "applicability": "Candidate application and disposable restored PostgreSQL on canonical host",
+      "decision": "adopted",
+      "rationale": "Share only the fully admitted network-none restore namespace, pin probe namespace handles, supply no production credentials and keep source mounts absent. No inference of full release readiness or protection from a compromised privileged host.",
+      "verifiedAt": "2026-10-05"
     }
   ]
 }

@@ -5618,6 +5618,101 @@
       },
       "property": "HTTP200 implies a fresh successful application-pool database round trip; failure details remain fixed and responses uncacheable.",
       "evidence": "Source fingerprints and exact command/revision results; negative variants remove the database check, deadline or cancellation propagation."
+    },
+    {
+      "id": "DEPLOY-CANARY-001",
+      "title": "Candidate application isolation and truthful readiness evidence",
+      "domain": "DEPLOY",
+      "statement": "An optional application canary must run the immutable candidate only in the admitted disposable restored database network namespace, without production credentials or mounts. Completion requires source/version identity, healthy startup, unavailable-database rejection, recovery and confirmed application/database cleanup.",
+      "authority": "User safe deployed verification, failure semantics and isolated recovery requirements",
+      "source": "formal/system/isolated-canary.md; ops/hetzner/README.md",
+      "contract": "formal/system/isolated-canary.md",
+      "critical": true,
+      "actors": [
+        "Authorized audit or release operator",
+        "Nonce-owned candidate application",
+        "Nonce-owned restored database"
+      ],
+      "preconditions": [
+        "Clean source revision and completed canonical candidate migration rehearsal",
+        "Preloaded immutable TDF image digest",
+        "Existing durable restore reservation",
+        "Private new archive directory and host resource capacity"
+      ],
+      "inputs": [
+        "Candidate image digest",
+        "Exact source revision",
+        "Existing admitted disposable restore target"
+      ],
+      "state": {
+        "states": [
+          "restored",
+          "application-requested",
+          "application-running",
+          "observed",
+          "application-removed",
+          "database-removed",
+          "complete",
+          "failed"
+        ],
+        "initial": "restored",
+        "terminal": [
+          "complete",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Admit fixed disconnected database -> request application under retained reservation",
+        "Observe startup/version -> pause only owned database -> reject200 -> unpause -> observe recovery",
+        "Remove admitted application before database -> release matching reservation -> publish receipt"
+      ],
+      "forbiddenTransitions": [
+        "Production database or mounts as application targets",
+        "Provider connectivity or inherited production/image credentials",
+        "Accept malformed HTTP as an unavailable database",
+        "Claim completion after wrong image/revision, failed recovery or uncertain cleanup",
+        "Release reservation while an application create request or container may remain"
+      ],
+      "effects": [
+        "Temporary bounded application and empty private asset/upload directories",
+        "Readiness/version GETs inside pinned matching network namespace",
+        "Temporary pause/unpause of owned restored database only",
+        "Redacted source/image/binary and cleanup receipt"
+      ],
+      "authorization": "Operator invoked rehearsal only; no provider or feature activation; full target admission precedes destructive cleanup and pause.",
+      "privacy": "Cloned database remains host-private. No production credentials or content mounts supplied. Probe accepts fixed metadata paths and bounded allowlisted JSON, never arbitrary API records or raw diagnostics.",
+      "concurrency": "Existing permanent restore lock and durable reservation cover application and database. Delayed Docker completion cannot permit a second run. Privileged concurrent host reconfiguration is outside the sampled inspection boundary.",
+      "idempotency": "Every run is a new nonce; unresolved earlier requests block retry. Cleanup admits exact owned identities, never broad label deletion.",
+      "failure": "Any identity/isolation/protocol/recovery failure prevents completion. Recognized transport timeout or fixed503 under paused disposable database is expected; malformed200 or malformed status lines are failures.",
+      "recovery": "Remove only fully admitted application before database; preserve pending reservation and private archive evidence on cleanup uncertainty. Operator resolution must establish no delayed request remains.",
+      "observability": "Receipt binds clean source/helper hashes, immutable image/imageID, binary hash, source commit, pause outcome, recovery and application removal. No automatic deployment admission.",
+      "implementation": [
+        "ops/hetzner/isolated-application-canary.py",
+        "ops/hetzner/rehearse-postgres-restore.py",
+        "scripts/rehearse-hetzner-restore.mjs"
+      ],
+      "tests": [
+        "scripts/test-isolated-application-canary.py",
+        "scripts/test-hetzner-restore.py",
+        "scripts/__tests__/hetzner-restore.test.mjs",
+        "scripts/quality-repo.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/ApplicationCanary.tla"
+      ],
+      "status": "specified and implemented",
+      "confidence": "Deterministic controls and bounded model; real Docker execution unverified.",
+      "ambiguity": [
+        "Actual image/startup/Docker compatibility requires an exact isolated run. Aggregate writable bind quota and coordinated off-host recovery are not established."
+      ],
+      "verification": "Two-run bounded TLA+ safety and three named-invariant negative controls; hostile admission/cleanup tests and real synthetic HTTP protocol tests. No Docker/filesystem/HTTP refinement proof.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source and controlled tests exist; exact real isolated image execution and deployed correspondence remain outstanding."
+      },
+      "property": "An app with production connectivity cannot be admitted; application lifetime remains inside its database/reservation lifetime; completion requires verified observations.",
+      "evidence": "Exact revision command receipts and separate actual isolated-run output; simulated contracts are not Docker integration evidence."
     }
   ]
 }

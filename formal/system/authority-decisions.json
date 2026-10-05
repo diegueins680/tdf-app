@@ -474,6 +474,17 @@
       "conflict": "Health documentation promised a database check while runtime unconditionally returned ok; OpenAPI described an absent version and omitted actual db field.",
       "authority": "Existing readiness intent and user deployment verification requirements",
       "resolution": "Repair the handler to query its application pool, bound cooperative waiting, preserve cancellation and return fixed503 failures. Correct the actual response contract and both generated clients; do not treat healthy as full release admission."
+    },
+    {
+      "id": "AUTHORITY-045",
+      "sources": [
+        "ops/hetzner/compose.production.yaml",
+        "ops/hetzner/rehearse-postgres-restore.py",
+        "formal/system/isolated-canary.md"
+      ],
+      "conflict": "The historical compose canary shares the production database; the database-only rehearsal did not establish application startup or unavailable-database behavior.",
+      "authority": "User isolated verification and current canonical operations safety requirements",
+      "resolution": "Retain the shared-database compose service as historical/unadmitted for release testing; add an explicit optional application on the nonce-owned disconnected restore target. Keep default database-only receipts and full coordinated recovery exclusions explicit."
     }
   ]
 }

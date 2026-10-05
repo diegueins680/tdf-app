@@ -5619,6 +5619,101 @@
       },
       "property": "HTTP200 implies a fresh successful application-pool database round trip; failure details remain fixed and responses uncacheable.",
       "evidence": "Source fingerprints and exact command/revision results; negative variants remove the database check, deadline or cancellation propagation."
+    },
+    {
+      "id": "DEPLOY-CANARY-001",
+      "title": "Candidate application isolation and truthful readiness evidence",
+      "domain": "DEPLOY",
+      "statement": "An optional application canary must run the immutable candidate only in the admitted disposable restored database network namespace, without production credentials or mounts. Completion requires source/version identity, healthy startup, unavailable-database rejection, recovery and confirmed application/database cleanup.",
+      "authority": "User safe deployed verification, failure semantics and isolated recovery requirements",
+      "source": "formal/system/isolated-canary.md; ops/hetzner/README.md",
+      "contract": "formal/system/isolated-canary.md",
+      "critical": true,
+      "actors": [
+        "Authorized audit or release operator",
+        "Nonce-owned candidate application",
+        "Nonce-owned restored database"
+      ],
+      "preconditions": [
+        "Clean source revision and completed canonical candidate migration rehearsal",
+        "Preloaded immutable TDF image digest",
+        "Existing durable restore reservation",
+        "Private new archive directory and host resource capacity"
+      ],
+      "inputs": [
+        "Candidate image digest",
+        "Exact source revision",
+        "Existing admitted disposable restore target"
+      ],
+      "state": {
+        "states": [
+          "restored",
+          "application-requested",
+          "application-running",
+          "observed",
+          "application-removed",
+          "database-removed",
+          "complete",
+          "failed"
+        ],
+        "initial": "restored",
+        "terminal": [
+          "complete",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Admit fixed disconnected database -> request application under retained reservation",
+        "Observe startup/version -> pause only owned database -> reject200 -> unpause -> observe recovery",
+        "Remove admitted application before database -> release matching reservation -> publish receipt"
+      ],
+      "forbiddenTransitions": [
+        "Production database or mounts as application targets",
+        "Provider connectivity or inherited production/image credentials",
+        "Accept malformed HTTP as an unavailable database",
+        "Claim completion after wrong image/revision, failed recovery or uncertain cleanup",
+        "Release reservation while an application create request or container may remain"
+      ],
+      "effects": [
+        "Temporary bounded application and empty private asset/upload directories",
+        "Readiness/version GETs inside pinned matching network namespace",
+        "Temporary pause/unpause of owned restored database only",
+        "Redacted source/image/binary and cleanup receipt"
+      ],
+      "authorization": "Operator invoked rehearsal only; no provider or feature activation; full target admission precedes destructive cleanup and pause.",
+      "privacy": "Cloned database remains host-private. No production credentials or content mounts supplied. Probe accepts fixed metadata paths and bounded allowlisted JSON, never arbitrary API records or raw diagnostics.",
+      "concurrency": "Existing permanent restore lock and durable reservation cover application and database. Delayed Docker completion cannot permit a second run. Privileged concurrent host reconfiguration is outside the sampled inspection boundary.",
+      "idempotency": "Every run is a new nonce; unresolved earlier requests block retry. Cleanup admits exact owned identities, never broad label deletion.",
+      "failure": "Any identity/isolation/protocol/recovery failure prevents completion. Recognized transport timeout or fixed503 under paused disposable database is expected; malformed200 or malformed status lines are failures.",
+      "recovery": "Remove only fully admitted application before database; preserve pending reservation and private archive evidence on cleanup uncertainty. Operator resolution must establish no delayed request remains.",
+      "observability": "Receipt binds clean source/helper hashes, immutable image/imageID, binary hash, source commit, pause outcome, recovery and application removal. No automatic deployment admission.",
+      "implementation": [
+        "ops/hetzner/isolated-application-canary.py",
+        "ops/hetzner/rehearse-postgres-restore.py",
+        "scripts/rehearse-hetzner-restore.mjs"
+      ],
+      "tests": [
+        "scripts/test-isolated-application-canary.py",
+        "scripts/test-hetzner-restore.py",
+        "scripts/__tests__/hetzner-restore.test.mjs",
+        "scripts/quality-repo.sh",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/ApplicationCanary.tla"
+      ],
+      "status": "specified and implemented",
+      "confidence": "Deterministic controls and bounded model; real Docker execution unverified.",
+      "ambiguity": [
+        "Actual image/startup/Docker compatibility requires an exact isolated run. Aggregate writable bind quota and coordinated off-host recovery are not established."
+      ],
+      "verification": "Two-run bounded TLA+ safety and three named-invariant negative controls; hostile admission/cleanup tests and real synthetic HTTP protocol tests. No Docker/filesystem/HTTP refinement proof.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source and controlled tests exist; exact real isolated image execution and deployed correspondence remain outstanding."
+      },
+      "property": "An app with production connectivity cannot be admitted; application lifetime remains inside its database/reservation lifetime; completion requires verified observations.",
+      "evidence": "Exact revision command receipts and separate actual isolated-run output; simulated contracts are not Docker integration evidence."
     }
   ],
   "sourceFingerprints": {
@@ -5628,6 +5723,7 @@
     "docs/catalog-persistence/catalog-list-decisions.json": "b2b9caf40d76eaacec5e1a0dc98cf683683b7416e2523873ad872cc303885d52",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
+    "formal/event-operations/ApplicationCanary.tla": "0aa431a595b11112508c1042b88d5ba787f630798f6762d51cdc924bf7f879d1",
     "formal/event-operations/CatalogReorder.tla": "ab228ae812143f050feac4035e9724fb647a1072cb7816d500894ea1ba335c5d",
     "formal/event-operations/ChatMutationBoundary.cfg": "dc76bf1caa1a43de6891a51256da9efc4264ac45b882fef969bc15895068e0fa",
     "formal/event-operations/ChatMutationBoundary.tla": "21f20bc7d01648705472982b37d9dad6d7cf9711eb83d0f1b2202ed31497d74a",
@@ -5696,7 +5792,8 @@
     "ops/hetzner/backup-postgres.sh": "71682273cf6e2efec4644369af577f3ee6c0ee015c5d45d5998c9a43ea3f23a7",
     "ops/hetzner/compose.production.yaml": "1191a5773dc83807be2364340f8cb9f0feb33af4ed45d6e0bfbefe9f3bc42db8",
     "ops/hetzner/inspect-runtime.py": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
-    "ops/hetzner/rehearse-postgres-restore.py": "4794f49c34ed9042fc58450020ea844dc1dae57852c6a2607c4f8d5d23a0176e",
+    "ops/hetzner/isolated-application-canary.py": "6c3e861e6f177da093f39eb84366872e42c46f248a73bc196e7e29a800d5f36f",
+    "ops/hetzner/rehearse-postgres-restore.py": "66d134bd4510328d824375cfd72c25a89380b7c1360e0b00ca295bef78d6af7a",
     "ops/hetzner/tdf-postgres-backup.service": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
@@ -5719,7 +5816,7 @@
     "scripts/__tests__/hetzner-inspection.test.mjs": "21ec6653c818ca31badb7aa7e6f16b485cf7a03abeadc7bc7cf6288906d7e053",
     "scripts/__tests__/hetzner-migration-rehearsal.test.mjs": "8fd637e986cb2ee892a6d07641c1365ed929e1e52b840cfa2ea8f420ac2f9e05",
     "scripts/__tests__/hetzner-preparation.test.mjs": "b8f8b49cf4fa4e19eb84ebb9436033cc7f52d178cc45ed9d0cec6c902a48575f",
-    "scripts/__tests__/hetzner-restore.test.mjs": "5670603f31f9ff8aaf7536eae0cde39a96d8f4996922838eb120693ca86c05c4",
+    "scripts/__tests__/hetzner-restore.test.mjs": "d13b746d0d264c4e710a16cd81ff2f7532876d4520e9ff1ed85d8daf623b5a25",
     "scripts/__tests__/identity-http-runtime.mjs": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
     "scripts/__tests__/merch-commission-postgres.mjs": "91dd370bf08dfe2ab871c6a617d4e2871717c9f5ff27676e692c6d776c9721c3",
@@ -5762,8 +5859,8 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "3cc845e9e6bf8b5ec13bc22be0010ae79e3dd1fd1fd25005bddef17d317a340d",
-    "scripts/rehearse-hetzner-restore.mjs": "eba3bfe18eafcbd4e5f84e71bd817d8b8ede458658c447a060b7af2c9fe559b7",
+    "scripts/quality-repo.sh": "9bdae3c8c78460ef950c4f2f9913ffea1505eeebaddba8d7b74ddde768991f25",
+    "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
     "scripts/social/dm-read-model-cases.sql": "f4d2afe041a287e218fec18cd60122ae092842cf43ffc2eab00d79ea42957ebb",
@@ -5777,7 +5874,8 @@
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-backup.py": "978e7462dae93c4d71bbc15c6024b074de99ecbccd801013482f9213d7ed7d76",
     "scripts/test-hetzner-inspection.py": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
-    "scripts/test-hetzner-restore.py": "25496b629c15b61896ae762bc107f2c74c271e0fed6609ef05ae07a688f76d81",
+    "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
+    "scripts/test-isolated-application-canary.py": "434a9ca07c7aa04ccfc21177742babbc1e548a8128fab80e9898403911e21f40",
     "scripts/test-marketplace-contact-identity.sh": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
@@ -5795,7 +5893,7 @@
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "b5ba1d728abbc2181ffd260237e5743f38feb7681cb7fcd4e9cc5c969a2395b0",
-    "scripts/verify-event-operations-formal.sh": "911c387b86596d3d039eafcaaaef4bb58a17a3b56b96dc8e2f3d82661ed51737",
+    "scripts/verify-event-operations-formal.sh": "4269c0a915b01b4b4905c88f233ba699bd082fc8f2cb83439c8944a9891f4f40",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -6094,6 +6192,10 @@
       },
       {
         "requirement": "DEPLOY-BACKUP-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-CANARY-001",
         "relationship": "tests"
       }
     ],
@@ -7497,6 +7599,10 @@
       {
         "requirement": "DEPLOY-BACKUP-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-CANARY-001",
+        "relationship": "tests"
       }
     ],
     "scripts/quality-mobile.sh": [
@@ -7539,11 +7645,19 @@
       {
         "requirement": "DEPLOY-RESTORE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-CANARY-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/rehearse-hetzner-restore.mjs": [
       {
         "requirement": "DEPLOY-RESTORE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-CANARY-001",
         "relationship": "implementation"
       }
     ],
@@ -7557,11 +7671,19 @@
       {
         "requirement": "DEPLOY-RESTORE-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-CANARY-001",
+        "relationship": "tests"
       }
     ],
     "scripts/__tests__/hetzner-restore.test.mjs": [
       {
         "requirement": "DEPLOY-RESTORE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-CANARY-001",
         "relationship": "tests"
       }
     ],
@@ -9056,6 +9178,24 @@
         "requirement": "DEPLOY-READINESS-001",
         "relationship": "tests"
       }
+    ],
+    "ops/hetzner/isolated-application-canary.py": [
+      {
+        "requirement": "DEPLOY-CANARY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-isolated-application-canary.py": [
+      {
+        "requirement": "DEPLOY-CANARY-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/event-operations/ApplicationCanary.tla": [
+      {
+        "requirement": "DEPLOY-CANARY-001",
+        "relationship": "formalModels"
+      }
     ]
   },
   "surfaces": [
@@ -9525,6 +9665,18 @@
       ]
     },
     {
+      "id": "SURFACE-cf51ae79e61fc20d",
+      "path": "ops/hetzner/isolated-application-canary.py",
+      "sha256": "6c3e861e6f177da093f39eb84366872e42c46f248a73bc196e7e29a800d5f36f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-CANARY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-b85ac3ceaf40e5fb",
       "path": "ops/hetzner/migrate-owned-urls.sql",
       "sha256": "e32a6610db6a6432b2fb5d404a0b9251cd343165d2c43872effb9a204854bad0",
@@ -9534,11 +9686,15 @@
     {
       "id": "SURFACE-60310758bd18e31e",
       "path": "ops/hetzner/rehearse-postgres-restore.py",
-      "sha256": "4794f49c34ed9042fc58450020ea844dc1dae57852c6a2607c4f8d5d23a0176e",
+      "sha256": "66d134bd4510328d824375cfd72c25a89380b7c1360e0b00ca295bef78d6af7a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "DEPLOY-RESTORE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DEPLOY-CANARY-001",
           "relationship": "implementation"
         }
       ]
@@ -9983,11 +10139,15 @@
     {
       "id": "SURFACE-edbe02ea68dc09c3",
       "path": "scripts/__tests__/hetzner-restore.test.mjs",
-      "sha256": "5670603f31f9ff8aaf7536eae0cde39a96d8f4996922838eb120693ca86c05c4",
+      "sha256": "d13b746d0d264c4e710a16cd81ff2f7532876d4520e9ff1ed85d8daf623b5a25",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "DEPLOY-RESTORE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-CANARY-001",
           "relationship": "tests"
         }
       ]
@@ -11397,7 +11557,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "3cc845e9e6bf8b5ec13bc22be0010ae79e3dd1fd1fd25005bddef17d317a340d",
+      "sha256": "9bdae3c8c78460ef950c4f2f9913ffea1505eeebaddba8d7b74ddde768991f25",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -11414,6 +11574,10 @@
         },
         {
           "requirement": "DEPLOY-BACKUP-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-CANARY-001",
           "relationship": "tests"
         }
       ]
@@ -11442,11 +11606,15 @@
     {
       "id": "SURFACE-d71c43a36310a429",
       "path": "scripts/rehearse-hetzner-restore.mjs",
-      "sha256": "eba3bfe18eafcbd4e5f84e71bd817d8b8ede458658c447a060b7af2c9fe559b7",
+      "sha256": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "DEPLOY-RESTORE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DEPLOY-CANARY-001",
           "relationship": "implementation"
         }
       ]
@@ -12417,11 +12585,15 @@
     {
       "id": "SURFACE-1ecc6d6a29d831c9",
       "path": "scripts/test-hetzner-restore.py",
-      "sha256": "25496b629c15b61896ae762bc107f2c74c271e0fed6609ef05ae07a688f76d81",
+      "sha256": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "DEPLOY-RESTORE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-CANARY-001",
           "relationship": "tests"
         }
       ]
@@ -12439,6 +12611,18 @@
       "sha256": "adb36bdec82345f1e78c77ea9af6563320ec2fd91adc247d216bfeed5039de6a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-b6d8e853f9192b94",
+      "path": "scripts/test-isolated-application-canary.py",
+      "sha256": "434a9ca07c7aa04ccfc21177742babbc1e548a8128fab80e9898403911e21f40",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-CANARY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-6c0e76dafbb5a45f",
@@ -12939,7 +13123,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "911c387b86596d3d039eafcaaaef4bb58a17a3b56b96dc8e2f3d82661ed51737",
+      "sha256": "4269c0a915b01b4b4905c88f233ba699bd082fc8f2cb83439c8944a9891f4f40",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -12984,6 +13168,10 @@
         },
         {
           "requirement": "DEPLOY-BACKUP-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-CANARY-001",
           "relationship": "tests"
         }
       ]
@@ -30262,7 +30450,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "28e840e77825291e392cdb6e4990c5bff49185d3ad08830fef9c54a48883ef0e",
+      "sourceSha256": "06f745ba5946ba9f00c2a0a9d7881e48bd19f9ab8677e1e7e70c9dbb2c5ad4d0",
       "definition": {
         "states": [
           "absent",
@@ -52066,7 +52254,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 74,
+    "PARTIAL": 75,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
