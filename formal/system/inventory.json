@@ -2510,13 +2510,31 @@
     {
       "id": "SURFACE-48f151ff03188032",
       "path": "functions/_shared/event-preview.mjs",
-      "sha256": "c77c239f6030595b1dc86cfa30d00d55e6902e8011239242d780d5c8d16d1b62",
+      "sha256": "c82ec74b443c3767497b2fc8da2d832ffe9e07e583cf79da55fa842137eabf4e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4fa531e706dea33e",
+      "path": "functions/_shared/ticket-page.mjs",
+      "sha256": "3846816592c291f214d24c51b3caef90d8fdc4c65a940aff83e2e4ec933b5515",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8780cd8d489d13bd",
       "path": "functions/eventos/[eventId].js",
       "sha256": "6320247e4ff5983acd86a4a16b5bfc9c1f82a01b84cf15f1048f62ffec20afe1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a9abe3e4a591a109",
+      "path": "functions/eventos/[eventId]/entradas.js",
+      "sha256": "be5191ae682341eaa679c12d900363bf02df50dfe7edcc8aa0fd7ec64877c55c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-29ec9a025d2c7d61",
+      "path": "functions/eventos/[eventId]/orden/[orderId].js",
+      "sha256": "4590c38182a6223fe6b8c62f6b329a0aaca66b377a13b6085e5e32dee4cc0de4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2696,7 +2714,7 @@
     {
       "id": "SURFACE-c1036edc5aa530c7",
       "path": "scripts/__tests__/event-preview.test.mjs",
-      "sha256": "7a1b1a53ec9cec23e438e4fa4e8e4b2f8cc896c69a5b41e48c1ebe5ba199e37b",
+      "sha256": "6be60be6d0ba8e93ff2292425677c75a84fffd730a86bcbe1472645420ac7330",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2973,6 +2991,12 @@
       "id": "SURFACE-d8883a8baef05202",
       "path": "scripts/__tests__/ticket-admission-model.test.mjs",
       "sha256": "b18f70f304b0ed5b37f7709f49d50862ac60b2d71fa9f58ad18e9844a1f7e586",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-001ae3421c67f380",
+      "path": "scripts/__tests__/ticket-page-preview.test.mjs",
+      "sha256": "0d2dc6da9514a43994b98f676ed99d317a8af9efdbf0cac7ca304ae2189cde37",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3680,7 +3704,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "ee40658ae0f57f43fe65d02723ae235e4bfa62fe1376324e13016527efa1f2cf",
+      "sha256": "46c9e60cbb939885bc4368546224219f6742529fedba99d037da5af2865f1a2e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4970,7 +4994,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "c8b89250da35c17eb01fd453fc8ab73585b14e2210123c127ecbdc3dc6ff0c19",
+      "sha256": "cb7030ef6c014862b24db70df7a4080c7d480fca431cf90c032d9cee91910ab2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4982,7 +5006,7 @@
     {
       "id": "SURFACE-6fb3830cc5f24988",
       "path": "tdf-hq-ui/src/__tests__/analytics.test.ts",
-      "sha256": "6573922896e3aa8fbd1f46f8980936285d4ee917be37737d92f3235a0c5cef8d",
+      "sha256": "ae90e662ab416adf3f09a5d5bf2076e387069421e6930f6bcf58f56c63cea0c7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5036,7 +5060,7 @@
     {
       "id": "SURFACE-96eef8ce345a4711",
       "path": "tdf-hq-ui/src/analytics/posthog.ts",
-      "sha256": "94a45c95581b0b368a675597a30af3dad10a3fdd37ffd8d6973a471631700f5b",
+      "sha256": "0d790804125065c6216b311fe5e04a12d8c282312b6036078fbd9fbce2137746",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7286,7 +7310,7 @@
     {
       "id": "SURFACE-3d4d10b4fbba7c54",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
-      "sha256": "2e27beba685fb549e13c6aeaee3fd7b9746df05a3e1e92f9e13a404151c470e5",
+      "sha256": "3144381852a748f77c009fc398c513672cd908192bc390fb2aad499a5cb0a174",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7892,7 +7916,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "307ac18a2c370eea2190de478b9a450c6e15e99dae15850edaaee9381e507ca3",
+      "sha256": "1d09054a99ca7c87218fc60b08d49f7155aa269ff1e3eee91a54d430365699cb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21169,14 +21193,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "224ba01b658bc949872eb2ad1fac0b12ef6aa4435ff4a11d352df08a586e4317",
+      "sha256": "d0bf9d72ef113d86fca04ad299c0e5d24f1af8350ea12c3026f6cf0e4eb3f891",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "ab8eee78c899073dad98f363f8b287d3e851e61d3b8bef1df8891318eeb91ecc",
+      "sha256": "c7400080eb126d2d6848842a5aa9a3d40e17b43d27b4ce077f23590b56cb68f3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21372,7 +21396,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "8b2a7c45f285453be2e71319e1f8791934ffd448018d00d543c2041bf8760cd1",
+      "sha256": "d7c15dec7079ff78ff02efc3290c605c6b035cf14ef151ad4c624d6345b2b825",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

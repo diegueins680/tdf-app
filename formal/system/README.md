@@ -281,3 +281,13 @@ Operations projection compatibility migration. Current combined rehearsal is
 required; the previous173-entry receipt is historical evidence only.
 
 The consolidated confirmation audit also includes shipped main `cae7a54f3c9a712837e71186b0a6bf564c13180d` and its default-disabled notification worker (`NOTIF-TICKET-001`). Its historical SQL remains immutable; an additive migration repairs lease completion after lock waits. `SYS-CI-001` maps inherited pinned Mobile CI selection and conditional synthetic evidence. These source additions require fresh combined validation and production migration rehearsal.
+
+## Metadata and analytics consolidation
+
+Main182fe6a2ae12ac99cdcf651c23bbfa3a09a09d13 (PR487) is retained by normal
+merge. Its analytics serializer and transactional ticket-page response boundaries
+are mapped as PRIV-ANALYTICS-001 and EVT-PRESENTATION-001; their existing domain
+contracts remain at `docs/analytics.md` and `docs/events/ticket-page-metadata.md`.
+This checkpoint does not change the current shipped root Mobile23948ec5 baseline
+or the compatible audite7cb33eb source. Later Mobile-main merges are not silently
+substituted for a shipped root gitlink.

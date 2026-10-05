@@ -5169,6 +5169,169 @@
       "property": "No raw failure disclosure, no swallowed cancellation, at most one callback admission.",
       "verification": "Actual Haskell/WAI tests with synthetic exceptions and source-mutation negative controls.",
       "evidence": "Revision-bound verify-request-failures output and full backend suite; current combined execution pending."
+    },
+    {
+      "id": "PRIV-ANALYTICS-001",
+      "title": "Private navigation and credentials are excluded at analytics serialization",
+      "domain": "PRIV",
+      "statement": "Web analytics must strip the named sensitive properties recursively and redact private path identifiers, fragments, URL credentials and non-attribution query values before SDK transmission, including SDK-generated person-property envelopes. A missing project key must produce a no-op client.",
+      "authority": "AUTHORITY-042; accepted main PR487 privacy consolidation and docs/analytics.md",
+      "source": "docs/analytics.md",
+      "contract": "tdf-hq-ui/src/__tests__/analytics.test.ts",
+      "actors": [
+        "Web visitor",
+        "Authenticated web actor",
+        "PostHog SDK"
+      ],
+      "preconditions": [
+        "Web analytics configured with a public project token, or explicitly unavailable when unconfigured."
+      ],
+      "inputs": [
+        "Explicit event/identify/page properties",
+        "SDK-generated event.properties, $set and $set_once",
+        "Current/referrer URLs",
+        "Project configuration"
+      ],
+      "state": {
+        "client": [
+          "uninitialized",
+          "disabled",
+          "ready"
+        ],
+        "payload": [
+          "raw",
+          "sanitized",
+          "discarded"
+        ]
+      },
+      "allowedTransitions": [
+        "uninitialized + missing key/window -> disabled no-op",
+        "uninitialized + configured browser -> ready with before_send sanitization",
+        "raw named payload -> sanitized SDK event",
+        "SDK failure -> fixed operation-class warning"
+      ],
+      "forbiddenTransitions": [
+        "Transmit a named sensitive field in nested event or person-property envelopes",
+        "Transmit credentials, fragments, private resource identifiers or unapproved query values from recognized URL properties",
+        "Log arbitrary SDK exception payloads",
+        "Treat an unconfigured client as provider receipt evidence"
+      ],
+      "effects": [
+        "Sanitized optional telemetry; core user action remains separate",
+        "Public project token retained only when equal to configured token"
+      ],
+      "authorization": "Telemetry cannot grant access; distinct identity and consent/enablement decisions remain separate application obligations.",
+      "privacy": "Named sensitive fields and recognized URL surfaces are removed/redacted recursively; this is not a classifier for arbitrary personal information inside otherwise allowed free text.",
+      "concurrency": "Singleton configuration is memoized per module instance; no cross-tab ordering or provider exactly-once guarantee.",
+      "idempotency": "Provider acceptance and deduplication are not guaranteed by client capture calls.",
+      "failure": "Explicit capture/identify/reset/page calls catch SDK errors and emit fixed diagnostics. Automatic SDK callback failure and initialization lifecycle require separate validation.",
+      "recovery": "Do not replay customer payloads through logs. Change configuration only through the supported release/consent workflow.",
+      "observability": "Tests inspect synthetic serialized payloads and fixed warnings; production receipt requires separately verified provider evidence.",
+      "implementation": [
+        "tdf-hq-ui/src/analytics/posthog.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/__tests__/analytics.test.ts"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "High for inspected finite sanitizer boundary; complete consent/runtime provider verification remains open.",
+      "ambiguity": [
+        "No complete free-text PII detection or whole-provider retention proof.",
+        "Main PR485 tracks preservation of scheme-like campaign labels; this consolidation retains the currently shipped182fe6a behavior until that correction merges."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Incoming reviewed main implementation has mapped deterministic examples; fresh combined-candidate execution and deployed analytics configuration/consent correspondence remain required."
+      },
+      "property": "Named sensitive payloads do not survive recognized serializer boundaries; public attribution and configured project token remain usable.",
+      "verification": "Actual sanitizer and configured before_send callback tests with nested synthetic secrets and private URLs; not a universal privacy proof.",
+      "evidence": "Exact-candidate UI gate; original main PR487 validation is historical for subsequent merged trees."
+    },
+    {
+      "id": "EVT-PRESENTATION-001",
+      "title": "Transactional ticket pages do not advertise misleading public offers",
+      "domain": "EVT",
+      "statement": "Ticket checkout and receipt pages must use the public event as their canonical discovery URL, decline indexing and shared caching, and suppress referrer leakage. They must not publish an independent Offer inferred only from inventory or face value. Public event previews retain escaped Event metadata and safe fallback imagery.",
+      "authority": "AUTHORITY-042; accepted main PR487 and docs/events/ticket-page-metadata.md",
+      "source": "docs/events/ticket-page-metadata.md",
+      "contract": "docs/events/ticket-page-metadata.md",
+      "actors": [
+        "Visitor",
+        "Ticket buyer",
+        "Search crawler",
+        "Cloudflare Pages runtime"
+      ],
+      "preconditions": [
+        "Request to a mounted event checkout or receipt route, or public event preview."
+      ],
+      "inputs": [
+        "Route event/order IDs",
+        "Application shell response",
+        "Current public event metadata"
+      ],
+      "state": {
+        "route": [
+          "public_event",
+          "transactional_checkout",
+          "transactional_receipt",
+          "invalid_route"
+        ],
+        "render": [
+          "initial_response",
+          "hydrated_document"
+        ]
+      },
+      "allowedTransitions": [
+        "valid transactional request -> original app shell with noindex, private/no-store and no-referrer headers",
+        "invalid event/order identifier -> 404 with the same protective headers",
+        "hydrated transaction page -> canonical public event metadata without independent Offer",
+        "public event -> escaped Event preview with safe missing-image fallback"
+      ],
+      "forbiddenTransitions": [
+        "Infer payment availability from remaining inventory alone",
+        "Publish face value as a verified complete buyer offer",
+        "Expose a private event preview",
+        "Treat noindex or cache directives as backend authorization"
+      ],
+      "effects": [
+        "Metadata and initial HTTP response directives; business checkout state remains backend-authoritative"
+      ],
+      "authorization": "Order retrieval still requires its server-side capability; metadata does not confer access.",
+      "privacy": "Transaction responses carry private/no-store and no-referrer; provider/browser caches and historical crawls require separate observation.",
+      "concurrency": "Each request derives headers from its current route; no database mutation or ordering guarantee.",
+      "idempotency": "Repeated reads have no additional mutation effects.",
+      "failure": "Malformed route identifiers produce 404; underlying app-shell failures retain their status with protective headers.",
+      "recovery": "Revert through a reviewed web release preserving capability authorization and private-response handling.",
+      "observability": "Deterministic edge response/body tests and actual React metadata tests; safe preview smoke validates installed edge headers.",
+      "implementation": [
+        "functions/_shared/ticket-page.mjs",
+        "functions/eventos/[eventId]/entradas.js",
+        "functions/eventos/[eventId]/orden/[orderId].js",
+        "functions/_shared/event-preview.mjs",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx"
+      ],
+      "tests": [
+        "scripts/__tests__/ticket-page-preview.test.mjs",
+        "scripts/__tests__/event-preview.test.mjs",
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "High for stated response/metadata boundary; canonical offer publication and final deployed correspondence remain separate.",
+      "ambiguity": [
+        "Verified complete-price offers on public event pages remain deferred; no rich-result eligibility assertion."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Accepted incoming main change is structurally mapped; fresh combined-source tests and deployed response checks remain necessary."
+      },
+      "property": "Transactional pages do not become misleading independent search offers or shared-cache/referrer sources.",
+      "verification": "Actual edge Response and React component tests; not search-engine or cache-vendor proof.",
+      "evidence": "Exact combined repository/UI gates and source-bound deployed safe smoke."
     }
   ],
   "sourceFingerprints": {
@@ -5236,6 +5399,10 @@
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/compiled-api-surface.json": "e42c7becdc4bfeb4966dc7eeed09952b56a9420f1f1937ec4975cedb0181f012",
+    "functions/_shared/event-preview.mjs": "c82ec74b443c3767497b2fc8da2d832ffe9e07e583cf79da55fa842137eabf4e",
+    "functions/_shared/ticket-page.mjs": "3846816592c291f214d24c51b3caef90d8fdc4c65a940aff83e2e4ec933b5515",
+    "functions/eventos/[eventId]/entradas.js": "be5191ae682341eaa679c12d900363bf02df50dfe7edcc8aa0fd7ec64877c55c",
+    "functions/eventos/[eventId]/orden/[orderId].js": "4590c38182a6223fe6b8c62f6b329a0aaca66b377a13b6085e5e32dee4cc0de4",
     "ops/hetzner/compose.production.yaml": "1191a5773dc83807be2364340f8cb9f0feb33af4ed45d6e0bfbefe9f3bc42db8",
     "ops/hetzner/inspect-runtime.py": "bb868383fb81310589acf5ccb4fc760c7958a530b6324c2f7f3b3bbbe9450292",
     "ops/hetzner/rehearse-postgres-restore.py": "4794f49c34ed9042fc58450020ea844dc1dae57852c6a2607c4f8d5d23a0176e",
@@ -5253,6 +5420,7 @@
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/disposable-postgres-url.test.mjs": "8e577a4e15ef1dcb01333a2def3d342e5b07164b3139e15c72dbe41e235348c1",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
+    "scripts/__tests__/event-preview.test.mjs": "6be60be6d0ba8e93ff2292425677c75a84fffd730a86bcbe1472645420ac7330",
     "scripts/__tests__/formal-result-summary.test.mjs": "a3ecce01af25cb49f4b62fc51459ed9b36543f347b8d80cac6d4b1f1abfeca8c",
     "scripts/__tests__/generated-api-conformance.test.mjs": "34ee30eadd4114f8229af92693a01767fa8a7056233758cf0050b38f99e29f6f",
     "scripts/__tests__/hetzner-inspection.test.mjs": "1c9da69782bfe6776f661bd27429eccdf97d46ffe908ff63de415f792006e2dc",
@@ -5269,6 +5437,7 @@
     "scripts/__tests__/production-release.test.mjs": "5735fff347586aa3a4968a4d3d0c3a36225bf8438993980f50c2ca065dfde797",
     "scripts/__tests__/provider-rollback.test.mjs": "383fd368848ee72bd59be7fa5c2d77855754d0c9e58955613239f57c6c65983a",
     "scripts/__tests__/ticket-admission-model.test.mjs": "b18f70f304b0ed5b37f7709f49d50862ac60b2d71fa9f58ad18e9844a1f7e586",
+    "scripts/__tests__/ticket-page-preview.test.mjs": "0d2dc6da9514a43994b98f676ed99d317a8af9efdbf0cac7ca304ae2189cde37",
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
     "scripts/artist-enrichment.mjs": "4d9f8f5d55a1e2383f44590933f5ea2929bee12107750773892ee770f167099b",
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
@@ -5298,7 +5467,7 @@
     "scripts/production-release.mjs": "1643997b7b3ac422214725f4078b7b4db25f09d1df6ae5cebe8285cd257e0d59",
     "scripts/quality-backend.sh": "c45d2bf141efa9ef71097dc2721d60c3c0f00a8f31e7b44fac940bb8def1b752",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "ee40658ae0f57f43fe65d02723ae235e4bfa62fe1376324e13016527efa1f2cf",
+    "scripts/quality-repo.sh": "46c9e60cbb939885bc4368546224219f6742529fedba99d037da5af2865f1a2e",
     "scripts/rehearse-hetzner-restore.mjs": "eba3bfe18eafcbd4e5f84e71bd817d8b8ede458658c447a060b7af2c9fe559b7",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
@@ -5338,7 +5507,9 @@
     "streaming/mediamtx.yml": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
     "tdf-hq-ui/public/data-deletion.html": "fe759cb4af0642f024ef31d61f55cb890c8d52e1e05c9e00b409d020f3fc1c13",
     "tdf-hq-ui/public/mobile-app/data-deletion.html": "0e149f6fdb4e81761d1fd0f3f217ac1b9c5138d4987d935ed103ccbbd7ca1a0d",
-    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "c8b89250da35c17eb01fd453fc8ab73585b14e2210123c127ecbdc3dc6ff0c19",
+    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "cb7030ef6c014862b24db70df7a4080c7d480fca431cf90c032d9cee91910ab2",
+    "tdf-hq-ui/src/__tests__/analytics.test.ts": "ae90e662ab416adf3f09a5d5bf2076e387069421e6930f6bcf58f56c63cea0c7",
+    "tdf-hq-ui/src/analytics/posthog.ts": "0d790804125065c6216b311fe5e04a12d8c282312b6036078fbd9fbce2137746",
     "tdf-hq-ui/src/api/bookings.ts": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
     "tdf-hq-ui/src/api/client.test.ts": "eaec88fe099c62f7d68c2c350eb1b3493a71e132b7324e25e588b34ec76aed56",
     "tdf-hq-ui/src/api/client.ts": "3cbd9d209c184f0892451f4957721be0a55f65e922df33090c4a8b1e00ccfd13",
@@ -5356,12 +5527,13 @@
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "aad862427b31bb0777586ae09589055043f9346e4eaaa9bf14a521e3d4fed129",
+    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "3144381852a748f77c009fc398c513672cd908192bc390fb2aad499a5cb0a174",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
     "tdf-hq-ui/src/pages/LoginPage.test.tsx": "173a82881bf1ee9764582a56a82ea72c9e6aede174eab68ffbfbc77f8bfb6db7",
     "tdf-hq-ui/src/pages/LoginPage.tsx": "a08e02310726ed8c9a9306b106fdb65419ecb93e27d8b35efa6da847bdabf049",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
-    "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "307ac18a2c370eea2190de478b9a450c6e15e99dae15850edaaee9381e507ca3",
+    "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "1d09054a99ca7c87218fc60b08d49f7155aa269ff1e3eee91a54d430365699cb",
     "tdf-hq-ui/src/session/SessionContext.tsx": "57281da0da41ea04116422cad679e7f7052f55b1e0e3054feeab4438e83c0b5b",
     "tdf-hq-ui/src/session/SessionProviders.test.tsx": "db255bb28b7788b5090883abd8b33769fb1507bf0c353a66f097725024f74de1",
     "tdf-hq-ui/src/session/SessionProviders.tsx": "0a75819f91321403b981874eef2d44482d6a0fd90e3bfbc009daa7b925d8082f",
@@ -7906,6 +8078,10 @@
       {
         "requirement": "EVT-TICKET-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-PRESENTATION-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Routes/EventTickets.hs": [
@@ -7951,6 +8127,10 @@
     "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": [
       {
         "requirement": "EVT-TICKET-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-PRESENTATION-001",
         "relationship": "tests"
       }
     ],
@@ -8289,6 +8469,60 @@
         "requirement": "PRIV-ERROR-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq-ui/src/analytics/posthog.ts": [
+      {
+        "requirement": "PRIV-ANALYTICS-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/__tests__/analytics.test.ts": [
+      {
+        "requirement": "PRIV-ANALYTICS-001",
+        "relationship": "tests"
+      }
+    ],
+    "functions/_shared/ticket-page.mjs": [
+      {
+        "requirement": "EVT-PRESENTATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "functions/eventos/[eventId]/entradas.js": [
+      {
+        "requirement": "EVT-PRESENTATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "functions/eventos/[eventId]/orden/[orderId].js": [
+      {
+        "requirement": "EVT-PRESENTATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "functions/_shared/event-preview.mjs": [
+      {
+        "requirement": "EVT-PRESENTATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": [
+      {
+        "requirement": "EVT-PRESENTATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/ticket-page-preview.test.mjs": [
+      {
+        "requirement": "EVT-PRESENTATION-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/event-preview.test.mjs": [
+      {
+        "requirement": "EVT-PRESENTATION-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -8620,9 +8854,26 @@
     {
       "id": "SURFACE-48f151ff03188032",
       "path": "functions/_shared/event-preview.mjs",
-      "sha256": "c77c239f6030595b1dc86cfa30d00d55e6902e8011239242d780d5c8d16d1b62",
+      "sha256": "c82ec74b443c3767497b2fc8da2d832ffe9e07e583cf79da55fa842137eabf4e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-PRESENTATION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-4fa531e706dea33e",
+      "path": "functions/_shared/ticket-page.mjs",
+      "sha256": "3846816592c291f214d24c51b3caef90d8fdc4c65a940aff83e2e4ec933b5515",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-PRESENTATION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-8780cd8d489d13bd",
@@ -8630,6 +8881,30 @@
       "sha256": "6320247e4ff5983acd86a4a16b5bfc9c1f82a01b84cf15f1048f62ffec20afe1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-a9abe3e4a591a109",
+      "path": "functions/eventos/[eventId]/entradas.js",
+      "sha256": "be5191ae682341eaa679c12d900363bf02df50dfe7edcc8aa0fd7ec64877c55c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-PRESENTATION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-29ec9a025d2c7d61",
+      "path": "functions/eventos/[eventId]/orden/[orderId].js",
+      "sha256": "4590c38182a6223fe6b8c62f6b329a0aaca66b377a13b6085e5e32dee4cc0de4",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-PRESENTATION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-8edebd7f210fcaba",
@@ -8962,9 +9237,14 @@
     {
       "id": "SURFACE-c1036edc5aa530c7",
       "path": "scripts/__tests__/event-preview.test.mjs",
-      "sha256": "7a1b1a53ec9cec23e438e4fa4e8e4b2f8cc896c69a5b41e48c1ebe5ba199e37b",
+      "sha256": "6be60be6d0ba8e93ff2292425677c75a84fffd730a86bcbe1472645420ac7330",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-PRESENTATION-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-39a576584c31ee3c",
@@ -9429,6 +9709,18 @@
         {
           "requirement": "EVT-TICKET-001",
           "relationship": "formalModels"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-001ae3421c67f380",
+      "path": "scripts/__tests__/ticket-page-preview.test.mjs",
+      "sha256": "0d2dc6da9514a43994b98f676ed99d317a8af9efdbf0cac7ca304ae2189cde37",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-PRESENTATION-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -10483,7 +10775,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "ee40658ae0f57f43fe65d02723ae235e4bfa62fe1376324e13016527efa1f2cf",
+      "sha256": "46c9e60cbb939885bc4368546224219f6742529fedba99d037da5af2865f1a2e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -12364,11 +12656,15 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "c8b89250da35c17eb01fd453fc8ab73585b14e2210123c127ecbdc3dc6ff0c19",
+      "sha256": "cb7030ef6c014862b24db70df7a4080c7d480fca431cf90c032d9cee91910ab2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "EVT-TICKET-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-PRESENTATION-001",
           "relationship": "tests"
         }
       ]
@@ -12383,9 +12679,14 @@
     {
       "id": "SURFACE-6fb3830cc5f24988",
       "path": "tdf-hq-ui/src/__tests__/analytics.test.ts",
-      "sha256": "6573922896e3aa8fbd1f46f8980936285d4ee917be37737d92f3235a0c5cef8d",
+      "sha256": "ae90e662ab416adf3f09a5d5bf2076e387069421e6930f6bcf58f56c63cea0c7",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-ANALYTICS-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-27c2e340baf13c46",
@@ -12446,9 +12747,14 @@
     {
       "id": "SURFACE-96eef8ce345a4711",
       "path": "tdf-hq-ui/src/analytics/posthog.ts",
-      "sha256": "94a45c95581b0b368a675597a30af3dad10a3fdd37ffd8d6973a471631700f5b",
+      "sha256": "0d790804125065c6216b311fe5e04a12d8c282312b6036078fbd9fbce2137746",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-ANALYTICS-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-fa95e5c41415dc39",
@@ -15156,9 +15462,14 @@
     {
       "id": "SURFACE-3d4d10b4fbba7c54",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
-      "sha256": "2e27beba685fb549e13c6aeaee3fd7b9746df05a3e1e92f9e13a404151c470e5",
+      "sha256": "3144381852a748f77c009fc398c513672cd908192bc390fb2aad499a5cb0a174",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-PRESENTATION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-5fd31c626962ad2f",
@@ -15896,11 +16207,15 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "307ac18a2c370eea2190de478b9a450c6e15e99dae15850edaaee9381e507ca3",
+      "sha256": "1d09054a99ca7c87218fc60b08d49f7155aa269ff1e3eee91a54d430365699cb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "EVT-TICKET-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-PRESENTATION-001",
           "relationship": "implementation"
         }
       ]
@@ -26024,7 +26339,6 @@
     "SURFACE-660f7078dc0b381a",
     "SURFACE-0d1b6286746163ff",
     "SURFACE-cca59b046cc76ace",
-    "SURFACE-48f151ff03188032",
     "SURFACE-8780cd8d489d13bd",
     "SURFACE-8edebd7f210fcaba",
     "SURFACE-f4743034f585d310",
@@ -26038,7 +26352,6 @@
     "SURFACE-9344bbc594468ec5",
     "SURFACE-d42db507e3322402",
     "SURFACE-fb39164e1682672b",
-    "SURFACE-c1036edc5aa530c7",
     "SURFACE-39a576584c31ee3c",
     "SURFACE-2207a12e65c74d0d",
     "SURFACE-97975ba39673dd5b",
@@ -26333,7 +26646,6 @@
     "SURFACE-5869f030ade79029",
     "SURFACE-822b40e105c55487",
     "SURFACE-df437d6ae3884110",
-    "SURFACE-6fb3830cc5f24988",
     "SURFACE-27c2e340baf13c46",
     "SURFACE-c5154d27c146520e",
     "SURFACE-c2453e0acd284799",
@@ -26342,7 +26654,6 @@
     "SURFACE-ddd5bddf37a22b13",
     "SURFACE-0e7ed1b161cff4ca",
     "SURFACE-9c096a82d3f7a503",
-    "SURFACE-96eef8ce345a4711",
     "SURFACE-fa95e5c41415dc39",
     "SURFACE-4167f2e43255ad85",
     "SURFACE-5f61a01aa269f351",
@@ -26700,7 +27011,6 @@
     "SURFACE-ac24f384b7949bc7",
     "SURFACE-b1d115adebe79a56",
     "SURFACE-814a4782598cab3d",
-    "SURFACE-3d4d10b4fbba7c54",
     "SURFACE-5fd31c626962ad2f",
     "SURFACE-932153a167d40c81",
     "SURFACE-857a51643aefc9ce",
@@ -27970,7 +28280,9 @@
     "AUTH-OPS-READ-001",
     "OPS-AUX-WRITE-001",
     "SYS-CI-001",
-    "PRIV-ERROR-001"
+    "PRIV-ERROR-001",
+    "PRIV-ANALYTICS-001",
+    "EVT-PRESENTATION-001"
   ],
   "stateMachines": [
     {
@@ -50743,7 +51055,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 69,
+    "PARTIAL": 71,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

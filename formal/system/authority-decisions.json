@@ -440,6 +440,18 @@
       "conflict": "The request fallback renders arbitrary exceptions, catches cancellation and can call the response callback twice; authentication activity also renders arbitrary persistence errors into admin diagnostics. Warp fallback invents wildcard CORS outside configured policy.",
       "authority": "formal/system/request-failure-boundary.md",
       "resolution": "Use a cancellation-preserving fixed-diagnostic boundary, track response start, propagate after callback admission, and leave error-origin grants to request-aware CORS. Radio raw exception strings are discarded today, not a proven public disclosure, but cancellation and fixed internal failure values follow the same boundary."
+    },
+    {
+      "id": "AUTHORITY-042",
+      "sources": [
+        "docs/analytics.md",
+        "docs/events/ticket-page-metadata.md",
+        "tdf-hq-ui/src/analytics/posthog.ts",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx"
+      ],
+      "conflict": "Consolidated main182fe6a introduces reviewed analytics credential containment and retires transactional Offer metadata, while the audit register predates those changes.",
+      "authority": "Approved main PR487 and explicit privacy/truthful-state audit requirements",
+      "resolution": "Preserve main by normal merge and map PRIV-ANALYTICS-001/EVT-PRESENTATION-001 to current source/tests. Historical analytics and metadata observations are not combined-head or provider conformance evidence."
     }
   ]
 }

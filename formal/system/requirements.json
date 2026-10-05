@@ -5168,6 +5168,169 @@
       "property": "No raw failure disclosure, no swallowed cancellation, at most one callback admission.",
       "verification": "Actual Haskell/WAI tests with synthetic exceptions and source-mutation negative controls.",
       "evidence": "Revision-bound verify-request-failures output and full backend suite; current combined execution pending."
+    },
+    {
+      "id": "PRIV-ANALYTICS-001",
+      "title": "Private navigation and credentials are excluded at analytics serialization",
+      "domain": "PRIV",
+      "statement": "Web analytics must strip the named sensitive properties recursively and redact private path identifiers, fragments, URL credentials and non-attribution query values before SDK transmission, including SDK-generated person-property envelopes. A missing project key must produce a no-op client.",
+      "authority": "AUTHORITY-042; accepted main PR487 privacy consolidation and docs/analytics.md",
+      "source": "docs/analytics.md",
+      "contract": "tdf-hq-ui/src/__tests__/analytics.test.ts",
+      "actors": [
+        "Web visitor",
+        "Authenticated web actor",
+        "PostHog SDK"
+      ],
+      "preconditions": [
+        "Web analytics configured with a public project token, or explicitly unavailable when unconfigured."
+      ],
+      "inputs": [
+        "Explicit event/identify/page properties",
+        "SDK-generated event.properties, $set and $set_once",
+        "Current/referrer URLs",
+        "Project configuration"
+      ],
+      "state": {
+        "client": [
+          "uninitialized",
+          "disabled",
+          "ready"
+        ],
+        "payload": [
+          "raw",
+          "sanitized",
+          "discarded"
+        ]
+      },
+      "allowedTransitions": [
+        "uninitialized + missing key/window -> disabled no-op",
+        "uninitialized + configured browser -> ready with before_send sanitization",
+        "raw named payload -> sanitized SDK event",
+        "SDK failure -> fixed operation-class warning"
+      ],
+      "forbiddenTransitions": [
+        "Transmit a named sensitive field in nested event or person-property envelopes",
+        "Transmit credentials, fragments, private resource identifiers or unapproved query values from recognized URL properties",
+        "Log arbitrary SDK exception payloads",
+        "Treat an unconfigured client as provider receipt evidence"
+      ],
+      "effects": [
+        "Sanitized optional telemetry; core user action remains separate",
+        "Public project token retained only when equal to configured token"
+      ],
+      "authorization": "Telemetry cannot grant access; distinct identity and consent/enablement decisions remain separate application obligations.",
+      "privacy": "Named sensitive fields and recognized URL surfaces are removed/redacted recursively; this is not a classifier for arbitrary personal information inside otherwise allowed free text.",
+      "concurrency": "Singleton configuration is memoized per module instance; no cross-tab ordering or provider exactly-once guarantee.",
+      "idempotency": "Provider acceptance and deduplication are not guaranteed by client capture calls.",
+      "failure": "Explicit capture/identify/reset/page calls catch SDK errors and emit fixed diagnostics. Automatic SDK callback failure and initialization lifecycle require separate validation.",
+      "recovery": "Do not replay customer payloads through logs. Change configuration only through the supported release/consent workflow.",
+      "observability": "Tests inspect synthetic serialized payloads and fixed warnings; production receipt requires separately verified provider evidence.",
+      "implementation": [
+        "tdf-hq-ui/src/analytics/posthog.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/__tests__/analytics.test.ts"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "High for inspected finite sanitizer boundary; complete consent/runtime provider verification remains open.",
+      "ambiguity": [
+        "No complete free-text PII detection or whole-provider retention proof.",
+        "Main PR485 tracks preservation of scheme-like campaign labels; this consolidation retains the currently shipped182fe6a behavior until that correction merges."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Incoming reviewed main implementation has mapped deterministic examples; fresh combined-candidate execution and deployed analytics configuration/consent correspondence remain required."
+      },
+      "property": "Named sensitive payloads do not survive recognized serializer boundaries; public attribution and configured project token remain usable.",
+      "verification": "Actual sanitizer and configured before_send callback tests with nested synthetic secrets and private URLs; not a universal privacy proof.",
+      "evidence": "Exact-candidate UI gate; original main PR487 validation is historical for subsequent merged trees."
+    },
+    {
+      "id": "EVT-PRESENTATION-001",
+      "title": "Transactional ticket pages do not advertise misleading public offers",
+      "domain": "EVT",
+      "statement": "Ticket checkout and receipt pages must use the public event as their canonical discovery URL, decline indexing and shared caching, and suppress referrer leakage. They must not publish an independent Offer inferred only from inventory or face value. Public event previews retain escaped Event metadata and safe fallback imagery.",
+      "authority": "AUTHORITY-042; accepted main PR487 and docs/events/ticket-page-metadata.md",
+      "source": "docs/events/ticket-page-metadata.md",
+      "contract": "docs/events/ticket-page-metadata.md",
+      "actors": [
+        "Visitor",
+        "Ticket buyer",
+        "Search crawler",
+        "Cloudflare Pages runtime"
+      ],
+      "preconditions": [
+        "Request to a mounted event checkout or receipt route, or public event preview."
+      ],
+      "inputs": [
+        "Route event/order IDs",
+        "Application shell response",
+        "Current public event metadata"
+      ],
+      "state": {
+        "route": [
+          "public_event",
+          "transactional_checkout",
+          "transactional_receipt",
+          "invalid_route"
+        ],
+        "render": [
+          "initial_response",
+          "hydrated_document"
+        ]
+      },
+      "allowedTransitions": [
+        "valid transactional request -> original app shell with noindex, private/no-store and no-referrer headers",
+        "invalid event/order identifier -> 404 with the same protective headers",
+        "hydrated transaction page -> canonical public event metadata without independent Offer",
+        "public event -> escaped Event preview with safe missing-image fallback"
+      ],
+      "forbiddenTransitions": [
+        "Infer payment availability from remaining inventory alone",
+        "Publish face value as a verified complete buyer offer",
+        "Expose a private event preview",
+        "Treat noindex or cache directives as backend authorization"
+      ],
+      "effects": [
+        "Metadata and initial HTTP response directives; business checkout state remains backend-authoritative"
+      ],
+      "authorization": "Order retrieval still requires its server-side capability; metadata does not confer access.",
+      "privacy": "Transaction responses carry private/no-store and no-referrer; provider/browser caches and historical crawls require separate observation.",
+      "concurrency": "Each request derives headers from its current route; no database mutation or ordering guarantee.",
+      "idempotency": "Repeated reads have no additional mutation effects.",
+      "failure": "Malformed route identifiers produce 404; underlying app-shell failures retain their status with protective headers.",
+      "recovery": "Revert through a reviewed web release preserving capability authorization and private-response handling.",
+      "observability": "Deterministic edge response/body tests and actual React metadata tests; safe preview smoke validates installed edge headers.",
+      "implementation": [
+        "functions/_shared/ticket-page.mjs",
+        "functions/eventos/[eventId]/entradas.js",
+        "functions/eventos/[eventId]/orden/[orderId].js",
+        "functions/_shared/event-preview.mjs",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx"
+      ],
+      "tests": [
+        "scripts/__tests__/ticket-page-preview.test.mjs",
+        "scripts/__tests__/event-preview.test.mjs",
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "High for stated response/metadata boundary; canonical offer publication and final deployed correspondence remain separate.",
+      "ambiguity": [
+        "Verified complete-price offers on public event pages remain deferred; no rich-result eligibility assertion."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Accepted incoming main change is structurally mapped; fresh combined-source tests and deployed response checks remain necessary."
+      },
+      "property": "Transactional pages do not become misleading independent search offers or shared-cache/referrer sources.",
+      "verification": "Actual edge Response and React component tests; not search-engine or cache-vendor proof.",
+      "evidence": "Exact combined repository/UI gates and source-bound deployed safe smoke."
     }
   ]
 }
