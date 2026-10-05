@@ -1530,6 +1530,8 @@
       "tdf-hq/sql/2026-10-05_ticket_confirmation_delivery_rollback.sql",
       "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index.sql",
       "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index_rollback.sql",
+      "tdf-hq/sql/2026-10-05_ticket_inclusive_tax.sql",
+      "tdf-hq/sql/2026-10-05_ticket_inclusive_tax_rollback.sql",
       "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit.sql",
       "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit_rollback.sql",
       "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history.sql",
@@ -1905,6 +1907,7 @@
       "tdf-hq/test/integration/ticket_admission_fixture.sql",
       "tdf-hq/test/integration/ticket_confirmation_delivery.sql",
       "tdf-hq/test/integration/ticket_confirmation_worker_fixture.sql",
+      "tdf-hq/test/integration/ticket_inclusive_tax.sql",
       "tdf-hq/test/integration/ticket_order_quantity_limit.sql",
       "tdf-hq/test/sql/event_ingestion_boundaries.sql",
       "tdf-hq/test/sql/identity_reconciliation.sql",
@@ -3335,7 +3338,14 @@
     },
     {
       "path": "docs/events/patch-culture-vol-1/README.md",
-      "sha256": "aa93466ba47f6b3911d39b8319fc3b2946837714ad16a4b001c984409e4346f5",
+      "sha256": "aec8c60a9077219efa2aec78483374879500259ac13d0b34952e0eba47406376",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/events/patch-culture-vol-1/activation-readiness-2026-10-05.md",
+      "sha256": "77cc067f682918f43f66e121e56934c880deff47b66fc399a9160d33e0202115",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -3343,6 +3353,13 @@
     {
       "path": "docs/events/patch-culture-vol-1/propuesta-condiciones.md",
       "sha256": "1dadff3dab423326520ce51df7da31bc9eaed61f5f07b8094124a7fd3284811d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/events/ticket-inclusive-tax.md",
+      "sha256": "5ef7228783b9522e9c3a42093329dea018ccc736e73ff4fa84373b5806a2ba54",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -6947,7 +6964,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "e5b862a2d4e750a57f00cab3a3365dd1f50fd44cbe0bf64619e69723545b108f",
+      "sha256": "69084d3e7868f742ad4a104494948628727ca2858e77aab7c71c42b240dc05cd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"

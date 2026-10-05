@@ -335,4 +335,15 @@ if apply_file tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime_rollback.sql;
   exit 1
 fi
 
+apply_file tdf-hq/sql/2026-10-05_ticket_inclusive_tax.sql
+inclusive_history_count="$(psql_exec -Atc "SELECT count(*) FROM event_ticket_checkout_policy_history;")"
+apply_file tdf-hq/sql/2026-10-05_ticket_inclusive_tax.sql
+assert_equal "$(psql_exec -Atc "SELECT count(*) FROM event_ticket_checkout_policy_history;")" "$inclusive_history_count" "Inclusive tax history replay"
+assert_equal "$(psql_exec -Atc "SELECT bool_and(NOT tax_included) FROM event_ticket_checkout_runtime;")" "t" "Legacy purchased tax basis is preserved"
+apply_file tdf-hq/test/integration/ticket_inclusive_tax.sql
+if apply_file tdf-hq/sql/2026-10-05_ticket_inclusive_tax_rollback.sql; then
+  echo "Tax rollback removed purchased pricing semantics" >&2
+  exit 1
+fi
+
 echo "Public ticket checkout migration passed rerun, clean rollback, inactive policy preservation, immutable price/fee binding, verified-payment gating, explicit issuance, exact hold expiry, promotion release, and evidence-aware rollback checks."

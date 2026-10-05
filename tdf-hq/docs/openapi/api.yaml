@@ -9424,6 +9424,7 @@ components:
         currency: { type: string, minLength: 3, maxLength: 3 }
         buyerFeeBps: { type: integer, minimum: 0, maximum: 10000 }
         organizerFeeBps: { type: integer, minimum: 0, maximum: 10000 }
+        taxIncluded: { type: boolean, default: false, description: Whether the advertised face value and buyer fee include tax. Omitted by older additive-tax APIs. }
         taxBps: { type: integer, minimum: 0, maximum: 10000 }
         holdMinutes: { type: integer, minimum: 1 }
         maxTicketsPerOrder:
@@ -9483,6 +9484,7 @@ components:
         netFaceValueMinor: { type: integer, format: int64, minimum: 0 }
         buyerPlatformFeeMinor: { type: integer, format: int64, minimum: 0 }
         organizerPlatformFeeMinor: { type: integer, format: int64, minimum: 0 }
+        taxIncluded: { type: boolean, default: false, description: Immutable purchased tax mode. If true taxMinor is included in checkoutTotalMinor rather than added to face value and buyer fee. }
         taxMinor: { type: integer, format: int64, minimum: 0 }
         checkoutTotalMinor: { type: integer, format: int64, minimum: 1 }
         organizerPayableMinor: { type: integer, format: int64, minimum: 0 }

@@ -880,6 +880,11 @@
       "id": "2026-10-05_ticket_confirmation_lease_index",
       "path": "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index.sql",
       "introducedBy": "73fae64015f3058d40f7c237010f7ea975290e7f"
+    },
+    {
+      "id": "2026-10-05_ticket_inclusive_tax",
+      "path": "tdf-hq/sql/2026-10-05_ticket_inclusive_tax.sql",
+      "introducedBy": "ba309ec13b2b9abb0bfb46fd17b2d0e66aa5e0fb"
     }
   ]
 }

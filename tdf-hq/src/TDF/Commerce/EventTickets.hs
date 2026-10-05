@@ -5,6 +5,7 @@ module TDF.Commerce.EventTickets
   , TicketPaymentGate(..)
   , TicketPriceBreakdown(..)
   , calculateTicketPrice
+  , calculateTicketPriceWithTaxMode
   , parseTicketFulfillmentState
   , ticketFulfillmentStateText
   , validateTicketFulfillmentTransition
@@ -54,7 +55,16 @@ calculateTicketPrice
   -> Int
   -> Int
   -> Either Text TicketPriceBreakdown
-calculateTicketPrice unitPrice quantity discount buyerFeeBps organizerFeeBps taxBps
+calculateTicketPrice = calculateTicketPriceWithTaxMode False
+
+-- | An inclusive policy keeps the advertised face value (and any buyer fee)
+-- inclusive of tax. Discounts are in the same advertised units. Round the tax
+-- component once per order; never reduce the per-ticket price to an approximate
+-- tax-exclusive amount. Legacy policies remain additive.
+calculateTicketPriceWithTaxMode
+  :: Bool -> Int64 -> Int -> Int64 -> Int -> Int -> Int
+  -> Either Text TicketPriceBreakdown
+calculateTicketPriceWithTaxMode taxIncluded unitPrice quantity discount buyerFeeBps organizerFeeBps taxBps
   | unitPrice <= 0 = Left "Ticket unit price must be greater than zero"
   | quantity <= 0 || quantity > 100 = Left "Ticket quantity must be between 1 and 100"
   | discount < 0 = Left "Ticket discount must not be negative"
@@ -64,7 +74,7 @@ calculateTicketPrice unitPrice quantity discount buyerFeeBps organizerFeeBps tax
   | toInteger discount > gross = Left "Ticket discount exceeds face value"
   | any (> maxInt64) [buyerFee, organizerFee, tax, checkoutTotal, platformFee] =
       Left "Ticket checkout total is too large"
-  | organizerFee > netFace = Left "Organizer fee exceeds net face value"
+  | organizerFee + includedTax > netFace = Left "Organizer fee and included tax exceed net face value"
   | otherwise = Right TicketPriceBreakdown
       { tpbGrossFaceValueMinor = fromInteger gross
       , tpbDiscountMinor = discount
@@ -73,7 +83,7 @@ calculateTicketPrice unitPrice quantity discount buyerFeeBps organizerFeeBps tax
       , tpbOrganizerFeeMinor = fromInteger organizerFee
       , tpbTaxMinor = fromInteger tax
       , tpbCheckoutTotalMinor = fromInteger checkoutTotal
-      , tpbOrganizerPayableMinor = fromInteger (netFace - organizerFee)
+      , tpbOrganizerPayableMinor = fromInteger (netFace - organizerFee - includedTax)
       , tpbPlatformFeeMinor = fromInteger platformFee
       }
   where
@@ -81,8 +91,12 @@ calculateTicketPrice unitPrice quantity discount buyerFeeBps organizerFeeBps tax
     netFace = gross - toInteger discount
     buyerFee = roundBasisPoints netFace buyerFeeBps
     organizerFee = roundBasisPoints netFace organizerFeeBps
-    tax = roundBasisPoints (netFace + buyerFee) taxBps
-    checkoutTotal = netFace + buyerFee + tax
+    tax = if taxIncluded
+      then ((netFace + buyerFee) * toInteger taxBps + divisor `div` 2) `div` divisor
+      else roundBasisPoints (netFace + buyerFee) taxBps
+    divisor = 10000 + toInteger taxBps
+    includedTax = if taxIncluded then tax else 0
+    checkoutTotal = netFace + buyerFee + tax - includedTax
     platformFee = buyerFee + organizerFee
     maxInt64 = toInteger (maxBound :: Int64)
     invalidBasisPoints value = value < 0 || value > 10000

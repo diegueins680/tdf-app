@@ -65,9 +65,10 @@ es **un escenario de prueba**, no una determinación fiscal del evento.
 | 4 | 92,00 | 79,99 | 80,00 |
 
 Cambiar el tier a USD17,39 no resuelve el precio final para todas las cantidades
-y además altera el precio mostrado en selección. Antes de una política gravada
-se necesita soporte coherente de precio con impuesto incluido, conservado en
-el snapshot de orden y compatible con descuentos, reembolsos, ledger y UI.
+y además altera el precio mostrado en selección. La continuación implementa un modo explícito `tax_included` de política y
+snapshot de orden, con total autoritativo y etiqueta web de impuesto incluido.
+La aprobación fiscal, las pruebas de integración completas y el despliegue
+siguen siendo requisitos separados.
 No se aplicó ninguno de esos dos atajos en producción.
 
 ## Trabajo necesario para activar
