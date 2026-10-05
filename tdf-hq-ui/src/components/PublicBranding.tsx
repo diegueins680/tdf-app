@@ -1,3 +1,5 @@
+import SignupMobileInvitation from '../mobile/SignupMobileInvitation';
+import MobilePromo from '../mobile/MobilePromo';
 import { useTranslation } from 'react-i18next';
 import { Box, Button, Container, IconButton, Menu, MenuItem, Stack, Tooltip, Typography } from '@mui/material';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
@@ -19,6 +21,7 @@ import {
 const PUBLIC_NAV_ITEMS = [
   { label: 'authEntry.search', to: '/buscar' },
   { label: 'TDF', to: '/tdf' },
+  { label: 'app.title', to: '/app' },
   { label: 'authEntry.services', to: '/comercio' },
   { label: 'authEntry.community', to: '/fans' },
   { label: 'authEntry.shop', to: '/marketplace' },
@@ -52,6 +55,8 @@ export default function PublicBranding({
     return hasInstagramTrafficSignal({ search: location.search, referrer }) || readStoredInstagramTraffic();
   });
   const open = Boolean(menuAnchor);
+  const profileRoute = /^\/(artista|a|perfil)\//.test(location.pathname);
+  const signupInvitation = Boolean(session && (location.state as { mobileInvitation?: boolean } | null)?.mobileInvitation);
   const contextualLoginPath = useMemo(
     () => buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`),
     [location.hash, location.pathname, location.search],
@@ -253,8 +258,12 @@ export default function PublicBranding({
         maxWidth="xl"
         sx={{ py: { xs: showHeader ? 2 : 3, md: showHeader ? 4 : 5 }, minWidth: 0, outline: 'none' }}
       >
+        <SignupMobileInvitation />
         {showInstagramEntryLinks && <InstagramEntryLinks />}
         {children}
+        {!signupInvitation && ['/', '/inicio', '/tdf', '/fans', '/comunidad'].includes(location.pathname) && <MobilePromo surface={location.pathname === '/tdf' ? 'tdf_landing' : (location.pathname === '/fans' || location.pathname === '/comunidad') ? 'community' : session ? 'authenticated_home' : 'homepage'} />}
+        {!signupInvitation && profileRoute && <MobilePromo surface="profile" />}
+        {!signupInvitation && !profileRoute && !['/', '/inicio', '/tdf', '/fans', '/comunidad', '/app', '/login', '/reset', '/feedback'].includes(location.pathname) && !location.pathname.includes('/orden/') && !location.pathname.startsWith('/reservar') && <MobilePromo surface="mobile_banner" banner />}
       </Container>
       <Box
         component="footer"
@@ -266,6 +275,7 @@ export default function PublicBranding({
         }}
       >
         <Container maxWidth="xl">
+          {location.pathname !== "/app" && <MobilePromo surface="footer" compact />}
           <Stack
             direction={{ xs: 'column', xl: 'row' }}
             spacing={3}

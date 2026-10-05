@@ -518,7 +518,7 @@ export default function LoginPage() {
         });
         setSignupDialogOpen(false);
         setSignupFeedback(null);
-        navigate(googleTargetPath, { replace: true });
+        navigate(googleTargetPath, { replace: true, ...(googleCreatedAccount ? { state: { mobileInvitation: true } } : {}) });
       } catch (err) {
         if (!signupDialogOpen && isGoogleSignupConsentRequiredError(err)) {
           setGoogleLinkToken(credential);
@@ -773,7 +773,7 @@ export default function LoginPage() {
         intent: signupIntent ?? 'general',
         destination: targetPath.split('?')[0],
       });
-      navigate(targetPath, { replace: true });
+      navigate(targetPath, { replace: true, state: { mobileInvitation: true } });
     } catch (err) {
       captureGrowthEvent(analytics, 'signup_failed', { route: '/login', method: 'password', intent: signupIntent ?? 'general' });
       setSignupFeedback({

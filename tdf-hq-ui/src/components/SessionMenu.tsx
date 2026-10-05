@@ -56,6 +56,7 @@ export default function SessionMenu() {
           </Stack>
         </MenuItem>
         <Divider sx={{ my: 0.5 }} />
+        <MenuItem onClick={() => { handleClose(); navigate('/app?surface=settings'); }}>{t('app.menu')}</MenuItem>
         <MenuItem onClick={handleLogout}>
           <Stack direction="row" spacing={1} alignItems="center">
             <LogoutIcon fontSize="small" />
