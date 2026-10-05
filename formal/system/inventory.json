@@ -6819,7 +6819,7 @@
     },
     {
       "path": "formal/system/identity-recovery.md",
-      "sha256": "d15f78faad09acc1900660112ffca7af42659104109e8e5fea84eafc7f1b8156",
+      "sha256": "08ddf5bbeb66849b8383db3df14429d0ea43d8e3d193b25c6d81f0991cddfeea",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
