@@ -97,6 +97,18 @@ an isolate: inspect the `net.tdf.restore-rehearsal` label, nonce name, immutable
 and isolation before removing that specific container. Never prune unrelated
 containers or remove the permanent lock inode. A failure is never a passing receipt.
 
+To rehearse this exact candidate's migrations on the restored isolate, add
+`--with-candidate-migrations`. The launcher loads the manifest and recursively
+included SQL from immutable Git blobs with introduction-ancestry validation. It
+uses the existing canonical migration-batch generator, including its schema
+verifier, and binds the manifest and SQL hashes to the receipt. The helper first
+rejects unknown or changed applied history, applies the batch twice on the admitted
+isolate, and requires complete ledger correspondence, preserved historical entries
+and stable second-application results. Any provider/revenue/social control changes
+are reported explicitly; their presence is not authorization to activate them in
+production. No application or worker is started against the restored data. SQL and
+migration diagnostics stay inside the root-private archive directory.
+
 **This does not establish release readiness.** The online database snapshot is not
 coordinated with assets or cluster-global role/schema changes; the rehearsal lock
 only excludes other rehearsals. No provider action, application canary, production

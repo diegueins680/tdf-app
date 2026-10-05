@@ -2514,7 +2514,8 @@
       "inputs": [
         "Exact production container/image identities",
         "Exported PostgreSQL snapshot and matching table counts",
-        "Password-free roles and bounded custom database archive"
+        "Password-free roles and bounded custom database archive",
+        "Optional immutable candidate manifest and expanded canonical migration SQL with source/introduction ancestry and hashes"
       ],
       "state": {
         "initial": "unverified",
@@ -2526,12 +2527,14 @@
       },
       "allowedTransitions": [
         "unverified -> locked -> snapshot captured -> isolate admitted -> roles restored -> database restored -> counts/ledger verified -> isolate removed -> receipt",
-        "Any failure -> bounded identity-checked cleanup -> failure evidence"
+        "Any failure -> bounded identity-checked cleanup -> failure evidence",
+        "After restore verification, optional candidate migration rehearsal -> canonical batch and schema verification twice -> historical and complete ledger verification -> cleanup; report control changes without enabling production."
       ],
       "forbiddenTransitions": [
         "Write to or restore over source database",
         "Restore through host networking, production mounts, unknown image or changed ownership",
-        "Emit passing receipt before cleanup or after source drift"
+        "Emit passing receipt before cleanup or after source drift",
+        "Do not accept missing/changed/unknown applied history, incomplete candidate ledger, rewritten history or unstable second-application controls."
       ],
       "effects": [
         "Create private host archives and a temporary resource-bounded isolate; remove only that admitted isolate",
@@ -2546,7 +2549,7 @@
       "observability": "Bind exact clean revision and source hashes before/after, timestamps, snapshot relation counts, archive hashes, migration count and confirmed cleanup. Explicitly retain exclusions.",
       "formalModels": [],
       "verification": "Executable target/command contracts, concurrent lock test, hostile environment tests, controlled restore-stage failures and real isolated PostgreSQL restore; no whole-system proof.",
-      "evidence": "Exact-source test logs and host restore receipt; remote execution remains required.",
+      "evidence": "Exact-source local gate logs; real isolated restoration passed on4f64fa50b with652relations/159migrations. Candidate migration rehearsal remains to be executed on its exact source.",
       "status": "specified and implemented",
       "confidence": "High for tested isolation contracts; actual restore and complete coordinated recovery require separate current evidence.",
       "ambiguity": [
@@ -2563,12 +2566,16 @@
       "implementation": [
         "ops/hetzner/rehearse-postgres-restore.py",
         "ops/hetzner/inspect-runtime.py",
-        "scripts/rehearse-hetzner-restore.mjs"
+        "scripts/rehearse-hetzner-restore.mjs",
+        "scripts/lib/hetzner-migration-rehearsal.mjs",
+        "scripts/lib/migration-contract.mjs",
+        "scripts/lib/production-release.mjs"
       ],
       "tests": [
         "scripts/test-hetzner-restore.py",
         "scripts/__tests__/hetzner-restore.test.mjs",
-        "scripts/test-hetzner-inspection.py"
+        "scripts/test-hetzner-inspection.py",
+        "scripts/__tests__/hetzner-migration-rehearsal.test.mjs"
       ],
       "critical": true
     }

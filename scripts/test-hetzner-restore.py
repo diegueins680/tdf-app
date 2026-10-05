@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import copy
+import hashlib
 from contextlib import ExitStack
 import json
 import os
@@ -211,6 +213,57 @@ class RestoreOrchestrationTests(unittest.TestCase):
     def test_success_and_injected_failures_never_skip_cleanup_or_emit_false_pass(self):
         for failure in [None, 'dump', 'roles', 'restore', 'counts', 'ledger', 'cleanup', 'interrupt']:
             with self.subTest(failure=failure): self.exercise(failure)
+
+
+class CandidateMigrationTests(unittest.TestCase):
+    def candidate(self):
+        sql = 'SELECT 1;'
+        return {'schemaVersion': 1, 'sourceRevision': 'f'*40, 'manifestSha256': 'a'*64,
+                'sql': sql, 'sqlSha256': hashlib.sha256(sql.encode()).hexdigest(),
+                'migrations': [{'id': 'old', 'checksum': 'b'*64, 'compatibleAppliedChecksums': []},
+                               {'id': 'new', 'checksum': 'c'*64, 'compatibleAppliedChecksums': []}]}
+
+    def ledger(self, complete=False):
+        rows = [{'migration_id': 'old', 'checksum': 'b'*64, 'source_commit': 'd'*40}]
+        if complete: rows.append({'migration_id': 'new', 'checksum': 'c'*64, 'source_commit': 'f'*40})
+        return rows
+
+    def test_candidate_correspondence_rejects_changed_unknown_duplicate_missing_history(self):
+        candidate = self.candidate()
+        self.assertEqual(restore.validate_candidate(candidate, self.ledger()), 1)
+        self.assertEqual(restore.validate_candidate(candidate, self.ledger(True), complete=True), 0)
+        for key, value in [('sql', 'SELECT 2;'), ('sourceRevision', 'main'), ('manifestSha256', 'invalid'),
+                           ('migrations', candidate['migrations']*2)]:
+            broken = copy.deepcopy(candidate); broken[key] = value
+            with self.subTest(key=key), self.assertRaises(ValueError): restore.validate_candidate(broken, self.ledger())
+        for ledger in [self.ledger()*2, [{'migration_id': 'unknown', 'checksum': 'b'*64, 'source_commit': 'd'*40}],
+                       [{'migration_id': 'old', 'checksum': 'c'*64, 'source_commit': 'd'*40}]]:
+            with self.subTest(ledger=ledger), self.assertRaises(ValueError): restore.validate_candidate(candidate, ledger)
+        with self.assertRaises(ValueError): restore.validate_candidate(candidate, self.ledger(), complete=True)
+
+    def test_two_applications_preserve_history_and_report_control_changes(self):
+        for fault in [None, 'execution', 'missing', 'history', 'second-control-change']:
+            with self.subTest(fault=fault), tempfile.TemporaryDirectory() as temporary:
+                before = {'migrations': self.ledger(), 'revenueFlags': [], 'providerAccounts': [], 'socialRuntime': None}
+                after = {**before, 'migrations': self.ledger(True), 'revenueFlags': [{'enabled': True}]}
+                second = copy.deepcopy(after)
+                if fault == 'missing': after['migrations'] = self.ledger()
+                if fault == 'history': after['migrations'][0]['source_commit'] = 'e'*40
+                if fault == 'second-control-change': second['revenueFlags'] = []
+                runtime = MagicMock(); runtime.summarize_database.side_effect = [after, second]
+                target = restore.IsolatedRestore(SOURCE, IMAGE, IMAGE_ID, NONCE); target.admit(container())
+                with patch.object(target, 'inspect'), patch.object(restore, 'execute', return_value='{}'), \
+                     patch.object(restore.subprocess, 'run', return_value=type('Result', (), {'returncode': 1 if fault == 'execution' else 0})()) as run:
+                    if fault:
+                        with self.assertRaises(ValueError): restore.rehearse_candidate(runtime, target, Path(temporary), self.candidate(), before)
+                    else:
+                        result = restore.rehearse_candidate(runtime, target, Path(temporary), self.candidate(), before)
+                        self.assertEqual(result['applications'], 2)
+                        self.assertFalse(result['deploymentAuthorized'])
+                        self.assertEqual(result['controlChanges']['revenueFlags']['after'], [{'enabled': True}])
+                        self.assertEqual(run.call_count, 2)
+                    for call in run.call_args_list:
+                        self.assertIn(TARGET, call.args[0]); self.assertNotIn(SOURCE, call.args[0])
 
 
 original_stat = Path.stat

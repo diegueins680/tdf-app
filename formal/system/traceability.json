@@ -2515,7 +2515,8 @@
       "inputs": [
         "Exact production container/image identities",
         "Exported PostgreSQL snapshot and matching table counts",
-        "Password-free roles and bounded custom database archive"
+        "Password-free roles and bounded custom database archive",
+        "Optional immutable candidate manifest and expanded canonical migration SQL with source/introduction ancestry and hashes"
       ],
       "state": {
         "initial": "unverified",
@@ -2527,12 +2528,14 @@
       },
       "allowedTransitions": [
         "unverified -> locked -> snapshot captured -> isolate admitted -> roles restored -> database restored -> counts/ledger verified -> isolate removed -> receipt",
-        "Any failure -> bounded identity-checked cleanup -> failure evidence"
+        "Any failure -> bounded identity-checked cleanup -> failure evidence",
+        "After restore verification, optional candidate migration rehearsal -> canonical batch and schema verification twice -> historical and complete ledger verification -> cleanup; report control changes without enabling production."
       ],
       "forbiddenTransitions": [
         "Write to or restore over source database",
         "Restore through host networking, production mounts, unknown image or changed ownership",
-        "Emit passing receipt before cleanup or after source drift"
+        "Emit passing receipt before cleanup or after source drift",
+        "Do not accept missing/changed/unknown applied history, incomplete candidate ledger, rewritten history or unstable second-application controls."
       ],
       "effects": [
         "Create private host archives and a temporary resource-bounded isolate; remove only that admitted isolate",
@@ -2547,7 +2550,7 @@
       "observability": "Bind exact clean revision and source hashes before/after, timestamps, snapshot relation counts, archive hashes, migration count and confirmed cleanup. Explicitly retain exclusions.",
       "formalModels": [],
       "verification": "Executable target/command contracts, concurrent lock test, hostile environment tests, controlled restore-stage failures and real isolated PostgreSQL restore; no whole-system proof.",
-      "evidence": "Exact-source test logs and host restore receipt; remote execution remains required.",
+      "evidence": "Exact-source local gate logs; real isolated restoration passed on4f64fa50b with652relations/159migrations. Candidate migration rehearsal remains to be executed on its exact source.",
       "status": "specified and implemented",
       "confidence": "High for tested isolation contracts; actual restore and complete coordinated recovery require separate current evidence.",
       "ambiguity": [
@@ -2564,12 +2567,16 @@
       "implementation": [
         "ops/hetzner/rehearse-postgres-restore.py",
         "ops/hetzner/inspect-runtime.py",
-        "scripts/rehearse-hetzner-restore.mjs"
+        "scripts/rehearse-hetzner-restore.mjs",
+        "scripts/lib/hetzner-migration-rehearsal.mjs",
+        "scripts/lib/migration-contract.mjs",
+        "scripts/lib/production-release.mjs"
       ],
       "tests": [
         "scripts/test-hetzner-restore.py",
         "scripts/__tests__/hetzner-restore.test.mjs",
-        "scripts/test-hetzner-inspection.py"
+        "scripts/test-hetzner-inspection.py",
+        "scripts/__tests__/hetzner-migration-rehearsal.test.mjs"
       ],
       "critical": true
     }
@@ -2607,7 +2614,7 @@
     "formal/social/SessionBoundary.tla": "f52854a744652bc18f0d9f0fb4c3e6453447d26aff88267dff29ac03924e8ee6",
     "ops/hetzner/compose.production.yaml": "961c19190335ac4033d8932598796394b93c13a040ef07c3ac62660c534e45e7",
     "ops/hetzner/inspect-runtime.py": "6c439dbc8b1e17b96399990cb12d49d4d3f64757a161cffdd3224103082cf2e3",
-    "ops/hetzner/rehearse-postgres-restore.py": "f3af7d2dc1f90f624e5a8445353178d4ccda093c3bb4c5362a059507d6d80723",
+    "ops/hetzner/rehearse-postgres-restore.py": "0ee39c5cf23c5893109b5e5e8613caeba817390690c58c7ee6b70d497e5c492a",
     "package-lock.json": "b2663069d0f1901b4d5b76dde885fa0ff107089cf661819ed3500be6443bace4",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/checkout-amount-postgres.mjs": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
@@ -2619,8 +2626,9 @@
     "scripts/__tests__/formal-result-summary.test.mjs": "a3ecce01af25cb49f4b62fc51459ed9b36543f347b8d80cac6d4b1f1abfeca8c",
     "scripts/__tests__/generated-api-conformance.test.mjs": "34ee30eadd4114f8229af92693a01767fa8a7056233758cf0050b38f99e29f6f",
     "scripts/__tests__/hetzner-inspection.test.mjs": "1c9da69782bfe6776f661bd27429eccdf97d46ffe908ff63de415f792006e2dc",
+    "scripts/__tests__/hetzner-migration-rehearsal.test.mjs": "8fd637e986cb2ee892a6d07641c1365ed929e1e52b840cfa2ea8f420ac2f9e05",
     "scripts/__tests__/hetzner-preparation.test.mjs": "e1b3d4e0b8eb8dca78b04a513dd9b27be539464179f1875f81a99d1bb758e66f",
-    "scripts/__tests__/hetzner-restore.test.mjs": "cdb1d56a5a4db7cb484284851f6b6ad02d473911a70171c6c135def70ee4566d",
+    "scripts/__tests__/hetzner-restore.test.mjs": "5670603f31f9ff8aaf7536eae0cde39a96d8f4996922838eb120693ca86c05c4",
     "scripts/__tests__/identity-http-runtime.mjs": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
     "scripts/__tests__/merch-commission-postgres.mjs": "91dd370bf08dfe2ab871c6a617d4e2871717c9f5ff27676e692c6d776c9721c3",
@@ -2634,6 +2642,7 @@
     "scripts/ci-change-scope.mjs": "6e1bf4833fec7e1e51e230ccc830dca80470c0c2dcad18a2c329ad9defdf1379",
     "scripts/inspect-hetzner-production.mjs": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
     "scripts/lib/formal-result-summary.mjs": "fa378d768a1c4e8ff6fe67e8d18d61367cd1b272339107e71c497798fb657167",
+    "scripts/lib/hetzner-migration-rehearsal.mjs": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a",
     "scripts/lib/hetzner-preparation.mjs": "c6bbfb4aa25013264a4fbbeb5122f0b709ff48b9105a26b4645e8c022014a0c1",
     "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
     "scripts/lib/production-release.mjs": "0e02e1bcf6f8a451860ad5c1f52ac8461effc88659bce690f9ce222875878f71",
@@ -2642,8 +2651,8 @@
     "scripts/production-migrations.json": "d1b45b55ebb0b86987fcb2c628de2edc1ada2c7abbb046f0f6009325538bdfe3",
     "scripts/production-release.mjs": "1643997b7b3ac422214725f4078b7b4db25f09d1df6ae5cebe8285cd257e0d59",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "5675f2a1877832f6fe70e1471755e3754201c56ca0e8a29243494228a37e5f4b",
-    "scripts/rehearse-hetzner-restore.mjs": "1ebfc2ff309f0dbd3a96baeca93e90d0a4e6b9e137b23551102d32c506f53c08",
+    "scripts/quality-repo.sh": "29380b8bce52cee82c8f3670bda4c126e932bd48a677e2558e68117fe2177aba",
+    "scripts/rehearse-hetzner-restore.mjs": "eba3bfe18eafcbd4e5f84e71bd817d8b8ede458658c447a060b7af2c9fe559b7",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
     "scripts/social/dm-read-model-cases.sql": "f4d2afe041a287e218fec18cd60122ae092842cf43ffc2eab00d79ea42957ebb",
@@ -2655,7 +2664,7 @@
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-inspection.py": "bd6d20cea85b0e1c3c29a342bf78e512345b8f224c4d880563d3634ac18c923c",
-    "scripts/test-hetzner-restore.py": "3651d017c0b7c0b72ea61cca86e32577243c2e3a144d79deb704293226a141cd",
+    "scripts/test-hetzner-restore.py": "efabb3a66192aceb1929c7aeb1722ae99027ebf372919454ea68451217e8c44f",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
     "scripts/test-specification-conformance.py": "edd2d8b6b8d46603144d9fb02af2f43850dbf2791f8266a1dd109a1e9e9e19b9",
@@ -3409,6 +3418,10 @@
       {
         "requirement": "PAY-CHECKOUT-003",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-RESTORE-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/__tests__/checkout-amount-postgres.mjs": [
@@ -3697,6 +3710,10 @@
       {
         "requirement": "DEPLOY-MIGRATION-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-RESTORE-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/lib/hetzner-preparation.mjs": [
@@ -3869,6 +3886,12 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/lib/hetzner-migration-rehearsal.mjs": [
+      {
+        "requirement": "DEPLOY-RESTORE-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-hetzner-restore.py": [
       {
         "requirement": "DEPLOY-RESTORE-001",
@@ -3876,6 +3899,12 @@
       }
     ],
     "scripts/__tests__/hetzner-restore.test.mjs": [
+      {
+        "requirement": "DEPLOY-RESTORE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/hetzner-migration-rehearsal.test.mjs": [
       {
         "requirement": "DEPLOY-RESTORE-001",
         "relationship": "tests"
@@ -4246,7 +4275,7 @@
     {
       "id": "SURFACE-60310758bd18e31e",
       "path": "ops/hetzner/rehearse-postgres-restore.py",
-      "sha256": "f3af7d2dc1f90f624e5a8445353178d4ccda093c3bb4c5362a059507d6d80723",
+      "sha256": "0ee39c5cf23c5893109b5e5e8613caeba817390690c58c7ee6b70d497e5c492a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -4585,6 +4614,18 @@
       ]
     },
     {
+      "id": "SURFACE-6bf41260a8a1cce6",
+      "path": "scripts/__tests__/hetzner-migration-rehearsal.test.mjs",
+      "sha256": "8fd637e986cb2ee892a6d07641c1365ed929e1e52b840cfa2ea8f420ac2f9e05",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-RESTORE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-b1dae8bd0d7ae4ca",
       "path": "scripts/__tests__/hetzner-preparation.test.mjs",
       "sha256": "e1b3d4e0b8eb8dca78b04a513dd9b27be539464179f1875f81a99d1bb758e66f",
@@ -4599,7 +4640,7 @@
     {
       "id": "SURFACE-edbe02ea68dc09c3",
       "path": "scripts/__tests__/hetzner-restore.test.mjs",
-      "sha256": "cdb1d56a5a4db7cb484284851f6b6ad02d473911a70171c6c135def70ee4566d",
+      "sha256": "5670603f31f9ff8aaf7536eae0cde39a96d8f4996922838eb120693ca86c05c4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -5390,6 +5431,18 @@
       ]
     },
     {
+      "id": "SURFACE-48203da98dabd0f8",
+      "path": "scripts/lib/hetzner-migration-rehearsal.mjs",
+      "sha256": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-RESTORE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-5ee17ccf3d926503",
       "path": "scripts/lib/hetzner-preparation.mjs",
       "sha256": "c6bbfb4aa25013264a4fbbeb5122f0b709ff48b9105a26b4645e8c022014a0c1",
@@ -5445,6 +5498,10 @@
         {
           "requirement": "DEPLOY-MIGRATION-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "DEPLOY-RESTORE-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -5474,6 +5531,10 @@
         },
         {
           "requirement": "PAY-CHECKOUT-003",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DEPLOY-RESTORE-001",
           "relationship": "implementation"
         }
       ]
@@ -5683,7 +5744,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "5675f2a1877832f6fe70e1471755e3754201c56ca0e8a29243494228a37e5f4b",
+      "sha256": "29380b8bce52cee82c8f3670bda4c126e932bd48a677e2558e68117fe2177aba",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -5716,7 +5777,7 @@
     {
       "id": "SURFACE-d71c43a36310a429",
       "path": "scripts/rehearse-hetzner-restore.mjs",
-      "sha256": "1ebfc2ff309f0dbd3a96baeca93e90d0a4e6b9e137b23551102d32c506f53c08",
+      "sha256": "eba3bfe18eafcbd4e5f84e71bd817d8b8ede458658c447a060b7af2c9fe559b7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -6579,7 +6640,7 @@
     {
       "id": "SURFACE-1ecc6d6a29d831c9",
       "path": "scripts/test-hetzner-restore.py",
-      "sha256": "3651d017c0b7c0b72ea61cca86e32577243c2e3a144d79deb704293226a141cd",
+      "sha256": "efabb3a66192aceb1929c7aeb1722ae99027ebf372919454ea68451217e8c44f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

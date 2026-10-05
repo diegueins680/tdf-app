@@ -49,3 +49,46 @@ for (const mode of ['pass', 'dirty', 'existing', 'remote-error', 'changed-source
     }
   });
 }
+
+for (const mode of ['pass', 'wrong-sql', 'wrong-manifest', 'incomplete-ledger']) {
+  test(`candidate migration launcher: ${mode}`, t => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'tdf-migration-launcher-'));
+    t.after(() => rmSync(dir, { recursive: true, force: true }));
+    const helpers = ['scripts/lib/migration-contract.mjs', 'scripts/lib/production-release.mjs', 'scripts/lib/hetzner-migration-rehearsal.mjs'];
+    for (const name of ['scripts/lib', 'ops/hetzner', 'tdf-hq/sql', 'bin']) mkdirSync(path.join(dir, name), { recursive: true });
+    for (const file of [...files, ...helpers]) copyFileSync(path.join(root, file), path.join(dir, file));
+    writeFileSync(path.join(dir, '.gitignore'), '/receipt.json\n');
+    writeFileSync(path.join(dir, 'tdf-hq/sql/synthetic.sql'), 'SELECT 1;');
+    // The stand-in decodes only the data bundle, never executes transmitted Python.
+    writeFileSync(path.join(dir, 'bin/ssh'), `#!${process.execPath}\n` + `
+import fs from 'node:fs';
+const program = fs.readFileSync(0, 'utf8');
+const encoded = program.match(/candidate = json.loads\\(base64.b64decode\\('([^']+)'\\)\\)/)[1];
+const candidate = JSON.parse(Buffer.from(encoded, 'base64').toString('utf8'));
+const proof = { sourceRevision: candidate.sourceRevision, sqlSha256: candidate.sqlSha256,
+ manifestSha256: candidate.manifestSha256, applications: 2, migrationCount: candidate.migrations.length };
+if (process.env.MODE === 'wrong-sql') proof.sqlSha256 = '0'.repeat(64);
+if (process.env.MODE === 'wrong-manifest') proof.manifestSha256 = '0'.repeat(64);
+if (process.env.MODE === 'incomplete-ledger') proof.migrationCount = 0;
+console.log(JSON.stringify({ ...${JSON.stringify(passing)}, candidateMigrations: proof }));
+`, { mode: 0o700 });
+    const git = (...args) => execFileSync('git', args, { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+    const commit = message => git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', '-c', 'commit.gpgsign=false', 'commit', '-qm', message);
+    git('init', '-q'); git('add', '.'); commit('introduce source');
+    const introducedBy = git('rev-parse', 'HEAD');
+    writeFileSync(path.join(dir, 'scripts/production-migrations.json'), JSON.stringify({ schemaVersion: 1,
+      migrations: [{ id: 'synthetic', path: 'tdf-hq/sql/synthetic.sql', introducedBy }] }));
+    git('add', '.'); commit('register source');
+    const output = path.join(dir, 'receipt.json');
+    const result = spawnSync(process.execPath, [path.join(dir, files[0]), '--identity-file', path.join(dir, 'key'), '--output', output, '--with-candidate-migrations'], {
+      encoding: 'utf8', env: { PATH: `${dir}/bin:${process.env.PATH}`, MODE: mode },
+    });
+    assert.equal(result.status, mode === 'pass' ? 0 : 1, result.stderr);
+    assert.equal(existsSync(output), mode === 'pass');
+    if (mode === 'pass') {
+      const receipt = JSON.parse(readFileSync(output));
+      assert.equal(receipt.snapshot.candidateMigrations.migrationCount, 1);
+      for (const file of helpers) assert.match(receipt.sources[file], /^[a-f0-9]{64}$/);
+    }
+  });
+}

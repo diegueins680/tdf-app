@@ -205,13 +205,78 @@ def rehearsal_lock(directory):
         os.close(descriptor)
 
 
-def rehearse(runtime):
+def validate_candidate(candidate, ledger, *, complete=False):
+    require(candidate['schemaVersion'] == 1)
+    require(re.fullmatch(r'[a-f0-9]{40}', candidate['sourceRevision']))
+    require(re.fullmatch(r'[a-f0-9]{64}', candidate['manifestSha256']))
+    require(hashlib.sha256(candidate['sql'].encode()).hexdigest() == candidate['sqlSha256'])
+    require(0 < len(candidate['sql']) <= 8 * 1024 * 1024)
+    expected = {}
+    for row in candidate['migrations']:
+        require(re.fullmatch(r'[a-zA-Z0-9][a-zA-Z0-9_-]*', row['id']) and row['id'] not in expected)
+        require(re.fullmatch(r'[a-f0-9]{64}', row['checksum']))
+        compatible = row['compatibleAppliedChecksums']
+        require(isinstance(compatible, list) and all(re.fullmatch(r'[a-f0-9]{64}', value) for value in compatible))
+        expected[row['id']] = {row['checksum'], *compatible}
+    require(0 < len(expected) <= 1000)
+    observed = set()
+    for row in ledger:
+        key = row['migration_id']
+        require(key in expected and key not in observed and row['checksum'] in expected[key])
+        require(re.fullmatch(r'[a-f0-9]{40}', row['source_commit']))
+        observed.add(key)
+    if complete:
+        require(observed == set(expected))
+    return len(expected) - len(observed)
+
+
+def rehearse_candidate(runtime, target, directory, candidate, restored):
+    pending = validate_candidate(candidate, restored['migrations'])
+    sql_file = directory / 'candidate-migrations.sql'
+    with sql_file.open('x') as output:
+        os.chmod(sql_file, 0o600)
+        output.write(candidate['sql'])
+    def diagnostic_limit():
+        resource.setrlimit(resource.RLIMIT_FSIZE, (4 * 1024 * 1024, 4 * 1024 * 1024))
+    after = None
+    for attempt in (1, 2):
+        target.inspect()
+        with sql_file.open('rb') as input_file, (directory / ('migration-' + str(attempt) + '.log')).open('xb') as output:
+            os.chmod(output.name, 0o600)
+            result = subprocess.run(target.write_command('psql',
+                         ['-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-d', 'tdf_hq']), stdin=input_file,
+                         stdout=output, stderr=output, timeout=180, preexec_fn=diagnostic_limit)
+        require(result.returncode == 0)
+        after = runtime.summarize_database(json.loads(execute(runtime.database_command(target.target), input=runtime.SQL)))
+        validate_candidate(candidate, after['migrations'], complete=True)
+        # Existing applied history must survive unchanged; new entries bind the
+        # immutable candidate. This rejects ledger rewriting during rehearsal.
+        old = {row['migration_id']: row for row in restored['migrations']}
+        for row in after['migrations']:
+            if row['migration_id'] in old:
+                require(row == old[row['migration_id']])
+            else:
+                require(row['source_commit'] == candidate['sourceRevision'])
+        if attempt == 1:
+            first = after
+        else:
+            require(after == first)
+    controls = ('revenueFlags', 'providerAccounts', 'socialRuntime')
+    return {'sourceRevision': candidate['sourceRevision'], 'manifestSha256': candidate['manifestSha256'],
+            'sqlSha256': candidate['sqlSha256'], 'applications': 2, 'pendingBefore': pending,
+            'migrationCount': len(after['migrations']), 'schemaVerification': 'passed by canonical batch',
+            'controlChanges': {key: {'before': restored[key], 'after': after[key]}
+                               for key in controls if restored[key] != after[key]},
+            'deploymentAuthorized': False}
+
+
+def rehearse(runtime, candidate=None):
     require(os.geteuid() == 0)
     with rehearsal_lock(Path('/opt/tdf/backups')):
-        return rehearse_locked(runtime)
+        return rehearse_locked(runtime, candidate)
 
 
-def rehearse_locked(runtime):
+def rehearse_locked(runtime, candidate=None):
     # runtime is the reviewed read-only collector bundled by the launcher.
     snapshot = runtime.inspect()
     db = snapshot['containers']['db']
@@ -283,6 +348,10 @@ def rehearse_locked(runtime):
         require(restored_counts == source_counts)
         restored = runtime.summarize_database(json.loads(execute(runtime.database_command(target.target), input=runtime.SQL)))
         require(restored['migrations'] == snapshot['database']['migrations'])
+        candidate_result = None
+        if candidate is not None:
+            stage = 'candidate-migrations'
+            candidate_result = rehearse_candidate(runtime, target, directory, candidate, restored)
         after = runtime.inspect()
         require(after['containers']['db'] == snapshot['containers']['db'])
         require(after['database']['migrations'] == snapshot['database']['migrations'])
@@ -292,6 +361,7 @@ def rehearse_locked(runtime):
                    'rolesSha256': digest_file(roles), 'archiveBytes': archive.stat().st_size,
                    'hostArchiveDirectory': str(directory), 'tableCounts': source_counts,
                    'migrationCount': len(restored['migrations']), 'productionDatabaseWritten': False,
+                   'candidateMigrations': candidate_result,
                    'limitations': ['Online database snapshot only; assets and globals are not snapshot-coordinated.',
                        'No deployment, restore over production, payment, worker, or API canary was executed.',
                        'Role credentials excluded; secret recovery and off-host recovery are separate obligations.',

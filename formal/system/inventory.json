@@ -104,6 +104,7 @@
       "scripts/__tests__/formal-result-summary.test.mjs",
       "scripts/__tests__/generated-api-conformance.test.mjs",
       "scripts/__tests__/hetzner-inspection.test.mjs",
+      "scripts/__tests__/hetzner-migration-rehearsal.test.mjs",
       "scripts/__tests__/hetzner-preparation.test.mjs",
       "scripts/__tests__/hetzner-restore.test.mjs",
       "scripts/__tests__/identity-http-runtime.mjs",
@@ -202,6 +203,7 @@
       "scripts/lib/flyctl-cli.mjs",
       "scripts/lib/formal-methods-audit.mjs",
       "scripts/lib/formal-result-summary.mjs",
+      "scripts/lib/hetzner-migration-rehearsal.mjs",
       "scripts/lib/hetzner-preparation.mjs",
       "scripts/lib/identity-inventory.sql",
       "scripts/lib/identity-reconciliation.mjs",
@@ -2429,7 +2431,7 @@
     {
       "id": "SURFACE-60310758bd18e31e",
       "path": "ops/hetzner/rehearse-postgres-restore.py",
-      "sha256": "f3af7d2dc1f90f624e5a8445353178d4ccda093c3bb4c5362a059507d6d80723",
+      "sha256": "0ee39c5cf23c5893109b5e5e8613caeba817390690c58c7ee6b70d497e5c492a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2661,6 +2663,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-6bf41260a8a1cce6",
+      "path": "scripts/__tests__/hetzner-migration-rehearsal.test.mjs",
+      "sha256": "8fd637e986cb2ee892a6d07641c1365ed929e1e52b840cfa2ea8f420ac2f9e05",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-b1dae8bd0d7ae4ca",
       "path": "scripts/__tests__/hetzner-preparation.test.mjs",
       "sha256": "e1b3d4e0b8eb8dca78b04a513dd9b27be539464179f1875f81a99d1bb758e66f",
@@ -2669,7 +2677,7 @@
     {
       "id": "SURFACE-edbe02ea68dc09c3",
       "path": "scripts/__tests__/hetzner-restore.test.mjs",
-      "sha256": "cdb1d56a5a4db7cb484284851f6b6ad02d473911a70171c6c135def70ee4566d",
+      "sha256": "5670603f31f9ff8aaf7536eae0cde39a96d8f4996922838eb120693ca86c05c4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3249,6 +3257,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-48203da98dabd0f8",
+      "path": "scripts/lib/hetzner-migration-rehearsal.mjs",
+      "sha256": "9856a792d57295d7e82f44072d09f26c645cffd22a347d2a94751f9f88e1f33a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-5ee17ccf3d926503",
       "path": "scripts/lib/hetzner-preparation.mjs",
       "sha256": "c6bbfb4aa25013264a4fbbeb5122f0b709ff48b9105a26b4645e8c022014a0c1",
@@ -3449,7 +3463,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "5675f2a1877832f6fe70e1471755e3754201c56ca0e8a29243494228a37e5f4b",
+      "sha256": "29380b8bce52cee82c8f3670bda4c126e932bd48a677e2558e68117fe2177aba",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3473,7 +3487,7 @@
     {
       "id": "SURFACE-d71c43a36310a429",
       "path": "scripts/rehearse-hetzner-restore.mjs",
-      "sha256": "1ebfc2ff309f0dbd3a96baeca93e90d0a4e6b9e137b23551102d32c506f53c08",
+      "sha256": "eba3bfe18eafcbd4e5f84e71bd817d8b8ede458658c447a060b7af2c9fe559b7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4151,7 +4165,7 @@
     {
       "id": "SURFACE-1ecc6d6a29d831c9",
       "path": "scripts/test-hetzner-restore.py",
-      "sha256": "3651d017c0b7c0b72ea61cca86e32577243c2e3a144d79deb704293226a141cd",
+      "sha256": "efabb3a66192aceb1929c7aeb1722ae99027ebf372919454ea68451217e8c44f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20024,7 +20038,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a9762e88347268d094d9946cc091172a787180e69104180d1701888a1aca63f8",
+      "sha256": "7cbc0df0ff2a332051ecfded351ea576361d5f2c7a7ac1abbcd91188ec380d8d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -20038,7 +20052,7 @@
     },
     {
       "path": "ops/hetzner/README.md",
-      "sha256": "40f0212d3360681af45b8ce0173718def76937bcdd1a52667a34bc070e5dd94e",
+      "sha256": "96b36910a87ca6110edf9cc21fe850749e2a93ab589f016216f82f98a53c8b61",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
