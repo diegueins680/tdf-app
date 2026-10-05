@@ -10,6 +10,7 @@ module TDF.ServerFeedback
   , internalFeedbackServer
   , validateAccountDeletionIdentity
   , validateAccountDeletionOutcome
+  , normalizeAccountDeletionDescription
   , normalizeOptionalFeedbackText
   , validateFeedbackDescription
   , validateFeedbackTitle
@@ -95,6 +96,11 @@ validateAccountDeletionIdentity expected actual
   | actual /= Just expected = Left err403
   | otherwise = Right ()
 
+-- Browser multipart encoders canonicalize text line endings to CRLF.
+-- Store one newline representation so acceptance and queue filtering agree.
+normalizeAccountDeletionDescription :: Text -> Text
+normalizeAccountDeletionDescription = T.replace "\r" "\n" . T.replace "\r\n" "\n"
+
 -- Terminal outcomes are immutable; completed requires an authenticated owner.
 validateAccountDeletionOutcome :: Bool -> Bool -> Text -> Either ServerError ()
 validateAccountDeletionOutcome resolved identified outcome
@@ -121,7 +127,10 @@ feedbackServer authorizationHeader cookieHeader =
     submitFeedback :: Maybe Int64 -> FeedbackPayload -> m (Maybe AccountDeletionReceipt)
     submitFeedback expectedAccount FeedbackPayload{..} = do
       title <- either throwError pure (validateFeedbackTitle fpTitle)
-      body <- either throwError pure (validateFeedbackDescription fpDescription)
+      let description = case expectedAccount of
+            Nothing -> fpDescription
+            Just _ -> normalizeAccountDeletionDescription fpDescription
+      body <- either throwError pure (validateFeedbackDescription description)
       (categoryId, categoryLabel) <- resolvePublishedFeedbackCategory fpCategoryId
       (severityId, severityLabel) <- resolvePublishedFeedbackSeverity fpSeverityId
       either throwError pure (validateFeedbackConsent fpConsent)

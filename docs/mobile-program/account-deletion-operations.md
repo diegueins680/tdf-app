@@ -10,7 +10,8 @@ The form shows the current account, requires an explicit confirmation, reloads
 the live cookie session before submission and refuses a missing/different
 account. It sends the request to `/feedback/account-deletion?accountId=…` using that
 cookie, without a potentially stale bearer-token override. The POST itself
-requires a live matching account before insertion or notification and reuses
+normalizes browser multipart CRLF to a canonical newline before validating the
+request marker, requires a live matching account before insertion or notification, and reuses
 `withCurrentAuthSession` to hold the existing token-row lock through insertion.
 A revocation that wins the lock prevents acceptance. The client
 validates the returned `adrCreatedBy` and `adrRequestId` before acknowledging

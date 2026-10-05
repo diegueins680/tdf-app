@@ -321,6 +321,7 @@ import TDF.ServerFeedback
       internalReportTypeForCategoryCode,
       validateAccountDeletionIdentity,
       validateAccountDeletionOutcome,
+      normalizeAccountDeletionDescription,
       normalizeOptionalFeedbackText,
       sanitizeFeedbackAttachmentFileName,
       validateEnvironment,
@@ -9547,6 +9548,16 @@ main = hspec $ do
                 ( validateWhatsAppOptOutReason
                     (Just (Data.Text.replicate 501 "x"))
                 )
+
+    describe "normalizeAccountDeletionDescription" $ do
+        it "accepts the browser multipart CRLF representation and stores the canonical marker" $
+            normalizeAccountDeletionDescription "account_deletion_request\r\nowner: 42\r\n"
+                `shouldBe` "account_deletion_request\nowner: 42\n"
+        it "is idempotent and removes carriage returns for arbitrary descriptions" $
+            QC.property $ \raw ->
+                let normalized = normalizeAccountDeletionDescription (Data.Text.pack raw)
+                in normalizeAccountDeletionDescription normalized == normalized
+                    && not (Data.Text.any (== '\r') normalized)
 
     describe "validateAccountDeletionOutcome" $ do
         it "accepts exactly a first valid resolution with ownership required for completion" $
