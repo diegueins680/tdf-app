@@ -14,6 +14,7 @@ import json
 import os
 from pathlib import Path
 import socket
+import sys
 import subprocess
 import threading
 import time
@@ -702,6 +703,10 @@ try:
               request('/radio/presence', {'rpuStreamUrl': encoded_url}, method='POST')[0] == 503)
     check('ordinary external presence remains usable',
           request('/radio/presence', {'rpuStreamUrl': public_url}, method='POST')[0] == 200)
+
+    sys.path.insert(0, str(ROOT / 'scripts/lib'))
+    from operations_conformance import verify_operations
+    verify_operations(sql, request, check, ENV, NAME, OUTPUT, actors)
 
     result = {'revision': revision, 'workingTreeDirty': dirty, 'binarySha256': hashlib.sha256(BINARY.read_bytes()).hexdigest(), 'checks': checks, 'status': 'passed'}
 finally:

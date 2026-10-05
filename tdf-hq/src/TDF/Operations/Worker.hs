@@ -6,19 +6,15 @@
 module TDF.Operations.Worker
   ( OperationsWorkerStats(..)
   , operationsMaintenanceTick
+  , operationsWorkerIterationWith
   , startOperationsWorker
   ) where
 
 import Control.Concurrent (forkIO, threadDelay)
-import Control.Exception
-  ( SomeAsyncException
-  , SomeException
-  , displayException
-  , fromException
-  , throwIO
-  , try
-  )
+import Control.Exception.Safe (tryAny)
 import Control.Monad (forever, void)
+import Data.Aeson (encode, object, (.=))
+import qualified Data.ByteString.Lazy.Char8 as BL
 import Data.Int (Int64)
 import Data.Text (Text)
 import Database.Persist.Sql (Single(..), SqlPersistT, rawSql, runSqlPool)
@@ -43,19 +39,23 @@ startOperationsWorker env = void (forkIO (workerLoop env))
 
 workerLoop :: Env -> IO ()
 workerLoop env = forever $ do
-  result <- trySync (operationsMaintenanceTick env)
-  case result of
-    Left err ->
-      hPutStrLn stderr
-        ("{\"component\":\"operations-worker\",\"level\":\"error\",\"error\":\""
-          <> redactLogValue (displayException err) <> "\"}")
-    Right stats
-      | stats /= emptyStats ->
-          putStrLn
-            ("{\"component\":\"operations-worker\",\"level\":\"info\",\"stats\":\""
-              <> redactLogValue (show stats) <> "\"}")
-      | otherwise -> pure ()
+  operationsWorkerIterationWith (operationsMaintenanceTick env) (hPutStrLn stderr) putStrLn
   threadDelay 1000000
+
+operationsWorkerIterationWith :: IO OperationsWorkerStats -> (String -> IO ()) -> (String -> IO ()) -> IO ()
+operationsWorkerIterationWith tick logError logInfo = do
+  result <- tryAny tick
+  case result of
+    Left _ -> void $ tryAny $ logError
+      "{\"component\":\"operations-worker\",\"level\":\"error\",\"message\":\"tick failed\"}"
+    Right stats
+      | stats /= emptyStats -> void $ tryAny $ logInfo $ BL.unpack $ encode $ object
+          [ "component" .= ("operations-worker" :: Text), "level" .= ("info" :: Text)
+          , "processed" .= outboxProcessed stats, "failed" .= outboxFailed stats
+          , "deadLettered" .= outboxDeadLettered stats, "slaReminders" .= slaRemindersCreated stats
+          , "slaBreaches" .= slaBreachesCreated stats, "archived" .= workItemsArchived stats
+          ]
+      | otherwise -> pure ()
 
 operationsMaintenanceTick :: Env -> IO OperationsWorkerStats
 operationsMaintenanceTick Env{envPool} = runSqlPool tick envPool
@@ -76,15 +76,15 @@ operationsMaintenanceTick Env{envPool} = runSqlPool tick envPool
             "SELECT reminders_created, breached_created FROM operations_tick_sla(now())"
             [] :: SqlPersistT IO [(Single Int, Single Int)]
           archiveRows <- rawSql archiveSql [] :: SqlPersistT IO [Single Int64]
-          let (processed, failed, dead) = case outboxRows of
-                [(Single p, Single f, Single d)] -> (p, f, d)
-                _ -> (0, 0, 0)
-              (reminders, breaches) = case slaRows of
-                [(Single r, Single b)] -> (r, b)
-                _ -> (0, 0)
-              archived = case archiveRows of
-                [Single count] -> fromIntegral count
-                _ -> 0
+          (processed, failed, dead) <- case outboxRows of
+            [(Single p, Single f, Single d)] | all (>= 0) [p,f,d] -> pure (p, f, d)
+            _ -> fail "Invalid operations outbox result"
+          (reminders, breaches) <- case slaRows of
+            [(Single r, Single b)] | r >= 0 && b >= 0 -> pure (r, b)
+            _ -> fail "Invalid operations SLA result"
+          archived <- case archiveRows of
+            [Single count] | count >= 0 -> pure (fromIntegral count)
+            _ -> fail "Invalid operations archive result"
           pure OperationsWorkerStats
             { outboxProcessed = processed
             , outboxFailed = failed
@@ -108,19 +108,3 @@ archiveSql =
   \ INSERT INTO operations_admin_audit (organization_id, branch_id, acting_role, source_client, action, target_entity_type, target_entity_id, new_value, request_id, correlation_id, reason) \
   \ SELECT organization_id, branch_id, 'system', 'tdf-hq-operations-worker', 'auto_archive', 'operations_work_item', id::text, jsonb_build_object('status', 'archived'), gen_random_uuid()::text, id::text, 'resolved for 90 days' FROM archived \
   \) SELECT count(*)::bigint FROM archived"
-
-trySync :: IO a -> IO (Either SomeException a)
-trySync action = do
-  result <- try action
-  case result of
-    Left err
-      | Just async <- (fromException err :: Maybe SomeAsyncException) -> throwIO async
-      | otherwise -> pure (Left err)
-    Right value -> pure (Right value)
-
-redactLogValue :: String -> String
-redactLogValue = take 1000 . map replaceUnsafe
-  where
-    replaceUnsafe c
-      | c `elem` ['\n', '\r', '\t', '"'] = ' '
-      | otherwise = c

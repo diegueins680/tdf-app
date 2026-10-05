@@ -15,6 +15,7 @@ import qualified Test.QuickCheck as QC
 import qualified TDF.Commerce.MerchReservationWorker as Merch
 import qualified TDF.Commerce.ProviderEventWorker as Events
 import qualified TDF.Commerce.ProviderReconciliation as Query
+import qualified TDF.Operations.Worker as Operations
 
 -- The names are markers, not real credentials, card data, accounts or customers.
 syntheticFailure :: String
@@ -35,6 +36,9 @@ emptyEvents = Events.ProviderEventWorkerStats 0 0 0 0 0
 
 spec :: Spec
 spec = describe "payment worker logging boundary" $ do
+  failureBoundary "operations control center"
+    (\tick -> Operations.operationsWorkerIterationWith (tick >> pure (Operations.OperationsWorkerStats 0 0 0 0 0 0)))
+    "operations-worker" "tick failed"
   failureBoundary "provider events"
     (\tick -> Events.providerEventWorkerIterationWith (tick >> pure emptyEvents))
     "provider-event-worker" "tick failed"
