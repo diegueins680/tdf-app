@@ -621,14 +621,14 @@
       "statement": "Required recovery-dialog browser checks must pass before release without weakening their assertions or time limits.",
       "authority": "approved",
       "source": "Current user audit instructions sections 7 and 9; .github/workflows/ci.yml persona-web-e2e gate; docs/ux-ui-audit/2026-09-17/locale-recovery.md records the existing intermittent failure",
-      "interpretation": "Close action must dismiss the existing recovery dialog while preserving the tested locale, destination and focus behavior. Immediate unmount is the chosen implementation, not a new business policy.",
-      "property": "After dismissal the recovery dialog is absent from the DOM; reopening remains possible; the unchanged browser assertions pass.",
+      "interpretation": "Recovery close unmounts its dialog while retaining locale/destination. Deferred login autofocus may run only while the document body retains focus and no dialog is mounted; it must not steal focus from an active recovery/signup dialog or user-selected field.",
+      "property": "Recovery dismissal removes the dialog; reopening remains possible. Delayed initial autofocus preserves an existing interaction and focuses the identifier only on an idle page. Existing browser assertions and time limits remain unchanged.",
       "contract": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
       "implementation": [
         "tdf-hq-ui/src/pages/LoginPage.tsx",
         "e2e/web/persona-public.spec.mjs"
       ],
-      "verification": "Actual React component regression fails before conditional unmount and passes afterward; existing Playwright browser checks. Runtime tests only, no unrestricted proof or claim that library/browser internals were verified.",
+      "verification": "Actual React component regressions fail against the unguarded deferred focus callback and pass with the guard; separate idle-page control preserves intended autofocus. Existing Playwright checks are unchanged. The hosted empty-input trace alone does not establish callback causality.",
       "evidence": "Local negative and corrected component logs; exact-head UI and persona-web-e2e CI artifacts.",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-browser-verification-and-release",
@@ -646,13 +646,14 @@
       ],
       "state": {
         "boundary": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-        "property": "After dismissal the recovery dialog is absent from the DOM; reopening remains possible; the unchanged browser assertions pass."
+        "property": "Recovery dismissal removes the dialog; reopening remains possible. Delayed initial autofocus preserves an existing interaction and focuses the identifier only on an idle page. Existing browser assertions and time limits remain unchanged."
       },
       "allowedTransitions": [
-        "After dismissal the recovery dialog is absent from the DOM; reopening remains possible; the unchanged browser assertions pass."
+        "Recovery dismissal removes the dialog; reopening remains possible. Delayed initial autofocus preserves an existing interaction and focuses the identifier only on an idle page. Existing browser assertions and time limits remain unchanged."
       ],
       "forbiddenTransitions": [
-        "A result violating the property must not be admitted."
+        "Deferred initial focus moves a user-selected field or modal focus to the background login identifier.",
+        "A dismissed recovery dialog remains mounted."
       ],
       "effects": [
         "Required recovery-dialog browser checks must pass before release without weakening their assertions or time limits."
@@ -675,7 +676,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Existing mapped implementation requires fresh exact-candidate execution; historical status is not current evidence."
+        "reason": "Scoped component negative controls establish the delayed-focus defect and repair; final exact-candidate browser matrix and deployed correspondence remain required."
       }
     },
     {

@@ -7636,13 +7636,13 @@
     {
       "id": "SURFACE-2b469a2b395c027a",
       "path": "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-      "sha256": "f88e22a6253b0cefe744d8e09b7edc088c2f45c52934855eba384365af88cac0",
+      "sha256": "173a82881bf1ee9764582a56a82ea72c9e6aede174eab68ffbfbc77f8bfb6db7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f46d0ae001744f15",
       "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
-      "sha256": "78885e7bb418d22f98657a2823effb36743857f0edc8b4fa9849a219e9aa3c3b",
+      "sha256": "a08e02310726ed8c9a9306b106fdb65419ecb93e27d8b35efa6da847bdabf049",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18323,7 +18323,7 @@
     },
     {
       "path": "docs/ux-ui-audit/2026-09-17/locale-recovery.md",
-      "sha256": "c98e0956e2c2ca5f466e5fe57d70c2fc532a20c32ca01d167031ac50d0027d03",
+      "sha256": "de3a6105ac46b00767d209d48334dfa5c83922de7b2b7505f6f342c756851447",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21361,7 +21361,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "df48291a55493fcecb0a98752da0001f37d21b338407395b996a207281c1442e",
+      "sha256": "8b2a7c45f285453be2e71319e1f8791934ffd448018d00d543c2041bf8760cd1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
