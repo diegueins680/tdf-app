@@ -3,9 +3,9 @@
 The live TDF web API moved to Hetzner on 2026-09-28; see the
 [cutover evidence and outstanding validation](validation-2026-09-28.md). Trader and its shared Fly
 database remain running. Older mobile builds require a new release.
-Cutover validation is incomplete until Google interactive login and
-authenticated uploads pass end to end; the live transition is not evidence
-that those gates passed.
+Google interactive login passed on 2026-10-05. Cutover validation remains
+incomplete until the authenticated-upload client repair is deployed and passes
+without browser instrumentation; see the validation record.
 
 The rehearsal configuration deploys a quarantined copy and does not switch
 production writers or traffic. Never promote that rehearsal database: take a

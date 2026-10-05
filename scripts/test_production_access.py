@@ -5,6 +5,7 @@ import os
 import urllib.request
 import pathlib
 import subprocess
+import stat
 import sys
 import unittest
 from types import SimpleNamespace
@@ -37,7 +38,7 @@ class AccessTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(result.stdout, '')
 
-    def remote_fixture(self, mode, mutate=None, permissions=0o600, repo_digests=None, sql_override=None, postgres_image='postgres@sha256:manifest', database_repo_digests=None):
+    def remote_fixture(self, mode, mutate=None, permissions=0o600, repo_digests=None, sql_override=None, postgres_image='postgres@sha256:manifest', database_repo_digests=None, owner=0, file_type=stat.S_IFREG, open_error=None):
         def container(service):
             return {'Id': service, 'Image': 'sha256:local-config', 'State': {'Running': True},
                     'Config': {'Image': 'registry/image@sha256:manifest', 'Labels': {'com.docker.compose.project': 'tdf-production',
@@ -58,9 +59,13 @@ class AccessTests(unittest.TestCase):
         def read(path, *args, **kw):
             return ('TDF_IMAGE=registry/image@sha256:manifest\n' + (f'POSTGRES_IMAGE={postgres_image}\n' if postgres_image is not None else '')) if str(path).endswith('/.env') else 'SMTP_USERNAME=u\nSMTP_PASSWORD=p\n'
         output = io.StringIO()
+        credential_stream = io.StringIO('SMTP_USERNAME=u\nSMTP_PASSWORD=p\n')
+        credential_stream.fileno = lambda: 42
         with patch.object(sys, 'argv', ['remote', mode]), patch.object(sys, 'stdin', io.StringIO(sql_override if sql_override is not None else pathlib.Path(__file__).with_name('production-catalog-inventory.mjs').read_text().split('const inventorySql = String.raw`', 1)[1].split('`;', 1)[0])), \
              patch.object(subprocess, 'run', side_effect=run), patch.object(pathlib.Path, 'read_text', read), \
-             patch.object(pathlib.Path, 'stat', return_value=SimpleNamespace(st_mode=permissions)), \
+             patch.object(os, 'open', return_value=42, side_effect=open_error), \
+             patch.object(os, 'fdopen', return_value=credential_stream), \
+             patch.object(os, 'fstat', return_value=SimpleNamespace(st_mode=file_type | permissions, st_uid=owner)), \
              patch.dict(os.environ, {'SSH_CONNECTION': '192.0.2.10 50000 178.105.93.101 22'}), \
              patch.object(urllib.request, 'urlopen', side_effect=lambda *a, **kw: io.StringIO('{}')), contextlib.redirect_stdout(output), contextlib.redirect_stderr(io.StringIO()):
             exec(access.REMOTE, {})
@@ -138,6 +143,11 @@ class AccessTests(unittest.TestCase):
     def test_world_readable_secret_file_is_rejected(self):
         with self.assertRaises(SystemExit):
             self.remote_fixture('credentials', permissions=0o644)
+
+    def test_nonroot_and_nonregular_secret_files_are_rejected(self):
+        for args in [{'owner': 1000}, {'file_type': stat.S_IFLNK}, {'file_type': stat.S_IFDIR}, {'file_type': stat.S_IFIFO}, {'open_error': OSError('symlink rejected')}]:
+            with self.subTest(args=args), self.assertRaises(SystemExit):
+                self.remote_fixture('credentials', **args)
 
     def test_protected_config_must_match_runtime(self):
         output, _ = self.remote_fixture('credentials')

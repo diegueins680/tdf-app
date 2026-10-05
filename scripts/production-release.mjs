@@ -75,9 +75,10 @@ const readRuntimeEnvCommand = [
 
 function usage() {
   return `Usage:
-  npm run release:backend:plan -- --sha <full-sha>
-  npm run release:backend:preflight -- --sha <full-sha>
-  npm run release:backend -- --sha <full-sha> --execute --confirm <full-sha>
+  Retired Fly CLI: remote execution is disabled.
+  Prepare artifacts only:
+  npm run release:backend:prepare -- FULL_RELEASE_SHA FULL_RECOVERY_SHA NEW_PRIVATE_DIRECTORY
+  Follow ops/hetzner/README.md for production rollout.
 
 Options:
   --app <name>       Fly API app (default: tdf-hq)

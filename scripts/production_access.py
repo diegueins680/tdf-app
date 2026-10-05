@@ -69,9 +69,15 @@ def main(mode):
         raise RuntimeError('Running database does not match configured immutable image')
     if mode == 'credentials':
         path = pathlib.Path('/opt/tdf/production/api.env')
-        if stat.S_IMODE(path.stat().st_mode) & 0o077:
-            raise RuntimeError('Production credential file permissions are unsafe')
-        config = raw_env(path)
+        # Inspect the opened file, refusing symlinks and avoiding a check/read race.
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        with os.fdopen(fd) as credential_file:
+            metadata = os.fstat(credential_file.fileno())
+            if (metadata.st_uid != 0 or not stat.S_ISREG(metadata.st_mode)
+                    or stat.S_IMODE(metadata.st_mode) & 0o077):
+                raise RuntimeError('Production credential file ownership/type/permissions are unsafe')
+            config = dict(line.split('=', 1) for line in credential_file.read().splitlines()
+                          if '=' in line and not line.lstrip().startswith('#'))
         keys = ('SMTP_USERNAME', 'SMTP_PASSWORD')
         if any(not config.get(k) or config[k] != env.get(k) for k in keys):
             raise RuntimeError('Protected mail configuration does not match the running API')

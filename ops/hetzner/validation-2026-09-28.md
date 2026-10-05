@@ -3,8 +3,8 @@
 ## Live transition — validation incomplete
 
 The authorized web-first traffic and writer transition occurred on 2026-09-28.
-Cutover validation remains **incomplete**: Google interactive login and
-authenticated uploads have not passed their end-to-end gates. No waiver of
+Cutover validation remains **incomplete** pending deployment and an unmodified
+browser rerun of the upload repair. Google interactive login passed on 2026-10-05. No waiver of
 those gates is recorded here. Production
 `https://www.tdfrecords.net` now uses `https://api.tdfrecords.net` on the dedicated
 Hetzner CPX12. Cloudflare deployment
@@ -45,8 +45,8 @@ compatible image against the current Hetzner database. A provider reversal
 requires another write freeze and fresh reverse migration.
 
 Older installed mobile builds still point at Fly and need an updated release;
-the operator explicitly accepted that downtime. Google interactive login and
-authenticated uploads have not been exercised end to end after cutover.
+the operator explicitly accepted that downtime. The original cutover did not exercise Google interactive login or authenticated
+uploads; the later verification below records their current status.
 No real payment was made. Database emergency-access checks are not evidence
 of a manual login. Video ingestion was disabled at cutover and was activated in the verified
 follow-up below. Event discovery and automatic publication remain disabled. Event PRs #460/#463/#464
@@ -141,3 +141,31 @@ Private database archives, asset tarballs, credentials, machine snapshots,
 and unsanitized logs are intentionally outside this repository. The operator
 holds those files locally and in the root-only restore directory on the
 dedicated host. The repeatable deployment and recovery procedure is in [README.md](README.md).
+
+## Interactive verification — 2026-10-05
+
+At 04:57 UTC, a fresh Google account-chooser login at `www.tdfrecords.net`
+returned to the protected application; `/session` returned HTTP 200 with a
+non-null party identity. No password or session token was recorded.
+
+The unmodified deployed inventory upload returned HTTP 401. Its XMLHttpRequest
+omitted `withCredentials`, unlike the shared API client, so Google HttpOnly
+session cookies were absent. A single instrumented request with the candidate
+`withCredentials=true` fix returned HTTP 200. The resulting 99-byte synthetic
+PNG was publicly retrieved with identical SHA256
+`56d68744198d24e94ed47dc334f6ae2c18992d6c1c6ca9bc9a162b0d0af28983`.
+Only that diagnostic file was written; no inventory record was saved. This
+confirms the API/storage path, **not deployment of the client fix**. The gate
+remains open until the repaired bundle passes in an unmodified production tab.
+
+The same surface exposed HTTP 400 from `pageSize=200`; the API limit is 100.
+The repair loads bounded pages until the inventory is complete instead of
+silently truncating the catalogue. No production migrations or feature flags
+were changed by these checks.
+
+The new credential-file guard also detected that production `api.env` was owned
+by UID 501 despite mode `0600`. On 2026-10-05, ownership was corrected to root
+through the existing authenticated SSH connection. An opened-descriptor check
+verified unchanged file bytes and mode `0600`; the protected reader then passed
+its owner/type/mode checks and matched the running API mail configuration.
+No credential values were logged or rotated by this ownership repair.
