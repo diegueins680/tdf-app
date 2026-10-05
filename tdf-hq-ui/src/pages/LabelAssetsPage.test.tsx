@@ -253,6 +253,69 @@ describe('LabelAssetsPage', () => {
     } finally { await cleanup(); }
   });
 
+  it('loads all inventory pages within the API limit and searches later pages', async () => {
+    const firstPage = Array.from({ length: 100 }, (_, index) =>
+      buildAsset({ assetId: `asset-${index}`, name: `Equipo ${index}` }));
+    listAssetsMock
+      .mockResolvedValueOnce({ items: firstPage, page: 1, pageSize: 100, total: 101 })
+      .mockResolvedValueOnce({
+        items: [buildAsset({ assetId: 'last-asset', name: 'Ultimo sintetizador' })],
+        page: 2, pageSize: 100, total: 101,
+      });
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await waitForExpectation(() => expect(container.textContent).toContain('Mostrando 101 de 101 assets'));
+      expect(listAssetsMock.mock.calls).toEqual([
+        [{ page: 1, pageSize: 100 }], [{ page: 2, pageSize: 100 }],
+      ]);
+      await setInputValue(getInputByLabel(container, 'Buscar assets'), 'Ultimo');
+      await waitForExpectation(() => expect(container.textContent).toContain('Ultimo sintetizador'));
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('shows a load error without claiming the inventory is empty and allows retry', async () => {
+    listAssetsMock.mockRejectedValueOnce(new Error('Request failed'));
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('No se pudo cargar el inventario.');
+        expect(container.textContent).not.toContain('Todavía no hay assets.');
+      });
+      listAssetsMock.mockResolvedValue([buildAsset()]);
+      await clickElement(getButtonByText(container, 'Actualizar'));
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Sintetizador Uno');
+        expect(container.textContent).not.toContain('No se pudo cargar el inventario.');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('does not present a partial inventory when a later page fails', async () => {
+    listAssetsMock
+      .mockResolvedValueOnce({ items: [buildAsset()], page: 1, pageSize: 100, total: 2 })
+      .mockRejectedValueOnce(new Error('Second page failed'));
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('No se pudo cargar el inventario.');
+        expect(container.textContent).not.toContain('Todavía no hay assets.');
+        expect(container.textContent).not.toContain('Sintetizador Uno');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('replaces empty inventory filter chrome with one first-asset empty state', async () => {
     listAssetsMock.mockResolvedValue([]);
 

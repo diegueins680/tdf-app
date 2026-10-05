@@ -923,7 +923,7 @@ export default function LabelAssetsPage() {
             <Typography variant="body2" color="text.secondary">
               Cargando inventario…
             </Typography>
-          ) : assets.length === 0 ? (
+          ) : assetsQuery.isError && assets.length === 0 ? null : assets.length === 0 ? (
             <Alert severity="info" variant="outlined">
               Todavía no hay assets. Agrégalos desde Agregar asset; el buscador y los filtros aparecerán cuando exista al menos uno.
             </Alert>
