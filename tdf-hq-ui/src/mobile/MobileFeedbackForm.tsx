@@ -29,8 +29,14 @@ export default function MobileFeedbackForm({ platform, request = false }: { plat
   });
   const defaultId = (code: string, scope: string) => {
     const page = catalogs.data?.catalogs.find(p => p.catalog.code === code);
-    const preferred = scope === 'feedback-category' ? page?.items.find(i => i.code === kind && i.active && i.workflowState === 'published' && !i.deprecatedAt)?.id : undefined;
-    const id = preferred ?? page?.defaults.find(d => d.scopeKind === scope && d.scopeId === 'global' && !d.localeId)?.entityId;
+    const published = (itemCode: string) => page?.items.find(i => i.code === itemCode && i.active && i.workflowState === 'published' && !i.deprecatedAt)?.id;
+    // The published catalog owns IDs; adapt UI intent without sending requests or comments to defect triage.
+    if (scope === 'feedback-category') {
+      if (request) return published('permissions') ?? published('question') ?? published('suggestion') ?? published('idea');
+      if (kind === 'general') return published('question') ?? published('suggestion') ?? published('idea');
+      return published(kind) ?? (kind === 'idea' ? published('suggestion') : undefined);
+    }
+    const id = (request || kind === 'general' || kind === 'idea' ? published('p4') : undefined) ?? page?.defaults.find(d => d.scopeKind === scope && d.scopeId === 'global' && !d.localeId)?.entityId;
     return page?.items.find(item => item.id === id && item.active && item.workflowState === 'published' && !item.deprecatedAt)?.id;
   };
   const categoryId = defaultId('feedback-categories', 'feedback-category');

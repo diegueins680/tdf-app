@@ -1,3 +1,4 @@
+import SignupMobileInvitation from '../mobile/SignupMobileInvitation';
 import MobilePromo from '../mobile/MobilePromo';
 import { useTranslation } from 'react-i18next';
 import { Box, Button, Container, IconButton, Menu, MenuItem, Stack, Tooltip, Typography } from '@mui/material';
@@ -54,6 +55,8 @@ export default function PublicBranding({
     return hasInstagramTrafficSignal({ search: location.search, referrer }) || readStoredInstagramTraffic();
   });
   const open = Boolean(menuAnchor);
+  const profileRoute = /^\/(artista|a|perfil)\//.test(location.pathname);
+  const signupInvitation = Boolean(session && (location.state as { mobileInvitation?: boolean } | null)?.mobileInvitation);
   const contextualLoginPath = useMemo(
     () => buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`),
     [location.hash, location.pathname, location.search],
@@ -255,11 +258,12 @@ export default function PublicBranding({
         maxWidth="xl"
         sx={{ py: { xs: showHeader ? 2 : 3, md: showHeader ? 4 : 5 }, minWidth: 0, outline: 'none' }}
       >
+        <SignupMobileInvitation />
         {showInstagramEntryLinks && <InstagramEntryLinks />}
         {children}
-        {!(location.state as { mobileInvitation?: boolean } | null)?.mobileInvitation && ['/', '/inicio', '/tdf', '/fans', '/comunidad'].includes(location.pathname) && <MobilePromo surface={location.pathname === '/tdf' ? 'tdf_landing' : location.pathname === '/fans' ? 'community' : session ? 'authenticated_home' : 'homepage'} />}
-        {/^\/(artista|a|perfil)\//.test(location.pathname) && <MobilePromo surface="profile" />}
-        {!['/', '/inicio', '/tdf', '/fans', '/comunidad', '/app', '/login', '/reset', '/feedback'].includes(location.pathname) && !location.pathname.includes('/orden/') && !location.pathname.startsWith('/reservar') && <MobilePromo surface="mobile_banner" banner />}
+        {!signupInvitation && ['/', '/inicio', '/tdf', '/fans', '/comunidad'].includes(location.pathname) && <MobilePromo surface={location.pathname === '/tdf' ? 'tdf_landing' : (location.pathname === '/fans' || location.pathname === '/comunidad') ? 'community' : session ? 'authenticated_home' : 'homepage'} />}
+        {!signupInvitation && profileRoute && <MobilePromo surface="profile" />}
+        {!signupInvitation && !profileRoute && !['/', '/inicio', '/tdf', '/fans', '/comunidad', '/app', '/login', '/reset', '/feedback'].includes(location.pathname) && !location.pathname.includes('/orden/') && !location.pathname.startsWith('/reservar') && <MobilePromo surface="mobile_banner" banner />}
       </Container>
       <Box
         component="footer"

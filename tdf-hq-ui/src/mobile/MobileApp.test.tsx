@@ -11,7 +11,7 @@ const severity = '10000000-0000-4000-8000-000000000002';
 jest.unstable_mockModule('../analytics/useAnalytics', () => ({ useAnalytics: () => ({ capture }) }));
 jest.unstable_mockModule('../session/SessionContext', () => ({ useSession: () => ({ session: null }) }));
 jest.unstable_mockModule('../api/feedback', () => ({ submitFeedback: submit }));
-jest.unstable_mockModule('../api/catalogs', () => ({ Catalogs: { listPublicBatch: async () => ({ catalogs: [['feedback-categories', 'feedback-category', category], ['feedback-severities', 'feedback-severity', severity]].map(([code, scopeKind, id]) => ({ catalog: { code }, items: [{ id, active: true, workflowState: 'published' }], defaults: [{ scopeKind, scopeId: 'global', entityId: id }] })) }) } }));
+jest.unstable_mockModule('../api/catalogs', () => ({ Catalogs: { listPublicBatch: async () => ({ catalogs: [['feedback-categories', 'feedback-category', category], ['feedback-severities', 'feedback-severity', severity]].map(([code, scopeKind, id]) => ({ catalog: { code }, items: (code === 'feedback-categories' ? ['bug', 'idea', 'ux'] : ['p2', 'p4']).map((itemCode, index) => ({ id: index === 0 ? id : `${id}-${itemCode}`, code: itemCode, active: true, workflowState: 'published' })), defaults: [{ scopeKind, scopeId: 'global', entityId: id }] })) }) } }));
 const { default: Page } = await import('../pages/MobileAppPage');
 const { default: Promo, DISMISS_KEY, DISMISS_MS, promoDismissed } = await import('./MobilePromoContent');
 const { campaignTags, appLink } = await import('./telemetry');
@@ -21,20 +21,21 @@ beforeEach(async () => { await i18n.changeLanguage('es'); localStorage.clear(); 
 afterEach(cleanup);
 it('shows unavailable Android honestly, keeps iOS selectable and translates', async () => {
   mount(<Page />);
-  expect(screen.getByText('Todavía no tenemos acceso abierto confirmado para esta plataforma.')).toBeTruthy();
+  expect(await screen.findByText('Todavía no tenemos acceso abierto confirmado para esta plataforma.')).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: 'iPhone / iOS' }));
   expect(await screen.findByRole('link', { name: 'Probar beta en TestFlight' })).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: 'English' }));
   expect(await screen.findByRole('link', { name: 'Try the beta on TestFlight' })).toBeTruthy();
 });
 it('collects only consented access requests and never reports admission as installed', async () => {
-  mount(<Page />); fireEvent.click(screen.getByRole('button', { name: 'Solicitar acceso' }));
+  mount(<Page />); fireEvent.click(await screen.findByRole('button', { name: 'Solicitar acceso' }));
   const send = await screen.findByRole('button', { name: 'Enviar' }); expect((send as HTMLButtonElement).disabled).toBe(true);
   fireEvent.change(screen.getByLabelText(/Correo para coordinar/), { target: { value: 'tester@example.com' } });
   fireEvent.click(screen.getByRole('checkbox'));
   await waitFor(() => expect((send as HTMLButtonElement).disabled).toBe(false)); fireEvent.click(send);
   expect(await screen.findByText(/Solicitud recibida/)).toBeTruthy();
   expect(submit).toHaveBeenCalledTimes(1);
+  expect(submit).toHaveBeenCalledWith(expect.objectContaining({ categoryId: `${category}-idea`, severityId: `${severity}-p4` }));
   expect(capture.mock.calls.some(([event]) => event === 'mobile_testing_request_submitted')).toBe(true);
   expect(JSON.stringify(capture.mock.calls)).not.toContain('tester@example.com');
 });
@@ -66,4 +67,38 @@ it('has accessible landing and feedback semantics', async () => {
   await expectNoSeriousAccessibilityViolations(view.container);
   fireEvent.click(screen.getByRole('button', { name: /Ya estoy probando/ }));
   await screen.findByLabelText(/Cuéntanos qué ocurrió/); await expectNoSeriousAccessibilityViolations(view.container);
+});
+
+it('waits for the manifest before offering enrollment', async () => {
+  let resolve!: (value: Response) => void;
+  global.fetch = jest.fn<typeof fetch>().mockReturnValue(new Promise<Response>(done => { resolve = done; }));
+  mount(<Page />);
+  expect(screen.getByRole('status').textContent).toContain('Comprobando disponibilidad');
+  expect(screen.queryByRole('button', { name: 'Solicitar acceso' })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'iPhone / iOS' }));
+  resolve({ ok: true, json: async () => config } as Response);
+  expect(await screen.findByRole('link', { name: 'Probar beta en TestFlight' })).toBeTruthy();
+  expect(screen.queryByRole('textbox', { name: 'Correo para coordinar el acceso' })).toBeNull();
+});
+
+it('keeps general comments out of bug triage with the live catalog vocabulary', async () => {
+  mount(<Page />);
+  fireEvent.click(screen.getByRole('button', { name: /Ya estoy probando/ }));
+  fireEvent.mouseDown(screen.getByRole('combobox'));
+  fireEvent.click(await screen.findByRole('option', { name: 'Comentario general' }));
+  fireEvent.change(screen.getByLabelText(/Cuéntanos qué ocurrió/), { target: { value: 'The first experience felt welcoming' } });
+  fireEvent.click(screen.getByRole('checkbox'));
+  const send = screen.getByRole<HTMLButtonElement>('button', { name: 'Enviar' });
+  await waitFor(() => expect(send.disabled).toBe(false));
+  fireEvent.click(send);
+  await screen.findByText(/Tu comentario fue recibido/);
+  expect(submit).toHaveBeenCalledWith(expect.objectContaining({ categoryId: `${category}-idea`, severityId: `${severity}-p4`, description: expect.stringContaining('kind: general') }));
+});
+
+it('uses public store instructions without a beta capacity or opt-in requirement', async () => {
+  global.fetch = jest.fn<typeof fetch>().mockResolvedValue({ ok: true, json: async () => ({ ...config, android: { ...config.android, status: 'public', url: 'https://play.google.com/store/apps/details?id=com.tdf.records', verifiedAt: config.ios.verifiedAt, validUntil: config.ios.validUntil } }) } as Response);
+  mount(<Page />); fireEvent.click(screen.getByRole('button', { name: 'Android' }));
+  expect(await screen.findByRole('link', { name: 'Descargar en Google Play' })).toBeTruthy();
+  expect(screen.getByText('Abre Google Play, instala TDF e inicia sesión con tu cuenta de TDF.')).toBeTruthy();
+  expect(screen.queryByText(/acepta participar con tu cuenta/)).toBeNull();
 });

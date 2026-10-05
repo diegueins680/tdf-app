@@ -1,4 +1,5 @@
 export default {
+  "loading": "Comprobando disponibilidad…",
   "title": "TDF Mobile",
   "invite": "Construyamos TDF Mobile juntos",
   "promo": "Prueba la app en tu día a día y cuéntanos qué mejorar. Consulta el acceso disponible para tu teléfono.",
@@ -41,6 +42,9 @@ export default {
   "metadata": "Incluimos solo plataforma, idioma y origen del formulario. En la app también podrás compartir versión, build y sistema operativo. Revisa las capturas antes de enviarlas.",
   "received": "¡Gracias! Tu comentario fue recibido.",
   "steps": "Cómo participar",
+  "stepIosPublic": "Abre App Store, instala TDF e inicia sesión con tu cuenta de TDF.",
+  "stepAndroidPublic": "Abre Google Play, instala TDF e inicia sesión con tu cuenta de TDF.",
+  "stepPreorder": "Reserva TDF en la tienda. La tienda indicará cuándo estará disponible para instalar.",
   "stepIos": "Cuando el acceso esté habilitado, abre TestFlight, acepta la invitación e instala TDF. Después, inicia sesión con tu cuenta de TDF.",
   "stepAndroid": "Cuando el acceso esté habilitado, acepta participar con tu cuenta de Google en Play Testing e instala TDF desde Google Play.",
   "stepClosed": "Este canal requiere admisión previa. Únete al grupo autorizado con la misma cuenta de Google que usas en Play y luego abre la prueba.",

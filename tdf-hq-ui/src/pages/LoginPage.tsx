@@ -518,7 +518,7 @@ export default function LoginPage() {
         });
         setSignupDialogOpen(false);
         setSignupFeedback(null);
-        navigate(googleTargetPath, { replace: true });
+        navigate(googleTargetPath, { replace: true, ...(googleCreatedAccount ? { state: { mobileInvitation: true } } : {}) });
       } catch (err) {
         if (!signupDialogOpen && isGoogleSignupConsentRequiredError(err)) {
           setGoogleLinkToken(credential);

@@ -37,3 +37,12 @@ describe('mobile distribution contract', () => {
     expect(() => validateDistribution({ ...config, ios: { ...config.ios, url: 'https://apps.apple.com/app/id6754828747' } })).toThrow();
   });
 });
+
+it.each(['public', 'store_preorder'] as const)('does not require beta capacity for %s', status => {
+  for (const capacity of [undefined, 'unknown', 'full'] as const) {
+    const config: MobileDistribution = { ios: { ...ios, status, capacity, url: 'https://apps.apple.com/app/id6779786470' }, android: { ...android, status, capacity, url: 'https://play.google.com/store/apps/details?id=com.tdf.records' } };
+    expect(validateDistribution(config)).toEqual(config);
+    expect(availableChannel(config.ios, now)).toBe(true);
+    expect(availableChannel(config.android, now)).toBe(true);
+  }
+});

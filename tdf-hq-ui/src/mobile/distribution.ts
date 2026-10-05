@@ -44,7 +44,7 @@ export function validateDistribution(value: unknown): MobileDistribution {
   return value as MobileDistribution;
 }
 export function availableChannel(channel: DistributionChannel, now = Date.now()): boolean {
-  return accessible.has(channel.status) && Boolean(channel.url) && Date.parse(channel.verifiedAt) <= now && now < Date.parse(channel.validUntil) && channel.capacity === 'available';
+  return accessible.has(channel.status) && Boolean(channel.url) && Date.parse(channel.verifiedAt) <= now && now < Date.parse(channel.validUntil) && (channel.status === 'public' || channel.status === 'store_preorder' || channel.capacity === 'available');
 }
 export function detectPlatform(userAgent = '', touchPoints = 0): MobilePlatform | 'desktop' {
   if (/android/i.test(userAgent)) return 'android';

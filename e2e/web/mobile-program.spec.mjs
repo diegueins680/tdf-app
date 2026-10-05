@@ -13,7 +13,7 @@ async function fixture(page, baseURL) {
     if (path === '/mobile-distribution.json') return route.fulfill({ json: config });
     if (path === '/session') return route.fulfill({ status: 401, json: {} });
     if (path === '/feedback' && request.method() === 'POST') { submissions.push(request.postData()); return route.fulfill({ status: 204 }); }
-    if (path.startsWith('/catalogs/')) return route.fulfill({ json: { catalogs: ['feedback-categories','feedback-severities'].map(code => ({ catalog: {code}, items: [{ id: catalogId, active: true, workflowState: 'published', name: 'General' }], defaults: [{scopeKind: code === 'feedback-categories' ? 'feedback-category' : 'feedback-severity', scopeId:'global', entityId:catalogId}] })) } });
+    if (path.startsWith('/catalogs/')) return route.fulfill({ json: { catalogs: ['feedback-categories','feedback-severities'].map(code => ({ catalog: {code}, items: (code === 'feedback-categories' ? ['bug','idea','ux'] : ['p2','p4']).map((itemCode, index) => ({ id: index === 0 ? catalogId : catalogId.slice(0,-1) + String(index + 1), code: itemCode, active: true, workflowState: 'published', name: itemCode })), defaults: [{scopeKind: code === 'feedback-categories' ? 'feedback-category' : 'feedback-severity', scopeId:'global', entityId:catalogId}] })) } });
     return route.fulfill({ json: [] });
   });
   return submissions;

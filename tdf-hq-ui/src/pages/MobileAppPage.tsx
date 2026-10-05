@@ -48,8 +48,8 @@ export default function MobileAppPage() {
     </ToggleButtonGroup>
     <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}><Stack spacing={2}>
       <Typography component="h2" variant="h5">{t(`app.${platform}`)}</Typography>
-      {active ? <>
-        <Chip sx={{ alignSelf: 'flex-start' }} label={t(beta ? 'app.betaStatus' : 'app.publicStatus')} />
+      {distribution.isPending ? <Typography role="status" aria-live="polite">{t('app.loading')}</Typography> : active ? <>
+        <Chip sx={{ alignSelf: 'flex-start' }} label={t(channel.status === 'store_preorder' ? 'app.preorder' : beta ? 'app.betaStatus' : 'app.publicStatus')} />
         {channel.status === 'closed_testing' && channel.admission === 'approval_required' && <Alert severity="info">{t('app.stepClosed')}</Alert>}
         {channel.enrollmentUrl && <Button component="a" href={channel.enrollmentUrl} referrerPolicy="no-referrer" onClick={() => track('mobile_testing_join_clicked', { platform, distribution_status: channel.status, destination: 'tester_group' })}>{t('app.group')}</Button>}
         {channel.status === 'closed_testing' && channel.admission === 'approval_required' && !channel.enrollmentUrl
@@ -65,7 +65,7 @@ export default function MobileAppPage() {
       {distribution.isError && <Button onClick={() => void distribution.refetch()}>{t('app.retry')}</Button>}
     </Stack></Paper>
     <Typography component="h2" variant="h5">{t('app.steps')}</Typography>
-    <Typography>{t(platform === 'ios' ? 'app.stepIos' : 'app.stepAndroid')}</Typography>
+    <Typography>{t(channel?.status === 'store_preorder' ? 'app.stepPreorder' : channel?.status === 'public' ? (platform === 'ios' ? 'app.stepIosPublic' : 'app.stepAndroidPublic') : platform === 'ios' ? 'app.stepIos' : 'app.stepAndroid')}</Typography>
     <Typography>{t('app.stepUse')}</Typography>
     <Button variant="outlined" onClick={() => setForm('feedback')}>{t('app.openFeedback')}</Button>
     {form && <Paper variant="outlined" sx={{ p: 2 }}><Stack spacing={2}>

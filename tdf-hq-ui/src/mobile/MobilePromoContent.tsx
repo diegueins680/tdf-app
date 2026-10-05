@@ -21,6 +21,7 @@ export default function MobilePromo({ surface, banner = false, compact = false }
   trackRef.current = track;
   const visible = !dismissed && (!banner || detectPlatform(navigator.userAgent, navigator.maxTouchPoints) !== 'desktop');
   useEffect(() => {
+    measured.current = false;
     if (!visible || !ref.current || !('IntersectionObserver' in window)) return;
     const observer = new IntersectionObserver(([entry]) => {
       if (entry?.isIntersecting && !measured.current) {
@@ -31,7 +32,7 @@ export default function MobilePromo({ surface, banner = false, compact = false }
     }, { threshold: 0.5 });
     observer.observe(ref.current);
     return () => observer.disconnect();
-  }, [visible]);
+  }, [visible, surface]);
   if (!visible) return null;
   return <Paper ref={ref} component="aside" aria-label={t('app.title')} variant="outlined" sx={{ p: compact ? 0 : 2, my: 2, border: compact ? 0 : undefined, minWidth: 0 }}>
     <Stack spacing={1}>
