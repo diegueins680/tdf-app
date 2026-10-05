@@ -348,6 +348,15 @@ jobs:
           createdb -h postgres -U postgres tdf_event_boundary_test
           ./scripts/test-event-ingestion-boundaries.sh
 
+      - name: Verify atomic ticket admission on PostgreSQL
+        env:
+          PGPASSWORD: postgres
+          TICKET_ADMISSION_TEST_DSN: postgresql://postgres:postgres@postgres:5432/tdf_ticket_admission_test
+        run: |
+          createdb -h postgres -U postgres tdf_ticket_admission_test
+          bash scripts/test-ticket-admission.sh
+          node --test scripts/__tests__/ticket-admission-model.test.mjs
+
       - name: Verify automatic migrations against the production schema
         env:
           TDF_AUTOMIG_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test

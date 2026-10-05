@@ -2,6 +2,20 @@
 
 Registro de implementación y distribución. La actualización del 5 de octubre siguiente sustituye los estados anteriores; se conserva el historial para trazabilidad.
 
+## Admisión Android comprobada en Console — 5 de octubre, 12:37 UTC
+
+La consola autenticada confirma **1.0.1 (23), “Available to selected testers”**, publicada el 5 de octubre, en **178 países/regiones**, con publicación gestionada desactivada. Esto amplía la observación API de las 05:27: el release cerrado está disponible, pero no es distribución pública ni acredita una instalación física.
+
+El acceso usa tres listas de correo seleccionadas (68, 1 y 11 entradas); los conteos pueden solaparse y no equivalen a testers inscritos. El dashboard muestra **4 testers con opt-in**. Open Testing está bloqueado hasta obtener acceso a producción; esta cuenta debe mantener **al menos 12 testers inscritos continuamente durante 14 días** antes de solicitarlo. No se alteraron listas ni se cambió a Google Groups, porque eso podría retirar accesos existentes. No se exportaron identidades. El enlace de opt-in, consultado con la sesión existente, muestra “You are a tester”; su enlace de descarga abre la ficha de TDF con opción de instalación y fecha de actualización 5 de octubre. No se alteró esa inscripción ni se solicitó instalación remota.
+
+La landing conserva la solicitud consentida y añade **“Ya tengo acceso: abrir Google Play”**, visible solo con estado, capacidad y vigencia comprobados. Quien ya recibió admisión usa su misma cuenta de Google; los nuevos interesados solicitan acceso. La capacidad disponible significa que el canal admite testers autorizados, no admisión automática para todos. El enlace revalida vigencia al pulsar y su evento mide un clic, no opt-in ni instalación.
+
+Se guardó y envió a revisión el canal de feedback de Play: `https://www.tdfrecords.net/app?feedback=1&utm_source=google_play&utm_medium=closed_testing`. Fue el único cambio pendiente en Publishing overview; no se envió una release de producción. El backend existente recibe solicitudes y feedback; el operador admite solo los correos consentidos en la lista seleccionada, sin reemplazar miembros ni cargar CSV que sobrescriba la lista. La aprobación de una solicitud y la inscripción efectiva en Play son pasos distintos.
+
+PostHog se comprobó también mediante el login Google existente, tanto en EU como US: ambas regiones llevan a creación de organización, sin proyecto accesible. No se creó organización ni se aceptaron nuevos términos. Sigue faltando acceso al proyecto real; no se afirma recepción productiva de analytics.
+
+Fuentes oficiales: [admisión por correo, límites y feedback de Google Play](https://support.google.com/googleplay/android-developer/answer/9845334), [requisitos de producción y Open Testing](https://support.google.com/googleplay/android-developer/answer/14151465). Evidencia agregada: [distribution-2026-10-05.json](distribution-2026-10-05.json). Los apartados siguientes conservan las observaciones históricas, sustituidas por esta actualización donde difieran.
+
 ## Actualización verificada — 5 de octubre de 2026
 
 La web de [TDF Mobile](https://www.tdfrecords.net/app) está desplegada desde [PR #479](https://github.com/diegueins680/tdf-app/pull/479), merge `5efd7ff31d55c1eb5b66b2f7710ea4ef87328727`; CI y deployment Cloudflare pasaron. La matriz específica de navegación/accesibilidad pasó 20/20 y la comprobación de producción pasó en Chromium, Firefox y WebKit. Los resultados completos y artefactos están en el informe de ese PR.
