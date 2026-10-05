@@ -9549,9 +9549,9 @@ main = hspec $ do
                 )
 
     describe "validateAccountDeletionOutcome" $ do
-        prop "accepts exactly a first valid resolution with ownership required for completion" $
-            \resolved identified (raw :: String) ->
-                let outcome = T.pack raw
+        it "accepts exactly a first valid resolution with ownership required for completion" $
+            QC.property $ \resolved identified (raw :: String) ->
+                let outcome = Data.Text.pack raw
                     accepted = either (const False) (const True) (validateAccountDeletionOutcome resolved identified outcome)
                 in accepted == (not resolved && (outcome == "rejected" || (outcome == "completed" && identified)))
         it "never overwrites completed or rejected work" $ do
