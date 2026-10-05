@@ -5043,7 +5043,7 @@
       "concurrency": "SKIP LOCKED claim and lease-fenced completion; SMTP and database cannot atomically commit.",
       "idempotency": "Order primary key deduplicates enqueue; lease fences acknowledgement; external SMTP is at-least-once under retry, bounded by attempt budget.",
       "failure": "Sanitized failure codes; retry/backoff to eight attempts then retained dead letter. Missing config leaves queue intact.",
-      "property": "Unique intent, canonical issuance authority, current lease completion, bounded attempts, no implicit production enablement.",
+      "property": "Fresh real-clock claim, unique intent, canonical issuance authority, current unexpired lease completion, bounded attempts, no implicit production enablement.",
       "implementation": [
         "tdf-hq/src/TDF/Ticketing/Confirmation.hs",
         "tdf-hq/src/TDF/App/Boot.hs",
@@ -5056,7 +5056,8 @@
         "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index.sql",
         "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index_rollback.sql",
         "tdf-hq/config/default.env.example",
-        "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_clock.sql"
+        "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_clock.sql",
+        "tdf-hq/sql/2026-10-05_ticket_confirmation_claim_clock.sql"
       ],
       "tests": [
         "scripts/test-ticket-confirmation.sh",

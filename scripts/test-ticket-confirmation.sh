@@ -23,6 +23,7 @@ psql "$TICKET_CONFIRMATION_TEST_DSN" -X -v ON_ERROR_STOP=1 \
   -f "$repo_root/tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql" \
   -f "$repo_root/tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index.sql" \
   -f "$repo_root/tdf-hq/sql/2026-10-05_ticket_confirmation_lease_clock.sql" \
+  -f "$repo_root/tdf-hq/sql/2026-10-05_ticket_confirmation_claim_clock.sql" \
   -f "$repo_root/tdf-hq/test/integration/ticket_confirmation_worker_fixture.sql"
 python3 "$repo_root/scripts/test-ticket-confirmation-lease.py"
 cd "$repo_root/tdf-hq"

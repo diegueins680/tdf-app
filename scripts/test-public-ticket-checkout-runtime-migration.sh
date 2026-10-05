@@ -316,12 +316,15 @@ apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_delivery_rollback.sql
 apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql
 apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index.sql
 apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_lease_clock.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_claim_clock.sql
 apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index.sql
 apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_lease_clock.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_claim_clock.sql
 assert_equal "$(psql_exec -Atc "SELECT count(*) FROM pg_indexes WHERE indexname='event_ticket_confirmation_expired_lease_idx' AND indexdef LIKE '%lease_expires_at%' AND indexdef LIKE '%processing%';")" "1" "Expired lease recovery has a partial processing index"
 apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index_rollback.sql
 apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index.sql
 apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_lease_clock.sql
+apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_claim_clock.sql
 apply_file tdf-hq/test/integration/ticket_confirmation_delivery.sql
 psql_exec -c 'SELECT event_ticket_queue_confirmation(1)' >/dev/null
 if apply_file tdf-hq/sql/2026-10-05_ticket_confirmation_delivery_rollback.sql; then
