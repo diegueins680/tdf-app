@@ -48,6 +48,7 @@ import qualified TDF.Internationalization as Internationalization
 import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.Routes.EventTickets as Routes
 import qualified TDF.Ticketing.Inventory as Inventory
+import qualified TDF.Ticketing.Transfer as Transfer
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import qualified TDF.Server.PaymentAvailability as PaymentAvailability
 import qualified TDF.Server.SocialEventsHandlers as SocialEvents
@@ -770,7 +771,7 @@ loadTicketCheckoutDTO orderKey lookupToken = do
   ticketEntities <- if isJust (trvIssuedAt runtime)
     then runDB $ selectList [SM.EventTicketOrderRefId ==. orderKey] [Asc SM.EventTicketId]
     else pure []
-  let publicTickets = map toPublicTicket ticketEntities
+  let publicTickets = map toPublicTicket (filter (Transfer.retainedByBuyer . entityVal) ticketEntities)
   pure Routes.PublicEventTicketCheckoutResponse
     { Routes.orderId = trvOrderId runtime
     , Routes.eventId = trvEventId runtime

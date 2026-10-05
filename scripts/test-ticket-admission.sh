@@ -10,6 +10,8 @@ fi
 psql "$TICKET_ADMISSION_TEST_DSN" -X -v ON_ERROR_STOP=1 \
   -f "$repo_root/tdf-hq/test/integration/ticket_admission_fixture.sql" \
   -f "$repo_root/tdf-hq/sql/2026-10-05_ticket_admission_audit.sql" \
-  -f "$repo_root/tdf-hq/sql/2026-10-05_ticket_admission_audit.sql"
+  -f "$repo_root/tdf-hq/sql/2026-10-05_ticket_admission_audit.sql" \
+  -f "$repo_root/tdf-hq/sql/2026-10-05_ticket_transfer_deadline.sql" \
+  -f "$repo_root/tdf-hq/sql/2026-10-05_ticket_transfer_deadline.sql"
 cd "$repo_root/tdf-hq"
 stack exec -- runghc -Wall -isrc test/TicketAdmissionMain.hs

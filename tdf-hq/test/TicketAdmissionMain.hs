@@ -14,7 +14,7 @@ import Data.Either (isLeft, isRight)
 import Data.List (nub)
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Time (getCurrentTime)
+import Data.Time (getCurrentTime, addUTCTime)
 import Database.Persist
 import Database.Persist.Postgresql (withPostgresqlPool)
 import Database.Persist.Sql
@@ -23,6 +23,7 @@ import Test.Hspec
 import qualified TDF.Models.SocialEventsModels as M
 import TDF.Ticketing.Admission
 import TDF.Ticketing.Inventory
+import qualified TDF.Ticketing.Transfer as Transfer
 
 main :: IO ()
 main = do
@@ -113,9 +114,107 @@ main = do
           deny scan AdmissionNotFound
           fmap status (admit "10" 1 (AdmissionByCode replacement)) `shouldReturn` Right "checked_in"
 
+      before_ (seed pool >> prepareTransfer pool) $ describe "PostgreSQL transfer authority" $ do
+        let invite = do
+              now <- getCurrentTime
+              code <- newTicketCode
+              let proposal = M.TicketTransfer (toSqlKey 1) (Just "20") Nothing
+                    (Just "recipient@example.invalid") (Just "Recipient") "pending" code Nothing
+                    (Just (addUTCTime 3600 now)) Nothing now now
+              runSqlPool (Transfer.createTransfer "20" (toSqlKey 1) proposal now) pool
+            accept actor code = do
+              now <- getCurrentTime
+              replacement <- newTicketCode
+              runSqlPool (Transfer.acceptTransfer actor code replacement now) pool
+            invitationCode result = case result of
+              Right entity -> pure (M.ticketTransferTransferCode (entityVal entity))
+              Left err -> fail (T.unpack err)
+        it "allows one recipient under eight concurrent acceptances, revokes old QR and keeps the buyer out" $ do
+          code <- invite >>= invitationCode
+          results <- mapConcurrently (\actor -> accept (T.pack (show actor)) code) [30..37 :: Int]
+          length (filter isRight results) `shouldBe` 1
+          ticket <- runSqlPool (getJust (toSqlKey 1)) pool
+          Transfer.retainedByBuyer ticket `shouldBe` False
+          M.eventTicketCode ticket `shouldNotBe` "TDF-AB12CD34EF56"
+          now <- getCurrentTime
+          old <- runSqlPool (admitTicket "10" (toSqlKey 1) (AdmissionByCode "TDF-AB12CD34EF56") now) pool
+          fmap (M.eventTicketStatus . entityVal) old `shouldBe` Left AdmissionNotFound
+          new <- runSqlPool (admitTicket "10" (toSqlKey 1) (AdmissionByCode (M.eventTicketCode ticket)) now) pool
+          new `shouldSatisfy` isRight
+          runSqlPool (rawSql "SELECT count(*) FROM ticket_transfer WHERE status='completed' AND accepted_at IS NOT NULL AND to_party_id IS NOT NULL" []) pool
+            `shouldReturn` [Single (1 :: Int)]
+        it "creates only one pending invitation under contention" $ do
+          results <- mapConcurrently (const invite) [1..8 :: Int]
+          length (filter isRight results) `shouldBe` 1
+        it "never overwrites a completed transfer with cancellation" $ do
+          result <- invite
+          code <- invitationCode result
+          accepted <- accept "30" code
+          accepted `shouldSatisfy` isRight
+          now <- getCurrentTime
+          case result of
+            Right entity -> runSqlPool (Transfer.cancelTransfer "20" (entityKey entity) now) pool
+              >>= (`shouldSatisfy` isLeft)
+            Left err -> fail (T.unpack err)
+        it "rejects cancelled, expired, used, unpaid and disabled transfers without changing the code" $ do
+          forM_ (["cancelled", "expired", "used", "unpaid", "disabled"] :: [Text]) $ \scenario -> do
+            seed pool
+            prepareTransfer pool
+            code <- invite >>= invitationCode
+            runSqlPool (case scenario of
+              "cancelled" -> updateWhere [] [M.TicketTransferStatus =. "cancelled"]
+              "expired" -> rawExecute "UPDATE ticket_transfer SET expires_at=now()-interval '1 second'" []
+              "used" -> update (toSqlKey 1) [M.EventTicketStatus =. "checked_in"]
+              "unpaid" -> update (toSqlKey 1) [M.EventTicketOrderStatus =. "pending"]
+              _ -> update (toSqlKey 1) [M.EventTicketTierAllowTransfers =. False]) pool
+            accept "30" code >>= (`shouldSatisfy` isLeft)
+            runSqlPool (fmap M.eventTicketCode (getJust (toSqlKey 1))) pool
+              `shouldReturn` "TDF-AB12CD34EF56"
+        it "rechecks the current holder and does not authorize a former holder's invitation" $ do
+          code <- invite >>= invitationCode
+          runSqlPool (update (toSqlKey 1) [M.EventTicketCurrentHolderPartyId =. Just "40"]) pool
+          accept "30" code >>= (`shouldSatisfy` isLeft)
+        it "enforces the versioned public checkout transfer policy and exact cutoff" $ do
+          now <- getCurrentTime
+          runSqlPool (do
+            rawExecute "INSERT INTO event_ticket_checkout_policy(id,event_id,transfer_allowed,transfer_deadline) VALUES ('11111111-1111-4111-a111-111111111111',1,false,?)" [PersistUTCTime (addUTCTime 1800 now)]
+            rawExecute "INSERT INTO event_ticket_checkout_runtime VALUES (1,'11111111-1111-4111-a111-111111111111',1,'paid')" []
+            ) pool
+          invite >>= (`shouldSatisfy` isLeft)
+          runSqlPool (rawExecute "UPDATE event_ticket_checkout_policy SET transfer_allowed=true" []) pool
+          code <- invite >>= invitationCode
+          runSqlPool (rawExecute "UPDATE event_ticket_checkout_policy SET transfer_deadline=?,approval_status='approved'" [PersistUTCTime now]) pool
+          replacement <- newTicketCode
+          runSqlPool (Transfer.acceptTransfer "30" code replacement now) pool >>= (`shouldSatisfy` isLeft)
+          result <- try $ runSqlPool (rawExecute "UPDATE event_ticket_checkout_policy SET transfer_deadline=NULL" []) pool
+          (result :: Either SomeException ()) `shouldSatisfy` isLeft
+        it "rejects a disputed public payment even if the legacy order still says paid" $ do
+          runSqlPool (do
+            rawExecute "INSERT INTO event_ticket_checkout_policy(id,event_id) VALUES ('11111111-1111-4111-a111-111111111111',1)" []
+            rawExecute "INSERT INTO event_ticket_checkout_runtime VALUES (1,'11111111-1111-4111-a111-111111111111',1,'disputed')" []
+            ) pool
+          invite >>= (`shouldSatisfy` isLeft)
+        it "rolls back holder and invitation changes if code rotation violates uniqueness" $ do
+          code <- invite >>= invitationCode
+          runSqlPool (rawExecute "INSERT INTO event_ticket(id,event_id,tier_ref_id,order_ref_id,code,status,created_at,updated_at) VALUES(2,1,1,1,'TDF-FFFFFFFFFFFF','issued',now(),now())" []) pool
+          now <- getCurrentTime
+          result <- try $ runSqlPool (Transfer.acceptTransfer "30" code "TDF-FFFFFFFFFFFF" now) pool
+          (result :: Either SomeException (Either Text (Entity M.EventTicket))) `shouldSatisfy` isLeft
+          ticket <- runSqlPool (getJust (toSqlKey 1)) pool
+          Transfer.retainedByBuyer ticket `shouldBe` True
+          runSqlPool (rawSql "SELECT status FROM ticket_transfer" []) pool
+            `shouldReturn` [Single ("pending" :: Text)]
+
+prepareTransfer :: ConnectionPool -> IO ()
+prepareTransfer pool = runSqlPool (do
+  rawExecute "UPDATE social_event SET start_time=now()+interval '1 day' WHERE id=1" []
+  update (toSqlKey 1) [M.EventTicketTierAllowTransfers =. True]
+  update (toSqlKey 1) [M.EventTicketCurrentHolderPartyId =. Just "20", M.EventTicketOriginalHolderPartyId =. Just "20"]
+  ) pool
+
 seed :: ConnectionPool -> IO ()
 seed pool = runSqlPool (do
-  rawExecute "TRUNCATE event_ticket_admission_audit,event_ticket,event_ticket_order,event_ticket_tier,social_event RESTART IDENTITY CASCADE" []
+  rawExecute "TRUNCATE event_ticket_checkout_runtime,event_ticket_checkout_policy,ticket_transfer,event_ticket_admission_audit,event_ticket,event_ticket_order,event_ticket_tier,social_event RESTART IDENTITY CASCADE" []
   rawExecute "INSERT INTO social_event(id,organizer_party_id,title,start_time,created_at,updated_at) VALUES (1,'10','Admission fixture',now(),now(),now()),(2,NULL,'Unowned',now(),now(),now()),(3,'10','Other event',now(),now(),now())" []
   rawExecute "INSERT INTO event_ticket_tier(id,event_id,code,name,price_cents,currency,quantity_total,quantity_sold,is_active,created_at,updated_at) VALUES (1,1,'GA','General',2000,'USD',20,1,true,now(),now())" []
   rawExecute "INSERT INTO event_ticket_order(id,event_id,tier_id,quantity,amount_cents,currency,status,purchased_at,created_at,updated_at) VALUES (1,1,1,1,2000,'USD','paid',now(),now(),now())" []

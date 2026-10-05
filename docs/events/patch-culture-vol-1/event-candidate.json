@@ -146,7 +146,17 @@
     "draftImageUploaded": true,
     "draftCanonicalCandidateUrl": "https://www.tdfrecords.net/eventos/141",
     "adminAccessVerifiedViaGitHubActions": true,
-    "adminVerificationRun": "https://github.com/diegueins680/tdf-app/actions/runs/37262309631"
+    "adminVerificationRun": "https://github.com/diegueins680/tdf-app/actions/runs/37262309631",
+    "inventoryConcurrencyLocalPostgresPassed": true,
+    "checkInConcurrencyLocalPostgresPassed": true,
+    "guestQrBrowserSyntheticPassed": true,
+    "draftPreparationReplayMutations": 0,
+    "draftPreparationReplayRun": "https://github.com/diegueins680/tdf-app/actions/runs/37264080498",
+    "publicStorefrontWhilePrivateHttpStatus": 404,
+    "providerReadinessDiagnosticHttpStatus": 404,
+    "implementationPullRequest": "https://github.com/diegueins680/tdf-app/pull/480",
+    "transferConcurrencyLocalPostgresPassed": true,
+    "localPostgresTicketingTestCount": 18
   },
   "organizerResponse": {
     "source": "Direct user message in this conversation",

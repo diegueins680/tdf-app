@@ -2,9 +2,9 @@
 
 # PATCH CULTURE Vol. 1 — investigación y auditoría inicial
 
-Estado actualizado: el organizador respondió el bloque consolidado. Ver [propuesta de condiciones v1](propuesta-condiciones.md) y `event-candidate.json` para la información vigente. **No creado en producción, no publicado, no cobros activados, no E2E acreditado.**
+Estado actualizado: condiciones comerciales aprobadas por el organizador («Approved. Continue»). Borrador creado en TDF; **sin publicación, cobros activados ni E2E de proveedor acreditado**. Ver [condiciones aprobadas v1](propuesta-condiciones.md) y `event-candidate.json`.
 
-Confirmados ahora: puertas13:30, jam16:30 incluida para compradores del taller, cierre con showcase de Llama Este Pez a las21:00, participantes Kevin Montenegro/Diego Saá/Emanuele Pilo-Pais, cero compromisos previos, ninguna venta Meet2Go, 18años y USD20 finales repartidos USD15TDF/USD5Andes. Los apartados siguientes conservan la auditoría inicial; sus faltantes ya respondidos se resuelven en el candidato actualizado. Condiciones nuevas continúan como propuesta para la única aprobación final.
+Confirmados ahora: puertas13:30, jam16:30 incluida para compradores del taller, cierre con showcase de Llama Este Pez a las21:00, participantes Kevin Montenegro/Diego Saá/Emanuele Pilo-Pais, cero compromisos previos, ninguna venta Meet2Go, 18años y USD20 finales repartidos USD15TDF/USD5Andes. Los apartados siguientes conservan la auditoría inicial; sus faltantes ya respondidos se resuelven en el candidato actualizado. La aprobación de la propuesta queda registrada; la activación continúa bloqueada por la validación técnica y fiscal pendiente.
 
 ## Fuentes y alcance
 
@@ -36,7 +36,7 @@ La imagen `evidence/instagram-preview.jpg` es la **preview publicada**, no una a
 | Marcas visibles | Elemental Zoser Sound Studio, Andes Brewing Co., TDF Records; Meet2Go únicamente en preview publicada |
 | Inscripción | Caption remite a link en bio, destino no recuperado |
 
-## Inferencias y propuestas, todavía sin activar
+## Inferencias y propuesta inicial (histórico; respuestas posteriores arriba)
 
 - **2026-10-24**, confianza alta: publicación fechada 2026-10-04, referencia a la fecha próxima y coincidencia de sábado. No se deduce el año del nombre del archivo.
 - Timezone `America/Guayaquil`, por ubicación en Quito; inicio propuesto `2026-10-24T14:00:00-05:00`.
@@ -45,7 +45,7 @@ La imagen `evidence/instagram-preview.jpg` es la **preview publicada**, no una a
 - Una página canónica de TDF puede presentar ambos bloques; el cupo del taller debe distinguirse del aforo de la jam y del venue. No usar automáticamente `SocialEvent.capacity=20` para toda la jornada.
 - Slug editorial propuesto `patch-culture-vol-1`; las rutas públicas existentes usan ID `/eventos/:eventId`. Cualquier alias futuro debe resolver a una única URL canónica, sin duplicar evento.
 
-## Faltantes e inconsistencias
+## Faltantes e inconsistencias de la investigación inicial (histórico)
 
 1. Horario final del taller/jam, apertura de puertas y fin de jornada. Se preserva `endTime=null` hasta tener evidencia, permitido por la arquitectura.
 2. Jam abierta no significa necesariamente gratuita. Faltan precio/registro/aforo y condiciones para participar con máquinas.

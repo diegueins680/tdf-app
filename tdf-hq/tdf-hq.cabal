@@ -83,6 +83,7 @@ executable tdf-hq-exe
     TDF.Commerce.EventTickets
     TDF.Ticketing.Admission
     TDF.Ticketing.Inventory
+    TDF.Ticketing.Transfer
     TDF.Commerce.MarketplaceSales
     TDF.Commerce.MarketplaceRentals
     TDF.Commerce.MarketplaceOperations
@@ -376,6 +377,7 @@ test-suite tdf-hq-test
     TDF.Commerce.EventTickets
     TDF.Ticketing.Admission
     TDF.Ticketing.Inventory
+    TDF.Ticketing.Transfer
     TDF.Commerce.MarketplaceSales
     TDF.Commerce.MarketplaceRentals
     TDF.Commerce.MarketplaceOperations
