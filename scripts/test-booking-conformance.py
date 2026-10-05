@@ -107,6 +107,13 @@ try:
         for _ in range(2):
             run(['psql', '-X', '-v', 'ON_ERROR_STOP=1', '-d', NAME, '-f', str(OUTPUT / 'migrations.sql')], stdout=log, stderr=log)
     check('canonical migration batch applies twice', sql('SELECT count(*) FROM tdf_schema_migration') == str(len(json.loads((ROOT / 'scripts/production-migrations.json').read_text())['migrations'])))
+    interval_cases = """WITH points AS (
+      SELECT '2035-01-01'::timestamptz + n * interval '1 microsecond' AS t FROM generate_series(0,8) n
+    ), windows AS (SELECT a.t AS s,b.t AS e FROM points a CROSS JOIN points b WHERE a.t<b.t)
+    SELECT bool_and((a.s < b.e AND a.e > b.s) = (tstzrange(a.s,a.e,'[)') && tstzrange(b.s,b.e,'[)'))),
+           bool_and((a.s <= b.e AND a.e >= b.s) = (tstzrange(a.s,a.e,'[)') && tstzrange(b.s,b.e,'[)')))
+    FROM windows a CROSS JOIN windows b"""
+    check('half-open overlap matches PostgreSQL ranges; inclusive mutation fails on adjacent windows', sql(interval_cases) == 't|f')
     roles = sql('SELECT code FROM security_role WHERE active ORDER BY code').splitlines()
     assert all(all(c.islower() or c == '-' for c in role) for role in roles)
     actors = {role: actor(role) for role in roles}

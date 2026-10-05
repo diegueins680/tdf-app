@@ -4024,7 +4024,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "e37686e46bf4dd8fa4bfc461c6f2d9b25177cc21f605e85ac34a5a8acddd09de",
+      "sha256": "31bab3c26a945391c5c6fc749c961e65543b40e4fa09235a66b15a9a8230d484",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11854,7 +11854,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "42085dd2d375ed07dfa57eeee85abbddad40838395b6ad62cc16a55174124532",
+      "sha256": "348f5a07fa5264ec8e306e71d435ce3f09d239b3f058aa9f844f1ba956123017",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12514,7 +12514,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "d49ecbf6d6db9bb47b62f89945f1c3a2841ef389758ba6a0719363259aecb470",
+      "sha256": "a205ac4f0400b0972d1fc3280cc6ed7913da633cbed670d919de38bfc96a4f45",
       "semanticConformance": "not-established-by-discovery"
     },
     {

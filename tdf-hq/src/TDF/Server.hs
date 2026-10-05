@@ -13221,14 +13221,15 @@ unavailableDefaultResourcesError serviceLabel names =
     }
 
 isResourceAvailableDB :: Key Resource -> UTCTime -> UTCTime -> SqlPersistT IO Bool
+isResourceAvailableDB _ start end | start >= end = pure False
 isResourceAvailableDB resourceKey start end = do
   -- The exclusion-backed allocation is the authority, including paid runtime
   -- holds and released/completed history. Booking status alone is insufficient.
   rows <- (rawSql
     "SELECT EXISTS (SELECT 1 FROM service_booking_resource_allocation\
     \ WHERE resource_id = ? AND allocation_status IN ('holding','reserved')\
-    \ AND tstzrange(starts_at, ends_at, '[)') && tstzrange(?, ?, '[)'))"
-    [toPersistValue resourceKey, PersistUTCTime start, PersistUTCTime end]
+    \ AND starts_at < ? AND ends_at > ?)"
+    [toPersistValue resourceKey, PersistUTCTime end, PersistUTCTime start]
     :: SqlPersistT IO [Single Bool])
   pure $ case rows of
     [Single occupied] -> not occupied

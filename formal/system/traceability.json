@@ -3065,7 +3065,7 @@
     "scripts/specification-inventory.py": "d2fd062de80b6aacf832714799d7596f13cabf101d2d7073192b2cd6ec6ff275",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-booking-conformance.py": "e37686e46bf4dd8fa4bfc461c6f2d9b25177cc21f605e85ac34a5a8acddd09de",
+    "scripts/test-booking-conformance.py": "31bab3c26a945391c5c6fc749c961e65543b40e4fa09235a66b15a9a8230d484",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-inspection.py": "65bfd55b856baf7ded66010a5fc809bb762384078fd36f1b28eade998b263bab",
     "scripts/test-hetzner-restore.py": "29c865489be16fb0510927b5fe6815498dde82dc74197365ac37bfbe28c79cf4",
@@ -3126,7 +3126,7 @@
     "tdf-hq/src/TDF/Cors.hs": "94a8b2ffedfc793e6d8c44d62f0388dc853e3da95e75e23dfdb6fed76d7f88dd",
     "tdf-hq/src/TDF/Directory/Policy.hs": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
     "tdf-hq/src/TDF/RagStore.hs": "80b5f523542cb71119551dbb64bd5e0c0e3e880622997a496e496e4d7fbeb912",
-    "tdf-hq/src/TDF/Server.hs": "42085dd2d375ed07dfa57eeee85abbddad40838395b6ad62cc16a55174124532",
+    "tdf-hq/src/TDF/Server.hs": "348f5a07fa5264ec8e306e71d435ce3f09d239b3f058aa9f844f1ba956123017",
     "tdf-hq/src/TDF/Server/Directory.hs": "6220ad30b1716729e26267bc3d8f2f1d890146480b02c08703175c411797e5e1",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/ProviderExecution.hs": "a8ea11e94ddf018b3955f2c67e86122035731268499b605673a2766e577c0a48",
@@ -3150,7 +3150,7 @@
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "39c92770f1830489ecb1c909dfbefa7c1a11857f3f002ce89da5283c06c69a0b",
-    "tdf-hq/test/TDF/ServerSpec.hs": "d49ecbf6d6db9bb47b62f89945f1c3a2841ef389758ba6a0719363259aecb470",
+    "tdf-hq/test/TDF/ServerSpec.hs": "a205ac4f0400b0972d1fc3280cc6ed7913da633cbed670d919de38bfc96a4f45",
     "tdf-mobile/package-lock.json": "1d669d0ea79f240494299f22c868f79753b921ad6f06656ad71b5942ccd3ac35",
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": "a8111cb6563d7cb08ca568175ed51460de0293db652142a7979e907e256ee2ff"
   },
@@ -7120,7 +7120,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "e37686e46bf4dd8fa4bfc461c6f2d9b25177cc21f605e85ac34a5a8acddd09de",
+      "sha256": "31bab3c26a945391c5c6fc749c961e65543b40e4fa09235a66b15a9a8230d484",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16680,7 +16680,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "42085dd2d375ed07dfa57eeee85abbddad40838395b6ad62cc16a55174124532",
+      "sha256": "348f5a07fa5264ec8e306e71d435ce3f09d239b3f058aa9f844f1ba956123017",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -17626,7 +17626,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "d49ecbf6d6db9bb47b62f89945f1c3a2841ef389758ba6a0719363259aecb470",
+      "sha256": "a205ac4f0400b0972d1fc3280cc6ed7913da633cbed670d919de38bfc96a4f45",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
