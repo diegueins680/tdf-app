@@ -95,3 +95,31 @@ test('Account deletion refuses authentication lost between session read and POST
   await expect(page.getByRole('status')).toHaveCount(0);
   expect(state.submissions).toHaveLength(0);
 });
+
+test('Administrator records an auditable deletion outcome @critical', async ({ page, baseURL }) => {
+  const state = await fixture(page, baseURL);
+  state.session.roles = ['Admin']; state.session.modules = ['internships'];
+  const record = { lfdId: 'synthetic-request', lfdTitle: 'Synthetic deletion request', lfdDescription: 'account_deletion_request\nSynthetic QA only.', lfdCreatedBy: 424242, lfdCreatedAt: '2026-10-05T12:00:00Z', lfdDeletionHistory: [] };
+  await page.route('**/feedback/internal**', async route => {
+    const url = new URL(route.request().url());
+    if (url.pathname.endsWith('/account-deletion/synthetic-request') && route.request().method() === 'POST') {
+      const payload = route.request().postDataJSON();
+      expect(payload.adrOutcome).toBe('completed');
+      record.lfdDeletionHistory = [{ adaOutcome: payload.adrOutcome, adaNote: payload.adrNote, adaActor: 77, adaCreatedAt: '2026-10-05T13:00:00Z' }];
+      return route.fulfill({ json: record.lfdDeletionHistory[0] });
+    }
+    return route.fulfill({ json: url.searchParams.get('accountDeletionOnly') === 'true' ? [record] : [] });
+  });
+  await page.goto('/feedback/interno');
+  await expect(page.getByRole('heading', { name: 'Solicitudes de eliminación de cuenta' })).toBeVisible();
+  const complete = page.getByRole('button', { name: 'Registrar eliminación completada' });
+  await expect(complete).toBeDisabled();
+  const note = page.getByLabel('Resultado y verificación del procesamiento');
+  await note.fill('Synthetic completion verified; no real account erased.');
+  await expect(complete).toBeEnabled();
+  expect((await complete.boundingBox()).height).toBeGreaterThanOrEqual(44);
+  await complete.focus(); await page.keyboard.press('Enter');
+  await expect(page.getByText('Completada', { exact: true })).toBeVisible();
+  await expect(page.getByText(/Operador 77/)).toBeVisible();
+  await expect(complete).toHaveCount(0);
+});
