@@ -6042,7 +6042,7 @@
     ".github/workflows/event-operations-formal.yml": "8cdbbb59f539a8394fde147ba38dc4f27260b9ac2c371c731da5b342401077d1",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     "docs/catalog-persistence/catalog-list-decisions.json": "fe2f2c2292abcb06e85cdff2ff8e72902f26a70e3303b8871ce9e0678674ab7a",
-    "e2e/web/account-deletion-rollout.spec.mjs": "772e9db0d36afea88184cc4c6302145069ed9ebd0e93db84b1f8dc79cd1a3f07",
+    "e2e/web/account-deletion-rollout.spec.mjs": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
     "e2e/web/account-deletion.spec.mjs": "b53299de10421c77b2364ad9df6d82f689b30056826e0aceddda1624e2aa64c3",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
     "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
@@ -10297,7 +10297,7 @@
     {
       "id": "SURFACE-ed82a4ad1ffc2408",
       "path": "e2e/web/account-deletion-rollout.spec.mjs",
-      "sha256": "772e9db0d36afea88184cc4c6302145069ed9ebd0e93db84b1f8dc79cd1a3f07",
+      "sha256": "a9385f304f7b5352979ff4d70c9966d7a38a77bd38aea4e50bbbb0c281cce96c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

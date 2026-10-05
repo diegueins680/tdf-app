@@ -40,6 +40,7 @@ test('Pausing intake preserves the operator queue and recorded owner @critical',
     if (request.method() === 'POST' && url.pathname.includes('account-deletion')) deletionPosts.push(url.pathname);
     if (url.pathname.endsWith('/session')) return route.fulfill({ json: { username: 'synthetic@example.test', partyId: 424242, roles: ['Admin'], modules: ['internships'], featureFlags: [] } });
     if (url.pathname.endsWith('/session/onboarding')) return route.fulfill({ json: { eligible: false } });
+    if (url.pathname.includes('/catalogs/')) return route.fulfill({ json: { catalogs: [] } });
     if (url.pathname.endsWith('/feedback/internal/legacy') && url.searchParams.get('accountDeletionOnly') === 'true') return route.fulfill({ json: [{
       lfdId: 'existing-private-request', lfdTitle: 'Existing deletion request', lfdDescription: 'account_deletion_request\nSynthetic record only.',
       lfdCreatedBy: 424242, lfdCreatedAt: '2026-10-05T12:00:00Z', lfdDeletionHistory: [],
