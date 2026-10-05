@@ -4,13 +4,14 @@
 -- replaced, so neither DNS, sockets, TLS nor provider credentials are used.
 module TDF.DriveReplaySpec (spec) where
 
-import Control.Exception (SomeException, bracket, fromException, throwIO, try)
+import Control.Exception (AsyncException(ThreadKilled), IOException, SomeAsyncException, SomeException, bracket, fromException, throwIO, try, tryJust)
 import Control.Monad (unless)
 import qualified Data.Aeson as A
 import qualified Data.Aeson.KeyMap as KM
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BL
 import Data.Int (Int64)
+import Data.Maybe (isJust)
 import Database.Persist.Sql (toSqlKey)
 import Data.IORef (atomicModifyIORef', modifyIORef', newIORef, readIORef, writeIORef)
 import Data.Text (Text)
@@ -28,6 +29,7 @@ import TDF.API.Types (DriveUploadDTO(..))
 import TDF.Server (uploadToDrive)
 
 type Hop = (BS.ByteString, BS.ByteString)
+type Attempt = (BS.ByteString, Int, Bool, BS.ByteString, BS.ByteString)
 
 fixtureKey :: Text
 fixtureKey = T.replicate 64 "a"
@@ -51,7 +53,7 @@ replayTrace = [listHop, shareHop, metaHop]
 spec :: Spec
 spec = describe "Drive replay payload binding (no provider network)" $ do
   it "reuses an identical upload without a second multipart create" $
-    withFixture False False $ \manager trace wire directory -> do
+    withFixture False False $ \manager trace wire directory _ -> do
       first <- send manager directory "first.tmp" "same.webp" "image/webp" "SYNTHETIC_PAYLOAD_A"
       second <- send manager directory "retry.tmp" "same.webp" "image/webp" "SYNTHETIC_PAYLOAD_A"
       duFileId first `shouldBe` fileId
@@ -61,10 +63,10 @@ spec = describe "Drive replay payload binding (no provider network)" $ do
 
   mapM_ (\(label, name, mime, bytes) ->
     it ("rejects a reused key with different " <> label <> " before provider mutation") $
-      withFixture False False $ \manager trace wire directory -> do
+      withFixture False False $ \manager trace wire directory _ -> do
         first <- send manager directory "first.tmp" "same.webp" "image/webp" "SYNTHETIC_PAYLOAD_A"
         duFileId first `shouldBe` fileId
-        outcome <- try (send manager directory "retry.tmp" name mime bytes)
+        outcome <- trySynchronous (send manager directory "retry.tmp" name mime bytes)
           :: IO (Either SomeException DriveUploadDTO)
         -- Check effects before checking the response. A failure after sharing is
         -- not a passing conflict. These three examples fail on the old helper.
@@ -83,40 +85,62 @@ spec = describe "Drive replay payload binding (no provider network)" $ do
     ]
 
   it "rejects another Party reusing the same key and folder" $
-    withFixture False False $ \manager trace _ directory -> do
+    withFixture False False $ \manager trace _ directory _ -> do
       _ <- send manager directory "first.tmp" "same.webp" "image/webp" "SYNTHETIC_PAYLOAD_A"
-      outcome <- try (sendAs 202 manager directory "foreign.tmp" "same.webp" "image/webp" "SYNTHETIC_PAYLOAD_A")
+      outcome <- trySynchronous (sendAs 202 manager directory "foreign.tmp" "same.webp" "image/webp" "SYNTHETIC_PAYLOAD_A")
         :: IO (Either SomeException DriveUploadDTO)
       trace `shouldReturn` (firstUploadTrace <> [listHop])
       expectConflict outcome
 
   it "does not adopt or share a legacy entry without a stored fingerprint" $
-    withFixture False True $ \manager trace _ directory -> do
+    withFixture False True $ \manager trace _ directory _ -> do
       _ <- send manager directory "first.tmp" "same.webp" "image/webp" "SYNTHETIC_PAYLOAD_A"
-      outcome <- try (send manager directory "legacy.tmp" "same.webp" "image/webp" "SYNTHETIC_PAYLOAD_A")
+      outcome <- trySynchronous (send manager directory "legacy.tmp" "same.webp" "image/webp" "SYNTHETIC_PAYLOAD_A")
         :: IO (Either SomeException DriveUploadDTO)
       trace `shouldReturn` (firstUploadTrace <> [listHop])
       expectConflict outcome
 
   it "does not follow a provider redirect" $
-    withFixture True False $ \manager trace _ directory -> do
-      outcome <- try (send manager directory "redirect.tmp" "same.webp" "image/webp" "SYNTHETIC_PAYLOAD_A")
+    withFixture True False $ \manager trace _ directory transport -> do
+      outcome <- trySynchronous (send manager directory "redirect.tmp" "same.webp" "image/webp" "SYNTHETIC_PAYLOAD_A")
         :: IO (Either SomeException DriveUploadDTO)
       trace `shouldReturn` [listHop]
+      transport `shouldReturn` ([("www.googleapis.com", 443, True, "GET", "/drive/v3/files")], 1)
       case outcome of
         Left _ -> pure ()
         Right _ -> expectationFailure "Redirect must not produce an upload result"
 
   it "rejects an unexpected destination before creating a connection" $
-    withFixture False False $ \manager trace wire _ -> do
+    withFixture False False $ \manager trace wire _ transport -> do
       request <- HC.parseRequest "https://unexpected.invalid/drive/v3/files"
-      outcome <- try (HC.httpLbs request manager)
+      outcome <- trySynchronous (HC.httpLbs request manager)
         :: IO (Either SomeException (HC.Response BL.ByteString))
       trace `shouldReturn` []
       wire `shouldReturn` BS.empty
+      transport `shouldReturn` ([("unexpected.invalid", 443, True, "GET", "/drive/v3/files")], 0)
       case outcome of
         Left _ -> pure ()
         Right _ -> expectationFailure "Unexpected destination was admitted"
+
+  it "does not turn asynchronous cancellation into an expected provider failure" $ do
+    outcome <- try (trySynchronous (throwIO ThreadKilled :: IO ()))
+      :: IO (Either AsyncException (Either SomeException ()))
+    case outcome of
+      Left ThreadKilled -> pure ()
+      _ -> expectationFailure "Asynchronous cancellation was swallowed"
+
+-- Accept only the synchronous failure classes this adapter can deliberately
+-- report. Unknown exceptions (including the outer timeout's exception) escape;
+-- cancellation must never make a negative assertion pass.
+trySynchronous :: IO a -> IO (Either SomeException a)
+trySynchronous = tryJust $ \exception ->
+  if isJust (fromException exception :: Maybe SomeAsyncException)
+    then Nothing
+    else if isJust (fromException exception :: Maybe IOException)
+      || isJust (fromException exception :: Maybe HC.HttpException)
+      || isJust (fromException exception :: Maybe ServerError)
+      then Just exception
+      else Nothing
 
 send :: HC.Manager -> FilePath -> FilePath -> Text -> Text -> BS.ByteString -> IO DriveUploadDTO
 send = sendAs 101
@@ -142,14 +166,19 @@ expectConflict outcome = case outcome of
 -- legacyReplay suppresses the property on replay to represent an old object.
 withFixture
   :: Bool -> Bool
-  -> (HC.Manager -> IO [Hop] -> IO BS.ByteString -> FilePath -> IO a)
+  -> (HC.Manager -> IO [Hop] -> IO BS.ByteString -> FilePath -> IO ([Attempt], Int) -> IO a)
   -> IO a
 withFixture redirectList legacyReplay action = withSystemTempDirectory "tdf-drive-replay-review-" $ \directory -> do
   created <- newIORef False
+  attempts <- newIORef []
+  connections <- newIORef (0 :: Int)
   hops <- newIORef []
   writes <- newIORef []
   nextResponse <- newIORef BS.empty
   let modifyRequest request = do
+        -- Record before admission: a followed redirect rejected by the host
+        -- guard must still fail the redirect-control assertion.
+        modifyIORef' attempts (<> [(HC.host request, HC.port request, HC.secure request, HC.method request, HC.path request)])
         let hop = (HC.method request, HC.path request)
         unless (HC.host request == "www.googleapis.com" && HC.port request == 443
           && HC.secure request && hop `elem` [listHop, createHop, shareHop, metaHop]) $
@@ -181,6 +210,7 @@ withFixture redirectList legacyReplay action = withSystemTempDirectory "tdf-driv
             <> BS.pack (show (BS.length body)) <> "\r\nConnection: close\r\n\r\n" <> body
         pure request { HC.redirectCount = 0 }
       connect _ _ _ = do
+        modifyIORef' connections (+1)
         response <- readIORef nextResponse
         remaining <- newIORef response
         HC.makeConnection
@@ -195,6 +225,7 @@ withFixture redirectList legacyReplay action = withSystemTempDirectory "tdf-driv
         }
   result <- timeout 15000000 $ bracket (HC.newManager settings) HC.closeManager $ \manager ->
     action manager (readIORef hops) (BS.concat <$> readIORef writes) directory
+      ((,) <$> readIORef attempts <*> readIORef connections)
   maybe (fail "Synthetic Drive replay fixture timed out") pure result
 
 capturedProperties :: BS.ByteString -> IO A.Value
