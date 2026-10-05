@@ -5193,9 +5193,12 @@
         "tdf-hq-ui/public/mobile-app/index.html",
         "tdf-hq-ui/public/mobile-app/privacy.html",
         "tdf-hq-ui/public/mobile-app/support.html",
-        "tdf-hq-ui/public/mobile-app/terms.html"
+        "tdf-hq-ui/public/mobile-app/terms.html",
+        "tdf-hq-ui/public/mobile-distribution.json"
       ],
-      "tests": [],
+      "tests": [
+        "tdf-hq-ui/src/mobile/MobileApp.test.tsx"
+      ],
       "formalModels": [],
       "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
       "evidence": "Current candidate gate receipts must be retained separately; historical source checks are not a current integration pass.",
@@ -5216,7 +5219,7 @@
       "idempotency": "Repeated reads have no application mutation.",
       "failure": "Stale or unavailable distribution must not be presented as verified current availability.",
       "recovery": "Correct source under review and reverify deployed content and links.",
-      "observability": "Source review and deployed static-page/browser checks; no dedicated automated assertion covers all legal disclosure wording."
+      "observability": "Source review and deployed static-page/browser checks; no dedicated automated assertion covers all legal disclosure wording. Distribution state, expiry, admission and URL validation have component regression coverage; actual store availability requires fresh provider evidence."
     },
     {
       "authority": "reconciled",
@@ -5898,6 +5901,112 @@
       },
       "verification": "Actual controller tests inject changed head/base/queue/draft/closure, revocation failure and duplicate heads; protected-main enforcement is re-observed during bootstrap.",
       "evidence": "Current-head unit and hosted repository gates plus source-bound metadata/protection receipts; no universal concurrency proof."
+    },
+    {
+      "id": "PRIV-INTAKE-001",
+      "title": "Authenticated account-deletion intake with auditable manual resolution",
+      "domain": "PRIV",
+      "statement": "Account owners can request deletion without composing an email. Only a live matching account may submit the reserved marker; administrator resolution is immutable and audited and never claims automatic erasure.",
+      "authority": "Product owner mobile release/privacy task; reviewed PR486; manual processing by owner-confirmed info@tdfrecords.net",
+      "source": "docs/mobile-program/account-deletion-operations.md; root PR486",
+      "contract": "docs/mobile-program/account-deletion-operations.md",
+      "actors": [
+        "Authenticated account holder",
+        "Current authorized administrator",
+        "Privacy operator"
+      ],
+      "preconditions": [
+        "Live matching session, explicit confirmation and published feedback catalog values; strict API deployment is required before the form is operational."
+      ],
+      "inputs": [
+        "Account ID bound to authenticated identity",
+        "Non-simple origin proof header and browser Origin when present",
+        "Reserved normalized request marker",
+        "Administrator outcome and required resolution note"
+      ],
+      "state": {
+        "intake": "Existing feedback request and authenticated creator",
+        "resolution": [
+          "pending",
+          "completed",
+          "rejected"
+        ],
+        "fulfilment": "Separate private evidence ledger PRIV-DELETE-001"
+      },
+      "allowedTransitions": [
+        "Authenticated current owner -> received request with server owner/ID receipt",
+        "Pending -> completed/rejected with locked row and actor/time/note audit"
+      ],
+      "forbiddenTransitions": [
+        "Anonymous, revoked or mismatched owner submits deletion request",
+        "Simple cross-origin form or hostile Origin submits deletion request",
+        "Generic feedback bypasses reserved-marker checks",
+        "Completed/rejected request is resolved again",
+        "Successful intake or queue resolution is represented as automatic erasure"
+      ],
+      "effects": [
+        "Existing feedback row and notification on accepted intake",
+        "Append-only resolution audit in the same transaction as the terminal state"
+      ],
+      "authorization": "Cookie identity is reloaded before submission; server withCurrentAuthSession lock spans insertion. Required non-simple header and trusted Origin guard precede general CORS. Administrator capability and current session protect resolution.",
+      "privacy": "No diagnostics, attachments or analytics on the deletion form. Identity and request content remain in authenticated queues/private evidence; no public tester/account list.",
+      "concurrency": "Current-session lock serializes intake against revocation. PostgreSQL FOR UPDATE serializes terminal resolution; exactly one concurrent resolution succeeds and the loser returns409.",
+      "idempotency": "Terminal resolution is immutable; repeated resolution returns409. Intake has no exactly-once retry-key guarantee; network ambiguity must not be described as confirmed submission.",
+      "failure": "Reject absent/mismatched receipt; preserve cached terminal receipt if refresh fails. Failed validation performs no insertion/notification. Operator execution failure remains unfinished under PRIV-DELETE-001.",
+      "recovery": "Reload authenticated receipt and private evidence; never infer erasure from a queue flag. Preserve earliest receipt/deadline in the existing operator ledger.",
+      "observability": "Scoped unit/browser tests and unmodified FormData/HTTP tests with disposable PostgreSQL cover identity, CSRF, spoofing, pagination, audit and concurrent200/409. No real deletion or extra notification is used for QA.",
+      "property": "OwnerMatches; ReservedMarkerCannotBypass; OneTerminalResolution; IntakeIsNotErasure",
+      "implementation": [
+        "tdf-hq/src/TDF/API/Feedback.hs",
+        "tdf-hq/src/TDF/ServerFeedback.hs",
+        "tdf-hq/src/TDF/Cors.hs",
+        "tdf-hq-ui/src/api/accountDeletion.ts",
+        "tdf-hq-ui/src/api/feedback.ts",
+        "tdf-hq-ui/src/api/internalFeedback.ts",
+        "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/components/AccountDeletionQueue.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts",
+        "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/pages/AccountDeletionPage.tsx",
+        "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+        "tdf-hq-ui/src/routes/publicRoutes.tsx",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq/docs/openapi/api.yaml"
+      ],
+      "tests": [
+        "e2e/web/account-deletion.spec.mjs",
+        "e2e/web/studio-internship-audit.spec.mjs",
+        "scripts/test-account-deletion-api.mjs",
+        "scripts/test-studio-internship-audit-api-e2e.mjs",
+        "scripts/test-studio-internship-audit-api-e2e.sh",
+        "tdf-hq-ui/src/api/accountDeletion.test.ts",
+        "tdf-hq-ui/src/api/feedback.test.ts",
+        "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
+        "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx",
+        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-mobile/__tests__/featureRegistry.test.ts",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/CorsSpec.hs",
+        "scripts/verify-cors-boundary.py"
+      ],
+      "formalModels": [],
+      "verification": "QuickCheck properties exercise the actual identity/outcome validators and normalization idempotency over arbitrary inputs; disposable PostgreSQL/HTTP controls exercise CSRF and concurrent resolution. No dedicated temporal model or whole-program refinement is claimed for these handlers; the distinct operator lifecycle model does not prove them. Real Servant routing tests bind the CORS proof/origin guard to both the canonical endpoint and its accepted trailing-slash alias.",
+      "evidence": "Exact revision, command, binary and disposable HTTP/browser receipts retained separately; predecessor passes do not qualify the combined main merge.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Scoped source and regression evidence; combined candidate and deployed acceptance remain separate gates.",
+      "ambiguity": [
+        "Physical iPhone OAuth and Apple Beta Review are independent release gates.",
+        "Operational assignment, monitoring, per-service erasure and delivered completion notice require actual operator evidence.",
+        "No dedicated formal intake model currently exists."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Intake and audited resolution implemented; current merged validation, production backend deployment and actual operational fulfilment remain required."
+      }
     }
   ]
 }

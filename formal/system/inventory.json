@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "6297e3f137126350aa485690bf89de19e82d3c25",
+  "mobileRevision": "c98a397e3895cf44008bab472773ade3985d6b2e",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -25,6 +25,7 @@
     "e2e": [
       "e2e/integration/event-raci-browser.spec.mjs",
       "e2e/interactions/interactions.spec.mjs",
+      "e2e/web/account-deletion.spec.mjs",
       "e2e/web/artist-follow.spec.mjs",
       "e2e/web/artist-merch.spec.mjs",
       "e2e/web/campaign-accessibility.spec.mjs",
@@ -346,6 +347,7 @@
       "scripts/sync-concerts-with-apis.py",
       "scripts/sync-country-reference.mjs",
       "scripts/test-access-request-notification-migration.sh",
+      "scripts/test-account-deletion-api.mjs",
       "scripts/test-artist-claim-target-http.sh",
       "scripts/test-artist-merch-runtime.sh",
       "scripts/test-artist-merch-storefronts-migration.sh",
@@ -502,6 +504,8 @@
       "tdf-hq-ui/src/analytics/useAnalytics.ts",
       "tdf-hq-ui/src/analytics/webVitals.ts",
       "tdf-hq-ui/src/api/accessRequests.ts",
+      "tdf-hq-ui/src/api/accountDeletion.test.ts",
+      "tdf-hq-ui/src/api/accountDeletion.ts",
       "tdf-hq-ui/src/api/admin.ts",
       "tdf-hq-ui/src/api/ads.ts",
       "tdf-hq-ui/src/api/artistEnrichment.test.ts",
@@ -617,6 +621,8 @@
       "tdf-hq-ui/src/api/types.ts",
       "tdf-hq-ui/src/api/whatsappConsent.ts",
       "tdf-hq-ui/src/api/whatsappConsentPublic.ts",
+      "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
+      "tdf-hq-ui/src/components/AccountDeletionQueue.tsx",
       "tdf-hq-ui/src/components/AdminUserCommunicationDialog.test.tsx",
       "tdf-hq-ui/src/components/AdminUserCommunicationDialog.tsx",
       "tdf-hq-ui/src/components/ApiActivityIndicator.test.tsx",
@@ -797,6 +803,8 @@
       "tdf-hq-ui/src/hooks/useNavigationPreferences.ts",
       "tdf-hq-ui/src/hooks/useOffline.ts",
       "tdf-hq-ui/src/i18n/index.ts",
+      "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts",
+      "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts",
       "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
       "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
       "tdf-hq-ui/src/i18n/locales/de.ts",
@@ -822,6 +830,8 @@
       "tdf-hq-ui/src/pages/AboutPage.tsx",
       "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
       "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
+      "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx",
+      "tdf-hq-ui/src/pages/AccountDeletionPage.tsx",
       "tdf-hq-ui/src/pages/AdminDiagnosticsPage.test.tsx",
       "tdf-hq-ui/src/pages/AdminDiagnosticsPage.tsx",
       "tdf-hq-ui/src/pages/AdminTokenPage.tsx",
@@ -2312,7 +2322,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "b5f123f33695eb912cf9f3956a4b2620add70006c42d86f8a52755c663ccc0c3",
+      "sha256": "f43ddaf0e847ee524739559f2ac242970aaa42bef5ad810249900784ca863d2e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2379,6 +2389,12 @@
       "id": "SURFACE-b6a53fc19d550b31",
       "path": "e2e/interactions/interactions.spec.mjs",
       "sha256": "d3208c1857133ebf963798cfd25daaf733ef4b0d4d84e2d3075cfd18fd9bfab5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9258b3c42ab418b4",
+      "path": "e2e/web/account-deletion.spec.mjs",
+      "sha256": "b31778ac20f8bdbc66232add16556a4334d6e82f8a80b598b544934ea1f34a64",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2498,7 +2514,7 @@
     {
       "id": "SURFACE-03b376e5c1e5769e",
       "path": "e2e/web/studio-internship-audit.spec.mjs",
-      "sha256": "a1476f348af89e8c1bc1f2e41573a6b8acb8fa2db257c919236457c1a11f484a",
+      "sha256": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4236,6 +4252,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-1185f571edd4c1d3",
+      "path": "scripts/test-account-deletion-api.mjs",
+      "sha256": "7a712d3754e8e99771637b30e27be7cefd2536c8e8bd4a2b94296fa535f38d0c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-a8dfded8bd6214c5",
       "path": "scripts/test-artist-claim-target-http.sh",
       "sha256": "ea13d891593d2b2951a59b256df5de6bea5518c4b416ffd2366efd08ef051cc5",
@@ -4688,13 +4710,13 @@
     {
       "id": "SURFACE-df93425ce321f1fb",
       "path": "scripts/test-studio-internship-audit-api-e2e.mjs",
-      "sha256": "889996bfee1d3934ad9eb5f35e37c05b8f15f11c43dbfa94ecba095e18158da1",
+      "sha256": "c051228cf890bdc3ec2079f9afbbc3e8e2bf1ead0743e192f54c8281d442db7e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-712726a891f46cde",
       "path": "scripts/test-studio-internship-audit-api-e2e.sh",
-      "sha256": "2d3b7e61467078e968499231822d4f80b172d2f3f3646be427df0bcf3a4c00c5",
+      "sha256": "5c0236ad2a923c9891a8d8239055865828060a78a96ab57e572330714583f8c6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4802,7 +4824,7 @@
     {
       "id": "SURFACE-da360911414286b5",
       "path": "scripts/verify-cors-boundary.py",
-      "sha256": "b5ba1d728abbc2181ffd260237e5743f38feb7681cb7fcd4e9cc5c969a2395b0",
+      "sha256": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4940,7 +4962,7 @@
     {
       "id": "SURFACE-6bf3e8831a095bee",
       "path": "tdf-hq-ui/public/mobile-app/data-deletion.html",
-      "sha256": "32b495f131da0c153d219f8d2fadb0d04fcd2300782a17e75216c2ad5d96f695",
+      "sha256": "813ff5df54318e43fd4064004f0d9f2e72ade70140d974a3761d150ed91d5d96",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4970,7 +4992,7 @@
     {
       "id": "SURFACE-58b1b762b88c9b8e",
       "path": "tdf-hq-ui/public/mobile-distribution.json",
-      "sha256": "c4ae01681008e3588976812895addb26ce9461b4734c898228593f11d731b686",
+      "sha256": "d37f5a688b69bd641ab0976020268da070505b9f882d68f688906007e94c8e91",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5145,6 +5167,18 @@
       "id": "SURFACE-5f61a01aa269f351",
       "path": "tdf-hq-ui/src/api/accessRequests.ts",
       "sha256": "6989c7101cd4a221461cbcc97f0ef65425aea589a263b86423119707d58461fd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f8ed9b53a433074a",
+      "path": "tdf-hq-ui/src/api/accountDeletion.test.ts",
+      "sha256": "c814a2f8e09ac57867c267245acd8e7bf5b2135d10fce8c7cd037690ab7e46f7",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e0156ec387afe64c",
+      "path": "tdf-hq-ui/src/api/accountDeletion.ts",
+      "sha256": "6eb25d69e9f973136c11ddb354892587b6289ceffc446f59382a7895acdcfc13",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5420,13 +5454,13 @@
     {
       "id": "SURFACE-69a704f4fb55bf52",
       "path": "tdf-hq-ui/src/api/feedback.test.ts",
-      "sha256": "dbd23e43cd43994667b8745df7039f56234880342bdb5b0bdda25d521a73819e",
+      "sha256": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-07a03f2b6135fe72",
       "path": "tdf-hq-ui/src/api/feedback.ts",
-      "sha256": "8c8a95930d681cecbaab367ed68ea17fd431751951569fdb33d20b7f9b174041",
+      "sha256": "574d73b2e559ee161c084f55f976d3c4d662d5fa99dc5b3f5a8f04ab62905545",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5450,7 +5484,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "cc567cc305996039f30cba0b75d1cbec4ba4380b6cc2c1d79176121814e47869",
+      "sha256": "fc0c21b4ec62ede01af324f46b3cd7bc87b7886e028e7c2f489c8b951dafe3c3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5480,7 +5514,7 @@
     {
       "id": "SURFACE-7f274ed7ae3d4fde",
       "path": "tdf-hq-ui/src/api/internalFeedback.ts",
-      "sha256": "fc5eaf580debc8784f27ab934aa5ace331d31fa1810f32ec796af0c4e28c8022",
+      "sha256": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5822,7 +5856,7 @@
     {
       "id": "SURFACE-9bac22f287db5deb",
       "path": "tdf-hq-ui/src/api/types.ts",
-      "sha256": "71af45fd6a302b5b2a52ee54106522aa8faba612550298cb07748a807cc35cf4",
+      "sha256": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5835,6 +5869,18 @@
       "id": "SURFACE-53ccbdf692a3b60f",
       "path": "tdf-hq-ui/src/api/whatsappConsentPublic.ts",
       "sha256": "e679e1b41bc86a3fdf357030af08149cc08f1948ba726de9043d9e955ed99e08",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-526786b1dccd2ea9",
+      "path": "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
+      "sha256": "f382ffb3931903701e4416dc22f97b4d56c594d972953be5dc9d218bbd619972",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d0c4c8db8120be10",
+      "path": "tdf-hq-ui/src/components/AccountDeletionQueue.tsx",
+      "sha256": "8cef257d699117b94fb7d45b3fd574fb97098a0a6e38ef29d3038fb2b41e49bf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6068,7 +6114,7 @@
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "1f43956a75a96472fe0020ddeda0d203b32be8b242606f1f55303ce290a48861",
+      "sha256": "7b611aa98fbd9f7a80236089e593265e6b95f579c8b6b91b38bd72a41e66f1a8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6608,7 +6654,7 @@
     {
       "id": "SURFACE-2ee656af772bf719",
       "path": "tdf-hq-ui/src/features/featureRegistry.test.ts",
-      "sha256": "3202fad3806ebb31695ca186727f9163373d6ad6c6f9cfa79089d129bbaf1b6b",
+      "sha256": "4e3a97254efaf4f01fc0a7e596666f435c95fe4335a363ddeb0fb4900bb0632f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6918,6 +6964,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-c97910a5593293cd",
+      "path": "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts",
+      "sha256": "dcfed367027497a13691491f27434050618bdf386d5ae9ad032a9037892a3534",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-5e55534c6210f093",
+      "path": "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts",
+      "sha256": "31796bc77316bf6d1b90841e6d9454bdeafe75c7e8630713b45c2cc601f0420c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f53988d1fb48e7e5",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
       "sha256": "83320844622c1c458265cb4e230d9edeae3d495da2a7d6dcb516d444f88f999f",
@@ -6950,13 +7008,13 @@
     {
       "id": "SURFACE-844ef4d7558a76f8",
       "path": "tdf-hq-ui/src/i18n/locales/en.ts",
-      "sha256": "969c9406f05d0f7fa189cca0e7cf4f720be0d305b97b2293b98dee30f146d355",
+      "sha256": "3f2bad72c74df51d522a433a3c1c97a6ea6b8dcf5b8a9d4657af3515cd6d4ebf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-40770a4aba9f94ce",
       "path": "tdf-hq-ui/src/i18n/locales/es.ts",
-      "sha256": "2095866bbdbfb6727ae75c944b9f229bf520beafefafde6978998eba0b920d70",
+      "sha256": "e7e93c77deb6043f650aeb71e0b10538c480918d702af78e9ab17f756aaabd0b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7065,6 +7123,18 @@
       "id": "SURFACE-53c8ba4f1cec8bc4",
       "path": "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
       "sha256": "5ac2140b9ba524b837e15d82113cd7b75af91eb5c3efe2a0e2c0cd366267eb41",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7eb3d6265bbc7ec8",
+      "path": "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx",
+      "sha256": "2792cf8b46ad3c870fbc52818aa67ee9a5155a10568444faa64d2f01cddb8d04",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c46fe8f1aff9a4d8",
+      "path": "tdf-hq-ui/src/pages/AccountDeletionPage.tsx",
+      "sha256": "f04ca7a62b3ba9d5f293ea988738f357928d8086b56f113803e92f87f353b24c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7598,7 +7668,7 @@
     {
       "id": "SURFACE-48b0e7098c6f5184",
       "path": "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
-      "sha256": "e2ff9e1cbe79bb4f9a92c69072f2cb3999381dfd04b7341f79bc82f254fd487c",
+      "sha256": "aacb639d3b0f88101fa1f9f3c790d817c7962ad149133462d2e88004e9f7bd01",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8486,7 +8556,7 @@
     {
       "id": "SURFACE-f6a0ac8526319c29",
       "path": "tdf-hq-ui/src/routes/publicRoutes.tsx",
-      "sha256": "549e3dba76f23f8606285e0f4382731e1fd778c018a6e4c21e14ce971a6778a5",
+      "sha256": "4f2025acbc29657ec9a2b1f289aae38edebe56c135b465912e8f57455628dce0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9176,7 +9246,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "7388f163749d305fb7bc12b0ada9c4f7f988c878a1db006437db835555cbe3af",
+      "sha256": "c3b5ac5a02b11056d3f918c4d7577b426ad582e89a11431b937cd097d9377323",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9236,7 +9306,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "568ba2f5cf08b2f3112fa36a8b99cb732088b74cadf1f5789bd00ddccb7407ca",
+      "sha256": "445da4d1d8ea64aee6c0fb40bd1800f7bd44bd01478aa88d8156745fd516bd12",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11510,7 +11580,7 @@
     {
       "id": "SURFACE-b512bf606a31fa6e",
       "path": "tdf-hq/src/TDF/API/Feedback.hs",
-      "sha256": "b3a4660be280fa6aabb8cc0a39958f8eeb60a61bce687e1042c14f1893cdbd3b",
+      "sha256": "cc2586f885751ab3265217830e11b30c97cf5a77739955b1e24ae565abe7e8cf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11990,7 +12060,7 @@
     {
       "id": "SURFACE-057525240b5b11f7",
       "path": "tdf-hq/src/TDF/Cors.hs",
-      "sha256": "94a8b2ffedfc793e6d8c44d62f0388dc853e3da95e75e23dfdb6fed76d7f88dd",
+      "sha256": "cd71072735d45e404fbf9508f2531fc9e6e1389914bb835bf22ee7baf33211ba",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12518,7 +12588,7 @@
     {
       "id": "SURFACE-4e1ca7d206cc436f",
       "path": "tdf-hq/src/TDF/ServerFeedback.hs",
-      "sha256": "55a0f22b890416af1a9e48cccb5fcff733114e4a748a9c87ea616001e2584866",
+      "sha256": "97ba92528177da1dda6481a3887e58312d15c40335c60ae9c594e6364f1445a7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12824,7 +12894,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "b142c0195c1fac1707c9318fe946bd9ee82448607872990f67f4845139bdf47d",
+      "sha256": "5354b498a63a41be8a899a6d01aa5b0255413cb432777502baa33fb70b18ff90",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12902,7 +12972,7 @@
     {
       "id": "SURFACE-56829a36e8042830",
       "path": "tdf-hq/test/TDF/CorsSpec.hs",
-      "sha256": "ca283c34c7b4368f59ba7af790950482e527747e95574afbbd22c1ce0e6a4245",
+      "sha256": "6992c0359ea87c5b7f0d00a6f952d608d215306ec09677b793c514c6da6c243e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13934,7 +14004,7 @@
     {
       "id": "SURFACE-7aafc197c0caae2e",
       "path": "tdf-mobile/__tests__/featureRegistry.test.ts",
-      "sha256": "44a816ddc9c953522502961694eb4115d46e1f2ed6d59e5ffd257d0d0477d533",
+      "sha256": "37f19809fc84d5c70d6f625f2f2425a3a139797d55bc055131ed0aaaa2385941",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14828,7 +14898,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "cc567cc305996039f30cba0b75d1cbec4ba4380b6cc2c1d79176121814e47869",
+      "sha256": "fc0c21b4ec62ede01af324f46b3cd7bc87b7886e028e7c2f489c8b951dafe3c3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15158,7 +15228,7 @@
     {
       "id": "SURFACE-3cdceeb8afd26986",
       "path": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-      "sha256": "a8111cb6563d7cb08ca568175ed51460de0293db652142a7979e907e256ee2ff",
+      "sha256": "f7cd4cb67651d7ab6925cfea81ed71e686a09a0b4e55cda9681bff396a7a81b5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17630,14 +17700,21 @@
     },
     {
       "path": "docs/mobile-program/README.md",
-      "sha256": "df0a067dd63abe59f013bae91b465e106ca0daf343b9aace825d5c28d99ceacd",
+      "sha256": "5f5a898deb0cc04dd7a603fcb915f22b0f2cbe4ad8f1e4ebdf30ece78da2707f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/mobile-program/account-deletion-operations.md",
+      "sha256": "efdacf60479218d3450f1890080edb2a6c1cdbcab8ecff4b3f5dbe996330f602",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "docs/mobile-program/analytics-2026-10-05.md",
-      "sha256": "8e6d5502fb3958fc99801d14657ec214a486aa480b7dcaf01421a52fd90b8721",
+      "sha256": "56b1097cc312d5cc262b9eda8679491d52d68acfd30848ba083d1e91afada51d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21340,7 +21417,7 @@
     },
     {
       "path": "formal/system/cors-boundary.md",
-      "sha256": "5190d7e68ecce0b9244f63101c9bac923c177ccaf2f0c64a769a8d41028b7f2c",
+      "sha256": "2e4439569f87f5427cba26a62c69e3cb04c4010680412cf5ea6c8a93e05017b5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21501,7 +21578,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "8a174b87c8c1c38e279e6b168579b7cfc032779e6c6b98cae3598359757853cb",
+      "sha256": "66e0ada5e0a56c36612cf6bafa1f91b72af329e9ce9bb59f1d972a9b4aa976cb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -21613,7 +21690,7 @@
     },
     {
       "path": "ops/privacy/README.md",
-      "sha256": "15dd5ffaece32e4a0743de8af92c34e3d899643b250df7dc4385b123549eb3a6",
+      "sha256": "474f2535e1ffd9f5f986fdf8eebaa83c96970a32058f9437b4893765e0c583ad",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21704,7 +21781,7 @@
     },
     {
       "path": "tdf-hq-ui/public/mobile-app/data-deletion.html",
-      "sha256": "32b495f131da0c153d219f8d2fadb0d04fcd2300782a17e75216c2ad5d96f695",
+      "sha256": "813ff5df54318e43fd4064004f0d9f2e72ade70140d974a3761d150ed91d5d96",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "published-product-page"
@@ -21809,7 +21886,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "568ba2f5cf08b2f3112fa36a8b99cb732088b74cadf1f5789bd00ddccb7407ca",
+      "sha256": "445da4d1d8ea64aee6c0fb40bd1800f7bd44bd01478aa88d8156745fd516bd12",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"

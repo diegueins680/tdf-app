@@ -317,8 +317,10 @@
             }
           },
           "originalDecisionSha256": "31bdf931129e2cc5527a52ee0ffb5cf0c26c3b355cd2ca10d191f321386ab6df",
-          "replacementId": "0bd23196640f34d2ea12",
-          "reason": "The combined 160-entry Mobile registry already preserves both shipped and audit parent decisions."
+          "replacementId": "66c48cc059727856b6f1",
+          "reason": "The combined 160-entry Mobile registry already preserves both shipped and audit parent decisions.",
+          "previousReplacementId": "0bd23196640f34d2ea12",
+          "successorReason": "Reviewed current generated mirror retains strict-admin concealment and adds authenticated account-deletion discovery; full main predecessor decision remains in its concurrentReviewHistory."
         }
       ]
     }

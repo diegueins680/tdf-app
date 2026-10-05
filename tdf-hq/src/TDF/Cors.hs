@@ -112,7 +112,7 @@ corsPolicy = do
   -- must never opt this cookie-authenticated action into arbitrary origins.
   let deletionGuard app req respond
         | requestMethod req == "POST"
-          && pathInfo req == ["feedback", "account-deletion"]
+          && filter (/= "") (pathInfo req) == ["feedback", "account-deletion"]
           && not (isAccountDeletionRequestAllowed (map BS.pack effective)
                     (lookup "origin" (requestHeaders req))
                     (lookup "x-requested-with" (requestHeaders req))) =

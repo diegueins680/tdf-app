@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "6297e3f137126350aa485690bf89de19e82d3c25",
+  "mobileRevision": "c98a397e3895cf44008bab472773ade3985d6b2e",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -5194,9 +5194,12 @@
         "tdf-hq-ui/public/mobile-app/index.html",
         "tdf-hq-ui/public/mobile-app/privacy.html",
         "tdf-hq-ui/public/mobile-app/support.html",
-        "tdf-hq-ui/public/mobile-app/terms.html"
+        "tdf-hq-ui/public/mobile-app/terms.html",
+        "tdf-hq-ui/public/mobile-distribution.json"
       ],
-      "tests": [],
+      "tests": [
+        "tdf-hq-ui/src/mobile/MobileApp.test.tsx"
+      ],
       "formalModels": [],
       "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
       "evidence": "Current candidate gate receipts must be retained separately; historical source checks are not a current integration pass.",
@@ -5217,7 +5220,7 @@
       "idempotency": "Repeated reads have no application mutation.",
       "failure": "Stale or unavailable distribution must not be presented as verified current availability.",
       "recovery": "Correct source under review and reverify deployed content and links.",
-      "observability": "Source review and deployed static-page/browser checks; no dedicated automated assertion covers all legal disclosure wording."
+      "observability": "Source review and deployed static-page/browser checks; no dedicated automated assertion covers all legal disclosure wording. Distribution state, expiry, admission and URL validation have component regression coverage; actual store availability requires fresh provider evidence."
     },
     {
       "authority": "reconciled",
@@ -5899,16 +5902,124 @@
       },
       "verification": "Actual controller tests inject changed head/base/queue/draft/closure, revocation failure and duplicate heads; protected-main enforcement is re-observed during bootstrap.",
       "evidence": "Current-head unit and hosted repository gates plus source-bound metadata/protection receipts; no universal concurrency proof."
+    },
+    {
+      "id": "PRIV-INTAKE-001",
+      "title": "Authenticated account-deletion intake with auditable manual resolution",
+      "domain": "PRIV",
+      "statement": "Account owners can request deletion without composing an email. Only a live matching account may submit the reserved marker; administrator resolution is immutable and audited and never claims automatic erasure.",
+      "authority": "Product owner mobile release/privacy task; reviewed PR486; manual processing by owner-confirmed info@tdfrecords.net",
+      "source": "docs/mobile-program/account-deletion-operations.md; root PR486",
+      "contract": "docs/mobile-program/account-deletion-operations.md",
+      "actors": [
+        "Authenticated account holder",
+        "Current authorized administrator",
+        "Privacy operator"
+      ],
+      "preconditions": [
+        "Live matching session, explicit confirmation and published feedback catalog values; strict API deployment is required before the form is operational."
+      ],
+      "inputs": [
+        "Account ID bound to authenticated identity",
+        "Non-simple origin proof header and browser Origin when present",
+        "Reserved normalized request marker",
+        "Administrator outcome and required resolution note"
+      ],
+      "state": {
+        "intake": "Existing feedback request and authenticated creator",
+        "resolution": [
+          "pending",
+          "completed",
+          "rejected"
+        ],
+        "fulfilment": "Separate private evidence ledger PRIV-DELETE-001"
+      },
+      "allowedTransitions": [
+        "Authenticated current owner -> received request with server owner/ID receipt",
+        "Pending -> completed/rejected with locked row and actor/time/note audit"
+      ],
+      "forbiddenTransitions": [
+        "Anonymous, revoked or mismatched owner submits deletion request",
+        "Simple cross-origin form or hostile Origin submits deletion request",
+        "Generic feedback bypasses reserved-marker checks",
+        "Completed/rejected request is resolved again",
+        "Successful intake or queue resolution is represented as automatic erasure"
+      ],
+      "effects": [
+        "Existing feedback row and notification on accepted intake",
+        "Append-only resolution audit in the same transaction as the terminal state"
+      ],
+      "authorization": "Cookie identity is reloaded before submission; server withCurrentAuthSession lock spans insertion. Required non-simple header and trusted Origin guard precede general CORS. Administrator capability and current session protect resolution.",
+      "privacy": "No diagnostics, attachments or analytics on the deletion form. Identity and request content remain in authenticated queues/private evidence; no public tester/account list.",
+      "concurrency": "Current-session lock serializes intake against revocation. PostgreSQL FOR UPDATE serializes terminal resolution; exactly one concurrent resolution succeeds and the loser returns409.",
+      "idempotency": "Terminal resolution is immutable; repeated resolution returns409. Intake has no exactly-once retry-key guarantee; network ambiguity must not be described as confirmed submission.",
+      "failure": "Reject absent/mismatched receipt; preserve cached terminal receipt if refresh fails. Failed validation performs no insertion/notification. Operator execution failure remains unfinished under PRIV-DELETE-001.",
+      "recovery": "Reload authenticated receipt and private evidence; never infer erasure from a queue flag. Preserve earliest receipt/deadline in the existing operator ledger.",
+      "observability": "Scoped unit/browser tests and unmodified FormData/HTTP tests with disposable PostgreSQL cover identity, CSRF, spoofing, pagination, audit and concurrent200/409. No real deletion or extra notification is used for QA.",
+      "property": "OwnerMatches; ReservedMarkerCannotBypass; OneTerminalResolution; IntakeIsNotErasure",
+      "implementation": [
+        "tdf-hq/src/TDF/API/Feedback.hs",
+        "tdf-hq/src/TDF/ServerFeedback.hs",
+        "tdf-hq/src/TDF/Cors.hs",
+        "tdf-hq-ui/src/api/accountDeletion.ts",
+        "tdf-hq-ui/src/api/feedback.ts",
+        "tdf-hq-ui/src/api/internalFeedback.ts",
+        "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/components/AccountDeletionQueue.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts",
+        "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/pages/AccountDeletionPage.tsx",
+        "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
+        "tdf-hq-ui/src/routes/publicRoutes.tsx",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq/docs/openapi/api.yaml"
+      ],
+      "tests": [
+        "e2e/web/account-deletion.spec.mjs",
+        "e2e/web/studio-internship-audit.spec.mjs",
+        "scripts/test-account-deletion-api.mjs",
+        "scripts/test-studio-internship-audit-api-e2e.mjs",
+        "scripts/test-studio-internship-audit-api-e2e.sh",
+        "tdf-hq-ui/src/api/accountDeletion.test.ts",
+        "tdf-hq-ui/src/api/feedback.test.ts",
+        "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
+        "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx",
+        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-mobile/__tests__/featureRegistry.test.ts",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/CorsSpec.hs",
+        "scripts/verify-cors-boundary.py"
+      ],
+      "formalModels": [],
+      "verification": "QuickCheck properties exercise the actual identity/outcome validators and normalization idempotency over arbitrary inputs; disposable PostgreSQL/HTTP controls exercise CSRF and concurrent resolution. No dedicated temporal model or whole-program refinement is claimed for these handlers; the distinct operator lifecycle model does not prove them. Real Servant routing tests bind the CORS proof/origin guard to both the canonical endpoint and its accepted trailing-slash alias.",
+      "evidence": "Exact revision, command, binary and disposable HTTP/browser receipts retained separately; predecessor passes do not qualify the combined main merge.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Scoped source and regression evidence; combined candidate and deployed acceptance remain separate gates.",
+      "ambiguity": [
+        "Physical iPhone OAuth and Apple Beta Review are independent release gates.",
+        "Operational assignment, monitoring, per-service erasure and delivered completion notice require actual operator evidence.",
+        "No dedicated formal intake model currently exists."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Intake and audited resolution implemented; current merged validation, production backend deployment and actual operational fulfilment remain required."
+      }
     }
   ],
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
-    ".github/workflows/ci.yml": "b5f123f33695eb912cf9f3956a4b2620add70006c42d86f8a52755c663ccc0c3",
+    ".github/workflows/ci.yml": "f43ddaf0e847ee524739559f2ac242970aaa42bef5ad810249900784ca863d2e",
     ".github/workflows/event-operations-formal.yml": "8cdbbb59f539a8394fde147ba38dc4f27260b9ac2c371c731da5b342401077d1",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
-    "docs/catalog-persistence/catalog-list-decisions.json": "daccbb1c466d0f29fbde12e9281a9fa19da6b1a6e892e837e64a122980e1b164",
+    "docs/catalog-persistence/catalog-list-decisions.json": "fe2f2c2292abcb06e85cdff2ff8e72902f26a70e3303b8871ce9e0678674ab7a",
+    "e2e/web/account-deletion.spec.mjs": "b31778ac20f8bdbc66232add16556a4334d6e82f8a80b598b544934ea1f34a64",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
+    "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
     "formal/event-operations/CatalogReorder.tla": "ab228ae812143f050feac4035e9724fb647a1072cb7816d500894ea1ba335c5d",
     "formal/event-operations/ChatMutationBoundary.cfg": "dc76bf1caa1a43de6891a51256da9efc4264ac45b882fef969bc15895068e0fa",
@@ -6062,6 +6173,7 @@
     "scripts/social/test-dm-writes.sh": "2f216b4a6d7537959a0ddc6aa4da52afc5a11828d852dc6a3c5d469702e9122a",
     "scripts/specification-conformance.py": "27fc7959ad752d8d76c025cd2cbadc978dcad3cc763b26b4efb5f63cfb94343e",
     "scripts/specification-inventory.py": "5d84634a34efe3e9f619063656e2f63a0cae7d71dfacbb4fd8ea035ca5008502",
+    "scripts/test-account-deletion-api.mjs": "7a712d3754e8e99771637b30e27be7cefd2536c8e8bd4a2b94296fa535f38d0c",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-booking-conformance.py": "982521d7e19285665d480aa2c4f4e037052aec2a1b6a45e01b171cc646aa8b33",
@@ -6080,6 +6192,8 @@
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
     "scripts/test-stripe-integration.sh": "f3c057e5afea48b657a2eeb35763b49054979cfaf84ec2e48940617a2d64f8df",
+    "scripts/test-studio-internship-audit-api-e2e.mjs": "c051228cf890bdc3ec2079f9afbbc3e8e2bf1ead0743e192f54c8281d442db7e",
+    "scripts/test-studio-internship-audit-api-e2e.sh": "5c0236ad2a923c9891a8d8239055865828060a78a96ab57e572330714583f8c6",
     "scripts/test-ticket-admission.sh": "e861b2b98961f0c24ddacd5e67f3622ea665d118ad69979948dc82cb1aa81800",
     "scripts/test-ticket-confirmation-lease.py": "9246ce1669f1f6bb32352897b290dd3ef85efa222655bf54680b027dc6129420",
     "scripts/test-ticket-confirmation-smtp.py": "ab36fc612102863669f18a8b12db86ee4192f77d56bbad31b5dc7aa3a5834743",
@@ -6088,7 +6202,7 @@
     "scripts/test_production_access.py": "2dd32acc8e3a98450e7930127b477b99795ee8bc0f9cc2a7c712d5b4f0b81e37",
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
-    "scripts/verify-cors-boundary.py": "b5ba1d728abbc2181ffd260237e5743f38feb7681cb7fcd4e9cc5c969a2395b0",
+    "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
     "scripts/verify-event-operations-formal.sh": "9d0da623a08815e4c8e99bd2737083b01a8b7403e2eb32faa6fe54fcfe9c6f20",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
@@ -6097,35 +6211,53 @@
     "streaming/docker-compose.streaming.yml": "27a418566cfbaf8d10fd9da948aecc6bae2b3279b14e67013aae26492e33e249",
     "streaming/mediamtx.yml": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
     "tdf-hq-ui/public/data-deletion.html": "fe759cb4af0642f024ef31d61f55cb890c8d52e1e05c9e00b409d020f3fc1c13",
-    "tdf-hq-ui/public/mobile-app/data-deletion.html": "32b495f131da0c153d219f8d2fadb0d04fcd2300782a17e75216c2ad5d96f695",
+    "tdf-hq-ui/public/mobile-app/data-deletion.html": "813ff5df54318e43fd4064004f0d9f2e72ade70140d974a3761d150ed91d5d96",
     "tdf-hq-ui/public/mobile-app/index.html": "4e3e201b1ba1cd62fa22d2c487c759cdc55569f0591fdf1e864c6eefd70731c2",
     "tdf-hq-ui/public/mobile-app/privacy.html": "5aadcfc8e72fe83f6ed58999ee0f1963ca3b1eec031212bc7a3fdf1fc51d4f5b",
     "tdf-hq-ui/public/mobile-app/support.html": "56a65c45903c596b908bf49416a1e8e073453accbb6186bb19cc22e9d85191c5",
     "tdf-hq-ui/public/mobile-app/terms.html": "cd1c821e65f488d4fcc9304714fc358ae13bc72aadf354cbc1a3b7bc89e3374c",
+    "tdf-hq-ui/public/mobile-distribution.json": "d37f5a688b69bd641ab0976020268da070505b9f882d68f688906007e94c8e91",
     "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "cb7030ef6c014862b24db70df7a4080c7d480fca431cf90c032d9cee91910ab2",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "8d53d8843af919c437dfff1d88dd85b02a6b037e7b88336d96edbd071e09c4a9",
     "tdf-hq-ui/src/analytics/posthog.ts": "055add96cca77d4b346946d478092851e224aed2a1db53bb1a8a4efe43e408e8",
+    "tdf-hq-ui/src/api/accountDeletion.test.ts": "c814a2f8e09ac57867c267245acd8e7bf5b2135d10fce8c7cd037690ab7e46f7",
+    "tdf-hq-ui/src/api/accountDeletion.ts": "6eb25d69e9f973136c11ddb354892587b6289ceffc446f59382a7895acdcfc13",
     "tdf-hq-ui/src/api/bookings.ts": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
     "tdf-hq-ui/src/api/client.test.ts": "eaec88fe099c62f7d68c2c350eb1b3493a71e132b7324e25e588b34ec76aed56",
     "tdf-hq-ui/src/api/client.ts": "3cbd9d209c184f0892451f4957721be0a55f65e922df33090c4a8b1e00ccfd13",
-    "tdf-hq-ui/src/api/generated/types.ts": "cc567cc305996039f30cba0b75d1cbec4ba4380b6cc2c1d79176121814e47869",
+    "tdf-hq-ui/src/api/feedback.test.ts": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
+    "tdf-hq-ui/src/api/feedback.ts": "574d73b2e559ee161c084f55f976d3c4d662d5fa99dc5b3f5a8f04ab62905545",
+    "tdf-hq-ui/src/api/generated/types.ts": "fc0c21b4ec62ede01af324f46b3cd7bc87b7886e028e7c2f489c8b951dafe3c3",
+    "tdf-hq-ui/src/api/internalFeedback.ts": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
     "tdf-hq-ui/src/api/inventory.ts": "7462c17a811a3e307b8ff551745b76cf7e2ea7691d1193c9076190c77545a07c",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
+    "tdf-hq-ui/src/api/types.ts": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
+    "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx": "f382ffb3931903701e4416dc22f97b4d56c594d972953be5dc9d218bbd619972",
+    "tdf-hq-ui/src/components/AccountDeletionQueue.tsx": "8cef257d699117b94fb7d45b3fd574fb97098a0a6e38ef29d3038fb2b41e49bf",
     "tdf-hq-ui/src/components/LazyPaginatedList.test.tsx": "7723dd458079bcad7d7c3f39933b2025de76462f8d0fb40a6c6d4e6bd35deb49",
     "tdf-hq-ui/src/components/LazyPaginatedList.tsx": "8c96fc43fa7096d5bf59e0a724c19bd4b73d1f05582a25d99b633ba95f075d91",
+    "tdf-hq-ui/src/components/PublicBranding.tsx": "7b611aa98fbd9f7a80236089e593265e6b95f579c8b6b91b38bd72a41e66f1a8",
     "tdf-hq-ui/src/components/TicketCredentialQR.tsx": "0ae153c24a40b2a2688c5eeb93e04a7b7c15f0a37a3cc1414950061bbf556831",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "fd6674cc3b97424d868e0f77e681c5fea4362a82f8babc71dff15dc345112589",
-    "tdf-hq-ui/src/features/featureRegistry.test.ts": "3202fad3806ebb31695ca186727f9163373d6ad6c6f9cfa79089d129bbaf1b6b",
+    "tdf-hq-ui/src/features/featureRegistry.test.ts": "4e3a97254efaf4f01fc0a7e596666f435c95fe4335a363ddeb0fb4900bb0632f",
     "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx": "a4c38b4329431d311a51ae9d9b0ffb2cc67edbd97a6a6e709aa580c7e15fcef1",
+    "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts": "dcfed367027497a13691491f27434050618bdf386d5ae9ad032a9037892a3534",
+    "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts": "31796bc77316bf6d1b90841e6d9454bdeafe75c7e8630713b45c2cc601f0420c",
     "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "83320844622c1c458265cb4e230d9edeae3d495da2a7d6dcb516d444f88f999f",
     "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "0e4db3d2d183691f42c81fc1bcd0ab6589c8847e04cd0e0e10db3ecc21861ed9",
+    "tdf-hq-ui/src/i18n/locales/en.ts": "3f2bad72c74df51d522a433a3c1c97a6ea6b8dcf5b8a9d4657af3515cd6d4ebf",
+    "tdf-hq-ui/src/i18n/locales/es.ts": "e7e93c77deb6043f650aeb71e0b10538c480918d702af78e9ab17f756aaabd0b",
     "tdf-hq-ui/src/main.tsx": "36d658b2afc501b4c6729dba8ba333d918c434b5ac16e8d7c8228244c119e626",
+    "tdf-hq-ui/src/mobile/MobileApp.test.tsx": "2cda5efe4cfeb77f4e67e629b3aa8b5aec10c617658ddc8042ba01990c6a2c2b",
+    "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx": "2792cf8b46ad3c870fbc52818aa67ee9a5155a10568444faa64d2f01cddb8d04",
+    "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": "f04ca7a62b3ba9d5f293ea988738f357928d8086b56f113803e92f87f353b24c",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "321ca8865a1691f27b010bf848bb5da338a31538d2f3a69bb52c78d3299a5224",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "f31453da042673650ab16f5779b58f375b407a1d37481f8c966b9efb481d7014",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "aad862427b31bb0777586ae09589055043f9346e4eaaa9bf14a521e3d4fed129",
     "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "3144381852a748f77c009fc398c513672cd908192bc390fb2aad499a5cb0a174",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
+    "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx": "aacb639d3b0f88101fa1f9f3c790d817c7962ad149133462d2e88004e9f7bd01",
     "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx": "e48405433f70c9a163131f753453005460341e242be28c4f28e4afa49628d56a",
     "tdf-hq-ui/src/pages/LabelAssetsPage.tsx": "4ba88b3c7f5a9b50feabbd44bb7172e5297866b5e279d60f6329d44e0090978a",
     "tdf-hq-ui/src/pages/LoginPage.test.tsx": "173a82881bf1ee9764582a56a82ea72c9e6aede174eab68ffbfbc77f8bfb6db7",
@@ -6133,6 +6265,7 @@
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
     "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "1d09054a99ca7c87218fc60b08d49f7155aa269ff1e3eee91a54d430365699cb",
+    "tdf-hq-ui/src/routes/publicRoutes.tsx": "4f2025acbc29657ec9a2b1f289aae38edebe56c135b465912e8f57455628dce0",
     "tdf-hq-ui/src/session/SessionContext.tsx": "57281da0da41ea04116422cad679e7f7052f55b1e0e3054feeab4438e83c0b5b",
     "tdf-hq-ui/src/session/SessionProviders.test.tsx": "db255bb28b7788b5090883abd8b33769fb1507bf0c353a66f097725024f74de1",
     "tdf-hq-ui/src/session/SessionProviders.tsx": "0a75819f91321403b981874eef2d44482d6a0fd90e3bfbc009daa7b925d8082f",
@@ -6147,9 +6280,9 @@
     "tdf-hq/Dockerfile": "9d4b6b0747296ff98277153a7fa31ae5e75a14709a0900ffd3abf2588b20cf4f",
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
-    "tdf-hq/assets/feature-registry.json": "7388f163749d305fb7bc12b0ada9c4f7f988c878a1db006437db835555cbe3af",
+    "tdf-hq/assets/feature-registry.json": "c3b5ac5a02b11056d3f918c4d7577b426ad582e89a11431b937cd097d9377323",
     "tdf-hq/config/default.env.example": "5681d9b6ae87dd2bb3d6d3540675b10b39d0615de3380b45ef0f98a24a11f8f6",
-    "tdf-hq/docs/openapi/api.yaml": "568ba2f5cf08b2f3112fa36a8b99cb732088b74cadf1f5789bd00ddccb7407ca",
+    "tdf-hq/docs/openapi/api.yaml": "445da4d1d8ea64aee6c0fb40bd1800f7bd44bd01478aa88d8156745fd516bd12",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/persistent-uploads.sh": "89c251d96be949d638941d45d4a8994f09c8157a04bea786ee93aefde90cbd44",
     "tdf-hq/production-entrypoint.sh": "9cf124a277a19e2d5c0d7769cfc8a2d16dc2d21f09e93406b3ebfa293e0416b4",
@@ -6178,6 +6311,7 @@
     "tdf-hq/src/TDF/API.hs": "3b1f027ffe718dd547fc2299f6aa8977b9db9915736d4210dc1df235cb1372bc",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
     "tdf-hq/src/TDF/API/Drive.hs": "167f920abec8f6e362c6a20c62982e0a62aa9db41215f83161e4b6175de17d75",
+    "tdf-hq/src/TDF/API/Feedback.hs": "cc2586f885751ab3265217830e11b30c97cf5a77739955b1e24ae565abe7e8cf",
     "tdf-hq/src/TDF/API/Instagram.hs": "d31bf02a6a69cab1c0122699eb890fcc32e4809234b41246f3185bec76c8c1ef",
     "tdf-hq/src/TDF/API/MerchReputation.hs": "84d721478ab6f904dee04ae3568a32d30f37a220937b703fc74a006c44995bdb",
     "tdf-hq/src/TDF/API/Radio.hs": "5c62e0f4a402225202217be3a8361991127ad1ac093fd0f4366789dd1723357f",
@@ -6196,7 +6330,7 @@
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "e40608b5bc2ce1429c61fbfc6131f4e6e134f599cbf734a62ddd505fab3264b6",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
     "tdf-hq/src/TDF/Config.hs": "abbb65101876065724d97c24b1aef742f86300ca006e14e9c0565eb4af0dafe5",
-    "tdf-hq/src/TDF/Cors.hs": "94a8b2ffedfc793e6d8c44d62f0388dc853e3da95e75e23dfdb6fed76d7f88dd",
+    "tdf-hq/src/TDF/Cors.hs": "cd71072735d45e404fbf9508f2531fc9e6e1389914bb835bf22ee7baf33211ba",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/Directory/Policy.hs": "bec4876e611ee4771a198f91095a8d648ad933fa8949df5c3cd14a1a29b66388",
@@ -6224,7 +6358,7 @@
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
     "tdf-hq/src/TDF/ServerAuth.hs": "4b53165a764b1d6dd083f193ad1f0d752b42d10ef48bcab2ac9337fb791288e7",
     "tdf-hq/src/TDF/ServerExtra.hs": "458d0b1c8390232020691cb1c4ebfd1578c4e4c163e7c45b43a95733fe6457ee",
-    "tdf-hq/src/TDF/ServerFeedback.hs": "55a0f22b890416af1a9e48cccb5fcff733114e4a748a9c87ea616001e2584866",
+    "tdf-hq/src/TDF/ServerFeedback.hs": "97ba92528177da1dda6481a3887e58312d15c40335c60ae9c594e6364f1445a7",
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
     "tdf-hq/src/TDF/ServerRadio.hs": "964189f5f5c8b06bbbbfca51d5ed4329e29d81d4f71012ad672343d1f6e7b319",
     "tdf-hq/src/TDF/Social/Chat.hs": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd",
@@ -6238,7 +6372,7 @@
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/tdf-hq.cabal": "c2f2de27bae619934ebd0f05e680e15c4990f5101478ba08587786d94f9a240c",
-    "tdf-hq/test/Spec.hs": "b142c0195c1fac1707c9318fe946bd9ee82448607872990f67f4845139bdf47d",
+    "tdf-hq/test/Spec.hs": "5354b498a63a41be8a899a6d01aa5b0255413cb432777502baa33fb70b18ff90",
     "tdf-hq/test/TDF/APITypesSpec.hs": "e031671786b71e7714c0d8cc4f1324707917eaa452bb74030a6d7f5a1eccd068",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
@@ -6246,7 +6380,7 @@
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "6d6019cff6baa80c82fb421c02bddf5e609b88451ad73ef0b31fcd4fb35fe7f6",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "bc9e5e0920de51b7b8c16d764991911c9eabb087cd024f2405aeb98174c57563",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
-    "tdf-hq/test/TDF/CorsSpec.hs": "ca283c34c7b4368f59ba7af790950482e527747e95574afbbd22c1ce0e6a4245",
+    "tdf-hq/test/TDF/CorsSpec.hs": "6992c0359ea87c5b7f0d00a6f952d608d215306ec09677b793c514c6da6c243e",
     "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "e68face714495ad762b3ccb8eec7b38ce6047274c44fd6977dc44abfd56f9439",
     "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs": "dd1168717766515274065c45da50d0f6da23e824ccc7a2e49055e2977fb95ddd",
     "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs": "cdf133bc96409a0c3a56abb7a2023b0d3dc9dd0237bdb50d9a4f46b97f72ab55",
@@ -6287,6 +6421,7 @@
     "tdf-mobile/__tests__/ddexApi.test.ts": "c9e274d52a3bab8063c84a79c398c68657d2a07774722f64caecec0b25d4518b",
     "tdf-mobile/__tests__/directoryApi.test.ts": "477010a59bdff0576ab9cab6f2d79f5fddb9a8e4ed9b63f0ebc8a329adaf39a4",
     "tdf-mobile/__tests__/eventMoments.test.ts": "8d2e690a4253ac3c39a84e54beaa92db2d3cdb6fefe60ef26e77c9e4c532a824",
+    "tdf-mobile/__tests__/featureRegistry.test.ts": "37f19809fc84d5c70d6f625f2f2425a3a139797d55bc055131ed0aaaa2385941",
     "tdf-mobile/__tests__/liveBroadcastsRepository.test.ts": "ff98004607a259e2b0e9a9e677d121a564a78e61e6a66074e948e04d15ff9d6d",
     "tdf-mobile/__tests__/onboardingApi.test.ts": "4770fd9508a3a13c6ab0fb701d900b32633bac7b377d3f4fed4498f0b0c08300",
     "tdf-mobile/__tests__/onboardingIntent.test.ts": "5598a1deba59da59d8c3c669ad8d77836040bd855776a4108a73639cc3842319",
@@ -6312,13 +6447,13 @@
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
     "tdf-mobile/src/api/events.ts": "a6014149f81240e56023471ea987fc8ac8245fc06d3034fb0382750e818d2b1e",
-    "tdf-mobile/src/api/generated/types.ts": "cc567cc305996039f30cba0b75d1cbec4ba4380b6cc2c1d79176121814e47869",
+    "tdf-mobile/src/api/generated/types.ts": "fc0c21b4ec62ede01af324f46b3cd7bc87b7886e028e7c2f489c8b951dafe3c3",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/components/EventCard.tsx": "4eaba1e6a6ac76b67bbc7f5a6a8d24e0e14e81ebb0eb29041da70265dacd21a2",
     "tdf-mobile/src/components/EventMomentCard.tsx": "d157367b980c01a8425a396971519124105860e6394b5c27d90cc5c2fc7dd9c8",
     "tdf-mobile/src/experiments/NewUserOnboardingGate.tsx": "80c962ddd011c5b8121d9da53af1ddd4b4c691533d24fd233fbc4e39723f6e19",
-    "tdf-mobile/src/features/generatedFeatureRegistry.ts": "a8111cb6563d7cb08ca568175ed51460de0293db652142a7979e907e256ee2ff",
+    "tdf-mobile/src/features/generatedFeatureRegistry.ts": "f7cd4cb67651d7ab6925cfea81ed71e686a09a0b4e55cda9681bff396a7a81b5",
     "tdf-mobile/src/hooks/usePartyOwnership.ts": "d95a290a5cf31cb69c41b257144118cec54fc1d132ff24971d0283da05405cca",
     "tdf-mobile/src/lib/eventMoments.ts": "4c737b4a82c92dfd89a362caaba5b7d1bae16f06d93ecdb08c104737f24a598d",
     "tdf-mobile/src/lib/eventMomentsRepository.ts": "3fc6bd9bff601d1b03a311b57a384b385a87a2e3413a5c3452fb3fdb06b17a7e",
@@ -6805,6 +6940,10 @@
       {
         "requirement": "AUTH-CORS-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Config.hs": [
@@ -6831,11 +6970,19 @@
       {
         "requirement": "AUTH-CORS-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "tests"
       }
     ],
     "scripts/verify-cors-boundary.py": [
       {
         "requirement": "AUTH-CORS-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PRIV-INTAKE-001",
         "relationship": "tests"
       }
     ],
@@ -6853,6 +7000,10 @@
       {
         "requirement": "ID-CLAIM-REVIEW-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": [
@@ -6864,6 +7015,10 @@
     "tdf-hq-ui/src/features/featureRegistry.test.ts": [
       {
         "requirement": "AUTH-REGISTRY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PRIV-INTAKE-001",
         "relationship": "tests"
       }
     ],
@@ -6922,6 +7077,10 @@
       },
       {
         "requirement": "MEDIA-STREAM-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PRIV-INTAKE-001",
         "relationship": "implementation"
       }
     ],
@@ -7480,6 +7639,10 @@
       },
       {
         "requirement": "MEDIA-STREAM-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PRIV-INTAKE-001",
         "relationship": "tests"
       }
     ],
@@ -8056,6 +8219,10 @@
     "tdf-hq/src/TDF/ServerFeedback.hs": [
       {
         "requirement": "MEDIA-PERSIST-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PRIV-INTAKE-001",
         "relationship": "implementation"
       }
     ],
@@ -9429,6 +9596,18 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/public/mobile-distribution.json": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/mobile/MobileApp.test.tsx": [
+      {
+        "requirement": "MOB-PUBLIC-001",
+        "relationship": "tests"
+      }
+    ],
     "formal/event-operations/OperationsManualReceipt.tla": [
       {
         "requirement": "OPS-MANUAL-001",
@@ -9642,6 +9821,150 @@
         "requirement": "OPS-INTEGRATION-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq/src/TDF/API/Feedback.hs": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/accountDeletion.ts": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/feedback.ts": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/internalFeedback.ts": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/types.ts": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/components/AccountDeletionQueue.tsx": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/components/PublicBranding.tsx": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/i18n/locales/en.ts": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/i18n/locales/es.ts": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/AccountDeletionPage.tsx": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/routes/publicRoutes.tsx": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "e2e/web/account-deletion.spec.mjs": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/web/studio-internship-audit.spec.mjs": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-account-deletion-api.mjs": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-studio-internship-audit-api-e2e.mjs": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-studio-internship-audit-api-e2e.sh": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/api/accountDeletion.test.ts": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/api/feedback.test.ts": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/__tests__/featureRegistry.test.ts": [
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -9693,7 +10016,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "b5f123f33695eb912cf9f3956a4b2620add70006c42d86f8a52755c663ccc0c3",
+      "sha256": "f43ddaf0e847ee524739559f2ac242970aaa42bef5ad810249900784ca863d2e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -9804,6 +10127,18 @@
       "sha256": "d3208c1857133ebf963798cfd25daaf733ef4b0d4d84e2d3075cfd18fd9bfab5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-9258b3c42ab418b4",
+      "path": "e2e/web/account-deletion.spec.mjs",
+      "sha256": "b31778ac20f8bdbc66232add16556a4334d6e82f8a80b598b544934ea1f34a64",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-21d4d7e18c516e29",
@@ -9950,9 +10285,14 @@
     {
       "id": "SURFACE-03b376e5c1e5769e",
       "path": "e2e/web/studio-internship-audit.spec.mjs",
-      "sha256": "a1476f348af89e8c1bc1f2e41573a6b8acb8fa2db257c919236457c1a11f484a",
+      "sha256": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-d249a5ea8a3f2986",
@@ -12651,6 +12991,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-1185f571edd4c1d3",
+      "path": "scripts/test-account-deletion-api.mjs",
+      "sha256": "7a712d3754e8e99771637b30e27be7cefd2536c8e8bd4a2b94296fa535f38d0c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-a8dfded8bd6214c5",
       "path": "scripts/test-artist-claim-target-http.sh",
       "sha256": "ea13d891593d2b2951a59b256df5de6bea5518c4b416ffd2366efd08ef051cc5",
@@ -13384,16 +13736,26 @@
     {
       "id": "SURFACE-df93425ce321f1fb",
       "path": "scripts/test-studio-internship-audit-api-e2e.mjs",
-      "sha256": "889996bfee1d3934ad9eb5f35e37c05b8f15f11c43dbfa94ecba095e18158da1",
+      "sha256": "c051228cf890bdc3ec2079f9afbbc3e8e2bf1ead0743e192f54c8281d442db7e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-712726a891f46cde",
       "path": "scripts/test-studio-internship-audit-api-e2e.sh",
-      "sha256": "2d3b7e61467078e968499231822d4f80b172d2f3f3646be427df0bcf3a4c00c5",
+      "sha256": "5c0236ad2a923c9891a8d8239055865828060a78a96ab57e572330714583f8c6",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-5b061ec22f6fb1b6",
@@ -13565,11 +13927,15 @@
     {
       "id": "SURFACE-da360911414286b5",
       "path": "scripts/verify-cors-boundary.py",
-      "sha256": "b5ba1d728abbc2181ffd260237e5743f38feb7681cb7fcd4e9cc5c969a2395b0",
+      "sha256": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "AUTH-CORS-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PRIV-INTAKE-001",
           "relationship": "tests"
         }
       ]
@@ -13807,7 +14173,7 @@
     {
       "id": "SURFACE-6bf3e8831a095bee",
       "path": "tdf-hq-ui/public/mobile-app/data-deletion.html",
-      "sha256": "32b495f131da0c153d219f8d2fadb0d04fcd2300782a17e75216c2ad5d96f695",
+      "sha256": "813ff5df54318e43fd4064004f0d9f2e72ade70140d974a3761d150ed91d5d96",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -13867,9 +14233,14 @@
     {
       "id": "SURFACE-58b1b762b88c9b8e",
       "path": "tdf-hq-ui/public/mobile-distribution.json",
-      "sha256": "c4ae01681008e3588976812895addb26ce9461b4734c898228593f11d731b686",
+      "sha256": "d37f5a688b69bd641ab0976020268da070505b9f882d68f688906007e94c8e91",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-c13a12d2ea792bdf",
@@ -14092,6 +14463,30 @@
       "sha256": "6989c7101cd4a221461cbcc97f0ef65425aea589a263b86423119707d58461fd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-f8ed9b53a433074a",
+      "path": "tdf-hq-ui/src/api/accountDeletion.test.ts",
+      "sha256": "c814a2f8e09ac57867c267245acd8e7bf5b2135d10fce8c7cd037690ab7e46f7",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-e0156ec387afe64c",
+      "path": "tdf-hq-ui/src/api/accountDeletion.ts",
+      "sha256": "6eb25d69e9f973136c11ddb354892587b6289ceffc446f59382a7895acdcfc13",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-c708f44fd07aaecc",
@@ -14426,16 +14821,26 @@
     {
       "id": "SURFACE-69a704f4fb55bf52",
       "path": "tdf-hq-ui/src/api/feedback.test.ts",
-      "sha256": "dbd23e43cd43994667b8745df7039f56234880342bdb5b0bdda25d521a73819e",
+      "sha256": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-07a03f2b6135fe72",
       "path": "tdf-hq-ui/src/api/feedback.ts",
-      "sha256": "8c8a95930d681cecbaab367ed68ea17fd431751951569fdb33d20b7f9b174041",
+      "sha256": "574d73b2e559ee161c084f55f976d3c4d662d5fa99dc5b3f5a8f04ab62905545",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-1466b07a94b92eb2",
@@ -14461,7 +14866,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "cc567cc305996039f30cba0b75d1cbec4ba4380b6cc2c1d79176121814e47869",
+      "sha256": "fc0c21b4ec62ede01af324f46b3cd7bc87b7886e028e7c2f489c8b951dafe3c3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14501,9 +14906,14 @@
     {
       "id": "SURFACE-7f274ed7ae3d4fde",
       "path": "tdf-hq-ui/src/api/internalFeedback.ts",
-      "sha256": "fc5eaf580debc8784f27ab934aa5ace331d31fa1810f32ec796af0c4e28c8022",
+      "sha256": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-c1dbdb6b385cafc3",
@@ -14910,9 +15320,14 @@
     {
       "id": "SURFACE-9bac22f287db5deb",
       "path": "tdf-hq-ui/src/api/types.ts",
-      "sha256": "71af45fd6a302b5b2a52ee54106522aa8faba612550298cb07748a807cc35cf4",
+      "sha256": "c3983d63207c11622d75d6dee3b8af257c128abe3fc9395ab7eb2fbbf21af222",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-8843dbd0dcd5f79a",
@@ -14927,6 +15342,30 @@
       "sha256": "e679e1b41bc86a3fdf357030af08149cc08f1948ba726de9043d9e955ed99e08",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-526786b1dccd2ea9",
+      "path": "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
+      "sha256": "f382ffb3931903701e4416dc22f97b4d56c594d972953be5dc9d218bbd619972",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-d0c4c8db8120be10",
+      "path": "tdf-hq-ui/src/components/AccountDeletionQueue.tsx",
+      "sha256": "8cef257d699117b94fb7d45b3fd574fb97098a0a6e38ef29d3038fb2b41e49bf",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-8070ded38d77e27b",
@@ -15207,9 +15646,14 @@
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "1f43956a75a96472fe0020ddeda0d203b32be8b242606f1f55303ce290a48861",
+      "sha256": "7b611aa98fbd9f7a80236089e593265e6b95f579c8b6b91b38bd72a41e66f1a8",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-f3829ea86f743f20",
@@ -15852,11 +16296,15 @@
     {
       "id": "SURFACE-2ee656af772bf719",
       "path": "tdf-hq-ui/src/features/featureRegistry.test.ts",
-      "sha256": "3202fad3806ebb31695ca186727f9163373d6ad6c6f9cfa79089d129bbaf1b6b",
+      "sha256": "4e3a97254efaf4f01fc0a7e596666f435c95fe4335a363ddeb0fb4900bb0632f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "AUTH-REGISTRY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PRIV-INTAKE-001",
           "relationship": "tests"
         }
       ]
@@ -16224,6 +16672,30 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-c97910a5593293cd",
+      "path": "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts",
+      "sha256": "dcfed367027497a13691491f27434050618bdf386d5ae9ad032a9037892a3534",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-5e55534c6210f093",
+      "path": "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts",
+      "sha256": "31796bc77316bf6d1b90841e6d9454bdeafe75c7e8630713b45c2cc601f0420c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-f53988d1fb48e7e5",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
       "sha256": "83320844622c1c458265cb4e230d9edeae3d495da2a7d6dcb516d444f88f999f",
@@ -16271,16 +16743,26 @@
     {
       "id": "SURFACE-844ef4d7558a76f8",
       "path": "tdf-hq-ui/src/i18n/locales/en.ts",
-      "sha256": "969c9406f05d0f7fa189cca0e7cf4f720be0d305b97b2293b98dee30f146d355",
+      "sha256": "3f2bad72c74df51d522a433a3c1c97a6ea6b8dcf5b8a9d4657af3515cd6d4ebf",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-40770a4aba9f94ce",
       "path": "tdf-hq-ui/src/i18n/locales/es.ts",
-      "sha256": "2095866bbdbfb6727ae75c944b9f229bf520beafefafde6978998eba0b920d70",
+      "sha256": "e7e93c77deb6043f650aeb71e0b10538c480918d702af78e9ab17f756aaabd0b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-90a473fead52aa3c",
@@ -16341,7 +16823,12 @@
       "path": "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
       "sha256": "2cda5efe4cfeb77f4e67e629b3aa8b5aec10c617658ddc8042ba01990c6a2c2b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MOB-PUBLIC-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-7bc3d01f19102b0f",
@@ -16412,6 +16899,30 @@
       "sha256": "5ac2140b9ba524b837e15d82113cd7b75af91eb5c3efe2a0e2c0cd366267eb41",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-7eb3d6265bbc7ec8",
+      "path": "tdf-hq-ui/src/pages/AccountDeletionPage.test.tsx",
+      "sha256": "2792cf8b46ad3c870fbc52818aa67ee9a5155a10568444faa64d2f01cddb8d04",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-c46fe8f1aff9a4d8",
+      "path": "tdf-hq-ui/src/pages/AccountDeletionPage.tsx",
+      "sha256": "f04ca7a62b3ba9d5f293ea988738f357928d8086b56f113803e92f87f353b24c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-4af2046447a4d6be",
@@ -17057,9 +17568,14 @@
     {
       "id": "SURFACE-48b0e7098c6f5184",
       "path": "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
-      "sha256": "e2ff9e1cbe79bb4f9a92c69072f2cb3999381dfd04b7341f79bc82f254fd487c",
+      "sha256": "aacb639d3b0f88101fa1f9f3c790d817c7962ad149133462d2e88004e9f7bd01",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-6225db5e836b097f",
@@ -18140,9 +18656,14 @@
     {
       "id": "SURFACE-f6a0ac8526319c29",
       "path": "tdf-hq-ui/src/routes/publicRoutes.tsx",
-      "sha256": "549e3dba76f23f8606285e0f4382731e1fd778c018a6e4c21e14ce971a6778a5",
+      "sha256": "4f2025acbc29657ec9a2b1f289aae38edebe56c135b465912e8f57455628dce0",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-06ba6461b3eb1e56",
@@ -19018,7 +19539,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "7388f163749d305fb7bc12b0ada9c4f7f988c878a1db006437db835555cbe3af",
+      "sha256": "c3b5ac5a02b11056d3f918c4d7577b426ad582e89a11431b937cd097d9377323",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19027,6 +19548,10 @@
         },
         {
           "requirement": "ID-CLAIM-REVIEW-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PRIV-INTAKE-001",
           "relationship": "implementation"
         }
       ]
@@ -19097,7 +19622,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "568ba2f5cf08b2f3112fa36a8b99cb732088b74cadf1f5789bd00ddccb7407ca",
+      "sha256": "445da4d1d8ea64aee6c0fb40bd1800f7bd44bd01478aa88d8156745fd516bd12",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -19110,6 +19635,10 @@
         },
         {
           "requirement": "MEDIA-STREAM-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PRIV-INTAKE-001",
           "relationship": "implementation"
         }
       ]
@@ -21923,9 +22452,14 @@
     {
       "id": "SURFACE-b512bf606a31fa6e",
       "path": "tdf-hq/src/TDF/API/Feedback.hs",
-      "sha256": "b3a4660be280fa6aabb8cc0a39958f8eeb60a61bce687e1042c14f1893cdbd3b",
+      "sha256": "cc2586f885751ab3265217830e11b30c97cf5a77739955b1e24ae565abe7e8cf",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-a72004f4d0fc91c5",
@@ -22617,11 +23151,15 @@
     {
       "id": "SURFACE-057525240b5b11f7",
       "path": "tdf-hq/src/TDF/Cors.hs",
-      "sha256": "94a8b2ffedfc793e6d8c44d62f0388dc853e3da95e75e23dfdb6fed76d7f88dd",
+      "sha256": "cd71072735d45e404fbf9508f2531fc9e6e1389914bb835bf22ee7baf33211ba",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "AUTH-CORS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PRIV-INTAKE-001",
           "relationship": "implementation"
         }
       ]
@@ -23481,11 +24019,15 @@
     {
       "id": "SURFACE-4e1ca7d206cc436f",
       "path": "tdf-hq/src/TDF/ServerFeedback.hs",
-      "sha256": "55a0f22b890416af1a9e48cccb5fcff733114e4a748a9c87ea616001e2584866",
+      "sha256": "97ba92528177da1dda6481a3887e58312d15c40335c60ae9c594e6364f1445a7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-PERSIST-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PRIV-INTAKE-001",
           "relationship": "implementation"
         }
       ]
@@ -23924,7 +24466,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "b142c0195c1fac1707c9318fe946bd9ee82448607872990f67f4845139bdf47d",
+      "sha256": "5354b498a63a41be8a899a6d01aa5b0255413cb432777502baa33fb70b18ff90",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23941,6 +24483,10 @@
         },
         {
           "requirement": "MEDIA-STREAM-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PRIV-INTAKE-001",
           "relationship": "tests"
         }
       ]
@@ -24091,11 +24637,15 @@
     {
       "id": "SURFACE-56829a36e8042830",
       "path": "tdf-hq/test/TDF/CorsSpec.hs",
-      "sha256": "ca283c34c7b4368f59ba7af790950482e527747e95574afbbd22c1ce0e6a4245",
+      "sha256": "6992c0359ea87c5b7f0d00a6f952d608d215306ec09677b793c514c6da6c243e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "AUTH-CORS-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PRIV-INTAKE-001",
           "relationship": "tests"
         }
       ]
@@ -25536,9 +26086,14 @@
     {
       "id": "SURFACE-7aafc197c0caae2e",
       "path": "tdf-mobile/__tests__/featureRegistry.test.ts",
-      "sha256": "44a816ddc9c953522502961694eb4115d46e1f2ed6d59e5ffd257d0d0477d533",
+      "sha256": "37f19809fc84d5c70d6f625f2f2425a3a139797d55bc055131ed0aaaa2385941",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-INTAKE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-a44fa1219b230d2b",
@@ -26704,7 +27259,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "cc567cc305996039f30cba0b75d1cbec4ba4380b6cc2c1d79176121814e47869",
+      "sha256": "fc0c21b4ec62ede01af324f46b3cd7bc87b7886e028e7c2f489c8b951dafe3c3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27119,7 +27674,7 @@
     {
       "id": "SURFACE-3cdceeb8afd26986",
       "path": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-      "sha256": "a8111cb6563d7cb08ca568175ed51460de0293db652142a7979e907e256ee2ff",
+      "sha256": "f7cd4cb67651d7ab6925cfea81ed71e686a09a0b4e55cda9681bff396a7a81b5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -27919,7 +28474,6 @@
     "SURFACE-e5280fb6cf4274bc",
     "SURFACE-bb80adee648c0293",
     "SURFACE-d3c9dbc473fd46d6",
-    "SURFACE-03b376e5c1e5769e",
     "SURFACE-660f7078dc0b381a",
     "SURFACE-0d1b6286746163ff",
     "SURFACE-cca59b046cc76ace",
@@ -28173,8 +28727,6 @@
     "SURFACE-df0467f34f5e71d1",
     "SURFACE-829614625675f708",
     "SURFACE-69baedf792a35920",
-    "SURFACE-df93425ce321f1fb",
-    "SURFACE-712726a891f46cde",
     "SURFACE-5b061ec22f6fb1b6",
     "SURFACE-75ed4534ce225e0f",
     "SURFACE-a5f7689f101fcc8c",
@@ -28198,7 +28750,6 @@
     "SURFACE-ee14fa660066a784",
     "SURFACE-16fd6a7d303023ea",
     "SURFACE-a2ada5ea1a6d219a",
-    "SURFACE-58b1b762b88c9b8e",
     "SURFACE-c13a12d2ea792bdf",
     "SURFACE-092f602711fabb68",
     "SURFACE-e5cf91b3e384faae",
@@ -28267,8 +28818,6 @@
     "SURFACE-36051dc74bb3ac84",
     "SURFACE-743e4202864493ee",
     "SURFACE-ffd1f7d4f06774cf",
-    "SURFACE-69a704f4fb55bf52",
-    "SURFACE-07a03f2b6135fe72",
     "SURFACE-1466b07a94b92eb2",
     "SURFACE-acc1011eb1c1fb12",
     "SURFACE-5258acdc9275f4b0",
@@ -28276,7 +28825,6 @@
     "SURFACE-485cf245408b2210",
     "SURFACE-89ce35a1784c5738",
     "SURFACE-3a8631af15793b20",
-    "SURFACE-7f274ed7ae3d4fde",
     "SURFACE-c1dbdb6b385cafc3",
     "SURFACE-8954d786b64d481b",
     "SURFACE-7c8fda1bc9a6aba7",
@@ -28331,7 +28879,6 @@
     "SURFACE-9e922e0be55cb4d9",
     "SURFACE-4db04fec7552683c",
     "SURFACE-356a0fb82dec0531",
-    "SURFACE-9bac22f287db5deb",
     "SURFACE-8843dbd0dcd5f79a",
     "SURFACE-53ccbdf692a3b60f",
     "SURFACE-8070ded38d77e27b",
@@ -28370,7 +28917,6 @@
     "SURFACE-e3d94a49085bdc41",
     "SURFACE-1ca0b4712a14943f",
     "SURFACE-6838929c1edd8346",
-    "SURFACE-24748a68641bb0f8",
     "SURFACE-f3829ea86f743f20",
     "SURFACE-a1dac13c9010be34",
     "SURFACE-e89e4f0a2bd61051",
@@ -28510,15 +29056,12 @@
     "SURFACE-c15c4de32f8d549b",
     "SURFACE-7e096967d3a00d3b",
     "SURFACE-31dfb712c6445325",
-    "SURFACE-844ef4d7558a76f8",
-    "SURFACE-40770a4aba9f94ce",
     "SURFACE-90a473fead52aa3c",
     "SURFACE-81e227132420f964",
     "SURFACE-7ffb652987ca6eb6",
     "SURFACE-eb51f33c8df76f33",
     "SURFACE-b354b9104200a96e",
     "SURFACE-f2804d98461b2053",
-    "SURFACE-faf0ef2a53a46622",
     "SURFACE-7bc3d01f19102b0f",
     "SURFACE-c466dd3a2779a06d",
     "SURFACE-2df2e567dfc3a0a8",
@@ -28612,7 +29155,6 @@
     "SURFACE-64be6d74454c5dda",
     "SURFACE-272c14516ccb78b7",
     "SURFACE-37e15e274883ac2f",
-    "SURFACE-48b0e7098c6f5184",
     "SURFACE-6225db5e836b097f",
     "SURFACE-3b1ca178b6f6ea73",
     "SURFACE-d0e36c97b6f11244",
@@ -28753,7 +29295,6 @@
     "SURFACE-b81f4ee712780e85",
     "SURFACE-f0dfc7a18e8b49c7",
     "SURFACE-dd805fb7a067baea",
-    "SURFACE-f6a0ac8526319c29",
     "SURFACE-06ba6461b3eb1e56",
     "SURFACE-533fde17d26f7770",
     "SURFACE-f33f3db01ba04d18",
@@ -29214,7 +29755,6 @@
     "SURFACE-531b5849276ce165",
     "SURFACE-cb535c211328ca30",
     "SURFACE-afc4cb3bc501dafc",
-    "SURFACE-b512bf606a31fa6e",
     "SURFACE-a72004f4d0fc91c5",
     "SURFACE-b0337643e2433350",
     "SURFACE-46c44f4c44b3bb33",
@@ -29509,7 +30049,6 @@
     "SURFACE-2947edfcf470d479",
     "SURFACE-293e026d753996ba",
     "SURFACE-38f4ba1a427a2577",
-    "SURFACE-7aafc197c0caae2e",
     "SURFACE-a44fa1219b230d2b",
     "SURFACE-27d00a7896b43cdb",
     "SURFACE-42687e63082cfbc2",
@@ -29764,9 +30303,7 @@
     "SURFACE-b7c7359f0a4f26db",
     "SURFACE-21b31fbb27b536c4"
   ],
-  "untestedRequirements": [
-    "MOB-PUBLIC-001"
-  ],
+  "untestedRequirements": [],
   "unmodeledCriticalRequirements": [
     "SYS-VERIFY-001",
     "SYS-VERIFY-002",
@@ -29811,7 +30348,8 @@
     "SYS-CI-001",
     "EVT-PRESENTATION-001",
     "PRIV-ERROR-001",
-    "OPS-INTEGRATION-001"
+    "OPS-INTEGRATION-001",
+    "PRIV-INTAKE-001"
   ],
   "stateMachines": [
     {
@@ -34685,6 +35223,23 @@
       "conformance": "not-established-by-client-generation"
     },
     {
+      "id": "POST /feedback/account-deletion",
+      "operationId": "requestAccountDeletion",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
       "id": "GET /feedback/internal",
       "operationId": "listInternalFeedback",
       "source": "tdf-hq/docs/openapi/api.yaml",
@@ -34755,6 +35310,25 @@
       "responses": [
         "200",
         "403"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /feedback/internal/account-deletion/{feedbackId}",
+      "operationId": "resolveAccountDeletion",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "409"
       ],
       "conformance": "not-established-by-client-generation"
     },
@@ -38938,6 +39512,72 @@
         "kind": "external-web",
         "destination": "https://www.tdfrecords.net/app",
         "documentedException": null
+      },
+      "authority": "client discovery policy; backend denial requires independent verification"
+    },
+    {
+      "feature": "account.deletion",
+      "resource": "/cuenta/eliminar",
+      "action": "discover",
+      "authentication": "authenticated",
+      "rolesAny": [],
+      "rolesAll": [],
+      "modulesAll": [],
+      "modulesAny": [],
+      "strictAdmin": false,
+      "scope": "own",
+      "condition": {
+        "flag": null,
+        "maturity": "stable"
+      },
+      "mobile": {
+        "kind": "external-web",
+        "destination": "https://www.tdfrecords.net/cuenta/eliminar",
+        "documentedException": "Dedicated authenticated web initiation; no separate native erasure implementation."
+      },
+      "authority": "client discovery policy; backend denial requires independent verification"
+    },
+    {
+      "feature": "account.deletion",
+      "resource": "/cuenta/eliminar",
+      "action": "view",
+      "authentication": "authenticated",
+      "rolesAny": [],
+      "rolesAll": [],
+      "modulesAll": [],
+      "modulesAny": [],
+      "strictAdmin": false,
+      "scope": "own",
+      "condition": {
+        "flag": null,
+        "maturity": "stable"
+      },
+      "mobile": {
+        "kind": "external-web",
+        "destination": "https://www.tdfrecords.net/cuenta/eliminar",
+        "documentedException": "Dedicated authenticated web initiation; no separate native erasure implementation."
+      },
+      "authority": "client discovery policy; backend denial requires independent verification"
+    },
+    {
+      "feature": "account.deletion",
+      "resource": "/cuenta/eliminar",
+      "action": "submit",
+      "authentication": "authenticated",
+      "rolesAny": [],
+      "rolesAll": [],
+      "modulesAll": [],
+      "modulesAny": [],
+      "strictAdmin": false,
+      "scope": "own",
+      "condition": {
+        "flag": null,
+        "maturity": "stable"
+      },
+      "mobile": {
+        "kind": "external-web",
+        "destination": "https://www.tdfrecords.net/cuenta/eliminar",
+        "documentedException": "Dedicated authenticated web initiation; no separate native erasure implementation."
       },
       "authority": "client discovery policy; backend denial requires independent verification"
     },
@@ -52584,7 +53224,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 78,
+    "PARTIAL": 79,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

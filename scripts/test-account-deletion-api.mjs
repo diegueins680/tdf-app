@@ -19,6 +19,9 @@ export async function verifyAccountDeletion({ request: rawRequest, requestStatus
   const cookie = { Cookie: `tdf_session=${account.token}` };
   await rawRequest(endpoint, { headers: { ...cookie, Origin: 'https://attacker.example' }, method: 'POST', body: form(), expected: 403 });
   await rawRequest(endpoint, { headers: cookie, method: 'POST', body: form(), expected: 403 });
+  // Servant accepts a trailing slash; route aliases must retain the same CSRF boundary.
+  await rawRequest(`/feedback/account-deletion/?accountId=${account.partyId}`, { headers: cookie, method: 'POST', body: form(), expected: 403 });
+  await rawRequest(`/feedback/account-deletion/?accountId=${account.partyId}`, { headers: { ...cookie, Origin: 'https://attacker.example' }, method: 'POST', body: form(), expected: 403 });
   await rawRequest(endpoint, { token: account.token, method: 'POST', body: form(), expected: 403 });
   await request(endpoint, { token: account.token, headers: { Origin: 'https://attacker.example' }, method: 'POST', body: form(), expected: 403 });
   const spoof = form();
