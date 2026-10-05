@@ -36,7 +36,8 @@ def database():
             'providerAccounts': [{'provider': 'manual_bank', 'status': 'ready', 'contract_status': 'approved',
                 'credential_status': 'validated', 'environment': 'production', 'enabled': False,
                 'feature_flag_key': None, 'credentials': SECRET}],
-            'extensions': [{'extname': 'vector', 'extversion': '0.8.1'}], 'extra': SECRET}
+            'extensions': [{'extname': 'vector', 'extversion': '0.8.1'}],
+            'socialRuntime': {'enabled': False, 'activatedOnce': True, 'private': SECRET}, 'extra': SECRET}
 
 
 class Boundaries(unittest.TestCase):
@@ -45,6 +46,7 @@ class Boundaries(unittest.TestCase):
         self.assertNotIn(SECRET, json.dumps(result))
         self.assertEqual(result['booleanConfiguration']['ALLOW_ALL_ORIGINS'], 'true')
         self.assertIn('RUN_MIGRATIONS', result['missingBooleanConfiguration'])
+        self.assertIn('SOCIAL_V2_ENABLED', result['missingBooleanConfiguration'])
 
     def test_rejects_routing_identity_and_mutable_image_controls(self):
         for mutation in [
@@ -75,6 +77,16 @@ class Boundaries(unittest.TestCase):
         self.assertNotIn(SECRET,json.dumps(value))
         self.assertEqual(value['providerAccounts'][0]['enabled'],False)
         self.assertTrue(value['readOnly'])
+        self.assertEqual(value['socialRuntime'], {'enabled': False, 'activatedOnce': True})
+
+    def test_absent_social_runtime_is_unknown_and_non_boolean_state_is_rejected(self):
+        value = database()
+        value['socialRuntime'] = None
+        self.assertIsNone(module.summarize_database(value)['socialRuntime'])
+        for invalid in [{}, {'enabled': False, 'activatedOnce': SECRET},
+                        {'enabled': 'false', 'activatedOnce': True}]:
+            value['socialRuntime'] = invalid
+            with self.assertRaises(ValueError): module.summarize_database(value)
 
     def test_database_identity_and_ledger_controls(self):
         for mutation in [

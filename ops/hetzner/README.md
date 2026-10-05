@@ -18,8 +18,10 @@ node scripts/inspect-hetzner-production.mjs --identity-file /absolute/private/ke
 The command pins the host, requires existing SSH host trust and a specific key,
 checks Compose identity, immutable image references, private database networking
 and the expected volume. It reads the ledger and production capability flags
-through the existing `tdf_catalog_inventory` role in read-only transactions. Only
-the container's pinned Unix socket and port are used; inherited libpq routing
+through the existing `tdf_catalog_inventory` role in read-only transactions. Social
+observations contain only runtime enablement and activation history, never pair,
+consent or message data. A missing singleton remains unknown rather than inferred
+disabled. Only the container's pinned Unix socket and port are used; inherited libpq routing
 overrides are cleared and SQL verifies that the connection is local. Only
 allowlisted identity/configuration facts leave the host. Credentials and raw
 Docker/SQL errors are not printed. Output creation is exclusive with mode0600;

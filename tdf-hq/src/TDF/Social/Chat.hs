@@ -17,7 +17,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Database.Persist (PersistValue(..))
 import Database.PostgreSQL.Simple (SqlError(..))
-import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool, toSqlKey)
+import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool, toSqlKey, transactionUndo)
 import Database.Persist.SqlBackend (getRDBMS)
 import Servant
 import TDF.API.Chat (ChatAPI)
@@ -78,15 +78,19 @@ chatPolicyServer user (oldThreads :<|> oldOpen :<|> oldMessages :<|> oldSend) =
         let scoped = case (access,other) of
               (WriteSession _,Just target) -> WriteSession (Just target)
               _ -> access
-        withCurrentSession scoped user
-          (rawSql statement params :: SqlPersistT IO [Single Text])) pool
+        result <- withCurrentSession scoped user
+          (rawSql statement params :: SqlPersistT IO [Single Text])
+        -- Decode while the operation and its authority locks are still in the
+        -- same transaction. Returning Left alone would otherwise commit effects.
+        let decoded = result >>= \rows -> case rows of
+              [Single encoded] -> decodeResult encoded
+              _ -> Left err500
+        case decoded of
+          Left err -> transactionUndo >> pure (Left err)
+          Right value -> pure (Right value)) pool
       case outcome of
         Left (err :: SqlError) -> throwError (mapChatSqlError err)
-        Right result -> do
-          rows <- either throwError pure result
-          case rows of
-            [Single encoded] -> decodeResult encoded
-            _ -> throwError err500
+        Right result -> either throwError pure result
 
 policyAvailable :: SqlPersistT IO (Maybe Bool)
 policyAvailable = do
@@ -101,20 +105,20 @@ policyAvailable = do
       -- before serving this application version against the social foundation.
       pure $ if foundation then Nothing else Just False
 
-decodeResult :: FromJSON a => Text -> ChatM a
+decodeResult :: FromJSON a => Text -> Either ServerError a
 decodeResult encoded = case eitherDecodeStrict' (TE.encodeUtf8 encoded) of
-  Right (Object fields) -> case KM.lookup "error" fields of
-    Just (String "unavailable") -> throwError err404 {errBody=BL.fromStrict (TE.encodeUtf8 "Conversación no disponible.")}
-    Just (String "forbidden") -> throwError err403
+  Right (Object fields) | KM.size fields == 1 -> case KM.lookup "error" fields of
+    Just (String "unavailable") -> Left err404 {errBody=BL.fromStrict (TE.encodeUtf8 "Conversación no disponible.")}
+    Just (String "forbidden") -> Left err403
       {errBody=BL.fromStrict (TE.encodeUtf8 "Esta conversación requiere una conexión aceptada y permisos vigentes.")}
-    Just (String "invalid") -> throwError err400
-    Just (String "before_not_found") -> throwError err404 {errBody="beforeId not found in this thread"}
-    Just (String "after_not_found") -> throwError err404 {errBody="afterId not found in this thread"}
-    Just _ -> throwError err500
+    Just (String "invalid") -> Left err400
+    Just (String "before_not_found") -> Left err404 {errBody="beforeId not found in this thread"}
+    Just (String "after_not_found") -> Left err404 {errBody="afterId not found in this thread"}
+    Just _ -> Left err500
     Nothing -> case KM.lookup "result" fields of
-      Just value -> case fromJSON value of Success parsed -> pure parsed; Error _ -> throwError err500
-      Nothing -> throwError err500
-  _ -> throwError err500
+      Just value -> case fromJSON value of Success parsed -> Right parsed; Error _ -> Left err500
+      Nothing -> Left err500
+  _ -> Left err500
 
 -- Never expose SQL details/message contents to clients. Known trigger denials use
 -- the same response as a pre-check; serialization/deadlock errors aborted the write.

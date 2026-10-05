@@ -5,6 +5,9 @@ claim an unbounded mathematical proof. TLC exhaustively explores the finite conf
 Alloy searches the stated finite scopes. Executable database, API, property, concurrency, and
 authorization tests remain required for the implementation.
 
+The shared gate also runs the [chat mutation boundary](../system/messaging.md),
+with its separately stated sequential scope and two mandatory negative controls.
+
 ## Toolchain used
 
 - OpenJDK `21.0.12.1`, extracted from the Homebrew Sonoma bottle into a temporary directory because

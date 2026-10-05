@@ -21,6 +21,7 @@ Historical green results are not current-candidate evidence.
   applicability and adoption rationale separately from verification evidence.
 - [cors-boundary.md](cors-boundary.md): credentialed production browser origins,
   startup guards, runtime mutation controls and coordinated configuration rollout.
+- [messaging.md](messaging.md): current-session/consent authority, rejected mutation rollback, bounded model and delivery/idempotency exclusions.
 - Domain contracts retain their existing source locations. This index references
   them instead of maintaining another handwritten copy of their transitions.
 - [payment-arithmetic.md](payment-arithmetic.md), [legacy-escrow.md](legacy-escrow.md)

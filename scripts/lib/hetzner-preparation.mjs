@@ -49,6 +49,8 @@ export function prepareHetznerRelease({ contract, receipt, provenance, now = Dat
     migrations, counts: { applied: migrations.filter(row => row.state === 'applied').length,
       pending: migrations.filter(row => row.state === 'pending').length },
     observedFlags, missingFlags: snapshot.containers.api.missingBooleanConfiguration,
+    observedDatabaseControls: { revenueFlags: database.revenueFlags ?? null,
+      providerAccounts: database.providerAccounts ?? null, socialRuntime: database.socialRuntime ?? null },
     requiredCorsConfiguration: { ALLOW_ALL_ORIGINS: 'false', CORS_DISABLE_DEFAULTS: 'true',
       ALLOWED_ORIGINS: 'https://www.tdfrecords.net,https://tdfrecords.net' },
     remainingGates: [

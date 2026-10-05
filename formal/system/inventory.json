@@ -2409,7 +2409,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "118f357cf68b0e559c8f26a1440016290d59847aad72c075a96f073365cfe1a9",
+      "sha256": "c0f60f9d182097bbb82c53bb83d2c123a3c402697aa8c37c2053997609430916",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2637,7 +2637,7 @@
     {
       "id": "SURFACE-b1dae8bd0d7ae4ca",
       "path": "scripts/__tests__/hetzner-preparation.test.mjs",
-      "sha256": "82ca21046c09be1de20785e36ac7b007766dfe8223b07f38ff11634d7f3cdc80",
+      "sha256": "e1b3d4e0b8eb8dca78b04a513dd9b27be539464179f1875f81a99d1bb758e66f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3207,7 +3207,7 @@
     {
       "id": "SURFACE-5ee17ccf3d926503",
       "path": "scripts/lib/hetzner-preparation.mjs",
-      "sha256": "20d2759f58a8e45e6c636d999f614773fbaa897101d2c35d7ae67876854b351b",
+      "sha256": "c6bbfb4aa25013264a4fbbeb5122f0b709ff48b9105a26b4645e8c022014a0c1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3483,7 +3483,7 @@
     {
       "id": "SURFACE-a8a5e7eef8c5278a",
       "path": "scripts/social/ChatSpec.hs",
-      "sha256": "b4c539436f151759e48665f1a6e8299b9b468bdd1dff4865a6ed13055df9cf1e",
+      "sha256": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4095,7 +4095,7 @@
     {
       "id": "SURFACE-305b8be869b1a5ec",
       "path": "scripts/test-hetzner-inspection.py",
-      "sha256": "ce8fc3662986c506304f826ec287ca4fdedae5cf78e2db6dfb7292b10a379a0c",
+      "sha256": "ea7ea89cf41614da0e4f46782831c010d400c5db939dbf24e15375d0a6fe8446",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4377,7 +4377,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "7cf784520d75e5f8eba5ecc1b9cbbdee3b9d1da536d365f3f55e0e171c0a4c2d",
+      "sha256": "0ffa3215db6642546f40eede7bc9017413dafd85766c18dae77fc9aa5d8acc24",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11889,7 +11889,7 @@
     {
       "id": "SURFACE-a87713bbc4cb9f7f",
       "path": "tdf-hq/src/TDF/Social/Chat.hs",
-      "sha256": "b1e939e3902c3a445ff3a9c2a6b3ea484bbccb5bbe42811f7e5eb7bb515fda61",
+      "sha256": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17965,6 +17965,34 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/ChatMutationBoundary.cfg",
+      "sha256": "dc76bf1caa1a43de6891a51256da9efc4264ac45b882fef969bc15895068e0fa",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ChatMutationBoundary.tla",
+      "sha256": "21f20bc7d01648705472982b37d9dad6d7cf9711eb83d0f1b2202ed31497d74a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/ChatMutationEarlyCommit.cfg",
+      "sha256": "d46199cc0f1db6672aeacdacc0da24bab1fae1766063a5c0732adc5c4e7c710d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/ChatMutationNoRollback.cfg",
+      "sha256": "689d923264fb1fc9bbd57fae69dcc6fac4619d9ff7f050b5f1be15f09090457f",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/CheckoutCancellation.cfg",
       "sha256": "64c93ecd5a7f8da635b2caa53786f58da9348cc531e1b56d0365e939f36e7f10",
       "authority": "inferred",
@@ -18687,7 +18715,7 @@
     },
     {
       "path": "formal/event-operations/README.md",
-      "sha256": "ff9b12e4bd6a8298c1ac12d3c98214a112753849cd2aab74dea611a7a22a4e33",
+      "sha256": "bdd4972da406c7886e036b0aafe90a11efca6d53f32a54989e2bb78bd9202559",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -19842,14 +19870,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "70146892a6ba879db767ada967f2049619d87fb893b159f2e6c453f3bfd18a96",
+      "sha256": "6c60f6116204d0ce2914a7f1ee406ffa96ff6576edf2ec70463419bdb6bd5367",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "6b88a491689ff1e5092095d8539b2c833272ce230751c9ea5a7c6d8001a8f1fc",
+      "sha256": "7e9bbe7a7df0a705159d05b06f4ebae8d97ac3999522ffc9a8d138d2e5b861c7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -19911,6 +19939,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/messaging.md",
+      "sha256": "14053fa13d1ae86436bca5ce058214b70d948df136d3932abef033b28f292416",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/payment-arithmetic.md",
       "sha256": "c08a1eccf725c31eadacdff1c36472ca984959e31233b887dc8760f1e07d6661",
       "authority": "inferred",
@@ -19919,21 +19954,21 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "94b9202bc674c3ed3a2580f2de695c7c59821eba31b1d48eeaf74184a3345ead",
+      "sha256": "ec6a7444984ac080de8d7eb59ab04b2a82affef3045535a6a0651d1d452af8bc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "ddf0d1e1e610af98008d731039d8c7a2f9846f0b09e94442de84b54c892ffb6d",
+      "sha256": "7d3b4111eb89ee88e43f4f11810b03b92969cab7e9c4d809fa0951e56a1088bf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "ops/hetzner/README.md",
-      "sha256": "7ae766db6a0da0b90b23ea52eddefae3ecf9ada4b29d054ea9078cc62b1a4413",
+      "sha256": "e6e9e49dbbc09596b5b08e3662f8aab8f24a39c20bdf81f5ca99f19e230f1509",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23280,6 +23315,52 @@
         "INVARIANTS AtMostOneAutomaticExchange OnlyPersistedConnection CurrentSessionReceipt",
         "PROPERTY RequestSettles",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ChatMutationBoundary.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  MaxRequests = 2",
+        "  DecodeBeforeCommit = TRUE",
+        "  RollbackRejected = TRUE",
+        "INVARIANTS",
+        "  RejectedLeavesNoMutation",
+        "  AcceptedHasOneMutation",
+        "  OnlyValidatedCommit",
+        "  BoundedRequests"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ChatMutationEarlyCommit.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  MaxRequests = 2",
+        "  DecodeBeforeCommit = FALSE",
+        "  RollbackRejected = TRUE",
+        "INVARIANT RejectedLeavesNoMutation"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/ChatMutationNoRollback.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "CONSTANTS",
+        "  MaxRequests = 2",
+        "  DecodeBeforeCommit = TRUE",
+        "  RollbackRejected = FALSE",
+        "INVARIANT RejectedLeavesNoMutation"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"

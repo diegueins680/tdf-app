@@ -2270,12 +2270,173 @@
         "scripts/__tests__/provider-rollback.test.mjs"
       ],
       "critical": true
+    },
+    {
+      "domain": "MSG",
+      "actors": [
+        "Authenticated direct-message participant",
+        "Other participant controlling their own consent/block",
+        "Administrator subject to canonical participant/consent policy"
+      ],
+      "authority": "approved domain contract",
+      "source": "docs/social/dm-write-boundary.md; docs/social/dm-read-boundary.md; docs/social/chat-client-isolation.md",
+      "contract": "formal/system/messaging.md",
+      "status": "specified and implemented",
+      "critical": true,
+      "privacy": "Deny bodies, names, previews and cursor-existence distinctions before exposing a forbidden thread. Do not expose raw SQL diagnostics.",
+      "idempotency": "Normalized direct-message open returns one unique pair thread. Send has no idempotency key: an uncertain accepted response can cause a duplicate on retry; no exactly-once guarantee.",
+      "recovery": "Retain canonical consent/activation and SQL enforcement across feature pause or compatible application rollback; never resurrect revoked consent.",
+      "observability": "Record exact source, model configuration/bounds, HTTP/SQL assertions and positive/negative results without production message content.",
+      "confidence": "Domain-specific policy and concrete boundary tests; no claim of all messaging surfaces, native clients or delivered-content erasure.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Existing domain contracts and models are linked; current candidate execution and deployed/native correspondence remain separate obligations."
+      },
+      "id": "MSG-ACCESS-001",
+      "title": "Current participant and consent authority for direct messages",
+      "statement": "All four existing chat API routes must apply current session and participant authority and, when canonical governance applies, bilateral consent, no block and live/open participants; pausing the feature must not restore legacy permissions.",
+      "property": "Canonical block/closure/consent denial prevents thread preview/history disclosure and message mutation, including privileged caller context and paused feature flags.",
+      "preconditions": [
+        "Authenticated captured bearer identity; installed canonical social schema and policy functions where governance is required."
+      ],
+      "inputs": [
+        "Captured bearer token/Party identity",
+        "Thread/peer selector, bounded cursor/limit and validated message body",
+        "Current canonical pair consent, block, lifecycle and activation memory"
+      ],
+      "state": {
+        "authority": "Per-pair canonical consent/block and participant lifecycle; never-governed legacy compatibility is explicit",
+        "bounds": "Use DmReads, LegacyDm and SessionBoundary model configurations and their domain contracts"
+      },
+      "allowedTransitions": [
+        "Read an eligible participant thread using one policy/payload statement snapshot.",
+        "Create the normalized unique pair thread or send after current session and domain permission checks in the operation transaction.",
+        "An actor withdraws only their own consent or block; later renewal requires fresh bilateral authority."
+      ],
+      "forbiddenTransitions": [
+        "A role, historical follow, feature pause, old cache or token captured before revocation must not bypass current canonical policy.",
+        "A forbidden thread must not disclose whether a cursor exists."
+      ],
+      "effects": [
+        "Return eligible minimized thread/message DTOs; persist allowed messages with the existing canonical write trigger."
+      ],
+      "authorization": "Backend session and SQL policy are authoritative. Administrator context cannot override a canonical block or outsider denial; unqualified legacy organization delegation remains outside this contract.",
+      "concurrency": "Read payload and policy share a statement snapshot; overlapping later revocations do not retract delivered data. Ordered Party/credential/session locks and SQL write policy fence mutations. Full lock graph and global role revocation are not proven here.",
+      "failure": "Return generic 404 for absent/forbidden history, 403 for canonical send denial, 401 for invalid current bearer identity; incomplete activated policy schema fails closed with 503.",
+      "implementation": [
+        "tdf-hq/src/TDF/Social/Chat.hs",
+        "tdf-hq/src/TDF/Social/Session.hs",
+        "tdf-hq/sql/2026-09-15_social_v2_chat_api.sql",
+        "tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.sql"
+      ],
+      "tests": [
+        "scripts/social/ChatSpec.hs",
+        "scripts/social/SessionSpec.hs",
+        "scripts/social/dm-read-refinement.sql",
+        "scripts/social/dm-read-model-cases.sql",
+        "scripts/social/test-dm-writes.sh"
+      ],
+      "formalModels": [
+        "formal/social/DmReads.tla",
+        "formal/social/LegacyDm.tla",
+        "formal/social/SessionBoundary.tla"
+      ],
+      "verification": "Bounded policy/session models, generated PostgreSQL outcomes, actual bearer HTTP and observed lock-order races; historical runs require current-candidate repetition.",
+      "evidence": "Domain source/test/model mappings and exact-run receipts, not documentation labels.",
+      "ambiguity": [
+        "Native chat cache isolation and full cross-device deletion are not qualified.",
+        "Global role revocation and legacy organization delegation need their separate authorization audit."
+      ]
+    },
+    {
+      "domain": "MSG",
+      "actors": [
+        "Authenticated direct-message participant",
+        "Other participant controlling their own consent/block",
+        "Administrator subject to canonical participant/consent policy"
+      ],
+      "authority": "inferred safety requirement",
+      "source": "docs/social/dm-write-boundary.md; docs/social/dm-read-boundary.md; docs/social/chat-client-isolation.md",
+      "contract": "formal/system/messaging.md",
+      "status": "specified and implemented",
+      "critical": true,
+      "privacy": "Deny bodies, names, previews and cursor-existence distinctions before exposing a forbidden thread. Do not expose raw SQL diagnostics.",
+      "idempotency": "Normalized direct-message open returns one unique pair thread. Send has no idempotency key: an uncertain accepted response can cause a duplicate on retry; no exactly-once guarantee.",
+      "recovery": "Retain canonical consent/activation and SQL enforcement across feature pause or compatible application rollback; never resurrect revoked consent.",
+      "observability": "Record exact source, model configuration/bounds, HTTP/SQL assertions and positive/negative results without production message content.",
+      "confidence": "Domain-specific policy and concrete boundary tests; no claim of all messaging surfaces, native clients or delivered-content erasure.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The old-code defect is reproduced and all1148 current social HTTP/PostgreSQL examples, including seven rollback cases, pass; bounded sequential model and both negative controls pass. Full final-candidate quality and deployed correspondence remain open."
+      },
+      "id": "MSG-ATOMIC-001",
+      "title": "Rejected chat database responses roll back their effects",
+      "statement": "A chat request whose database result is denied, malformed or ambiguous must roll back message and thread mutations before returning that rejection. Decode the response within the same transaction as session authorization and SQL effects.",
+      "property": "A server-rejected SQL result leaves message rows and thread timestamps unchanged; a valid accepted result commits one operation. Lost post-commit HTTP delivery remains an ambiguous accepted outcome.",
+      "preconditions": [
+        "PostgreSQL chat adapter selected; current bearer and domain authority hold before the attempted operation."
+      ],
+      "inputs": [
+        "One SQL result envelope and its corresponding operation effects",
+        "Known denial code or decodable result DTO"
+      ],
+      "state": {
+        "initial": "authorized operation",
+        "transitions": [
+          "executed with staged effects",
+          "validated",
+          "committed",
+          "accepted or response-lost",
+          "rejected with rollback"
+        ],
+        "bounds": "ChatMutationBoundary: one sender/thread, up to two sequential attempts"
+      },
+      "allowedTransitions": [
+        "Validate a single unambiguous result in the transaction and commit; return accepted DTO.",
+        "Reject a denial/invalid envelope and roll back before responding.",
+        "A committed response may be lost; replay remains non-idempotent under the existing API contract."
+      ],
+      "forbiddenTransitions": [
+        "Commit SQL effects before validating the result.",
+        "Return a denial while retaining effects from that operation.",
+        "Accept an envelope containing competing result/error or extra unrecognized top-level fields."
+      ],
+      "effects": [
+        "Atomic message and thread-timestamp persistence for accepted operations; rejected mutations leave those rows unchanged. PostgreSQL sequence gaps are permitted."
+      ],
+      "authorization": "Current session and canonical domain authorization remain mandatory; decoder acceptance never grants additional rights.",
+      "concurrency": "Decode and rollback occur while the operation transaction holds its authority locks. The small model is sequential and does not replace PostgreSQL/session concurrency tests.",
+      "failure": "Preserve known denial HTTP codes; invalid or ambiguous envelopes produce a generic 500 without leaking SQL or payload details, after rollback.",
+      "implementation": [
+        "tdf-hq/src/TDF/Social/Chat.hs"
+      ],
+      "tests": [
+        "scripts/social/ChatSpec.hs",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/ChatMutationBoundary.tla",
+        "formal/event-operations/ChatMutationBoundary.cfg",
+        "formal/event-operations/ChatMutationEarlyCommit.cfg",
+        "formal/event-operations/ChatMutationNoRollback.cfg"
+      ],
+      "verification": "Bounded safety with early-commit and missing-rollback mutations; actual SQL wrappers write then return rejected envelopes through authenticated HTTP.",
+      "evidence": "ChatMutationBoundary positive/negative logs and SQL/HTTP before/fixed comparison; no whole-program proof.",
+      "ambiguity": [
+        "No request-key deduplication is added; callers still face ambiguous success after transport failure.",
+        "No provider or notification side effects are covered by this model.",
+        "DTO decoding validates shape; complete SQL-result identity/value correspondence remains a separate conformance obligation."
+      ]
     }
   ],
   "sourceFingerprints": {
     ".github/workflows/ci.yml": "973900ec5b05196fd223818aa834641088b5758164a6225563001d7c95c11378",
     ".github/workflows/event-operations-formal.yml": "210f59ede61c720ebd87399246c98dc9e58903e856dd01356c8336384d70feed",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
+    "formal/event-operations/ChatMutationBoundary.cfg": "dc76bf1caa1a43de6891a51256da9efc4264ac45b882fef969bc15895068e0fa",
+    "formal/event-operations/ChatMutationBoundary.tla": "21f20bc7d01648705472982b37d9dad6d7cf9711eb83d0f1b2202ed31497d74a",
+    "formal/event-operations/ChatMutationEarlyCommit.cfg": "d46199cc0f1db6672aeacdacc0da24bab1fae1766063a5c0732adc5c4e7c710d",
+    "formal/event-operations/ChatMutationNoRollback.cfg": "689d923264fb1fc9bbd57fae69dcc6fac4619d9ff7f050b5f1be15f09090457f",
     "formal/event-operations/CredentialLifecycle.tla": "2930edc753523a7a315cd76a04e389570785c8fd39eb0cd1ea69e700c1f528bc",
     "formal/event-operations/DirectoryClaimReview.tla": "bad88bce95e46906a7f202d7d798efabbd87202fd822e7c9202184479bb1b652",
     "formal/event-operations/HostedServicePayment.cfg": "29663fa3078459cb0abf5de479b7206aa840c6779fc9522f2eefa9d1592d2227",
@@ -2296,8 +2457,11 @@
     "formal/event-operations/RefundRecoveryAuthority.cfg": "4afa03d6529045f942c54f80eb7e15e579e8728b694cd304256a6ced4a7afdec",
     "formal/event-operations/RefundRecoveryExecution.cfg": "6882026c6f5cfb3f3e251df3ccc8d9eb6ccc95204440603e6e645668dcc29349",
     "formal/event-operations/SignupIdentity.tla": "5d8ba90dae0dd870971694ddf8d6becd36ab9b44e0670e38cd0dc13636253c4a",
+    "formal/social/DmReads.tla": "b322db9a64900980298be4b0ed7f9d8341f8df66a2ed0fa57ebca8868b893eff",
+    "formal/social/LegacyDm.tla": "82c7adae30ad9df72df8e288948b3fc7c3bae3bc16cc82766d32ccc665167e16",
+    "formal/social/SessionBoundary.tla": "f52854a744652bc18f0d9f0fb4c3e6453447d26aff88267dff29ac03924e8ee6",
     "ops/hetzner/compose.production.yaml": "961c19190335ac4033d8932598796394b93c13a040ef07c3ac62660c534e45e7",
-    "ops/hetzner/inspect-runtime.py": "118f357cf68b0e559c8f26a1440016290d59847aad72c075a96f073365cfe1a9",
+    "ops/hetzner/inspect-runtime.py": "c0f60f9d182097bbb82c53bb83d2c123a3c402697aa8c37c2053997609430916",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/checkout-amount-postgres.mjs": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
@@ -2306,7 +2470,7 @@
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/generated-api-conformance.test.mjs": "34ee30eadd4114f8229af92693a01767fa8a7056233758cf0050b38f99e29f6f",
     "scripts/__tests__/hetzner-inspection.test.mjs": "1c9da69782bfe6776f661bd27429eccdf97d46ffe908ff63de415f792006e2dc",
-    "scripts/__tests__/hetzner-preparation.test.mjs": "82ca21046c09be1de20785e36ac7b007766dfe8223b07f38ff11634d7f3cdc80",
+    "scripts/__tests__/hetzner-preparation.test.mjs": "e1b3d4e0b8eb8dca78b04a513dd9b27be539464179f1875f81a99d1bb758e66f",
     "scripts/__tests__/identity-http-runtime.mjs": "5474e75ad0fd2eebfe6fa151c9eede5c0b078a79efd0a20e7152e1352fbc623c",
     "scripts/__tests__/legacy-escrow-contract.test.mjs": "3b77ffb3edeb67abe98abe7967c58a46560bcfa48f973bf9a7f5420ee371658d",
     "scripts/__tests__/merch-commission-postgres.mjs": "91dd370bf08dfe2ab871c6a617d4e2871717c9f5ff27676e692c6d776c9721c3",
@@ -2318,26 +2482,31 @@
     "scripts/check-generated-api.mjs": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
     "scripts/ci-change-scope.mjs": "6e1bf4833fec7e1e51e230ccc830dca80470c0c2dcad18a2c329ad9defdf1379",
     "scripts/inspect-hetzner-production.mjs": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
-    "scripts/lib/hetzner-preparation.mjs": "20d2759f58a8e45e6c636d999f614773fbaa897101d2c35d7ae67876854b351b",
+    "scripts/lib/hetzner-preparation.mjs": "c6bbfb4aa25013264a4fbbeb5122f0b709ff48b9105a26b4645e8c022014a0c1",
     "scripts/lib/migration-contract.mjs": "d73c8c55f2d8b4d19ca92ac1a4683848d90dfc69283350cdea7403b17655fb0c",
     "scripts/lib/production-release.mjs": "0e02e1bcf6f8a451860ad5c1f52ac8461effc88659bce690f9ce222875878f71",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
     "scripts/production-migrations.json": "d1b45b55ebb0b86987fcb2c628de2edc1ada2c7abbb046f0f6009325538bdfe3",
     "scripts/production-release.mjs": "1643997b7b3ac422214725f4078b7b4db25f09d1df6ae5cebe8285cd257e0d59",
+    "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
+    "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
+    "scripts/social/dm-read-model-cases.sql": "f4d2afe041a287e218fec18cd60122ae092842cf43ffc2eab00d79ea42957ebb",
+    "scripts/social/dm-read-refinement.sql": "067a8f255ee74ed589bd4a97b94ab918335c07e6a4dc69ee0a39c23a48d4dcea",
+    "scripts/social/test-dm-writes.sh": "2f216b4a6d7537959a0ddc6aa4da52afc5a11828d852dc6a3c5d469702e9122a",
     "scripts/specification-conformance.py": "7e0d9aa01c62362482a60b409bb57d7b07c3863d393a4d606af81148158ab2d2",
     "scripts/specification-inventory.py": "4e7c722e3a04f0bcae857a7f1d280550ee938fc21bd770f3077feb749a6831ae",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
-    "scripts/test-hetzner-inspection.py": "ce8fc3662986c506304f826ec287ca4fdedae5cf78e2db6dfb7292b10a379a0c",
+    "scripts/test-hetzner-inspection.py": "ea7ea89cf41614da0e4f46782831c010d400c5db939dbf24e15375d0a6fe8446",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-provider-retry-runtime.sh": "fefc986deb95fc2ff2d8ad1af2829d20363128fbc52846fbfffa0ebc65b27353",
     "scripts/test-specification-conformance.py": "edd2d8b6b8d46603144d9fb02af2f43850dbf2791f8266a1dd109a1e9e9e19b9",
     "scripts/test-specification-inventory.py": "429bfd7c6ee6600e4010394f476c1247597d3c6c1a88f1fbd5e738c96b221df8",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "836906067ac620b64214922f9390c012848abf5bc1c4ca6f15a02757986bcddd",
-    "scripts/verify-event-operations-formal.sh": "7cf784520d75e5f8eba5ecc1b9cbbdee3b9d1da536d365f3f55e0e171c0a4c2d",
+    "scripts/verify-event-operations-formal.sh": "0ffa3215db6642546f40eede7bc9017413dafd85766c18dae77fc9aa5d8acc24",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
     "scripts/verify-system-evidence.mjs": "6518277395cc99a25df3ffa5469d5150a5a7cd5c3d10f4409ecb695fb49ca03e",
@@ -2358,6 +2527,8 @@
     "tdf-hq/assets/feature-registry.json": "937ec3786fdef97afc5ac11dd93380baa707de14448872a923e07875ca65ee81",
     "tdf-hq/docs/openapi/api.yaml": "6de5124eee0d2a5fb489a652777c8f13cee45a251049e0446d9f301f2301cb97",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
+    "tdf-hq/sql/2026-09-15_social_v2_chat_api.sql": "faa8026e41a293c01656120e360590d793ea575af0e12a68c67b916deb86dc52",
+    "tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.sql": "8f86bc3c25209d6f56987dd3f84123e2be4fd78e3a9ee9876075ca1077a1864c",
     "tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql": "e70e67606e1ff1451ee6cf0404a7cad28b2ede0b72ffa92c16aab9cea9d72cca",
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/sql/2026-10-04_checkout_amount_correspondence.sql": "9d6236c8bf0a2f593cf54cf445d24adfe9e765cc91f000cf45dcd3b8bb86e4fd",
@@ -2382,6 +2553,8 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
     "tdf-hq/src/TDF/ServerAuth.hs": "f2e6388e573818567db451d3770b88442741fbf5b3724104fc4126346f1aaa36",
+    "tdf-hq/src/TDF/Social/Chat.hs": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd",
+    "tdf-hq/src/TDF/Social/Session.hs": "f7a905c1302ede6168c0914b73261025bdaadfc3201ccf80304012d3d463e99f",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/tdf-hq.cabal": "1b8e6387004eb4106e624921814f360aba0d4cb4180c635ac4d7e55f8c5096a0",
     "tdf-hq/test/Spec.hs": "d4bf3f4d36c92125cf54c87d6616e9ea76648a85ea5639b73319eb32fe74487e",
@@ -2462,6 +2635,10 @@
       },
       {
         "requirement": "PAY-RECOVERY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MSG-ATOMIC-001",
         "relationship": "tests"
       }
     ],
@@ -3362,6 +3539,110 @@
         "requirement": "DEPLOY-MIGRATION-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq/src/TDF/Social/Chat.hs": [
+      {
+        "requirement": "MSG-ACCESS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MSG-ATOMIC-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Social/Session.hs": [
+      {
+        "requirement": "MSG-ACCESS-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-09-15_social_v2_chat_api.sql": [
+      {
+        "requirement": "MSG-ACCESS-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.sql": [
+      {
+        "requirement": "MSG-ACCESS-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/social/ChatSpec.hs": [
+      {
+        "requirement": "MSG-ACCESS-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MSG-ATOMIC-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/social/SessionSpec.hs": [
+      {
+        "requirement": "MSG-ACCESS-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/social/dm-read-refinement.sql": [
+      {
+        "requirement": "MSG-ACCESS-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/social/dm-read-model-cases.sql": [
+      {
+        "requirement": "MSG-ACCESS-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/social/test-dm-writes.sh": [
+      {
+        "requirement": "MSG-ACCESS-001",
+        "relationship": "tests"
+      }
+    ],
+    "formal/social/DmReads.tla": [
+      {
+        "requirement": "MSG-ACCESS-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/social/LegacyDm.tla": [
+      {
+        "requirement": "MSG-ACCESS-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/social/SessionBoundary.tla": [
+      {
+        "requirement": "MSG-ACCESS-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/ChatMutationBoundary.tla": [
+      {
+        "requirement": "MSG-ATOMIC-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/ChatMutationBoundary.cfg": [
+      {
+        "requirement": "MSG-ATOMIC-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/ChatMutationEarlyCommit.cfg": [
+      {
+        "requirement": "MSG-ATOMIC-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/ChatMutationNoRollback.cfg": [
+      {
+        "requirement": "MSG-ATOMIC-001",
+        "relationship": "formalModels"
+      }
     ]
   },
   "surfaces": [
@@ -3705,7 +3986,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "118f357cf68b0e559c8f26a1440016290d59847aad72c075a96f073365cfe1a9",
+      "sha256": "c0f60f9d182097bbb82c53bb83d2c123a3c402697aa8c37c2053997609430916",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -4024,7 +4305,7 @@
     {
       "id": "SURFACE-b1dae8bd0d7ae4ca",
       "path": "scripts/__tests__/hetzner-preparation.test.mjs",
-      "sha256": "82ca21046c09be1de20785e36ac7b007766dfe8223b07f38ff11634d7f3cdc80",
+      "sha256": "e1b3d4e0b8eb8dca78b04a513dd9b27be539464179f1875f81a99d1bb758e66f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -4793,7 +5074,7 @@
     {
       "id": "SURFACE-5ee17ccf3d926503",
       "path": "scripts/lib/hetzner-preparation.mjs",
-      "sha256": "20d2759f58a8e45e6c636d999f614773fbaa897101d2c35d7ae67876854b351b",
+      "sha256": "c6bbfb4aa25013264a4fbbeb5122f0b709ff48b9105a26b4645e8c022014a0c1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -5170,9 +5451,18 @@
     {
       "id": "SURFACE-a8a5e7eef8c5278a",
       "path": "scripts/social/ChatSpec.hs",
-      "sha256": "b4c539436f151759e48665f1a6e8299b9b468bdd1dff4865a6ed13055df9cf1e",
+      "sha256": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MSG-ACCESS-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MSG-ATOMIC-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-c903708e11b14bac",
@@ -5270,7 +5560,12 @@
       "path": "scripts/social/SessionSpec.hs",
       "sha256": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MSG-ACCESS-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-c6d8995610ec7a67",
@@ -5347,7 +5642,12 @@
       "path": "scripts/social/dm-read-model-cases.sql",
       "sha256": "f4d2afe041a287e218fec18cd60122ae092842cf43ffc2eab00d79ea42957ebb",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MSG-ACCESS-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-314a977cc88efa03",
@@ -5361,7 +5661,12 @@
       "path": "scripts/social/dm-read-refinement.sql",
       "sha256": "067a8f255ee74ed589bd4a97b94ab918335c07e6a4dc69ee0a39c23a48d4dcea",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MSG-ACCESS-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-58eb727f501d03e9",
@@ -5543,7 +5848,12 @@
       "path": "scripts/social/test-dm-writes.sh",
       "sha256": "2f216b4a6d7537959a0ddc6aa4da52afc5a11828d852dc6a3c5d469702e9122a",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MSG-ACCESS-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-f06073f0dc1e9d32",
@@ -5913,7 +6223,7 @@
     {
       "id": "SURFACE-305b8be869b1a5ec",
       "path": "scripts/test-hetzner-inspection.py",
-      "sha256": "ce8fc3662986c506304f826ec287ca4fdedae5cf78e2db6dfb7292b10a379a0c",
+      "sha256": "ea7ea89cf41614da0e4f46782831c010d400c5db939dbf24e15375d0a6fe8446",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -6293,7 +6603,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "7cf784520d75e5f8eba5ecc1b9cbbdee3b9d1da536d365f3f55e0e171c0a4c2d",
+      "sha256": "0ffa3215db6642546f40eede7bc9017413dafd85766c18dae77fc9aa5d8acc24",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -6310,6 +6620,10 @@
         },
         {
           "requirement": "PAY-RECOVERY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MSG-ATOMIC-001",
           "relationship": "tests"
         }
       ]
@@ -13260,14 +13574,24 @@
       "path": "tdf-hq/sql/2026-09-15_social_v2_chat_api.sql",
       "sha256": "faa8026e41a293c01656120e360590d793ea575af0e12a68c67b916deb86dc52",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MSG-ACCESS-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-2f0a948af58ed3dd",
       "path": "tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.sql",
       "sha256": "8f86bc3c25209d6f56987dd3f84123e2be4fd78e3a9ee9876075ca1077a1864c",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MSG-ACCESS-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-7c3b9121009a751a",
@@ -15358,9 +15682,18 @@
     {
       "id": "SURFACE-a87713bbc4cb9f7f",
       "path": "tdf-hq/src/TDF/Social/Chat.hs",
-      "sha256": "b1e939e3902c3a445ff3a9c2a6b3ea484bbccb5bbe42811f7e5eb7bb515fda61",
+      "sha256": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MSG-ACCESS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MSG-ATOMIC-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-b16b93ab1b670275",
@@ -15402,7 +15735,12 @@
       "path": "tdf-hq/src/TDF/Social/Session.hs",
       "sha256": "f7a905c1302ede6168c0914b73261025bdaadfc3201ccf80304012d3d463e99f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MSG-ACCESS-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-24f8d92d510c1f2c",
@@ -19084,7 +19422,6 @@
     "SURFACE-d6e73fe2563699af",
     "SURFACE-68ff1620a1303c50",
     "SURFACE-570e59c695b530c8",
-    "SURFACE-a8a5e7eef8c5278a",
     "SURFACE-c903708e11b14bac",
     "SURFACE-7b0a31dacefc6480",
     "SURFACE-2c7797fd43485f18",
@@ -19098,7 +19435,6 @@
     "SURFACE-750774099dae3f98",
     "SURFACE-e3d0d4ee0253885f",
     "SURFACE-9a5043de3e53e7e2",
-    "SURFACE-574d6eb1b1749d7a",
     "SURFACE-c6d8995610ec7a67",
     "SURFACE-2e0e93e57b6c8565",
     "SURFACE-cb6860298a3534f4",
@@ -19109,9 +19445,7 @@
     "SURFACE-ec623ecf28c2af8e",
     "SURFACE-541387ff599c1cc8",
     "SURFACE-c8e20b0dd6fe5c08",
-    "SURFACE-c3cccc59685d9d79",
     "SURFACE-314a977cc88efa03",
-    "SURFACE-98ca8fa2f35bb3ef",
     "SURFACE-58eb727f501d03e9",
     "SURFACE-848ea8868ebe91eb",
     "SURFACE-b6e6fb673a81fab7",
@@ -19137,7 +19471,6 @@
     "SURFACE-b0c5b40933817034",
     "SURFACE-2344ae3236c97ea3",
     "SURFACE-15c82649896acb3b",
-    "SURFACE-df08df1fd0a1ee36",
     "SURFACE-f06073f0dc1e9d32",
     "SURFACE-d043b92d718bcc7b",
     "SURFACE-16d8def719a85cfa",
@@ -20176,8 +20509,6 @@
     "SURFACE-3de3494500040781",
     "SURFACE-093fa48b0443ae44",
     "SURFACE-1677021132c22307",
-    "SURFACE-8509b4c93568afdf",
-    "SURFACE-2f0a948af58ed3dd",
     "SURFACE-7c3b9121009a751a",
     "SURFACE-537eb13588762c72",
     "SURFACE-9a15dda74e94cb7e",
@@ -20428,13 +20759,11 @@
     "SURFACE-1ac6ca33fd4e0411",
     "SURFACE-4053a4f2498e072d",
     "SURFACE-dcd6c643453694a2",
-    "SURFACE-a87713bbc4cb9f7f",
     "SURFACE-b16b93ab1b670275",
     "SURFACE-85aae9756eda5339",
     "SURFACE-5f3c565954968d6a",
     "SURFACE-effe2030880b0cfd",
     "SURFACE-f0cebaafb30d082c",
-    "SURFACE-c3ca2a020c86adc2",
     "SURFACE-24f8d92d510c1f2c",
     "SURFACE-4d1393b620b6aed0",
     "SURFACE-981d668b9e163412",
@@ -42803,7 +43132,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 33,
+    "PARTIAL": 35,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

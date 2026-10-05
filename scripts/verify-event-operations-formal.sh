@@ -101,6 +101,9 @@ run_negative_tlc SignupIdentityPublicClaim.cfg signup-public-claim 'Invariant In
 run_negative_tlc SignupIdentityUnreviewed.cfg signup-unreviewed 'Invariant ReviewedManagement is violated' SignupIdentity.tla
 run_negative_tlc SignupIdentityRebind.cfg signup-rebind 'Invariant IndependentPrincipal is violated' SignupIdentity.tla
 run_tlc CredentialLifecycle.tla CredentialLifecycle.cfg credential-lifecycle
+run_tlc ChatMutationBoundary.tla ChatMutationBoundary.cfg chat-mutation-boundary
+run_negative_tlc ChatMutationEarlyCommit.cfg chat-mutation-early-commit 'Invariant RejectedLeavesNoMutation is violated' ChatMutationBoundary.tla
+run_negative_tlc ChatMutationNoRollback.cfg chat-mutation-no-rollback 'Invariant RejectedLeavesNoMutation is violated' ChatMutationBoundary.tla
 run_negative_tlc CredentialLifecycleConcurrentReset.cfg credential-reset-race 'Invariant SingleUseReset is violated' CredentialLifecycle.tla
 run_negative_tlc CredentialLifecycleEarlyCommit.cfg credential-early-commit 'Invariant AtomicChallengeConsumption is violated' CredentialLifecycle.tla
 run_negative_tlc CredentialLifecycleGoogleSession.cfg credential-google-session 'Invariant NoSessionsAfterDisable is violated' CredentialLifecycle.tla

@@ -14,6 +14,7 @@ ORIGINS = {'https://www.tdfrecords.net', 'https://tdfrecords.net'}
 BOOLEAN_KEYS = {
     'RUN_MIGRATIONS', 'AUTO_APPLY_PRODUCTION_MIGRATIONS', 'RESET_DB', 'SEED_DB',
     'ALLOW_ALL_ORIGINS', 'CORS_DISABLE_DEFAULTS', 'SESSION_COOKIE_SECURE',
+    'SOCIAL_V2_ENABLED', 'EVENT_LOGISTICS_RECHECK_ENABLED',
 }
 
 
@@ -97,6 +98,8 @@ SELECT json_build_object(
  'providerAccounts',(SELECT coalesce(json_agg(x ORDER BY provider),'[]'::json) FROM
    (SELECT provider,environment,status,contract_status,credential_status,enabled,feature_flag_key
       FROM public.commerce_provider_account WHERE environment='production') x),
+ 'socialRuntime',(SELECT json_build_object('enabled',enabled,'activatedOnce',activated_once)
+      FROM public.social_v2_runtime WHERE singleton),
  'extensions',(SELECT json_agg(x ORDER BY extname) FROM
    (SELECT extname,extversion FROM pg_extension) x));
 ROLLBACK;
@@ -111,6 +114,13 @@ def summarize_database(data):
     result = {'database': DATABASE, 'role': 'tdf_catalog_inventory', 'readOnly': True,
               'serverVersion': version, 'localConnection': True, 'migrations': [], 'revenueFlags': [],
               'providerAccounts': [], 'extensions': []}
+    social = data['socialRuntime']
+    require(social is None or (isinstance(social, dict)
+            and isinstance(social.get('enabled'), bool)
+            and isinstance(social.get('activatedOnce'), bool)))
+    # No row is unknown authority, not a false activation-history claim.
+    result['socialRuntime'] = None if social is None else {
+        key: social[key] for key in ('enabled', 'activatedOnce')}
     seen = set()
     for row in data['migrations']:
         identifier = token(row['migration_id'])

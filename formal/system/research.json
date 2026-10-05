@@ -209,6 +209,15 @@
       "applicability": "Identity recovery migration and old-handler drainage",
       "decision": "adopted as executor constraint",
       "rationale": "A stop request alone does not prove drained writers. Verify termination and database sessions, distinguish a forced termination from graceful completion, and preserve ambiguous external-effect evidence."
+    },
+    {
+      "id": "RES-MSG-001",
+      "source": "https://www.postgresql.org/docs/17/tutorial-transactions.html",
+      "title": "PostgreSQL atomic transaction boundaries",
+      "recommendation": "Group related effects in a transaction and roll back before commit when the operation cannot be accepted.",
+      "applicability": "Chat SQL effects and server-side response validation",
+      "decision": "adopted",
+      "rationale": "A normal return from the SQL action can commit even when later application decoding rejects its result. Keep validation inside the transaction and explicitly undo rejected operations; this does not solve lost post-commit network responses."
     }
   ]
 }

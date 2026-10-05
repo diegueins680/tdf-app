@@ -2269,6 +2269,163 @@
         "scripts/__tests__/provider-rollback.test.mjs"
       ],
       "critical": true
+    },
+    {
+      "domain": "MSG",
+      "actors": [
+        "Authenticated direct-message participant",
+        "Other participant controlling their own consent/block",
+        "Administrator subject to canonical participant/consent policy"
+      ],
+      "authority": "approved domain contract",
+      "source": "docs/social/dm-write-boundary.md; docs/social/dm-read-boundary.md; docs/social/chat-client-isolation.md",
+      "contract": "formal/system/messaging.md",
+      "status": "specified and implemented",
+      "critical": true,
+      "privacy": "Deny bodies, names, previews and cursor-existence distinctions before exposing a forbidden thread. Do not expose raw SQL diagnostics.",
+      "idempotency": "Normalized direct-message open returns one unique pair thread. Send has no idempotency key: an uncertain accepted response can cause a duplicate on retry; no exactly-once guarantee.",
+      "recovery": "Retain canonical consent/activation and SQL enforcement across feature pause or compatible application rollback; never resurrect revoked consent.",
+      "observability": "Record exact source, model configuration/bounds, HTTP/SQL assertions and positive/negative results without production message content.",
+      "confidence": "Domain-specific policy and concrete boundary tests; no claim of all messaging surfaces, native clients or delivered-content erasure.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Existing domain contracts and models are linked; current candidate execution and deployed/native correspondence remain separate obligations."
+      },
+      "id": "MSG-ACCESS-001",
+      "title": "Current participant and consent authority for direct messages",
+      "statement": "All four existing chat API routes must apply current session and participant authority and, when canonical governance applies, bilateral consent, no block and live/open participants; pausing the feature must not restore legacy permissions.",
+      "property": "Canonical block/closure/consent denial prevents thread preview/history disclosure and message mutation, including privileged caller context and paused feature flags.",
+      "preconditions": [
+        "Authenticated captured bearer identity; installed canonical social schema and policy functions where governance is required."
+      ],
+      "inputs": [
+        "Captured bearer token/Party identity",
+        "Thread/peer selector, bounded cursor/limit and validated message body",
+        "Current canonical pair consent, block, lifecycle and activation memory"
+      ],
+      "state": {
+        "authority": "Per-pair canonical consent/block and participant lifecycle; never-governed legacy compatibility is explicit",
+        "bounds": "Use DmReads, LegacyDm and SessionBoundary model configurations and their domain contracts"
+      },
+      "allowedTransitions": [
+        "Read an eligible participant thread using one policy/payload statement snapshot.",
+        "Create the normalized unique pair thread or send after current session and domain permission checks in the operation transaction.",
+        "An actor withdraws only their own consent or block; later renewal requires fresh bilateral authority."
+      ],
+      "forbiddenTransitions": [
+        "A role, historical follow, feature pause, old cache or token captured before revocation must not bypass current canonical policy.",
+        "A forbidden thread must not disclose whether a cursor exists."
+      ],
+      "effects": [
+        "Return eligible minimized thread/message DTOs; persist allowed messages with the existing canonical write trigger."
+      ],
+      "authorization": "Backend session and SQL policy are authoritative. Administrator context cannot override a canonical block or outsider denial; unqualified legacy organization delegation remains outside this contract.",
+      "concurrency": "Read payload and policy share a statement snapshot; overlapping later revocations do not retract delivered data. Ordered Party/credential/session locks and SQL write policy fence mutations. Full lock graph and global role revocation are not proven here.",
+      "failure": "Return generic 404 for absent/forbidden history, 403 for canonical send denial, 401 for invalid current bearer identity; incomplete activated policy schema fails closed with 503.",
+      "implementation": [
+        "tdf-hq/src/TDF/Social/Chat.hs",
+        "tdf-hq/src/TDF/Social/Session.hs",
+        "tdf-hq/sql/2026-09-15_social_v2_chat_api.sql",
+        "tdf-hq/sql/2026-09-15_social_v2_dm_write_boundary.sql"
+      ],
+      "tests": [
+        "scripts/social/ChatSpec.hs",
+        "scripts/social/SessionSpec.hs",
+        "scripts/social/dm-read-refinement.sql",
+        "scripts/social/dm-read-model-cases.sql",
+        "scripts/social/test-dm-writes.sh"
+      ],
+      "formalModels": [
+        "formal/social/DmReads.tla",
+        "formal/social/LegacyDm.tla",
+        "formal/social/SessionBoundary.tla"
+      ],
+      "verification": "Bounded policy/session models, generated PostgreSQL outcomes, actual bearer HTTP and observed lock-order races; historical runs require current-candidate repetition.",
+      "evidence": "Domain source/test/model mappings and exact-run receipts, not documentation labels.",
+      "ambiguity": [
+        "Native chat cache isolation and full cross-device deletion are not qualified.",
+        "Global role revocation and legacy organization delegation need their separate authorization audit."
+      ]
+    },
+    {
+      "domain": "MSG",
+      "actors": [
+        "Authenticated direct-message participant",
+        "Other participant controlling their own consent/block",
+        "Administrator subject to canonical participant/consent policy"
+      ],
+      "authority": "inferred safety requirement",
+      "source": "docs/social/dm-write-boundary.md; docs/social/dm-read-boundary.md; docs/social/chat-client-isolation.md",
+      "contract": "formal/system/messaging.md",
+      "status": "specified and implemented",
+      "critical": true,
+      "privacy": "Deny bodies, names, previews and cursor-existence distinctions before exposing a forbidden thread. Do not expose raw SQL diagnostics.",
+      "idempotency": "Normalized direct-message open returns one unique pair thread. Send has no idempotency key: an uncertain accepted response can cause a duplicate on retry; no exactly-once guarantee.",
+      "recovery": "Retain canonical consent/activation and SQL enforcement across feature pause or compatible application rollback; never resurrect revoked consent.",
+      "observability": "Record exact source, model configuration/bounds, HTTP/SQL assertions and positive/negative results without production message content.",
+      "confidence": "Domain-specific policy and concrete boundary tests; no claim of all messaging surfaces, native clients or delivered-content erasure.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The old-code defect is reproduced and all1148 current social HTTP/PostgreSQL examples, including seven rollback cases, pass; bounded sequential model and both negative controls pass. Full final-candidate quality and deployed correspondence remain open."
+      },
+      "id": "MSG-ATOMIC-001",
+      "title": "Rejected chat database responses roll back their effects",
+      "statement": "A chat request whose database result is denied, malformed or ambiguous must roll back message and thread mutations before returning that rejection. Decode the response within the same transaction as session authorization and SQL effects.",
+      "property": "A server-rejected SQL result leaves message rows and thread timestamps unchanged; a valid accepted result commits one operation. Lost post-commit HTTP delivery remains an ambiguous accepted outcome.",
+      "preconditions": [
+        "PostgreSQL chat adapter selected; current bearer and domain authority hold before the attempted operation."
+      ],
+      "inputs": [
+        "One SQL result envelope and its corresponding operation effects",
+        "Known denial code or decodable result DTO"
+      ],
+      "state": {
+        "initial": "authorized operation",
+        "transitions": [
+          "executed with staged effects",
+          "validated",
+          "committed",
+          "accepted or response-lost",
+          "rejected with rollback"
+        ],
+        "bounds": "ChatMutationBoundary: one sender/thread, up to two sequential attempts"
+      },
+      "allowedTransitions": [
+        "Validate a single unambiguous result in the transaction and commit; return accepted DTO.",
+        "Reject a denial/invalid envelope and roll back before responding.",
+        "A committed response may be lost; replay remains non-idempotent under the existing API contract."
+      ],
+      "forbiddenTransitions": [
+        "Commit SQL effects before validating the result.",
+        "Return a denial while retaining effects from that operation.",
+        "Accept an envelope containing competing result/error or extra unrecognized top-level fields."
+      ],
+      "effects": [
+        "Atomic message and thread-timestamp persistence for accepted operations; rejected mutations leave those rows unchanged. PostgreSQL sequence gaps are permitted."
+      ],
+      "authorization": "Current session and canonical domain authorization remain mandatory; decoder acceptance never grants additional rights.",
+      "concurrency": "Decode and rollback occur while the operation transaction holds its authority locks. The small model is sequential and does not replace PostgreSQL/session concurrency tests.",
+      "failure": "Preserve known denial HTTP codes; invalid or ambiguous envelopes produce a generic 500 without leaking SQL or payload details, after rollback.",
+      "implementation": [
+        "tdf-hq/src/TDF/Social/Chat.hs"
+      ],
+      "tests": [
+        "scripts/social/ChatSpec.hs",
+        "scripts/verify-event-operations-formal.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/ChatMutationBoundary.tla",
+        "formal/event-operations/ChatMutationBoundary.cfg",
+        "formal/event-operations/ChatMutationEarlyCommit.cfg",
+        "formal/event-operations/ChatMutationNoRollback.cfg"
+      ],
+      "verification": "Bounded safety with early-commit and missing-rollback mutations; actual SQL wrappers write then return rejected envelopes through authenticated HTTP.",
+      "evidence": "ChatMutationBoundary positive/negative logs and SQL/HTTP before/fixed comparison; no whole-program proof.",
+      "ambiguity": [
+        "No request-key deduplication is added; callers still face ambiguous success after transport failure.",
+        "No provider or notification side effects are covered by this model.",
+        "DTO decoding validates shape; complete SQL-result identity/value correspondence remains a separate conformance obligation."
+      ]
     }
   ]
 }

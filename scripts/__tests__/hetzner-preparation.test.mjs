@@ -85,6 +85,8 @@ async function input() {
       schemaVersion: 1, project: 'tdf-production', directory: '/opt/tdf/production',
       publicBackend: { name: 'tdf-hq', commit: introducedBy, version: '0.1.0.0' },
       database: { database: 'tdf_hq', role: 'tdf_catalog_inventory', readOnly: true, localConnection: true,
+        socialRuntime: { enabled: false, activatedOnce: true },
+        revenueFlags: [{ flag: 'checkout.synthetic', enabled: false }], providerAccounts: [],
         migrations: [applied(contract.migrations[0])] },
       containers: { api: { ...container, booleanConfiguration: { RUN_MIGRATIONS: 'false', RESET_DB: 'false',
         SEED_DB: 'false', ALLOW_ALL_ORIGINS: 'true', ARTIST_ENRICHMENT_ENABLED: 'true' },
@@ -105,6 +107,8 @@ test('preparation records current drift and required CORS repair without enablin
   assert.equal(plan.requiredCorsConfiguration.ALLOW_ALL_ORIGINS, 'false');
   assert.equal(plan.observedFlags.ARTIST_ENRICHMENT_ENABLED, 'true');
   assert.equal(plan.requiredCorsConfiguration.ARTIST_ENRICHMENT_ENABLED, undefined);
+  assert.deepEqual(plan.observedDatabaseControls, { socialRuntime: { enabled: false, activatedOnce: true },
+    revenueFlags: [{ flag: 'checkout.synthetic', enabled: false }], providerAccounts: [] });
   assert.ok(plan.remainingGates.some(x => x.includes('actual isolated restore')));
   assert.ok(plan.remainingGates.some(x => x.includes('all old writers')));
 });

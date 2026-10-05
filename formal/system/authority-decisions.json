@@ -175,6 +175,17 @@
       "conflict": "Historical cutover instructions still describe keeping production on Fly, while live identity and database are on Hetzner and the routine release command still executes Fly.",
       "authority": "ops/hetzner/README.md",
       "resolution": "Archive the original cutover plan as historical evidence. Reject Fly preflight/release execution before remote operations; preserve source-only planning and shared validators. Add a repository-owned read-only Hetzner collector with fixed target, secret-safe output and negative controls. A complete guarded Hetzner release executor remains an explicit open obligation."
+    },
+    {
+      "id": "AUTHORITY-018",
+      "sources": [
+        "tdf-hq/src/TDF/Social/Chat.hs",
+        "docs/social/dm-read-boundary.md",
+        "formal/system/messaging.md"
+      ],
+      "conflict": "The chat adapter reports rejection after its database transaction has already committed. A real malformed-result regression retained a message and changed thread timestamp despite an HTTP error.",
+      "authority": "formal/system/messaging.md",
+      "resolution": "Keep session, SQL effects and response validation in one transaction; roll back rejected envelopes. Preserve existing non-idempotent transport-loss semantics and never-governed legacy compatibility. Add runtime negative controls and a bounded sequential model; do not redefine committed error outcomes as intended behavior."
     }
   ]
 }
