@@ -128,6 +128,7 @@ try:
         sock.bind(('127.0.0.1', 0)); http_port = sock.getsockname()[1]
     assets = OUTPUT / 'assets'; assets.mkdir()
     server_env = {'PATH': ENV['PATH'], 'APP_ENV': 'test', 'DATABASE_URL': URL,
+                 'GHCRTS': '-N2',  # Bound synthetic fixture workers independently of host core count.
                  'APP_PORT': str(http_port), 'RESET_DB': 'false', 'RUN_MIGRATIONS': 'false',
                  'AUTO_APPLY_PRODUCTION_MIGRATIONS': 'false', 'SEED_DB': 'false',
                  'HQ_ASSETS_DIR': str(assets), 'DEFAULT_LOCALE': 'es',

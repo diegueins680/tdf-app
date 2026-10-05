@@ -4154,7 +4154,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "c1f85c86d4e055f4bf2e3bfd7e94b3b54df8010a3f8434a58031c6d7e2c12971",
+      "sha256": "dbae479703cb26529c6cd31991881585aef7c721f74ad35467bc4d9c8b332eaa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20997,7 +20997,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "fd5618d65e19dd98251f3be5dc17bf0f5641005f7a4d6137e488925419c91ec9",
+      "sha256": "558e1307d7bef2848328557393a6ff591cb00c46b4ae4bc9bdda70b644f68256",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

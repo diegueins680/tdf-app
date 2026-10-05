@@ -920,12 +920,14 @@
       "implementation": [
         "scripts/specification-conformance.py",
         "scripts/check-new-specification-surfaces.py",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        "docs/catalog-persistence/catalog-list-decisions.json"
       ],
       "tests": [
         "scripts/test-specification-conformance.py",
         "scripts/test-new-specification-surfaces.py",
-        "scripts/__tests__/ci-pipeline.test.mjs"
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "scripts/__tests__/catalog-list-audit.test.mjs"
       ],
       "formalModels": [],
       "verification": "Executable conformance and mutation tests; not a whole-program proof.",

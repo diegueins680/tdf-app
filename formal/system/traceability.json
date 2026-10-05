@@ -921,12 +921,14 @@
       "implementation": [
         "scripts/specification-conformance.py",
         "scripts/check-new-specification-surfaces.py",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        "docs/catalog-persistence/catalog-list-decisions.json"
       ],
       "tests": [
         "scripts/test-specification-conformance.py",
         "scripts/test-new-specification-surfaces.py",
-        "scripts/__tests__/ci-pipeline.test.mjs"
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "scripts/__tests__/catalog-list-audit.test.mjs"
       ],
       "formalModels": [],
       "verification": "Executable conformance and mutation tests; not a whole-program proof.",
@@ -4371,6 +4373,7 @@
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
     ".github/workflows/ci.yml": "021541980348669b01cbb19bb7448b948ba0ce09f0017e431272d18e3ea12a46",
     ".github/workflows/event-operations-formal.yml": "8cdbbb59f539a8394fde147ba38dc4f27260b9ac2c371c731da5b342401077d1",
+    "docs/catalog-persistence/catalog-list-decisions.json": "1bd1d353b72ba5c095f33f81b008fba6e3c3eb7fd799c1978280f9963a5c89d6",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
     "formal/event-operations/CatalogReorder.tla": "ab228ae812143f050feac4035e9724fb647a1072cb7816d500894ea1ba335c5d",
@@ -4435,6 +4438,7 @@
     "package.json": "f5113b4d00775becd6433276b1e2cc1e04c6dfc652e0445c0390d2efa99da61d",
     "scripts/__tests__/artist-enrichment.test.mjs": "180ce22aca9d7d991b98e563f922749037f79a4ab1ce258e813feb1888aa167d",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "a792f74cdd4497a9c44907d394884012728cbbdfd8c1793e079619344605fb94",
     "scripts/__tests__/checkout-amount-postgres.mjs": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "03fe83c795e80e464e4f0a6dba868723a60c079f6c5631e2b3435732eba649ea",
@@ -4497,7 +4501,7 @@
     "scripts/specification-inventory.py": "5d84634a34efe3e9f619063656e2f63a0cae7d71dfacbb4fd8ea035ca5008502",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-booking-conformance.py": "c1f85c86d4e055f4bf2e3bfd7e94b3b54df8010a3f8434a58031c6d7e2c12971",
+    "scripts/test-booking-conformance.py": "dbae479703cb26529c6cd31991881585aef7c721f74ad35467bc4d9c8b332eaa",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-inspection.py": "560125d36d6469b3f2f2ca1dea30ba0bf452dc9e9e373f2e0521256052c0ed98",
     "scripts/test-hetzner-restore.py": "279906ce3fca58619f1a4c361c475c810bb666263418ca45a975ee0ad4fd8e41",
@@ -5102,6 +5106,12 @@
         "relationship": "implementation"
       }
     ],
+    "docs/catalog-persistence/catalog-list-decisions.json": [
+      {
+        "requirement": "SYS-TRACE-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-specification-conformance.py": [
       {
         "requirement": "SYS-TRACE-001",
@@ -5113,6 +5123,12 @@
       }
     ],
     "scripts/test-new-specification-surfaces.py": [
+      {
+        "requirement": "SYS-TRACE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/catalog-list-audit.test.mjs": [
       {
         "requirement": "SYS-TRACE-001",
         "relationship": "tests"
@@ -7520,7 +7536,12 @@
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
       "sha256": "a792f74cdd4497a9c44907d394884012728cbbdfd8c1793e079619344605fb94",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-TRACE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-790b053ca0c0e13b",
@@ -9803,7 +9824,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "c1f85c86d4e055f4bf2e3bfd7e94b3b54df8010a3f8434a58031c6d7e2c12971",
+      "sha256": "dbae479703cb26529c6cd31991881585aef7c721f74ad35467bc4d9c8b332eaa",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24219,7 +24240,6 @@
     "SURFACE-039bc8d278e3dafc",
     "SURFACE-35a1af26327814c1",
     "SURFACE-d96822f506e6f794",
-    "SURFACE-d41c5a6a64677381",
     "SURFACE-2a6db69bcc12b984",
     "SURFACE-9344bbc594468ec5",
     "SURFACE-d42db507e3322402",
