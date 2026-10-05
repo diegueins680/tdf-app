@@ -497,6 +497,7 @@
       "tdf-hq-ui/src/api/internalFeedback.ts",
       "tdf-hq-ui/src/api/internships.ts",
       "tdf-hq-ui/src/api/inventory.ts",
+      "tdf-hq-ui/src/api/inventory.upload.test.ts",
       "tdf-hq-ui/src/api/invoices.ts",
       "tdf-hq-ui/src/api/label.ts",
       "tdf-hq-ui/src/api/liveSessions.test.ts",
@@ -2161,7 +2162,7 @@
     },
     {
       "path": "docs/Event_Discovery_Cron.md",
-      "sha256": "b7790a5027207efd6409ebd8efb207d8f8747e606b2cb855c3fafb6321cc3ef3",
+      "sha256": "1f25ebd777a33ae6f4fbab3a644872eb19a59cea06bb001bb3239e7a42a6bf82",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
