@@ -150,7 +150,10 @@ and cannot satisfy these obligations.
 
 The [private file recovery primitive](../../formal/system/recovery-files.md) checks
 file content and metadata in new isolated targets. It is a library for the pending
-coordinated bundle, not a production backup or deployment command.
+coordinated bundle, not a production backup or deployment command. The
+[encryption primitive](../../formal/system/recovery-envelope.md) uses pinned age
+with immutable Linux execution and trusted content hashes; it does not yet
+provide production key custody, transfer or coordinated restoration.
 
 The [scheduled logical archive contract](../../formal/system/logical-backup.md)
 defines the daily timer's narrower guarantee. Install the shell entrypoint and

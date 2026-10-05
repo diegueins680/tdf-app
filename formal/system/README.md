@@ -7,6 +7,8 @@ Historical green results are not current-candidate evidence.
 
 ## Canonical package
 
+- [recovery-envelope.md](recovery-envelope.md): sealed executable encryption/decryption and explicit off-host recovery obligations.
+
 - [recovery-files.md](recovery-files.md): private content/metadata replay and remaining coordinated bundle obligations.
 
 - [isolated-canary.md](isolated-canary.md): candidate startup/identity/failure-recovery on a disconnected disposable restore, with explicit deployment exclusions.

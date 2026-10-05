@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "version": "v1.3.2",
+  "upstream": "https://github.com/FiloSottile/age/releases/tag/v1.3.2",
+  "trust": "SHA256 pins verified against official GitHub release asset digests; independent Sigsum proof verification is not claimed.",
+  "platforms": {
+    "darwin-amd64": {
+      "archiveSha256": "1d1e4bc66e1427edad7739ae7616157de0e79db8b6d2a1497d7d9925fb06a539",
+      "binaries": {
+        "age": "0c2fbcffab91d0af398162a8ed792e096916c8c47c3c400e303904431103f492",
+        "age-keygen": "33c25cc60fdfbb27438f885e0e9f6e2e2c29c0a64449738bff57b6aebe42f67f"
+      }
+    },
+    "linux-amd64": {
+      "archiveSha256": "cbe24006683f8eb669266162894b9a522a1af52f2665fbc63a4bb032ed26ac10",
+      "binaries": {
+        "age": "eb7dd1b518f0a307c99cd97782623c5321da049154b04acd2d98d21aa7bc9b2c",
+        "age-keygen": "0a0009db842259d6717f7eeb30acb6b90d2a2eb924c6acd0a0db0ca1f1537899"
+      }
+    }
+  }
+}

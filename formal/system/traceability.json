@@ -5799,11 +5799,101 @@
       },
       "property": "Successful replay requires complete exact manifest correspondence in a fresh contained target; missing or invalid evidence cannot report success.",
       "evidence": "Revision/source-qualified synthetic test receipts; no production file capture or restoration claimed."
+    },
+    {
+      "id": "DEPLOY-ENVELOPE-001",
+      "title": "Private recovery encryption binds execution and trusted content",
+      "domain": "DEPLOY",
+      "statement": "Recovery encryption shall execute immutable reviewed age bytes and report decryption success only after authenticated completion and correspondence to separately trusted plaintext and transferred ciphertext hashes.",
+      "authority": "User storage, ownership, privacy and coordinated recovery requirements",
+      "source": "formal/system/recovery-envelope.md; ops/hetzner/recovery-tools.json",
+      "contract": "formal/system/recovery-envelope.md",
+      "critical": true,
+      "actors": [
+        "Authorized recovery operator",
+        "Future release bundle coordinator"
+      ],
+      "preconditions": [
+        "Supported Linux sealed memfd runtime",
+        "Pinned private age binary",
+        "Private native X25519 identity held independently of production for actual off-host recovery",
+        "Independently trusted capture and transfer content hashes"
+      ],
+      "inputs": [
+        "Private captured bundle or transferred ciphertext",
+        "Native recipient or private identity path",
+        "New private output path",
+        "Trusted hashes and sizes"
+      ],
+      "state": {
+        "states": [
+          "unverified",
+          "tool-sealed",
+          "encrypting",
+          "encrypted",
+          "decrypting",
+          "content-verified",
+          "failed"
+        ],
+        "initial": "unverified",
+        "terminal": [
+          "encrypted",
+          "content-verified",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Verify bytes -> seal executable -> encrypt private source -> recheck source -> encrypted-not-transferred",
+        "Verify sealed tool and trusted transfer hash -> authenticated decryption -> trusted plaintext comparison -> decrypted-content-verified"
+      ],
+      "forbiddenTransitions": [
+        "Execute a subsequently replaced pathname instead of verified bytes",
+        "Execute unpinned or plugin tools",
+        "Expose identity or plaintext through logs, arguments or environment",
+        "Overwrite an output or accept partial decryption",
+        "Treat public-key encryption as sender authentication",
+        "Infer transfer or restored system from encryption/decryption"
+      ],
+      "effects": [
+        "Exclusive private ciphertext or plaintext output",
+        "Aggregate hash/size evidence with transfer and restoration claims explicitly false"
+      ],
+      "authorization": "Operator-local invocation; no key generation, remote destination, production access or deployment implicitly authorized by this library.",
+      "privacy": "Identity passed by held private descriptor; fixed child environment, suppressed tool diagnostics, private failed output and manifests. No production secret required by tests.",
+      "concurrency": "Verified executable bytes held in write/grow/shrink/seal-sealed Linux memfd through execution; source descriptors and hashes rechecked. Python/policy integrity and trusted capture record remain caller assumptions.",
+      "idempotency": "Every output must be new; retries reject existing paths and preserve partial evidence.",
+      "failure": "Unsupported platform, bad tool/identity/receipt, native failure, deadline, truncation, corruption or changed content raises without successful receipt; private partial output may remain.",
+      "recovery": "Use separately protected identity and trusted capture hashes to retry into a new path; no automatic transfer, cleanup, database rollback or restore.",
+      "observability": "Source-qualified tool hashes, plaintext/ciphertext sizes/digests and explicit encrypted-not-transferred or decrypted-content-verified scope; never customer/identity bytes.",
+      "implementation": [
+        "ops/hetzner/recovery-envelope.py",
+        "ops/hetzner/recovery-tools.json",
+        "scripts/install-recovery-tools.py",
+        ".github/workflows/ci.yml"
+      ],
+      "tests": [
+        "scripts/test-recovery-envelope.py",
+        "scripts/test-recovery-tools.py",
+        "scripts/quality-repo.sh"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Real age integration and scheduling controls; no cryptographic or whole-system proof.",
+      "ambiguity": [
+        "Production key custody, coordinated capture, trusted bundle evidence and off-host transfer/retrieval remain unimplemented."
+      ],
+      "verification": "Linux real-tool negative/scheduling controls and deterministic installer tests; unsupported platforms cannot stand in for Linux runtime evidence.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Encryption primitive and controlled checks exist; integrated production key/backup/transfer/restoration workflow remains outstanding."
+      },
+      "property": "No output is reported recovered without authenticated decryption and exact trusted content correspondence using immutable verified executable bytes.",
+      "evidence": "Exact source receipts with temporary synthetic identities/data only; no production archive or key claim."
     }
   ],
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
-    ".github/workflows/ci.yml": "b5f123f33695eb912cf9f3956a4b2620add70006c42d86f8a52755c663ccc0c3",
+    ".github/workflows/ci.yml": "da7229fd7ef24a43048ef566c9f80cf9a0cac8b198e41216bc683e7c5704b784",
     ".github/workflows/event-operations-formal.yml": "a038253d968022ed95501359a07f16852bf8dcc1da198b7aa303543f0f95b552",
     "docs/catalog-persistence/catalog-list-decisions.json": "b2b9caf40d76eaacec5e1a0dc98cf683683b7416e2523873ad872cc303885d52",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
@@ -5878,7 +5968,9 @@
     "ops/hetzner/compose.production.yaml": "1191a5773dc83807be2364340f8cb9f0feb33af4ed45d6e0bfbefe9f3bc42db8",
     "ops/hetzner/inspect-runtime.py": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
     "ops/hetzner/isolated-application-canary.py": "6c3e861e6f177da093f39eb84366872e42c46f248a73bc196e7e29a800d5f36f",
+    "ops/hetzner/recovery-envelope.py": "dd916295bcae2318cbe1e00af9c51e38cf40838993326e284614d0b09e0250fb",
     "ops/hetzner/recovery-files.py": "09c07444444b498d9fe5f9696e8ebec9b3010cc2453c59e72de74ccd60cdcb84",
+    "ops/hetzner/recovery-tools.json": "a2427185433ece7d46514d9827eb788a223d09881b3d68adb259c1df44b6c2a4",
     "ops/hetzner/rehearse-postgres-restore.py": "66d134bd4510328d824375cfd72c25a89380b7c1360e0b00ca295bef78d6af7a",
     "ops/hetzner/tdf-postgres-backup.service": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
@@ -5926,6 +6018,7 @@
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/inspect-compiled-api.mjs": "2b65b93d80950b7c3cb650dafc247cfd49f6575e8a6653fc083223741da47e70",
     "scripts/inspect-hetzner-production.mjs": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
+    "scripts/install-recovery-tools.py": "87e21bcbbf08076148d6b5d0aca5464afedad77ec209a5cf95439ab440e286a0",
     "scripts/lib/compiled-api-surface.mjs": "6416e603ceb8f55faf42b04658b837a8d076b9f26eaf5d54f26343794e197b72",
     "scripts/lib/disposable-postgres-url.mjs": "49cdbc947485d89de6be08f23c888c686c4255de9cb73a331fc573352738fdb4",
     "scripts/lib/formal-result-summary.mjs": "fa378d768a1c4e8ff6fe67e8d18d61367cd1b272339107e71c497798fb657167",
@@ -5946,7 +6039,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "526a6474f258c00026760efd7663a894eb3b7c1bfd8b27ccd3d7e51ef4963255",
+    "scripts/quality-repo.sh": "298d55d39c7fd8cdf832063119dabd5ae75614bd1c3e6d772c06175b163e583d",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
     "scripts/social/SessionSpec.hs": "bac4dfc9d38189b2a5bb0682cb0bbf5cb1097be27c0d2331a0f78642f58de370",
@@ -5970,7 +6063,9 @@
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "ea9812c229d7c71aa7d866034e54eb25a225af9220440d5703daba14cbf6014b",
+    "scripts/test-recovery-envelope.py": "730f6d41789ac414c6578b1e19d9be44f47e19299e9c5826dc831248291d59d0",
     "scripts/test-recovery-files.py": "3da1087e55ecc127cc9a45eb20f6a3fe6f714c7719b1ad09fdde15b4feea2299",
+    "scripts/test-recovery-tools.py": "91b2037bea06ffbf5a71a0948b2ab89185aaa695ffcfee53d6717975efceb934",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
@@ -6586,6 +6681,10 @@
       },
       {
         "requirement": "SYS-TRACE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-ENVELOPE-001",
         "relationship": "implementation"
       }
     ],
@@ -7694,6 +7793,10 @@
       },
       {
         "requirement": "DEPLOY-FILES-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-ENVELOPE-001",
         "relationship": "tests"
       }
     ],
@@ -9310,6 +9413,36 @@
         "requirement": "DEPLOY-FILES-001",
         "relationship": "tests"
       }
+    ],
+    "ops/hetzner/recovery-envelope.py": [
+      {
+        "requirement": "DEPLOY-ENVELOPE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "ops/hetzner/recovery-tools.json": [
+      {
+        "requirement": "DEPLOY-ENVELOPE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/install-recovery-tools.py": [
+      {
+        "requirement": "DEPLOY-ENVELOPE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-recovery-envelope.py": [
+      {
+        "requirement": "DEPLOY-ENVELOPE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-recovery-tools.py": [
+      {
+        "requirement": "DEPLOY-ENVELOPE-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -9356,7 +9489,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "b5f123f33695eb912cf9f3956a4b2620add70006c42d86f8a52755c663ccc0c3",
+      "sha256": "da7229fd7ef24a43048ef566c9f80cf9a0cac8b198e41216bc683e7c5704b784",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -9369,6 +9502,10 @@
         },
         {
           "requirement": "SYS-TRACE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DEPLOY-ENVELOPE-001",
           "relationship": "implementation"
         }
       ]
@@ -9798,6 +9935,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-64aaa5c506476af5",
+      "path": "ops/hetzner/recovery-envelope.py",
+      "sha256": "dd916295bcae2318cbe1e00af9c51e38cf40838993326e284614d0b09e0250fb",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-ENVELOPE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-c1e1cc1e8132267a",
       "path": "ops/hetzner/recovery-files.py",
       "sha256": "09c07444444b498d9fe5f9696e8ebec9b3010cc2453c59e72de74ccd60cdcb84",
@@ -9805,6 +9954,18 @@
       "requirements": [
         {
           "requirement": "DEPLOY-FILES-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-ab32c7f5b65f1b86",
+      "path": "ops/hetzner/recovery-tools.json",
+      "sha256": "a2427185433ece7d46514d9827eb788a223d09881b3d68adb259c1df44b6c2a4",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-ENVELOPE-001",
           "relationship": "implementation"
         }
       ]
@@ -11095,6 +11256,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-b85e7ba1c3709ca8",
+      "path": "scripts/install-recovery-tools.py",
+      "sha256": "87e21bcbbf08076148d6b5d0aca5464afedad77ec209a5cf95439ab440e286a0",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-ENVELOPE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-865e33190c6c6efa",
       "path": "scripts/interactions/generate-mobile-shared.mjs",
       "sha256": "1cfcc5965e1fb8159a2ef6b9d9181ee8950e61e3eb0a09bcccd1c288f23f5550",
@@ -11695,7 +11868,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "526a6474f258c00026760efd7663a894eb3b7c1bfd8b27ccd3d7e51ef4963255",
+      "sha256": "298d55d39c7fd8cdf832063119dabd5ae75614bd1c3e6d772c06175b163e583d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -11720,6 +11893,10 @@
         },
         {
           "requirement": "DEPLOY-FILES-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-ENVELOPE-001",
           "relationship": "tests"
         }
       ]
@@ -13001,6 +13178,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-45fe5f83a883bb5f",
+      "path": "scripts/test-recovery-envelope.py",
+      "sha256": "730f6d41789ac414c6578b1e19d9be44f47e19299e9c5826dc831248291d59d0",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-ENVELOPE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-74baba1704e4a65f",
       "path": "scripts/test-recovery-files.py",
       "sha256": "3da1087e55ecc127cc9a45eb20f6a3fe6f714c7719b1ad09fdde15b4feea2299",
@@ -13008,6 +13197,18 @@
       "requirements": [
         {
           "requirement": "DEPLOY-FILES-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-273813235d3bf51b",
+      "path": "scripts/test-recovery-tools.py",
+      "sha256": "91b2037bea06ffbf5a71a0948b2ab89185aaa695ffcfee53d6717975efceb934",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-ENVELOPE-001",
           "relationship": "tests"
         }
       ]
@@ -29487,7 +29688,8 @@
     "PRIV-ANALYTICS-001",
     "EVT-PRESENTATION-001",
     "DEPLOY-READINESS-001",
-    "DEPLOY-FILES-001"
+    "DEPLOY-FILES-001",
+    "DEPLOY-ENVELOPE-001"
   ],
   "stateMachines": [
     {
@@ -30609,7 +30811,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "74c486b6b2c7d5a1c16d95ae44eaf9942f628f31ba2bf72a6727781ba0579693",
+      "sourceSha256": "c819f7f9c49e293b651131bf9eac015a961add0798d33f8464665dbd96715a7e",
       "definition": {
         "states": [
           "absent",
@@ -52413,7 +52615,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 76,
+    "PARTIAL": 77,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

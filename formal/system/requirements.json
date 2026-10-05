@@ -5798,6 +5798,96 @@
       },
       "property": "Successful replay requires complete exact manifest correspondence in a fresh contained target; missing or invalid evidence cannot report success.",
       "evidence": "Revision/source-qualified synthetic test receipts; no production file capture or restoration claimed."
+    },
+    {
+      "id": "DEPLOY-ENVELOPE-001",
+      "title": "Private recovery encryption binds execution and trusted content",
+      "domain": "DEPLOY",
+      "statement": "Recovery encryption shall execute immutable reviewed age bytes and report decryption success only after authenticated completion and correspondence to separately trusted plaintext and transferred ciphertext hashes.",
+      "authority": "User storage, ownership, privacy and coordinated recovery requirements",
+      "source": "formal/system/recovery-envelope.md; ops/hetzner/recovery-tools.json",
+      "contract": "formal/system/recovery-envelope.md",
+      "critical": true,
+      "actors": [
+        "Authorized recovery operator",
+        "Future release bundle coordinator"
+      ],
+      "preconditions": [
+        "Supported Linux sealed memfd runtime",
+        "Pinned private age binary",
+        "Private native X25519 identity held independently of production for actual off-host recovery",
+        "Independently trusted capture and transfer content hashes"
+      ],
+      "inputs": [
+        "Private captured bundle or transferred ciphertext",
+        "Native recipient or private identity path",
+        "New private output path",
+        "Trusted hashes and sizes"
+      ],
+      "state": {
+        "states": [
+          "unverified",
+          "tool-sealed",
+          "encrypting",
+          "encrypted",
+          "decrypting",
+          "content-verified",
+          "failed"
+        ],
+        "initial": "unverified",
+        "terminal": [
+          "encrypted",
+          "content-verified",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "Verify bytes -> seal executable -> encrypt private source -> recheck source -> encrypted-not-transferred",
+        "Verify sealed tool and trusted transfer hash -> authenticated decryption -> trusted plaintext comparison -> decrypted-content-verified"
+      ],
+      "forbiddenTransitions": [
+        "Execute a subsequently replaced pathname instead of verified bytes",
+        "Execute unpinned or plugin tools",
+        "Expose identity or plaintext through logs, arguments or environment",
+        "Overwrite an output or accept partial decryption",
+        "Treat public-key encryption as sender authentication",
+        "Infer transfer or restored system from encryption/decryption"
+      ],
+      "effects": [
+        "Exclusive private ciphertext or plaintext output",
+        "Aggregate hash/size evidence with transfer and restoration claims explicitly false"
+      ],
+      "authorization": "Operator-local invocation; no key generation, remote destination, production access or deployment implicitly authorized by this library.",
+      "privacy": "Identity passed by held private descriptor; fixed child environment, suppressed tool diagnostics, private failed output and manifests. No production secret required by tests.",
+      "concurrency": "Verified executable bytes held in write/grow/shrink/seal-sealed Linux memfd through execution; source descriptors and hashes rechecked. Python/policy integrity and trusted capture record remain caller assumptions.",
+      "idempotency": "Every output must be new; retries reject existing paths and preserve partial evidence.",
+      "failure": "Unsupported platform, bad tool/identity/receipt, native failure, deadline, truncation, corruption or changed content raises without successful receipt; private partial output may remain.",
+      "recovery": "Use separately protected identity and trusted capture hashes to retry into a new path; no automatic transfer, cleanup, database rollback or restore.",
+      "observability": "Source-qualified tool hashes, plaintext/ciphertext sizes/digests and explicit encrypted-not-transferred or decrypted-content-verified scope; never customer/identity bytes.",
+      "implementation": [
+        "ops/hetzner/recovery-envelope.py",
+        "ops/hetzner/recovery-tools.json",
+        "scripts/install-recovery-tools.py",
+        ".github/workflows/ci.yml"
+      ],
+      "tests": [
+        "scripts/test-recovery-envelope.py",
+        "scripts/test-recovery-tools.py",
+        "scripts/quality-repo.sh"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Real age integration and scheduling controls; no cryptographic or whole-system proof.",
+      "ambiguity": [
+        "Production key custody, coordinated capture, trusted bundle evidence and off-host transfer/retrieval remain unimplemented."
+      ],
+      "verification": "Linux real-tool negative/scheduling controls and deterministic installer tests; unsupported platforms cannot stand in for Linux runtime evidence.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Encryption primitive and controlled checks exist; integrated production key/backup/transfer/restoration workflow remains outstanding."
+      },
+      "property": "No output is reported recovered without authenticated decryption and exact trusted content correspondence using immutable verified executable bytes.",
+      "evidence": "Exact source receipts with temporary synthetic identities/data only; no production archive or key claim."
     }
   ]
 }

@@ -564,6 +564,17 @@
       "decision": "adopted within file primitive; release coordination pending",
       "rationale": "Use explicit descriptor-relative exclusive file creation and exact metadata/content checks; do not rely on general tar extraction defaults or infer coordination from independently created archives.",
       "verifiedAt": "2026-10-05"
+    },
+    {
+      "id": "RES-RECOVERY-ENVELOPE-001",
+      "source": "https://c2sp.org/age",
+      "supportingSource": "https://github.com/FiloSottile/age/releases/tag/v1.3.2",
+      "title": "Authenticated age recovery envelopes",
+      "recommendation": "Use established streamed authenticated encryption and reject truncated final chunks; maintain separate provenance because encryption for a public recipient does not authenticate its sender.",
+      "applicability": "Encryption of coordinated TDF recovery bundles",
+      "decision": "adopted for primitive; off-host workflow pending",
+      "rationale": "Use pinned upstream age rather than implement cryptography; preserve trusted plaintext/ciphertext hashes and keep real key custody and off-host restoration separate.",
+      "verifiedAt": "2026-10-05"
     }
   ]
 }
