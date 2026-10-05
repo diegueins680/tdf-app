@@ -376,6 +376,17 @@
       "conflict": "Published email/30-day commitments lack current operational workflow/completion evidence; historical mobile docs and release sign-off are not fulfillment evidence.",
       "authority": "formal/system/deletion-workflow.md",
       "resolution": "Owner explicitly requested discovery or creation. Establish machine-readable operator lifecycle, guarded private ledger and runbook; retain original deadlines, record retention honestly, require effect and delivered-notice evidence before closure. Do not infer inbox monitoring, legal adequacy or executed deletion from a passing synthetic test."
+    },
+    {
+      "id": "AUTHORITY-036",
+      "sources": [
+        "docs/operations-control-center/architecture.md",
+        "docs/operations-control-center/formal-model.yaml",
+        "tdf-hq/src/TDF/Operations/Server.hs"
+      ],
+      "conflict": "Actual concurrent HTTP accepted eight same-version writes and emitted eight audit rows for one update; approval conflict lookup was unbound and terminal decisions could reopen.",
+      "authority": "formal/system/operations-command-boundary.md",
+      "resolution": "Retain intended version/current-scope/dual-approval requirements and repair transactional handlers. Historical abbreviated lifecycle and broad invariants are incomplete obligations, not proof. Request IDs remain diagnostic; approval keys require full semantic binding."
     }
   ]
 }

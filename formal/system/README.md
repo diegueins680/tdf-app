@@ -267,3 +267,5 @@ correctness of a plausible mapping or replace implementation review. Deleted
 paths remain subject to the inventory and requirement orphan checks.
 [fixture-routing.md](fixture-routing.md) records the separate test database routing
 boundary and the ownership guarantees it does not provide.
+
+Operations transactional command, approval and worker boundaries: [operations-command-boundary.md](operations-command-boundary.md).

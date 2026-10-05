@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 §9.2.2",
+      "title": "RFC 9110 \u00a79.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -453,6 +453,33 @@
       "applicability": "Private ledger restoration test and operational backup procedure",
       "decision": "adopted",
       "rationale": "Synthetic restore uses SQLite backup and rechecks chain/policy/retry binding; production backups/evidence-store durability still require activation."
+    },
+    {
+      "id": "RES-OPS-001",
+      "source": "https://www.postgresql.org/docs/current/transaction-iso.html",
+      "title": "PostgreSQL Read Committed snapshots",
+      "recommendation": "Avoid authorizing a write from a later unbounded reread of unlocked role assignments.",
+      "applicability": "Operations command and approval admission",
+      "decision": "adopted within handler boundary",
+      "rationale": "Use the captured locked role rows; a concurrent insertion is deferred to the next command."
+    },
+    {
+      "id": "RES-OPS-002",
+      "source": "https://www.postgresql.org/docs/current/explicit-locking.html",
+      "title": "PostgreSQL explicit row locks",
+      "recommendation": "Hold relevant row locks through transaction commit and handle deadlock aborts.",
+      "applicability": "Operations command and approval admission",
+      "decision": "adopted within handler boundary",
+      "rationale": "Serialize item mutation, scoped authorization and atomic evidence; return409 on deadlock/serialization errors."
+    },
+    {
+      "id": "RES-OPS-003",
+      "source": "https://www.postgresql.org/docs/current/functions-datetime.html",
+      "title": "PostgreSQL wall clock versus transaction timestamp",
+      "recommendation": "Use actual wall-clock evaluation for expiry after waits.",
+      "applicability": "Operations command and approval admission",
+      "decision": "adopted within handler boundary",
+      "rationale": "Decision uses clock_timestamp rather than transaction-start now(); timeout and host clock correctness remain environment assumptions."
     }
   ]
 }

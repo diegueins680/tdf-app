@@ -92,6 +92,16 @@ run_negative_tlc() {
   fi
   printf 'TDF_TLC_RESULT negative %s %s\n' "${module}" "${config}"
 }
+run_tlc OperationsCommandFence.tla OperationsCommandFence.cfg operationscommandfence
+run_negative_tlc OperationsCommandFenceAllowStale.cfg operationscommandfenceallowstale 'Invariant NoStaleCommit is violated' OperationsCommandFence.tla
+run_negative_tlc OperationsCommandFenceAllowRevoked.cfg operationscommandfenceallowrevoked 'Invariant NoRevokedCommit is violated' OperationsCommandFence.tla
+run_negative_tlc OperationsCommandFenceLeakEffect.cfg operationscommandfenceleakeffect 'Invariant AtomicEvidence is violated' OperationsCommandFence.tla
+run_tlc OperationsApproval.tla OperationsApproval.cfg operationsapproval
+run_negative_tlc OperationsApprovalUnboundReplay.cfg operationsapprovalunboundreplay 'Invariant BoundReplay is violated' OperationsApproval.tla
+run_negative_tlc OperationsApprovalDuplicateAudit.cfg operationsapprovalduplicateaudit 'Invariant SingleEvidence is violated' OperationsApproval.tla
+run_negative_tlc OperationsApprovalReopen.cfg operationsapprovalreopen 'Invariant DecisionGuard is violated' OperationsApproval.tla
+run_negative_tlc OperationsApprovalIgnoreExpiry.cfg operationsapprovalignoreexpiry 'Invariant DecisionGuard is violated' OperationsApproval.tla
+run_negative_tlc OperationsApprovalSelfApprove.cfg operationsapprovalselfapprove 'Invariant DecisionGuard is violated' OperationsApproval.tla
 run_tlc PrivacyDeletionWorkflow.tla PrivacyDeletionWorkflow.cfg privacy-deletion
 run_negative_tlc PrivacyDeletionEarlyClose.cfg privacy-deletion-earlyclose 'Invariant ClosureEvidence is violated' PrivacyDeletionWorkflow.tla
 run_negative_tlc PrivacyDeletionDeadlineReset.cfg privacy-deletion-deadline 'Invariant FixedDeadline is violated' PrivacyDeletionWorkflow.tla

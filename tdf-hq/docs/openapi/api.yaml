@@ -9,6 +9,189 @@ servers:
     description: Development server
 
 paths:
+  /operations/work-items/{workItemId}/seen:
+    patch:
+      operationId: operationsWorkItemSeen
+      tags: [Operations]
+      summary: Apply an authorized versioned work-item seen command
+      description: >-
+        Current token, locked canonical roles, enabled organization and active branch
+        membership are required. The expected version must match the locked item.
+        Item, timer and audit/stream effects commit together. A repeat with the old
+        version returns 409; requestId is diagnostic, not a replay receipt.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: workItemId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OperationsVersionedCommand' }
+      responses:
+        '200':
+          description: Authoritative committed work item
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OperationsWorkItem' }
+        '400': { description: Malformed request }
+        '401': { description: Inactive or invalid current session }
+        '403': { description: Role or active scoped membership denied }
+        '404': { description: Item missing or not visible }
+        '409': { description: Version changed or transactional conflict; no effects committed }
+        '422': { description: Invalid command or transition }
+        '500': { description: Transaction rolled back; operational data unavailable }
+  /operations/work-items/{workItemId}/transition:
+    patch:
+      operationId: operationsWorkItemTransition
+      tags: [Operations]
+      summary: Apply an authorized versioned work-item transition command
+      description: >-
+        Current token, locked canonical roles, enabled organization and active branch
+        membership are required. The expected version must match the locked item.
+        Item, timer and audit/stream effects commit together. A repeat with the old
+        version returns 409; requestId is diagnostic, not a replay receipt.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: workItemId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OperationsTransitionCommand' }
+      responses:
+        '200':
+          description: Authoritative committed work item
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OperationsWorkItem' }
+        '400': { description: Malformed request }
+        '401': { description: Inactive or invalid current session }
+        '403': { description: Role or active scoped membership denied }
+        '404': { description: Item missing or not visible }
+        '409': { description: Version changed or transactional conflict; no effects committed }
+        '422': { description: Invalid command or transition }
+        '500': { description: Transaction rolled back; operational data unavailable }
+  /operations/work-items/{workItemId}/assignment:
+    patch:
+      operationId: operationsWorkItemAssignment
+      tags: [Operations]
+      summary: Apply an authorized versioned work-item assignment command
+      description: >-
+        Current token, locked canonical roles, enabled organization and active branch
+        membership are required. The expected version must match the locked item.
+        Item, timer and audit/stream effects commit together. A repeat with the old
+        version returns 409; requestId is diagnostic, not a replay receipt.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: workItemId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OperationsAssignmentCommand' }
+      responses:
+        '200':
+          description: Authoritative committed work item
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OperationsWorkItem' }
+        '400': { description: Malformed request }
+        '401': { description: Inactive or invalid current session }
+        '403': { description: Role or active scoped membership denied }
+        '404': { description: Item missing or not visible }
+        '409': { description: Version changed or transactional conflict; no effects committed }
+        '422': { description: Invalid command or transition }
+        '500': { description: Transaction rolled back; operational data unavailable }
+  /operations/work-items/{workItemId}/priority:
+    patch:
+      operationId: operationsWorkItemPriority
+      tags: [Operations]
+      summary: Apply an authorized versioned work-item priority command
+      description: >-
+        Current token, locked canonical roles, enabled organization and active branch
+        membership are required. The expected version must match the locked item.
+        Item, timer and audit/stream effects commit together. A repeat with the old
+        version returns 409; requestId is diagnostic, not a replay receipt.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: workItemId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OperationsPriorityCommand' }
+      responses:
+        '200':
+          description: Authoritative committed work item
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OperationsWorkItem' }
+        '400': { description: Malformed request }
+        '401': { description: Inactive or invalid current session }
+        '403': { description: Role or active scoped membership denied }
+        '404': { description: Item missing or not visible }
+        '409': { description: Version changed or transactional conflict; no effects committed }
+        '422': { description: Invalid command or transition }
+        '500': { description: Transaction rolled back; operational data unavailable }
+  /operations/approvals:
+    post:
+      operationId: operationsCreateApproval
+      tags: [Operations]
+      summary: Create or replay a bound approval request
+      description: >-
+        Requires Admin, Manager or Accounting in an enabled organization and active
+        branch. Organization-scoped idempotency keys bind the requester, resolved
+        scope and semantic payload. Exact authorized replay returns the retained
+        request without new audit. This endpoint does not execute the source action.
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OperationsApprovalCreate' }
+      responses:
+        '201':
+          description: New or identically replayed approval
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OperationsApproval' }
+        '400': { description: Malformed request }
+        '401': { description: Invalid current session }
+        '403': { description: Role or active scope denied }
+        '404': { description: Linked item outside visible scope }
+        '409': { description: Idempotency key bound to another request or transaction conflict }
+        '422': { description: Unsupported action, blank key/reason, invalid money or expired new request }
+        '500': { description: Transaction rolled back; operational data unavailable }
+  /operations/approvals/{approvalId}/decision:
+    patch:
+      operationId: operationsDecideApproval
+      tags: [Operations]
+      summary: Commit a pending unexpired approval decision
+      description: >-
+        Requires a different current Admin, Manager or Accounting actor in the same
+        active organization/branch. The pending decision and audit commit together.
+        Expiry is evaluated after lock waits. A terminal replay returns 409; decisions
+        cannot reopen. Approval does not execute a payment or deletion.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: approvalId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OperationsApprovalDecision' }
+      responses:
+        '200':
+          description: Committed approval decision
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OperationsApproval' }
+        '400': { description: Malformed request }
+        '401': { description: Invalid current session }
+        '403': { description: Role or active scope denied }
+        '409': { description: Missing, expired, self, terminal or changed approval; no effects committed }
+        '422': { description: Invalid decision or blank reason }
+        '500': { description: Transaction rolled back; operational data unavailable }
   /drive/upload:
     post:
       tags: [Media]
@@ -16341,8 +16524,8 @@ components:
         actionType: { type: string }
         targetEntityType: { type: string }
         targetEntityId: { type: string }
-        amountMinor: { type: integer, format: int64, nullable: true }
-        currency: { type: string, nullable: true }
+        amountMinor: { type: integer, format: int64, minimum: 0, nullable: true }
+        currency: { type: string, pattern: '^[A-Z]{3}$', nullable: true }
         reason: { type: string, minLength: 1 }
         idempotencyKey: { type: string, minLength: 1 }
         expiresAt: { type: string, format: date-time, nullable: true }

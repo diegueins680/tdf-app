@@ -4366,6 +4366,203 @@
         "classification": "PARTIAL",
         "reason": "Approved current-main implementation is incorporated with explicit traceability; exact consolidated tests and deployment remain outstanding."
       }
+    },
+    {
+      "id": "OPS-COMMAND-001",
+      "title": "Atomic authorized Operations commands",
+      "statement": "Work-item seen, transition, assignment and priority commands must commit only against their locked current version and authorization, with all timers and evidence atomic.",
+      "domain": "OPS",
+      "authority": "reconciled",
+      "source": "docs/operations-control-center/architecture.md; docs/operations-control-center/formal-model.yaml; actual synthetic concurrent HTTP reproduction",
+      "property": "NoStaleCommit; NoRevokedCommit; AtomicEvidence",
+      "contract": "formal/system/operations-command-boundary.md",
+      "critical": true,
+      "actors": [
+        "current authenticated operations actor",
+        "independently authorized approver",
+        "operations worker"
+      ],
+      "preconditions": [
+        "Initialized canonical migrations and active organization/branch where applicable"
+      ],
+      "inputs": [
+        "Typed Operations API command and current token; worker tick SQL results"
+      ],
+      "state": {
+        "boundary": "formal/system/operations-command-boundary.md",
+        "property": "NoStaleCommit; NoRevokedCommit; AtomicEvidence"
+      },
+      "allowedTransitions": [
+        "Work-item transitions in TDF.Operations.Model with locked expected version",
+        "Approval absent -> pending -> approved or rejected"
+      ],
+      "forbiddenTransitions": [
+        "Stale or revoked commit",
+        "Unbound key replay",
+        "Terminal/expired/self approval decision",
+        "Partial effect after rollback"
+      ],
+      "effects": [
+        "Atomic item/timer/event/stream/audit, or retained approval and decision audit; worker safe counters"
+      ],
+      "authorization": "Current locked token, canonical role snapshot, enabled organization, active branch and scoped memberships; distinct decision actor. See scoped contract.",
+      "privacy": "Never log arbitrary exception/SQL payload or disclose conflicting receipt.",
+      "concurrency": "PostgreSQL row locks held through commit; token then locked role snapshot, then item/receipt and active scope. Deadlock/serialization conflicts abort.",
+      "idempotency": "Work-item version retries conflict; approval exact bound replay has no new effects; worker logging never repeats the tick.",
+      "failure": "401/403/404/409/422 admission, transactional rollback; sanitized500; asynchronous cancellation propagates.",
+      "recovery": "Reload authoritative state after conflict. No downstream provider/deletion execution inferred.",
+      "observability": "Atomic audit/stream for accepted mutations; source-bound HTTP/model/property test receipts.",
+      "implementation": [
+        "tdf-hq/src/TDF/Operations/Server.hs",
+        "tdf-hq/src/TDF/Operations/Model.hs",
+        "tdf-hq/src/TDF/Operations/API.hs",
+        "tdf-hq/src/TDF/Operations/Types.hs"
+      ],
+      "tests": [
+        "scripts/lib/operations_conformance.py",
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [
+        "formal/event-operations/OperationsCommandFence.tla"
+      ],
+      "status": "specified and implemented",
+      "confidence": "Source reviewed; exact final runtime validation pending",
+      "ambiguity": [
+        "Other Operations routes and production enablement remain separate obligations; no complete refinement or delivery proof."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repair is under exact-candidate runtime validation; other Operations surfaces and deployed correspondence remain unverified."
+      }
+    },
+    {
+      "id": "OPS-APPROVAL-001",
+      "title": "Bound approval receipts and final decisions",
+      "statement": "Approval creation must bind organization-scoped keys to requester, resolved scope and semantic payload; decision must be pending, unexpired and made by a different currently authorized actor.",
+      "domain": "OPS",
+      "authority": "reconciled",
+      "source": "docs/operations-control-center/architecture.md; docs/operations-control-center/formal-model.yaml; actual synthetic concurrent HTTP reproduction",
+      "property": "BoundReplay; DecisionGuard; SingleEvidence",
+      "contract": "formal/system/operations-command-boundary.md",
+      "critical": true,
+      "actors": [
+        "current authenticated operations actor",
+        "independently authorized approver",
+        "operations worker"
+      ],
+      "preconditions": [
+        "Initialized canonical migrations and active organization/branch where applicable"
+      ],
+      "inputs": [
+        "Typed Operations API command and current token; worker tick SQL results"
+      ],
+      "state": {
+        "boundary": "formal/system/operations-command-boundary.md",
+        "property": "BoundReplay; DecisionGuard; SingleEvidence"
+      },
+      "allowedTransitions": [
+        "Work-item transitions in TDF.Operations.Model with locked expected version",
+        "Approval absent -> pending -> approved or rejected"
+      ],
+      "forbiddenTransitions": [
+        "Stale or revoked commit",
+        "Unbound key replay",
+        "Terminal/expired/self approval decision",
+        "Partial effect after rollback"
+      ],
+      "effects": [
+        "Atomic item/timer/event/stream/audit, or retained approval and decision audit; worker safe counters"
+      ],
+      "authorization": "Current locked token, canonical role snapshot, enabled organization, active branch and scoped memberships; distinct decision actor. See scoped contract.",
+      "privacy": "Never log arbitrary exception/SQL payload or disclose conflicting receipt.",
+      "concurrency": "PostgreSQL row locks held through commit; token then locked role snapshot, then item/receipt and active scope. Deadlock/serialization conflicts abort.",
+      "idempotency": "Work-item version retries conflict; approval exact bound replay has no new effects; worker logging never repeats the tick.",
+      "failure": "401/403/404/409/422 admission, transactional rollback; sanitized500; asynchronous cancellation propagates.",
+      "recovery": "Reload authoritative state after conflict. No downstream provider/deletion execution inferred.",
+      "observability": "Atomic audit/stream for accepted mutations; source-bound HTTP/model/property test receipts.",
+      "implementation": [
+        "tdf-hq/src/TDF/Operations/Server.hs",
+        "tdf-hq/src/TDF/Operations/Model.hs",
+        "tdf-hq/src/TDF/Operations/Types.hs"
+      ],
+      "tests": [
+        "scripts/lib/operations_conformance.py",
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [
+        "formal/event-operations/OperationsApproval.tla"
+      ],
+      "status": "specified and implemented",
+      "confidence": "Source reviewed; exact final runtime validation pending",
+      "ambiguity": [
+        "Other Operations routes and production enablement remain separate obligations; no complete refinement or delivery proof."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repair is under exact-candidate runtime validation; other Operations surfaces and deployed correspondence remain unverified."
+      }
+    },
+    {
+      "id": "OPS-WORKER-001",
+      "title": "Private and truthful Operations worker failure reporting",
+      "statement": "Operations worker failures must not expose arbitrary exception data, swallow cancellation, repeat work on logging failure or report malformed SQL results as successful zero work.",
+      "domain": "OPS",
+      "authority": "reconciled",
+      "source": "docs/operations-control-center/architecture.md; docs/operations-control-center/formal-model.yaml; actual synthetic concurrent HTTP reproduction",
+      "property": "safe fixed error; cancellation propagation; single invocation",
+      "contract": "formal/system/operations-command-boundary.md",
+      "critical": true,
+      "actors": [
+        "current authenticated operations actor",
+        "independently authorized approver",
+        "operations worker"
+      ],
+      "preconditions": [
+        "Initialized canonical migrations and active organization/branch where applicable"
+      ],
+      "inputs": [
+        "Typed Operations API command and current token; worker tick SQL results"
+      ],
+      "state": {
+        "boundary": "formal/system/operations-command-boundary.md",
+        "property": "safe fixed error; cancellation propagation; single invocation"
+      },
+      "allowedTransitions": [
+        "Work-item transitions in TDF.Operations.Model with locked expected version",
+        "Approval absent -> pending -> approved or rejected"
+      ],
+      "forbiddenTransitions": [
+        "Stale or revoked commit",
+        "Unbound key replay",
+        "Terminal/expired/self approval decision",
+        "Partial effect after rollback"
+      ],
+      "effects": [
+        "Atomic item/timer/event/stream/audit, or retained approval and decision audit; worker safe counters"
+      ],
+      "authorization": "Current locked token, canonical role snapshot, enabled organization, active branch and scoped memberships; distinct decision actor. See scoped contract.",
+      "privacy": "Never log arbitrary exception/SQL payload or disclose conflicting receipt.",
+      "concurrency": "PostgreSQL row locks held through commit; token then locked role snapshot, then item/receipt and active scope. Deadlock/serialization conflicts abort.",
+      "idempotency": "Work-item version retries conflict; approval exact bound replay has no new effects; worker logging never repeats the tick.",
+      "failure": "401/403/404/409/422 admission, transactional rollback; sanitized500; asynchronous cancellation propagates.",
+      "recovery": "Reload authoritative state after conflict. No downstream provider/deletion execution inferred.",
+      "observability": "Atomic audit/stream for accepted mutations; source-bound HTTP/model/property test receipts.",
+      "implementation": [
+        "tdf-hq/src/TDF/Operations/Worker.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Source reviewed; exact final runtime validation pending",
+      "ambiguity": [
+        "Other Operations routes and production enablement remain separate obligations; no complete refinement or delivery proof."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repair is under exact-candidate runtime validation; other Operations surfaces and deployed correspondence remain unverified."
+      }
     }
   ]
 }

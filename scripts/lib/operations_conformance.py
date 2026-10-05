@@ -44,34 +44,36 @@ def verify_operations(sql, request, check, env, database, output, actors):
             process = subprocess.Popen(['psql', '-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-d', database],
                                        env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=log, text=True)
             try:
-                process.stdin.write("BEGIN; " + query + "; SELECT 'fixture_locked';\n")
+                process.stdin.write("BEGIN; " + query + "; SELECT 'fixture_locked:' || pg_backend_pid();\n")
                 process.stdin.flush()
                 while True:
                     line = process.stdout.readline()
                     if not line: raise RuntimeError('Operations barrier exited before acquiring lock')
-                    if line.strip() == 'fixture_locked': break
+                    if line.startswith('fixture_locked:'):
+                        barrier_pid = int(line.strip().split(':')[1])
+                        break
                 def release():
                     process.stdin.write('COMMIT;\n')
                     process.stdin.flush()
-                yield release
+                yield release, barrier_pid
             finally:
                 process.communicate('ROLLBACK;\n', timeout=15)
                 if process.returncode: raise RuntimeError('Operations barrier failed')
 
-    def blocked(number):
+    def blocked(number, barrier_pid):
         deadline = time.monotonic() + 12
         while time.monotonic() < deadline:
-            actual = count('pg_stat_activity', "datname=current_database() AND pid<>pg_backend_pid() AND wait_event_type='Lock'")
+            actual = int(sql("WITH RECURSIVE blocked(pid) AS (SELECT " + str(barrier_pid) + " UNION SELECT activity.pid FROM pg_stat_activity activity JOIN blocked parent ON parent.pid=ANY(pg_blocking_pids(activity.pid)) WHERE activity.datname=current_database()) SELECT count(DISTINCT activity.pid) FROM blocked JOIN pg_stat_activity activity USING(pid) WHERE activity.pid<>" + str(barrier_pid) + " AND activity.wait_event_type='Lock' AND (activity.query LIKE '%operations_%' OR activity.query LIKE '%api_token%' OR activity.query LIKE '%party_security_role%')"))
             if actual >= number: return
             time.sleep(.02)
         raise AssertionError('Operations concurrency barrier did not observe ' + str(number) + ' blocked requests')
 
     def race(query, calls, before_release=None):
-        with held(query) as release:
+        with held(query) as (release, barrier_pid):
             with concurrent.futures.ThreadPoolExecutor(max_workers=len(calls)) as executor:
                 futures = [executor.submit(call) for call in calls]
                 try:
-                    blocked(len(calls))
+                    blocked(len(calls), barrier_pid)
                     if before_release: before_release()
                 finally:
                     release()
@@ -162,6 +164,7 @@ def verify_operations(sql, request, check, env, database, output, actors):
         replies = list(executor.map(lambda _: create(body), range(8)))
     check('operations simultaneous approval replays return same result', all(reply == response for reply in replies))
     check('operations replay appends no duplicate audit', count('operations_admin_audit', 'approval_request_id=' + q(approval)) == 1)
+    before_rejections = (count('operations_admin_audit', 'true'), count('operations_approval_request', 'true'))
     for changes in [{'branchId': branches[1]}, {'amountMinor': 11}, {'currency': 'EUR'}, {'reason': 'Changed'},
                     {'targetEntityId': 'changed'}, {'actionType': 'payment_void'}, {'expiresAt': None}]:
         check('operations rejects bound approval payload change ' + next(iter(changes)), create({**body, **changes})[0] == 409)
@@ -169,6 +172,7 @@ def verify_operations(sql, request, check, env, database, output, actors):
     check('operations refuses linked item outside branch', create(approval_body(workItemId=item(branches[1])))[0] == 404)
     for changes in [{'amountMinor': -1}, {'currency': 'usd'}, {'idempotencyKey': ' '}, {'expiresAt': '2000-01-01T00:00:00Z'}]:
         check('operations rejects invalid approval ' + next(iter(changes)), create(approval_body(**changes))[0] == 422)
+    check('operations rejected approval creates and replays persist no effects', before_rejections == (count('operations_admin_audit', 'true'), count('operations_approval_request', 'true')))
     self_decision = {'decision': 'approved', 'reason': 'Synthetic', 'expectedDecision': 'pending', 'requestId': 'self', 'sourceClient': 'conformance'}
     check('operations requester cannot approve own request', request('/operations/approvals/' + approval + '/decision', self_decision, method='PATCH')[0] == 409)
     response = audit_failure(decide(approval))
