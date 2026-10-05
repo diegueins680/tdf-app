@@ -67,7 +67,7 @@ spec = describe "refund-safety money invariants" $ do
                  }
 
 databaseSpec
-  :: (ConnectionPool -> Checkout.PaymentProvider -> IO Checkout.VerifiedPayment)
+  :: (ConnectionPool -> Checkout.PaymentProvider -> [Int64] -> IO Checkout.VerifiedPayment)
   -> SpecWith ConnectionPool
 databaseSpec captureFixture = describe "refund-safety execution and reservation" $ do
   it "grants one durable claim, including retries long after provider retention" $ \pool -> do
@@ -294,18 +294,8 @@ databaseSpec captureFixture = describe "refund-safety execution and reservation"
   where
     fixture pool = fixtureWithLines pool [12515]
     fixtureWithLines pool amounts = do
-      payment <- captureFixture pool Checkout.ProviderPayPal
+      payment <- captureFixture pool Checkout.ProviderPayPal amounts
       requestId <- toText <$> nextRandom
-      forM_ (zip [1..] amounts) $ \(lineNumber, amount) -> do
-        lineId <- toText <$> nextRandom
-        runSqlPool (rawExecute
-          "INSERT INTO commerce_checkout_line_item(id,checkout_id,line_number,product_type,\
-          \ product_id,product_version,description,quantity,unit_amount_minor,subtotal_minor,\
-          \ total_minor,snapshot) VALUES (?::uuid,?::uuid,?,'service','synthetic','1',\
-          \ 'Synthetic refund fixture',1,?,?,?,'{}'::jsonb)"
-          ([PersistText lineId,
-            PersistText (Checkout.checkoutReferenceId (Checkout.vpCheckout payment)),
-            PersistInt64 lineNumber] <> replicate 3 (PersistInt64 amount))) pool
       runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right True
       pure Refund.RefundCreation
         { Refund.rcCheckout = Checkout.vpCheckout payment

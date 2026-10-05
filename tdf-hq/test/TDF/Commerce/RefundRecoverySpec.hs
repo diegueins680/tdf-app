@@ -244,12 +244,7 @@ databaseSpec captureFixture = after resetAuthority $ describe "held-refund autho
       resetAuthority pool
       payment <- captureFixture pool Checkout.ProviderPayPal
       lineId <- toText <$> nextRandom
-      runSqlPool (rawExecute
-        "INSERT INTO commerce_checkout_line_item(id,checkout_id,line_number,product_type,\
-        \ product_id,product_version,description,quantity,unit_amount_minor,subtotal_minor,\
-        \ total_minor,snapshot) VALUES (?::uuid,?::uuid,1,'service','synthetic','1',\
-        \ 'Synthetic refund recovery',1,12515,12515,12515,'{}'::jsonb)"
-        [PersistText lineId, PersistText (Checkout.checkoutReferenceId (Checkout.vpCheckout payment))]) pool
+      -- The capture fixture already owns the immutable single-line snapshot.
       runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right True
       record <- runSqlPool (Refund.requestSingleLineRefund Refund.RefundCreation
         { Refund.rcCheckout = Checkout.vpCheckout payment, Refund.rcPaymentAttempt = Checkout.vpAttempt payment

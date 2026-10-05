@@ -9,14 +9,15 @@
 
 module TDF.Operations.Server (operationsServer) where
 
-import Control.Exception (SomeException, displayException, try)
+import Control.Exception (Exception, fromException, throwIO)
+import Control.Exception.Safe (tryAny)
 import Control.Monad (forM_, unless, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, ask)
-import Data.Aeson (FromJSON, ToJSON(..), Value, decodeStrict', encode)
+import Data.Aeson (FromJSON, ToJSON(..), Value(..), decodeStrict', encode)
 import qualified Data.ByteString.Lazy as BL
 import Data.Int (Int64)
-import Data.List (find, foldl')
+import Data.List (find, foldl', nub, sort)
 import Data.Maybe (fromMaybe, isJust)
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -26,23 +27,33 @@ import Data.Time.Format.ISO8601 (iso8601ParseM)
 import Data.UUID (UUID)
 import qualified Data.UUID as UUID
 import Database.Persist (PersistValue(..))
-import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool)
+import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawExecuteCount, rawSql, runSqlPool)
+import Database.PostgreSQL.Simple (SqlError(..))
 import Servant
 
-import TDF.Auth (AuthedUser(..))
+import TDF.Auth (AuthedUser(..), withCurrentAuthSession)
 import TDF.DB (Env(..))
-import TDF.Models (RoleEnum(..), roleToText)
+import TDF.Models (RoleEnum(..), roleFromRegistryCode, roleToText)
 import TDF.Operations.API (OperationsAPI)
 import TDF.Operations.Model
   ( TransitionContext(..)
   , allowedTargets
   , canViewEntityType
+  , visibleEntityTypes
   , requiresTwoPersonApproval
   , validateTransition
   )
 import qualified TDF.Operations.Types as Ops
 
 type OperationsM = ReaderT Env Handler
+
+-- Throw inside the SQL transaction so rejected commands roll back timers and
+-- evidence as well as the primary row. Never render database exception payloads.
+newtype OperationsRejected = OperationsRejected ServerError deriving (Show)
+instance Exception OperationsRejected
+
+rejectCommand :: ServerError -> SqlPersistT IO a
+rejectCommand = liftIO . throwIO . OperationsRejected
 
 data OperationsScope = OperationsScope
   { scopeOrganizationId :: UUID
@@ -72,12 +83,84 @@ operationsServer user =
 runOperationsDb :: SqlPersistT IO a -> OperationsM a
 runOperationsDb action = do
   Env{envPool} <- ask
-  result <- liftIO (try (runSqlPool action envPool))
+  result <- liftIO (tryAny (runSqlPool action envPool))
   case result of
     Right value -> pure value
-    Left (err :: SomeException) -> do
-      liftIO $ putStrLn ("[operations] database error: " <> displayException err)
-      throwError err500 {errBody = "Operational data is temporarily unavailable"}
+    Left err -> case fromException err of
+      Just (OperationsRejected rejected) -> throwError rejected
+      Nothing -> case fromException err :: Maybe SqlError of
+        Just sqlFailure | sqlState sqlFailure `elem` ["40001", "40P01"] ->
+          throwError err409 {errBody = "Operational state changed; reload and retry"}
+        _ -> do
+          liftIO $ putStrLn "[operations] database action failed"
+          throwError err500 {errBody = "Operational data is temporarily unavailable"}
+
+-- Session, current role grants and their role definitions remain locked through
+-- the command. Captured HTTP role lists cannot authorize a later revoked write.
+runOperationsWrite :: AuthedUser -> (AuthedUser -> SqlPersistT IO a) -> OperationsM a
+runOperationsWrite original action = runOperationsDb $ do
+  admitted <- withCurrentAuthSession original $ do
+    -- Authorize only from this locked snapshot, never from a later unbounded
+    -- reload that could admit a concurrently inserted, unlocked assignment.
+    rows <- rawSql
+      "SELECT role.code,role.active FROM party_security_role assignment JOIN security_role role ON role.id=assignment.role_id WHERE assignment.party_id=? AND assignment.active ORDER BY assignment.id,role.id FOR SHARE OF assignment,role"
+      [partyIdValue original] :: SqlPersistT IO [(Single Text, Single Bool)]
+    roles <- maybe (rejectCommand err401) pure $ traverse
+      (\(Single code, Single active) -> if active then roleFromRegistryCode code else Nothing) rows
+    action original {auRoles = sort (nub roles)}
+  maybe (rejectCommand err401) pure admitted
+
+validateCommandMetadata :: Text -> Text -> SqlPersistT IO ()
+validateCommandMetadata requestId sourceClient =
+  when (T.null requestId || T.null sourceClient) $
+    rejectCommand err422 {errBody = "Request and source identifiers must not be empty"}
+
+lockOperationsScope :: AuthedUser -> OperationsScope -> [Int64] -> SqlPersistT IO ()
+lockOperationsScope user scope additional = do
+  let organization = uuidValue (scopeOrganizationId scope)
+      branch = uuidValue (scopeBranchId scope)
+      required = sort (nub (fromSqlKey (auPartyId user) : additional))
+  active <- rawSql
+    "SELECT organization.id::text FROM operations_organization organization JOIN operations_branch branch ON branch.organization_id=organization.id WHERE organization.id=?::uuid AND branch.id=?::uuid AND organization.operations_enabled AND branch.active FOR SHARE OF organization,branch"
+    [organization, branch] :: SqlPersistT IO [Single Text]
+  unless (length active == 1) $ rejectCommand err403
+  -- Lock actor and assignment target in stable order through commit.
+  members <- rawSql
+    ("SELECT party_id FROM operations_scope_member WHERE organization_id=?::uuid AND branch_id=?::uuid AND active AND party_id IN ("
+      <> T.intercalate "," (map (const "?") required) <> ") ORDER BY party_id FOR SHARE")
+    ([organization, branch] <> map PersistInt64 required) :: SqlPersistT IO [Single Int64]
+  unless (all (`elem` map unSingle members) required) $
+    rejectCommand err403
+
+withLockedWorkItem
+  :: AuthedUser -> UUID -> [Int64]
+  -> (AuthedUser -> OperationsScope -> Ops.WorkItemDTO -> SqlPersistT IO a)
+  -> OperationsM a
+withLockedWorkItem original itemId additional action =
+  runOperationsWrite original $ \user -> do
+    unless (any (`elem` auRoles user) operationsMutatingRoles) $ rejectCommand err403
+    locked <- rawSql "SELECT id::text FROM operations_work_item WHERE id=?::uuid FOR UPDATE"
+      [uuidValue itemId] :: SqlPersistT IO [Single Text]
+    unless (length locked == 1) $ rejectCommand err404
+    before <- fetchUpdatedItem itemId >>= maybe (rejectCommand err500) pure
+    branch <- maybe (rejectCommand err404) pure (before.branchId)
+    let scope = OperationsScope (before.organizationId) branch
+    lockOperationsScope user scope additional
+    unless (canViewEntityType (filter (/= ReadOnly) (auRoles user))
+      (before.assigneePartyId == Just (fromSqlKey (auPartyId user))) (before.entityType)) $
+      rejectCommand err404
+    action user scope before
+
+withWorkItemCommand
+  :: AuthedUser -> UUID -> Int64 -> Bool -> [Int64]
+  -> (AuthedUser -> OperationsScope -> Ops.WorkItemDTO -> SqlPersistT IO Ops.WorkItemDTO)
+  -> OperationsM Ops.WorkItemDTO
+withWorkItemCommand original itemId expected managerOnly additional action =
+  withLockedWorkItem original itemId additional $ \user scope before -> do
+    when (expected < 1) $ rejectCommand err422
+    when (managerOnly && not (any (`elem` auRoles user) [Admin, Manager, StudioManager])) $ rejectCommand err403
+    when (expected /= before.version) $ rejectCommand err409
+    action user scope before
 
 requireOperationsRole :: AuthedUser -> OperationsM ()
 requireOperationsRole AuthedUser{auRoles}
@@ -89,14 +172,15 @@ requireOperationsRole AuthedUser{auRoles}
 
 requireMutatingRole :: AuthedUser -> OperationsM ()
 requireMutatingRole AuthedUser{auRoles}
-  | ReadOnly `elem` auRoles && not (any (`elem` auRoles) mutatingRoles) =
+  | ReadOnly `elem` auRoles && not (any (`elem` auRoles) operationsMutatingRoles) =
       throwError err403 {errBody = "Read-only operations access"}
-  | any (`elem` auRoles) mutatingRoles = pure ()
+  | any (`elem` auRoles) operationsMutatingRoles = pure ()
   | otherwise = throwError err403 {errBody = "Operations mutation denied"}
-  where
-    mutatingRoles =
-      [Admin, Manager, StudioManager, Accounting, Reception, Teacher, Engineer,
-       LiveSessionsProducer, Producer, AandR, Maintenance]
+
+operationsMutatingRoles :: [RoleEnum]
+operationsMutatingRoles =
+  [Admin, Manager, StudioManager, Accounting, Reception, Teacher, Engineer,
+   LiveSessionsProducer, Producer, AandR, Maintenance]
 
 requireManagerRole :: AuthedUser -> OperationsM ()
 requireManagerRole AuthedUser{auRoles}
@@ -220,23 +304,19 @@ workItemJson alias = T.concat
   , "'pan','cvv','seedPhrase','rawPayload','taxId','address','email','phone'])"
   ]
 
-roleMode :: AuthedUser -> Text
-roleMode AuthedUser{auRoles}
-  | any (`elem` auRoles) [Admin, Manager, StudioManager, ReadOnly] = "broad"
-  | Accounting `elem` auRoles = "accounting"
-  | Reception `elem` auRoles || LiveSessionsProducer `elem` auRoles || Producer `elem` auRoles || AandR `elem` auRoles = "reception"
-  | Maintenance `elem` auRoles = "maintenance"
-  | otherwise = "assigned"
-
 scopeFilterSql :: Text
 scopeFilterSql =
-  " AND CASE ?::text \
-  \ WHEN 'accounting' THEN item.entity_type IN ('invoice','payment','marketplace_order','course_registration') \
-  \ WHEN 'reception' THEN item.entity_type IN ('course_registration','booking','party','invoice','payment','manual','uncorrelated_inbound','marketplace_order','proposal','social_event') \
-  \ WHEN 'maintenance' THEN item.entity_type IN ('maintenance_ticket','stock_item','booking','manual') \
-  \ WHEN 'assigned' THEN item.assignee_party_id = ? AND item.entity_type IN ('course_registration','booking','maintenance_ticket','manual','social_event','intern_project') \
-  \ ELSE item.entity_type <> 'security_incident' OR ?::boolean \
-  \ END "
+  " AND ((?::boolean AND item.entity_type <> 'security_incident') \
+  \OR jsonb_exists(?::jsonb,item.entity_type) \
+  \OR (item.assignee_party_id=? AND jsonb_exists(?::jsonb,item.entity_type))) "
+
+scopeFilterParams :: AuthedUser -> [PersistValue]
+scopeFilterParams user =
+  [ PersistBool ("*" `elem` visibleEntityTypes (auRoles user) False)
+  , jsonValue (visibleEntityTypes (auRoles user) False)
+  , partyIdValue user
+  , jsonValue (visibleEntityTypes (auRoles user) True)
+  ]
 
 listWorkItemsHandler
   :: AuthedUser
@@ -312,11 +392,7 @@ listWorkItemsHandler user cursor requestedLimit query seenFilter entityFilter st
         <> [ maybe PersistNull PersistText cursorTime
            , maybe PersistNull PersistText cursorTime
            , maybe PersistNull uuidValue cursorId
-           , PersistText (roleMode user)
-           , partyIdValue user
-           , PersistBool (Admin `elem` auRoles user)
-           , PersistInt64 (fromIntegral (limit + 1))
-           ]
+           ] <> scopeFilterParams user <> [PersistInt64 (fromIntegral (limit + 1))]
   rows <- runOperationsDb (rawSql querySql params :: SqlPersistT IO [Single Text])
   decoded <- mapM (decodeJsonText . unSingle) rows
   let hasMore = length decoded > limit
@@ -375,7 +451,7 @@ metricsHandler user organizationFilter branchFilter = do
     [(Single configuredTimezone, Single configuredCurrency)] -> pure (configuredTimezone, configuredCurrency)
     _ -> throwError err500 {errBody = "Operations locale configuration is unavailable"}
   rows <- runOperationsDb $ rawSql
-    "SELECT jsonb_build_object( \
+    ("SELECT jsonb_build_object( \
     \ 'newRegistrations', count(*) FILTER (WHERE entity_type = 'course_registration' AND status = 'new'), \
     \ 'registrationsRequiringAttention', count(*) FILTER (WHERE entity_type = 'course_registration' AND status NOT IN ('resolved','archived')), \
     \ 'reservationsAwaitingConfirmation', count(*) FILTER (WHERE entity_type = 'booking' AND status NOT IN ('resolved','archived')), \
@@ -389,17 +465,18 @@ metricsHandler user organizationFilter branchFilter = do
     \ 'slaBreaches', count(*) FILTER (WHERE sla_breached_at IS NOT NULL AND status NOT IN ('resolved','archived')), \
     \ 'averageFirstResponseSeconds', avg(extract(epoch FROM (first_seen_at - created_at))) FILTER (WHERE first_seen_at IS NOT NULL), \
     \ 'averageResolutionSeconds', avg(extract(epoch FROM (resolved_at - created_at))) FILTER (WHERE resolved_at IS NOT NULL), \
-    \ 'integrationFailures', (SELECT count(*) FROM operations_integration_failure failure WHERE failure.organization_id = ?::uuid AND failure.status IN ('open','retrying','dead_letter')), \
+    \ 'integrationFailures', (SELECT count(*) FROM operations_integration_failure failure WHERE failure.organization_id = ?::uuid AND failure.branch_id = ?::uuid AND ?::boolean AND failure.status IN ('open','retrying','dead_letter')), \
     \ 'currency', ?::text, 'calculatedAt', ?::timestamptz)::text \
-    \FROM operations_work_item WHERE organization_id = ?::uuid AND branch_id = ?::uuid"
-    [ PersistText timezone, PersistText timezone
+    \FROM operations_work_item item WHERE item.organization_id = ?::uuid AND item.branch_id = ?::uuid" <> scopeFilterSql)
+    ([ PersistText timezone, PersistText timezone
     , PersistText timezone, PersistText timezone
-    , uuidValue (scopeOrganizationId scope)
+    , uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope)
+    , PersistBool (any (`elem` auRoles user) [Admin, Manager, StudioManager])
     , PersistText currency
     , PersistUTCTime now
     , uuidValue (scopeOrganizationId scope)
     , uuidValue (scopeBranchId scope)
-    ] :: OperationsM [Single Text]
+    ] <> scopeFilterParams user) :: OperationsM [Single Text]
   case rows of
     [Single payload] -> decodeJsonText payload
     _ -> throwError err500 {errBody = "Could not calculate operations metrics"}
@@ -413,8 +490,9 @@ loadVisibleWorkItem user itemId = do
       , "FROM operations_work_item item JOIN operations_scope_member member "
       , "ON member.organization_id = item.organization_id AND member.branch_id = item.branch_id "
       , "JOIN operations_organization organization ON organization.id = member.organization_id "
+      , "JOIN operations_branch branch ON branch.id = member.branch_id AND branch.organization_id=organization.id "
       , "WHERE item.id = ?::uuid AND member.party_id = ? AND member.active = TRUE "
-      , "AND organization.operations_enabled = TRUE LIMIT 1"
+      , "AND organization.operations_enabled = TRUE AND branch.active = TRUE LIMIT 1"
       ])
     [uuidValue itemId, partyIdValue user] :: OperationsM [(Single Text, Single Text, Single Text)]
   case rows of
@@ -531,39 +609,34 @@ recordWorkItemEffect user scope itemId action eventType requestId reason previou
     ]
 
 markSeenHandler :: AuthedUser -> UUID -> Ops.VersionedCommand -> OperationsM Ops.WorkItemDTO
-markSeenHandler user itemId command = do
-  requireMutatingRole user
-  (scope, before) <- loadVisibleWorkItem user itemId
-  when (command.expectedVersion /= before.version) conflict
-  updated <- runOperationsDb $ do
+markSeenHandler original itemId command =
+  withWorkItemCommand original itemId (command.expectedVersion) False [] $ \user scope before -> do
+    validateCommandMetadata (command.requestId) (command.sourceClient)
     now <- liftIO getCurrentTime
-    rawExecute
+    updateCount <- rawExecuteCount
       "UPDATE operations_work_item SET first_seen_by = COALESCE(first_seen_by, ?), \
       \ first_seen_at = COALESCE(first_seen_at, ?), status = CASE WHEN status = 'new' THEN 'seen' ELSE status END, \
       \ updated_at = ?, version = version + 1 WHERE id = ?::uuid AND version = ?"
       [partyIdValue user, PersistUTCTime now, PersistUTCTime now, uuidValue itemId, PersistInt64 (command.expectedVersion)]
-    mAfter <- fetchUpdatedItem itemId
-    forM_ mAfter $ \after ->
-      recordWorkItemEffect user scope itemId "mark_seen" "work_item.seen" (command.requestId)
-        (command.reason) (toJson before) (toJson after)
-    pure mAfter
-  maybe (throwError err404 {errBody = "Work item not found after update"}) pure updated
+    unless (updateCount == 1) $ rejectCommand err409
+    after <- fetchUpdatedItem itemId >>= maybe (rejectCommand err500) pure
+    recordWorkItemEffect user scope itemId "mark_seen" "work_item.seen" (command.requestId)
+      (command.reason) (toJson before) (toJson after)
+    pure after
 
 transitionHandler :: AuthedUser -> UUID -> Ops.TransitionCommand -> OperationsM Ops.WorkItemDTO
-transitionHandler user itemId command = do
-  requireMutatingRole user
-  (scope, before) <- loadVisibleWorkItem user itemId
-  when (command.expectedVersion /= before.version) conflict
-  either (const invalidTransition) pure $ validateTransition TransitionContext
-    { currentStatus = before.status
-    , targetStatus = command.targetStatus
-    , actorRoles = auRoles user
-    , hasAssignee = isJust (before.assigneePartyId)
-    , reason = command.reason
-    , waitingExternalDependency = command.waitingExternalDependency
-    , resumeAtPresent = isJust (command.resumeAt)
-    }
-  updated <- runOperationsDb $ do
+transitionHandler original itemId command =
+  withWorkItemCommand original itemId (command.expectedVersion) False [] $ \user scope before -> do
+    validateCommandMetadata (command.requestId) (command.sourceClient)
+    either (const (rejectCommand err422 {errBody = "Invalid operational transition"})) pure $ validateTransition TransitionContext
+      { currentStatus = before.status
+      , targetStatus = command.targetStatus
+      , actorRoles = auRoles user
+      , hasAssignee = isJust (before.assigneePartyId)
+      , reason = command.reason
+      , waitingExternalDependency = command.waitingExternalDependency
+      , resumeAtPresent = isJust (command.resumeAt)
+      }
     now <- liftIO getCurrentTime
     let target = command.targetStatus
         isWaiting = target == Ops.WorkWaiting
@@ -583,14 +656,14 @@ transitionHandler user itemId command = do
       "UPDATE operations_sla_timer SET completed_at = COALESCE(completed_at, now()) \
       \ WHERE work_item_id = ?::uuid AND completed_at IS NULL"
       [uuidValue itemId]
-    rawExecute
+    updateCount <- rawExecuteCount
       "UPDATE operations_work_item SET status = ?::text, \
-      \ waiting_started_at = CASE WHEN ?::boolean THEN ? ELSE NULL END, \
+      \ waiting_started_at = CASE WHEN ?::boolean THEN ?::timestamptz ELSE NULL END, \
       \ waiting_reason = CASE WHEN ?::boolean THEN ?::text ELSE NULL END, \
       \ waiting_external_dependency = CASE WHEN ?::boolean THEN ?::boolean ELSE FALSE END, \
-      \ resume_at = CASE WHEN ?::boolean THEN ? ELSE NULL END, \
-      \ resolved_at = CASE WHEN ?::boolean THEN ? ELSE CASE WHEN ?::boolean THEN NULL ELSE resolved_at END END, \
-      \ archived_at = CASE WHEN ?::boolean THEN ? ELSE CASE WHEN ?::boolean THEN NULL ELSE archived_at END END, \
+      \ resume_at = CASE WHEN ?::boolean THEN ?::timestamptz ELSE NULL END, \
+      \ resolved_at = CASE WHEN ?::boolean THEN ?::timestamptz ELSE CASE WHEN ?::boolean THEN NULL ELSE resolved_at END END, \
+      \ archived_at = CASE WHEN ?::boolean THEN ?::timestamptz ELSE CASE WHEN ?::boolean THEN NULL ELSE archived_at END END, \
       \ updated_at = ?, version = version + 1 WHERE id = ?::uuid AND version = ?"
       [ PersistText (Ops.workStatusText target)
       , PersistBool isWaiting, PersistUTCTime now
@@ -601,29 +674,18 @@ transitionHandler user itemId command = do
       , PersistBool isArchived, PersistUTCTime now, PersistBool (target == Ops.WorkInProgress)
       , PersistUTCTime now, uuidValue itemId, PersistInt64 (command.expectedVersion)
       ]
-    mAfter <- fetchUpdatedItem itemId
-    forM_ mAfter $ \after ->
-      recordWorkItemEffect user scope itemId "transition" "work_item.transitioned"
-        (command.requestId) (command.reason) (toJson before) (toJson after)
-    pure mAfter
-  maybe (throwError err404 {errBody = "Work item not found after update"}) pure updated
+    unless (updateCount == 1) $ rejectCommand err409
+    after <- fetchUpdatedItem itemId >>= maybe (rejectCommand err500) pure
+    recordWorkItemEffect user scope itemId "transition" "work_item.transitioned"
+      (command.requestId) (command.reason) (toJson before) (toJson after)
+    pure after
 
 assignmentHandler :: AuthedUser -> UUID -> Ops.AssignmentCommand -> OperationsM Ops.WorkItemDTO
-assignmentHandler user itemId command = do
-  requireMutatingRole user
-  (scope, before) <- loadVisibleWorkItem user itemId
-  when (command.expectedVersion /= before.version) conflict
-  case command.assigneePartyId of
-    Nothing -> pure ()
-    Just assignee -> do
-      membership <- runOperationsDb $ rawSql
-        "SELECT count(*) FROM operations_scope_member WHERE organization_id = ?::uuid AND branch_id = ?::uuid AND party_id = ? AND active = TRUE"
-        [uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope), PersistInt64 assignee] :: OperationsM [Single Int64]
-      unless (membership == [Single 1]) $
-        throwError err422 {errBody = "Assignee is outside the work-item scope"}
-  updated <- runOperationsDb $ do
+assignmentHandler original itemId command =
+  withWorkItemCommand original itemId (command.expectedVersion) False (maybe [] pure (command.assigneePartyId)) $ \user scope before -> do
+    validateCommandMetadata (command.requestId) (command.sourceClient)
     now <- liftIO getCurrentTime
-    rawExecute
+    updateCount <- rawExecuteCount
       "UPDATE operations_work_item SET assignee_party_id = ?, responsible_team = ?::text, \
       \ status = CASE WHEN ?::bigint IS NOT NULL AND status IN ('new','seen') THEN 'assigned' ELSE status END, \
       \ updated_at = ?, version = version + 1 WHERE id = ?::uuid AND version = ?"
@@ -631,184 +693,261 @@ assignmentHandler user itemId command = do
       , maybeInt64Value (command.assigneePartyId), PersistUTCTime now, uuidValue itemId
       , PersistInt64 (command.expectedVersion)
       ]
-    mAfter <- fetchUpdatedItem itemId
-    forM_ mAfter $ \after ->
-      recordWorkItemEffect user scope itemId "assign" "work_item.assigned"
-        (command.requestId) (command.reason) (toJson before) (toJson after)
-    pure mAfter
-  maybe (throwError err404 {errBody = "Work item not found after update"}) pure updated
+    unless (updateCount == 1) $ rejectCommand err409
+    after <- fetchUpdatedItem itemId >>= maybe (rejectCommand err500) pure
+    recordWorkItemEffect user scope itemId "assign" "work_item.assigned"
+      (command.requestId) (command.reason) (toJson before) (toJson after)
+    pure after
 
 priorityHandler :: AuthedUser -> UUID -> Ops.PriorityCommand -> OperationsM Ops.WorkItemDTO
-priorityHandler user itemId command = do
-  requireManagerRole user
-  when (T.null (T.strip (command.reason))) $
-    throwError err422 {errBody = "Priority override reason is required"}
-  (scope, before) <- loadVisibleWorkItem user itemId
-  when (command.expectedVersion /= before.version) conflict
-  updated <- runOperationsDb $ do
+priorityHandler original itemId command =
+  withWorkItemCommand original itemId (command.expectedVersion) True [] $ \user scope before -> do
+    validateCommandMetadata (command.requestId) (command.sourceClient)
+    when (T.null (T.strip (command.reason))) $ rejectCommand err422 {errBody = "Priority override reason is required"}
     now <- liftIO getCurrentTime
-    rawExecute
+    updateCount <- rawExecuteCount
       "UPDATE operations_work_item SET priority = ?::text, priority_override_reason = ?::text, \
       \ updated_at = ?, version = version + 1 WHERE id = ?::uuid AND version = ?"
       [ PersistText (Ops.workPriorityText (command.priority)), PersistText (T.strip (command.reason))
       , PersistUTCTime now, uuidValue itemId, PersistInt64 (command.expectedVersion)
       ]
-    mAfter <- fetchUpdatedItem itemId
-    forM_ mAfter $ \after ->
-      recordWorkItemEffect user scope itemId "override_priority" "work_item.priority_overridden"
-        (command.requestId) (Just (command.reason)) (toJson before) (toJson after)
-    pure mAfter
-  maybe (throwError err404 {errBody = "Work item not found after update"}) pure updated
+    unless (updateCount == 1) $ rejectCommand err409
+    after <- fetchUpdatedItem itemId >>= maybe (rejectCommand err500) pure
+    recordWorkItemEffect user scope itemId "override_priority" "work_item.priority_overridden"
+      (command.requestId) (Just (command.reason)) (toJson before) (toJson after)
+    pure after
 
 createNoteHandler :: AuthedUser -> UUID -> Ops.NoteCreate -> OperationsM Ops.WorkItemNoteDTO
-createNoteHandler user itemId command = do
-  requireMutatingRole user
-  (scope, _) <- loadVisibleWorkItem user itemId
-  let noteBody = T.strip (command.body)
-  when (T.null noteBody || T.length noteBody > 5000) $
-    throwError err422 {errBody = "Note body must contain 1 to 5000 characters"}
-  (invalidMention, rows) <- runOperationsDb $ do
-    mentionCheck <- fmap or $ mapM (\mentionedPartyId -> do
-      membership <- rawSql
-        "SELECT count(*) FROM operations_scope_member member \
-        \WHERE member.organization_id = ?::uuid AND member.branch_id = ?::uuid \
-        \AND member.party_id = ? AND member.active"
-        [ uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope)
-        , PersistInt64 mentionedPartyId
-        ] :: SqlPersistT IO [Single Int64]
-      pure (membership /= [Single 1])) (command.mentionedPartyIds)
-    if mentionCheck
-      then pure (True, [])
-      else do
-        inserted <- rawSql
-          "INSERT INTO operations_note (organization_id, work_item_id, author_party_id, body) \
-          \VALUES (?::uuid, ?::uuid, ?, ?::text) RETURNING id::text, created_at"
-          [uuidValue (scopeOrganizationId scope), uuidValue itemId, partyIdValue user, PersistText noteBody]
-          :: SqlPersistT IO [(Single Text, Single UTCTime)]
-        case inserted of
-          [(Single noteIdText, Single created)] -> do
-            forM_ (command.mentionedPartyIds) $ \mentionedPartyId ->
-              rawExecute
-                "INSERT INTO operations_mention (note_id, mentioned_party_id) \
-                \VALUES (?::uuid, ?) ON CONFLICT DO NOTHING"
-                [PersistText noteIdText, PersistInt64 mentionedPartyId]
-            rawExecute
-              "INSERT INTO operations_stream_event (organization_id, branch_id, event_type, work_item_id, payload) \
-              \VALUES (?::uuid, ?::uuid, 'work_item.note_added', ?::uuid, jsonb_build_object('workItemId', ?::uuid, 'noteId', ?::uuid))"
-              [uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope), uuidValue itemId, uuidValue itemId, PersistText noteIdText]
-            rawExecute
-              "INSERT INTO operations_admin_audit (organization_id, branch_id, actor_party_id, acting_role, source_client, action, target_entity_type, target_entity_id, new_value, request_id, correlation_id) \
-              \VALUES (?::uuid, ?::uuid, ?, ?::text, ?::text, 'add_note', 'operations_note', ?::text, jsonb_build_object('workItemId', ?::uuid), ?::text, ?::text)"
-              [uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope), partyIdValue user,
-               PersistText (auditRole user), PersistText (command.sourceClient), PersistText noteIdText,
-               uuidValue itemId, PersistText (command.requestId), PersistText (UUID.toText itemId)]
-            case UUID.fromText noteIdText of
-              Just noteId -> pure (False, [Ops.WorkItemNoteDTO noteId (fromSqlKey (auPartyId user)) noteBody (command.mentionedPartyIds) created Nothing])
-              Nothing -> pure (False, [])
-          _ -> pure (False, [])
-  when invalidMention $ throwError err422 {errBody = "Mentioned party is outside the operations scope"}
-  case rows of
-    [note] -> pure note
-    _ -> throwError err500 {errBody = "Could not create note"}
+createNoteHandler original itemId command =
+  withLockedWorkItem original itemId (command.mentionedPartyIds) $ \user scope _ -> do
+    validateCommandMetadata (command.requestId) (command.sourceClient)
+    let noteBody = T.strip (command.body)
+    when (T.null noteBody || T.length noteBody > 5000) $
+      rejectCommand err422 {errBody = "Note body must contain 1 to 5000 characters"}
+    inserted <- rawSql
+      "INSERT INTO operations_note (organization_id, work_item_id, author_party_id, body) \
+      \VALUES (?::uuid, ?::uuid, ?, ?::text) RETURNING id::text, created_at"
+      [uuidValue (scopeOrganizationId scope), uuidValue itemId, partyIdValue user, PersistText noteBody]
+      :: SqlPersistT IO [(Single Text, Single UTCTime)]
+    case inserted of
+      [(Single noteIdText, Single created)] -> do
+        forM_ (command.mentionedPartyIds) $ \mentionedPartyId ->
+          rawExecute
+            "INSERT INTO operations_mention (note_id, mentioned_party_id) \
+            \VALUES (?::uuid, ?) ON CONFLICT DO NOTHING"
+            [PersistText noteIdText, PersistInt64 mentionedPartyId]
+        rawExecute
+          "INSERT INTO operations_stream_event (organization_id, branch_id, event_type, work_item_id, payload) \
+          \VALUES (?::uuid, ?::uuid, 'work_item.note_added', ?::uuid, jsonb_build_object('workItemId', ?::uuid, 'noteId', ?::uuid))"
+          [uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope), uuidValue itemId, uuidValue itemId, PersistText noteIdText]
+        rawExecute
+          "INSERT INTO operations_admin_audit (organization_id, branch_id, actor_party_id, acting_role, source_client, action, target_entity_type, target_entity_id, new_value, request_id, correlation_id) \
+          \VALUES (?::uuid, ?::uuid, ?, ?::text, ?::text, 'add_note', 'operations_note', ?::text, jsonb_build_object('workItemId', ?::uuid), ?::text, ?::text)"
+          [uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope), partyIdValue user,
+           PersistText (auditRole user), PersistText (command.sourceClient), PersistText noteIdText,
+           uuidValue itemId, PersistText (command.requestId), PersistText (UUID.toText itemId)]
+        case UUID.fromText noteIdText of
+          Just noteId -> pure (Ops.WorkItemNoteDTO noteId (fromSqlKey (auPartyId user)) noteBody (command.mentionedPartyIds) created Nothing)
+          Nothing -> rejectCommand err500
+      _ -> rejectCommand err500
 
 createManualWorkItemHandler :: AuthedUser -> Ops.ManualWorkItemCreate -> OperationsM Ops.WorkItemDTO
-createManualWorkItemHandler user command = do
-  requireMutatingRole user
-  scope <- resolveScope user (Just (command.organizationId)) (command.branchId)
-  when (T.null (T.strip (command.correlationKey))) $
-    throwError err422 {errBody = "Correlation key is required"}
-  when (command.uncorrelated /= not (isJust (command.entityId))) $
-    throwError err422 {errBody = "Uncorrelated items must omit entityId; correlated items must include it"}
-  mItem <- runOperationsDb $ do
-    now <- liftIO getCurrentTime
-    let aggregateId = fromMaybe (UUID.toText (command.organizationId) <> ":uncorrelated") (command.entityId)
-        eventType = if command.uncorrelated then "manual.uncorrelated_created" else "manual.created"
-        dedup = command.correlationKey <> ":manual-created"
-        payload = jsonValue command
-    rawExecute
-      "INSERT INTO operations_domain_event (organization_id, branch_id, event_type, aggregate_type, aggregate_id, source_system, source_channel, correlation_key, deduplication_key, occurred_at, payload) \
-      \VALUES (?::uuid, ?::uuid, ?::text, ?::text, ?::text, 'tdf-hq', 'manual', ?::text, encode(digest(?::text, 'sha256'), 'hex'), ?, ?::jsonb) \
-      \ON CONFLICT (organization_id, deduplication_key) DO NOTHING"
-      [ uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope), PersistText eventType
-      , PersistText (if command.uncorrelated then "uncorrelated_inbound" else command.entityType)
-      , PersistText aggregateId, PersistText (command.correlationKey), PersistText dedup
-      , PersistUTCTime now, payload
-      ]
-    _ <- rawSql "SELECT processed, failed, dead_lettered FROM operations_process_outbox_batch(100, 'api-manual')" []
-      :: SqlPersistT IO [(Single Int, Single Int, Single Int)]
-    rows <- rawSql
-      ("SELECT (" <> workItemJson "item" <> ")::text FROM operations_work_item item WHERE item.organization_id = ?::uuid AND item.correlation_key = ?::text")
-      [uuidValue (scopeOrganizationId scope), PersistText (command.correlationKey)] :: SqlPersistT IO [Single Text]
-    case rows of
-      [Single payloadText] -> pure (decodeStrict' (TE.encodeUtf8 payloadText))
-      _ -> pure Nothing
-  maybe (throwError err404 {errBody = "Manual work item projection unavailable"}) pure mItem
+createManualWorkItemHandler original command = runOperationsWrite original $ \user -> do
+  unless (any (`elem` auRoles user) operationsMutatingRoles) $ rejectCommand err403
+  validateCommandMetadata (command.requestId) (command.sourceClient)
+  scope <- resolveCommandScope user (command.organizationId) (command.branchId)
+  let entityType = if command.uncorrelated then "uncorrelated_inbound" else command.entityType
+      clientKey = T.strip (command.correlationKey)
+      dedup = "manual-v2:" <> clientKey
+  unless (canViewEntityType (filter (/= ReadOnly) (auRoles user)) False entityType) $ rejectCommand err403
+  when (T.null clientKey || T.length clientKey > 320
+    || command.uncorrelated /= not (isJust (command.entityId))) $
+    rejectCommand err422 {errBody = "Invalid manual correlation or entity binding"}
+  -- Metadata is executable projection input, not an arbitrary client dictionary.
+  -- No manually supplied metadata is currently admitted by the typed contract.
+  unless (command.metadata == Object mempty) $ rejectCommand err422 {errBody = "Manual metadata must be an empty object"}
+  when (maybe False (< 0) (command.amountMinor)
+    || (isJust (command.amountMinor) && not (isJust (command.currency)))
+    || maybe False (\value -> T.length value /= 3 || not (T.all (\c -> c >= 'A' && c <= 'Z') value)) (command.currency)) $
+    rejectCommand err422 {errBody = "Invalid manual monetary representation"}
+  legacy <- rawSql
+    "SELECT id::text FROM operations_domain_event WHERE organization_id=?::uuid AND deduplication_key=encode(digest(?::text,'sha256'),'hex') LIMIT 1"
+    [uuidValue (scopeOrganizationId scope), PersistText (command.correlationKey <> ":manual-created")]
+    :: SqlPersistT IO [Single Text]
+  unless (null legacy) $ rejectCommand err409 {errBody = "Legacy manual key has no bound replay receipt"}
+  -- Client keys identify receipts only. A server UUID creates the projection key,
+  -- disjoint from payment/booking/etc. source capture keys, including future ones.
+  inserted <- rawExecuteCount
+    "WITH identity AS (SELECT gen_random_uuid() AS id) \
+    \INSERT INTO operations_domain_event(id,organization_id,branch_id,event_type,aggregate_type,aggregate_id,source_system,source_channel,correlation_key,deduplication_key,occurred_at,payload) \
+    \SELECT id,?::uuid,?::uuid,?::text,?::text,COALESCE(?::text,id::text),'tdf-hq','manual','manual:'||id::text,encode(digest(?::text,'sha256'),'hex'),clock_timestamp(), \
+    \(?::jsonb-'requestId'-'sourceClient')||jsonb_build_object('branchId',?::uuid,'correlationKey',?::text,'__manualActorPartyId',?::bigint) FROM identity \
+    \ON CONFLICT(organization_id,deduplication_key) DO NOTHING"
+    [ uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope)
+    , PersistText (if command.uncorrelated then "manual.uncorrelated_created" else "manual.created")
+    , PersistText entityType, maybeTextValue (command.entityId), PersistText dedup, jsonValue command
+    , uuidValue (scopeBranchId scope), PersistText clientKey, partyIdValue user
+    ]
+  receipts <- rawSql
+    "SELECT id::text,correlation_key,payload=((?::jsonb-'requestId'-'sourceClient')||jsonb_build_object('branchId',?::uuid,'correlationKey',?::text,'__manualActorPartyId',?::bigint)) AND branch_id=?::uuid \
+    \FROM operations_domain_event WHERE organization_id=?::uuid AND deduplication_key=encode(digest(?::text,'sha256'),'hex') FOR UPDATE"
+    [ jsonValue command, uuidValue (scopeBranchId scope), PersistText clientKey, partyIdValue user
+    , uuidValue (scopeBranchId scope), uuidValue (scopeOrganizationId scope), PersistText dedup
+    ] :: SqlPersistT IO [(Single Text, Single Text, Single Bool)]
+  (eventId, correlation) <- case receipts of
+    [(Single eventId, Single correlation, Single True)] -> pure (eventId, correlation)
+    _ -> rejectCommand err409 {errBody = "Manual key is bound to a different request"}
+  when (inserted == 1) $ do
+    projected <- rawSql "SELECT processed,failed,dead_lettered FROM operations_process_outbox_batch(1,'api-manual',?::uuid)"
+      [PersistText eventId] :: SqlPersistT IO [(Single Int, Single Int, Single Int)]
+    unless (projected == [(Single 1, Single 0, Single 0)]) $ rejectCommand err409 {errBody = "Manual projection could not commit"}
+  when (inserted == 1) $ do
+    updated <- rawExecuteCount
+      "UPDATE operations_work_item SET responsible_team=?::text,customer_party_id=?::bigint,service_key=?::text,amount_minor=?::bigint,currency=?::char(3) WHERE organization_id=?::uuid AND branch_id=?::uuid AND correlation_key=?::text"
+      [maybeTextValue (command.responsibleTeam),maybe PersistNull PersistInt64 (command.customerPartyId),maybeTextValue (command.serviceKey)
+      ,maybe PersistNull PersistInt64 (command.amountMinor),maybeTextValue (command.currency)
+      ,uuidValue (scopeOrganizationId scope),uuidValue (scopeBranchId scope),PersistText correlation]
+    unless (updated == 1) $ rejectCommand err409
+  completed <- rawSql "SELECT status FROM operations_outbox WHERE event_id=?::uuid"
+    [PersistText eventId] :: SqlPersistT IO [Single Text]
+  unless (completed == [Single "processed"]) $ rejectCommand err409
+  rows <- rawSql
+    ("SELECT (" <> workItemJson "item" <> ")::text FROM operations_work_item item WHERE item.organization_id=?::uuid AND item.branch_id=?::uuid AND item.correlation_key=?::text FOR UPDATE")
+    [uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope), PersistText correlation]
+    :: SqlPersistT IO [Single Text]
+  item <- case rows of
+    [Single payload] -> decodeCommandJson payload
+    _ -> rejectCommand err409
+  unless (canViewEntityType (filter (/= ReadOnly) (auRoles user))
+    (item.assigneePartyId == Just (fromSqlKey (auPartyId user))) (item.entityType)) $ rejectCommand err404
+  pure item
+
+approvalProjection :: Text
+approvalProjection = "jsonb_build_object('id', id, 'organizationId', organization_id, 'branchId', branch_id, 'workItemId', work_item_id, 'actionType', action_type, 'targetEntityType', target_entity_type, 'targetEntityId', target_entity_id, 'amountMinor', amount_minor, 'currency', currency, 'requesterPartyId', requester_party_id, 'requesterRole', requester_role, 'requestReason', request_reason, 'requestedAt', requested_at, 'approverPartyId', approver_party_id, 'approverRole', approver_role, 'decision', decision, 'decisionReason', decision_reason, 'decidedAt', decided_at, 'expiresAt', expires_at, 'executionStatus', execution_status)::text"
+
+decodeCommandJson :: FromJSON a => Text -> SqlPersistT IO a
+decodeCommandJson payload = maybe (rejectCommand err500) pure (decodeStrict' (TE.encodeUtf8 payload))
+
+resolveCommandScope :: AuthedUser -> UUID -> Maybe UUID -> SqlPersistT IO OperationsScope
+resolveCommandScope user organization requestedBranch = do
+  rows <- rawSql
+    "SELECT member.branch_id::text FROM operations_scope_member member JOIN operations_branch branch ON branch.id=member.branch_id AND branch.organization_id=member.organization_id JOIN operations_organization organization ON organization.id=member.organization_id WHERE member.party_id=? AND member.organization_id=?::uuid AND member.active AND branch.active AND organization.operations_enabled AND (?::uuid IS NULL OR member.branch_id=?::uuid) ORDER BY member.created_at,member.branch_id LIMIT 1"
+    [partyIdValue user, uuidValue organization, maybeUuidValue requestedBranch, maybeUuidValue requestedBranch]
+    :: SqlPersistT IO [Single Text]
+  branch <- case rows of
+    [Single value] -> maybe (rejectCommand err500) pure (UUID.fromText value)
+    _ -> rejectCommand err403
+  let scope = OperationsScope organization branch
+  lockOperationsScope user scope []
+  pure scope
 
 createApprovalHandler :: AuthedUser -> Ops.ApprovalCreate -> OperationsM Ops.ApprovalDTO
-createApprovalHandler user command = do
-  requireFinancialApprovalRole user
-  scope <- resolveScope user (Just (command.organizationId)) (command.branchId)
+createApprovalHandler original command = runOperationsWrite original $ \user -> do
+  validateCommandMetadata (command.requestId) (command.sourceClient)
+  unless (any (`elem` auRoles user) [Admin, Manager, Accounting]) $ rejectCommand err403
   unless (requiresTwoPersonApproval (command.actionType) Nothing (fromMaybe 0 (command.amountMinor))) $
-    throwError err422 {errBody = "Action does not require dual approval"}
-  rows <- runOperationsDb $ do
-    approvalRows <- rawSql
-      "INSERT INTO operations_approval_request (organization_id, branch_id, work_item_id, action_type, target_entity_type, target_entity_id, amount_minor, currency, requester_party_id, requester_role, request_reason, expires_at, idempotency_key) \
-      \VALUES (?::uuid, ?::uuid, ?::uuid, ?::text, ?::text, ?::text, ?, ?::text, ?, ?::text, ?::text, ?, ?::text) \
-      \ON CONFLICT (organization_id, idempotency_key) DO UPDATE SET idempotency_key = EXCLUDED.idempotency_key \
-      \RETURNING jsonb_build_object('id', id, 'organizationId', organization_id, 'branchId', branch_id, 'workItemId', work_item_id, 'actionType', action_type, 'targetEntityType', target_entity_type, 'targetEntityId', target_entity_id, 'amountMinor', amount_minor, 'currency', currency, 'requesterPartyId', requester_party_id, 'requesterRole', requester_role, 'requestReason', request_reason, 'requestedAt', requested_at, 'approverPartyId', approver_party_id, 'approverRole', approver_role, 'decision', decision, 'decisionReason', decision_reason, 'decidedAt', decided_at, 'expiresAt', expires_at, 'executionStatus', execution_status)::text"
-      [ uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope), maybeUuidValue (command.workItemId)
-      , PersistText (command.actionType), PersistText (command.targetEntityType), PersistText (command.targetEntityId)
-      , maybeInt64Value (command.amountMinor), maybeTextValue (command.currency), partyIdValue user
-      , PersistText (auditRole user), PersistText (T.strip (command.reason)), maybe PersistNull PersistUTCTime (command.expiresAt)
-      , PersistText (command.idempotencyKey)
-      ] :: SqlPersistT IO [Single Text]
-    rawExecute
-      "INSERT INTO operations_admin_audit (organization_id, branch_id, actor_party_id, acting_role, source_client, action, target_entity_type, target_entity_id, new_value, request_id, correlation_id, reason, approval_request_id) \
-      \VALUES (?::uuid, ?::uuid, ?, ?::text, ?::text, 'approval_requested', ?::text, ?::text, jsonb_build_object('actionType', ?::text, 'amountMinor', ?::bigint, 'currency', ?::text), ?::text, ?::text, ?::text, (SELECT id FROM operations_approval_request WHERE organization_id = ?::uuid AND idempotency_key = ?::text))"
-      [ uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope), partyIdValue user
-      , PersistText (auditRole user), PersistText (command.sourceClient), PersistText (command.targetEntityType)
-      , PersistText (command.targetEntityId), PersistText (command.actionType), maybeInt64Value (command.amountMinor)
-      , maybeTextValue (command.currency), PersistText (command.requestId), PersistText (command.idempotencyKey)
-      , PersistText (T.strip (command.reason)), uuidValue (scopeOrganizationId scope)
-      , PersistText (command.idempotencyKey)
-      ]
-    pure approvalRows
-  case rows of
-    [Single payload] -> decodeJsonText payload
-    _ -> throwError err500 {errBody = "Could not create approval request"}
+    rejectCommand err422 {errBody = "Action does not require dual approval"}
+  when (T.null (T.strip (command.idempotencyKey)) || T.null (T.strip (command.reason))
+    || maybe False (< 0) (command.amountMinor)
+    || maybe False (\value -> T.length value /= 3 || not (T.all (\c -> c >= 'A' && c <= 'Z') value)) (command.currency)) $
+    rejectCommand err422 {errBody = "Invalid approval key, reason or monetary representation"}
+  scope <- resolveCommandScope user (command.organizationId) (command.branchId)
+  -- Bind timestamp semantics at PostgreSQL's storage precision, including on
+  -- the first insert; clients may send finer fractional seconds.
+  expiryRows <- rawSql "SELECT ?::timestamptz"
+    [maybe PersistNull PersistUTCTime (command.expiresAt)] :: SqlPersistT IO [Single (Maybe UTCTime)]
+  canonicalExpiry <- case expiryRows of
+    [Single value] -> pure value
+    _ -> rejectCommand err500
+  forM_ (command.workItemId) $ \itemId -> do
+    linked <- rawSql
+      "SELECT id::text FROM operations_work_item WHERE id=?::uuid AND organization_id=?::uuid AND branch_id=?::uuid FOR SHARE"
+      [uuidValue itemId, uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope)]
+      :: SqlPersistT IO [Single Text]
+    unless (length linked == 1) $ rejectCommand err404
+    item <- fetchUpdatedItem itemId >>= maybe (rejectCommand err500) pure
+    unless (canViewEntityType (auRoles user)
+      (item.assigneePartyId == Just (fromSqlKey (auPartyId user))) (item.entityType)) $
+      rejectCommand err404
+  inserted <- rawSql
+    "INSERT INTO operations_approval_request (organization_id, branch_id, work_item_id, action_type, target_entity_type, target_entity_id, amount_minor, currency, requester_party_id, requester_role, request_reason, expires_at, idempotency_key) \
+    \VALUES (?::uuid, ?::uuid, ?::uuid, ?::text, ?::text, ?::text, ?, ?::text, ?, ?::text, ?::text, ?, ?::text) \
+    \ON CONFLICT (organization_id, idempotency_key) DO NOTHING RETURNING id::text"
+    [ uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope), maybeUuidValue (command.workItemId)
+    , PersistText (command.actionType), PersistText (command.targetEntityType), PersistText (command.targetEntityId)
+    , maybeInt64Value (command.amountMinor), maybeTextValue (command.currency), partyIdValue user
+    , PersistText (auditRole user), PersistText (T.strip (command.reason)), maybe PersistNull PersistUTCTime canonicalExpiry
+    , PersistText (command.idempotencyKey)
+    ] :: SqlPersistT IO [Single Text]
+  rows <- rawSql
+    ("SELECT " <> approvalProjection <> " FROM operations_approval_request WHERE organization_id=?::uuid AND idempotency_key=?::text FOR UPDATE")
+    [uuidValue (scopeOrganizationId scope), PersistText (command.idempotencyKey)] :: SqlPersistT IO [Single Text]
+  approval <- case rows of
+    [Single payload] -> (decodeCommandJson payload :: SqlPersistT IO Ops.ApprovalDTO)
+    _ -> rejectCommand err500
+  -- The key is scoped by organization but the retained request is bound to its
+  -- actor, resolved branch and semantic payload. Never expose conflicting data.
+  unless (approval.requesterPartyId == fromSqlKey (auPartyId user)
+    && approval.organizationId == scopeOrganizationId scope
+    && approval.branchId == Just (scopeBranchId scope)
+    && approval.workItemId == command.workItemId
+    && approval.actionType == command.actionType
+    && approval.targetEntityType == command.targetEntityType
+    && approval.targetEntityId == command.targetEntityId
+    && approval.amountMinor == command.amountMinor && approval.currency == command.currency
+    && approval.requestReason == T.strip (command.reason) && approval.expiresAt == canonicalExpiry) $
+    rejectCommand err409 {errBody = "Approval idempotency key is bound to another request"}
+  case inserted of
+    [] -> pure approval
+    [Single _] -> do
+      clockRows <- rawSql "SELECT clock_timestamp()" [] :: SqlPersistT IO [Single UTCTime]
+      now <- case clockRows of [Single value] -> pure value; _ -> rejectCommand err500
+      when (maybe False (<= now) canonicalExpiry) $ rejectCommand err422 {errBody = "Approval has already expired"}
+      rawExecute
+        "INSERT INTO operations_admin_audit (organization_id, branch_id, actor_party_id, acting_role, source_client, action, target_entity_type, target_entity_id, new_value, request_id, correlation_id, reason, approval_request_id) \
+        \VALUES (?::uuid, ?::uuid, ?, ?::text, ?::text, 'approval_requested', ?::text, ?::text, jsonb_build_object('actionType', ?::text, 'amountMinor', ?::bigint, 'currency', ?::text), ?::text, ?::text, ?::text, ?::uuid)"
+        [ uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope), partyIdValue user
+        , PersistText (auditRole user), PersistText (command.sourceClient), PersistText (command.targetEntityType)
+        , PersistText (command.targetEntityId), PersistText (command.actionType), maybeInt64Value (command.amountMinor)
+        , maybeTextValue (command.currency), PersistText (command.requestId), PersistText (command.idempotencyKey)
+        , PersistText (T.strip (command.reason)), uuidValue (approval.id)
+        ]
+      pure approval
+    _ -> rejectCommand err500
 
 decideApprovalHandler :: AuthedUser -> UUID -> Ops.ApprovalDecision -> OperationsM Ops.ApprovalDTO
-decideApprovalHandler user approvalId command = do
-  requireFinancialApprovalRole user
-  let normalizedDecision = T.toLower (T.strip (command.decision))
-  unless (normalizedDecision `elem` ["approved", "rejected"]) $
-    throwError err422 {errBody = "Decision must be approved or rejected"}
-  rows <- runOperationsDb $ do
-    updatedRows <- rawSql
-      "UPDATE operations_approval_request approval SET approver_party_id = ?, approver_role = ?::text, decision = ?::text, decision_reason = ?::text, decided_at = now(), execution_status = CASE WHEN ?::text = 'approved' THEN 'pending' ELSE 'not_started' END \
-      \WHERE approval.id = ?::uuid AND approval.decision = ?::text AND approval.requester_party_id <> ? \
-      \AND EXISTS (SELECT 1 FROM operations_scope_member member JOIN operations_organization organization ON organization.id = member.organization_id WHERE member.organization_id = approval.organization_id AND member.branch_id = approval.branch_id AND member.party_id = ? AND member.active AND organization.operations_enabled) \
-      \RETURNING jsonb_build_object('id', id, 'organizationId', organization_id, 'branchId', branch_id, 'workItemId', work_item_id, 'actionType', action_type, 'targetEntityType', target_entity_type, 'targetEntityId', target_entity_id, 'amountMinor', amount_minor, 'currency', currency, 'requesterPartyId', requester_party_id, 'requesterRole', requester_role, 'requestReason', request_reason, 'requestedAt', requested_at, 'approverPartyId', approver_party_id, 'approverRole', approver_role, 'decision', decision, 'decisionReason', decision_reason, 'decidedAt', decided_at, 'expiresAt', expires_at, 'executionStatus', execution_status)::text, organization_id::text, branch_id::text, target_entity_type, target_entity_id"
-      [ partyIdValue user, PersistText (auditRole user), PersistText normalizedDecision
-      , PersistText (T.strip (command.reason)), PersistText normalizedDecision
-      , uuidValue approvalId, PersistText (command.expectedDecision), partyIdValue user, partyIdValue user
-      ] :: SqlPersistT IO [(Single Text, Single Text, Single Text, Single Text, Single Text)]
-    case updatedRows of
-      [(Single payload, Single organizationText, Single branchText, Single targetType, Single targetId)] -> do
-        rawExecute
-          "INSERT INTO operations_admin_audit (organization_id, branch_id, actor_party_id, acting_role, source_client, action, target_entity_type, target_entity_id, previous_value, new_value, request_id, correlation_id, approval_request_id, reason) \
-          \VALUES (?::uuid, ?::uuid, ?, ?::text, ?::text, 'approval_decided', ?::text, ?::text, jsonb_build_object('decision', ?::text), jsonb_build_object('decision', ?::text), ?::text, ?::text, ?::uuid, ?::text)"
-          [ PersistText organizationText, PersistText branchText, partyIdValue user
-          , PersistText (auditRole user), PersistText (command.sourceClient), PersistText targetType
-          , PersistText targetId, PersistText (command.expectedDecision), PersistText normalizedDecision
-          , PersistText (command.requestId), PersistText (UUID.toText approvalId), uuidValue approvalId
-          , PersistText (T.strip (command.reason))
-          ]
-        pure [Single payload]
-      _ -> pure []
-  case rows of
-    [Single payload] -> decodeJsonText payload
-    _ -> throwError err409 {errBody = "Approval changed, is unavailable, or cannot be self-approved"}
+decideApprovalHandler original approvalId command = runOperationsWrite original $ \user -> do
+  validateCommandMetadata (command.requestId) (command.sourceClient)
+  unless (any (`elem` auRoles user) [Admin, Manager, Accounting]) $ rejectCommand err403
+  let decision = T.toLower (T.strip (command.decision))
+  unless (decision `elem` ["approved", "rejected"] && not (T.null (T.strip (command.reason)))) $
+    rejectCommand err422 {errBody = "A decision and reason are required"}
+  unless (command.expectedDecision == "pending") $ rejectCommand err409
+  rows <- rawSql ("SELECT " <> approvalProjection <> " FROM operations_approval_request WHERE id=?::uuid FOR UPDATE")
+    [uuidValue approvalId] :: SqlPersistT IO [Single Text]
+  before <- case rows of
+    [Single payload] -> (decodeCommandJson payload :: SqlPersistT IO Ops.ApprovalDTO)
+    _ -> rejectCommand err409
+  branch <- maybe (rejectCommand err409) pure (before.branchId)
+  let scope = OperationsScope (before.organizationId) branch
+  lockOperationsScope user scope []
+  unless (before.decision == "pending" && before.requesterPartyId /= fromSqlKey (auPartyId user)) $
+    rejectCommand err409
+  updated <- rawSql
+    ("UPDATE operations_approval_request SET approver_party_id=?,approver_role=?::text,decision=?::text,decision_reason=?::text,decided_at=clock_timestamp(),execution_status=CASE WHEN ?::text='approved' THEN 'pending' ELSE 'not_started' END "
+      <> "WHERE id=?::uuid AND decision='pending' AND (expires_at IS NULL OR expires_at>clock_timestamp()) RETURNING " <> approvalProjection)
+    [partyIdValue user, PersistText (auditRole user), PersistText decision, PersistText (T.strip (command.reason)), PersistText decision, uuidValue approvalId]
+    :: SqlPersistT IO [Single Text]
+  after <- case updated of
+    [Single payload] -> (decodeCommandJson payload :: SqlPersistT IO Ops.ApprovalDTO)
+    _ -> rejectCommand err409 {errBody = "Approval changed or expired"}
+  rawExecute
+    "INSERT INTO operations_admin_audit (organization_id, branch_id, actor_party_id, acting_role, source_client, action, target_entity_type, target_entity_id, previous_value, new_value, request_id, correlation_id, approval_request_id, reason) \
+    \VALUES (?::uuid,?::uuid,?,?::text,?::text,'approval_decided',?::text,?::text,jsonb_build_object('decision','pending'),jsonb_build_object('decision',?::text),?::text,?::text,?::uuid,?::text)"
+    [uuidValue (scopeOrganizationId scope), uuidValue branch, partyIdValue user, PersistText (auditRole user), PersistText (command.sourceClient)
+    , PersistText (before.targetEntityType), PersistText (before.targetEntityId), PersistText decision
+    , PersistText (command.requestId), PersistText (UUID.toText approvalId), uuidValue approvalId, PersistText (T.strip (command.reason))]
+  pure after
 
 listFailuresHandler
   :: AuthedUser
@@ -822,38 +961,40 @@ listFailuresHandler user organizationFilter statusFilter requestedLimit = do
   let limit = min 100 (max 1 (fromMaybe 30 requestedLimit))
   rows <- runOperationsDb $ rawSql
     "SELECT jsonb_build_object('id', id, 'organizationId', organization_id, 'branchId', branch_id, 'provider', provider, 'direction', direction, 'sourceRecordType', source_record_type, 'sourceRecordId', source_record_id, 'failureCode', failure_code, 'redactedSummary', redacted_summary, 'retryable', retryable, 'status', status, 'attemptCount', attempt_count, 'lastAttemptAt', last_attempt_at, 'nextAttemptAt', next_attempt_at, 'createdAt', created_at)::text \
-    \FROM operations_integration_failure WHERE organization_id = ?::uuid AND (?::text IS NULL OR status = ?::text) ORDER BY created_at DESC, id DESC LIMIT ?"
-    [uuidValue (scopeOrganizationId scope), maybeTextValue statusFilter, maybeTextValue statusFilter, PersistInt64 (fromIntegral limit)] :: OperationsM [Single Text]
+    \FROM operations_integration_failure WHERE organization_id = ?::uuid AND branch_id = ?::uuid AND (?::text IS NULL OR status = ?::text) ORDER BY created_at DESC, id DESC LIMIT ?"
+    [uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope), maybeTextValue statusFilter, maybeTextValue statusFilter, PersistInt64 (fromIntegral limit)] :: OperationsM [Single Text]
   mapM (decodeJsonText . unSingle) rows
 
 replayFailureHandler :: AuthedUser -> UUID -> Ops.ReplayCommand -> OperationsM Ops.IntegrationFailureDTO
-replayFailureHandler user failureId command = do
-  requireManagerRole user
-  when (T.null (T.strip (command.reason))) $
-    throwError err422 {errBody = "Replay reason is required"}
-  rows <- runOperationsDb $ do
-    replayRows <- rawSql
-      "UPDATE operations_integration_failure failure SET status = 'retrying', next_attempt_at = now(), last_attempt_at = now(), attempt_count = attempt_count + 1 \
-      \WHERE failure.id = ?::uuid AND failure.retryable = TRUE \
-      \AND EXISTS (SELECT 1 FROM operations_scope_member member JOIN operations_organization organization ON organization.id = member.organization_id WHERE member.organization_id = failure.organization_id AND member.branch_id = failure.branch_id AND member.party_id = ? AND member.active AND organization.operations_enabled) \
-      \RETURNING jsonb_build_object('id', id, 'organizationId', organization_id, 'branchId', branch_id, 'provider', provider, 'direction', direction, 'sourceRecordType', source_record_type, 'sourceRecordId', source_record_id, 'failureCode', failure_code, 'redactedSummary', redacted_summary, 'retryable', retryable, 'status', status, 'attemptCount', attempt_count, 'lastAttemptAt', last_attempt_at, 'nextAttemptAt', next_attempt_at, 'createdAt', created_at)::text, organization_id::text, branch_id::text, source_record_type, source_record_id"
-      [uuidValue failureId, partyIdValue user]
-      :: SqlPersistT IO [(Single Text, Single Text, Single Text, Single Text, Single Text)]
-    case replayRows of
-      [(Single payload, Single organizationText, Single branchText, Single sourceType, Single sourceId)] -> do
-        rawExecute
-          "INSERT INTO operations_admin_audit (organization_id, branch_id, actor_party_id, acting_role, source_client, action, target_entity_type, target_entity_id, previous_value, new_value, request_id, correlation_id, reason) \
-          \VALUES (?::uuid, ?::uuid, ?, ?::text, ?::text, 'integration_failure_replayed', ?::text, ?::text, jsonb_build_object('status', 'open'), jsonb_build_object('status', 'retrying'), ?::text, ?::text, ?::text)"
-          [ PersistText organizationText, PersistText branchText, partyIdValue user
-          , PersistText (auditRole user), PersistText (command.sourceClient), PersistText sourceType
-          , PersistText sourceId, PersistText (command.requestId), PersistText (UUID.toText failureId)
-          , PersistText (T.strip (command.reason))
-          ]
-        pure [Single payload]
-      _ -> pure []
+replayFailureHandler original failureId command = runOperationsWrite original $ \user -> do
+  unless (any (`elem` auRoles user) [Admin, Manager, StudioManager]) $ rejectCommand err403
+  validateCommandMetadata (command.requestId) (command.sourceClient)
+  when (T.null (T.strip (command.reason))) $ rejectCommand err422 {errBody = "Replay reason is required"}
+  locked <- rawSql
+    "SELECT organization_id::text,branch_id::text,status,retryable FROM operations_integration_failure WHERE id=?::uuid FOR UPDATE"
+    [uuidValue failureId] :: SqlPersistT IO [(Single Text, Single (Maybe Text), Single Text, Single Bool)]
+  (scope, previous) <- case locked of
+    [(Single org, Single (Just branch), Single previous, Single True)] ->
+      case (UUID.fromText org, UUID.fromText branch) of
+        (Just organization, Just branchId) -> pure (OperationsScope organization branchId, previous)
+        _ -> rejectCommand err500
+    _ -> rejectCommand err404
+  lockOperationsScope user scope []
+  unless (previous `elem` ["open", "dead_letter"]) $ rejectCommand err409
+  rows <- rawSql
+    "UPDATE operations_integration_failure SET status='retrying',next_attempt_at=clock_timestamp(),last_attempt_at=clock_timestamp(),attempt_count=attempt_count+1 WHERE id=?::uuid \
+    \RETURNING jsonb_build_object('id',id,'organizationId',organization_id,'branchId',branch_id,'provider',provider,'direction',direction,'sourceRecordType',source_record_type,'sourceRecordId',source_record_id,'failureCode',failure_code,'redactedSummary',redacted_summary,'retryable',retryable,'status',status,'attemptCount',attempt_count,'lastAttemptAt',last_attempt_at,'nextAttemptAt',next_attempt_at,'createdAt',created_at)::text,source_record_type,source_record_id"
+    [uuidValue failureId] :: SqlPersistT IO [(Single Text, Single Text, Single Text)]
   case rows of
-    [Single payload] -> decodeJsonText payload
-    _ -> throwError err404 {errBody = "Replayable failure not found"}
+    [(Single payload, Single sourceType, Single sourceId)] -> do
+      rawExecute
+        "INSERT INTO operations_admin_audit(organization_id,branch_id,actor_party_id,acting_role,source_client,action,target_entity_type,target_entity_id,previous_value,new_value,request_id,correlation_id,reason) \
+        \VALUES(?::uuid,?::uuid,?,?::text,?::text,'integration_failure_replayed',?::text,?::text,jsonb_build_object('status',?::text),jsonb_build_object('status','retrying'),?::text,?::text,?::text)"
+        [uuidValue (scopeOrganizationId scope),uuidValue (scopeBranchId scope),partyIdValue user
+        ,PersistText (auditRole user),PersistText (command.sourceClient),PersistText sourceType,PersistText sourceId
+        ,PersistText previous,PersistText (command.requestId),PersistText (UUID.toText failureId),PersistText (T.strip (command.reason))]
+      decodeCommandJson payload
+    _ -> rejectCommand err500
 
 streamEventsHandler
   :: AuthedUser
@@ -865,15 +1006,13 @@ streamEventsHandler user afterId requestedLimit organizationFilter = do
   scope <- resolveScope user organizationFilter Nothing
   let limit = min 250 (max 1 (fromMaybe 100 requestedLimit))
   rows <- runOperationsDb $ rawSql
-    "SELECT jsonb_build_object('id', stream.id, 'eventType', stream.event_type, 'workItemId', stream.work_item_id, 'payload', stream.payload, 'createdAt', stream.created_at)::text \
+    ("SELECT jsonb_build_object('id', stream.id, 'eventType', stream.event_type, 'workItemId', stream.work_item_id, 'payload', stream.payload, 'createdAt', stream.created_at)::text \
     \FROM operations_stream_event stream WHERE stream.organization_id = ?::uuid AND stream.branch_id = ?::uuid AND stream.id > ? \
     \AND (stream.visible_to_party_id IS NULL OR stream.visible_to_party_id = ?) \
-    \AND (stream.work_item_id IS NULL OR EXISTS (SELECT 1 FROM operations_work_item item WHERE item.id = stream.work_item_id AND CASE ?::text WHEN 'accounting' THEN item.entity_type IN ('invoice','payment','marketplace_order','course_registration') WHEN 'reception' THEN item.entity_type IN ('course_registration','booking','party','invoice','payment','manual','uncorrelated_inbound','marketplace_order','proposal','social_event') WHEN 'maintenance' THEN item.entity_type IN ('maintenance_ticket','stock_item','booking','manual') WHEN 'assigned' THEN item.assignee_party_id = ? AND item.entity_type IN ('course_registration','booking','maintenance_ticket','manual','social_event','intern_project') ELSE item.entity_type <> 'security_incident' OR ?::boolean END)) \
-    \ORDER BY stream.id LIMIT ?"
-    [ uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope), PersistInt64 (fromMaybe 0 afterId)
-    , partyIdValue user, PersistText (roleMode user), partyIdValue user
-    , PersistBool (Admin `elem` auRoles user), PersistInt64 (fromIntegral limit)
-    ] :: OperationsM [Single Text]
+    \AND (stream.work_item_id IS NULL OR EXISTS (SELECT 1 FROM operations_work_item item WHERE item.id=stream.work_item_id AND item.organization_id=stream.organization_id AND item.branch_id=stream.branch_id"
+    <> scopeFilterSql <> ")) ORDER BY stream.id LIMIT ?")
+    ([uuidValue (scopeOrganizationId scope),uuidValue (scopeBranchId scope),PersistInt64 (fromMaybe 0 afterId),partyIdValue user]
+      <> scopeFilterParams user <> [PersistInt64 (fromIntegral limit)]) :: OperationsM [Single Text]
   events <- mapM (decodeJsonText . unSingle) rows
   pure Ops.StreamBatchDTO
     { Ops.events = events
@@ -893,67 +1032,72 @@ listSavedViewsHandler user organizationFilter = do
   mapM (decodeJsonText . unSingle) rows
 
 createSavedViewHandler :: AuthedUser -> Ops.SavedViewCreate -> OperationsM Ops.SavedViewDTO
-createSavedViewHandler user command = do
-  requireMutatingRole user
-  scope <- resolveScope user (Just command.organizationId) Nothing
+createSavedViewHandler original command = runOperationsWrite original $ \user -> do
+  unless (any (`elem` auRoles user) operationsMutatingRoles) $ rejectCommand err403
+  validateCommandMetadata (command.requestId) (command.sourceClient)
+  scope <- resolveCommandScope user (command.organizationId) Nothing
+  let isObject (Object _) = True
+      isObject _ = False
+      isTextValue (String _) = True
+      isTextValue _ = False
+      isTextArray (Array values) = all isTextValue values
+      isTextArray _ = False
+  unless (isObject (command.filters) && all isTextArray
+    [command.columns,command.widgets,command.subscribedEventTypes]) $ rejectCommand err422
   let viewName = T.strip command.name
   when (T.null viewName || T.length viewName > 120) $
-    throwError err422 {errBody = "Saved-view name must contain 1 to 120 characters"}
-  rows <- runOperationsDb $ do
-    savedRows <- rawSql
-      "INSERT INTO operations_saved_view (organization_id, owner_party_id, name, shared, filters, columns, widgets, subscribed_event_types) \
-      \VALUES (?::uuid, ?, ?::text, ?::boolean, ?::jsonb, ?::jsonb, ?::jsonb, ?::jsonb) \
-      \ON CONFLICT (organization_id, owner_party_id, name) DO UPDATE SET shared = EXCLUDED.shared, filters = EXCLUDED.filters, columns = EXCLUDED.columns, widgets = EXCLUDED.widgets, subscribed_event_types = EXCLUDED.subscribed_event_types, updated_at = now() \
-      \RETURNING jsonb_build_object('id', id, 'organizationId', organization_id, 'ownerPartyId', owner_party_id, 'name', name, 'shared', shared, 'filters', filters, 'columns', columns, 'widgets', widgets, 'subscribedEventTypes', subscribed_event_types, 'updatedAt', updated_at)::text"
-      [ uuidValue (scopeOrganizationId scope), partyIdValue user, PersistText viewName
-      , PersistBool command.shared, jsonValue command.filters, jsonValue command.columns
-      , jsonValue command.widgets, jsonValue command.subscribedEventTypes
-      ] :: SqlPersistT IO [Single Text]
-    rawExecute
-      "INSERT INTO operations_admin_audit (organization_id, branch_id, actor_party_id, acting_role, source_client, action, target_entity_type, target_entity_id, new_value, request_id, correlation_id) \
-      \VALUES (?::uuid, ?::uuid, ?, ?::text, ?::text, 'save_view', 'operations_saved_view', ?::text, jsonb_build_object('name', ?::text, 'shared', ?::boolean), ?::text, ?::text)"
-      [ uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope), partyIdValue user
-      , PersistText (auditRole user), PersistText command.sourceClient, PersistText viewName
-      , PersistText viewName, PersistBool command.shared, PersistText command.requestId
-      , PersistText (UUID.toText (scopeOrganizationId scope))
-      ]
-    pure savedRows
-  case rows of
-    [Single payload] -> decodeJsonText payload
-    _ -> throwError err500 {errBody = "Could not save operational view"}
+    rejectCommand err422 {errBody = "Saved-view name must contain 1 to 120 characters"}
+  savedRows <- rawSql
+    "INSERT INTO operations_saved_view (organization_id, owner_party_id, name, shared, filters, columns, widgets, subscribed_event_types) \
+    \VALUES (?::uuid, ?, ?::text, ?::boolean, ?::jsonb, ?::jsonb, ?::jsonb, ?::jsonb) \
+    \ON CONFLICT (organization_id, owner_party_id, name) DO UPDATE SET shared = EXCLUDED.shared, filters = EXCLUDED.filters, columns = EXCLUDED.columns, widgets = EXCLUDED.widgets, subscribed_event_types = EXCLUDED.subscribed_event_types, updated_at = now() \
+    \RETURNING jsonb_build_object('id', id, 'organizationId', organization_id, 'ownerPartyId', owner_party_id, 'name', name, 'shared', shared, 'filters', filters, 'columns', columns, 'widgets', widgets, 'subscribedEventTypes', subscribed_event_types, 'updatedAt', updated_at)::text"
+    [ uuidValue (scopeOrganizationId scope), partyIdValue user, PersistText viewName
+    , PersistBool command.shared, jsonValue command.filters, jsonValue command.columns
+    , jsonValue command.widgets, jsonValue command.subscribedEventTypes
+    ] :: SqlPersistT IO [Single Text]
+  rawExecute
+    "INSERT INTO operations_admin_audit (organization_id, branch_id, actor_party_id, acting_role, source_client, action, target_entity_type, target_entity_id, new_value, request_id, correlation_id) \
+    \VALUES (?::uuid, ?::uuid, ?, ?::text, ?::text, 'save_view', 'operations_saved_view', ?::text, jsonb_build_object('name', ?::text, 'shared', ?::boolean), ?::text, ?::text)"
+    [ uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope), partyIdValue user
+    , PersistText (auditRole user), PersistText command.sourceClient, PersistText viewName
+    , PersistText viewName, PersistBool command.shared, PersistText command.requestId
+    , PersistText (UUID.toText (scopeOrganizationId scope))
+    ]
+  case savedRows of
+    [Single payload] -> decodeCommandJson payload
+    _ -> rejectCommand err500 {errBody = "Could not save operational view"}
 
 createPushSubscriptionHandler :: AuthedUser -> Ops.PushSubscriptionCreate -> OperationsM Ops.PushSubscriptionDTO
-createPushSubscriptionHandler user command = do
-  scope <- resolveScope user (Just (command.organizationId)) Nothing
+createPushSubscriptionHandler original command = runOperationsWrite original $ \user -> do
+  unless (any (`elem` auRoles user) (ReadOnly : operationsMutatingRoles)) $ rejectCommand err403
+  validateCommandMetadata (command.requestId) (command.sourceClient)
+  scope <- resolveCommandScope user (command.organizationId) Nothing
   unless (command.platform `elem` ["ios", "android", "web"]) $
-    throwError err422 {errBody = "Unsupported push platform"}
+    rejectCommand err422 {errBody = "Unsupported push platform"}
   when (T.length (command.deviceToken) < 16 || T.length (command.deviceToken) > 4096) $
-    throwError err422 {errBody = "Invalid push token"}
-  rows <- runOperationsDb $ do
-    subscriptionRows <- rawSql
-      "WITH encryption AS (SELECT NULLIF(current_setting('tdf.push_encryption_key', true), '') AS key), inserted AS ( \
-      \ INSERT INTO operations_push_subscription (organization_id, party_id, platform, device_token_digest, encrypted_device_token) \
-      \ SELECT ?::uuid, ?, ?::text, encode(digest(?::text, 'sha256'), 'hex'), pgp_sym_encrypt(?::text, encryption.key) FROM encryption WHERE encryption.key IS NOT NULL \
-      \ ON CONFLICT (organization_id, party_id, device_token_digest) DO UPDATE SET active = TRUE, platform = EXCLUDED.platform, encrypted_device_token = EXCLUDED.encrypted_device_token, updated_at = now() \
-      \ RETURNING id, organization_id, platform, active, updated_at) \
-      \SELECT jsonb_build_object('id', id, 'organizationId', organization_id, 'platform', platform, 'active', active, 'updatedAt', updated_at)::text, id::text FROM inserted"
-      [ uuidValue (scopeOrganizationId scope), partyIdValue user, PersistText (command.platform)
-      , PersistText (command.deviceToken), PersistText (command.deviceToken)
-      ] :: SqlPersistT IO [(Single Text, Single Text)]
-    case subscriptionRows of
-      [(Single payload, Single subscriptionId)] -> do
-        rawExecute
-          "INSERT INTO operations_admin_audit (organization_id, branch_id, actor_party_id, acting_role, source_client, action, target_entity_type, target_entity_id, new_value, request_id, correlation_id) \
-          \VALUES (?::uuid, ?::uuid, ?, ?::text, ?::text, 'push_subscription_registered', 'operations_push_subscription', ?::text, jsonb_build_object('platform', ?::text, 'active', true), ?::text, ?::text)"
-          [ uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope), partyIdValue user
-          , PersistText (auditRole user), PersistText (command.sourceClient), PersistText subscriptionId
-          , PersistText (command.platform), PersistText (command.requestId), PersistText subscriptionId
-          ]
-        pure [Single payload]
-      _ -> pure []
-  case rows of
-    [Single payload] -> decodeJsonText payload
-    _ -> throwError err503 {errBody = "Push token encryption is not configured"}
+    rejectCommand err422 {errBody = "Invalid push token"}
+  subscriptionRows <- rawSql
+    "WITH encryption AS (SELECT NULLIF(current_setting('tdf.push_encryption_key', true), '') AS key), inserted AS ( \
+    \ INSERT INTO operations_push_subscription (organization_id, party_id, platform, device_token_digest, encrypted_device_token) \
+    \ SELECT ?::uuid, ?, ?::text, encode(digest(?::text, 'sha256'), 'hex'), pgp_sym_encrypt(?::text, encryption.key) FROM encryption WHERE encryption.key IS NOT NULL \
+    \ ON CONFLICT (organization_id, party_id, device_token_digest) DO UPDATE SET active = TRUE, platform = EXCLUDED.platform, encrypted_device_token = EXCLUDED.encrypted_device_token, updated_at = now() \
+    \ RETURNING id, organization_id, platform, active, updated_at) \
+    \SELECT jsonb_build_object('id', id, 'organizationId', organization_id, 'platform', platform, 'active', active, 'updatedAt', updated_at)::text, id::text FROM inserted"
+    [ uuidValue (scopeOrganizationId scope), partyIdValue user, PersistText (command.platform)
+    , PersistText (command.deviceToken), PersistText (command.deviceToken)
+    ] :: SqlPersistT IO [(Single Text, Single Text)]
+  case subscriptionRows of
+    [(Single payload, Single subscriptionId)] -> do
+      rawExecute
+        "INSERT INTO operations_admin_audit (organization_id, branch_id, actor_party_id, acting_role, source_client, action, target_entity_type, target_entity_id, new_value, request_id, correlation_id) \
+        \VALUES (?::uuid, ?::uuid, ?, ?::text, ?::text, 'push_subscription_registered', 'operations_push_subscription', ?::text, jsonb_build_object('platform', ?::text, 'active', true), ?::text, ?::text)"
+        [ uuidValue (scopeOrganizationId scope), uuidValue (scopeBranchId scope), partyIdValue user
+        , PersistText (auditRole user), PersistText (command.sourceClient), PersistText subscriptionId
+        , PersistText (command.platform), PersistText (command.requestId), PersistText subscriptionId
+        ]
+      decodeCommandJson payload
+    _ -> rejectCommand err503 {errBody = "Push token encryption is not configured"}
 
 toJson :: ToJSON value => value -> Value
 toJson = toJSON

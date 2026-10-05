@@ -1,6 +1,5 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -8,51 +7,27 @@
 module TDF.Meta
   ( MetaAPI
   , metaServer
-  , BuildInfo(..)
   , redocIndex
   ) where
 
-import           Control.Monad.IO.Class     (liftIO)
-import           Data.Aeson                 (ToJSON)
 import qualified Data.ByteString.Base64     as B64
 import qualified Data.ByteString.Char8      as BC
 import qualified Data.ByteString.Lazy       as BL
-import           Data.Time                  (UTCTime, getCurrentTime)
-import           Data.Version               (showVersion)
-import           GHC.Generics               (Generic)
 import           Network.HTTP.Media         ((//), (/:))
 import           Servant
 import qualified Data.Text                  as T
 import qualified Data.Text.Lazy             as TL
 import qualified Data.Text.Lazy.Encoding    as TLE
 import           Data.FileEmbed             (embedFile)
-import qualified Paths_tdf_hq               as Paths
 
--- | Basic build info for the About dialog.
-data BuildInfo = BuildInfo
-  { app     :: T.Text
-  , version :: T.Text
-  , builtAt :: UTCTime
-  } deriving (Show, Generic)
-instance ToJSON BuildInfo
-
+-- Version identity is served only by TDF.API.VersionAPI / TDF.Version.
+-- Keeping a second GET /version here shadowed a conflicting response contract.
 type MetaAPI =
-       "version"      :> Get '[JSON] BuildInfo
-  :<|> "openapi.yaml" :> Get '[YAML] BL.ByteString
+       "openapi.yaml" :> Get '[YAML] BL.ByteString
   :<|> "docs"         :> Get '[HTML] T.Text
 
 metaServer :: Server MetaAPI
-metaServer = versionH :<|> openapiH :<|> docsH
-  where
-    versionH = do
-      now <- liftIO getCurrentTime
-      pure BuildInfo
-        { app     = "tdf-hq"
-        , version = T.pack (showVersion Paths.version)
-        , builtAt = now
-        }
-    openapiH = pure openapiSpec
-    docsH    = pure (T.pack redocIndex)
+metaServer = pure openapiSpec :<|> pure (T.pack redocIndex)
 
 openapiSpec :: BL.ByteString
 openapiSpec = BL.fromStrict $(embedFile "docs/openapi/api.yaml")
@@ -113,23 +88,6 @@ redocIndex = unlines
   , "</html>"
   ]
 
-{-
-To mount these routes in your Servant 'API' and 'Server', add something like:
-
-  import TDF.Meta (MetaAPI, metaServer)
-  type API = MetaAPI :<|> ExistingAPI
-  server :: Server API
-  server = metaServer :<|> existingServer
-
-If your app exposes 'app :: Application' instead, wrap your existing server:
-
-  import Network.Wai (Application)
-  import Servant
-  app :: Application
-  app = serve (Proxy :: Proxy MetaAPI) metaServer <|> existingApp
-
-Adjust the wiring to your codebase as needed.
--}
 -- | Serve the embedded OpenAPI document with the canonical YAML mime type.
 data YAML
 

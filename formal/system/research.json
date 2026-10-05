@@ -1,0 +1,506 @@
+{
+  "schemaVersion": 1,
+  "researchedAt": "2026-10-04",
+  "scope": "Primary and official guidance reviewed for the current audit; applicability is recorded separately from implementation verification.",
+  "decisions": [
+    {
+      "id": "RES-HTTP-001",
+      "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
+      "title": "RFC 9110 §9.2.2",
+      "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
+      "applicability": "Checkout, event commands and Mobile mutation retries",
+      "decision": "adopted",
+      "rationale": "Bind retries to immutable actor/resource/request receipts; retain ambiguous outcomes. Do not enable blanket POST retries."
+    },
+    {
+      "id": "RES-AUTH-001",
+      "source": "https://www.rfc-editor.org/rfc/rfc9700.html",
+      "title": "RFC 9700 OAuth 2.0 Security Best Current Practice",
+      "recommendation": "Constrain OAuth tokens and protect public-client refresh tokens with sender constraint or rotation.",
+      "applicability": "External OAuth adapters and future refresh-token flows",
+      "decision": "conditional",
+      "rationale": "Audit each actual OAuth flow. TDF opaque API tokens are not automatically an OAuth authorization server; this source does not certify current sessions."
+    },
+    {
+      "id": "RES-AUTH-002",
+      "source": "https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html",
+      "title": "OWASP Authorization Cheat Sheet",
+      "recommendation": "Deny by default and check authorization on every request.",
+      "applicability": "Role composition, object ownership and receipt replay",
+      "decision": "adopted",
+      "rationale": "UI hiding is discovery only; backend denial and authorization on replay require executable cases."
+    },
+    {
+      "id": "RES-CORS-001",
+      "source": "https://fetch.spec.whatwg.org/#cors-protocol-and-credentials",
+      "title": "WHATWG Fetch: CORS protocol and credentials",
+      "recommendation": "Credentialed sharing requires an origin-specific response and explicit credentials permission.",
+      "applicability": "Observed reflected origin plus credentials in production",
+      "decision": "adopted",
+      "rationale": "An origin-specific response is insufficient if arbitrary origins are reflected. AUTH-CORS-001 restricts the trusted origin set. CORS does not replace CSRF or resource authorization."
+    },
+    {
+      "id": "RES-DATA-001",
+      "source": "https://www.postgresql.org/docs/17/rangetypes.html#RANGETYPES-CONSTRAINT",
+      "title": "PostgreSQL 17 range constraints",
+      "recommendation": "Exclusion constraints can enforce non-overlapping ranges.",
+      "applicability": "Exclusive resource reservations on production PG17",
+      "decision": "adopted where applicable",
+      "rationale": "Prefer transactionally enforced exclusion constraints for resource/time conflicts; application prechecks alone do not prevent races. Inspect each actual booking path before claiming coverage."
+    },
+    {
+      "id": "RES-DATA-002",
+      "source": "https://www.postgresql.org/docs/17/transaction-iso.html",
+      "title": "PostgreSQL 17 transaction isolation",
+      "recommendation": "Isolation levels provide distinct visibility/conflict behavior; serializable failures require whole-transaction retry.",
+      "applicability": "Revision fencing, concurrent grants, reservations, worker claims",
+      "decision": "adopted",
+      "rationale": "Run actual PostgreSQL race tests and distinguish isolation assumptions. Do not retry external effects merely because the database transaction retries."
+    },
+    {
+      "id": "RES-PAY-001",
+      "source": "https://docs.stripe.com/api/idempotent_requests",
+      "title": "Stripe idempotent requests",
+      "recommendation": "Provider idempotency binds repeated calls to a key with provider-specific retention and parameter rules.",
+      "applicability": "Stripe adapter and local checkout receipts",
+      "decision": "adopted with scope",
+      "rationale": "Retain local immutable request/effect evidence beyond provider key retention. Provider keys do not establish universal exactly-once processing."
+    },
+    {
+      "id": "RES-PAY-002",
+      "source": "https://developer.paypal.com/api/rest/requests/",
+      "title": "PayPal REST requests",
+      "recommendation": "PayPal-Request-Id supports idempotency only for supported APIs and their documented retention behavior.",
+      "applicability": "Enabled PayPal checkout and reconciliation",
+      "decision": "adopted with scope",
+      "rationale": "Verify endpoint support and exact request binding, preserve ambiguous outcomes and reconcile using authenticated provider evidence."
+    },
+    {
+      "id": "RES-FORMAL-001",
+      "source": "https://lamport.azurewebsites.net/tla/high-level-view.html",
+      "title": "Lamport: A high-level view of TLA+",
+      "recommendation": "Specify system behavior mathematically and check properties at an explicit abstraction level.",
+      "applicability": "Existing TLA+/TLC models and implementation correspondence",
+      "decision": "adopted",
+      "rationale": "Record state bounds, environment/fairness and exclusions; use negative controls and separate concrete runtime evidence. Bounded model checks do not prove the whole implementation."
+    },
+    {
+      "id": "RES-IDENTITY-001",
+      "source": "https://pages.nist.gov/800-63-4/sp800-63b/events/",
+      "title": "NIST SP 800-63B-4 Authenticator Event Management",
+      "recommendation": "Recovery requires authenticating recovery evidence, not merely supplying known contact attributes.",
+      "applicability": "Public artist claim and account recovery",
+      "decision": "adopted principle",
+      "rationale": "A caller-typed public email is not possession proof. Use independent signup and reviewed delegated management; no NIST assurance-level certification is claimed."
+    },
+    {
+      "id": "RES-CONCURRENCY-001",
+      "source": "https://www.postgresql.org/docs/17/explicit-locking.html",
+      "title": "PostgreSQL 17 explicit locking",
+      "recommendation": "Row locks persist to transaction end; blocked locking reads return the current row. Lock mode compatibility and ordering determine concurrency behavior.",
+      "applicability": "Credential lifecycle versus Social/Event locks",
+      "decision": "adopted",
+      "rationale": "Party NO KEY UPDATE precedes credential and token mutation. Avoid an inner commit and revalidate after waits. Real database races remain required."
+    },
+    {
+      "id": "RES-RECOVERY-001",
+      "source": "https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html",
+      "title": "OWASP Forgot Password Cheat Sheet",
+      "recommendation": "Bind recovery tokens to individual accounts, make them single-use and expire after an appropriate period.",
+      "applicability": "ID-SESSION-003 recovery expiry and immutable credential binding",
+      "decision": "adopted with scope",
+      "rationale": "900 seconds is an explicit TDF policy, not a mandated OWASP duration. Rate limiting, hashed storage, delivery guarantees and separate post-reset login remain independent conformance gaps."
+    },
+    {
+      "id": "RES-RECOVERY-002",
+      "source": "https://www.postgresql.org/docs/17/functions-datetime.html#FUNCTIONS-DATETIME-CURRENT",
+      "title": "PostgreSQL 17 current date/time functions",
+      "recommendation": "clock_timestamp reads actual current time; now and CURRENT_TIMESTAMP use transaction start time.",
+      "applicability": "Recovery expiry after lock waits",
+      "decision": "adopted",
+      "rationale": "Sample actual database time after lifecycle locks and floor UTC seconds consistently with the test adapter. Transaction-start time could accept a token expired while blocked."
+    },
+    {
+      "id": "RES-BUILD-001",
+      "source": "https://manpages.debian.org/bookworm/apt/apt-secure.8.en.html",
+      "title": "Debian apt-secure(8)",
+      "recommendation": "Authenticate archive metadata and reject repositories that lose authentication; insecure repository overrides undermine this chain of trust.",
+      "applicability": "Backend build and runtime image package installation",
+      "decision": "adopted",
+      "rationale": "Remove existing insecure overrides. This protects APT archive authenticity; it does not prove installed packages or upstream images free of vulnerabilities."
+    },
+    {
+      "id": "RES-BUILD-002",
+      "source": "https://manpages.debian.org/bookworm/apt/apt-get.8.en.html",
+      "title": "Debian bookworm apt-get(8) error-on option",
+      "recommendation": "Use --error-on=any on update to fail even on transient errors.",
+      "applicability": "Fail-closed image builds when a mirror or proxy fails",
+      "decision": "adopted",
+      "rationale": "Authenticated cached indexes alone do not establish a successful refresh; stop the build and diagnose infrastructure."
+    },
+    {
+      "id": "RES-CHECKOUT-001",
+      "source": "https://www.postgresql.org/docs/17/functions-aggregate.html",
+      "title": "PostgreSQL 17 aggregate functions",
+      "recommendation": "sum(bigint) returns numeric, preserving exact aggregate arithmetic.",
+      "applicability": "Checkout line-to-parent payable correspondence",
+      "decision": "adopted",
+      "rationale": "Compare an exact numeric aggregate before any fixed-width conversion; do not wrap financial totals."
+    },
+    {
+      "id": "RES-CHECKOUT-002",
+      "source": "https://www.postgresql.org/docs/16/sql-createtrigger.html",
+      "title": "PostgreSQL constraint trigger semantics",
+      "recommendation": "Deferrable constraint triggers can validate at transaction end or SET CONSTRAINTS.",
+      "applicability": "Parent followed by multiple immutable checkout lines in one transaction",
+      "decision": "adopted with scope",
+      "rationale": "Allow transactional construction but reject incomplete commits. Concurrency relies separately on immutable amounts and nonnegative lines, not on deferral alone."
+    },
+    {
+      "id": "RES-CHECKOUT-003",
+      "source": "https://www.postgresql.org/docs/17/functions-math.html",
+      "title": "PostgreSQL17 mathematical functions: div",
+      "recommendation": "div(numeric,numeric) computes the integer quotient, truncating toward zero.",
+      "applicability": "Nonnegative merchandise commission floor calculation at Int64 boundaries",
+      "decision": "adopted",
+      "rationale": "Actual counterexample: trunc(maxInt64::numeric*5000/10000) rounds to4611686018427387904, whereas the exact floor is4611686018427387903. div preserves the required quotient without a rounded intermediate."
+    },
+    {
+      "id": "RES-DEPLOY-001",
+      "source": "https://docs.docker.com/reference/cli/docker/compose/config/",
+      "title": "Docker Compose effective configuration",
+      "recommendation": "Compare the fully resolved applied model; explicit files, interpolation and env-file resolution affect the runtime model.",
+      "applicability": "Installed Hetzner Compose configuration and future release planning",
+      "decision": "adopted",
+      "rationale": "Container labels/image/network/volume and allowlisted effective environment are inspected; future release must compare resolved configuration privately, since full rendering may expose secrets. Reading the repository YAML alone is insufficient."
+    },
+    {
+      "id": "RES-DEPLOY-002",
+      "source": "https://www.postgresql.org/docs/17/app-pgdump.html",
+      "title": "PostgreSQL17 consistent logical backup",
+      "recommendation": "pg_dump produces a consistent database backup while other users continue accessing it; cluster-global objects require separate handling.",
+      "applicability": "Hetzner database and asset recovery",
+      "decision": "adopted",
+      "rationale": "A consistent database dump does not establish a coordinated snapshot with mutable asset files or roles. The release contract requires writer quiescence, asset preservation and actual restore verification."
+    },
+    {
+      "id": "RES-DEPLOY-003",
+      "source": "https://www.postgresql.org/docs/17/app-pgrestore.html",
+      "title": "PostgreSQL17 archive restoration",
+      "recommendation": "Restore a custom archive using pg_restore with explicit error handling; listing its table of contents is a distinct operation.",
+      "applicability": "Current backup-postgres.sh only lists the archive before marking backup complete",
+      "decision": "adopted",
+      "rationale": "Keep the existing archive-integrity step but do not treat it as a tested restore. A future release must restore into an isolated target and verify schema/data before rollout."
+    },
+    {
+      "id": "RES-DEPLOY-004",
+      "source": "https://www.postgresql.org/docs/17/explicit-locking.html",
+      "title": "PostgreSQL advisory lock lifetime",
+      "recommendation": "Session advisory locks end with the holding session; transaction locks end with the transaction.",
+      "applicability": "Guarded release coordination across multi-step backup, migration and rollout",
+      "decision": "adopted as executor constraint",
+      "rationale": "A lock acquired by a short-lived psql command does not protect later release commands. The future executor must retain a lock owner throughout the operation and fail closed on ownership loss."
+    },
+    {
+      "id": "RES-DEPLOY-005",
+      "source": "https://docs.docker.com/reference/cli/docker/container/stop/",
+      "title": "Docker stop signals and timeout",
+      "recommendation": "Stopping sends a configured signal then forcibly terminates after its grace period.",
+      "applicability": "Identity recovery migration and old-handler drainage",
+      "decision": "adopted as executor constraint",
+      "rationale": "A stop request alone does not prove drained writers. Verify termination and database sessions, distinguish a forced termination from graceful completion, and preserve ambiguous external-effect evidence."
+    },
+    {
+      "id": "RES-MSG-001",
+      "source": "https://www.postgresql.org/docs/17/tutorial-transactions.html",
+      "title": "PostgreSQL atomic transaction boundaries",
+      "recommendation": "Group related effects in a transaction and roll back before commit when the operation cannot be accepted.",
+      "applicability": "Chat SQL effects and server-side response validation",
+      "decision": "adopted",
+      "rationale": "A normal return from the SQL action can commit even when later application decoding rejects its result. Keep validation inside the transaction and explicitly undo rejected operations; this does not solve lost post-commit network responses."
+    },
+    {
+      "id": "RES-DEPLOY-006",
+      "source": "https://www.postgresql.org/docs/17/app-pgdump.html",
+      "title": "PostgreSQL exported snapshot backup",
+      "recommendation": "Use --snapshot to synchronize a dump with an existing transaction snapshot.",
+      "applicability": "Online snapshot-count and restored-data correspondence",
+      "decision": "adopted",
+      "rationale": "Hold an exporting read-only transaction until the archive completes; table counts derive from the same snapshot. This does not coordinate role or asset changes."
+    },
+    {
+      "id": "RES-DEPLOY-007",
+      "source": "https://www.postgresql.org/docs/17/app-pg-dumpall.html",
+      "title": "PostgreSQL cluster role backup",
+      "recommendation": "Handle cluster-global roles separately and exclude password material when disclosure is unnecessary.",
+      "applicability": "Restore ownership and ACLs without exporting production credentials",
+      "decision": "adopted",
+      "rationale": "Dump roles using --no-role-passwords and retain grants/ownership during restore. Credential recovery remains a separate unverified obligation."
+    },
+    {
+      "id": "RES-DEPLOY-008",
+      "source": "https://docs.docker.com/engine/storage/tmpfs/",
+      "title": "Docker temporary storage and memory accounting",
+      "recommendation": "Bound tmpfs and container resources explicitly; temporary data consumes container memory.",
+      "applicability": "Production-host isolated restore resource safety",
+      "decision": "adopted",
+      "rationale": "Use bounded tmpfs, memory/swap/CPU/pids with no host mounts or external network; require host capacity and an exclusive rehearsal lock. Reject source growth rather than silently increasing limits."
+    },
+    {
+      "id": "RES-DEPLOY-009",
+      "source": "https://www.postgresql.org/docs/17/app-pgrestore.html",
+      "title": "Single-transaction restore lock capacity",
+      "recommendation": "A single-transaction restore locks each object and can exhaust the server lock table; provision bounded capacity or explicitly choose smaller transaction groups.",
+      "applicability": "Isolated PostgreSQL17 full production-schema restoration",
+      "decision": "adopted bounded lock capacity",
+      "rationale": "Actual restore with ten connections/default64 locks failed with out-of-shared-memory and the max_locks_per_transaction hint. Retain atomic restore with1024 locks per transaction while preserving the384MiB cgroup limit; do not change production configuration."
+    },
+    {
+      "id": "RES-RESTORE-001",
+      "source": "https://www.man7.org/linux/man-pages/man2/flock.2.html",
+      "title": "Linux flock(2)",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "Locks belong to open file descriptions and release when all associated descriptors close.",
+      "applicability": "Rehearsal helper process crash with a surviving Docker isolate",
+      "decision": "adopted",
+      "rationale": "Use flock for live mutual exclusion and separately reject existing labelled isolates; a released process lock cannot prove container cleanup."
+    },
+    {
+      "id": "RES-RESTORE-002",
+      "source": "https://docs.docker.com/reference/cli/docker/container/ls/",
+      "title": "Docker container ls",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "Use all-container listing and a label-presence filter to include stopped containers.",
+      "applicability": "Crash orphan admission guard",
+      "decision": "adopted",
+      "rationale": "Reject any labelled residue under the lock before new work; do not use label presence as deletion authority."
+    },
+    {
+      "id": "RES-BOOK-LOCK",
+      "source": "https://www.postgresql.org/docs/17/explicit-locking.html",
+      "title": "PostgreSQL row locks",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "Lock before reading a record to be replaced; handle deadlock/serialization rollback explicitly.",
+      "applicability": "Studio booking repair",
+      "decision": "adopted",
+      "rationale": "Actual synthetic HTTP reproduced foreign access, stale calendar projection and unsafe read/replace. Retain existing PostgreSQL calendar architecture and product-approved role scope."
+    },
+    {
+      "id": "RES-BOOK-EXCLUDE",
+      "source": "https://www.postgresql.org/docs/17/rangetypes.html",
+      "title": "PostgreSQL range exclusion",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "Enforce interval overlap exclusion in the database rather than relying on a preflight availability query.",
+      "applicability": "Studio booking repair",
+      "decision": "adopted",
+      "rationale": "Actual synthetic HTTP reproduced foreign access, stale calendar projection and unsafe read/replace. Retain existing PostgreSQL calendar architecture and product-approved role scope."
+    },
+    {
+      "id": "RES-BOOK-SCOPE",
+      "source": "https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html",
+      "title": "OWASP authorization",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "Validate object-level permission on the server for every sensitive operation.",
+      "applicability": "Studio booking repair",
+      "decision": "adopted",
+      "rationale": "Actual synthetic HTTP reproduced foreign access, stale calendar projection and unsafe read/replace. Retain existing PostgreSQL calendar architecture and product-approved role scope."
+    },
+    {
+      "id": "RES-MEDIA-001",
+      "source": "https://docs.docker.com/engine/storage/bind-mounts/",
+      "title": "Docker bind mount persistence and obscured legacy files",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "Persist runtime files outside the container writable layer; preserve existing contents before mounting over their destination.",
+      "applicability": "Feedback attachments and live-session riders on the current Hetzner deployment",
+      "decision": "adopted",
+      "rationale": "Dedicated private host bind preserves current relative paths without moving private uploads into public assets. Startup guard and container controls are necessary; coordinated backup and host-loss recovery remain separate obligations."
+    },
+    {
+      "id": "RES-PAY-RETRY-001",
+      "source": "https://developer.paypal.com/api/rest/reference/idempotency/",
+      "title": "PayPal operation-scoped idempotency and retry retention",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "Reuse the same operation request ID after ambiguous transport outcomes; do not assume all APIs or unlimited retention, or identical success for simultaneous requests.",
+      "applicability": "TDF canonical provider attempt admission and reconciliation",
+      "decision": "adopted",
+      "rationale": "Local immutable receipts and checkout serialization complement provider idempotency. Reject automatic new-charge fallback while unresolved; bounded model does not prove provider behavior."
+    },
+    {
+      "id": "RES-CI-ADMISSION-001",
+      "source": "https://docs.github.com/en/pull-requests/reference/status-checks",
+      "title": "GitHub status checks and skipped jobs",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "A skipped job can report success; status alone does not prove the intended verification executed.",
+      "applicability": "API availability policy-only changes and component-selective CI",
+      "decision": "adopted",
+      "rationale": "Run actual policy admission in the always-selected repository lane and independently test change wiring; a passing synthetic unit test does not validate current policy data."
+    },
+    {
+      "id": "RES-API-TYPE-001",
+      "source": "https://docs.servant.dev/en/latest/tutorial/ApiType.html",
+      "title": "Servant API type structure and combinators",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "Use the served API type to derive route and parameter structure; combinators encode captures, methods, bodies and response declarations.",
+      "applicability": "Compiler-derived CombinedAPI description and handwritten OpenAPI drift",
+      "decision": "adopted with boundary",
+      "rationale": "Interpret actual TypeRep from the same CombinedAPI used to serve, reject unknown syntax, and retain Raw mounts. This verifies declarations, not JSON codecs, handler authorization, feature enablement or complete semantic conformance."
+    },
+    {
+      "id": "RES-API-002",
+      "source": "https://www.servant.dev/posts/2016-03-19-servant-0.5-release.html",
+      "title": "Servant NoContent and status-code semantics",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "An empty NoContent body does not choose204; the method declaration chooses the response status.",
+      "applicability": "Eleven documented204 responses whose compiled handlers return200.",
+      "decision": "adopted",
+      "rationale": "Preserve existing acknowledgement semantics and accepting clients, correct OpenAPI, then verify real HTTP responses. Library semantics alone do not establish handler correctness."
+    },
+    {
+      "id": "RES-WEBHOOK-001",
+      "source": "https://whatsapp.github.io/WhatsApp-Nodejs-SDK/receivingMessages/",
+      "title": "Meta-hosted WhatsApp receiving-message example",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "Acknowledge received webhook delivery with HTTP200.",
+      "applicability": "Existing WhatsApp empty-body webhook acknowledgement.",
+      "decision": "adopted with boundary",
+      "rationale": "Retain200; signed synthetic HTTP probes verify acknowledgement and unsigned rejection. This does not prove durable event processing or provider replay semantics."
+    },
+    {
+      "id": "RES-CATALOG-001",
+      "source": "https://www.postgresql.org/docs/17/explicit-locking.html",
+      "title": "PostgreSQL17 row locks and transaction lifetime",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "Lock the coordinating row before testing the revision; keep dependent mutations in one transaction and account for deadlock aborts.",
+      "applicability": "Administrative catalog reordering and concurrent stale writes.",
+      "decision": "adopted with boundary",
+      "rationale": "A catalog row serializes competing reorders. Transaction rollback protects item/revision/audit consistency. Other catalog writers and global revocation require independent review; no serializability claim is inferred for them."
+    },
+    {
+      "id": "RES-PRIV-LOG-001",
+      "source": "https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html",
+      "title": "OWASP Logging Cheat Sheet",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "Exclude sensitive personal data and unnecessary payloads from operational logs; retain useful security and outcome evidence.",
+      "applicability": "Facebook/Instagram private inbound message receipts.",
+      "decision": "adopted with boundary",
+      "rationale": "Fixed channel plus event count provides ingestion evidence without customer payloads. This does not establish global log privacy or erase historical exposure."
+    },
+    {
+      "id": "RES-AUTH-HMAC-001",
+      "source": "https://www.rfc-editor.org/rfc/rfc2104.html",
+      "title": "RFC2104: HMAC keyed-hashing for message authentication",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "Message authentication depends on a shared secret key and authenticated message bytes.",
+      "applicability": "Existing Meta HMAC-SHA256 verifier and unavailable-key admission.",
+      "decision": "adopted with boundary",
+      "rationale": "Keep the existing SHA256 library and constant-time digest comparison; reject absent/blank keys before ingestion. Property tests exercise exact-byte binding, not cryptographic security. Historical hash examples in RFC2104 are not adopted. Meta getting-started documentation returned429 during this review, so current provider header semantics are grounded in the implemented protocol and existing tests rather than a claimed fresh document read."
+    },
+    {
+      "source": "https://developers.google.com/workspace/drive/api/guides/properties",
+      "recommendation": "Use appProperties for application-specific file metadata; respect property size/count and OAuth access boundaries.",
+      "applicability": "Store 64-hex request digest alongside existing retry key; each key/value pair fits the documented124-byte bound.",
+      "decision": "adopted with boundary",
+      "rationale": "Provider metadata transports request binding, but it is mutable and is not a durable atomic idempotency ledger or signature."
+    },
+    {
+      "source": "https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/",
+      "recommendation": "Associate a client retry identifier with request parameters and reject different intent under one identifier.",
+      "applicability": "Drive helper previously returned stale content on a conflicting retry.",
+      "decision": "adopted narrowly",
+      "rationale": "Fingerprint authenticated actor and normalized request before reuse. Do not claim provider creation is exactly once: lookup/create is separate and crash recovery needs a durable coordination design."
+    },
+    {
+      "id": "RES-WEB-CACHE-001",
+      "source": "https://react.dev/learn/preserving-and-resetting-state",
+      "title": "React state identity and keys",
+      "recommendation": "Use distinct component identity to reset state at a changed user boundary.",
+      "applicability": "Private state and query observers must not survive actor/session replacement.",
+      "decision": "adopted",
+      "rationale": "Numeric occurrence keys remount the application cache subtree; use fresh occurrences rather than a reusable Party-keyed cache."
+    },
+    {
+      "id": "RES-WEB-CACHE-002",
+      "source": "https://tanstack.com/query/latest/docs/framework/react/reference/classes/QueryClient",
+      "title": "TanStack QueryClient cache lifecycle",
+      "recommendation": "Manage cached data through QueryClient and clear retired caches.",
+      "applicability": "Old queries/mutations may still hold client references.",
+      "decision": "adopted with boundary",
+      "rationale": "Clear the retired cache for cancellation/retention, but use different actual client objects to isolate late callbacks. Do not equate client cleanup with canceling backend effects."
+    },
+    {
+      "id": "RES-STREAM-001",
+      "source": "https://www.rfc-editor.org/rfc/rfc9725.html",
+      "title": "RFC9725 sections3,4.7,5",
+      "recommendation": "Separate HTTP offer/answer acceptance from established ICE/DTLS media, use HTTPS and an explicit authorization mechanism for publishing.",
+      "applicability": "Native radio and event WHIP integration",
+      "decision": "adopted for admission boundary; secure provider adapter remains unimplemented",
+      "rationale": "Endpoint URLs and shared public stream keys do not establish publisher authorization. Fail closed rather than claim configuration or SDP exchange proves secure live media."
+    },
+    {
+      "id": "RES-PRIV-OPS-001",
+      "source": "https://www.sqlite.org/lang_transaction.html",
+      "title": "SQLite transaction control",
+      "recommendation": "Use an explicit write transaction to serialize competing updates; handle rollback and busy outcomes.",
+      "applicability": "Single-host private deletion case ledger",
+      "decision": "adopted",
+      "rationale": "BEGIN IMMEDIATE encloses replay lookup, version admission and event append. This is an operator ledger, not a replacement for production PostgreSQL or cross-host consensus."
+    },
+    {
+      "id": "RES-PRIV-OPS-002",
+      "source": "https://www.sqlite.org/backup.html",
+      "title": "SQLite Online Backup API",
+      "recommendation": "Use a coherent database snapshot for live backup rather than an uncoordinated file copy.",
+      "applicability": "Private ledger restoration test and operational backup procedure",
+      "decision": "adopted",
+      "rationale": "Synthetic restore uses SQLite backup and rechecks chain/policy/retry binding; production backups/evidence-store durability still require activation."
+    },
+    {
+      "id": "RES-OPS-001",
+      "source": "https://www.postgresql.org/docs/current/transaction-iso.html",
+      "title": "PostgreSQL Read Committed snapshots",
+      "recommendation": "Avoid authorizing a write from a later unbounded reread of unlocked role assignments.",
+      "applicability": "Operations command and approval admission",
+      "decision": "adopted within handler boundary",
+      "rationale": "Use the captured locked role rows; a concurrent insertion is deferred to the next command."
+    },
+    {
+      "id": "RES-OPS-002",
+      "source": "https://www.postgresql.org/docs/current/explicit-locking.html",
+      "title": "PostgreSQL explicit row locks",
+      "recommendation": "Hold relevant row locks through transaction commit and handle deadlock aborts.",
+      "applicability": "Operations command and approval admission",
+      "decision": "adopted within handler boundary",
+      "rationale": "Serialize item mutation, scoped authorization and atomic evidence; return409 on deadlock/serialization errors."
+    },
+    {
+      "id": "RES-OPS-003",
+      "source": "https://www.postgresql.org/docs/current/functions-datetime.html",
+      "title": "PostgreSQL wall clock versus transaction timestamp",
+      "recommendation": "Use actual wall-clock evaluation for expiry after waits.",
+      "applicability": "Operations command and approval admission",
+      "decision": "adopted within handler boundary",
+      "rationale": "Decision uses clock_timestamp rather than transaction-start now(); timeout and host clock correctness remain environment assumptions."
+    },
+    {
+      "id": "RES-NOTIF-001",
+      "source": "https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html",
+      "title": "Transactional outbox pattern",
+      "recommendation": "Persist notification intent with business mutation; tolerate duplicate delivery across the external acknowledgement boundary.",
+      "applicability": "Newly shipped ticket-confirmation worker",
+      "decision": "adopted",
+      "rationale": "A unique order intent and fenced retry preserve local authority; SMTP cannot participate in the transaction. No exactly-once inbox claim or AWS infrastructure dependency.",
+      "verifiedAt": "2026-10-05",
+      "supportingSource": "https://www.postgresql.org/docs/17/sql-select.html#SQL-FOR-UPDATE-SHARE"
+    },
+    {
+      "id": "RES-HTTP-ERROR-001",
+      "source": "https://hackage-content.haskell.org/package/warp-3.4.9/src/Network/Wai/Handler/Warp/Settings.hs",
+      "title": "Installed Warp3.4.9 default exception response source",
+      "recommendation": "Stock fallback returns fixed400/413/431/500 bodies and propagates asynchronous exceptions; default logging renders application exceptions.",
+      "applicability": "Boot request fallback and Warp diagnostic logger",
+      "decision": "adopted",
+      "rationale": "Retain stock safe protocol responses without wildcard CORS; replace raw diagnostic rendering with a fixed identifier. Exact installed version checked with Stack ghc-pkg.",
+      "verifiedAt": "2026-10-05"
+    }
+  ]
+}

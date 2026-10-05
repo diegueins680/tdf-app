@@ -1,4 +1,4 @@
-import { act } from 'react';
+import { act, Fragment, StrictMode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import appI18n from '../i18n/index';
 
@@ -11,23 +11,28 @@ const renderList = async (
   props?: {
     items?: readonly string[];
     loading?: boolean;
+    selectedIndex?: number;
+    strictMode?: boolean;
   },
 ) => {
   const listItems = props?.items ?? ['Alpha', 'Beta', 'Gamma'];
   let root: Root | null = createRoot(mountNode);
+  const Wrapper = props?.strictMode ? StrictMode : Fragment;
 
   await act(async () => {
     root?.render(
-      <LazyPaginatedList
-        items={listItems}
-        loading={props?.loading}
-        pagination={{ initialRowsPerPage: 2, itemLabel: 'items', rowsPerPageOptions: [2] }}
-        renderItems={(renderedItems, meta) => (
-          <div data-testid="items" data-start-index={meta.startIndex} data-total-items={meta.totalItems}>
-            {renderedItems.join('|')}
-          </div>
-        )}
-      />,
+      <Wrapper>
+        <LazyPaginatedList
+          items={listItems}
+          loading={props?.loading}
+          pagination={{ initialRowsPerPage: 2, itemLabel: 'items', rowsPerPageOptions: [2], selectedIndex: props?.selectedIndex }}
+          renderItems={(renderedItems, meta) => (
+            <div data-testid="items" data-start-index={meta.startIndex} data-total-items={meta.totalItems}>
+              {renderedItems.join('|')}
+            </div>
+          )}
+        />
+      </Wrapper>,
     );
     await flushPromises();
   });
@@ -87,6 +92,26 @@ describe('LazyPaginatedList', () => {
       expect(paginationItems?.getAttribute('data-start-index')).toBe('0');
       expect(paginationItems?.getAttribute('data-total-items')).toBe('3');
       expect(paginationHost.textContent).toContain('1–2 of 3 items');
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it.each([false, true])('retains linked selection through effect replay and permits manual paging (StrictMode=%s)', async (strictMode) => {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    const { cleanup } = await renderList(host, {
+      items: ['Alpha', 'Beta', 'Gamma', 'Delta'], selectedIndex: 2, strictMode,
+    });
+    try {
+      expect(host.querySelector('[data-testid="items"]')?.textContent).toBe('Gamma|Delta');
+      const previous = host.querySelector<HTMLButtonElement>('button[aria-label="Go to previous page"]');
+      expect(previous).not.toBeNull();
+      await act(async () => {
+        previous?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        await flushPromises();
+      });
+      expect(host.querySelector('[data-testid="items"]')?.textContent).toBe('Alpha|Beta');
     } finally {
       await cleanup();
     }

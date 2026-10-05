@@ -51,6 +51,7 @@ function run(current, overrides = {}) {
     encoding: 'utf8',
     env: {
       ...process.env,
+      APP_ENV: 'test', ENVIRONMENT: 'test', NODE_ENV: 'test', RUNTIME_ENV: 'test',
       PATH: current.path,
       DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
       TDF_PRODUCTION_MIGRATIONS_SQL: current.migrationSql,
@@ -85,6 +86,42 @@ test('migration precheck verifies reviewed SQL without starting the backend', (c
   assert.match(result.stdout, /migration precheck completed/i);
   assert.match(readFileSync(current.psqlLog, 'utf8'), /-X -v ON_ERROR_STOP=1 -f/);
   assert.equal(existsSync(current.serverLog), false);
+});
+
+test('production startup rejects ephemeral uploads before SQL, asset writes or server startup', context => {
+  const current = fixture();
+  context.after(() => rmSync(current.directory, { recursive: true, force: true }));
+  const result = run(current, {
+    APP_ENV: 'production', HQ_ASSETS_DIR: current.servedAssets,
+    TDF_PACKAGED_ASSETS_DIR: current.packagedAssets,
+  });
+  assert.equal(result.status, 78, result.stderr);
+  assert.match(result.stderr, /persistent mount at \/app\/uploads/);
+  assert.equal(existsSync(current.psqlLog), false);
+  assert.equal(existsSync(current.serverLog), false);
+  assert.equal(existsSync(current.servedAssets), false);
+});
+
+test('production migration-only precheck does not require an application upload mount', context => {
+  const current = fixture();
+  context.after(() => rmSync(current.directory, { recursive: true, force: true }));
+  const result = run(current, { APP_ENV: 'production', TDF_MIGRATION_PRECHECK_ONLY: 'true' });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(existsSync(current.psqlLog), true);
+  assert.equal(existsSync(current.serverLog), false);
+});
+
+test('every backend production alias enforces the upload mount even with another development marker', context => {
+  const current = fixture();
+  context.after(() => rmSync(current.directory, { recursive: true, force: true }));
+  for (const key of ['APP_ENV', 'ENVIRONMENT', 'NODE_ENV', 'RUNTIME_ENV']) {
+    for (const value of ['prod', ' Production ', 'LIVE', '\nproduction\n', '\t\rprod\t', '\u00a0production\u00a0', '\u2003live\u3000']) {
+      const result = run(current, { [key]: value });
+      assert.equal(result.status, 78, `${key}=${value}: ${result.stderr}`);
+      assert.equal(existsSync(current.psqlLog), false);
+      assert.equal(existsSync(current.serverLog), false);
+    }
+  }
 });
 
 test('production entrypoint copies packaged assets into the served asset volume', (context) => {

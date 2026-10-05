@@ -21,9 +21,11 @@ import Data.Char
 import Data.List (dropWhileEnd, intercalate, isInfixOf, isSuffixOf, nub)
 import Data.Maybe (isNothing)
 import Text.Read (readMaybe)
+import TDF.Config (isProductionRuntime, productionRuntimeKeys)
 
 corsPolicy :: IO Middleware
 corsPolicy = do
+  runtimeValues <- mapM lookupEnv productionRuntimeKeys
   originsEnv <- lookupFirstNonEmptyEnv
     [ "ALLOWED_ORIGINS"
     , "ALLOW_ORIGINS"
@@ -52,6 +54,11 @@ corsPolicy = do
       hqBaseCandidates = filter (not . null . trim) (maybe [] pure hqBaseEnv)
       parsed = maybe [] splitComma originsEnv
       configuredOrigins = parsed
+      isProduction = isProductionRuntime (zip productionRuntimeKeys runtimeValues)
+  if isProduction && (allowAllFlag || "*" `elem` map trim configuredOrigins)
+    then ioError . userError $
+      "Production CORS requires explicit trusted origins; allow-all and wildcard origins are forbidden"
+    else pure ()
   hqBaseDefaults <- either (ioError . userError) pure $
     traverse deriveCorsOriginFromAppBase hqBaseCandidates
   filtered <- either (ioError . userError) pure $
@@ -59,7 +66,7 @@ corsPolicy = do
       >>= traverse normalizeConfiguredCorsOrigin
       >>= validateUniqueConfiguredCorsOrigins
   let
-      defaults = defaultsCore ++ hqBaseDefaults
+      defaults = (if isProduction then [] else defaultsCore) ++ hqBaseDefaults
       includeDefaults = not disableDefaultsFlag
       merged = (if includeDefaults then defaults else []) ++ filtered
       deduped = nub merged
@@ -77,7 +84,7 @@ corsPolicy = do
         , corsRequireOrigin      = False
         , corsIgnoreFailures     = False
         }
-      allowPagesDevWildcard = True
+      allowPagesDevWildcard = not isProduction
       allowAllPolicy = basePolicy { corsOrigins = Nothing }
       allowOriginPolicy origin = basePolicy { corsOrigins = Just ([origin], True) }
       choosePolicy :: Request -> Maybe CorsResourcePolicy

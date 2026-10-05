@@ -54,11 +54,16 @@ run_tlc() {
   local module="$1"
   local config="$2"
   local slug="$3"
+  local status=0
   "${JAVA_BIN}" -XX:+UseParallelGC -jar "${TLA2TOOLS_JAR}" \
     -workers 1 \
     -metadir "${run_root}/tlc-${slug}" \
     -config "${config}" \
-    "${module}"
+    "${module}" || status=$?
+  if [[ "${status}" -eq 0 ]]; then
+    printf 'TDF_TLC_RESULT positive %s %s\n' "${module}" "${config}"
+  fi
+  return "${status}"
 }
 
 cd "${MODEL_DIR}"
@@ -85,7 +90,74 @@ run_negative_tlc() {
     echo "Negative control ${slug} did not detect ${expected}." >&2
     exit 1
   fi
+  printf 'TDF_TLC_RESULT negative %s %s\n' "${module}" "${config}"
 }
+run_tlc OperationsCommandFence.tla OperationsCommandFence.cfg operationscommandfence
+run_negative_tlc OperationsCommandFenceAllowStale.cfg operationscommandfenceallowstale 'Invariant NoStaleCommit is violated' OperationsCommandFence.tla
+run_negative_tlc OperationsCommandFenceAllowRevoked.cfg operationscommandfenceallowrevoked 'Invariant NoRevokedCommit is violated' OperationsCommandFence.tla
+run_negative_tlc OperationsCommandFenceLeakEffect.cfg operationscommandfenceleakeffect 'Invariant AtomicEvidence is violated' OperationsCommandFence.tla
+run_tlc NotificationLease.tla NotificationLease.cfg notificationlease
+run_negative_tlc NotificationLeaseStaleClock.cfg notificationleasestale 'Invariant UnexpiredCompletion is violated' NotificationLease.tla
+run_negative_tlc NotificationLeaseForeign.cfg notificationleaseforeign 'Invariant CurrentLease is violated' NotificationLease.tla
+run_negative_tlc NotificationLeaseClaimClock.cfg notificationleaseclaimclock 'Invariant FreshClaim is violated' NotificationLease.tla
+run_tlc OperationsManualReceipt.tla OperationsManualReceipt.cfg operationsmanualreceipt
+run_negative_tlc OperationsManualReceiptReuseSourceKey.cfg operationsmanualreusesourcekey 'Invariant SourceSeparation is violated' OperationsManualReceipt.tla
+run_negative_tlc OperationsManualReceiptUnboundReplay.cfg operationsmanualunboundreplay 'Invariant BoundReplay is violated' OperationsManualReceipt.tla
+run_negative_tlc OperationsManualReceiptPartialCommit.cfg operationsmanualpartialcommit 'Invariant AtomicCreation is violated' OperationsManualReceipt.tla
+run_tlc OperationsApproval.tla OperationsApproval.cfg operationsapproval
+run_negative_tlc OperationsApprovalUnboundReplay.cfg operationsapprovalunboundreplay 'Invariant BoundReplay is violated' OperationsApproval.tla
+run_negative_tlc OperationsApprovalDuplicateAudit.cfg operationsapprovalduplicateaudit 'Invariant SingleEvidence is violated' OperationsApproval.tla
+run_negative_tlc OperationsApprovalReopen.cfg operationsapprovalreopen 'Invariant DecisionGuard is violated' OperationsApproval.tla
+run_negative_tlc OperationsApprovalIgnoreExpiry.cfg operationsapprovalignoreexpiry 'Invariant DecisionGuard is violated' OperationsApproval.tla
+run_negative_tlc OperationsApprovalSelfApprove.cfg operationsapprovalselfapprove 'Invariant DecisionGuard is violated' OperationsApproval.tla
+run_tlc PrivacyDeletionWorkflow.tla PrivacyDeletionWorkflow.cfg privacy-deletion
+run_negative_tlc PrivacyDeletionEarlyClose.cfg privacy-deletion-earlyclose 'Invariant ClosureEvidence is violated' PrivacyDeletionWorkflow.tla
+run_negative_tlc PrivacyDeletionDeadlineReset.cfg privacy-deletion-deadline 'Invariant FixedDeadline is violated' PrivacyDeletionWorkflow.tla
+run_negative_tlc PrivacyDeletionStaleWrite.cfg privacy-deletion-stale 'Invariant NoStaleCommit is violated' PrivacyDeletionWorkflow.tla
+run_tlc SessionCacheIsolation.tla SessionCacheIsolation.cfg session-cache
+run_negative_tlc SessionCacheShared.cfg session-cache-shared "Invariant PrivateProjection is violated" SessionCacheIsolation.tla
+run_negative_tlc SessionCacheActorReuse.cfg session-cache-actor-reuse "Invariant PrivateProjection is violated" SessionCacheIsolation.tla
+run_negative_tlc SessionCacheStaleExpiry.cfg session-cache-stale-expiry "Invariant CurrentExpiry is violated" SessionCacheIsolation.tla
+run_tlc CatalogReorder.tla CatalogReorder.cfg catalog-reorder
+run_negative_tlc CatalogReorderPartialRollback.cfg catalog-reorder-partialrollback 'Invariant NoRejectedEffect is violated' CatalogReorder.tla
+run_negative_tlc CatalogReorderStaleRevision.cfg catalog-reorder-stalerevision 'Invariant NoStaleCommit is violated' CatalogReorder.tla
+run_negative_tlc CatalogReorderNoAuthorization.cfg catalog-reorder-noauthorization 'Invariant NoUnauthorizedCommit is violated' CatalogReorder.tla
+run_negative_tlc CatalogReorderNoAudit.cfg catalog-reorder-noaudit 'Invariant AtomicEvidence is violated' CatalogReorder.tla
+run_tlc StudioBookingProjection.tla StudioBookingProjection.cfg studiobookingprojection
+run_negative_tlc StudioBookingProjectionStale.cfg studiobookingprojection-stale 'Invariant ProjectionCurrent is violated' StudioBookingProjection.tla
+run_negative_tlc StudioBookingProjectionReactivation.cfg studiobookingprojection-reactivation 'Invariant ProjectionCurrent is violated' StudioBookingProjection.tla
+run_negative_tlc StudioBookingProjectionOverlap.cfg studiobookingprojection-overlap 'Invariant NoActiveOverlap is violated' StudioBookingProjection.tla
+run_tlc StudioBookingScope.tla StudioBookingScope.cfg studiobookingscope
+run_negative_tlc StudioBookingScopeModuleOnly.cfg studiobookingscope-moduleonly 'Invariant NoForeignAccess is violated' StudioBookingScope.tla
+run_negative_tlc StudioBookingScopeRequestedAssignment.cfg studiobookingscope-requestedassignment 'Invariant NoForeignAccess is violated' StudioBookingScope.tla
+run_negative_tlc StudioBookingScopeRevokedWrite.cfg studiobookingscope-revokedwrite 'Invariant NoRevokedCommit is violated' StudioBookingScope.tla
+run_tlc RestoreIsolation.tla RestoreIsolation.cfg restore-isolation
+run_negative_tlc RestoreIsolationNoLock.cfg restore-nolock 'Invariant ExclusiveOwners is violated' RestoreIsolation.tla
+run_negative_tlc RestoreIsolationOrphanRetry.cfg restore-orphanretry 'Invariant AtMostOneIsolate is violated' RestoreIsolation.tla
+run_negative_tlc RestoreIsolationSourceTarget.cfg restore-sourcetarget 'Invariant NoSourceMutation is violated' RestoreIsolation.tla
+run_negative_tlc RestoreIsolationEarlyReceipt.cfg restore-earlyreceipt 'Invariant ReceiptSound is violated' RestoreIsolation.tla
+run_negative_tlc RestoreIsolationLateCreate.cfg restore-late-create 'Invariant AtMostOneIsolate is violated' RestoreIsolation.tla
+run_tlc RecoveryExpiry.tla RecoveryExpiry.cfg recovery-expiry
+run_negative_tlc RecoveryExpiryNoExpiry.cfg recovery-no-expiry 'Invariant UnexpiredAtConsumption is violated' RecoveryExpiry.tla
+run_negative_tlc RecoveryExpiryStaleClock.cfg recovery-stale-clock 'Invariant UnexpiredAtConsumption is violated' RecoveryExpiry.tla
+run_negative_tlc RecoveryExpiryLegacy.cfg recovery-legacy 'Invariant LegacyFailsClosed is violated' RecoveryExpiry.tla
+run_negative_tlc RecoveryExpiryRebound.cfg recovery-rebound 'Invariant BoundCredential is violated' RecoveryExpiry.tla
+run_tlc DirectoryClaimReview.tla DirectoryClaimReview.cfg directory-claim-review
+run_negative_tlc DirectoryClaimReviewConcurrent.cfg directory-claim-race 'Invariant GrantMatchesClaim is violated' DirectoryClaimReview.tla
+run_negative_tlc DirectoryClaimReviewModuleOnly.cfg directory-claim-module-only 'Invariant AdminRoleRequired is violated' DirectoryClaimReview.tla
+run_negative_tlc DirectoryClaimReviewSelfReview.cfg directory-claim-self-review 'Invariant SeparatedReview is violated' DirectoryClaimReview.tla
+run_negative_tlc DirectoryClaimReviewReplay.cfg directory-claim-replay 'Invariant NoReplayRegrant is violated' DirectoryClaimReview.tla
+run_tlc SignupIdentity.tla SignupIdentity.cfg signup-identity
+run_negative_tlc SignupIdentityPublicClaim.cfg signup-public-claim 'Invariant IndependentPrincipal is violated' SignupIdentity.tla
+run_negative_tlc SignupIdentityUnreviewed.cfg signup-unreviewed 'Invariant ReviewedManagement is violated' SignupIdentity.tla
+run_negative_tlc SignupIdentityRebind.cfg signup-rebind 'Invariant IndependentPrincipal is violated' SignupIdentity.tla
+run_tlc CredentialLifecycle.tla CredentialLifecycle.cfg credential-lifecycle
+run_tlc ChatMutationBoundary.tla ChatMutationBoundary.cfg chat-mutation-boundary
+run_negative_tlc ChatMutationEarlyCommit.cfg chat-mutation-early-commit 'Invariant RejectedLeavesNoMutation is violated' ChatMutationBoundary.tla
+run_negative_tlc ChatMutationNoRollback.cfg chat-mutation-no-rollback 'Invariant RejectedLeavesNoMutation is violated' ChatMutationBoundary.tla
+run_negative_tlc CredentialLifecycleConcurrentReset.cfg credential-reset-race 'Invariant SingleUseReset is violated' CredentialLifecycle.tla
+run_negative_tlc CredentialLifecycleEarlyCommit.cfg credential-early-commit 'Invariant AtomicChallengeConsumption is violated' CredentialLifecycle.tla
+run_negative_tlc CredentialLifecycleGoogleSession.cfg credential-google-session 'Invariant NoSessionsAfterDisable is violated' CredentialLifecycle.tla
 run_tlc MarketplaceStorage.tla MarketplaceStorage.cfg marketplace-storage
 run_negative_tlc MarketplaceStorageUnsafeCache.cfg marketplace-storage-cache 'Invariant NoStorageExceptionEscapes is violated' MarketplaceStorage.tla
 run_negative_tlc MarketplaceStorageUnsafeKey.cfg marketplace-storage-key 'Invariant NoDispatchWithoutDurableKey is violated' MarketplaceStorage.tla
@@ -127,11 +199,21 @@ expect_counterexample() {
     exit 1
   fi
   echo "Expected mutation counterexample: ${config}: ${invariant}"
+  printf 'TDF_TLC_RESULT negative %s %s\n' "${module}" "${config}"
 }
 run_tlc PaymentRecovery.tla PaymentRecovery.cfg payment-recovery
 expect_counterexample PaymentRecoveryOverwrite.cfg NoLostRecovery payment-recovery-overwrite PaymentRecovery.tla
 expect_counterexample PaymentRecoveryReturn.cfg CorrectReturn payment-recovery-return PaymentRecovery.tla
 expect_counterexample PaymentRecoveryCompleted.cfg NoCompletedFlowHijack payment-recovery-completed PaymentRecovery.tla
+run_tlc WorkerCompletionEvidence.tla WorkerCompletionEvidence.cfg worker-completion
+expect_counterexample WorkerCompletionEvidenceFailed.cfg CompletedHasNoFailedItems worker-completion-failed WorkerCompletionEvidence.tla
+expect_counterexample WorkerCompletionEvidenceUnacknowledged.cfg SuccessfulReturnHasEvidence worker-completion-unacknowledged WorkerCompletionEvidence.tla
+run_tlc ProviderRetryAdmission.tla ProviderRetryAdmission.cfg provider-retry-admission
+expect_counterexample ProviderRetryAdmissionAmbiguous.cfg OneLiveIntent provider-retry-ambiguous ProviderRetryAdmission.tla
+expect_counterexample ProviderRetryAdmissionDuplicate.cfg ImmutableKey provider-retry-duplicate ProviderRetryAdmission.tla
+expect_counterexample ProviderRetryAdmissionPayload.cfg BoundReplay provider-retry-payload ProviderRetryAdmission.tla
+expect_counterexample ProviderRetryAdmissionClosed.cfg ClosedCreationDenied provider-retry-closed ProviderRetryAdmission.tla
+expect_counterexample ProviderRetryAdmissionLate.cfg CapturedEvidenceRetained provider-retry-late ProviderRetryAdmission.tla
 run_tlc HostedServicePayment.tla HostedServicePayment.cfg hosted-service-payment
 expect_counterexample HostedServicePaymentAtomic.cfg NoMissingFulfillment hosted-service-atomic HostedServicePayment.tla
 expect_counterexample HostedServicePaymentReplay.cfg ExactlyOnePaidAudit hosted-service-replay HostedServicePayment.tla

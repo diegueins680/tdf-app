@@ -11,15 +11,20 @@ import qualified Data.ByteString.Char8 as BS
 import Data.Text (Text)
 import Database.Persist.Sql hiding (loadConfig)
 import Database.Persist.Postgresql (withPostgresqlPool)
-import System.Environment (getEnv)
+import System.Environment (getEnv, lookupEnv)
 import Test.Hspec
 import TDF.Config (loadConfig,AppConfig(..))
 import TDF.DB (Env(..))
+import TDF.DisposableTicketDatabase (safeConfirmationDatabase)
 import TDF.Ticketing.Confirmation
 
 main :: IO ()
 main = do
   dsn <- getEnv "TICKET_CONFIRMATION_TEST_DSN"
+  ci <- (== Just "true") <$> lookupEnv "CI"
+  overrides <- traverse lookupEnv ["PGHOSTADDR", "PGSERVICE", "PGSERVICEFILE"]
+  unless (safeConfirmationDatabase ci overrides dsn) $
+    fail "Refusing non-local confirmation fixture routing or libpq overrides"
   cfg <- loadConfig
   runNoLoggingT $ withPostgresqlPool (BS.pack dsn) 8 $ \pool -> liftIO $ do
     names <- runSqlPool (rawSql "SELECT current_database()" []) pool

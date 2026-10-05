@@ -202,6 +202,12 @@ tdf-hq/sql/2026-07-30_event_city_subscriptions.sql
 tdf-hq/sql/2026-09-27_event_ingestion_boundaries.sql
 ```
 
+Use the current [Hetzner operational contract](../ops/hetzner/README.md).
+Its routine guarded release executor remains an open obligation. Historical Fly
+preflight/release commands are retired and reject before remote action. Verify
+the complete current migration manifest rather than treating the three domain
+migrations above as a complete deployment batch.
+
 Prepare the reviewed release/recovery bundle, then follow the canonical
 [Hetzner procedure](../ops/hetzner/README.md). Preparation does not deploy:
 

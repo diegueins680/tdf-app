@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "requirement": "MSG-ATOMIC-001",
+  "scope": "Transaction rejection boundary only; full system conformance and deployed fix not established",
+  "parentRevision": "1308d6ac31cacf4e1c907b113b7a3152263052fa",
+  "worktreeChanges": [
+    {
+      "path": "tdf-hq/src/TDF/Social/Chat.hs",
+      "sha256": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd"
+    },
+    {
+      "path": "scripts/social/ChatSpec.hs",
+      "sha256": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f"
+    },
+    {
+      "path": "formal/event-operations/ChatMutationBoundary.tla",
+      "sha256": "21f20bc7d01648705472982b37d9dad6d7cf9711eb83d0f1b2202ed31497d74a"
+    },
+    {
+      "path": "formal/event-operations/ChatMutationBoundary.cfg",
+      "sha256": "dc76bf1caa1a43de6891a51256da9efc4264ac45b882fef969bc15895068e0fa"
+    },
+    {
+      "path": "formal/event-operations/ChatMutationEarlyCommit.cfg",
+      "sha256": "d46199cc0f1db6672aeacdacc0da24bab1fae1766063a5c0732adc5c4e7c710d"
+    },
+    {
+      "path": "formal/event-operations/ChatMutationNoRollback.cfg",
+      "sha256": "689d923264fb1fc9bbd57fae69dcc6fac4619d9ff7f050b5f1be15f09090457f"
+    }
+  ],
+  "oldImplementationSha256": "b1e939e3902c3a445ff3a9c2a6b3ea484bbccb5bbe42811f7e5eb7bb515fda61",
+  "command": "env -u PGHOSTADDR -u PGSERVICE -u PGSERVICEFILE TDF_SOCIAL_HTTP_NATIVE=1 TDF_SOCIAL_HTTP_BUILD=<private existing directory> STACK_ROOT=<repository pinned Stack cache> bash scripts/social/test-http.sh",
+  "oldRuntime": {
+    "log": "social-chat-before-runtime.log",
+    "sha256": "0f6ee224af09344ce6449575a8370d3cbbb095a99ecf4ffa13b610fb98298f10",
+    "result": "Expected regression detected:94 examples,1 failure; HTTP rejection retained message/thread mutations"
+  },
+  "fixedRuntime": {
+    "log": "social-chat-fixed.log",
+    "sha256": "3753004cc80c696d7711227865a15adc83425f2339b31e090de3cb9f46dd4381",
+    "result": "PASS:1148 examples,0 failures; seven rejection/rollback cases and subsequent valid sends; real bearer HTTP and private PostgreSQL16"
+  },
+  "setupFailure": {
+    "log": "social-chat-before.log",
+    "result": "NOT regression evidence: caller supplied nonexistent GHC output directory; created private directory and reran"
+  },
+  "formal": {
+    "result": "Bounded safety passed; both controlled mutations detected",
+    "generatedStates": 34,
+    "distinctStates": 29,
+    "depth": 11,
+    "fairness": "None; no liveness proof",
+    "results": [
+      {
+        "config": "ChatMutationBoundary",
+        "exit": 0,
+        "expectedPositive": true,
+        "matchedExpectedResult": true
+      },
+      {
+        "config": "ChatMutationEarlyCommit",
+        "exit": 12,
+        "expectedPositive": false,
+        "matchedExpectedResult": true
+      },
+      {
+        "config": "ChatMutationNoRollback",
+        "exit": 12,
+        "expectedPositive": false,
+        "matchedExpectedResult": true
+      }
+    ]
+  },
+  "limitations": [
+    "One sender/thread and at most two sequential attempts in the new model",
+    "No exactly-once message semantics; retries after transport loss can duplicate accepted messages",
+    "Current full backend and hosted quality remain separate pending gates",
+    "No production mutation or deployment"
+  ],
+  "localLogDirectory": "/private/tmp/tdf-spec-evidence-20261004"
+}

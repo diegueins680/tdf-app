@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "scope": "Scoped consolidated checkpoint; no whole-system conformance or delivery claim",
+  "consolidatedMain": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+  "rootCandidate": "c1fe4fa5fd1a6307c991f4c6102b530837b1e6c4",
+  "mobileCandidate": "705fd75d3c87a31e8086fd6743398b01057676da",
+  "formal": {
+    "receipt": "formal-result.json",
+    "positiveTlcConfigurations": 56,
+    "expectedMutationCounterexamples": 69,
+    "pluscalModelsRegenerated": 1,
+    "pluscalIntegrityTests": 13,
+    "alloySat": 2,
+    "alloyUnsat": 13,
+    "qualification": "Bounded model assumptions only; no whole-program refinement"
+  },
+  "production": {
+    "receipt": "runtime-observation.json",
+    "backend": "645f56fcc44f81609fbfd0e03d683b40376ce77a",
+    "migrations": 159,
+    "writesPerformed": false,
+    "corsDefect": "ALLOW_ALL_ORIGINS=true remains live; enforcing image and configuration are not deployed"
+  },
+  "commands": [
+    {
+      "log": "repo-quality-c1fe4fa5f.log",
+      "sha256": "e31917cbe640a109fc9cff26aa6778b8600b5ad3b4226399c90064ef34439ef6",
+      "revision": "c1fe4fa5fd1a6307c991f4c6102b530837b1e6c4",
+      "command": "npm run quality:repo",
+      "result": "PASS"
+    },
+    {
+      "log": "ui-tests-b7f3fbbaf.log",
+      "sha256": "95556a3a53e9a66d41961dd887e3b09a4f41522fa98cfc44a206718591bf023e",
+      "revision": "b7f3fbbafbbe7a085f7a39f6f4025180c10aa439",
+      "command": "npm run test:ui",
+      "result": "PASS: 253 suites,2783 tests"
+    },
+    {
+      "log": "mobile-consolidated-tests.log",
+      "sha256": "f1c6958ea42e7af876f0b3fcf04e2f57c0b86089e0ca75aaa3d18115577af84b",
+      "revision": "705fd75d3c87a31e8086fd6743398b01057676da",
+      "command": "npm test -- --runInBand (inside pinned tdf-mobile)",
+      "result": "PASS: 87 suites,553 tests"
+    },
+    {
+      "log": "consolidated-migrations.log",
+      "sha256": "6d1a7966d64f3ef47e7a47c1fabbebdd679e6b3fcef05d9d9a3ebebcfd6a37ce",
+      "revision": "8f8ee386962a89109d3d31e28fa60b43f13fb693",
+      "command": "psql <disposable PG16 test database> -X -v ON_ERROR_STOP=1 -f <rendered migration batch, twice and schema verifier>",
+      "result": "PASS: 169 migrations, repeat application and full schema verification"
+    },
+    {
+      "log": "provider-fixture-source-sql.log",
+      "sha256": "e6ec16aee829f8d715b8441a854df6e482c7518f792701c22c9ddd1f0e590fab",
+      "revision": "b7f3fbbafbbe7a085f7a39f6f4025180c10aa439",
+      "command": "psql <disposable PG16 test database> -X -v ON_ERROR_STOP=1 -f <SQL extracted from ProviderRetrySpec>",
+      "result": "PASS: fixture SQL prepares/executes and immediate constraints pass; transaction rolled back; not provider retry integration"
+    }
+  ],
+  "externalEvidence": {
+    "rootPR": "https://github.com/diegueins680/tdf-app/pull/478",
+    "rootCI": "https://github.com/diegueins680/tdf-app/actions/runs/37247275633",
+    "rootCIStatusAtCheckpoint": "Backend running; no complete PASS claimed",
+    "mobilePR": "https://github.com/diegueins680/TDF-mobile/pull/129",
+    "mobileCI": "https://github.com/diegueins680/TDF-mobile/actions/runs/37246518594"
+  },
+  "remaining": [
+    "Current consolidated backend build/runtime gates still running at checkpoint",
+    "Provider retry integration with new immutable-line constraint pending",
+    "Independent GitHub exact-head approvals, merge and deployment pending",
+    "Canonical guarded Hetzner executor and verified restore pending",
+    "Broad semantic requirement extraction/refinement and implementation correspondence incomplete"
+  ],
+  "localLogDirectory": "/private/tmp/tdf-spec-evidence-20261004"
+}

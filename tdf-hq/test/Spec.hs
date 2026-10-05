@@ -47,6 +47,7 @@ import System.IO (hClose)
 import System.IO.Temp (withSystemTempDirectory, withSystemTempFile)
 import Test.Hspec
 import qualified TDF.Commerce.WorkerLoggingSpec as WorkerLoggingSpec
+import qualified TDF.Commerce.CheckoutMoneySpec as CheckoutMoneySpec
 import qualified TDF.Commerce.PaymentArithmeticSpec as PaymentArithmeticSpec
 import qualified TDF.EmailHeadersSpec as EmailHeadersSpec
 import qualified TDF.TicketConfirmationSpec as TicketConfirmationSpec
@@ -111,6 +112,8 @@ import TDF.Merch.Reputation
 import qualified TDF.APITypesSpec as APITypesSpec
 import qualified TDF.Artists.PromotionSpec as ArtistPromotionSpec
 import qualified TDF.Artists.EnrichmentSpec as ArtistEnrichmentSpec
+import qualified TDF.CorsSpec as CorsSpec
+import qualified TDF.FailureBoundarySpec as FailureBoundarySpec
 import TDF.Cors
     ( corsPolicy,
       deriveCorsOriginFromAppBase,
@@ -236,7 +239,7 @@ import qualified TDF.ServerProposalsSpec as ServerProposalsSpec
 import TDF.ServerRadio
     ( StreamMetadata (..),
       radioServer,
-      resolveRadioTransmissionEnvBase,
+      isLegacyBroadcastUrl,
       resolveRadioNowPlayingFetchResult,
       validateRadioFetchedMetadata,
       validateRadioImportLimit,
@@ -604,6 +607,8 @@ import qualified TDF.CourseIdentitySpec as CourseIdentitySpec
 import qualified TDF.MarketplaceIdentitySpec as MarketplaceIdentitySpec
 import qualified TDF.LiveIntakeIdentitySpec as LiveIntakeIdentitySpec
 import qualified TDF.ProviderIdentitySpec as ProviderIdentitySpec
+import qualified TDF.CredentialLifecycleSpec as CredentialLifecycleSpec
+import qualified TDF.DriveReplaySpec as DriveReplaySpec
 import qualified TDF.ServerSpec as ServerSpec
 import qualified TDF.ServerExtraSpec as ServerExtraSpec
 import qualified TDF.ServerFanClubSpec as ServerFanClubSpec
@@ -845,9 +850,11 @@ sampleSriScriptRequest =
 
 main :: IO ()
 main = hspec $ do
+    FailureBoundarySpec.spec
     StartupResponseSpec.spec
     WorkerLoggingSpec.spec
     PaymentArithmeticSpec.spec
+    CheckoutMoneySpec.spec
     EmailHeadersSpec.spec
     TicketConfirmationSpec.spec
     describe "merch commercial reputation formula v1" $ do
@@ -8328,6 +8335,8 @@ main = hspec $ do
                 ]
                 "CORS_DISABLE_DEFAULTS must be a boolean CORS flag"
 
+    CorsSpec.spec
+
     describe "CORS contact request idempotency" $ do
         it "permits the actor-scoped request header from an allowed web origin" $ do
             middleware <- corsPolicy
@@ -13390,67 +13399,20 @@ main = hspec $ do
                 "https://radio.example.com//live"
                 "RADIO_PUBLIC_BASE path must not contain empty, dot, or dot-dot segments"
 
-    describe "resolveRadioTransmissionEnvBase" $ do
-        it "uses fallback bases only when transmission env vars are absent" $ do
-            resolveRadioTransmissionEnvBase
-                "RADIO_PUBLIC_BASE"
-                "https://tdf-hq.fly.dev/live"
-                Nothing
-                `shouldBe` Right "https://tdf-hq.fly.dev/live"
-            resolveRadioTransmissionEnvBase
-                "RADIO_PUBLIC_BASE"
-                "https://tdf-hq.fly.dev/live"
-                (Just "  https://radio.example.com/live  ")
-                `shouldBe` Right "https://radio.example.com/live"
-
-        it "rejects explicitly blank transmission env vars instead of silently falling back" $ do
-            let assertBlank label rawValue =
-                    case
-                        resolveRadioTransmissionEnvBase
-                            label
-                            "https://fallback.example.com"
-                            (Just rawValue)
-                    of
-                        Left err -> do
-                            errHTTPCode err `shouldBe` 500
-                            BL.unpack (errBody err)
-                                `shouldContain`
-                                    Data.Text.unpack (label <> " is configured but blank")
-                        Right value ->
-                            expectationFailure
-                                ("Expected blank radio base env to be rejected, got " <> show value)
-            assertBlank "RADIO_PUBLIC_BASE" "   "
-            assertBlank "RADIO_INGEST_BASE" "\t\n"
-            assertBlank "RADIO_WHIP_BASE" ""
-
-        it "rejects malformed transmission env vars as server config errors" $ do
-            let assertInvalid label rawValue expectedMessage =
-                    case
-                        resolveRadioTransmissionEnvBase
-                            label
-                            "https://fallback.example.com"
-                            (Just rawValue)
-                    of
-                        Left err -> do
-                            errHTTPCode err `shouldBe` 500
-                            BL.unpack (errBody err)
-                                `shouldContain`
-                                    Data.Text.unpack (label <> expectedMessage)
-                        Right value ->
-                            expectationFailure
-                                ("Expected invalid radio base env to be rejected, got " <> show value)
-            assertInvalid
-                "RADIO_PUBLIC_BASE"
-                "https://radio.example.com/live stream"
-                " must not contain whitespace"
-            assertInvalid
-                "RADIO_WHIP_BASE"
-                "https://radio.example.com/whip\NUL"
-                " must not contain control characters"
-            assertInvalid
-                "RADIO_PUBLIC_BASE"
-                ("https://radio.example.com/live" <> "\x200B")
-                " must not contain hidden formatting characters"
+    describe "legacy native broadcast URL quarantine" $ do
+        it "withholds the historical UUID publisher-key path across hosts and suffixes" $ do
+            let key = "01234567-89ab-4def-8123-456789abcdef"
+            mapM_ (\url -> isLegacyBroadcastUrl url `shouldBe` True)
+                ["https://old.example/live/" <> key,
+                 "https://new.example/hls/" <> key <> "/index.m3u8",
+                 "https://new.example/" <> key <> "?x=1#play",
+                 "https://new.example/%30" <> Data.Text.drop 1 key,
+                 "https://new.example/%2530" <> Data.Text.drop 1 key]
+        it "preserves ordinary external stations and documents conservative UUID collisions" $ do
+            isLegacyBroadcastUrl "https://radio.example/stream.mp3" `shouldBe` False
+            isLegacyBroadcastUrl "https://radio.example/hls/index.m3u8" `shouldBe` False
+            isLegacyBroadcastUrl "https://public.example/01234567-89ab-4def-8123-456789abcdef"
+                `shouldBe` True
 
     describe "validateRadioTransmission endpoint bases" $ do
         it "normalizes configured ingest and WHIP bases before appending generated stream keys" $ do
@@ -17684,6 +17646,8 @@ main = hspec $ do
     ArtistActivationSpec.spec
     ServerAuthSpec.spec
     ProviderIdentitySpec.spec
+    CredentialLifecycleSpec.spec
+    DriveReplaySpec.spec
     LiveIntakeIdentitySpec.spec
     TrialIdentitySpec.spec
     CourseIdentitySpec.spec

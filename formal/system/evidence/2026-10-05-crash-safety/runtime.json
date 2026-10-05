@@ -1,0 +1,1143 @@
+{
+  "startedAt": "2026-10-05T03:27:47.608Z",
+  "observedAt": "2026-10-05T03:27:51.133Z",
+  "sourceRevision": "bea8cd79147254fd41f139a03732155c5a487040",
+  "sourceWorktreeDirty": false,
+  "inspectorSha256": "6c439dbc8b1e17b96399990cb12d49d4d3f64757a161cffdd3224103082cf2e3",
+  "launcherSha256": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
+  "snapshot": {
+    "containers": {
+      "api": {
+        "booleanConfiguration": {
+          "ALLOW_ALL_ORIGINS": "true",
+          "ARTIST_ENRICHMENT_AUTO_PUBLISH": "false",
+          "ARTIST_ENRICHMENT_ENABLED": "true",
+          "AUTO_APPLY_PRODUCTION_MIGRATIONS": "true",
+          "CONTEXTUAL_REPUTATION_ENABLED": "false",
+          "EVENT_DISCOVERY_AUTO_PUBLISH": "false",
+          "EVENT_DISCOVERY_ENABLED": "false",
+          "PUBLIC_REPUTATION_PROJECTION_ENABLED": "true",
+          "REPUTATION_AGGREGATION_WORKER_ENABLED": "false",
+          "RESET_DB": "false",
+          "RUN_MIGRATIONS": "false",
+          "SEED_DB": "false",
+          "SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED": "false"
+        },
+        "containerId": "1058ea212e6ed8f4f11d8e5b1c1496c77beeb5a84f4b0583a27b5640d5689831",
+        "cors": {
+          "canonicalOriginsPresent": [],
+          "otherOriginCount": 0
+        },
+        "health": "not-configured",
+        "image": "diegueins680/tdf-hq@sha256:38e6264b82db2d81a5b51c3a78740b6a305538b4cdae8d53ced067ccbb1e8fe0",
+        "imageId": "sha256:38e6264b82db2d81a5b51c3a78740b6a305538b4cdae8d53ced067ccbb1e8fe0",
+        "missingBooleanConfiguration": [
+          "CORS_DISABLE_DEFAULTS",
+          "EVENT_LOGISTICS_RECHECK_ENABLED",
+          "SESSION_COOKIE_SECURE",
+          "SOCIAL_V2_ENABLED"
+        ],
+        "networks": [
+          "tdf-production_database",
+          "tdf-production_outbound"
+        ],
+        "productionEnvironment": true,
+        "running": true
+      },
+      "db": {
+        "containerId": "6d0014d3523119a2efa66d578391e9d0c2557fd81b4e035765f0efe0a9dc1bff",
+        "health": "healthy",
+        "image": "pgvector/pgvector@sha256:3e8b3adfd27b5707128f60956f62a793c3c9326ea8cfaf0eab7adccb5d700b21",
+        "imageId": "sha256:3e8b3adfd27b5707128f60956f62a793c3c9326ea8cfaf0eab7adccb5d700b21",
+        "networks": [
+          "tdf-production_database"
+        ],
+        "running": true,
+        "volume": "tdf_production_postgres_data"
+      },
+      "edge": {
+        "containerId": "0bee37ff77ddc70d8442a131f0d2e93cb4f3428b2de86973f815e6f251ad3916",
+        "health": "not-configured",
+        "image": "caddy@sha256:6aeddd44c3078b0f9a35206472a11420648a79c184603ef95957d0a20044cb2b",
+        "imageId": "sha256:6aeddd44c3078b0f9a35206472a11420648a79c184603ef95957d0a20044cb2b",
+        "networks": [
+          "tdf-production_outbound"
+        ],
+        "running": true
+      }
+    },
+    "database": {
+      "database": "tdf_hq",
+      "extensions": [
+        {
+          "name": "btree_gist",
+          "version": "1.7"
+        },
+        {
+          "name": "pg_trgm",
+          "version": "1.6"
+        },
+        {
+          "name": "pgcrypto",
+          "version": "1.3"
+        },
+        {
+          "name": "plpgsql",
+          "version": "1.0"
+        },
+        {
+          "name": "unaccent",
+          "version": "1.1"
+        },
+        {
+          "name": "vector",
+          "version": "0.8.1"
+        }
+      ],
+      "localConnection": true,
+      "migrations": [
+        {
+          "checksum": "bec7e569f1b09a85f0bb50b88dd1fda8c4ad2132313209c9e979810e6f1e9475",
+          "migration_id": "2026-07-12_event_discovery_imports",
+          "source_commit": "393bf4fc9708a051409dbef3606564eb2e446933"
+        },
+        {
+          "checksum": "1ecccba9ae0a0d6ae0cbe52df539e6cbf8049e111093a7c579d8b73169e13a28",
+          "migration_id": "2026-07-12_ticket_checkout_idempotency",
+          "source_commit": "393bf4fc9708a051409dbef3606564eb2e446933"
+        },
+        {
+          "checksum": "778ed4cbe300a6050e875d0f31137670930d497bdcfd1ad58d1baed0c097a4c7",
+          "migration_id": "2026-07-12_ticketing_runtime_schema",
+          "source_commit": "393bf4fc9708a051409dbef3606564eb2e446933"
+        },
+        {
+          "checksum": "e14e59e1bf80f8a19907db02a38c83d08721463054b37002892790be8d91c2b8",
+          "migration_id": "2026-07-15_social_discovery_reviews",
+          "source_commit": "ce0c3bc19e2d9030e871480e9e93790940c9eb12"
+        },
+        {
+          "checksum": "8a1ece3ed4799a11e358c3b7645296f37f26db04009f3766b67d4919e586a2e3",
+          "migration_id": "2026-07-15_social_sync_runtime_schema",
+          "source_commit": "ce0c3bc19e2d9030e871480e9e93790940c9eb12"
+        },
+        {
+          "checksum": "25da8ffd43a21468a443633c519db9a49b0642222d6e7d8c68141eb70c1cc780",
+          "migration_id": "2026-07-21_event_logistics",
+          "source_commit": "ce0c3bc19e2d9030e871480e9e93790940c9eb12"
+        },
+        {
+          "checksum": "32ad57c4bf39e24bd1a6d1b6a1c51e6561989494ba880b3ee75300e3d12b31b8",
+          "migration_id": "2026-07-29_campaign_automation",
+          "source_commit": "b3d952079b759886ff4454edf926d81aa3c1db0b"
+        },
+        {
+          "checksum": "571360b49944b6146505d9aaff8c4bb7fc9ddc5702cd2a5fa2b7b316d47828a0",
+          "migration_id": "2026-07-30_event_city_subscriptions",
+          "source_commit": "ce0c3bc19e2d9030e871480e9e93790940c9eb12"
+        },
+        {
+          "checksum": "e2103b4e08e1e64f9ba3ae2da2fd158f90d6516ef600040e2e53a66f8520f099",
+          "migration_id": "2026-08-02_ddex_catalog_core",
+          "source_commit": "a18436ee7d8d8030cec1d99ab3c2f332b5306d96"
+        },
+        {
+          "checksum": "de2a6d4edb4f651ad8cd8712bee0cdd0228ee260e75ddd97fb2571017764fe24",
+          "migration_id": "2026-08-04_service_storefront",
+          "source_commit": "cc487aca2febe785748c43d8262ae34ba0f259e7"
+        },
+        {
+          "checksum": "d30f97b8adadaaca5ce418653fa7afed2efa6aeec48032cc2900a121f7f6a79a",
+          "migration_id": "2026-08-05_artist_enrichment",
+          "source_commit": "256d734370e5f4529ce1c7cef67b532b439ab2cb"
+        },
+        {
+          "checksum": "d0621170eafa63f9063a0569e432fb54863b5c846e6f788a5dfba0c66619e849",
+          "migration_id": "2026-08-05_artist_promotion_slots",
+          "source_commit": "ce0c3bc19e2d9030e871480e9e93790940c9eb12"
+        },
+        {
+          "checksum": "e0014984b3351c481b81c8e6c44ab98d6cf8bc73b2ce0db01ad0aa5888ac45be",
+          "migration_id": "2026-08-05_platform_internationalization",
+          "source_commit": "ce0c3bc19e2d9030e871480e9e93790940c9eb12"
+        },
+        {
+          "checksum": "b6837b8063370ad4316c089f6c4a43033e08d38a0fe0e9b2ea21f4f20fdbe55b",
+          "migration_id": "2026-08-06_feature_access_requests",
+          "source_commit": "b3d952079b759886ff4454edf926d81aa3c1db0b"
+        },
+        {
+          "checksum": "6c423c374b3af28493aa131fd8e4614d9261d3ceb8f9935bdcb50b0df59becc1",
+          "migration_id": "2026-08-06_feature_navigation_preferences",
+          "source_commit": "b3d952079b759886ff4454edf926d81aa3c1db0b"
+        },
+        {
+          "checksum": "aaeec0516e3c8dc994bb0e0f12d0cbb1cf97c5453164f232393c52d52da1561b",
+          "migration_id": "2026-08-07_catalog_backfill_apply",
+          "source_commit": "5ba55deb5a235872cd55629874aab4f7a8ac8701"
+        },
+        {
+          "checksum": "63aeabf9e0cdd1c8acca585968c50b4ad890815d05fe4bc081e224676b156ccc",
+          "migration_id": "2026-08-07_label_project_notes_backfill_apply",
+          "source_commit": "5ba55deb5a235872cd55629874aab4f7a8ac8701"
+        },
+        {
+          "checksum": "230441ac16d53f2e78355db01ec2a1b44e0363a7233037da8ef4cc2f461e891f",
+          "migration_id": "2026-08-07_records_cms_backfill_apply",
+          "source_commit": "5ba55deb5a235872cd55629874aab4f7a8ac8701"
+        },
+        {
+          "checksum": "38bb4dbd9368562c8b78eff933ced68df3bf7c6d65e32d14d7403bf61e6126cb",
+          "migration_id": "2026-08-09_admin_operations_control_center",
+          "source_commit": "b3d952079b759886ff4454edf926d81aa3c1db0b"
+        },
+        {
+          "checksum": "2cd277b795752d964e239549f1349f8e7718dd8a9392a93b7c2e626ba87ae87d",
+          "migration_id": "2026-08-11_feedback_catalog_cutover_apply",
+          "source_commit": "5ba55deb5a235872cd55629874aab4f7a8ac8701"
+        },
+        {
+          "checksum": "b0d83592604d0c34a87de60fec6fc1c35d2a69d669f4fb2e6e0f00e346043b4e",
+          "migration_id": "2026-08-11_instrument_input_cutover_apply",
+          "source_commit": "5ba55deb5a235872cd55629874aab4f7a8ac8701"
+        },
+        {
+          "checksum": "d937b2564cc95391bf151af01290a08c381551e6ae42bbf94e0f80292bf10e20",
+          "migration_id": "2026-08-11_pipeline_workflow_cutover_apply",
+          "source_commit": "5ba55deb5a235872cd55629874aab4f7a8ac8701"
+        },
+        {
+          "checksum": "f73a57f30ef3d0140ed6405787c68b693422b5fc04f23cf2be121661a8b8e8ed",
+          "migration_id": "2026-08-11_social_event_type_cutover_apply",
+          "source_commit": "5ba55deb5a235872cd55629874aab4f7a8ac8701"
+        },
+        {
+          "checksum": "6d0be08f0c2bc8c9e6f5598fea0f5027d9f7ef9fe9825d8329d1942eb7a2b315",
+          "migration_id": "2026-08-11_social_event_workflow_cutover_apply",
+          "source_commit": "5ba55deb5a235872cd55629874aab4f7a8ac8701"
+        },
+        {
+          "checksum": "e1e9695dd4fd6982fde4bd4c94a863445f45223054a1d842fe62db210c19012e",
+          "migration_id": "2026-08-12_content_reaction_cutover_apply",
+          "source_commit": "5ba55deb5a235872cd55629874aab4f7a8ac8701"
+        },
+        {
+          "checksum": "e496cfeb441a12eb61caa61a34aceb6607463807c1745f81db6760242a43c459",
+          "migration_id": "2026-08-12_creator_badge_cutover_apply",
+          "source_commit": "5ba55deb5a235872cd55629874aab4f7a8ac8701"
+        },
+        {
+          "checksum": "42b4a6ed803985f18cfe49b82562af0c24c29573dd2ddbe15636345bd34d2287",
+          "migration_id": "2026-08-12_ddex_operational_cutover_apply",
+          "source_commit": "5ba55deb5a235872cd55629874aab4f7a8ac8701"
+        },
+        {
+          "checksum": "221d2deac6769f811695be468435c15dd86997223c598137f798ecbd605ddc7a",
+          "migration_id": "2026-08-12_ddex_reference_cutover_apply",
+          "source_commit": "5ba55deb5a235872cd55629874aab4f7a8ac8701"
+        },
+        {
+          "checksum": "427cf999dbf5095bb4165290643bad196cc52e8d033db6bc53b3252dcd189686",
+          "migration_id": "2026-08-12_ddex_validation_reference_cutover_apply",
+          "source_commit": "5ba55deb5a235872cd55629874aab4f7a8ac8701"
+        },
+        {
+          "checksum": "873b6c80c5bfe1d4ee9a0dcb6d65b24831e8378236b53750bf5954c6d7236558",
+          "migration_id": "2026-08-12_event_moment_reaction_cutover_apply",
+          "source_commit": "5ba55deb5a235872cd55629874aab4f7a8ac8701"
+        },
+        {
+          "checksum": "ab983f7af3b192e6425b29096e800f7095ef185d288a0f639a280d1a5e361278",
+          "migration_id": "2026-08-13_distribution_accounting_core",
+          "source_commit": "5dc419ca1444b0e050815e1653ac9061e48eada0"
+        },
+        {
+          "checksum": "d5d7b05c5fc361dc104a265c4c2a19666dfe99bc236e948068d33ed194eb0924",
+          "migration_id": "2026-08-13_distribution_product_seeds",
+          "source_commit": "5dc419ca1444b0e050815e1653ac9061e48eada0"
+        },
+        {
+          "checksum": "7541ba81474ae699a6de2849ace0baad3623bc7dbffb285d70d611b17ea50b0b",
+          "migration_id": "2026-08-13_service_storefront_phase0_hardening",
+          "source_commit": "cc487aca2febe785748c43d8262ae34ba0f259e7"
+        },
+        {
+          "checksum": "79a940399d6d93f1d3ec7da0fb009e45aade993c0c2a645e674799a298e0abd0",
+          "migration_id": "2026-08-13_unified_checkout_core",
+          "source_commit": "5dc419ca1444b0e050815e1653ac9061e48eada0"
+        },
+        {
+          "checksum": "e2f4da860660ad277b2c8e8eb5a970f3bbedcd0671233c6fd1dcefcf066a9378",
+          "migration_id": "2026-08-13_versioned_revenue_products",
+          "source_commit": "5dc419ca1444b0e050815e1653ac9061e48eada0"
+        },
+        {
+          "checksum": "1d493409f9188fa71e949eb3856c5f70cbe59417cdc7adb0abfcbe8607b8552d",
+          "migration_id": "2026-08-14_catalog_canonical_schema",
+          "source_commit": "cc487aca2febe785748c43d8262ae34ba0f259e7"
+        },
+        {
+          "checksum": "2699878e425fe52876551d7a7d7783d44224d5cb1ada0e07652a6ecc7e65c9a2",
+          "migration_id": "2026-08-14_catalog_consumer_expand",
+          "source_commit": "cc487aca2febe785748c43d8262ae34ba0f259e7"
+        },
+        {
+          "checksum": "368befc23a89167c1b8778e448d0d734a7b250ee77b68d653135601cb4ae0d80",
+          "migration_id": "2026-08-14_catalog_foundation_seed",
+          "source_commit": "cc487aca2febe785748c43d8262ae34ba0f259e7"
+        },
+        {
+          "checksum": "4a856fb813417e2e87aed286b1b664d54cbda004ffb1c44baed89f4b4901571b",
+          "migration_id": "2026-08-14_catalog_integrity",
+          "source_commit": "cc487aca2febe785748c43d8262ae34ba0f259e7"
+        },
+        {
+          "checksum": "0503bca976e4244707e75c7cd7ac7c795c304e826112f95ca10b23b0247e4bcd",
+          "migration_id": "2026-08-14_checkout_event_refund_runtime",
+          "source_commit": "5dc419ca1444b0e050815e1653ac9061e48eada0"
+        },
+        {
+          "checksum": "0918c16a03bf181ce88ca470a9549af5f2942abcdb3b5881d66c7cf8647197ef",
+          "migration_id": "2026-08-14_music_directory_core",
+          "source_commit": "f49d5ba38b6a71f6749c9e371b67866d45ac271f"
+        },
+        {
+          "checksum": "1a7aced70428987f4d9e5b642b619d5e77526de3e593e1eaf9f44a2213b6a298",
+          "migration_id": "2026-08-14_provider_event_operations",
+          "source_commit": "5dc419ca1444b0e050815e1653ac9061e48eada0"
+        },
+        {
+          "checksum": "52709c99601560fd073cf1b3a4e83c09283e07d70fb30c9421b63e924d7c7938",
+          "migration_id": "2026-08-14_service_storefront_checkout_runtime",
+          "source_commit": "5dc419ca1444b0e050815e1653ac9061e48eada0"
+        },
+        {
+          "checksum": "d779764613fa1ea62651c406ca585cde96f5aab0c291007841602dd229ad8df5",
+          "migration_id": "2026-08-15_marketplace_rental_checkout_runtime",
+          "source_commit": "5dc419ca1444b0e050815e1653ac9061e48eada0"
+        },
+        {
+          "checksum": "cd4e6684229eeda18ec1190ce87936fd24ee0fdde0991b9003ccb3a2d3cb5b17",
+          "migration_id": "2026-08-15_marketplace_sale_checkout_runtime",
+          "source_commit": "5dc419ca1444b0e050815e1653ac9061e48eada0"
+        },
+        {
+          "checksum": "fb8e2e067936cc72db08d4754f5a8d9c7daf5a0ee895aae84899d62b61f48bd9",
+          "migration_id": "2026-08-16_catalog_locale_preference_resume",
+          "source_commit": "5ba55deb5a235872cd55629874aab4f7a8ac8701"
+        },
+        {
+          "checksum": "6b44512cff1abd69268f92e88cd3bc9252719515a85ec29b422483606b3dc1b9",
+          "migration_id": "2026-08-16_catalog_transitional_writer_resume",
+          "source_commit": "5ba55deb5a235872cd55629874aab4f7a8ac8701"
+        },
+        {
+          "checksum": "b57cfb74c9f37d6e8858f65984753a9dc7fb5dfd80eacdb156ee98c3663afa38",
+          "migration_id": "2026-08-16_event_research_ingestion",
+          "source_commit": "3c9d8618127834a65828e30e5e1e329a3a2e4cee"
+        },
+        {
+          "checksum": "fd60c9f954e90f9439292a435267d80ad9d77d5d7680037e978b065a45a01d6a",
+          "migration_id": "2026-08-16_music_directory_verified_reviews",
+          "source_commit": "f49d5ba38b6a71f6749c9e371b67866d45ac271f"
+        },
+        {
+          "checksum": "f292cb6c1723dd1a7e4e679f1c4d458da13598aa68be92d32146a19ec3fdd3da",
+          "migration_id": "2026-08-16_service_booking_checkout_runtime",
+          "source_commit": "5dc419ca1444b0e050815e1653ac9061e48eada0"
+        },
+        {
+          "checksum": "b2ade436a442e92a1d3ad9b6d74dafd5effc5ea4e86fae233f382bb957ad8f7e",
+          "migration_id": "2026-08-17_course_checkout_runtime",
+          "source_commit": "5dc419ca1444b0e050815e1653ac9061e48eada0"
+        },
+        {
+          "checksum": "5978cac3e9a4b1a3f40fd54c9407d8f48beb904f3517c890cef67d5e0c3eb8cd",
+          "migration_id": "2026-08-17_marketplace_customer_requests_and_deposit_settlement",
+          "source_commit": "5dc419ca1444b0e050815e1653ac9061e48eada0"
+        },
+        {
+          "checksum": "057cc2f473e68b7128ec18aaa40d5e3baad5b82c32e1e1930e14bf75d2c27022",
+          "migration_id": "2026-08-17_service_booking_manual_payments",
+          "source_commit": "5dc419ca1444b0e050815e1653ac9061e48eada0"
+        },
+        {
+          "checksum": "da34dfe9c194cf47b111a6a8d7c589326885f8058e911b29d5f0c49a01ebfbad",
+          "migration_id": "2026-08-17_service_booking_provider_actions",
+          "source_commit": "5dc419ca1444b0e050815e1653ac9061e48eada0"
+        },
+        {
+          "checksum": "d93f56137cea393a343a9ba1b3976f062c4958c84abd3290f2ab8c1c49add347",
+          "migration_id": "2026-08-17_social_event_optional_end",
+          "source_commit": "591abfacddd8a3acfbe117421efe65382fa73252"
+        },
+        {
+          "checksum": "e9a82c6697653a8adbdd628cd34ecb1a86265d8d6e04a9cf16d88e9354eb637f",
+          "migration_id": "2026-08-18_ddex_partner_legacy_compatibility",
+          "source_commit": "18feaca0fdda1ee1c0c967c10e2f51eb6c340d00"
+        },
+        {
+          "checksum": "6ee69bd485349c8a7f7c35e2e894aaf14af4c22ea8e59364a847d2f5c0d239ea",
+          "migration_id": "2026-08-18_domo_quote_checkout_runtime",
+          "source_commit": "3969f6bb3980df5de8d30c5f83ef2ad19e80ff3b"
+        },
+        {
+          "checksum": "6af15b13ef52fcead41265aea25454a4a278125a76ded988a60b3733bc07a168",
+          "migration_id": "2026-08-18_music_directory_profile_image_host_compatibility",
+          "source_commit": "5dc419ca1444b0e050815e1653ac9061e48eada0"
+        },
+        {
+          "checksum": "63dd690b595584c057c87278d8ee9e3d22607b59d127100b0267b736cb3c5312",
+          "migration_id": "2026-08-18_music_directory_profile_images",
+          "source_commit": "5dc419ca1444b0e050815e1653ac9061e48eada0"
+        },
+        {
+          "checksum": "720a7e4397ffee8748eb56910d555f613b62353d41c1b84d6f5c9ac52a4ad1b2",
+          "migration_id": "2026-08-18_public_ticket_checkout_runtime",
+          "source_commit": "5dc419ca1444b0e050815e1653ac9061e48eada0"
+        },
+        {
+          "checksum": "2bc6982f3bb9cce070bf189799f21ea6e87cd68aa25db98143b3b876b46f76a8",
+          "migration_id": "2026-08-20_verified_experience_reviews",
+          "source_commit": "3969f6bb3980df5de8d30c5f83ef2ad19e80ff3b"
+        },
+        {
+          "checksum": "a5949ddd72d8468f738443abc5e97f1bd7541fb24d69df0024bc0655f5dd1457",
+          "migration_id": "2026-08-21_studio_internship_audit",
+          "source_commit": "3969f6bb3980df5de8d30c5f83ef2ad19e80ff3b"
+        },
+        {
+          "checksum": "1e2b2544ee9e955c94b40fd12bb64d9de64a1a19492caab182e1e99db0c813a4",
+          "migration_id": "2026-08-24_studio_audit_completion_exception",
+          "source_commit": "3969f6bb3980df5de8d30c5f83ef2ad19e80ff3b"
+        },
+        {
+          "checksum": "9547485f79f8df7951f4010151a254c8ecf2331e4298fb2d012e4b09614de73c",
+          "migration_id": "2026-08-24_studio_audit_historical_failure_gate",
+          "source_commit": "3969f6bb3980df5de8d30c5f83ef2ad19e80ff3b"
+        },
+        {
+          "checksum": "46b0e396fd79a8908b4c927c6c4e8870b85fabf6c8bf6cb56bbe4052f68ca926",
+          "migration_id": "2026-08-24_ticket_qr_constraint_compatibility",
+          "source_commit": "3969f6bb3980df5de8d30c5f83ef2ad19e80ff3b"
+        },
+        {
+          "checksum": "aeb6a4d19d753b60366aa7638c3babcf139cb0f2172e624128d07ccec4b3729a",
+          "migration_id": "2026-08-25_commerce_trigger_row_binding_compatibility",
+          "source_commit": "3969f6bb3980df5de8d30c5f83ef2ad19e80ff3b"
+        },
+        {
+          "checksum": "70a6cc10ac204e199dfa974f690944b3a4fc505132675e066bca2c52307f3f03",
+          "migration_id": "2026-08-25_distribution_trigger_row_binding_compatibility",
+          "source_commit": "3969f6bb3980df5de8d30c5f83ef2ad19e80ff3b"
+        },
+        {
+          "checksum": "d35d8be11ade53be7c8c78b9e3473aa21196c4bfe883f528abef736842b9be6c",
+          "migration_id": "2026-08-26_music_directory_profile_media_reconciliation",
+          "source_commit": "b181fae331f900a7214feda140b5b36cd3fa9d28"
+        },
+        {
+          "checksum": "a13d15eb9e322a268db2e2b7fc35b4ee8516378eb5143bb1c504a8f6d1f50772",
+          "migration_id": "2026-09-01_contextual_reputation",
+          "source_commit": "b181fae331f900a7214feda140b5b36cd3fa9d28"
+        },
+        {
+          "checksum": "0eba757c9d7ae68ae4096b7ba5ff6f90b895297377846e136a256237354c092a",
+          "migration_id": "2026-09-02_party_selector_search_indexes",
+          "source_commit": "b181fae331f900a7214feda140b5b36cd3fa9d28"
+        },
+        {
+          "checksum": "200c8405c62fecfcd2479d5d889da511830f39a4ac08d6612c51abbbfbabceab",
+          "migration_id": "2026-09-04_access_request_notification_types",
+          "source_commit": "ce0ff93c346c02a6f66315fb143e3919c52a409a"
+        },
+        {
+          "checksum": "ae9730f74b5118237c8b3e76f13a6c83e65d4bccdf45d5e8334448aba93c837e",
+          "migration_id": "2026-09-04_contextual_reputation_category_safety",
+          "source_commit": "b181fae331f900a7214feda140b5b36cd3fa9d28"
+        },
+        {
+          "checksum": "9af5bd44c8525400de7044ebf64a7c78945b13b0b033a05ab23e6af8e4100367",
+          "migration_id": "2026-09-04_contextual_reputation_integrity",
+          "source_commit": "b181fae331f900a7214feda140b5b36cd3fa9d28"
+        },
+        {
+          "checksum": "29aee8a914607b77a6cbdc059f9911d596abafc6786ebedf708be81fe30b3ff5",
+          "migration_id": "2026-09-04_contextual_reputation_legacy_signals",
+          "source_commit": "b181fae331f900a7214feda140b5b36cd3fa9d28"
+        },
+        {
+          "checksum": "e67a4546ce0bfdda0870495bd2cd040e3874a7776e5a50e1968cf841ed9d030a",
+          "migration_id": "2026-09-04_contextual_reputation_preference_save",
+          "source_commit": "b181fae331f900a7214feda140b5b36cd3fa9d28"
+        },
+        {
+          "checksum": "c925815ed9ac87df01b21d80861f5958a417a418febba552cc1bc15ee2681742",
+          "migration_id": "2026-09-04_contextual_reputation_private_preferences",
+          "source_commit": "b181fae331f900a7214feda140b5b36cd3fa9d28"
+        },
+        {
+          "checksum": "b01908cd0246dbef37d3fff09c50750cca0fc85b8c5938bd4d274d17e46dcd9a",
+          "migration_id": "2026-09-04_party_selector_punctuation_indexes",
+          "source_commit": "b181fae331f900a7214feda140b5b36cd3fa9d28"
+        },
+        {
+          "checksum": "896b95b61fcbd43a763f3b632cd0be6564cf856282b2e805a1c99beaf33d1ded",
+          "migration_id": "2026-09-04_party_selector_trigram_indexes",
+          "source_commit": "b181fae331f900a7214feda140b5b36cd3fa9d28"
+        },
+        {
+          "checksum": "a8cf5d676c95a1ef6bee033afd3a3faf0453d6050a70248b048315974506f8ec",
+          "migration_id": "2026-09-05_contextual_reputation_preference_rounding",
+          "source_commit": "b181fae331f900a7214feda140b5b36cd3fa9d28"
+        },
+        {
+          "checksum": "204003ca9b90becb4423d518d2a1e59a8fbfd07159cecac916f95ed7a0a153ed",
+          "migration_id": "2026-09-05_party_selector_username_diacritic_indexes",
+          "source_commit": "b181fae331f900a7214feda140b5b36cd3fa9d28"
+        },
+        {
+          "checksum": "5ec11f453dddf2b167c79f4d54ac7ec677591f8c2f9fa7bb2a9bc389878a6959",
+          "migration_id": "2026-09-06_contextual_reputation_staging_worker",
+          "source_commit": "849444cdcce0254c3091293edce8a4cc5f8175fa"
+        },
+        {
+          "checksum": "fe7167bdbaac443a470ea4138abd9375b5ebc07d29f5a57ada75f7d7123f6f4f",
+          "migration_id": "2026-09-06_records_youtube_catalog",
+          "source_commit": "b181fae331f900a7214feda140b5b36cd3fa9d28"
+        },
+        {
+          "checksum": "2c84193c29966646de029c27b0ff1a29d231ebafa9db77e56d42b6d4c753ad57",
+          "migration_id": "2026-09-06_user_onboarding_progress",
+          "source_commit": "d6244296925e20ccb6b2261290204415201843f3"
+        },
+        {
+          "checksum": "699100a59dc180e12cc0c13d5053a6aab002c9ff891672411ac6ea3d67f771db",
+          "migration_id": "2026-09-07_artist_merch_storefronts",
+          "source_commit": "d6244296925e20ccb6b2261290204415201843f3"
+        },
+        {
+          "checksum": "ceca33c1065687232be5fab7ebbf4809ac5db01bf0395c552f6c3aa0c0c33a13",
+          "migration_id": "2026-09-07_catalog_slug_alias_integrity_revalidation",
+          "source_commit": "d6244296925e20ccb6b2261290204415201843f3"
+        },
+        {
+          "checksum": "fde258fbaeb83d502cffee06f746e5ea3a8b68508bc4f494270bd41fc2de37d0",
+          "migration_id": "2026-09-07_contextual_reputation_consent",
+          "source_commit": "849444cdcce0254c3091293edce8a4cc5f8175fa"
+        },
+        {
+          "checksum": "2ca422b24d0fe51875b876e97ade6044d2012d0c2c1e041cb612ec094366dce5",
+          "migration_id": "2026-09-07_contextual_reputation_invalidation_repair",
+          "source_commit": "849444cdcce0254c3091293edce8a4cc5f8175fa"
+        },
+        {
+          "checksum": "c1e7c7a10ee51952501643ba96b058d5ce12cd002ad803c007f3c9b7e56fd181",
+          "migration_id": "2026-09-07_directory_event_visibility_and_favorite_evidence",
+          "source_commit": "d6244296925e20ccb6b2261290204415201843f3"
+        },
+        {
+          "checksum": "7192ceef0e203f46d0eea8d53f944f0c9fd2e6664213c181a3c12a244bdd107b",
+          "migration_id": "2026-09-07_service_storefront_package_bounds_repair",
+          "source_commit": "b181fae331f900a7214feda140b5b36cd3fa9d28"
+        },
+        {
+          "checksum": "9df89a8a9e917251e1233987412d5193ace2eb38013af4024a94d187db4b4449",
+          "migration_id": "2026-09-07_user_experiment_assignment",
+          "source_commit": "d6244296925e20ccb6b2261290204415201843f3"
+        },
+        {
+          "checksum": "fa1704e8458096dbfe341aad100d0c209dbc28c48597646a3353c4aa0d3307fe",
+          "migration_id": "2026-09-08_event_rsvp_identity_privacy_feed",
+          "source_commit": "d6244296925e20ccb6b2261290204415201843f3"
+        },
+        {
+          "checksum": "1acbc5b863b2f496d5f79d1034ca5d3e175ab6973da2ae44bc09da129151fa36",
+          "migration_id": "2026-09-08_merch_reputation",
+          "source_commit": "d6244296925e20ccb6b2261290204415201843f3"
+        },
+        {
+          "checksum": "f83049fb3f27f4d57ac2c5594849ec10cef83b847363a25e76712f9369d2cf5d",
+          "migration_id": "2026-09-08_notification_notif_type_not_null_repair",
+          "source_commit": "849444cdcce0254c3091293edce8a4cc5f8175fa"
+        },
+        {
+          "checksum": "e495d71e1f6553735351d58edd65afbb4cb0a5aaa841112937c3b068faeec204",
+          "migration_id": "2026-09-08_notification_notif_type_text_compatibility",
+          "source_commit": "849444cdcce0254c3091293edce8a4cc5f8175fa"
+        },
+        {
+          "checksum": "38f1d5cd7a9cc8a8db85c2173aed87259365168fcae058b9909d8c3212132816",
+          "migration_id": "2026-09-08_studio_audit_historical_failure_gate_repair",
+          "source_commit": "849444cdcce0254c3091293edce8a4cc5f8175fa"
+        },
+        {
+          "checksum": "c9c77ac7f1f8d4fe2efd8ad72dd76c9609cf5c2b93d7704af83400d2acf8e506",
+          "migration_id": "2026-09-09_canonical_payment_lifecycle",
+          "source_commit": "d6244296925e20ccb6b2261290204415201843f3"
+        },
+        {
+          "checksum": "a1143215bc14aaba417f319319172bc3d0858f1d129a4d24ce162dd7e5bf31fc",
+          "migration_id": "2026-09-09_experience_review_ticket_buyer_type_repair",
+          "source_commit": "1157258b6a6551d49708fa9eb21ab893b6a051f1"
+        },
+        {
+          "checksum": "33f89f61c2552cacc6c4842ac8513d6b518a7b342115a9b1cde3f01a76926712",
+          "migration_id": "2026-09-09_music_directory_suppressed_event_privacy",
+          "source_commit": "849444cdcce0254c3091293edce8a4cc5f8175fa"
+        },
+        {
+          "checksum": "6e3b50079a66e131dd21ea3c1f43a285ebacd7b41c524e22d3fd0061c7b84215",
+          "migration_id": "2026-09-09_public_booking_tentative_idempotency",
+          "source_commit": "d6244296925e20ccb6b2261290204415201843f3"
+        },
+        {
+          "checksum": "1698fe37adc350979fe71b123e3f56e880ff2c2c6346933bef9c9b1db119c09c",
+          "migration_id": "2026-09-10_contextual_reputation_pilot_cohort",
+          "source_commit": "d6244296925e20ccb6b2261290204415201843f3"
+        },
+        {
+          "checksum": "450d8e121017a044a80b2e1bf7fdd4ccbc19e8e1aaa8b70d9fdf5367d2c0d82b",
+          "migration_id": "2026-09-10_party_selector_rate_limit_scopes",
+          "source_commit": "d6244296925e20ccb6b2261290204415201843f3"
+        },
+        {
+          "checksum": "31167db71edf0be5c3e391858c5be140ff2a9497b1701863b5e549e93d620016",
+          "migration_id": "2026-09-10_payment_attempt_intent_binding",
+          "source_commit": "d6244296925e20ccb6b2261290204415201843f3"
+        },
+        {
+          "checksum": "aecfa5d0b0aa127f4bc0292bbddbda8df658c2bb5cf462df6fbc56cb639ad3f9",
+          "migration_id": "2026-09-14_social_v2_foundation",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "e5bb2face01092b2081c98f5c0b6c295f5a05c09615a48a3fd43f868a1bad041",
+          "migration_id": "2026-09-14_social_v2_read_models",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "faa8026e41a293c01656120e360590d793ea575af0e12a68c67b916deb86dc52",
+          "migration_id": "2026-09-15_social_v2_chat_api",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "8f86bc3c25209d6f56987dd3f84123e2be4fd78e3a9ee9876075ca1077a1864c",
+          "migration_id": "2026-09-15_social_v2_dm_write_boundary",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "4231193428a903b7086074c756527ae639e70a3d1ea691aaabeb6e9b778efc8f",
+          "migration_id": "2026-09-15_social_v2_profile_reads",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "3513ce902cb3200f1062d1c5fbf83074e689db77032b00ad5adfa301e34b88a7",
+          "migration_id": "2026-09-15_social_v2_relationship_reads",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "38a5bce02a98389729d9778498826b1a85b6aeaa18c473a9befa6ad5a9fc6c5e",
+          "migration_id": "2026-09-16_artist_self_service",
+          "source_commit": "db69e0534e87ffcb9b3ccf3a856a7fc85e839f16"
+        },
+        {
+          "checksum": "57f22962516b1a14cd43e2da231380e1df7c20a89ee1760383a0d3d960851f54",
+          "migration_id": "2026-09-16_social_v2_fan_effects",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "b2730a6269ade87f9b2368e9e14ee8f9ae11ee10755444af63ae37e24f1cee2f",
+          "migration_id": "2026-09-16_social_v2_legacy_writes",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "52d27c9cc86c6ef90c0719e30d0a56e40d21a914d0af9711d5dc6c80105614de",
+          "migration_id": "2026-09-17_directory_event_privacy_composition",
+          "source_commit": "9f0da14de84919f8fba391fa752b7df7412a600d"
+        },
+        {
+          "checksum": "2ecfa7e44f9722e0a6c96e51b0942ae81c9fe5a7d4406ab2b6a4bc7a2753e00c",
+          "migration_id": "2026-09-17_identity_reconciliation",
+          "source_commit": "a81e48ea9e68b495562ae1f6592654c043dc97eb"
+        },
+        {
+          "checksum": "b841839f26ebfbc022ef831f7f947f69956ae3eaa29058933b8627608cd614fa",
+          "migration_id": "2026-09-18_ads_identity_requests",
+          "source_commit": "cc244b1f86603055997b51379b297baebfd3e7ce"
+        },
+        {
+          "checksum": "f47ef5cbc2dc2750126f384d4f27d40a96000f323466bc65180afc00b12c1947",
+          "migration_id": "2026-09-18_calendar_runtime_schema",
+          "source_commit": "e1a825bda26dbb16b1c732e551cc4880d5626943"
+        },
+        {
+          "checksum": "f9077cfa8a4fd55f6662d585757bb704367f96605f8e7582cb741728fd08ec54",
+          "migration_id": "2026-09-18_course_identity_requests",
+          "source_commit": "cc244b1f86603055997b51379b297baebfd3e7ce"
+        },
+        {
+          "checksum": "5636028805b77a1705bb364c87669e8d46983c93d9fc177da9e2187b98972f4f",
+          "migration_id": "2026-09-18_identity_review_dependencies",
+          "source_commit": "a81e48ea9e68b495562ae1f6592654c043dc97eb"
+        },
+        {
+          "checksum": "ebfa2ed5eda05f282d9289931a10322cd0ab1bf9410f61954de7cf82b04d0ebc",
+          "migration_id": "2026-09-18_live_intake_idempotency",
+          "source_commit": "e1a825bda26dbb16b1c732e551cc4880d5626943"
+        },
+        {
+          "checksum": "99c868a9aad524824160744a8e8d95c3474d174a72ff108774a39dc4b047b38c",
+          "migration_id": "2026-09-18_notification_navigation",
+          "source_commit": "4b0bc6ed703089b25dc3480e2fb3acbb9277fac3"
+        },
+        {
+          "checksum": "c5256cf8ee47b9c8ef6590c9bf7fe58726f088e14b7d2f4edd482435703fc6f1",
+          "migration_id": "2026-09-18_provider_subject_identity",
+          "source_commit": "5c11577a5d31f079b3e070a7810a6b04a48d99f4"
+        },
+        {
+          "checksum": "c74220c13ed341afb49f5ddaf39238b46e0fb6a203125e9c709930de8ca29d65",
+          "migration_id": "2026-09-18_records_resource_availability",
+          "source_commit": "cc244b1f86603055997b51379b297baebfd3e7ce"
+        },
+        {
+          "checksum": "f334746505b218e4bb4fcd99a361b2e97b814c1797d0cf2dead1b03739401d8b",
+          "migration_id": "2026-09-18_trial_identity_requests",
+          "source_commit": "cc244b1f86603055997b51379b297baebfd3e7ce"
+        },
+        {
+          "checksum": "405ad13d7ad045bf544befa1fd93007f8d6d31a2270b3f93e726b9d5b29b4ccf",
+          "migration_id": "2026-09-20_records_ingestion_runtime",
+          "source_commit": "cc244b1f86603055997b51379b297baebfd3e7ce"
+        },
+        {
+          "checksum": "a82a859bf536c108b9030167f7bf2eea09995e6dfa1dbd960a9a3cabfc99d049",
+          "migration_id": "2026-09-27_event_ingestion_boundaries",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "d862514d3c74191814eedf291f1539f925d8d2047ad85ab712f2c072f29ccbc9",
+          "migration_id": "2026-09-28_interaction_account_controls",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "1b4996a84538a67f87bc181ac0da560d5644e1b40d8fe088450b22a195d710a8",
+          "migration_id": "2026-09-28_interaction_blocks",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "31b5747785e648d8759d933b2736abe75a6be9a4b028a148befcaedbdc1dbf8a",
+          "migration_id": "2026-09-28_interaction_commands",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "bc82cacf16a2e4cf9b501436907376f47bc4c6be177feadb9e6c8b8fd0fde38d",
+          "migration_id": "2026-09-28_interaction_compatibility",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "b5e83253e8180289f8d446d65ee4aac3f1f5ff931e1b7e52ba7eea16284a9fa9",
+          "migration_id": "2026-09-28_interaction_discussions",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "4bddd12c17e189286b4fa468ede50e27a471f370ced44224118e46fef3e1b019",
+          "migration_id": "2026-09-28_interaction_integrity",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "2295f7479ae3d3dc83a38a7a21bab1c93d83ba198da97ff4b6726974086e1d12",
+          "migration_id": "2026-09-28_interaction_legacy",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "578a5bf48f811e62054e2a3e8ca788aa1f6651068a01486a525bfcce338d2dda",
+          "migration_id": "2026-09-28_interaction_locks",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "682cc75f8cd38475bedc6a88ecdef7eb14dd416dfad6a7c5499627c3bbc60521",
+          "migration_id": "2026-09-28_interaction_navigation",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "d4a1be4367e2b460b66af1329d5c557ab5ec712f3461431a15ea9851138dd1f6",
+          "migration_id": "2026-09-28_interaction_notifications",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "bdb8004b8af80a16f0073cdb4372f45708aaddcb13e2d859926bfd0156f53efc",
+          "migration_id": "2026-09-28_interaction_policy",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "c9d2268d357b13d5be73eb7b8553d00c277dd2587f2086bf93a673fea443f0c2",
+          "migration_id": "2026-09-28_interaction_read_optimization",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "347c39f690b0590771446f020699ac51faac3382226af6edb9d7bb3c87656e89",
+          "migration_id": "2026-09-28_interaction_summary",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "4c728c92ff8bed0a05afbc8162e7d2d6f4ce97031bc0cdc71a30912013a98cfd",
+          "migration_id": "2026-09-28_universal_interactions",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "dce8abb3aa3c717bc1d769ab8c614641208cdc898e4730eac44c8ce8057bb64f",
+          "migration_id": "2026-09-29_interaction_author_moderation_notices",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "da57327773268a24dd6909e948d3cc4882eca9b52912b7a18894c05ce75f20b4",
+          "migration_id": "2026-09-29_interaction_catalog_authority",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "5ded5d74ae5c7452d7aef15d8802343612ba7ae1bd636d0209fd22ee477b8ebc",
+          "migration_id": "2026-09-29_interaction_event_destinations",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "195a7bae57935fa1049239d1f1e5d3daccfba8f0bcce55d5e5e4bd608bdbc43e",
+          "migration_id": "2026-09-29_interaction_inactive_allowlists",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "248f08a718fa233f5a92a848c49080cb2ed85522762941990ee59ac93ef453a0",
+          "migration_id": "2026-09-29_interaction_legacy_moment_choices",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "deb0d1e81b15c1cf29d11730b9421fa42a4c01db09b8ee2eda65841e7fc0e02e",
+          "migration_id": "2026-09-29_interaction_legacy_reply_aliases",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "30de2c86d23ea46b9caf38c8694c15910adc8f79bb7c91360b86498542addadb",
+          "migration_id": "2026-09-29_interaction_mention_privacy",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "97e8a96006b15d183a2cff557d10b646c734196e8e9eec1f68ab67517d278155",
+          "migration_id": "2026-09-29_interaction_moderation_access",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "77f9d49c668e859b9645ba3715e132091620b5cf3aa808c7f7fe7ce9bf965e4a",
+          "migration_id": "2026-09-29_interaction_moderation_block_boundary",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "0bbda40c61284232021fd9f8b65e748efcb58b8d38c8972249173278c94e7470",
+          "migration_id": "2026-09-29_interaction_moderation_delivery",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "2858c67e3d22bc8167d3904455e811477038ba282a484baf3b621b43679fa056",
+          "migration_id": "2026-09-29_interaction_nonblank_comments",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "73713302b4cec82f2d92b07875ed7d25717530692fcad5c1d09ced7036aa35c0",
+          "migration_id": "2026-09-29_interaction_nonblank_reasons",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "2c476f9d651a4c385e81eba0458d8f65f97d8c99a6bd62c84d8af09579a785e5",
+          "migration_id": "2026-09-29_interaction_ownerless_policy",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "2c3d4998457a07ea2c72e831f8462440bbc5d2a50f644c6e94dee3ce68858d3b",
+          "migration_id": "2026-09-29_interaction_pause_boundary",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "5409159ab033e5e9b5183eb68b5b37a0e26e4ab51cfdd4f94b37e00a0f8ddbd7",
+          "migration_id": "2026-09-29_interaction_publication_authority",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "76de9abcf192d7cd8e9da75bc4381bfb122532c3a40ddb213f275fd7bff0e400",
+          "migration_id": "2026-09-29_interaction_reaction_withdrawal",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "2a28926782c54ecef6f01d566332ece8c32993484782f52f9c272e260fc0b68c",
+          "migration_id": "2026-09-29_interaction_report_reopen",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "5163f796b84a2a4050cf55e77e47c5e5580ea4e5d6ff72d6f8657dc4c5633cae",
+          "migration_id": "2026-09-29_interaction_review_repairs",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "2ffe8f112ae3e9656436b9250ab48959365be3267ca20ec4360c321bdbc48a0c",
+          "migration_id": "2026-09-30_interaction_classified_expiry",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "e483214ff8f59a9f3cbf32f7e234d2811089593859325aec6fe03c5982bbea71",
+          "migration_id": "2026-09-30_interaction_records_publication",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        },
+        {
+          "checksum": "15e288d8b6e0d9aeac135caa416ff7e13ca9a4543bb275722ab5361da7682f58",
+          "migration_id": "2026-09-30_interaction_report_content_version",
+          "source_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+        }
+      ],
+      "providerAccounts": [
+        {
+          "contract_status": "unverified",
+          "credential_status": "absent",
+          "enabled": false,
+          "featureFlag": "checkout.datafast",
+          "provider": "datafast",
+          "status": "disabled"
+        },
+        {
+          "contract_status": "unverified",
+          "credential_status": "absent",
+          "enabled": false,
+          "featureFlag": "checkout.paypal",
+          "provider": "paypal",
+          "status": "disabled"
+        },
+        {
+          "contract_status": "unverified",
+          "credential_status": "absent",
+          "enabled": false,
+          "featureFlag": "checkout.payphone",
+          "provider": "payphone",
+          "status": "disabled"
+        },
+        {
+          "contract_status": "unverified",
+          "credential_status": "absent",
+          "enabled": false,
+          "featureFlag": "checkout.placetopay",
+          "provider": "placetopay",
+          "status": "disabled"
+        }
+      ],
+      "readOnly": true,
+      "revenueFlags": [
+        {
+          "enabled": true,
+          "flag": "checkout.bank_transfer"
+        },
+        {
+          "enabled": true,
+          "flag": "checkout.cash"
+        },
+        {
+          "enabled": false,
+          "flag": "checkout.datafast"
+        },
+        {
+          "enabled": false,
+          "flag": "checkout.datafast.refunds"
+        },
+        {
+          "enabled": false,
+          "flag": "checkout.datafast.webhooks"
+        },
+        {
+          "enabled": true,
+          "flag": "checkout.paypal"
+        },
+        {
+          "enabled": false,
+          "flag": "checkout.paypal.refunds"
+        },
+        {
+          "enabled": true,
+          "flag": "checkout.paypal.webhooks"
+        },
+        {
+          "enabled": false,
+          "flag": "checkout.payphone"
+        },
+        {
+          "enabled": false,
+          "flag": "checkout.placetopay"
+        },
+        {
+          "enabled": true,
+          "flag": "checkout.pos"
+        },
+        {
+          "enabled": true,
+          "flag": "checkout.provider_event_worker"
+        },
+        {
+          "enabled": false,
+          "flag": "commerce.course_recurring_billing"
+        },
+        {
+          "enabled": false,
+          "flag": "commerce.courses"
+        },
+        {
+          "enabled": false,
+          "flag": "commerce.domo_quotes"
+        },
+        {
+          "enabled": true,
+          "flag": "commerce.event_tickets"
+        },
+        {
+          "enabled": false,
+          "flag": "commerce.event_ticket_settlements"
+        },
+        {
+          "enabled": false,
+          "flag": "commerce.marketplace_connected_accounts"
+        },
+        {
+          "enabled": true,
+          "flag": "commerce.marketplace_manual_deposit_settlement"
+        },
+        {
+          "enabled": true,
+          "flag": "commerce.marketplace_rentals"
+        },
+        {
+          "enabled": true,
+          "flag": "commerce.marketplace_sales"
+        },
+        {
+          "enabled": false,
+          "flag": "commerce.mixing_mastering"
+        },
+        {
+          "enabled": false,
+          "flag": "commerce.payment_links"
+        },
+        {
+          "enabled": false,
+          "flag": "commerce.recurring_payments"
+        },
+        {
+          "enabled": false,
+          "flag": "commerce.service_bookings"
+        },
+        {
+          "enabled": false,
+          "flag": "distribution.automatic_payouts"
+        },
+        {
+          "enabled": false,
+          "flag": "distribution.dsr_ingestion"
+        },
+        {
+          "enabled": false,
+          "flag": "distribution.ern_delivery"
+        },
+        {
+          "enabled": false,
+          "flag": "distribution.intake"
+        },
+        {
+          "enabled": false,
+          "flag": "distribution.manual_payouts"
+        },
+        {
+          "enabled": false,
+          "flag": "distribution.partner_delivery"
+        },
+        {
+          "enabled": false,
+          "flag": "distribution.public_storefront"
+        },
+        {
+          "enabled": false,
+          "flag": "domo.authoritative_quotes"
+        },
+        {
+          "enabled": false,
+          "flag": "domo.checkout"
+        },
+        {
+          "enabled": false,
+          "flag": "merch.checkout"
+        },
+        {
+          "enabled": false,
+          "flag": "merch.checkout.datafast"
+        },
+        {
+          "enabled": false,
+          "flag": "merch.checkout.manual"
+        },
+        {
+          "enabled": false,
+          "flag": "merch.checkout.paypal"
+        },
+        {
+          "enabled": false,
+          "flag": "merch.checkout.runtime_ready"
+        },
+        {
+          "enabled": false,
+          "flag": "merch.disputes"
+        },
+        {
+          "enabled": false,
+          "flag": "merch.experimental"
+        },
+        {
+          "enabled": false,
+          "flag": "merch.notifications"
+        },
+        {
+          "enabled": false,
+          "flag": "merch.public_catalog"
+        },
+        {
+          "enabled": false,
+          "flag": "merch.refunds"
+        },
+        {
+          "enabled": false,
+          "flag": "merch.reviews"
+        },
+        {
+          "enabled": false,
+          "flag": "merch.seller_applications"
+        },
+        {
+          "enabled": false,
+          "flag": "merch.storefronts"
+        }
+      ],
+      "role": "tdf_catalog_inventory",
+      "serverVersion": "17.8 (Debian 17.8-1.pgdg12+1)",
+      "socialRuntime": {
+        "activatedOnce": false,
+        "enabled": false
+      }
+    },
+    "directory": "/opt/tdf/production",
+    "limitations": [
+      "Read-only observation, not deployment eligibility or approval.",
+      "Observations are sequential, not an atomic fleet snapshot.",
+      "Absent runtime variables retain unknown effective defaults.",
+      "Database flags are recorded, not activated; no provider transaction was sent.",
+      "Container image and public version are separate observations until image metadata is verified."
+    ],
+    "project": "tdf-production",
+    "publicBackend": {
+      "commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    },
+    "schemaVersion": 1
+  }
+}

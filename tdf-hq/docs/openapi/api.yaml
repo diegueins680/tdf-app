@@ -9,6 +9,768 @@ servers:
     description: Development server
 
 paths:
+  /operations/work-items:
+    get:
+      operationId: operationsWorkItems
+      tags:
+      - Operations
+      summary: List visible scoped work
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationsWorkItemPage'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid current session
+        '403':
+          description: Role or active scope denied
+        '404':
+          description: Resource missing or not visible
+        '409':
+          description: Conflicting replay or state; no command effects committed
+        '422':
+          description: Invalid command representation
+        '500':
+          description: Operational data unavailable; command transaction rolled back
+      parameters:
+      - name: cursor
+        in: query
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: integer
+      - name: q
+        in: query
+        schema:
+          type: string
+      - name: seen
+        in: query
+        schema:
+          type: boolean
+      - name: entityType
+        in: query
+        schema:
+          type: string
+      - name: status
+        in: query
+        schema:
+          type: string
+      - name: priority
+        in: query
+        schema:
+          type: string
+      - name: slaState
+        in: query
+        schema:
+          type: string
+      - name: assigneePartyId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: customerPartyId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: service
+        in: query
+        schema:
+          type: string
+      - name: from
+        in: query
+        schema:
+          type: string
+      - name: to
+        in: query
+        schema:
+          type: string
+      - name: minAmountMinor
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: maxAmountMinor
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: paymentState
+        in: query
+        schema:
+          type: string
+      - name: organizationId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: branchId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: sourceChannel
+        in: query
+        schema:
+          type: string
+    post:
+      operationId: operationsManualWorkItem
+      tags:
+      - Operations
+      summary: Create a bound manual work item
+      security:
+      - bearerAuth: []
+      responses:
+        '201':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationsWorkItem'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid current session
+        '403':
+          description: Role or active scope denied
+        '404':
+          description: Resource missing or not visible
+        '409':
+          description: Conflicting replay or state; no command effects committed
+        '422':
+          description: Invalid command representation
+        '500':
+          description: Operational data unavailable; command transaction rolled back
+      description: correlationKey is an organization-scoped idempotency key bound to current actor, resolved
+        branch and semantic payload. The returned projection uses a server-generated manual UUID key. Exact authorized
+        replay returns the current item without new effects; changed binding or unbound legacy keys reject. Metadata
+        must be empty. Unassigned specialists cannot create work they may not operate. Receipt, targeted projection,
+        audit and response decoding commit together.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationsManualWorkItemCreate'
+  /operations/work-items/{workItemId}:
+    get:
+      operationId: operationsWorkItem
+      tags:
+      - Operations
+      summary: Read one visible work item with history
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationsWorkItemDetail'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid current session
+        '403':
+          description: Role or active scope denied
+        '404':
+          description: Resource missing or not visible
+        '409':
+          description: Conflicting replay or state; no command effects committed
+        '422':
+          description: Invalid command representation
+        '500':
+          description: Operational data unavailable; command transaction rolled back
+      parameters: &id001
+      - name: workItemId
+        in: path
+        schema:
+          type: string
+          format: uuid
+        required: true
+  /operations/work-items/{workItemId}/notes:
+    post:
+      operationId: operationsWorkItemNote
+      tags:
+      - Operations
+      summary: Append an authorized note atomically
+      security:
+      - bearerAuth: []
+      responses:
+        '201':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationsNote'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid current session
+        '403':
+          description: Role or active scope denied
+        '404':
+          description: Resource missing or not visible
+        '409':
+          description: Conflicting replay or state; no command effects committed
+        '422':
+          description: Invalid command representation
+        '500':
+          description: Operational data unavailable; command transaction rolled back
+      description: Current session, roles, assignment and active scope are locked through commit, including mentioned
+        memberships. This is an append command without a replay receipt; an ambiguous response requires reconciliation
+        before retry.
+      parameters: *id001
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationsNoteCreate'
+  /operations/integration-failures:
+    get:
+      operationId: operationsIntegrationFailures
+      tags:
+      - Operations
+      summary: List manager-visible failures in the selected branch
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OperationsIntegrationFailure'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid current session
+        '403':
+          description: Role or active scope denied
+        '404':
+          description: Resource missing or not visible
+        '409':
+          description: Conflicting replay or state; no command effects committed
+        '422':
+          description: Invalid command representation
+        '500':
+          description: Operational data unavailable; command transaction rolled back
+      description: Selects the earliest active scoped membership, as other default-scoped Operations reads. Other
+        branches and unscoped failures are excluded.
+      parameters:
+      - &id002
+        name: organizationId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - name: status
+        in: query
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: integer
+  /operations/integration-failures/{failureId}/replay:
+    post:
+      operationId: operationsReplayFailure
+      tags:
+      - Operations
+      summary: Request one retry of an eligible integration failure
+      security:
+      - bearerAuth: []
+      responses:
+        '202':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationsIntegrationFailure'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid current session
+        '403':
+          description: Role or active scope denied
+        '404':
+          description: Resource missing or not visible
+        '409':
+          description: Conflicting replay or state; no command effects committed
+        '422':
+          description: Invalid command representation
+        '500':
+          description: Operational data unavailable; command transaction rolled back
+      description: Current manager grant and active scoped membership are locked. Only retryable open or dead_letter
+        failures enter retrying; resolved or already retrying rows reject409. State and audit commit once. This
+        records retry admission, not provider delivery.
+      parameters:
+      - name: failureId
+        in: path
+        schema:
+          type: string
+          format: uuid
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationsReplayCommand'
+  /operations/events:
+    get:
+      operationId: operationsStreamEvents
+      tags:
+      - Operations
+      summary: Read visible scoped stream records
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationsStreamBatch'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid current session
+        '403':
+          description: Role or active scope denied
+        '404':
+          description: Resource missing or not visible
+        '409':
+          description: Conflicting replay or state; no command effects committed
+        '422':
+          description: Invalid command representation
+        '500':
+          description: Operational data unavailable; command transaction rolled back
+      parameters:
+      - *id002
+      - name: afterId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: limit
+        in: query
+        schema:
+          type: integer
+  /operations/saved-views:
+    get:
+      operationId: operationsSavedViews
+      tags:
+      - Operations
+      summary: List own and explicitly shared organization views
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OperationsSavedView'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid current session
+        '403':
+          description: Role or active scope denied
+        '404':
+          description: Resource missing or not visible
+        '409':
+          description: Conflicting replay or state; no command effects committed
+        '422':
+          description: Invalid command representation
+        '500':
+          description: Operational data unavailable; command transaction rolled back
+      parameters:
+      - *id002
+    post:
+      operationId: operationsSaveView
+      tags:
+      - Operations
+      summary: Save an owned organization view
+      security:
+      - bearerAuth: []
+      responses:
+        '201':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationsSavedView'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid current session
+        '403':
+          description: Role or active scope denied
+        '404':
+          description: Resource missing or not visible
+        '409':
+          description: Conflicting replay or state; no command effects committed
+        '422':
+          description: Invalid command representation
+        '500':
+          description: Operational data unavailable; command transaction rolled back
+      description: Owner and name identify the replaceable layout. Shared layouts are organization-visible. Stored
+        filters and columns are presentation preferences and never expand source authorization. Each accepted
+        replacement has an audit; no requestId replay deduplication is promised.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationsSavedViewCreate'
+  /operations/push-subscriptions:
+    post:
+      operationId: operationsPushSubscription
+      tags:
+      - Operations
+      summary: Register an encrypted owned push subscription
+      security:
+      - bearerAuth: []
+      responses:
+        '201':
+          description: Authoritative result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationsPushSubscription'
+        '400':
+          description: Malformed input
+        '401':
+          description: Invalid current session
+        '403':
+          description: Role or active scope denied
+        '404':
+          description: Resource missing or not visible
+        '409':
+          description: Conflicting replay or state; no command effects committed
+        '422':
+          description: Invalid command representation
+        '500':
+          description: Operational data unavailable; command transaction rolled back
+        '503':
+          description: Push encryption is not configured; no subscription committed
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationsPushSubscriptionCreate'
+  /operations/metrics:
+    get:
+      operationId: operationsMetrics
+      tags: [Operations]
+      summary: Read metrics over visible operational work
+      description: >-
+        Uses the same role, assignment, organization and branch filter as the item
+        list. Integration-failure counts are manager-only and branch-scoped.
+        Amounts are dashboard projections, not reconciled accounting evidence.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: organizationId, in: query, schema: { type: string, format: uuid } }
+        - { name: branchId, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Scoped metrics
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OperationsMetrics' }
+        '400': { description: Malformed scope selector }
+        '401': { description: Invalid session }
+        '403': { description: Role or active scope denied }
+        '500': { description: Metrics unavailable }
+  /operations/work-items/{workItemId}/seen:
+    patch:
+      operationId: operationsWorkItemSeen
+      tags: [Operations]
+      summary: Apply an authorized versioned work-item seen command
+      description: >-
+        Current token, locked canonical roles, enabled organization and active branch
+        membership are required. The expected version must match the locked item.
+        Item, timer and audit/stream effects commit together. A repeat with the old
+        version returns 409; requestId is diagnostic, not a replay receipt.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: workItemId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OperationsVersionedCommand' }
+      responses:
+        '200':
+          description: Authoritative committed work item
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OperationsWorkItem' }
+        '400': { description: Malformed request }
+        '401': { description: Inactive or invalid current session }
+        '403': { description: Role or active scoped membership denied }
+        '404': { description: Item missing or not visible }
+        '409': { description: Version changed or transactional conflict; no effects committed }
+        '422': { description: Invalid command or transition }
+        '500': { description: Transaction rolled back; operational data unavailable }
+  /operations/work-items/{workItemId}/transition:
+    patch:
+      operationId: operationsWorkItemTransition
+      tags: [Operations]
+      summary: Apply an authorized versioned work-item transition command
+      description: >-
+        Current token, locked canonical roles, enabled organization and active branch
+        membership are required. The expected version must match the locked item.
+        Item, timer and audit/stream effects commit together. A repeat with the old
+        version returns 409; requestId is diagnostic, not a replay receipt.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: workItemId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OperationsTransitionCommand' }
+      responses:
+        '200':
+          description: Authoritative committed work item
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OperationsWorkItem' }
+        '400': { description: Malformed request }
+        '401': { description: Inactive or invalid current session }
+        '403': { description: Role or active scoped membership denied }
+        '404': { description: Item missing or not visible }
+        '409': { description: Version changed or transactional conflict; no effects committed }
+        '422': { description: Invalid command or transition }
+        '500': { description: Transaction rolled back; operational data unavailable }
+  /operations/work-items/{workItemId}/assignment:
+    patch:
+      operationId: operationsWorkItemAssignment
+      tags: [Operations]
+      summary: Apply an authorized versioned work-item assignment command
+      description: >-
+        Current token, locked canonical roles, enabled organization and active branch
+        membership are required. The expected version must match the locked item.
+        Item, timer and audit/stream effects commit together. A repeat with the old
+        version returns 409; requestId is diagnostic, not a replay receipt.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: workItemId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OperationsAssignmentCommand' }
+      responses:
+        '200':
+          description: Authoritative committed work item
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OperationsWorkItem' }
+        '400': { description: Malformed request }
+        '401': { description: Inactive or invalid current session }
+        '403': { description: Role or active scoped membership denied }
+        '404': { description: Item missing or not visible }
+        '409': { description: Version changed or transactional conflict; no effects committed }
+        '422': { description: Invalid command or transition }
+        '500': { description: Transaction rolled back; operational data unavailable }
+  /operations/work-items/{workItemId}/priority:
+    patch:
+      operationId: operationsWorkItemPriority
+      tags: [Operations]
+      summary: Apply an authorized versioned work-item priority command
+      description: >-
+        Current token, locked canonical roles, enabled organization and active branch
+        membership are required. The expected version must match the locked item.
+        Item, timer and audit/stream effects commit together. A repeat with the old
+        version returns 409; requestId is diagnostic, not a replay receipt.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: workItemId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OperationsPriorityCommand' }
+      responses:
+        '200':
+          description: Authoritative committed work item
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OperationsWorkItem' }
+        '400': { description: Malformed request }
+        '401': { description: Inactive or invalid current session }
+        '403': { description: Role or active scoped membership denied }
+        '404': { description: Item missing or not visible }
+        '409': { description: Version changed or transactional conflict; no effects committed }
+        '422': { description: Invalid command or transition }
+        '500': { description: Transaction rolled back; operational data unavailable }
+  /operations/approvals:
+    post:
+      operationId: operationsCreateApproval
+      tags: [Operations]
+      summary: Create or replay a bound approval request
+      description: >-
+        Requires Admin, Manager or Accounting in an enabled organization and active
+        branch. Organization-scoped idempotency keys bind the requester, resolved
+        scope and semantic payload. Exact authorized replay returns the retained
+        request without new audit. This endpoint does not execute the source action.
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OperationsApprovalCreate' }
+      responses:
+        '201':
+          description: New or identically replayed approval
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OperationsApproval' }
+        '400': { description: Malformed request }
+        '401': { description: Invalid current session }
+        '403': { description: Role or active scope denied }
+        '404': { description: Linked item outside visible scope }
+        '409': { description: Idempotency key bound to another request or transaction conflict }
+        '422': { description: Unsupported action, blank key/reason, invalid money or expired new request }
+        '500': { description: Transaction rolled back; operational data unavailable }
+  /operations/approvals/{approvalId}/decision:
+    patch:
+      operationId: operationsDecideApproval
+      tags: [Operations]
+      summary: Commit a pending unexpired approval decision
+      description: >-
+        Requires a different current Admin, Manager or Accounting actor in the same
+        active organization/branch. The pending decision and audit commit together.
+        Expiry is evaluated after lock waits. A terminal replay returns 409; decisions
+        cannot reopen. Approval does not execute a payment or deletion.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: approvalId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OperationsApprovalDecision' }
+      responses:
+        '200':
+          description: Committed approval decision
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OperationsApproval' }
+        '400': { description: Malformed request }
+        '401': { description: Invalid current session }
+        '403': { description: Role or active scope denied }
+        '409': { description: Missing, expired, self, terminal or changed approval; no effects committed }
+        '422': { description: Invalid decision or blank reason }
+        '500': { description: Transaction rolled back; operational data unavailable }
+  /drive/upload:
+    post:
+      tags: [Media]
+      operationId: uploadDriveFile
+      summary: Upload a file through the authorized Google Drive adapter
+      description: >-
+        Requires a coherent authenticated operations or persisted artist role admitted by
+        validateDriveAccess. Uses the supplied Google OAuth access token, or configured
+        service credentials and default folder. Files must be nonempty and at most 50 MiB.
+        An optional idempotency key is bound to the authenticated Party, effective filename,
+        MIME, destination folder and exact bytes. A conflicting or legacy unbound entry
+        returns 409 before upload or permission changes. Identical replay reuses the file
+        and retries best-effort public-reader permission. A null duPublicUrl does not
+        attest public access. Provider lookup/create is not atomic; concurrent creation
+        and ambiguous provider outcomes do not have an exactly-once guarantee.
+      parameters:
+        - name: X-Goog-Access-Token
+          in: header
+          required: false
+          schema: { type: string, maxLength: 4096 }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+                folderId: { type: string }
+                name: { type: string }
+                accessToken: { type: string, maxLength: 4096 }
+                idempotencyKey: { type: string, pattern: '^\s*[0-9a-fA-F]{64}\s*$' }
+      responses:
+        '200':
+          description: Provider file reference; sharing is separately indicated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [duFileId, duWebViewLink, duWebContentLink, duPublicUrl]
+                properties:
+                  duFileId: { type: string }
+                  duWebViewLink: { type: string, nullable: true }
+                  duWebContentLink: { type: string, nullable: true }
+                  duPublicUrl: { type: string, nullable: true }
+        '400': { description: Invalid multipart input, size, name, MIME, folder or credentials }
+        '401': { description: Missing or invalid TDF session, or revoked Google refresh grant }
+        '403': { description: Authenticated actor lacks Drive access }
+        '409': { description: Retry key conflicts with the actor or request, or legacy entry lacks binding }
+        '502': { description: Provider request or response failed }
+        '503': { description: Provider credentials are not configured }
+  /trials/v1/subjects:
+    get:
+      tags: [Trials]
+      operationId: listPublicTrialSubjects
+      summary: List active trial subjects
+      description: Public active subjects only. The historical includeInactive query never selected the protected handler and grants no access to inactive subjects.
+      security: []
+      responses:
+        '200':
+          description: Active subject catalog
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/TrialSubject' }
+  /trials/v1/subjects/catalog:
+    get:
+      tags: [Trials]
+      operationId: listManagedTrialSubjects
+      summary: List subjects for authorized school operations
+      description: Requires current bearer authentication, Scheduling access, and Teacher, Admin, Manager, Studio Manager or Reception role. Uses a distinct path so the public list cannot shadow this handler.
+      parameters:
+        - name: includeInactive
+          in: query
+          required: false
+          schema: { type: boolean, default: false }
+      responses:
+        '200':
+          description: Active subjects, or all subjects when includeInactive is true
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/TrialSubject' }
+        '400': { description: Invalid includeInactive query }
+        '401': { description: 'Missing, invalid or inactive bearer session' }
+        '403': { description: Actor lacks school access }
   /commerce/payment-capabilities:
     get:
       operationId: listPaymentCapabilities
@@ -507,6 +1269,120 @@ paths:
                 $ref: '#/components/schemas/SocialEvent'
         '422':
           description: Event type is unknown, inactive, ineffective, deprecated, or unpublished
+  /social-events/events/{eventId}/live-broadcasts:
+    get:
+      tags: [Social events]
+      operationId: listEventLiveBroadcasts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema: { type: string }
+      description: List legacy metadata visible to the broadcaster or artist followers; streaming URLs and keys are null.
+      responses:
+        '200':
+          description: Legacy broadcast metadata without streaming endpoints or keys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventLiveBroadcastDTO'
+        '400': { description: Invalid request, path identifier, event relation or actor claim }
+        '401': { description: Missing or invalid authentication }
+        '403': { description: Actor is not authorized for this broadcast operation }
+        '404': { description: Event or referenced resource missing or hidden }
+    post:
+      tags: [Social events]
+      operationId: createEventLiveBroadcast
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventLiveBroadcastCreateDTO'
+      description: Native creation is unavailable503 after event, lineup, follower and caller-identity checks. No broadcast is persisted.
+      responses:
+        '503': { description: Native broadcasting unavailable pending verified publisher authorization }
+        '400': { description: Invalid request, path identifier, event relation or actor claim }
+        '401': { description: Missing or invalid authentication }
+        '403': { description: Actor is not authorized for this broadcast operation }
+        '404': { description: Event or referenced resource missing or hidden }
+  /social-events/events/{eventId}/live-broadcasts/{broadcastId}/heartbeat:
+    post:
+      tags: [Social events]
+      operationId: heartbeatEventLiveBroadcast
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: broadcastId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventLiveBroadcastHeartbeatDTO'
+      description: Broadcaster or follower updates the legacy viewer count and heartbeat. This is not evidence of provider connection; streaming URLs and keys are null.
+      responses:
+        '200':
+          description: Legacy broadcast metadata without streaming endpoints or keys
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventLiveBroadcastDTO'
+        '400': { description: Invalid request, path identifier, event relation or actor claim }
+        '401': { description: Missing or invalid authentication }
+        '403': { description: Actor is not authorized for this broadcast operation }
+        '404': { description: Event or referenced resource missing or hidden }
+  /social-events/events/{eventId}/live-broadcasts/{broadcastId}/end:
+    post:
+      tags: [Social events]
+      operationId: endEventLiveBroadcast
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: broadcastId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventLiveBroadcastEndDTO'
+      description: Only the broadcaster may end the legacy session. Streaming URLs and keys are null; this does not revoke remote provider credentials.
+      responses:
+        '200':
+          description: Legacy broadcast metadata without streaming endpoints or keys
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventLiveBroadcastDTO'
+        '400': { description: Invalid request, path identifier, event relation or actor claim }
+        '401': { description: Missing or invalid authentication }
+        '403': { description: Actor is not authorized for this broadcast operation }
+        '404': { description: Event or referenced resource missing or hidden }
   /social-events/events/{eventId}/rsvp:
     parameters:
       - name: eventId
@@ -916,10 +1792,90 @@ paths:
                   type: string
                   format: email
       responses:
-        '204':
+        '200':
           description: Request processed without revealing whether the account exists or email delivery succeeded.
         '400':
           description: Invalid request email.
+  /v1/password-reset/confirm:
+    post:
+      summary: Consume an unexpired single-use recovery challenge
+      description: Requires credential-bound metadata and a current database time within the 15-minute challenge lifetime, checked after lock waits. Legacy metadata-free challenges require a fresh request. Atomically replaces the password, consumes the challenge, revokes existing interactive sessions for the Party, and issues one replacement session. Failure rolls back these changes.
+      operationId: confirmPasswordReset
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PasswordResetConfirmRequest' }
+      responses:
+        '200':
+          description: Password replaced and session issued
+          headers:
+            Set-Cookie: { schema: { type: string }, description: Replacement browser session }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResponse' }
+        '400': { description: 'Invalid payload or invalid, expired, revoked, consumed or unbound challenge' }
+        '403': { description: Credential is disabled }
+        '500': { description: Transaction failed; no credential or session changes committed }
+  /password/change:
+    post:
+      summary: Change a password using the current password
+      description: Requires current password proof and an explicit username or active bearer token identifying the credential. Atomically revokes the Party's interactive sessions and issues a replacement. Service tokens retain their separate policy.
+      operationId: changePassword
+      security: []
+      parameters:
+        - in: header
+          name: Authorization
+          required: false
+          schema: { type: string }
+          description: Bearer token used to resolve the username when omitted from the body; current password proof is still required.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChangePasswordRequest' }
+      responses:
+        '200':
+          description: Password replaced and session issued
+          headers:
+            Set-Cookie: { schema: { type: string }, description: Replacement browser session }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResponse' }
+        '400': { description: Invalid request fields }
+        '401': { description: Current credentials or identifier session are invalid }
+        '403': { description: Credential is disabled }
+        '500': { description: Transaction failed; no credential or session changes committed }
+  /v1/password/change:
+    post:
+      summary: Change a password using the current password
+      description: Requires current password proof and an explicit username or active bearer token identifying the credential. Atomically revokes the Party's interactive sessions and issues a replacement. Service tokens retain their separate policy.
+      operationId: changePasswordV1
+      security: []
+      parameters:
+        - in: header
+          name: Authorization
+          required: false
+          schema: { type: string }
+          description: Bearer token used to resolve the username when omitted from the body; current password proof is still required.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChangePasswordRequest' }
+      responses:
+        '200':
+          description: Password replaced and session issued
+          headers:
+            Set-Cookie: { schema: { type: string }, description: Replacement browser session }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResponse' }
+        '400': { description: Invalid request fields }
+        '401': { description: Current credentials or identifier session are invalid }
+        '403': { description: Credential is disabled }
+        '500': { description: Transaction failed; no credential or session changes committed }
   /login:
     post:
       summary: Login with username or email
@@ -996,6 +1952,40 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Invalid signup fields or missing terms acceptance
+        '403':
+          description: Public signup cannot claim an existing artist identity
+        '409':
+          description: Email already registered
+  /v1/signup:
+    post:
+      summary: Create an account
+      description: Registers a new party + credential pair, sets a session cookie, and returns a ready-to-use token.
+      operationId: signupV1
+      security: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '200':
+          description: Account created
+          headers:
+            Set-Cookie:
+              description: Session cookie for browser-based clients.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Invalid signup fields or missing terms acceptance
+        '403':
+          description: Public signup cannot claim an existing artist identity
         '409':
           description: Email already registered
   /session:
@@ -1405,6 +2395,14 @@ paths:
       description: Consumes WhatsApp Cloud API message payloads and triggers keyword-based enrollment.
       operationId: handleWhatsAppWebhook
       security: [ ]
+      parameters:
+        - name: X-Hub-Signature-256
+          in: header
+          required: true
+          description: HMAC-SHA256 over the exact raw request bytes using the configured Meta app secret; signature presence alone is insufficient.
+          schema:
+            type: string
+            pattern: '^sha256=[a-fA-F0-9]{64}$'
       requestBody:
         required: true
         content:
@@ -1412,8 +2410,75 @@ paths:
             schema:
               $ref: '#/components/schemas/WhatsAppWebhook'
       responses:
-        '204':
+        '200':
           description: Processed
+        '400':
+          description: Invalid JSON or webhook envelope.
+        '401':
+          description: Missing or invalid signature with a configured app secret.
+        '503':
+          description: Meta app secret is absent or blank; ingestion is unavailable.
+  /hooks/whatsapp:
+    get:
+      tags: [Webhooks]
+      summary: Verify WhatsApp webhook
+      description: Echoes the hub.challenge parameter when the verify token matches.
+      operationId: verifyWhatsAppWebhookLegacy
+      security: [ ]
+      parameters:
+        - name: hub.mode
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: hub.verify_token
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: hub.challenge
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Challenge echoed
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Verify token mismatch
+    post:
+      tags: [Webhooks]
+      summary: Receive WhatsApp webhook
+      description: Consumes WhatsApp Cloud API message payloads and triggers keyword-based enrollment.
+      operationId: handleWhatsAppWebhookLegacy
+      security: [ ]
+      parameters:
+        - name: X-Hub-Signature-256
+          in: header
+          required: true
+          description: HMAC-SHA256 over the exact raw request bytes using the configured Meta app secret; signature presence alone is insufficient.
+          schema:
+            type: string
+            pattern: '^sha256=[a-fA-F0-9]{64}$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WhatsAppWebhook'
+      responses:
+        '200':
+          description: Processed
+        '400':
+          description: Invalid JSON or webhook envelope.
+        '401':
+          description: Missing or invalid signature with a configured app secret.
+        '503':
+          description: Meta app secret is absent or blank; ingestion is unavailable.
   /instagram/reply:
     post:
       tags: [Instagram]
@@ -1513,6 +2578,67 @@ paths:
             application/json:
               schema:
                 type: object
+  /instagram/webhook:
+    get:
+      operationId: verifyInstagramWebhook
+      tags: [Instagram]
+      summary: Verify Instagram webhook
+      description: Echoes hub.challenge when verify token matches.
+      security: [ ]
+      parameters:
+        - name: hub.mode
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: hub.verify_token
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: hub.challenge
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Verification challenge
+          content:
+            text/plain:
+              schema:
+                type: string
+        '403':
+          description: Verify token mismatch
+    post:
+      operationId: handleInstagramWebhook
+      tags: [Instagram]
+      summary: Receive Instagram webhook
+      description: Consumes Meta Instagram webhook payloads for Messenger inbox ingestion.
+      security: [ ]
+      parameters:
+        - name: X-Hub-Signature-256
+          in: header
+          required: true
+          description: HMAC-SHA256 over the exact raw request bytes using the configured Meta app secret; signature presence alone is insufficient.
+          schema:
+            type: string
+            pattern: '^sha256=[a-fA-F0-9]{64}$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Processed
+        '400':
+          description: Invalid JSON or webhook envelope.
+        '401':
+          description: Missing or invalid signature with a configured app secret.
+        '503':
+          description: Meta app secret is absent or blank; ingestion is unavailable.
   /facebook/webhook:
     get:
       tags: [Facebook]
@@ -1549,6 +2675,14 @@ paths:
       summary: Receive Facebook webhook
       description: Consumes Meta Page webhook payloads for Messenger inbox ingestion.
       security: [ ]
+      parameters:
+        - name: X-Hub-Signature-256
+          in: header
+          required: true
+          description: HMAC-SHA256 over the exact raw request bytes using the configured Meta app secret; signature presence alone is insufficient.
+          schema:
+            type: string
+            pattern: '^sha256=[a-fA-F0-9]{64}$'
       requestBody:
         required: true
         content:
@@ -1556,8 +2690,14 @@ paths:
             schema:
               type: object
       responses:
-        '204':
+        '200':
           description: Processed
+        '400':
+          description: Invalid JSON or webhook envelope.
+        '401':
+          description: Missing or invalid signature with a configured app secret.
+        '503':
+          description: Meta app secret is absent or blank; ingestion is unavailable.
   /facebook/messages:
     get:
       tags: [Facebook]
@@ -2304,7 +3444,7 @@ paths:
       security:
         - bearerAuth: [ ]
       responses:
-        '204':
+        '200':
           description: Follow removed
   /fans/me/artist-profile:
     get:
@@ -2777,7 +3917,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/CmsContentId'
       responses:
-        '204':
+        '200':
           description: Draft archived without hard deletion.
         '409':
           description: Published, legacy slug-only, or structured Records content cannot be deleted.
@@ -3580,7 +4720,7 @@ paths:
             schema:
               $ref: '#/components/schemas/CatalogReorder'
       responses:
-        '204':
+        '200':
           description: Ordering updated.
         '409':
           description: Incomplete item set or stale catalog revision.
@@ -4029,7 +5169,7 @@ paths:
     patch:
       tags: [Admin]
       summary: Update user account
-      description: Update username, active flag, roles, or force a password reset for a specific user.
+      description: Strict administrator updates one credential's username, active flag or password. Disable, username change or password replacement atomically revokes the Party's existing password, Google and recovery tokens; custom service tokens remain separately managed. Another active credential may authenticate anew.
       operationId: adminUpdateUser
       security:
         - bearerAuth: [ ]
@@ -4232,7 +5372,7 @@ paths:
     get:
       tags: [Radio]
       summary: Search active radio streams
-      description: Returns active streams. Country and genre filtering use immutable UUIDs of active persisted references.
+      description: Returns active streams excluding quarantined UUID-path URLs that can contain historical native publishing keys. Country and genre filtering use immutable UUIDs of active persisted references.
       operationId: searchRadioStreams
       parameters:
         - name: countryId
@@ -4278,6 +5418,7 @@ paths:
                 $ref: '#/components/schemas/RadioStream'
         '400':
           description: Invalid stream metadata, unknown/inactive country UUID, or unknown/inactive/unpublished genre UUID
+        '503': { description: UUID-path URL quarantined pending legacy broadcast reconciliation }
   /radio/streams/import:
     post:
       tags: [Radio]
@@ -4346,9 +5487,14 @@ paths:
   /radio/transmissions:
     post:
       tags: [Radio]
-      summary: Create a radio transmission
-      description: Creates ingest and listening endpoints. The optional genre is referenced only by canonical UUID.
+      summary: Native radio broadcasting unavailable
+      description: >-
+        Returns 503 after normal authentication and request decoding. No stream is
+        persisted. Endpoint configuration cannot override this safety boundary;
+        a verified provider must separate listener identity from publish authority.
       operationId: createRadioTransmission
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -4356,18 +5502,15 @@ paths:
             schema:
               $ref: '#/components/schemas/RadioTransmissionRequest'
       responses:
-        '200':
-          description: Transmission endpoints
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RadioTransmissionInfo'
-        '400':
-          description: Invalid metadata, unknown/inactive country UUID, or unknown/inactive/unpublished genre UUID
+        '400': { description: Invalid request representation }
+        '401': { description: Missing or invalid authentication }
+        '403': { description: Radio access denied }
+        '503': { description: Native broadcasting unavailable pending verified publisher authorization }
   /radio/presence:
     get:
       tags: [Radio]
       summary: Get current user's radio presence
+      description: Quarantined UUID-path presence is returned as null.
       operationId: getRadioPresence
       responses:
         '200':
@@ -4397,17 +5540,19 @@ paths:
                 $ref: '#/components/schemas/RadioPresence'
         '400':
           description: Invalid presence metadata
+        '503': { description: UUID-path URL quarantined pending legacy broadcast reconciliation }
     delete:
       tags: [Radio]
       summary: Clear current user's radio presence
       operationId: clearRadioPresence
       responses:
-        '204':
+        '200':
           description: Presence cleared
   /radio/presence/{partyId}:
     get:
       tags: [Radio]
       summary: Get a party's radio presence
+      description: Quarantined UUID-path presence is returned as null.
       operationId: getPartyRadioPresence
       parameters:
         - name: partyId
@@ -4456,7 +5601,7 @@ paths:
             schema:
               $ref: '#/components/schemas/LiveSessionIntakeMultipart'
       responses:
-        '204':
+        '200':
           description: Intake created
         '400':
           description: Invalid multipart data, canonical reference, or terms acceptance
@@ -4482,7 +5627,7 @@ paths:
             schema:
               $ref: '#/components/schemas/FeedbackMultipart'
       responses:
-        '204':
+        '200':
           description: Feedback accepted
         '400':
           description: Invalid multipart data, catalog reference, consent, or attachment
@@ -4830,7 +5975,12 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/DdexUploadRequest' }
       responses:
-        '501': { description: Storage integration is not implemented }
+        '200':
+          description: Private document stored or retrieved by content hash
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DdexDocument' }
+        '503': { description: Required private storage or supported runtime profile is unavailable }
         '403': { description: Missing persisted `catalog.import` capability }
   /ddex/documents/{documentId}:
     parameters:
@@ -4854,7 +6004,12 @@ paths:
       summary: Download the private source document
       operationId: downloadDdexRawDocument
       responses:
-        '501': { description: Private file storage integration is not implemented }
+        '200':
+          description: Private XML encoded in a JSON download envelope
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DdexDownloadResponse' }
+        '503': { description: Required private storage or supported runtime profile is unavailable }
         '403': { description: Missing persisted `catalog.read` capability }
   /ddex/documents/{documentId}/validation-runs:
     parameters:
@@ -4864,9 +6019,15 @@ paths:
       summary: Start governed validation for a DDEX document
       operationId: validateDdexDocument
       responses:
-        '501': { description: Governed validation execution is not implemented }
+        '200':
+          description: Completed structural validation run; official XSD and recipient-profile validation have not run
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DdexValidationRun' }
+        '503': { description: Required private storage or supported runtime profile is unavailable }
         '403': { description: Missing persisted `catalog.import` capability }
         '404': { description: Document not found }
+        '409': { description: Current document lifecycle or source binding changed; rejected validation makes no changes }
   /ddex/documents/{documentId}/validation-runs/latest:
     parameters:
       - $ref: '#/components/parameters/DdexDocumentId'
@@ -4890,7 +6051,12 @@ paths:
       summary: Preview a DDEX import
       operationId: previewDdexDocument
       responses:
-        '501': { description: Typed import preview generation is not implemented }
+        '200':
+          description: ERN 4.3.2 preview only; no import or delivery
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DdexPreview' }
+        '503': { description: Required private storage or supported runtime profile is unavailable }
         '403': { description: Missing persisted `catalog.read` capability }
   /ddex/documents/{documentId}/import-plans:
     parameters:
@@ -4900,7 +6066,7 @@ paths:
       summary: Create the persisted DDEX import preview
       operationId: createDdexImportPlan
       responses:
-        '501': { description: Typed import planning is not implemented }
+        '503': { description: This capability is deliberately disabled until its verified runtime prerequisites are available }
         '403': { description: Missing persisted `catalog.import` capability }
         '404': { description: Document not found }
   /ddex/import-plans/{importPlanId}:
@@ -4916,7 +6082,7 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/DdexImportPlanResolution' }
       responses:
-        '501': { description: Conflict resolution is not implemented }
+        '503': { description: This capability is deliberately disabled until its verified runtime prerequisites are available }
         '400': { description: Unknown or malformed request properties }
         '403': { description: Missing persisted `catalog.import` capability }
   /ddex/import-plans/{importPlanId}/commit:
@@ -4927,7 +6093,7 @@ paths:
       summary: Commit an approved DDEX import plan
       operationId: commitDdexImportPlan
       responses:
-        '501': { description: Import commit execution is not implemented }
+        '503': { description: This capability is deliberately disabled until its verified runtime prerequisites are available }
         '403': { description: Missing persisted `catalog.import` capability }
   /ddex/exports:
     post:
@@ -4940,7 +6106,7 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/DdexExportRequest' }
       responses:
-        '501': { description: Export rendering and private storage are not implemented }
+        '503': { description: This capability is deliberately disabled until its verified runtime prerequisites are available }
         '400': { description: Unknown properties or malformed canonical UUID }
         '403': { description: Missing persisted `catalog.export` capability }
         '422': { description: Partner is inactive or does not allow the export-enabled version }
@@ -4952,7 +6118,7 @@ paths:
       summary: Download a rendered DDEX export
       operationId: downloadDdexExport
       responses:
-        '501': { description: Export rendering and private storage are not implemented }
+        '503': { description: This capability is deliberately disabled until its verified runtime prerequisites are available }
         '403': { description: Missing persisted `catalog.export` capability }
   /ddex/partners:
     get:
@@ -5066,6 +6232,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/MarketplaceCart' }
         '404': { description: Cart not found }
+        '409': { description: Stored cart quantity or price is invalid, or its exact total exceeds supported storage }
   /marketplace/cart/{cartId}/items:
     parameters:
       - $ref: '#/components/parameters/MarketplaceCartId'
@@ -5088,7 +6255,7 @@ paths:
               schema: { $ref: '#/components/schemas/MarketplaceCart' }
         '400': { description: Invalid listing, quantity, date range, or rental request }
         '404': { description: Cart or listing not found }
-        '409': { description: Asset is no longer available }
+        '409': { description: Asset is no longer available, or the resulting cart amount cannot be represented; rejected updates are rolled back }
   /marketplace/cart/{cartId}/checkout:
     parameters:
       - $ref: '#/components/parameters/MarketplaceCartId'
@@ -6311,6 +7478,87 @@ paths:
         '403': { description: Strict Admin role required }
         '404': { description: Provider event not found }
         '409': { description: Event is not currently dead-lettered }
+  /bookings:
+    get:
+      tags: [Bookings]
+      operationId: listBookings
+      summary: List bookings within the caller's object scope
+      description: >-
+        Scheduling access is required. Admin, Manager, StudioManager and Reception
+        can view the studio calendar; other actors see only bookings where their
+        party is the customer or assigned engineer. Query filters never widen this
+        scope. A foreign or missing bookingId returns an empty list. Only the
+        studio-wide unfiltered calendar includes synthetic course sessions.
+      parameters:
+        - { name: bookingId, in: query, schema: { type: integer, format: int64, minimum: 1 } }
+        - { name: partyId, in: query, schema: { type: integer, format: int64, minimum: 1 } }
+        - { name: engineerPartyId, in: query, schema: { type: integer, format: int64, minimum: 1 } }
+      responses:
+        '200':
+          description: Scoped bookings; party and engineer filters combine by union within object scope
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Booking' } }
+        '400': { description: Invalid positive identifier filter }
+        '401': { description: Current authentication required }
+        '403': { description: Scheduling module access required }
+    post:
+      tags: [Bookings]
+      operationId: createBooking
+      summary: Create an authenticated studio booking
+      description: >-
+        Scheduling access is required. Studio-wide roles may choose a customer;
+        other actors may create only for themselves, with an omitted/null partyId
+        resolving to their authenticated party. Resource conflicts roll back the
+        transaction. This compatibility operation does not establish payment.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BookingCreate' }
+      responses:
+        '200':
+          description: Persisted booking
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Booking' }
+        '400': { description: Invalid or unknown input field }
+        '401': { description: Current authentication required }
+        '403': { description: Scheduling access or customer scope denied }
+        '409': { description: Resource conflict or stale concurrent operation; no mutation committed }
+        '422': { description: Invalid referenced party, offering or resource }
+  /bookings/{bookingId}:
+    parameters:
+      - { name: bookingId, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }
+    put:
+      tags: [Bookings]
+      operationId: updateBooking
+      summary: Update an owned, assigned or staff-accessible booking
+      description: >-
+        Scheduling access and persisted object scope are checked before mutation;
+        a requested engineer assignment cannot grant access. Updates serialize on
+        the booking row and project interval/status changes atomically into the
+        exclusion-backed calendar. Checkout-bound intervals/offering and lifecycle
+        cannot diverge from their authoritative runtime. Omitted/null fields retain
+        existing values; a blank notes string clears notes. At least one field must
+        be non-null. Resources and customer ownership cannot be reassigned here.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BookingUpdate' }
+      responses:
+        '200':
+          description: Authoritatively accepted booking
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Booking' }
+        '400': { description: Invalid, empty, all-null or unknown input field }
+        '401': { description: Current authentication required }
+        '403': { description: Scheduling module access required }
+        '404': { description: Booking absent or outside the caller's object scope }
+        '409': { description: Calendar, checkout lifecycle or concurrent transaction conflict; no mutation committed }
+        '422': { description: Invalid referenced party or offering }
   /bookings/public/availability:
     get:
       tags: [Public bookings]
@@ -6930,7 +8178,7 @@ paths:
       parameters:
         - { name: notificationId, in: path, required: true, schema: { type: integer, format: int64, minimum: 1 } }
       responses:
-        '204': { description: Read state persisted }
+        '200': { description: Read state persisted }
         '401': { description: Authentication required }
   /access-requests/{requestId}:
     get:
@@ -7575,13 +8823,13 @@ paths:
       operationId: addMerchFavorite
       parameters:
         - $ref: '#/components/parameters/MerchProductId'
-      responses: { '204': { description: Favorite stored } }
+      responses: { '200': { description: Favorite stored } }
     delete:
       tags: [Artist merch]
       operationId: deleteMerchFavorite
       parameters:
         - $ref: '#/components/parameters/MerchProductId'
-      responses: { '204': { description: Favorite removed } }
+      responses: { '200': { description: Favorite removed } }
   /merch/seller/stores:
     get:
       tags: [Artist merch seller]
@@ -8172,6 +9420,59 @@ components:
       description: Stable caller-generated key. Reuse with a different request snapshot is rejected.
       schema: { type: string, minLength: 16, maxLength: 128 }
   schemas:
+    EventLiveBroadcastDTO:
+      type: object
+      required: [elbId, elbEventId, elbArtistId, elbArtistName, elbBroadcasterName, elbBroadcasterPartyId, elbTitle, elbDescription, elbStatus, elbPlaybackUrl, elbIngestUrl, elbWhipUrl, elbStreamKey, elbViewerCount, elbStartedAt, elbEndedAt, elbLastHeartbeatAt]
+      properties:
+        elbId: { type: string, nullable: true }
+        elbEventId: { type: string, nullable: true }
+        elbArtistId: { type: string }
+        elbArtistName: { type: string }
+        elbBroadcasterName: { type: string }
+        elbBroadcasterPartyId: { type: string, nullable: true }
+        elbTitle: { type: string }
+        elbDescription: { type: string, nullable: true }
+        elbStatus: { type: string }
+        elbPlaybackUrl: { type: string, nullable: true, description: 'Always null while native streaming is unavailable' }
+        elbIngestUrl: { type: string, nullable: true, description: 'Always null while native streaming is unavailable' }
+        elbWhipUrl: { type: string, nullable: true, description: 'Always null while native streaming is unavailable' }
+        elbStreamKey: { type: string, nullable: true, description: 'Always null while native streaming is unavailable' }
+        elbViewerCount: { type: integer }
+        elbStartedAt: { type: string, nullable: true, format: date-time }
+        elbEndedAt: { type: string, nullable: true, format: date-time }
+        elbLastHeartbeatAt: { type: string, nullable: true, format: date-time }
+    EventLiveBroadcastCreateDTO:
+      type: object
+      additionalProperties: false
+      required: [elbCreateArtistId]
+      properties:
+        elbCreateArtistId: { type: string, minLength: 1 }
+        elbCreateArtistName: { type: string }
+        elbCreateBroadcasterName: { type: string }
+        elbCreateBroadcasterPartyId: { type: string }
+        elbCreateTitle: { type: string }
+        elbCreateDescription: { type: string }
+        elbCreateQuality: { type: string }
+    EventLiveBroadcastHeartbeatDTO:
+      type: object
+      additionalProperties: false
+      properties:
+        elbhViewerDelta: { type: integer, description: Clamped to -1000 through 1000 by the legacy handler }
+    EventLiveBroadcastEndDTO:
+      type: object
+      additionalProperties: false
+      properties:
+        elbEndBroadcasterPartyId: { type: string }
+    TrialSubject:
+      type: object
+      required: [subjectId, name, active, roomIds]
+      properties:
+        subjectId: { type: integer, format: int64 }
+        name: { type: string }
+        active: { type: boolean }
+        roomIds:
+          type: array
+          items: { type: string }
     PaymentCapabilityName:
       type: string
       enum: [one_time, recurring, tokenization, three_ds, installments, authorize, capture, void, full_refund, partial_refund, disputes, chargebacks, payment_link, signed_webhook, server_verification, connected_accounts, split_settlement, seller_payouts]
@@ -9556,6 +10857,58 @@ components:
         customerName: { type: string, nullable: true }
         partyDisplayName: { type: string, nullable: true }
         resources: { type: array, items: { $ref: '#/components/schemas/BookingResource' } }
+        courseSlug: { type: string, nullable: true }
+        coursePrice: { type: number, format: double, nullable: true }
+        courseCurrency: { type: string, nullable: true }
+        courseCapacity: { type: integer, nullable: true }
+        courseRemaining: { type: integer, nullable: true }
+        courseLocation: { type: string, nullable: true }
+    BookingCreate:
+      type: object
+      additionalProperties: false
+      required: [cbTitle, cbStartsAt, cbEndsAt, cbStatus, cbServiceOfferingId]
+      properties:
+        cbTitle: { type: string, minLength: 1, maxLength: 160 }
+        cbStartsAt: { type: string, format: date-time }
+        cbEndsAt: { type: string, format: date-time }
+        cbStatus: { type: string, description: "One of Tentative, Confirmed, InProgress, Completed, Cancelled, NoShow; normalized case and separators accepted" }
+        cbNotes: { type: string, nullable: true, maxLength: 1000 }
+        cbPartyId: { type: integer, format: int64, nullable: true, minimum: 1 }
+        cbEngineerPartyId: { type: integer, format: int64, nullable: true, minimum: 1 }
+        cbEngineerName: { type: string, nullable: true }
+        cbServiceOfferingId: { type: string, format: uuid }
+        cbResourceIds: { type: array, nullable: true, maxItems: 20, items: { type: string, maxLength: 160 } }
+    BookingUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      description: At least one supported field must be non-null; null alone is not an update.
+      anyOf:
+        - required: [ubTitle]
+          properties: { ubTitle: { type: string, nullable: false } }
+        - required: [ubStartsAt]
+          properties: { ubStartsAt: { type: string, nullable: false } }
+        - required: [ubEndsAt]
+          properties: { ubEndsAt: { type: string, nullable: false } }
+        - required: [ubStatus]
+          properties: { ubStatus: { type: string, nullable: false } }
+        - required: [ubNotes]
+          properties: { ubNotes: { type: string, nullable: false } }
+        - required: [ubEngineerPartyId]
+          properties: { ubEngineerPartyId: { type: integer, nullable: false } }
+        - required: [ubEngineerName]
+          properties: { ubEngineerName: { type: string, nullable: false } }
+        - required: [ubServiceOfferingId]
+          properties: { ubServiceOfferingId: { type: string, nullable: false } }
+      properties:
+        ubTitle: { nullable: true, type: string, minLength: 1, maxLength: 160 }
+        ubStartsAt: { nullable: true, type: string, format: date-time }
+        ubEndsAt: { nullable: true, type: string, format: date-time }
+        ubStatus: { nullable: true, type: string, description: "One of Tentative, Confirmed, InProgress, Completed, Cancelled, NoShow; normalized case and separators accepted" }
+        ubNotes: { type: string, nullable: true, maxLength: 1000 }
+        ubEngineerPartyId: { type: integer, format: int64, nullable: true, minimum: 1 }
+        ubEngineerName: { type: string, nullable: true }
+        ubServiceOfferingId: { nullable: true, type: string, format: uuid }
     PublicBookingCreate:
       type: object
       required: [pbFullName, pbEmail, pbServiceOfferingId, pbStartsAt]
@@ -9566,7 +10919,7 @@ components:
         pbServiceOfferingId: { type: string, format: uuid }
         pbStartsAt: { type: string, format: date-time }
         pbDurationMinutes: { type: integer, minimum: 30, maximum: 840 }
-        pbNotes: { type: string, nullable: true, maxLength: 5000 }
+        pbNotes: { type: string, nullable: true, maxLength: 1000 }
         pbEngineerPartyId: { type: integer, format: int64, nullable: true }
         pbEngineerName: { type: string, nullable: true }
         pbResourceIds: { type: array, nullable: true, maxItems: 20, items: { type: string } }
@@ -9580,7 +10933,7 @@ components:
         pbcServiceOfferingId: { type: string, format: uuid }
         pbcStartsAt: { type: string, format: date-time }
         pbcDurationMinutes: { type: integer, minimum: 30, maximum: 840 }
-        pbcNotes: { type: string, nullable: true, maxLength: 5000 }
+        pbcNotes: { type: string, nullable: true, maxLength: 1000 }
         pbcEngineerPartyId: { type: integer, format: int64, nullable: true }
         pbcEngineerName: { type: string, nullable: true }
         pbcResourceIds: { type: array, nullable: true, maxItems: 20, items: { type: string } }
@@ -10883,6 +12236,16 @@ components:
         resolutionConflicts:
           type: array
           items: { $ref: '#/components/schemas/DdexConflictResolution' }
+    DdexPreview:
+      type: object
+      additionalProperties: false
+      required: [previewMessageId, previewSender, previewReleaseCount, previewResourceCount, previewWarnings]
+      properties:
+        previewMessageId: { type: string }
+        previewSender: { type: string }
+        previewReleaseCount: { type: integer, minimum: 0 }
+        previewResourceCount: { type: integer, minimum: 0 }
+        previewWarnings: { type: array, items: { type: string } }
     DdexDownloadResponse:
       type: object
       additionalProperties: false
@@ -11594,9 +12957,25 @@ components:
         claimArtistId:
           type: integer
           format: int64
-          description: Optional existing artist profile to claim when it is not already assigned to a user. A verified email match applies the persisted artist-claim policy server-side.
+          deprecated: true
+          description: Unsupported legacy ownership claim. A supplied positive identifier is rejected with 403 before database effects. Create an independent account, then use the authenticated reviewed directory-claim workflow.
         onboardingIntent:
           $ref: '#/components/schemas/OnboardingIntent'
+    PasswordResetConfirmRequest:
+      type: object
+      additionalProperties: false
+      required: [token, newPassword]
+      properties:
+        token: { type: string, format: uuid }
+        newPassword: { type: string, format: password }
+    ChangePasswordRequest:
+      type: object
+      additionalProperties: false
+      required: [currentPassword, newPassword]
+      properties:
+        username: { type: string, description: Optional when an active bearer token supplies the identifier }
+        currentPassword: { type: string, format: password }
+        newPassword: { type: string, format: password }
     LoginResponse:
       type: object
       required: [token, partyId, roles, modules]
@@ -13664,17 +15043,16 @@ components:
           nullable: true
     UpdateUserAccountRequest:
       type: object
+      additionalProperties: false
+      minProperties: 1
       properties:
         uauUsername:
           type: string
-          nullable: true
         uauPassword:
           type: string
           format: password
-          nullable: true
         uauActive:
           type: boolean
-          nullable: true
     ArtistProfile:
       type: object
       required: [apArtistId, apDisplayName, apGenreIds, apFollowerCount, apHasUserAccount]
@@ -15568,7 +16946,6 @@ components:
     OperationsVersionedCommand:
       type: object
       required: [expectedVersion, requestId, sourceClient]
-      additionalProperties: false
       properties:
         expectedVersion: { type: integer, format: int64, minimum: 1 }
         reason: { type: string, nullable: true }
@@ -15593,7 +16970,6 @@ components:
     OperationsPriorityCommand:
       type: object
       required: [expectedVersion, priority, reason, requestId, sourceClient]
-      additionalProperties: false
       properties:
         expectedVersion: { type: integer, format: int64, minimum: 1 }
         priority: { $ref: '#/components/schemas/OperationsPriority' }
@@ -15603,12 +16979,11 @@ components:
     OperationsNoteCreate:
       type: object
       required: [body, mentionedPartyIds, requestId, sourceClient]
-      additionalProperties: false
       properties:
         body: { type: string, minLength: 1, maxLength: 5000 }
         mentionedPartyIds: { type: array, items: { type: integer, format: int64 } }
-        requestId: { type: string }
-        sourceClient: { type: string }
+        requestId: { type: string, minLength: 1 }
+        sourceClient: { type: string, minLength: 1 }
     OperationsManualWorkItemCreate:
       type: object
       required: [organizationId, entityType, uncorrelated, correlationKey, titleEs, titleEn, descriptionEs, descriptionEn, priority, metadata, requestId, sourceClient]
@@ -15618,7 +16993,7 @@ components:
         entityType: { type: string }
         entityId: { type: string, nullable: true }
         uncorrelated: { type: boolean }
-        correlationKey: { type: string }
+        correlationKey: { type: string, minLength: 1, maxLength: 320 }
         titleEs: { type: string }
         titleEn: { type: string }
         descriptionEs: { type: string }
@@ -15627,11 +17002,11 @@ components:
         responsibleTeam: { type: string, nullable: true }
         customerPartyId: { type: integer, format: int64, nullable: true }
         serviceKey: { type: string, nullable: true }
-        amountMinor: { type: integer, format: int64, nullable: true }
-        currency: { type: string, nullable: true }
-        metadata: { type: object, additionalProperties: true }
-        requestId: { type: string }
-        sourceClient: { type: string }
+        amountMinor: { type: integer, format: int64, minimum: 0, nullable: true }
+        currency: { type: string, pattern: '^[A-Z]{3}$', nullable: true }
+        metadata: { type: object, maxProperties: 0 }
+        requestId: { type: string, minLength: 1 }
+        sourceClient: { type: string, minLength: 1 }
     OperationsApprovalCreate:
       type: object
       required: [organizationId, actionType, targetEntityType, targetEntityId, reason, idempotencyKey, requestId, sourceClient]
@@ -15642,13 +17017,13 @@ components:
         actionType: { type: string }
         targetEntityType: { type: string }
         targetEntityId: { type: string }
-        amountMinor: { type: integer, format: int64, nullable: true }
-        currency: { type: string, nullable: true }
+        amountMinor: { type: integer, format: int64, minimum: 0, nullable: true }
+        currency: { type: string, pattern: '^[A-Z]{3}$', nullable: true }
         reason: { type: string, minLength: 1 }
         idempotencyKey: { type: string, minLength: 1 }
         expiresAt: { type: string, format: date-time, nullable: true }
-        requestId: { type: string }
-        sourceClient: { type: string }
+        requestId: { type: string, minLength: 1 }
+        sourceClient: { type: string, minLength: 1 }
     OperationsApprovalDecision:
       type: object
       required: [decision, reason, expectedDecision, requestId, sourceClient]
@@ -15656,8 +17031,8 @@ components:
         decision: { type: string, enum: [approved, rejected] }
         reason: { type: string, minLength: 1 }
         expectedDecision: { type: string, enum: [pending] }
-        requestId: { type: string }
-        sourceClient: { type: string }
+        requestId: { type: string, minLength: 1 }
+        sourceClient: { type: string, minLength: 1 }
     OperationsApproval:
       type: object
       required: [id, organizationId, actionType, targetEntityType, targetEntityId, requesterPartyId, requesterRole, requestReason, requestedAt, decision, executionStatus]
@@ -15706,8 +17081,8 @@ components:
       required: [reason, requestId, sourceClient]
       properties:
         reason: { type: string, minLength: 1 }
-        requestId: { type: string }
-        sourceClient: { type: string }
+        requestId: { type: string, minLength: 1 }
+        sourceClient: { type: string, minLength: 1 }
     OperationsStreamEvent:
       type: object
       required: [id, eventType, payload, createdAt]
@@ -15749,8 +17124,8 @@ components:
         columns: { type: array, items: { type: string } }
         widgets: { type: array, items: { type: string } }
         subscribedEventTypes: { type: array, items: { type: string } }
-        requestId: { type: string }
-        sourceClient: { type: string }
+        requestId: { type: string, minLength: 1 }
+        sourceClient: { type: string, minLength: 1 }
     OperationsPushSubscriptionCreate:
       type: object
       required: [organizationId, platform, deviceToken, requestId, sourceClient]
@@ -15758,8 +17133,8 @@ components:
         organizationId: { type: string, format: uuid }
         platform: { type: string, enum: [ios, android, web] }
         deviceToken: { type: string, minLength: 16, maxLength: 4096, writeOnly: true }
-        requestId: { type: string, minLength: 1, maxLength: 200 }
-        sourceClient: { type: string, minLength: 1, maxLength: 100 }
+        requestId: { type: string, minLength: 1 }
+        sourceClient: { type: string, minLength: 1 }
     OperationsPushSubscription:
       type: object
       required: [id, organizationId, platform, active, updatedAt]

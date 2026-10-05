@@ -1,6 +1,7 @@
 import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import { mkdirSync, openSync, closeSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { tlcSummary } from './lib/formal-result-summary.mjs';
 import { fileURLToPath } from 'node:url';
 import { sourceManifest, sha256, classifyExecution } from './lib/verification-evidence.mjs';
 
@@ -43,6 +44,7 @@ try {
   const after = sourceManifest(root);
   const log = readFileSync(path.join(out, 'models.log'), 'utf8');
   report.execution = outcome;
+  report.tlc = tlcSummary(log);
   report.logSha256 = sha256(log);
   report.finishedAt = new Date().toISOString();
   report.finalSourceDigest = after.digest;

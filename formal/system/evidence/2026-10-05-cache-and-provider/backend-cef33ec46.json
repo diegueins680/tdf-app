@@ -1,0 +1,18 @@
+{
+  "sourceRevision": "cef33ec46f12c56222b4cd945b714e394d40ff8b",
+  "mobileRevision": "7a43e78131d66646504e40ed2cc380d2bc5336d1",
+  "recordedAt": "2026-10-05T11:41:50.271573+00:00",
+  "command": "STACK_ROOT=/Users/diegosaa/GitHub/tdf-app/.stack-root stack --no-terminal test tdf-hq --copy-bins --local-bin-path /private/tmp/tdf-spec-evidence-20261004/bin-cef33ec46",
+  "cwd": "tdf-hq",
+  "exitCode": 0,
+  "examples": 3813,
+  "failures": 0,
+  "pending": 7,
+  "driveSyntheticExamples": 9,
+  "logSha256": "59c99c482a17cb7f06ad346b24974e2882728bcbcb00db295e3a87fde547280f",
+  "binarySha256": "5f8321f39cf9d983083a8d999e81eb7c2870802e269b3d1205c7d1cae9dbd8de",
+  "limitations": [
+    "Pending tests retained; separate PostgreSQL runners not part of this Hspec command.",
+    "No external Drive/OAuth/provider request; transport fixture synthetic."
+  ]
+}

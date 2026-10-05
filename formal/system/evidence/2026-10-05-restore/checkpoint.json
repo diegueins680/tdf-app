@@ -1,0 +1,86 @@
+{
+  "revision": "9b9d0e118e25972a331eaa02056d21bb05bb2ea0",
+  "mobile": "c1d6031b36e52dd365e699163900e65adb0621e0",
+  "databaseRestore": {
+    "relations": 652,
+    "rowCountSum": 34865,
+    "migrationCountBefore": 159,
+    "migrationCountAfter": 169,
+    "applications": 2,
+    "isolateRemoved": true,
+    "productionDatabaseWritten": false,
+    "controlChanges": {
+      "revenueFlags": {
+        "added": [
+          {
+            "flag": "checkout.payphone.notifications",
+            "enabled": false
+          },
+          {
+            "flag": "checkout.provider_query_recovery",
+            "enabled": false
+          },
+          {
+            "flag": "checkout.placetopay.webhooks",
+            "enabled": false
+          }
+        ],
+        "removed": [],
+        "changed": []
+      },
+      "providerAccounts": {
+        "added": [
+          {
+            "provider": "bank_transfer",
+            "status": "disabled",
+            "contract_status": "unverified",
+            "credential_status": "absent",
+            "enabled": false,
+            "featureFlag": "checkout.bank_transfer"
+          }
+        ],
+        "removed": [],
+        "changed": []
+      }
+    }
+  },
+  "commands": [
+    {
+      "command": "npm run quality:repo",
+      "result": "PASS",
+      "logSha256": "583118516eb1c80756951cdaf1b2350fb22ae628bfdb76c5caa6bf5ce59f8762"
+    },
+    {
+      "command": "node scripts/rehearse-hetzner-restore.mjs --identity-file PRIVATE_KEY --output NEW_JSON --with-candidate-migrations",
+      "result": "PASS",
+      "receiptSha256": "e7b035e8cb995fbc5afef19769f8b7575172d2ca9c4bff7a4a45e40143950273"
+    }
+  ],
+  "review": {
+    "kind": "independent read-only source and receipt review",
+    "findings": 0,
+    "pythonTests": 13,
+    "nodeTests": 13,
+    "githubApproval": false
+  },
+  "controlledFailures": [
+    {
+      "revision": "7b6e43d76",
+      "stage": "restore-database",
+      "result": "FAIL; no passing receipt, cleanup confirmed"
+    },
+    {
+      "revision": "bbd941e56fc3e15ed13b5c6230c321e785b3d134",
+      "stage": "restore-database",
+      "category": "PostgreSQL shared lock table exhausted with default64 locks and10connections",
+      "privateDiagnosticSha256": "986d9125a07496a820669a5b1f41c434af10c8ca64c106e102e4d98b7562407d",
+      "result": "FAIL; no passing receipt, cleanup confirmed"
+    }
+  ],
+  "limitations": [
+    "No application or provider transaction was run against the copy.",
+    "Online database snapshot does not coordinate assets, roles or secret recovery.",
+    "No root or Mobile merge, production migration or application deployment.",
+    "Full semantic inventory, canonical routine executor, current GitHub approval and hosted backend completion remain open."
+  ]
+}

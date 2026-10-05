@@ -63,6 +63,9 @@ export default function LazyPaginatedList<T>({
   }, [initialPageSize, normalizedOptions]);
 
   useEffect(() => {
+    // A reset invalidates the remembered application as well as the page. React
+    // may replay setup; the following selection effect must restore its target.
+    appliedSelection.current = null;
     setPage(0);
   }, [resetKey, rowsPerPage]);
 

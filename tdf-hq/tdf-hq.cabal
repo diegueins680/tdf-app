@@ -13,6 +13,7 @@ executable tdf-hq-exe
   other-modules:
     TDF.App.Boot
     TDF.App.StartupResponse
+    TDF.App.FailureBoundary
     TDF.API.Admin
     TDF.API
     TDF.API.Bands
@@ -77,6 +78,7 @@ executable tdf-hq-exe
     TDF.Artists.Enrichment
     TDF.Auth
     TDF.CampaignAutomation
+    TDF.Commerce.Money
     TDF.Commerce.CheckoutStore
     TDF.Commerce.CourseCheckout
     TDF.Commerce.DomoQuotes
@@ -301,18 +303,24 @@ test-suite tdf-hq-test
   other-modules:
     TDF.LiveIntakeIdentitySpec
     TDF.ProviderIdentitySpec
+    TDF.CredentialLifecycleSpec
+    TDF.DriveReplaySpec
     TDF.CourseIdentitySpec
     TDF.TrialIdentitySpec
     TDF.MarketplaceIdentitySpec
     TDF.Commerce.WorkerLoggingSpec
+    TDF.Commerce.CheckoutMoneySpec
     TDF.Commerce.PaymentArithmeticSpec
     TDF.EmailHeadersSpec
+    TDF.CorsSpec
+    TDF.FailureBoundarySpec
     TDF.TicketConfirmationSpec
     Paths_tdf_hq
     TDF.API
     TDF.API.Admin
     TDF.App.Boot
     TDF.App.StartupResponse
+    TDF.App.FailureBoundary
     TDF.API.Bands
     TDF.API.Facebook
     TDF.API.Future
@@ -373,6 +381,7 @@ test-suite tdf-hq-test
     TDF.Artists.EnrichmentSpec
     TDF.Auth
     TDF.CampaignAutomation
+    TDF.Commerce.Money
     TDF.Commerce.CheckoutStore
     TDF.Commerce.CourseCheckout
     TDF.Commerce.DomoQuotes

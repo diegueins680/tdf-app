@@ -1,0 +1,11 @@
+{
+  "recordedAt": "2026-10-05T11:23:07.437981+00:00",
+  "buildSourceRevision": "9fca2c09167675d85224428d53f2074f62d9ba72",
+  "harnessSourceRevision": "4cc9942940fc8dbf617e63a4e8b407f39605b0f6",
+  "backendSourceDifference": false,
+  "binarySha256": "6f32ecd09c95d007e9ab863122f575e150f86414d4bcfd10733a64cbc1598baa",
+  "command": "PATH=/usr/local/opt/postgresql@16/bin:$PATH TDF_BOOKING_TEST_PG_PORT=5432 TDF_BOOKING_TEST_PG_ROLE=diegosaa TDF_BOOKING_TEST_SERVER_BIN=/private/tmp/tdf-spec-evidence-20261004/bin-9fca2c091-linked/tdf-hq-exe TDF_BOOKING_TEST_OUTPUT=/private/tmp/tdf-spec-evidence-20261004/booking-4cc994294 python3 scripts/test-booking-conformance.py",
+  "exitCode": 0,
+  "checks": 327,
+  "limitation": "Linked executable; full separate Hspec build still in progress, including fake-provider Drive tests."
+}
