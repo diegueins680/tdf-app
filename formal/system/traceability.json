@@ -5893,7 +5893,7 @@
   ],
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
-    ".github/workflows/ci.yml": "da7229fd7ef24a43048ef566c9f80cf9a0cac8b198e41216bc683e7c5704b784",
+    ".github/workflows/ci.yml": "053ed9f34026b1ecf12b6bf14cf2eb9430a59f43f3c5236b21d77a72f1575c03",
     ".github/workflows/event-operations-formal.yml": "a038253d968022ed95501359a07f16852bf8dcc1da198b7aa303543f0f95b552",
     "docs/catalog-persistence/catalog-list-decisions.json": "b2b9caf40d76eaacec5e1a0dc98cf683683b7416e2523873ad872cc303885d52",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
@@ -9489,7 +9489,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "da7229fd7ef24a43048ef566c9f80cf9a0cac8b198e41216bc683e7c5704b784",
+      "sha256": "053ed9f34026b1ecf12b6bf14cf2eb9430a59f43f3c5236b21d77a72f1575c03",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

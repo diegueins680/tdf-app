@@ -13,6 +13,8 @@ A hash checked before and after an ordinary pathname execution was insufficient:
 a path substitution could run another program in between. A regression test
 performs this substitution and requires actual encrypted output and valid recovery.
 Other platforms fail closed; the Linux-only tests are visibly skipped on macOS.
+Linux must also permit executable memfds; denial fails the operation without
+changing kernel or namespace policy.
 
 Only native X25519 age recipients and one plaintext native identity are accepted.
 Plugin identities, SSH identities and password prompts are not supported. Private

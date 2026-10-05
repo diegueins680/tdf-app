@@ -575,6 +575,17 @@
       "decision": "adopted for primitive; off-host workflow pending",
       "rationale": "Use pinned upstream age rather than implement cryptography; preserve trusted plaintext/ciphertext hashes and keep real key custody and off-host restoration separate.",
       "verifiedAt": "2026-10-05"
+    },
+    {
+      "id": "RES-RECOVERY-EXECUTION-001",
+      "source": "https://man7.org/linux/man-pages/man2/memfd_create.2.html",
+      "supportingSource": "https://www.kernel.org/doc/html/latest/userspace-api/mfd_noexec.html",
+      "title": "Immutable execution bytes and Linux memfd policy",
+      "recommendation": "Use write/grow/shrink seals for immutable shared bytes; executable memfd availability depends on namespace kernel policy.",
+      "applicability": "Executing precisely the pinned recovery encryption tool",
+      "decision": "adopted with fail-closed runtime support",
+      "rationale": "Hold verified sealed bytes through child exec rather than checking a mutable pathname. Reject unsupported memfd execution; never change system policy to bypass a denial. No claim against compromised privileged code or policy sources.",
+      "verifiedAt": "2026-10-05"
     }
   ]
 }

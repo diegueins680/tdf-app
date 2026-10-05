@@ -2330,7 +2330,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "da7229fd7ef24a43048ef566c9f80cf9a0cac8b198e41216bc683e7c5704b784",
+      "sha256": "053ed9f34026b1ecf12b6bf14cf2eb9430a59f43f3c5236b21d77a72f1575c03",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21746,7 +21746,7 @@
     },
     {
       "path": "formal/system/recovery-envelope.md",
-      "sha256": "515b7006590901235f51cb0a6d8a516816883c5fc22b799f9d6a7196d81f27fc",
+      "sha256": "6af6d997db007dffac3bb59e306e2469285f214b184ad58f230f5f9646d1fe9d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21774,7 +21774,7 @@
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "14f6b6924b824e16c5fa8b4ef9a862e95f862f82ad28306d9f26b5e2cfb8e828",
+      "sha256": "6a09ab16ae8e3d2c12f1dfc80094ca00600646515bf909c5940871ec3b12bbca",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

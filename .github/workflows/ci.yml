@@ -103,8 +103,6 @@ jobs:
           node scripts/ci-change-scope.mjs "${args[@]}"
 
   repo-quality:
-    env:
-      TDF_RECOVERY_TOOLS: ${{ runner.temp }}/tdf-recovery-private/age
     needs: changes
     if: needs.changes.outputs.repo == 'true'
     runs-on: ubuntu-latest
@@ -138,7 +136,9 @@ jobs:
       - name: Install pinned recovery encryption tools
         run: |
           mkdir -m 700 "${RUNNER_TEMP}/tdf-recovery-private"
-          python3 scripts/install-recovery-tools.py --destination "$TDF_RECOVERY_TOOLS"
+          tdf_recovery_tools="${RUNNER_TEMP}/tdf-recovery-private/age"
+          python3 scripts/install-recovery-tools.py --destination "$tdf_recovery_tools"
+          printf 'TDF_RECOVERY_TOOLS=%s\n' "$tdf_recovery_tools" >> "$GITHUB_ENV"
 
       - name: Run repository checks
         run: npm run quality:repo
