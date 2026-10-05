@@ -17203,7 +17203,7 @@
     },
     {
       "path": "docs/events/patch-culture-vol-1/activation-readiness-2026-10-05.md",
-      "sha256": "77cc067f682918f43f66e121e56934c880deff47b66fc399a9160d33e0202115",
+      "sha256": "d306540956e02de758755008a62ab24ed061eb0d376dbf6fd54340bf5e6b2f99",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

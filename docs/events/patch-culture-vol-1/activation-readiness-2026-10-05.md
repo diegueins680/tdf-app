@@ -8,7 +8,32 @@ finales, una pinta y acceso a jam/showcase. No corresponde solicitar otra
 aprobación comercial para esos mismos términos. Autorización y funcionamiento
 verificado se registran por separado.
 
-## Hallazgos nuevos
+## Continuación: sandbox oficial disponible
+
+Después de que Diego inició sesión en PayPal Developer, se verificó la aplicación
+sandbox existente de Ecuador: OAuth HTTP 200 y registro de webhook real HTTP 201
+el 5 de octubre a las 21:21 UTC. También está disponible el comprador Personal de
+pruebas. Este acceso resuelve el bloqueo anterior de credenciales sandbox.
+Las credenciales permanecen fuera del repositorio en archivos privados; no se
+reutilizan credenciales de producción en el entorno aislado.
+
+El webhook temporal expone exclusivamente su ruta de recepción; el resto responde
+404. Reenvía cuerpo y firmas al backend aislado para la verificación oficial.
+La base local aplica el manifiesto canónico de 181 migraciones, conservando sus
+identidades y checksums. La configuración de habilitación del proveedor en esta
+base es una **precondición sintética**, no prueba de una transacción verificada.
+La compra, captura, reembolso y entrega externa siguen pendientes de ejecución.
+El receptor SMTP local prueba procesamiento de la cola, no llegada a una bandeja.
+
+La revisión del backend combinado identifica dos puntos que deben comprobarse y
+corregirse antes de habilitar ventas: la aprobación legacy de reembolsos de tickets
+solo llama a Stripe; el webhook PayPal de refund/reversal registra una excepción
+de conciliación sin revocar por sí mismo la entrada. Se usará el sandbox real para
+verificar la transición, siguiendo la [API oficial de reembolsos](https://developer.paypal.com/api/payments/v2)
+y los [eventos oficiales](https://developer.paypal.com/api/rest/webhooks/event-names/).
+No se declara completo el flujo por obtener autenticación o por registrar el webhook.
+
+## Inspección de producción
 
 | Comprobación | Resultado observado | Límite de la evidencia |
 |---|---|---|
@@ -79,8 +104,8 @@ No se aplicó ninguno de esos dos atajos en producción.
    resolver el total incluido con pruebas para una a cuatro entradas.
 3. Ejecutar una compra de proveedor y reembolso en un entorno oficial utilizable,
    incluyendo callback/webhook, emisión, QR, check-in y entrega de confirmación.
-   Se encontró configuración live utilizable para autenticación; no se encontró
-   un conjunto sandbox utilizable en las configuraciones inspeccionadas.
+   El acceso sandbox ya está verificado; falta completar las transacciones
+   del proveedor y corregir cualquier fallo observado.
 4. Activar la ruta PayPal y la política del evento solamente con la evidencia
    anterior, luego publicar y comprobar el checkout canónico. La autorización
    del organizador ya está registrada; no constituye una prueba de estos pasos.
