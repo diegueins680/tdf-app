@@ -4,8 +4,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { fireEvent } from '@testing-library/react';
 
 const getStorefrontMock = jest.fn<(eventId: number) => Promise<unknown>>();
+const createCheckoutMock = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 const getCheckoutMock = jest.fn<(eventId: number, orderId: number, token: string) => Promise<unknown>>();
 const confirmDatafastStatusMock = jest.fn<(
   eventId: number,
@@ -25,7 +27,7 @@ jest.unstable_mockModule('../api/eventTickets', () => ({
       resourcePath: string,
       token: string,
     ) => confirmDatafastStatusMock(eventId, orderId, resourcePath, token),
-    createCheckout: jest.fn(),
+    createCheckout: createCheckoutMock,
     createDatafastCheckout: jest.fn(),
     createPaypalOrder: jest.fn(),
     capturePaypalOrder: jest.fn(),
@@ -146,6 +148,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     window.sessionStorage.clear();
     window.localStorage.setItem('tdf:event-ticket-checkout:41:92', 'secure-lookup-token');
     getStorefrontMock.mockReset().mockResolvedValue(storefrontFixture);
+    createCheckoutMock.mockReset().mockResolvedValue(checkoutFixture());
     getCheckoutMock.mockReset();
     confirmDatafastStatusMock.mockReset();
     queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -188,6 +191,52 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(container.textContent).toContain('Retención temporal de inventario: 15 minutos');
     expect(container.textContent).toContain('Transferencias: permitidas');
     expect(container.textContent).toContain('Versión de términos: event-ticket-terms-v1');
+  });
+
+  it('shows the server policy limit and rejects an oversized quantity even when HTML validation is bypassed', async () => {
+    getStorefrontMock.mockResolvedValue({
+      ...storefrontFixture,
+      policy: { ...storefrontFixture.policy, maxTicketsPerOrder: 4 },
+    });
+    await renderTracking('/eventos/41/entradas?tierId=8&quantity=5');
+    await waitForExpectation(() => expect(container.textContent).toContain('Hasta 4 entradas por orden.'));
+    expect(container.querySelector<HTMLInputElement>('input[type="number"]')?.max).toBe('4');
+    await act(async () => {
+      fireEvent.click(container.querySelector<HTMLInputElement>('input[type="checkbox"]')!);
+    });
+    await act(async () => {
+      fireEvent.submit(container.querySelector('form')!);
+    });
+    expect(container.textContent).toContain('Puedes comprar hasta 4 entradas por orden.');
+    expect(createCheckoutMock).not.toHaveBeenCalled();
+  });
+
+  it('permits the exact policy boundary and retains the actual remaining stock display', async () => {
+    getStorefrontMock.mockResolvedValue({
+      ...storefrontFixture,
+      policy: { ...storefrontFixture.policy, maxTicketsPerOrder: 4 },
+    });
+    await renderTracking('/eventos/41/entradas?tierId=8&quantity=4');
+    await waitForExpectation(() => expect(container.textContent).toContain('Hasta 4 entradas por orden.'));
+    expect(container.textContent).toContain('25 disponibles');
+    await act(async () => {
+      fireEvent.change(container.querySelector<HTMLInputElement>('input[maxlength="160"]')!,
+        { target: { value: 'Comprador de prueba' } });
+      fireEvent.change(container.querySelector<HTMLInputElement>('input[type="email"]')!,
+        { target: { value: 'buyer@example.invalid' } });
+      fireEvent.click(container.querySelector<HTMLInputElement>('input[type="checkbox"]')!);
+    });
+    await act(async () => {
+      fireEvent.submit(container.querySelector('form')!);
+    });
+    expect(createCheckoutMock).toHaveBeenCalledWith(41,
+      expect.objectContaining({ quantity: 4, buyerEmail: 'buyer@example.invalid' }), expect.any(String));
+  });
+
+  it('keeps the legacy policy fallback bounded by remaining inventory', async () => {
+    await renderTracking('/eventos/41/entradas?tierId=8');
+    await waitForExpectation(() => expect(container.textContent).toContain('Hasta 100 entradas por orden.'));
+    expect(container.querySelector<HTMLInputElement>('input[type="number"]')?.max).toBe('25');
   });
 
   it('treats a Datafast browser return as processing until server verification finishes', async () => {
