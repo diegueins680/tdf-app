@@ -42,7 +42,7 @@
               },
               {
                 "language": "es-419",
-                "text": "Ayuda a mejorar TDF. Env\u00eda errores, problemas de UX, ideas o comentarios desde Perfil o Acerca de. La informaci\u00f3n t\u00e9cnica y las capturas son opcionales. Las invitaciones respetan tu decisi\u00f3n de descartarlas o desactivarlas."
+                "text": "Ayuda a mejorar TDF. Envía errores, problemas de UX, ideas o comentarios desde Perfil o Acerca de. La información técnica y las capturas son opcionales. Las invitaciones respetan tu decisión de descartarlas o desactivarlas."
               }
             ],
             "status": "completed"
@@ -73,7 +73,7 @@
     "closedRestOfWorld": true,
     "sourceCommit22": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
     "artifact22Sha256": "c9dbbf560702ddc60b5e9634300bd19cbcf12dfb218828e31c4a930af1061aae",
-    "emailListAdmissionVerified": false,
+    "emailListAdmissionVerified": true,
     "openTestingValidation": "FAILED_PRECONDITION",
     "inspectionEditsDeleted": true,
     "publicAvailabilityVerified": false,
@@ -93,11 +93,55 @@
     "build23Run": "https://github.com/diegueins680/TDF-mobile/actions/runs/37265560883",
     "closedTrackCommitAccepted": true,
     "reviewRequested": true,
-    "reviewApprovalVerified": false
+    "reviewApprovalVerified": true,
+    "consoleObservation": {
+      "checkedAt": "2026-10-05T12:37:34.407635Z",
+      "source": "Authenticated Google Play Console; aggregate counts only",
+      "releaseState": "Available to selected testers",
+      "versionCode": 23,
+      "publishedDate": "2026-10-05",
+      "managedPublishing": false,
+      "consoleCountryRegionCount": 178,
+      "admission": "selected_email_lists",
+      "selectedListSizes": [
+        68,
+        1,
+        11
+      ],
+      "listCountsAreUniqueOrOptedIn": false,
+      "optedInTesters": 4,
+      "productionAccess": false,
+      "productionRequirement": {
+        "minimumContinuouslyOptedInTesters": 12,
+        "days": 14
+      },
+      "openTestingGate": "Requires production access",
+      "feedbackUrl": "https://www.tdfrecords.net/app?feedback=1&utm_source=google_play&utm_medium=closed_testing",
+      "feedbackMetadataReview": "submitted",
+      "existingListsPreserved": true,
+      "physicalInstallVerified": false,
+      "eligibleAccountVerification": {
+        "checkedAt": "2026-10-05T12:45:36.406363Z",
+        "optInPage": "You are a tester",
+        "storeListing": "TDF, install option available, updated October 5, 2026",
+        "membershipChanged": false,
+        "remoteInstallRequested": false
+      }
+    }
   },
   "analytics": {
     "existingProvider": "PostHog",
     "productionProjectKeyConfigured": false,
-    "liveProviderReceiptVerified": false
+    "liveProviderReceiptVerified": false,
+    "browserAccess": {
+      "checkedAt": "2026-10-05T12:43:08.654593Z",
+      "regions": [
+        "EU",
+        "US"
+      ],
+      "result": "Existing Google session reaches organization creation in both regions; no accessible organization",
+      "organizationCreated": false,
+      "termsAccepted": false
+    }
   }
 }
