@@ -3321,7 +3321,7 @@
     },
     {
       "path": "docs/events/patch-culture-vol-1/propuesta-condiciones.md",
-      "sha256": "859652795065962f15d7dddeaec44984f1df38227dae8fef3c44cbe0fcef8210",
+      "sha256": "e7051763016bdfe82fa8b01fc19b3c428635838dc3b4aabe4ec3542ae764ddaf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

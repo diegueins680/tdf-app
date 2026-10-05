@@ -169,5 +169,14 @@
     "source": "Direct user message: Approved. Continue",
     "policyVersion": "patch-culture-vol-1-proposal-v1",
     "scope": "Commercial proposal approved; activation still requires verified payment, tax setup and end-to-end release checks."
+  },
+  "invoiceIssuer": {
+    "commercialName": "TDF Records",
+    "legalNameFromExistingTdfBillingTemplate": "TDF Records S.A.S.",
+    "ruc": "1793215092001",
+    "source": "Organizer confirmation on 2026-10-05; same RUC and beneficiary already in TDF.Email course billing template",
+    "taxTreatmentConfirmed": false,
+    "taxRate": null,
+    "publicSriRegistrationVerified": false
   }
 }
