@@ -1,0 +1,182 @@
+{
+  "schemaPurpose": "Evidence-backed editorial candidate, not an API write payload",
+  "status": "commercial_proposal_approved_implementation_in_progress",
+  "tdfEventId": "141",
+  "publicationAllowed": false,
+  "liveChargesApproved": false,
+  "canonicalOrigin": "https://www.tdfrecords.net",
+  "sourceUrl": "https://www.instagram.com/p/DeFRIIplgpU/",
+  "sourceAuthor": "elemental.zoser",
+  "confirmed": {
+    "name": "PATCH CULTURE Vol. 1",
+    "descriptionShort": "Taller de introducción a la síntesis modular, seguido de jam de máquinas y live act.",
+    "publishedDayMonth": "24 de octubre",
+    "publishedWeekday": "sábado",
+    "workshopStartLocal": "14:00",
+    "flyerWorkshopEndLocal": "16:30",
+    "flyerJamStartLocal": "16:30",
+    "captionWorkshopEndAlternatives": [
+      "16:00",
+      "16:30"
+    ],
+    "venueName": "Andes Brewing — La Pradera",
+    "city": "Quito",
+    "country": "Ecuador",
+    "countryCode": "EC",
+    "venueMapUrl": "https://maps.app.goo.gl/d7t9CBaLMaxYHVMQ8",
+    "venueLatitude": -0.1945826,
+    "venueLongitude": -78.4855891,
+    "workshopPriceMinor": 2000,
+    "currency": "USD",
+    "workshopCapacity": 20,
+    "workshopIncludedDrink": "1 pinta de cerveza",
+    "activities": [
+      "taller introductorio",
+      "jam de máquinas",
+      "grabación en vivo",
+      "demostración / live act"
+    ],
+    "visibleBrands": [
+      "Elemental Zoser Sound Studio",
+      "Andes Brewing Co.",
+      "TDF Records"
+    ],
+    "instagramPreviewAdditionalBrand": "Meet2Go",
+    "doorsOpenLocal": "13:30",
+    "workshopEndLocal": "16:30",
+    "jamStartLocal": "16:30",
+    "closingShowcaseReferenceLocal": "21:00",
+    "closingShowcaseArtist": "Llama Este Pez",
+    "jamIncludedInWorkshop": true,
+    "ticketTotalMinor": 2000,
+    "buyerSurchargeMinor": 0,
+    "tdfAllocationMinorPerTicket": 1500,
+    "venueAllocationMinorPerTicket": 500,
+    "minimumAge": 18,
+    "participants": [
+      "Kevin Montenegro",
+      "Diego Saá",
+      "Emanuele Pilo-Pais"
+    ],
+    "bandMembersConfirmed": [
+      "Diego Saá",
+      "Emanuele Pilo-Pais"
+    ],
+    "reportedExistingCommittedWorkshopPlaces": 0,
+    "meet2goSelling": false
+  },
+  "inferred": {
+    "date": {
+      "value": "2026-10-24",
+      "confidence": "high",
+      "reason": "Public post metadata dated 2026-10-04 and upcoming Saturday 24 October; event year not explicitly printed"
+    },
+    "timezone": {
+      "value": "America/Guayaquil",
+      "confidence": "high",
+      "reason": "Verified venue in Quito, Ecuador"
+    }
+  },
+  "proposed": {
+    "slug": "patch-culture-vol-1",
+    "admission": "general_admission",
+    "workshopTier": "Taller + jam + showcase + pinta",
+    "retainPublishedPriceMinor": 2000,
+    "newEarlyBirdOrVipTiers": false,
+    "tags": [
+      "síntesis modular",
+      "taller",
+      "jam de máquinas",
+      "live act"
+    ],
+    "maximumNominalWorkshopRevenueMinorBeforeReservationsAndCosts": 40000,
+    "commercialWorkshopPlaces": 20,
+    "complimentaryWorkshopPlaces": 0,
+    "productionReservedWorkshopPlaces": 0,
+    "processorFeesChargedTo": "TDF allocation",
+    "maxTicketsPerOrder": 4,
+    "doorSales": "Only remaining canonical inventory at the same USD20 final price",
+    "standaloneJamTicketEnabled": false,
+    "promotionsEnabled": false,
+    "policyVersion": "patch-culture-vol-1-proposal-v1",
+    "conditionsDocument": "propuesta-condiciones.md",
+    "eventEndInterpretation": "21:00 as closing time; do not invent a separate showcase start time",
+    "equipmentRequired": "Not proposed as a mandatory purchase condition; terse No does not establish a detailed technical rider"
+  },
+  "unresolved": {
+    "eventEndsAt": null,
+    "venueAddressComplete": null,
+    "venueTotalCapacity": null,
+    "jamAdmissionPriceMinor": null,
+    "jamCapacity": null,
+    "instructors": null,
+    "organizerPartyId": null,
+    "venueId": "22",
+    "artistPartyIds": "Canonical social artist IDs: Llama Este Pez=42, Emanuele Pilo-Pais=36, Kevin Montenegro=51. Diego Saá: IDs4/12 ambiguous, not linked.",
+    "supportContact": null,
+    "merchantAndBeneficiary": null,
+    "meet2goRegistrationUrl": null,
+    "externalChannelAllocation": null,
+    "organizerFeePolicy": null,
+    "processorFeePolicy": null,
+    "taxPolicy": null,
+    "identificationRequirements": null,
+    "requiredEquipment": null,
+    "refundPolicy": null,
+    "transferPolicy": null,
+    "recordingNoticeAndConsent": null,
+    "performerSpecificRoles": "Participants confirmed; precise individual teaching roles not asserted",
+    "sellerLegalIdentityAndTaxTreatment": null,
+    "processorFees": null,
+    "standaloneJamAccessAndCapacity": null,
+    "showcaseStartSeparateFromClosingTime": null,
+    "shortNoResponse": "No additional mandatory ID/equipment requirements inferred from this answer; no beverage alternative promised"
+  },
+  "verification": {
+    "draftCreatedInTdf": true,
+    "publicEventUrl": null,
+    "publicDirectoryMatchesFound": 0,
+    "administrativeDeduplicationComplete": false,
+    "officialPaymentSandboxTested": false,
+    "purchaseToCheckinE2ePassed": false,
+    "liveChargesApproved": false,
+    "draftWorkflow": "planning",
+    "draftTierId": "2",
+    "draftTierActive": false,
+    "draftImageUploaded": true,
+    "draftCanonicalCandidateUrl": "https://www.tdfrecords.net/eventos/141",
+    "adminAccessVerifiedViaGitHubActions": true,
+    "adminVerificationRun": "https://github.com/diegueins680/tdf-app/actions/runs/37262309631",
+    "inventoryConcurrencyLocalPostgresPassed": true,
+    "checkInConcurrencyLocalPostgresPassed": true,
+    "guestQrBrowserSyntheticPassed": true,
+    "draftPreparationReplayMutations": 0,
+    "draftPreparationReplayRun": "https://github.com/diegueins680/tdf-app/actions/runs/37264080498",
+    "publicStorefrontWhilePrivateHttpStatus": 404,
+    "providerReadinessDiagnosticHttpStatus": 404,
+    "implementationPullRequest": "https://github.com/diegueins680/tdf-app/pull/480",
+    "transferConcurrencyLocalPostgresPassed": true,
+    "localPostgresTicketingTestCount": 19,
+    "disputedPaymentAdmissionLocalPostgresPassed": true
+  },
+  "organizerResponse": {
+    "source": "Direct user message in this conversation",
+    "recordedAt": "2026-10-04T22:40:23.814200-05:00",
+    "text": "Sí. Termina con un showcase de Llama Este Pez, a las 21:00. Se abren puertas a las 13:30.\nEs incluida para quienes compran el taller\n0. No.\nKevin Montenegro, y Diego Saá y Emanuele Pilo-Pais de Llama Este Pez\nSí. $20 en total, e incluye una Pinta de cerveza. $15 van para TDF y $5 para el lugar (Andes)\n18 años. No\nPrepara una propuesta."
+  },
+  "termsApproved": true,
+  "approval": {
+    "source": "Direct user message: Approved. Continue",
+    "policyVersion": "patch-culture-vol-1-proposal-v1",
+    "scope": "Commercial proposal approved; activation still requires verified payment, tax setup and end-to-end release checks."
+  },
+  "invoiceIssuer": {
+    "commercialName": "TDF Records",
+    "legalNameFromExistingTdfBillingTemplate": "TDF Records S.A.S.",
+    "ruc": "1793215092001",
+    "source": "Organizer confirmation on 2026-10-05; same RUC and beneficiary already in TDF.Email course billing template",
+    "taxTreatmentConfirmed": false,
+    "taxRate": null,
+    "publicSriRegistrationVerified": false
+  }
+}

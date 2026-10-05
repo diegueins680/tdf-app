@@ -32,6 +32,8 @@ import {
 } from '../api/eventTickets';
 import type { DatafastCheckoutDTO } from '../api/types';
 import HostedProviderCheckout from '../components/payments/HostedProviderCheckout';
+import TicketCredentialQR from '../components/TicketCredentialQR';
+import MobilePromo from '../mobile/MobilePromo';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { useMetaTags } from '../hooks/useMetaTags';
 
@@ -513,12 +515,20 @@ export default function PublicEventTicketsPage() {
                         />
                     )}
                   </Stack>
-                  {paid && checkout.tickets.length > 0 && (
+                  {paid && issued && checkout.tickets.length > 0 && (
                     <Stack spacing={1}>
                       <Typography variant="h6">{english ? 'Issued tickets' : 'Entradas emitidas'}</Typography>
-                      {checkout.tickets.map((ticket) => <Alert key={ticket.ticketId} severity="success" icon={<ConfirmationNumberIcon />}>
-                        {ticket.ticketCode} · {ticket.status}
-                      </Alert>)}
+                      {checkout.tickets.map((ticket) => <Card key={ticket.ticketId} variant="outlined">
+                        <CardContent>
+                          <Typography gutterBottom>{ticket.holderName ?? title}</Typography>
+                          {ticket.status === 'issued' && ticket.ticketCode
+                            ? <TicketCredentialQR code={ticket.ticketCode} english={english} />
+                            : <Alert severity="info">{ticket.status === 'checked_in'
+                              ? (english ? 'Already used' : 'Entrada ya utilizada')
+                              : (english ? 'Not available for entry' : 'No disponible para el acceso')}</Alert>}
+                        </CardContent>
+                      </Card>)}
+                      <MobilePromo surface="ticket_confirmation" />
                     </Stack>
                   )}
                   <Typography variant="caption" color="text.secondary">{english

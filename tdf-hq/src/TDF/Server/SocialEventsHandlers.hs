@@ -148,7 +148,6 @@ import Data.Char (
     isAsciiLower,
     isAsciiUpper,
     isControl,
-    isHexDigit,
  )
 import Data.Int (Int64)
 import Data.List (nub, sortOn)
@@ -159,7 +158,6 @@ import qualified Data.Set as Set
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Data.Time (UTCTime, diffUTCTime, getCurrentTime, utctDay)
-import Data.Time.Clock.POSIX (utcTimeToPOSIXSeconds)
 import Data.Time.Format (defaultTimeLocale, formatTime)
 import Data.Time.Format.ISO8601 (iso8601ParseM)
 import qualified Data.UUID as UUID
@@ -200,11 +198,10 @@ import Database.Persist.SqlBackend
     )
 import Database.PostgreSQL.Simple (SqlError (..))
 
-import Crypto.Hash.Algorithms (SHA256)
-import Crypto.MAC.HMAC (HMAC, hmac, hmacGetDigest)
 import Data.Time.Clock (addUTCTime)
-import qualified System.Random as Random
 import TDF.API.SocialEventsAPI
+import qualified TDF.Ticketing.Admission as Admission
+import qualified TDF.Ticketing.Transfer as Transfer
 import qualified TDF.Server.EventResearch as EventResearch
 import TDF.Auth (AuthedUser (..), hasStrictAdminAccess, moduleName)
 import qualified TDF.Catalog.Models as Catalog
@@ -912,7 +909,7 @@ issueMissingTicketsForOrder now orderKey order = do
                 , eventTicketUpdatedAt = now
                 }
     allTickets <- selectList [EventTicketOrderRefId ==. orderKey] [Asc EventTicketId]
-    pure (map (eventTicketCode . entityVal) allTickets)
+    pure (map (eventTicketCode . entityVal) (filter (Transfer.retainedByBuyer . entityVal) allTickets))
 
 finalizePaidTicketOrder ::
     UTCTime ->
@@ -981,7 +978,7 @@ finalizePaidTicketOrder now orderKey = do
                 selectList [EventTicketOrderRefId ==. orderKey] [Asc EventTicketId]
             pure
                 ( order
-                , map (eventTicketCode . entityVal) existingTickets
+                , map (eventTicketCode . entityVal) (filter (Transfer.retainedByBuyer . entityVal) existingTickets)
                 , False
                 )
         _ -> fail "Paid ticket checkout is not in an issuable fulfillment state"
@@ -4653,27 +4650,11 @@ socialEventsServer user =
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         let manager = isEventManager currentPartyId eventVal
         orderFilters <- case cleanMaybeText mOrderId of
-            Nothing ->
-                if manager
-                    then pure []
-                    else do
-                        ownOrders <-
-                            liftIO $
-                                runSqlPool
-                                    (selectList [EventTicketOrderEventId ==. eventKey, EventTicketOrderBuyerPartyId ==. Just currentPartyId] [LimitTo 500])
-                                    envPool
-                        let orderIds = map entityKey ownOrders
-                        if null orderIds
-                            then pure [EventTicketId ==. toSqlKey 0]
-                            else pure [EventTicketOrderRefId <-. orderIds]
+            Nothing -> pure []
             Just rawOrderId -> do
                 orderKey <- parseKeyOr400 "ticket order" rawOrderId
-                mOrder <- liftIO $ runSqlPool (get orderKey) envPool
-                order <- maybe (throwError err404{errBody = "Ticket order not found"}) pure mOrder
-                when (eventTicketOrderEventId order /= eventKey) $ throwError err400{errBody = "Ticket order does not belong to this event"}
-                when (not manager && eventTicketOrderBuyerPartyId order /= Just currentPartyId) $
-                    throwError err403{errBody = "You can only list your own tickets"}
                 pure [EventTicketOrderRefId ==. orderKey]
+        let holderFilters = if manager then [] else [EventTicketCurrentHolderPartyId ==. Just currentPartyId]
 
         statusFilters <- case cleanMaybeText mStatus of
             Nothing -> pure []
@@ -4681,57 +4662,29 @@ socialEventsServer user =
                 Nothing -> throwError err400{errBody = "Invalid ticket status"}
                 Just statusVal -> pure [EventTicketStatus ==. statusVal]
 
-        let filters = [EventTicketEventId ==. eventKey] ++ orderFilters ++ statusFilters
+        let filters = [EventTicketEventId ==. eventKey] ++ orderFilters ++ holderFilters ++ statusFilters
         rows <- liftIO $ runSqlPool (selectList filters [Asc EventTicketId, LimitTo 400]) envPool
         pure (map ticketEntityToDTO rows)
 
     checkInTicket :: T.Text -> TicketCheckInRequestDTO -> AppM TicketDTO
-    checkInTicket eventIdStr TicketCheckInRequestDTO{..} = do
+    checkInTicket eventIdStr request = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
         eventKey <- parseVisibleEventKey eventIdStr
-        mEvent <- liftIO $ runSqlPool (get eventKey) envPool
-        eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
-        _ <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
-
-        ticketLookup <- either throwError pure (validateTicketCheckInLookup TicketCheckInRequestDTO{..})
-        mTicket <- liftIO $ runSqlPool (findTicketForCheckIn eventKey ticketLookup) envPool
-        ticketEntity <- maybe (throwError err404{errBody = "Ticket not found"}) pure mTicket
-
-        let ticketKey = entityKey ticketEntity
-            ticketVal = entityVal ticketEntity
-        orderRef <- liftIO $ runSqlPool (get (eventTicketOrderRefId ticketVal)) envPool
-        orderStatus <-
-            either
-                throwError
-                pure
-                (validateTicketCheckInOrderStatus (eventTicketOrderStatus <$> orderRef))
-        when (orderStatus /= "paid") $ throwError err400{errBody = "Only paid tickets can be checked in"}
-        ticketStatus <-
-            either
-                throwError
-                pure
-                (validateTicketCheckInTicketStatus (eventTicketStatus ticketVal))
-        case ticketStatus of
-            "cancelled" -> throwError err400{errBody = "Cancelled tickets cannot be checked in"}
-            "refunded" -> throwError err400{errBody = "Refunded tickets cannot be checked in"}
-            "checked_in" -> pure (ticketEntityToDTO ticketEntity)
-            _ -> do
-                liftIO $
-                    runSqlPool
-                        ( update
-                            ticketKey
-                            [ EventTicketStatus =. "checked_in"
-                            , EventTicketCheckedInAt =. Just now
-                            , EventTicketUpdatedAt =. now
-                            ]
-                        )
-                        envPool
-                mUpdated <- liftIO $ runSqlPool (getEntity ticketKey) envPool
-                maybe
-                    (throwError err500{errBody = "Could not check in ticket"})
-                    (pure . ticketEntityToDTO)
-                    mUpdated
+        ticketLookup <- either throwError pure (validateTicketCheckInLookup request)
+        let lookupValue = case ticketLookup of
+                TicketCheckInLookupById ticketId -> Admission.AdmissionById (toSqlKey ticketId)
+                TicketCheckInLookupByCode code -> Admission.AdmissionByCode code
+        result <- liftIO $ runSqlPool (Admission.admitTicket currentPartyId eventKey lookupValue now) envPool
+        case result of
+            Right ticket -> pure (ticketEntityToDTO ticket)
+            Left Admission.AdmissionNotFound -> throwError err404{errBody = "Ticket not found for this event"}
+            Left Admission.AdmissionForbidden -> throwError err403{errBody = "Only the event organizer can check in tickets"}
+            Left Admission.AdmissionUnpaid -> throwError err409{errBody = "Ticket payment is not confirmed"}
+            Left Admission.AdmissionCancelled -> throwError err409{errBody = "Ticket is cancelled"}
+            Left Admission.AdmissionRefunded -> throwError err409{errBody = "Ticket is refunded"}
+            Left Admission.AdmissionAlreadyUsed -> throwError err409{errBody = "Ticket was already checked in"}
+            Left Admission.AdmissionInvalidState -> throwError err409{errBody = "Ticket is not valid for admission"}
 
     -- Promo Codes
     listPromoCodes :: T.Text -> AppM [PromoCodeDTO]
@@ -4999,7 +4952,7 @@ socialEventsServer user =
                 pure . Just $
                     ( existingOrderKey
                     , existingOrder
-                    , map (eventTicketCode . entityVal) existingTickets
+                    , map (eventTicketCode . entityVal) (filter (Transfer.retainedByBuyer . entityVal) existingTickets)
                     , True
                     )
             Nothing -> do
@@ -5137,7 +5090,7 @@ socialEventsServer user =
                                                     pure . Just $
                                                         ( winnerKey
                                                         , winnerOrder
-                                                        , map (eventTicketCode . entityVal) winnerTickets
+                                                        , map (eventTicketCode . entityVal) (filter (Transfer.retainedByBuyer . entityVal) winnerTickets)
                                                         , True
                                                         )
                                 | otherwise -> liftIO (throwIO createErr)
@@ -5583,22 +5536,12 @@ socialEventsServer user =
             throwError err403{errBody = "You can only transfer your own tickets"}
         when (eventTicketStatus ticket `elem` ["cancelled", "refunded", "checked_in"]) $
             throwError err400{errBody = "Cannot transfer this ticket"}
-        mExistingTransfer <-
-            liftIO $
-                runSqlPool
-                    (selectFirst [TicketTransferTicketId ==. ticketKey, TicketTransferStatus ==. "pending"] [])
-                    envPool
-        when (isJust mExistingTransfer) $
-            throwError err409{errBody = "A pending transfer already exists for this ticket"}
-        transferCode <- liftIO $ do
-            code1 <- Random.randomRIO (100000 :: Int, 999999 :: Int)
-            code2 <- Random.randomRIO (100000 :: Int, 999999 :: Int)
-            pure (T.pack (show code1 ++ "-" ++ show code2))
+        transferCode <- liftIO Admission.newTicketCode
         let expiresAt = addUTCTime (48 * 3600) now
-        transferKey <-
+        result <-
             liftIO $
                 runSqlPool
-                    ( insert
+                    ( Transfer.createTransfer currentPartyId eventKey
                         TicketTransfer
                             { ticketTransferTicketId = ticketKey
                             , ticketTransferFromPartyId = Just currentPartyId
@@ -5613,13 +5556,11 @@ socialEventsServer user =
                             , ticketTransferCreatedAt = now
                             , ticketTransferUpdatedAt = now
                             }
+                        now
                     )
                     envPool
-        mTransfer <- liftIO $ runSqlPool (getEntity transferKey) envPool
-        maybe
-            (throwError err500{errBody = "Could not create transfer"})
-            (pure . transferEntityToDTO)
-            mTransfer
+        either (throwError . (\message -> err409{errBody = BL.fromStrict (TE.encodeUtf8 message)}))
+            (pure . transferEntityToDTO) result
 
     listTransfers :: T.Text -> T.Text -> AppM [TicketTransferDTO]
     listTransfers eventIdStr ticketIdStr = do
@@ -5635,11 +5576,12 @@ socialEventsServer user =
         let manager = isEventManager currentPartyId eventVal
         when (not manager && eventTicketCurrentHolderPartyId ticket /= Just currentPartyId) $
             throwError err403{errBody = "You can only view transfers for your own tickets"}
-        transfers <-
-            liftIO $
-                runSqlPool
-                    (selectList [TicketTransferTicketId ==. ticketKey] [Desc TicketTransferCreatedAt])
-                    envPool
+        -- Recheck ownership in the same statement that reads invitation credentials.
+        transfers <- liftIO $ runSqlPool
+            (rawSql
+                "SELECT ?? FROM ticket_transfer WHERE ticket_id=? AND EXISTS (SELECT 1 FROM event_ticket t JOIN social_event e ON e.id=t.event_id WHERE t.id=ticket_transfer.ticket_id AND t.event_id=? AND (t.current_holder_party_id=? OR e.organizer_party_id=?)) ORDER BY created_at DESC"
+                [toPersistValue ticketKey, toPersistValue eventKey, PersistText currentPartyId, PersistText currentPartyId])
+            envPool
         pure (map transferEntityToDTO transfers)
 
     acceptTransfer :: T.Text -> AppM TicketDTO
@@ -5648,45 +5590,16 @@ socialEventsServer user =
         now <- liftIO getCurrentTime
         mTransferEnt <- liftIO $ runSqlPool (getBy (UniqueTicketTransferCode transferCode)) envPool
         transferEnt <- maybe (throwError err404{errBody = "Transfer not found"}) pure mTransferEnt
-        let transferKey = entityKey transferEnt
-            transfer = entityVal transferEnt
+        let transfer = entityVal transferEnt
             ticketKey = ticketTransferTicketId transfer
         mTicket <- liftIO $ runSqlPool (get ticketKey) envPool
         ticket <- maybe (throwError err404{errBody = "Ticket not found"}) pure mTicket
         requireEventVisibleToUser (eventTicketEventId ticket)
-        when (ticketTransferStatus transfer /= "pending") $
-            throwError err400{errBody = "Transfer is not pending"}
-        case ticketTransferExpiresAt transfer of
-            Just expiresAt
-                | now > expiresAt ->
-                    throwError err400{errBody = "Transfer has expired"}
-            _ -> pure ()
-        when (eventTicketStatus ticket `elem` ["cancelled", "refunded", "checked_in"]) $
-            throwError err400{errBody = "Cannot accept transfer for this ticket"}
-        liftIO $
-            runSqlPool
-                ( do
-                    update
-                        transferKey
-                        [ TicketTransferStatus =. "completed"
-                        , TicketTransferToPartyId =. Just currentPartyId
-                        , TicketTransferAcceptedAt =. Just now
-                        , TicketTransferUpdatedAt =. now
-                        ]
-                    update
-                        ticketKey
-                        [ EventTicketCurrentHolderPartyId =. Just currentPartyId
-                        , EventTicketCurrentHolderEmail =. (ticketTransferToEmail transfer <|> eventTicketCurrentHolderEmail ticket)
-                        , EventTicketCurrentHolderName =. (ticketTransferToName transfer <|> eventTicketCurrentHolderName ticket)
-                        , EventTicketUpdatedAt =. now
-                        ]
-                )
-                envPool
-        mUpdated <- liftIO $ runSqlPool (getEntity ticketKey) envPool
-        maybe
-            (throwError err500{errBody = "Could not accept transfer"})
-            (pure . ticketEntityToDTO)
-            mUpdated
+        replacement <- liftIO Admission.newTicketCode
+        result <- liftIO $ runSqlPool
+            (Transfer.acceptTransfer currentPartyId transferCode replacement now) envPool
+        either (throwError . (\message -> err409{errBody = BL.fromStrict (TE.encodeUtf8 message)}))
+            (pure . ticketEntityToDTO) result
 
     cancelTransfer :: T.Text -> AppM TicketTransferDTO
     cancelTransfer transferIdStr = do
@@ -5700,22 +5613,9 @@ socialEventsServer user =
         requireEventVisibleToUser (eventTicketEventId ticket)
         when (ticketTransferFromPartyId transfer /= Just currentPartyId) $
             throwError err403{errBody = "You can only cancel your own transfers"}
-        when (ticketTransferStatus transfer /= "pending") $
-            throwError err400{errBody = "Transfer is not pending"}
-        liftIO $
-            runSqlPool
-                ( update
-                    transferKey
-                    [ TicketTransferStatus =. "cancelled"
-                    , TicketTransferUpdatedAt =. now
-                    ]
-                )
-                envPool
-        mUpdated <- liftIO $ runSqlPool (getEntity transferKey) envPool
-        maybe
-            (throwError err500{errBody = "Could not cancel transfer"})
-            (pure . transferEntityToDTO)
-            mUpdated
+        result <- liftIO $ runSqlPool (Transfer.cancelTransfer currentPartyId transferKey now) envPool
+        either (throwError . (\message -> err409{errBody = BL.fromStrict (TE.encodeUtf8 message)}))
+            (pure . transferEntityToDTO) result
 
     -- Waitlist
     joinWaitlist :: T.Text -> WaitlistJoinDTO -> AppM WaitlistEntryDTO
@@ -5848,7 +5748,6 @@ socialEventsServer user =
     getTicketQR :: T.Text -> T.Text -> AppM TicketWithQRDTO
     getTicketQR eventIdStr ticketIdStr = do
         Env{..} <- ask
-        now <- liftIO getCurrentTime
         eventKey <- parseVisibleEventKey eventIdStr
         ticketKey <- parseKeyOr400 "ticket" ticketIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
@@ -5860,45 +5759,10 @@ socialEventsServer user =
         let manager = isEventManager currentPartyId eventVal
         when (not manager && eventTicketCurrentHolderPartyId ticket /= Just currentPartyId) $
             throwError err403{errBody = "You can only view QR codes for your own tickets"}
-        mExistingQR <- liftIO $ runSqlPool (getBy (UniqueTicketQRCode ticketKey)) envPool
-        qrData <-
-            maybe
-                ( do
-                    let timestamp = T.pack (show (floor (realToFrac (utcTimeToPOSIXSeconds now) :: Double) :: Int))
-                        payload =
-                            T.intercalate
-                                "|"
-                                [ renderKeyText ticketKey
-                                , renderKeyText eventKey
-                                , fromMaybe "" (eventTicketHolderEmail ticket)
-                                , timestamp
-                                ]
-                        secret = "tdf-qr-secret-key"
-                        hmacHex =
-                            T.pack $
-                                show (hmacGetDigest (hmac (TE.encodeUtf8 secret) (TE.encodeUtf8 payload) :: HMAC SHA256))
-                        qrDataValue = payload <> "|" <> hmacHex
-                    liftIO $
-                        runSqlPool
-                            ( insert_
-                                TicketQRCode
-                                    { ticketQRCodeTicketId = ticketKey
-                                    , ticketQRCodeQrData = qrDataValue
-                                    , ticketQRCodeQrImageUrl = Nothing
-                                    , ticketQRCodeGeneratedAt = now
-                                    }
-                            )
-                            envPool
-                    pure qrDataValue
-                )
-                (pure . ticketQRCodeQrData . entityVal)
-                mExistingQR
-        mTicketEnt <- liftIO $ runSqlPool (getEntity ticketKey) envPool
-        ticketDto <-
-            maybe
-                (throwError err500{errBody = "Could not load ticket"})
-                (pure . ticketEntityToDTO)
-                mTicketEnt
+        -- A QR is an opaque ticket credential, never a PII-bearing signed payload.
+        -- Stored legacy QR strings are deliberately not returned.
+        let qrData = eventTicketCode ticket
+        let ticketDto = ticketEntityToDTO (Entity ticketKey ticket)
         pure
             TicketWithQRDTO
                 { twqTicket = ticketDto
@@ -7956,14 +7820,7 @@ isValidSocialEventEmailDomainChar c =
     isAscii c && (isAlphaNum c || c == '-')
 
 normalizeTicketCheckInCode :: T.Text -> Maybe T.Text
-normalizeTicketCheckInCode rawCode = do
-    suffix <- T.stripPrefix "TDF-" normalized
-    if T.length suffix == 12 && T.all isAsciiHexDigit suffix
-        then Just normalized
-        else Nothing
-  where
-    normalized = T.toUpper (T.strip rawCode)
-    isAsciiHexDigit ch = isAscii ch && isHexDigit ch
+normalizeTicketCheckInCode = Admission.normalizeTicketCode
 
 normalizeMomentMediaType :: T.Text -> Maybe T.Text
 normalizeMomentMediaType raw =
@@ -10053,8 +9910,8 @@ ticketEntityToDTO (Entity ticketKey ticketRow) =
         , ticketOrderId = Just (renderKeyText (eventTicketOrderRefId ticketRow))
         , ticketCode = eventTicketCode ticketRow
         , ticketStatus = normalizeTicketStatus (Just (eventTicketStatus ticketRow))
-        , ticketHolderName = eventTicketHolderName ticketRow
-        , ticketHolderEmail = eventTicketHolderEmail ticketRow
+        , ticketHolderName = if Transfer.retainedByBuyer ticketRow then eventTicketHolderName ticketRow else eventTicketCurrentHolderName ticketRow
+        , ticketHolderEmail = if Transfer.retainedByBuyer ticketRow then eventTicketHolderEmail ticketRow else eventTicketCurrentHolderEmail ticketRow
         , ticketCheckedInAt = eventTicketCheckedInAt ticketRow
         , ticketCreatedAt = Just (eventTicketCreatedAt ticketRow)
         , ticketUpdatedAt = Just (eventTicketUpdatedAt ticketRow)
@@ -10080,7 +9937,7 @@ ticketOrderEntityToDTO (Entity orderKey orderRow) tickets =
         , ticketOrderPurchasedAt = Just (eventTicketOrderPurchasedAt orderRow)
         , ticketOrderCreatedAt = Just (eventTicketOrderCreatedAt orderRow)
         , ticketOrderUpdatedAt = Just (eventTicketOrderUpdatedAt orderRow)
-        , ticketOrderTickets = map ticketEntityToDTO tickets
+        , ticketOrderTickets = map ticketEntityToDTO (filter (Transfer.retainedByBuyer . entityVal) tickets)
         }
 
 promoCodeEntityToDTO :: Entity SM.PromoCode -> PromoCodeDTO
@@ -10303,11 +10160,7 @@ replaceLogisticsActivityDependencies activityKey dependencyKeys now = do
 
 generateUniqueTicketCode :: (MonadIO m) => ReaderT SqlBackend m T.Text
 generateUniqueTicketCode = do
-    uuidVal <- liftIO UUIDV4.nextRandom
-    let baseCode =
-            T.toUpper
-                (T.take 12 (T.replace "-" "" (UUID.toText uuidVal)))
-        code = "TDF-" <> baseCode
+    code <- liftIO Admission.newTicketCode
     mExisting <- getBy (UniqueEventTicketCode code)
     case mExisting of
         Nothing -> pure code

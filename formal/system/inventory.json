@@ -18,7 +18,8 @@
       ".github/workflows/interaction-verification.yml",
       ".github/workflows/refresh-instagram-token.yml",
       ".github/workflows/social-verification.yml",
-      ".github/workflows/test-trigger.txt"
+      ".github/workflows/test-trigger.txt",
+      ".github/workflows/ticketing-event-preflight.yml"
     ],
     "functions": [
       "functions/.well-known/apple-app-site-association.js",
@@ -37,6 +38,7 @@
       "scripts/__tests__/ci-change-scope.test.mjs",
       "scripts/__tests__/ci-pipeline.test.mjs",
       "scripts/__tests__/continuous-improvement-loop.test.mjs",
+      "scripts/__tests__/event-draft-plan.test.mjs",
       "scripts/__tests__/event-operations-http-runner.test.mjs",
       "scripts/__tests__/event-operations-pluscal.test.mjs",
       "scripts/__tests__/event-operations-schema-rehearsal.test.mjs",
@@ -76,6 +78,7 @@
       "scripts/__tests__/sri-invoice.test.mjs",
       "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
       "scripts/__tests__/studio-internship-audit.test.mjs",
+      "scripts/__tests__/ticket-admission-model.test.mjs",
       "scripts/__tests__/ui-validation-bundle.test.mjs",
       "scripts/__tests__/ux-quality-audit.test.mjs",
       "scripts/__tests__/ux-review-real-browser.mjs",
@@ -127,6 +130,7 @@
       "scripts/get-instagram-token.mjs",
       "scripts/identity-reconciliation.mjs",
       "scripts/inspect-payment-staging.mjs",
+      "scripts/inspect-ticketing-event-access.mjs",
       "scripts/instagram-lifecycle-artifact.mjs",
       "scripts/instagram-openclaw-cdp.mjs",
       "scripts/install-continuous-improvement-loop-launchd.sh",
@@ -169,6 +173,7 @@
       "scripts/patchCodexUI",
       "scripts/patchOpenApi",
       "scripts/persona-test-program.mjs",
+      "scripts/prepare-event-draft.mjs",
       "scripts/prepare-portable-restore.mjs",
       "scripts/prepare-studio-audit-draft.mjs",
       "scripts/production-catalog-inventory.mjs",
@@ -322,6 +327,7 @@
       "scripts/test-studio-internship-audit-api-e2e.mjs",
       "scripts/test-studio-internship-audit-api-e2e.sh",
       "scripts/test-studio-internship-audit-migration.sh",
+      "scripts/test-ticket-admission.sh",
       "scripts/test-trial-identity.sh",
       "scripts/test-unified-checkout-migration.sh",
       "scripts/test-user-experiment-assignment-migration.sh",
@@ -611,6 +617,7 @@
       "tdf-hq-ui/src/components/StripeCheckoutModal.logic.test.ts",
       "tdf-hq-ui/src/components/StripeCheckoutModal.logic.ts",
       "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+      "tdf-hq-ui/src/components/TicketCredentialQR.tsx",
       "tdf-hq-ui/src/components/TicketQRDisplay.tsx",
       "tdf-hq-ui/src/components/TicketTransferDialog.tsx",
       "tdf-hq-ui/src/components/TopBar.test.tsx",
@@ -1511,6 +1518,10 @@
       "tdf-hq/sql/2026-09-30_interaction_records_publication.sql",
       "tdf-hq/sql/2026-09-30_interaction_report_content_version.sql",
       "tdf-hq/sql/2026-10-03_discovery_ownership_metadata_boundary.sql",
+      "tdf-hq/sql/2026-10-05_ticket_admission_audit.sql",
+      "tdf-hq/sql/2026-10-05_ticket_admission_audit_rollback.sql",
+      "tdf-hq/sql/2026-10-05_ticket_transfer_deadline.sql",
+      "tdf-hq/sql/2026-10-05_ticket_transfer_deadline_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -1720,6 +1731,9 @@
       "tdf-hq/src/TDF/Social/Server.hs",
       "tdf-hq/src/TDF/Social/Session.hs",
       "tdf-hq/src/TDF/SocialEventLifecycle.hs",
+      "tdf-hq/src/TDF/Ticketing/Admission.hs",
+      "tdf-hq/src/TDF/Ticketing/Inventory.hs",
+      "tdf-hq/src/TDF/Ticketing/Transfer.hs",
       "tdf-hq/src/TDF/Trials/API.hs",
       "tdf-hq/src/TDF/Trials/DTO.hs",
       "tdf-hq/src/TDF/Trials/Models.hs",
@@ -1804,6 +1818,7 @@
       "tdf-hq/test/TDF/TrialIdentitySpec.hs",
       "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
       "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs",
+      "tdf-hq/test/TicketAdmissionMain.hs",
       "tdf-hq/test/fixtures/ddex/ern-v432/album-valid.xml",
       "tdf-hq/test/fixtures/ddex/ern-v432/single-invalid-business-rules.xml",
       "tdf-hq/test/fixtures/ddex/ern-v432/single-valid.xml",
@@ -1869,6 +1884,7 @@
       "tdf-hq/test/integration/social_event_workflow_cutover_negative.sh",
       "tdf-hq/test/integration/social_event_workflow_cutover_postgres.sql",
       "tdf-hq/test/integration/social_event_workflow_postgres.sql",
+      "tdf-hq/test/integration/ticket_admission_fixture.sql",
       "tdf-hq/test/sql/event_ingestion_boundaries.sql",
       "tdf-hq/test/sql/identity_reconciliation.sql",
       "tdf-hq/test/sql/records_ingestion_invariants.sql",
@@ -3292,6 +3308,20 @@
     {
       "path": "docs/event-operations/web-onboarding-integration-contract.md",
       "sha256": "538f9fb8a016cf9c84f43494aaa447e9ff6c9c293f2b861fe0e0a3fbaa507180",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/events/patch-culture-vol-1/README.md",
+      "sha256": "dada641835af7bff1374194154307f0f02573d81c543df46395909355b239713",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/events/patch-culture-vol-1/propuesta-condiciones.md",
+      "sha256": "e7051763016bdfe82fa8b01fc19b3c428635838dc3b4aabe4ec3542ae764ddaf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -6774,6 +6804,13 @@
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
+    },
+    {
+      "path": "formal/ticket-admission/README.md",
+      "sha256": "501a9af62409a0dcc82d52559cad9fb7c9973edd65c992ce2dfce43eed2a004e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
     },
     {
       "path": "release-checklist.md",
