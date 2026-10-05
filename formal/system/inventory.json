@@ -5042,7 +5042,7 @@
     {
       "id": "SURFACE-6fb3830cc5f24988",
       "path": "tdf-hq-ui/src/__tests__/analytics.test.ts",
-      "sha256": "ae90e662ab416adf3f09a5d5bf2076e387069421e6930f6bcf58f56c63cea0c7",
+      "sha256": "8d53d8843af919c437dfff1d88dd85b02a6b037e7b88336d96edbd071e09c4a9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5096,7 +5096,7 @@
     {
       "id": "SURFACE-96eef8ce345a4711",
       "path": "tdf-hq-ui/src/analytics/posthog.ts",
-      "sha256": "0d790804125065c6216b311fe5e04a12d8c282312b6036078fbd9fbce2137746",
+      "sha256": "055add96cca77d4b346946d478092851e224aed2a1db53bb1a8a4efe43e408e8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
