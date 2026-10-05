@@ -47,7 +47,7 @@
     }
   ],
   "outstanding": [
-    "Rebuild latest backend and regenerate843-route snapshot from executable; test protected subject route and radio denial controls.",
+    "Historical at8b27add85, resolved by8faf7975b: rebuilt5d9a917ed executable emitted843 routes/zero competing and passed206 synthetic runtime checks; see formal/system/compiled-api-boundary.md.",
     "Full final-candidate quality, review and normal protected merge.",
     "Canonical guarded Hetzner release executor and eligible production verification.",
     "Broad semantic gaps remain:49 explicit obligations,430 discovered candidates,1976 unmapped material surfaces; no whole-system conformance claim."

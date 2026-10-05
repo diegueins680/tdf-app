@@ -2224,7 +2224,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "bac1edf01130d59bc9bb183858ad0b1f4beb3d8e2875515fb9a8339d831cd7e9",
+      "sha256": "493144df8f912db92f01d6e9e37a11a714f1cf5a63644a40bd35f82fe6fa0d73",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2548,7 +2548,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "94b1f5ae51398abe35ee0bbe8c372814f6890cbbaea26cf50e55766b77d476d8",
+      "sha256": "367578f372789d845334a91d98e5360deece6a455c97f831944ca4d1ea7c53a5",
       "semanticConformance": "not-established-by-discovery"
     },
     {

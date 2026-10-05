@@ -126,6 +126,13 @@ jobs:
       - name: Install root dependencies
         run: npm ci
 
+      - name: Install image conformance tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffmpeg -version
+          ffprobe -version
+
       - name: Run repository checks
         run: npm run quality:repo
 

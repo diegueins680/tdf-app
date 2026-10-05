@@ -343,3 +343,14 @@ test('repository lane checks actual API availability policy without a backend bu
   const quality = await source('scripts/quality-repo.sh');
   assert.match(quality, /node "\$ROOT\/scripts\/check-api-availability\.mjs"/);
 });
+
+test('repository image conformance installs and probes FFmpeg before running actual codecs', async () => {
+  const job = parseYaml(await source('.github/workflows/ci.yml')).jobs['repo-quality'];
+  const setup = job.steps.findIndex(step => step.name === 'Install image conformance tools');
+  const checks = job.steps.findIndex(step => step.name === 'Run repository checks');
+  assert.ok(setup >= 0 && setup < checks);
+  assert.match(job.steps[setup].run, /apt-get install -y --no-install-recommends ffmpeg/);
+  assert.match(job.steps[setup].run, /ffmpeg -version/);
+  assert.match(job.steps[setup].run, /ffprobe -version/);
+  assert.doesNotMatch(job.steps[setup].run, /allow-unauthenticated|trusted=yes|\|\| true/);
+});
