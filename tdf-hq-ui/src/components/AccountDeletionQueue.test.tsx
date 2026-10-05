@@ -24,7 +24,7 @@ it('keeps the eleventh request visible and exposes older pages with authoritativ
   fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
   expect((await screen.findByText('Deletion 21')).textContent).toBe('Deletion 21');
   expect(list).toHaveBeenLastCalledWith({ accountDeletionOnly: true, offset: 20 });
-  expect((screen.getByRole('button', { name: 'Siguiente' }) as HTMLButtonElement).disabled).toBe(true);
+  expect(screen.getByRole('button', { name: 'Siguiente' }).hasAttribute('disabled')).toBe(true);
   fireEvent.click(screen.getByRole('button', { name: 'Anterior' }));
   expect((await screen.findByText('Deletion 11')).textContent).toBe('Deletion 11');
 });
