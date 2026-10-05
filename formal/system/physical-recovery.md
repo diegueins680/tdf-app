@@ -110,6 +110,10 @@ failure and requires both containers and the durable reservation to remain befor
 fixture-only, identity-checked cleanup. Build Image runs this after packaging the
 tested executable. Publishing an image alone is not a passing release gate.
 
+It also restores actual UID/GID1000 asset/private-upload fixtures, rejects altered
+content manifests before application creation and verifies the sentinels through
+the running image. Existing copy ownership is verified, never normalized.
+
 This combined test requires at least2GiB available memory and the canonical TDF
 application repository. The October5 production host has less than2GiB total RAM;
 its online application rehearsal cannot meet that admission. The guard remains

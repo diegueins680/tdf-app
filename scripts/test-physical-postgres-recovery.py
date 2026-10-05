@@ -157,6 +157,59 @@ class PhysicalRecoveryTests(unittest.TestCase):
             self.clone.start()
         execute.assert_not_called()
 
+    def test_restored_application_copies_require_full_content_metadata_and_registration(self):
+        application = SimpleNamespace(database=self.clone, nonce=self.clone.nonce, directory=self.directory)
+        self.clone.reservation_pid = os.getpid(); self.clone.active_application = application
+        manifests = {}
+        actual_walk = physical.files.walk
+        observed_uid = 1000
+        def observe_test_owner(fd):
+            value = actual_walk(fd)
+            # Ordinary macOS accounts cannot chown1000. Only the root ownership
+            # observation is substituted; byte/metadata scans remain real. The
+            # Linux combined Docker fixture restores actual UID/GID1000 copies.
+            value['entries'][0].update(uid=observed_uid, gid=1000)
+            return value
+        for name in ('assets', 'uploads'):
+            path = self.directory/('canary-'+name); path.mkdir(mode=0o700)
+            (path/'sentinel').write_bytes(b'original synthetic content')
+            with physical.files.directory(str(path)) as fd:
+                manifests[name] = observe_test_owner(fd)
+        with patch.object(physical.files, 'walk', side_effect=observe_test_owner):
+            evidence = self.clone.admit_application_content(application, manifests)
+            self.assertEqual(set(evidence), {'assets', 'uploads'})
+            self.assertEqual(evidence['uploads']['bytes'], len(b'original synthetic content'))
+            path = self.directory/'canary-uploads'/'sentinel'
+            path.write_bytes(b'tampered synthetic content')
+            with self.assertRaises(ValueError): self.clone.admit_application_content(application, manifests)
+            path.write_bytes(b'original synthetic content')
+            original = next(row for row in manifests['uploads']['entries'] if row['path'] == 'sentinel')
+            os.utime(path, ns=(original['mtimeNs'], original['mtimeNs']))
+            self.clone.admit_application_content(application, manifests)
+            for change in (lambda m: m.pop('uploads'), lambda m: m.update(extra=manifests['assets'])):
+                invalid = copy.deepcopy(manifests); change(invalid)
+                with self.assertRaises(ValueError): self.clone.admit_application_content(application, invalid)
+            # Match the complete observed manifests so only the image-user
+            # ownership/permission policy can reject these controls.
+            observed_uid = 0
+            invalid = copy.deepcopy(manifests)
+            for manifest in invalid.values(): manifest['entries'][0]['uid'] = 0
+            with self.assertRaises(ValueError): self.clone.admit_application_content(application, invalid)
+            observed_uid = 1000
+            invalid = copy.deepcopy(manifests)
+            for name, manifest in invalid.items():
+                (self.directory/('canary-'+name)).chmod(0o500)
+                manifest['entries'][0]['mode'] = 0o500
+            try:
+                with self.assertRaises(ValueError): self.clone.admit_application_content(application, invalid)
+            finally:
+                for name in manifests: (self.directory/('canary-'+name)).chmod(0o700)
+            self.clone.admit_application_content(application, manifests)
+        self.clone.active_application = None
+        with patch.object(physical.files, 'walk') as scan:
+            with self.assertRaises(ValueError): self.clone.admit_application_content(application, manifests)
+        scan.assert_not_called()
+
     @contextmanager
     def reservation(self):
         # Real permanent lock and pending marker; only Linux host inventory and

@@ -100,6 +100,13 @@ class CanaryTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'Unregistered application'):subject.prepare()
         execute.assert_not_called();inspect.assert_not_called()
 
+    def test_restored_content_input_is_not_a_mutable_caller_alias(self):
+        manifests = {'assets': {'sentinel': ['original']}, 'uploads': {}}
+        subject = canary.Canary(make().restore, make().database, DIRECTORY, IMAGE, REV,
+                                restored_content=manifests)
+        manifests['assets']['sentinel'].append('changed')
+        self.assertEqual(subject.restored_content['assets']['sentinel'], ['original'])
+
     def test_database_network_must_still_be_disconnected(self):
         subject=make();data={'NetworkSettings':{'Networks':{'none':{}}},'State':{'Running':True,'Pid':123}}
         with patch.object(subject,'execute',return_value=json.dumps([data])):subject.inspect_database()

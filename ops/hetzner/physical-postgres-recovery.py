@@ -143,6 +143,29 @@ class PhysicalClone(restore.IsolatedRestore):
                 and application.database is self and application.nonce == self.nonce
                 and application.directory == self.directory)
 
+    def admit_application_content(self, application, manifests):
+        """Verify previously restored copies, without changing their metadata.
+
+        The coordinator binds manifests to its trusted, retrieved bundle. This
+        check establishes copy correspondence, not that capture was coherent.
+        """
+        self.require_application_owner(application)
+        require(isinstance(manifests, dict) and set(manifests) == {'assets', 'uploads'})
+        verify_mounts()
+        evidence = {}
+        with files.directory(str(self.directory), private=True):
+            for name, manifest in manifests.items():
+                rows = files.validate_manifest(manifest)
+                # Image UID1000 must own and traverse/write the restored root.
+                # Do not normalize ownership to hide a failed recovery check.
+                require(rows['']['uid'] == 1000 and rows['']['gid'] == 1000
+                        and rows['']['mode'] & 0o700 == 0o700)
+                with files.directory(str(self.directory/('canary-'+name))) as fd:
+                    require(files.walk(fd) == manifest)
+                evidence[name] = {'manifestSha256': hashlib.sha256(canonical(manifest)).hexdigest(),
+                                  'bytes': manifest['bytes'], 'entries': len(rows)}
+        return evidence
+
     @contextmanager
     def with_application(self, application):
         """Register dependency before Docker creation; remove it before the DB.

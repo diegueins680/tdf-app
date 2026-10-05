@@ -4,6 +4,7 @@
 Linux root, preloaded immutable images and at least 2GiB available memory only.
 No production database, volume, credentials, provider or public port is used.
 """
+import copy
 import hashlib
 import importlib.util
 import json
@@ -92,9 +93,34 @@ def main():
         sql(clone, batch)
         require(sql(clone, ledger_query) == first_ledger)
         require(sql(clone, 'SELECT count(*) FROM tdf_schema_migration;') == str(expected_count))
-        application = canary.Canary(r, clone, clone.directory, app_image, revision)
+        content = {}
+        sentinels = {}
+        for name in ('assets', 'uploads'):
+            source = clone.directory/('synthetic-'+name); source.mkdir(mode=0o700)
+            os.chown(source, 1000, 1000)
+            sentinel = source/'synthetic-recovery-sentinel'
+            sentinel.write_bytes(bytes(range(256))*7); sentinel.chmod(0o600); os.chown(sentinel, 1000, 1000)
+            archive_path = clone.directory/(name+'.tar')
+            content[name] = p.files.capture(str(source), str(archive_path))
+            p.files.restore(str(archive_path), content[name], str(clone.directory/('canary-'+name)))
+            sentinels[name] = hashlib.sha256(sentinel.read_bytes()).hexdigest()
+        for name in ('assets', 'uploads'):
+            invalid = copy.deepcopy(content)
+            next(row for row in invalid[name]['entries'] if row['kind'] == 'file')['sha256'] = '0'*64
+            denied = canary.Canary(r, clone, clone.directory, app_image, revision, restored_content=invalid)
+            with clone.with_application(denied):
+                try: denied.run()
+                except ValueError:
+                    require(denied.image_id is not None and denied.target is None and not denied.creation_attempted)
+                else: raise ValueError('Restored content mismatch was accepted')
+        application = canary.Canary(r, clone, clone.directory, app_image, revision, restored_content=content)
         with clone.with_application(application):
             evidence = application.run()
+            require(evidence['content']['mode'] == 'restored-copy-verified')
+            for name, destination in (('assets', '/data/assets'), ('uploads', '/app/uploads')):
+                actual = application.execute(['exec', application.target, 'sha256sum',
+                                               destination+'/synthetic-recovery-sentinel']).split()[0]
+                require(actual == sentinels[name])
             packaged_hash = application.execute(['exec', application.target, 'sha256sum',
                                                 '/app/production-migrations.sql']).split()[0]
             require(packaged_hash == batch_hash)
@@ -139,6 +165,8 @@ def main():
     print(json.dumps({'status': 'passed', 'scope': 'synthetic physical PG17 and isolated application',
         'application': evidence, 'migrations': expected_count, 'migrationBatchSha256': batch_hash,
         'migrationBatchMatchesImage': True, 'migrationReplayStable': True,
+        'restoredAssetAndPrivateUploadSentinelsMatch': True,
+        'restoredContentMismatchRejectedBeforeApplicationCreation': True,
         'applicationRemovedBeforeDatabase': True, 'failedApplicationCleanupRetainedBothAndReservation': True,
         'ownedContainersRemoved': True, 'productionDataAccessed': False}))
 

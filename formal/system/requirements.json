@@ -5658,7 +5658,8 @@
       "inputs": [
         "Candidate image digest",
         "Exact source revision",
-        "Existing admitted disposable restore target"
+        "Existing admitted disposable restore target",
+        "Optional trusted asset and private-upload manifests bound by the physical-copy coordinator to its retrieved recovery bundle"
       ],
       "state": {
         "states": [
@@ -5687,7 +5688,8 @@
         "Provider connectivity or inherited production/image credentials",
         "Accept malformed HTTP as an unavailable database",
         "Claim completion after wrong image/revision, failed recovery or uncertain cleanup",
-        "Release reservation while an application create request or container may remain"
+        "Release reservation while an application create request or container may remain",
+        "Start with mismatched restored content, unregistered physical dependency or silently changed copy ownership"
       ],
       "effects": [
         "Temporary bounded application and empty private asset/upload directories",
@@ -5722,7 +5724,8 @@
       "status": "specified and implemented",
       "confidence": "Deterministic controls and bounded model; real Docker execution unverified.",
       "ambiguity": [
-        "Actual image/startup/Docker compatibility requires an exact isolated run. Aggregate writable bind quota and coordinated off-host recovery are not established."
+        "Actual image/startup/Docker compatibility requires an exact isolated run. Aggregate writable bind quota and coordinated off-host recovery are not established.",
+        "Restored-copy admission verifies bytes and metadata; coherent production capture, secret decryption and customer-file workflows require separate evidence."
       ],
       "verification": "Two-run bounded TLA+ safety and three named-invariant negative controls; hostile admission/cleanup tests and real synthetic HTTP protocol tests. No Docker/filesystem/HTTP refinement proof.",
       "conformance": {
@@ -6601,7 +6604,8 @@
         "Reserve durably before Docker create",
         "Admit container and clean cluster control before direct PostgreSQL startup",
         "Verify live system identifier before reporting startup",
-        "Remove only admitted owned container before clearing reservation"
+        "Remove only admitted owned container before clearing reservation",
+        "Under the registered application dependency, verify fixed restored asset/upload copies before application creation without modifying their ownership"
       ],
       "forbiddenTransitions": [
         "Mutate a production bind alias",

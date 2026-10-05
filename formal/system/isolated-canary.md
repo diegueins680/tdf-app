@@ -10,8 +10,9 @@ After restoration and two successful migration applications, a nonce-owned app
 joins only the admitted restore database's `network=none` namespace. Both network
 identities are checked. It receives fixed synthetic database configuration through
 `env -i`, no production env file and no production mounts. It runs as1000:1000 with
-read-only rootfs, dropped capabilities and CPU/PID/memory limits. Assets/uploads
-are new private host directories; they are not copies of customer files. The real
+read-only rootfs, dropped capabilities and CPU/PID/memory limits. In the online
+logical rehearsal, assets/uploads are new private host directories; they are not
+copies of customer files. The optional physical-copy mode is specified below. The real
 production entrypoint and private-upload mount guard run. Background startup code
 may write the disposable database, but has no route to providers or production.
 The cloned database may itself contain stored credentials or tokens accessible to
@@ -38,6 +39,24 @@ Uncertain cleanup keeps the reservation and prevents another run. No broad label
 cleanup or automatic erasure of failed evidence is permitted. Private synthetic
 asset/upload directories and archives are retained for diagnosis.
 
+The physical-copy coordinator may instead supply trusted restored-content
+manifests for both assets and private uploads. This mode requires a registered
+dependent application in the live physical reservation. Before application
+creation, the physical boundary rechecks mount topology, all copied bytes and
+supported metadata in the two fixed canary directories. Their roots must retain
+UID/GID1000 and owner read/write/traverse permission; existing content is never
+silently chowned or replaced to make a check pass. Manifest inputs are copied to
+prevent later caller mutation. Only hashes, entry counts and byte counts enter
+the canary receipt. The coordinator remains responsible for binding those
+manifests to its authenticated retrieved bundle and coherent capture. This mode
+does not accept arbitrary mount paths or work with the online logical helper.
+
+The combined synthetic Docker fixture actually archives/restores UID1000-owned
+asset and private-upload sentinels, rejects modified expected hashes before
+application creation, then reads matching hashes as the real image user after
+startup. This establishes fixture access and correspondence, not arbitrary
+customer-file workflow, decryption-key or production recovery coverage.
+
 ## Evidence and exclusions
 
 Python controls reject target, mount, network, privilege, command and cleanup
@@ -58,8 +77,8 @@ claim: crashed/uncertain work may remain blocked pending operator investigation.
 Docker, Linux namespaces, JSON, filesystem durability and executable refinement
 are excluded. Bounded checking is not a whole-system proof.
 
-This canary is neither a deployment executor nor an asset/secret/off-host recovery
-rehearsal. It does not test authenticated workflows, native apps, provider delivery,
+This canary is not a deployment executor and does not independently establish
+coordinated asset/secret/off-host recovery. It does not test authenticated workflows, native apps, provider delivery,
 or financial side effects. Host checks are sampled, not a privileged-operator
 fence. Writable bind directories lack an aggregate quota. Complete coordinated
 backup, writer drain, lease, image provenance, rollback/forward recovery and final

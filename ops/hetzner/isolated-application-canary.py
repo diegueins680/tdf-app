@@ -4,6 +4,7 @@
 No production mounts, credentials, published ports, image pulls or provider routes.
 The restore owner must retain its durable pending reservation until cleanup succeeds.
 """
+import copy
 import json
 import os
 from pathlib import Path
@@ -61,7 +62,7 @@ def require(condition):
 
 
 class Canary:
-    def __init__(self, restore, target, directory, image, revision):
+    def __init__(self, restore, target, directory, image, revision, *, restored_content=None):
         require(re.fullmatch(r'diegueins680/tdf-hq@sha256:[a-f0-9]{64}', image))
         require(re.fullmatch(r'[a-f0-9]{40}', revision))
         require(target.target is not None and target.target != target.source)
@@ -70,6 +71,8 @@ class Canary:
         self.image, self.revision, self.nonce = image, revision, target.nonce
         self.target, self.creation_attempted, self.paused = None, False, False
         self.image_id = None
+        self.restored_content = copy.deepcopy(restored_content)
+        self.content_evidence = None
         self.name = 'tdf-audit-canary-'+self.nonce
         require(self.directory == Path('/opt/tdf/backups')/('rehearsal-'+self.nonce))
 
@@ -102,10 +105,17 @@ class Canary:
         self.image_id=rows[0]['Id']
         info=self.directory.lstat()
         require(stat.S_ISDIR(info.st_mode) and info.st_uid==0 and info.st_mode & 0o077==0)
-        for name in ('canary-assets','canary-uploads'):
-            path=self.directory/name
-            path.mkdir(mode=0o700)  # exclusive; never reuse pre-existing content
-            os.chown(path,1000,1000)
+        if self.restored_content is None:
+            for name in ('canary-assets','canary-uploads'):
+                path=self.directory/name
+                path.mkdir(mode=0o700)  # exclusive; never reuse pre-existing content
+                os.chown(path,1000,1000)
+            self.content_evidence = {'mode': 'new-empty-directories'}
+        else:
+            verifier = getattr(self.database, 'admit_application_content', None)
+            require(callable(verifier))
+            self.content_evidence = {'mode': 'restored-copy-verified',
+                                    'copies': verifier(self, self.restored_content)}
 
     def command(self):
         require(self.image_id is not None)
@@ -209,6 +219,7 @@ class Canary:
             self.paused=False
         self.await_ready()
         return {'image':self.image,'imageId':self.image_id,'sourceRevision':self.revision,'binarySha256':binary_hash,
+                'content':self.content_evidence,
                 'databasePauseProbe':unavailable['code'],'databaseRecovery':'passed',
                 'network':'disposable-database-only','productionCredentialsProvided':False,
                 'providerConnectivity':False,'scope':'Startup, version and readiness failure/recovery only; not full API conformance.'}
