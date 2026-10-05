@@ -2342,7 +2342,7 @@
     {
       "id": "SURFACE-305964459d20ce97",
       "path": ".github/workflows/merge-admission.yml",
-      "sha256": "6beba81c6fa22404456282db21cf1937748f03b6013ce86fe378d0e57a56988b",
+      "sha256": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4520,7 +4520,7 @@
     {
       "id": "SURFACE-56631cee05d8221c",
       "path": "scripts/test-merge-admission.py",
-      "sha256": "748d95f42aef1d03e4f07968a60bb20b4199eed1e79bd472d554474096cc8374",
+      "sha256": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17581,7 +17581,7 @@
     },
     {
       "path": "docs/main-integration-admission.md",
-      "sha256": "676e0a7dcd10c6331d721079d8bd7d935b32b21adb09e2bbc4f1e2b50233712c",
+      "sha256": "dfc4322e11271cfb074d5438f1c5915bbd5ed902b4b0ce96f6c2788e32b19558",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

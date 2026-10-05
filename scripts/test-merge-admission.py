@@ -103,6 +103,7 @@ class AdmissionTests(unittest.TestCase):
         self.assertIn('ref: main', workflow)
         self.assertIn('persist-credentials: false', workflow)
         self.assertIn('cancel-in-progress: false', workflow)
+        self.assertIn("if: vars.TDF_INTEGRATION_BOOTSTRAP_ACTIVE != 'true'", workflow)
         self.assertNotIn('pull_request.head', workflow)
         self.assertNotIn('pull-requests: write', workflow)
         self.assertNotIn('contents: write', workflow)

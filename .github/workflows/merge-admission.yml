@@ -21,6 +21,8 @@ permissions:
 
 jobs:
   admission:
+    # Bootstrap releases ownership before dispatching this workflow.
+    if: vars.TDF_INTEGRATION_BOOTSTRAP_ACTIVE != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

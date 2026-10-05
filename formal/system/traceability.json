@@ -5906,7 +5906,7 @@
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/ci.yml": "b5f123f33695eb912cf9f3956a4b2620add70006c42d86f8a52755c663ccc0c3",
     ".github/workflows/event-operations-formal.yml": "8cdbbb59f539a8394fde147ba38dc4f27260b9ac2c371c731da5b342401077d1",
-    ".github/workflows/merge-admission.yml": "6beba81c6fa22404456282db21cf1937748f03b6013ce86fe378d0e57a56988b",
+    ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     "docs/catalog-persistence/catalog-list-decisions.json": "daccbb1c466d0f29fbde12e9281a9fa19da6b1a6e892e837e64a122980e1b164",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
@@ -6069,7 +6069,7 @@
     "scripts/test-hetzner-inspection.py": "560125d36d6469b3f2f2ca1dea30ba0bf452dc9e9e373f2e0521256052c0ed98",
     "scripts/test-hetzner-restore.py": "279906ce3fca58619f1a4c361c475c810bb666263418ca45a975ee0ad4fd8e41",
     "scripts/test-marketplace-contact-identity.sh": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
-    "scripts/test-merge-admission.py": "748d95f42aef1d03e4f07968a60bb20b4199eed1e79bd472d554474096cc8374",
+    "scripts/test-merge-admission.py": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
@@ -9754,7 +9754,7 @@
     {
       "id": "SURFACE-305964459d20ce97",
       "path": ".github/workflows/merge-admission.yml",
-      "sha256": "6beba81c6fa22404456282db21cf1937748f03b6013ce86fe378d0e57a56988b",
+      "sha256": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -13101,7 +13101,7 @@
     {
       "id": "SURFACE-56631cee05d8221c",
       "path": "scripts/test-merge-admission.py",
-      "sha256": "748d95f42aef1d03e4f07968a60bb20b4199eed1e79bd472d554474096cc8374",
+      "sha256": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

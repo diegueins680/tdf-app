@@ -37,9 +37,14 @@ Bootstrap the required status only after these sources/tests are validated and
 prepared for independent review: retain
 the existing protection JSON, use this same controller once from the clean tested
 checkout to publish metadata statuses, then add its context to required checks
-without removing or weakening any existing policy. Bootstrap grants only a scheduling slot; independent approval and every existing
-quality gate must still pass before the implementation can merge. Once merged, the main workflow
-owns reconciliation; do not run a competing local writer. The controller needs
+without removing or weakening any existing policy. Bootstrap grants only a
+scheduling slot; independent approval and every existing quality gate must still
+pass before the implementation can merge. While a temporary bootstrap controller
+owns reconciliation, set repository variable `TDF_INTEGRATION_BOOTSTRAP_ACTIVE`
+to `true`. Once the exact reviewed controller and workflow reach main, stop local
+status writes, set that variable to `false`, and dispatch the main workflow.
+The variable fences the hosted job during this handoff; never run competing
+local and hosted status writers. The controller needs
 only repository metadata reads and commit-status writes. Keep the status issuer
 compatible with both the bootstrap operator and the GitHub Actions token.
 
