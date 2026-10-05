@@ -2126,7 +2126,7 @@
         "Record allowlisted runtime/ledger facts; preserve provider flags and production data."
       ],
       "authorization": "Explicit audit/read authorization permits observation, not bypassing deployment review; dedicated SSH identity and existing inventory SQL role are required.",
-      "privacy": "Never print raw container configuration, credentials, command stderr or provider/customer payloads.",
+      "privacy": "Never print raw container configuration, credentials, command stderr or provider/customer payloads. Protected credential transfer is memory-only through verified SSH; refuse unsafe credential file ownership, type or mode. Catalog and mailbox reports retain aggregate facts, not credentials, raw messages or recipient addresses.",
       "concurrency": "Observations are sequential, not an atomic fleet snapshot; fresh verification is required within a future guarded release.",
       "idempotency": "Read-only repeat observations do not mutate application state. Exclusive receipt creation rejects accidental overwrite.",
       "failure": "Fail closed on an unexpected target, database identity, image reference or output path; do not fall back to another host/provider.",
@@ -2140,7 +2140,8 @@
       "ambiguity": [
         "Absent environment variables need effective-default analysis.",
         "Container image/public version observations require artifact metadata correspondence before release.",
-        "Optional event-operations flag-table absence and missing merchandise flag rows remain explicit unknowns; observed flag state alone is not authorization to enable or mount features."
+        "Optional event-operations flag-table absence and missing merchandise flag rows remain explicit unknowns; observed flag state alone is not authorization to enable or mount features.",
+        "The catalog-role SQL requires separately authorized provisioning; read-only monitoring does not authorize sending mail, suppressing recipients or modifying application records."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -2152,11 +2153,18 @@
       "property": "Wrong Compose project/directory/image/volume/network or database role/version is rejected; secrets and raw failures are excluded from receipts.",
       "implementation": [
         "ops/hetzner/inspect-runtime.py",
-        "scripts/inspect-hetzner-production.mjs"
+        "scripts/inspect-hetzner-production.mjs",
+        "scripts/production_access.py",
+        "scripts/production-catalog-inventory.mjs",
+        "ops/hetzner/catalog-readonly-role.sql",
+        "scripts/mail-deliverability-monitor.py"
       ],
       "tests": [
         "scripts/test-hetzner-inspection.py",
-        "scripts/__tests__/hetzner-inspection.test.mjs"
+        "scripts/__tests__/hetzner-inspection.test.mjs",
+        "scripts/test_production_access.py",
+        "scripts/__tests__/production-catalog-inventory.test.mjs",
+        "scripts/test_mail_deliverability_monitor.py"
       ],
       "critical": false
     },
@@ -2214,7 +2222,7 @@
       },
       "id": "DEPLOY-TARGET-001",
       "title": "Retired providers cannot receive a production release",
-      "statement": "The former Fly preflight/release entrypoint must reject before any remote tool because current production is Hetzner; source-only historical planning does not establish deployment eligibility.",
+      "statement": "All invocations of the retired Fly release CLI reject before remote tools. Imported source/artifact preparation helpers do not establish deployment eligibility; the guarded Hetzner executor remains an open release obligation.",
       "property": "Retired Fly commands invoke no git, docker, ssh or flyctl operation before rejecting.",
       "implementation": [
         "scripts/production-release.mjs",
@@ -4889,6 +4897,286 @@
         "classification": "PARTIAL",
         "reason": "Source preservation and automated regression evidence exist; final combined root/native/release gates remain pending."
       }
+    },
+    {
+      "id": "OPS-CLIENT-001",
+      "title": "Canonical operational clients and retired credential helpers",
+      "statement": "Operational clients default to the current canonical API while retaining explicit test/operator overrides. Retired token helpers fail before credential disclosure or provider writes; scheduled messaging checks are explicitly read-only. Health readiness must not claim a payment transaction was exercised.",
+      "property": "Operational clients default to the current canonical API while retaining explicit test/operator overrides. Retired token helpers fail before credential disclosure or provider writes; scheduled messaging checks are explicitly read-only. Health readiness must not claim a payment transaction was exercised.",
+      "domain": "OPS",
+      "authority": "Reviewed source changes preserved from root #468/#485/#486/#484; final consolidated correspondence requires current independent review",
+      "source": "docs/INSTAGRAM_TOKEN_SETUP.md; reviewed #468 helper/provider-cutover decisions",
+      "contract": "formal/system/web-cutover-correspondence.md",
+      "actors": [
+        "Authorized operator",
+        "Scheduled diagnostic"
+      ],
+      "preconditions": [
+        "Current protected credentials for explicitly authorized operations; synthetic tests intercept external transports."
+      ],
+      "inputs": [
+        "Explicit API override or canonical default",
+        "Credential health result",
+        "Reviewed artist entity types and source keys"
+      ],
+      "state": {
+        "fields": [
+          "target API",
+          "diagnostic result",
+          "import source key"
+        ]
+      },
+      "allowedTransitions": [
+        "Current API -> authorized existing operation",
+        "Unhealthy messaging token -> failure without scheduled refresh",
+        "Explicit stable source key -> idempotent artist import"
+      ],
+      "forbiddenTransitions": [
+        "Retired helper -> print stored token or mutate Fly",
+        "HTTP health success -> claim successful payment",
+        "Missing reviewed entity types -> artist import"
+      ],
+      "effects": [
+        "Preserve existing backend authorization and source-key semantics; no provider migration is performed by a diagnostic."
+      ],
+      "implementation": [
+        ".github/workflows/check-messaging-token.yml",
+        "scripts/diagnose-instagram.mjs",
+        "scripts/diagnose-social.mjs",
+        "scripts/get-admin-token.sh",
+        "scripts/get-instagram-token.mjs",
+        "scripts/refresh-messaging-token.mjs",
+        "scripts/test-stripe-integration.sh",
+        "scripts/upsert-course.mjs",
+        "tdf-hq/scripts/create_artists_from_list.sh"
+      ],
+      "tests": [
+        "scripts/__tests__/instagram-token-workflows.test.mjs",
+        "scripts/__tests__/retired-messaging-refresher.test.mjs",
+        "scripts/__tests__/payment-readiness-helper.test.mjs",
+        "scripts/__tests__/artist-import-idempotency.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
+      "evidence": "Current candidate gate receipts must be retained separately; historical source checks are not a current integration pass.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Scoped implementation and regression correspondence; production acceptance remains separate.",
+      "ambiguity": [
+        "No whole-program refinement or external provider/device acceptance is asserted."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source contracts and scoped regressions preserved; current combined verification and applicable production acceptance remain required."
+      },
+      "authorization": "Only explicitly authorized API writes or operator repair; scheduled messaging workflow has contents:read and invokes --check.",
+      "privacy": "Retired helpers do not read or print token state. Operational authentication output is sensitive and is not audit evidence.",
+      "concurrency": "Existing backend idempotency applies to artist imports; client URL choice does not provide a transaction or concurrency guarantee.",
+      "idempotency": "Artist importer retains stable per-source keys and stops on HTTP error; no general upsert exactly-once assertion.",
+      "failure": "Fail unhealthy checks and retired commands; report external behavior not exercised.",
+      "recovery": "Repair protected current configuration and repeat diagnostics; provider repair is separately authorized.",
+      "observability": "Exit status and redacted health facts; never retain live token output."
+    },
+    {
+      "id": "PRIV-ANALYTICS-001",
+      "title": "Exclude private credentials from analytics",
+      "statement": "Analytics must redact ticket/buyer/capability values and private resource identifiers before delivery, strip URL credentials/fragments, bound nested URL sanitization and omit SDK exception payloads. URL query values are denied by default except reviewed public attribution fields.",
+      "property": "Analytics must redact ticket/buyer/capability values and private resource identifiers before delivery, strip URL credentials/fragments, bound nested URL sanitization and omit SDK exception payloads. URL query values are denied by default except reviewed public attribution fields.",
+      "domain": "PRIV",
+      "authority": "Reviewed source changes preserved from root #468/#485/#486/#484; final consolidated correspondence requires current independent review",
+      "source": "docs/analytics.md; #485 reviewed privacy corrections",
+      "contract": "formal/system/web-cutover-correspondence.md",
+      "actors": [
+        "Web visitor",
+        "Analytics adapter"
+      ],
+      "preconditions": [
+        "Analytics enabled only by explicit configured rollout; existing authorization unchanged."
+      ],
+      "inputs": [
+        "Event properties",
+        "SDK URL properties",
+        "Nested redirects",
+        "SDK error"
+      ],
+      "state": {
+        "fields": [
+          "unsanitized event",
+          "sanitized event",
+          "disabled client"
+        ]
+      },
+      "allowedTransitions": [
+        "Sanitized allowed properties -> configured analytics transport"
+      ],
+      "forbiddenTransitions": [
+        "Private code, buyer details, URL credential or SDK exception payload -> telemetry/log",
+        "Unknown URL query key -> unredacted value"
+      ],
+      "effects": [
+        "Preserve reviewed public event and campaign attribution without granting access."
+      ],
+      "implementation": [
+        "tdf-hq-ui/src/analytics/posthog.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/__tests__/analytics.test.ts"
+      ],
+      "formalModels": [],
+      "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
+      "evidence": "Current candidate gate receipts must be retained separately; historical source checks are not a current integration pass.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Scoped implementation and regression correspondence; production acceptance remains separate.",
+      "ambiguity": [
+        "No whole-program refinement or external provider/device acceptance is asserted."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source contracts and scoped regressions preserved; current combined verification and applicable production acceptance remain required."
+      },
+      "authorization": "Telemetry configuration does not authorize payments, access to private records or activation of experimental features.",
+      "privacy": "Apply sanitizer to automatic pageviews and explicit captures; mask all query values on private pages.",
+      "concurrency": "Sanitization occurs independently before each event delivery.",
+      "idempotency": "Repeated sanitization preserves redaction; this does not deduplicate provider events.",
+      "failure": "SDK failure logs omit raw exception payloads; missing configuration leaves analytics disabled.",
+      "recovery": "Repair configuration or sanitizer under review; do not replay raw sensitive payloads.",
+      "observability": "Sentinel-value regression assertions; actual provider receipt is a separate rollout check."
+    },
+    {
+      "id": "MEDIA-INVENTORY-001",
+      "title": "Authenticated uploads and complete inventory pagination",
+      "statement": "Inventory XHR uploads must carry the current cookie session while preserving existing bearer and encoded QR routing. Inventory listing uses the accepted 100-row page size and accumulates pages until the reported total, legacy complete response or empty page.",
+      "property": "Inventory XHR uploads must carry the current cookie session while preserving existing bearer and encoded QR routing. Inventory listing uses the accepted 100-row page size and accumulates pages until the reported total, legacy complete response or empty page.",
+      "domain": "MEDIA",
+      "authority": "Reviewed source changes preserved from root #468/#485/#486/#484; final consolidated correspondence requires current independent review",
+      "source": "Root #468 production cookie-upload and pagination regression",
+      "contract": "formal/system/web-cutover-correspondence.md",
+      "actors": [
+        "Authenticated inventory operator",
+        "QR capability holder"
+      ],
+      "preconditions": [
+        "Configured canonical API and server authorization; listing remains subject to backend access controls."
+      ],
+      "inputs": [
+        "File",
+        "Current cookie/bearer",
+        "Encoded QR capability",
+        "Paged inventory response"
+      ],
+      "state": {
+        "fields": [
+          "upload progress/result",
+          "page number",
+          "accumulated rows"
+        ]
+      },
+      "allowedTransitions": [
+        "Authenticated upload -> server-authorized stored media",
+        "Nonterminal page -> fetch next page"
+      ],
+      "forbiddenTransitions": [
+        "Cookie-only session -> silently omit credentials",
+        "First page -> claim complete inventory when total is larger"
+      ],
+      "effects": [
+        "Upload one selected file; reading pages creates no asset records."
+      ],
+      "implementation": [
+        "tdf-hq-ui/src/api/inventory.ts",
+        "tdf-hq-ui/src/pages/LabelAssetsPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/api/inventory.upload.test.ts",
+        "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
+      "evidence": "Current candidate gate receipts must be retained separately; historical source checks are not a current integration pass.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Scoped implementation and regression correspondence; production acceptance remains separate.",
+      "ambiguity": [
+        "No whole-program refinement or external provider/device acceptance is asserted."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source contracts and scoped regressions preserved; current combined verification and applicable production acceptance remain required."
+      },
+      "authorization": "Server session and QR capability checks remain authoritative; withCredentials does not grant a role.",
+      "privacy": "Do not copy HttpOnly credentials into readable tokens or audit logs.",
+      "concurrency": "Pages are sequential reads and not an atomic inventory snapshot; concurrent inventory changes remain possible.",
+      "idempotency": "Listing retries are reads. Upload retries can create multiple blobs and are not claimed exactly once.",
+      "failure": "Propagate upload/list failures; an empty page terminates an inconsistent listing rather than spinning.",
+      "recovery": "Retry under a valid session; production smoke must use the unmodified deployed UI and compare uploaded bytes.",
+      "observability": "XHR cookie/bearer/QR tests and multi-page regression; deployed Google login/upload acceptance remains separately recorded."
+    },
+    {
+      "id": "MOB-PUBLIC-001",
+      "title": "Accurate Mobile public disclosures and support",
+      "statement": "Published Mobile entry, privacy, support and terms pages must identify current canonical TDF surfaces and support contacts and describe configured analytics truthfully. A built artifact or merged configuration is not tester admission or production analytics activation.",
+      "property": "Published Mobile entry, privacy, support and terms pages must identify current canonical TDF surfaces and support contacts and describe configured analytics truthfully. A built artifact or merged configuration is not tester admission or production analytics activation.",
+      "domain": "MOB",
+      "authority": "Reviewed source changes preserved from root #468/#485/#486/#484; final consolidated correspondence requires current independent review",
+      "source": "Reviewed root #486 disclosures and docs/analytics.md; current Mobile distribution authority",
+      "contract": "formal/system/web-cutover-correspondence.md",
+      "actors": [
+        "Mobile visitor",
+        "Release maintainer"
+      ],
+      "preconditions": [
+        "Current distribution manifest and reviewed provider configuration remain authoritative."
+      ],
+      "inputs": [
+        "Published support/privacy text",
+        "Canonical origin/contact",
+        "Configured analytics provider"
+      ],
+      "state": {
+        "fields": [
+          "published information",
+          "configured rollout",
+          "actual distribution availability"
+        ]
+      },
+      "allowedTransitions": [
+        "Reviewed current information -> published static page"
+      ],
+      "forbiddenTransitions": [
+        "Code merge -> claim store admission",
+        "Preview telemetry -> claim production receipt"
+      ],
+      "effects": [
+        "Expose current public guidance without collecting new information or activating a provider."
+      ],
+      "implementation": [
+        "tdf-hq-ui/public/mobile-app/index.html",
+        "tdf-hq-ui/public/mobile-app/privacy.html",
+        "tdf-hq-ui/public/mobile-app/support.html",
+        "tdf-hq-ui/public/mobile-app/terms.html"
+      ],
+      "tests": [],
+      "formalModels": [],
+      "verification": "Existing actual implementation regression tests and source review; named tests cover scoped boundaries only. No universal proof or production/provider qualification is inferred.",
+      "evidence": "Current candidate gate receipts must be retained separately; historical source checks are not a current integration pass.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Scoped implementation and regression correspondence; production acceptance remains separate.",
+      "ambiguity": [
+        "No whole-program refinement or external provider/device acceptance is asserted."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source contracts and scoped regressions preserved; current combined verification and applicable production acceptance remain required."
+      },
+      "authorization": "Store admission, privacy fulfillment and analytics configuration retain their separate authorities.",
+      "privacy": "State actual PostHog EU usage/disclosure; existing deletion workflow is separately mapped by PRIV-DELETE-001.",
+      "concurrency": "Static deploy identity must match reviewed source; concurrent configuration changes require fresh verification.",
+      "idempotency": "Repeated reads have no application mutation.",
+      "failure": "Stale or unavailable distribution must not be presented as verified current availability.",
+      "recovery": "Correct source under review and reverify deployed content and links.",
+      "observability": "Source review and deployed static-page/browser checks; no dedicated automated assertion covers all legal disclosure wording."
     }
   ]
 }
