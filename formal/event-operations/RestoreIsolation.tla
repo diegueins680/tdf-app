@@ -27,7 +27,7 @@ CompleteCreate(r) == /\ r \in inflight
                      /\ UNCHANGED <<owners, pending, target, verified, receipts, sourceTouched>>
 Restore(r) == /\ phase[r] = "created" /\ r \in owners
               /\ phase' = [phase EXCEPT ![r] = "restored"]
-              /\ sourceTouched' = sourceTouched \/ target[r] = "production"
+              /\ sourceTouched' = (sourceTouched \/ target[r] = "production")
               /\ UNCHANGED <<owners, present, pending, inflight, target, verified, receipts>>
 Verify(r) == /\ phase[r] = "restored" /\ r \in owners
              /\ phase' = [phase EXCEPT ![r] = "verified"]

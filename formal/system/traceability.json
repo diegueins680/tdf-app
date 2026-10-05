@@ -2627,7 +2627,7 @@
     "formal/event-operations/RefundRecoveryAuthority.cfg": "4afa03d6529045f942c54f80eb7e15e579e8728b694cd304256a6ced4a7afdec",
     "formal/event-operations/RefundRecoveryExecution.cfg": "6882026c6f5cfb3f3e251df3ccc8d9eb6ccc95204440603e6e645668dcc29349",
     "formal/event-operations/RestoreIsolation.cfg": "6f9c62a5027891b6bf9aad2bc2f6befb7ddfb2b20a4b12f2fe748d4a402ff0e2",
-    "formal/event-operations/RestoreIsolation.tla": "6d085e9d9b02161dea1cd711f645e703536d99eb6d305d5a7cc1cf62b93f162f",
+    "formal/event-operations/RestoreIsolation.tla": "0c96b73de882cd3a1c22d13e187a911fc2fe066c3878343917f1331f6da45282",
     "formal/event-operations/RestoreIsolationEarlyReceipt.cfg": "8bd39dcd11c09edee26cc41af1fe0b7814876aab7ccd99bea5608dbbc1e7d6fd",
     "formal/event-operations/RestoreIsolationLateCreate.cfg": "745bd1a96a3c843230937ed912c7512b684a3bd248a13a8f3af62a645617a1a7",
     "formal/event-operations/RestoreIsolationNoLock.cfg": "31837374a28551c5aa52ce6a5289a9eb3f588d2574cc7b36c9d4e027a3b4d678",

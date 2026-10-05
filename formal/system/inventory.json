@@ -19086,7 +19086,7 @@
     },
     {
       "path": "formal/event-operations/RestoreIsolation.tla",
-      "sha256": "6d085e9d9b02161dea1cd711f645e703536d99eb6d305d5a7cc1cf62b93f162f",
+      "sha256": "0c96b73de882cd3a1c22d13e187a911fc2fe066c3878343917f1331f6da45282",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "formal-model"
