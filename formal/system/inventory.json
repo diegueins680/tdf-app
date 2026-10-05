@@ -1531,6 +1531,7 @@
       "tdf-hq/sql/2026-10-05_operations_scoped_projection.sql",
       "tdf-hq/sql/2026-10-05_ticket_admission_audit.sql",
       "tdf-hq/sql/2026-10-05_ticket_admission_audit_rollback.sql",
+      "tdf-hq/sql/2026-10-05_ticket_confirmation_claim_clock.sql",
       "tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql",
       "tdf-hq/sql/2026-10-05_ticket_confirmation_delivery_rollback.sql",
       "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_clock.sql",
@@ -3703,7 +3704,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "2ff24ffb95e29cde23b55fb593b0bacc51da4318a46df0105f5105cbf6b6faf3",
+      "sha256": "0008d17cab3f6a2ddcafb61f47e795ea50c2abe9c4eeb75248643e091f1b77c7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4597,7 +4598,7 @@
     {
       "id": "SURFACE-73f84c14f54480df",
       "path": "scripts/test-public-ticket-checkout-runtime-migration.sh",
-      "sha256": "9355dd4f0db3c8ec7e39ee6881d3cae31677e9817b767b23546d19fdbf2b4cf3",
+      "sha256": "ea9812c229d7c71aa7d866034e54eb25a225af9220440d5703daba14cbf6014b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4687,7 +4688,7 @@
     {
       "id": "SURFACE-f5260c2b48379b27",
       "path": "scripts/test-ticket-confirmation-lease.py",
-      "sha256": "d554fe1054ca6f9295d0485ae202e61b5d1d11b413c30bf2ae385b1394e95f74",
+      "sha256": "9246ce1669f1f6bb32352897b290dd3ef85efa222655bf54680b027dc6129420",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4699,7 +4700,7 @@
     {
       "id": "SURFACE-1a3dda71702f835f",
       "path": "scripts/test-ticket-confirmation.sh",
-      "sha256": "1eb8a54b3d5539f0bae3325ea28227520df0509d847be27eeb7ba8b716e56422",
+      "sha256": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4783,7 +4784,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "58d19136ec078438ccc1c58421c834bd6268084dff4bcb9a03e305a473d99eeb",
+      "sha256": "9d0da623a08815e4c8e99bd2737083b01a8b7403e2eb32faa6fe54fcfe9c6f20",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11300,6 +11301,12 @@
       "id": "SURFACE-926be86200012f94",
       "path": "tdf-hq/sql/2026-10-05_ticket_admission_audit_rollback.sql",
       "sha256": "34e99ede095569e38205687a58fc68e366342f89a99b7099c8c27471ca69d434",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f0748436dd299fec",
+      "path": "tdf-hq/sql/2026-10-05_ticket_confirmation_claim_clock.sql",
+      "sha256": "fac072a54395f98c8a32d1dd7e70a383d1b467acdd059c202bfb6805ce70de5d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19534,28 +19541,35 @@
     },
     {
       "path": "formal/event-operations/NotificationLease.cfg",
-      "sha256": "c465b2a0497ff10b3ceaa7d35d9c4ff5e9e683ba1a8411187321a11636022f7e",
+      "sha256": "bf403b13a59aca11c744ebb7a494090355944136798798f5fa24b978cb77f5dc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/NotificationLease.tla",
-      "sha256": "65f550acabba6bc780bdaa60b6f7678e2e7e0fc4b18a7ce2cdd17b704c1f22bb",
+      "sha256": "e3ee096b8c79eca3fe93d5f0fab0345312d2295dfe5ab3ded75a92bd41050a5a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "formal-model"
     },
     {
+      "path": "formal/event-operations/NotificationLeaseClaimClock.cfg",
+      "sha256": "5e784c366aff4f79fa7d8dcb617eb33dc7d1f95b0f76d1f304881b02bb946109",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/NotificationLeaseForeign.cfg",
-      "sha256": "e4f424791fa1cb5fca08d1d289c2a427d091e7d3206fb9e9f17ab9b1a409e154",
+      "sha256": "f59de8bd03cce4af8664e73925c0ed7ea9be7f10a69d7f5f67aa2f87239110e9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
     },
     {
       "path": "formal/event-operations/NotificationLeaseStaleClock.cfg",
-      "sha256": "16c58443fbc45b1921a209c431056ed271011bb5505e9ac832cc146fc2154ab2",
+      "sha256": "088e0bd02f7744b2e2361b314ae20cd211057628a20338c3b8e1d63026f33d3f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "model-configuration"
@@ -21431,7 +21445,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "9aa6f66cd16054da8fe46d82581d63eddb566b44094f819b50f3fa5e539fd136",
+      "sha256": "05babd5fca4a08cceaf9be297bc8e217c62a619b3005dfbb199675809bd12c02",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -21501,7 +21515,7 @@
     },
     {
       "path": "formal/ticket-admission/confirmation-delivery.md",
-      "sha256": "22981aa7140225539cbe3f1b8a4bf7f7697486c4c00d746c0089faa8537120ce",
+      "sha256": "03ed736c195359235ab63f5fae0ee7a5979c263df820d377137ef72b9dd354b7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29808,9 +29822,24 @@
       "declarations": [
         "SPECIFICATION Spec",
         "CONSTANTS",
+        "  StaleClaimClock = FALSE",
         "  StaleClock = FALSE",
         "  IgnoreLease = FALSE",
-        "INVARIANTS CurrentLease UnexpiredCompletion",
+        "INVARIANTS FreshClaim CurrentLease UnexpiredCompletion",
+        "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/NotificationLeaseClaimClock.cfg",
+      "declarations": [
+        "SPECIFICATION Spec",
+        "CONSTANTS",
+        "  StaleClaimClock = TRUE",
+        "  StaleClock = FALSE",
+        "  IgnoreLease = FALSE",
+        "INVARIANTS FreshClaim CurrentLease UnexpiredCompletion",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
@@ -29821,9 +29850,10 @@
       "declarations": [
         "SPECIFICATION Spec",
         "CONSTANTS",
+        "  StaleClaimClock = FALSE",
         "  StaleClock = FALSE",
         "  IgnoreLease = TRUE",
-        "INVARIANTS CurrentLease UnexpiredCompletion",
+        "INVARIANTS FreshClaim CurrentLease UnexpiredCompletion",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
@@ -29834,9 +29864,10 @@
       "declarations": [
         "SPECIFICATION Spec",
         "CONSTANTS",
+        "  StaleClaimClock = FALSE",
         "  StaleClock = TRUE",
         "  IgnoreLease = FALSE",
-        "INVARIANTS CurrentLease UnexpiredCompletion",
+        "INVARIANTS FreshClaim CurrentLease UnexpiredCompletion",
         "CHECK_DEADLOCK FALSE"
       ],
       "result": "not-revalidated-by-inventory",
