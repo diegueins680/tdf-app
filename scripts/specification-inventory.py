@@ -26,6 +26,10 @@ def is_specification_candidate(relative):
     if any(part in {"evidence", "campaigns", "reports", "rollout-evidence", "event-research-runs"}
            for part in path.parts):
         return False
+    # Public static pages carry shipped privacy, deletion, support and product
+    # promises even when no Markdown copy exists. Discovery is not approval.
+    if relative.startswith("tdf-hq-ui/public/") and path.suffix == ".html":
+        return True
     if relative.startswith(("docs/", "tdf-hq/docs/", "tdf-mobile/docs/", "ops/")):
         return path.suffix in (".md", ".yaml")
     if path.parts[0] == "tdf-mobile" and len(path.parts) == 2:
@@ -61,6 +65,8 @@ def mobile_paths(root):
 
 def material_source(relative):
     path = Path(relative)
+    if relative.startswith("tdf-hq-ui/public/") and path.suffix == ".html":
+        return True
     roots = {"tdf-hq", "tdf-hq-ui", "tdf-mobile", "scripts", "functions", "streaming",
              "tidal-agent", "ops", "e2e", "test", ".github"}
     suffixes = {".hs", ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".py", ".sh",
@@ -109,6 +115,7 @@ def generate():
                           "kind": "formal-model" if path.suffix in (".tla", ".als") else
                           "model-configuration" if path.suffix == ".cfg" else
                           "interface-contract" if "/openapi/" in relative and path.suffix == ".yaml" else
+                          "published-product-page" if path.suffix == ".html" else
                           "requirement-register" if relative == "formal/system/requirements.json" else "requirement-candidate"})
         if path.suffix == ".cfg":
             models.append({"configuration": relative, "declarations": source.splitlines(),

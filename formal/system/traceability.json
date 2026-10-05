@@ -4244,7 +4244,7 @@
     "scripts/social/dm-read-refinement.sql": "067a8f255ee74ed589bd4a97b94ab918335c07e6a4dc69ee0a39c23a48d4dcea",
     "scripts/social/test-dm-writes.sh": "2f216b4a6d7537959a0ddc6aa4da52afc5a11828d852dc6a3c5d469702e9122a",
     "scripts/specification-conformance.py": "27fc7959ad752d8d76c025cd2cbadc978dcad3cc763b26b4efb5f63cfb94343e",
-    "scripts/specification-inventory.py": "d2fd062de80b6aacf832714799d7596f13cabf101d2d7073192b2cd6ec6ff275",
+    "scripts/specification-inventory.py": "5d84634a34efe3e9f619063656e2f63a0cae7d71dfacbb4fd8ea035ca5008502",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-booking-conformance.py": "0afc012d5980f287d6199e27c1761264fa77baeb4d2991b88aa1d21f546da806",
@@ -4258,7 +4258,7 @@
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
     "scripts/test-specification-conformance.py": "b7da3648e4d776ba472ca337f974c7ace5a0aa9980c584a48cbefee8d750174b",
-    "scripts/test-specification-inventory.py": "429bfd7c6ee6600e4010394f476c1247597d3c6c1a88f1fbd5e738c96b221df8",
+    "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "836906067ac620b64214922f9390c012848abf5bc1c4ca6f15a02757986bcddd",
     "scripts/verify-event-operations-formal.sh": "c96fdf3e940694b8172242fd38a2fec799b1cfdba5e60a291084f1d6c587a66a",
@@ -9113,7 +9113,7 @@
     {
       "id": "SURFACE-d18ca1829df72762",
       "path": "scripts/specification-inventory.py",
-      "sha256": "d2fd062de80b6aacf832714799d7596f13cabf101d2d7073192b2cd6ec6ff275",
+      "sha256": "5d84634a34efe3e9f619063656e2f63a0cae7d71dfacbb4fd8ea035ca5008502",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -9813,7 +9813,7 @@
     {
       "id": "SURFACE-0d2014021bc7262a",
       "path": "scripts/test-specification-inventory.py",
-      "sha256": "429bfd7c6ee6600e4010394f476c1247597d3c6c1a88f1fbd5e738c96b221df8",
+      "sha256": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -10103,6 +10103,48 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-03e3d269984814cc",
+      "path": "tdf-hq-ui/public/account/privacy-es.html",
+      "sha256": "298a3705baa1d1f44e8319697a685ded7a43d6b036aac2a809f5b4672cc939df",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-bf83998210f0bb9e",
+      "path": "tdf-hq-ui/public/account/privacy.html",
+      "sha256": "baf1f79b4f7f5b28b236b35158ff0e4858272edfb8a6ad24de0ad1de05f5bd61",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-eaa9b5372d91a318",
+      "path": "tdf-hq-ui/public/account/terms-es.html",
+      "sha256": "52919b461eea5d1f1576db4d8e15ca6c8088cb97ca99432095de9a2a0f5c6f14",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-ee14fa660066a784",
+      "path": "tdf-hq-ui/public/account/terms.html",
+      "sha256": "7b43da71091fc18e99a47df45688d23dee765316d2e67d7fcb68384782eb9abb",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-3104f3d9aa895aea",
+      "path": "tdf-hq-ui/public/data-deletion.html",
+      "sha256": "fe759cb4af0642f024ef31d61f55cb890c8d52e1e05c9e00b409d020f3fc1c13",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-16fd6a7d303023ea",
+      "path": "tdf-hq-ui/public/deauthorize.html",
+      "sha256": "de147edc06aff69a7b8236736dc720d59a3f24e0295ba4c2858609766d6ab5de",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-a2ada5ea1a6d219a",
       "path": "tdf-hq-ui/public/manifest.json",
       "sha256": "55627bc0699a4af5b4cb240c199041ed73966c346ceca712303e30525fba46c7",
@@ -10110,9 +10152,58 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-6bf3e8831a095bee",
+      "path": "tdf-hq-ui/public/mobile-app/data-deletion.html",
+      "sha256": "0e149f6fdb4e81761d1fd0f3f217ac1b9c5138d4987d935ed103ccbbd7ca1a0d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-4c56dddf990a5626",
+      "path": "tdf-hq-ui/public/mobile-app/index.html",
+      "sha256": "988ff3d19252f52958f26f014c70532f5aa510ecff62fdd5bbdbdfeb519b90de",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-1656aae22ee2e9e0",
+      "path": "tdf-hq-ui/public/mobile-app/privacy.html",
+      "sha256": "0b05c5b884c0c58d9a239c4b8be44cd42b7c8b7c1ad200086f3db280c6e801bf",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-9ab2dcf023458604",
+      "path": "tdf-hq-ui/public/mobile-app/support.html",
+      "sha256": "82b725aa5da569911df25d4a10ecb44c96da7d9b4720ca347666a47b45ef4061",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-27e00a2c872dcc44",
+      "path": "tdf-hq-ui/public/mobile-app/terms.html",
+      "sha256": "2c3ca861931079bdceefbae8ea3afab63bd2938bd31a448f97d746da3923ed03",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-58b1b762b88c9b8e",
       "path": "tdf-hq-ui/public/mobile-distribution.json",
       "sha256": "edebce0b337da6b5d37e8a468d126f060c7701c1d3bfb048cf7709cd9303cd91",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-c13a12d2ea792bdf",
+      "path": "tdf-hq-ui/public/privacy.html",
+      "sha256": "9d5fd58b762f6b5cf8198c0a2ef2c8a29ad994bd7565d5b5009420039ecb6819",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-092f602711fabb68",
+      "path": "tdf-hq-ui/public/terms.html",
+      "sha256": "1da3b383fca43f56822785fd3200507036962d9d9d2f5904b3502114b021001a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -23579,8 +23670,21 @@
     "SURFACE-4573385494ace809",
     "SURFACE-dfe8096f81b40bd5",
     "SURFACE-52eaee55a9a4d661",
+    "SURFACE-03e3d269984814cc",
+    "SURFACE-bf83998210f0bb9e",
+    "SURFACE-eaa9b5372d91a318",
+    "SURFACE-ee14fa660066a784",
+    "SURFACE-3104f3d9aa895aea",
+    "SURFACE-16fd6a7d303023ea",
     "SURFACE-a2ada5ea1a6d219a",
+    "SURFACE-6bf3e8831a095bee",
+    "SURFACE-4c56dddf990a5626",
+    "SURFACE-1656aae22ee2e9e0",
+    "SURFACE-9ab2dcf023458604",
+    "SURFACE-27e00a2c872dcc44",
     "SURFACE-58b1b762b88c9b8e",
+    "SURFACE-c13a12d2ea792bdf",
+    "SURFACE-092f602711fabb68",
     "SURFACE-e5cf91b3e384faae",
     "SURFACE-1585a9050a6bc1d3",
     "SURFACE-02bd88f022e926a3",

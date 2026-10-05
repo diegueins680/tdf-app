@@ -170,6 +170,21 @@ history, identity recovery floors, database ownership and verified backups.
 Canonical routine-release correspondence remains a delivery obligation; never
 release to a historical host to obtain a green receipt.
 
+## Published product promises
+
+The discovery inventory includes every shipped HTML page under `tdf-hq-ui/public`,
+including privacy, deletion, account terms and Mobile support pages. Their source
+hashes are material implementation fingerprints and changes enter CI admission.
+Public availability is provenance, not proof of product approval or fulfillment.
+The social-message deletion page promises completion within30days; the Mobile
+page describes identity verification, a30day target and retention exceptions.
+No operational deletion runbook or completion ledger was found in this source
+review. Their location has been requested from the owner. Do not replace those
+commitments merely to match absent automation, or infer completed deletion from
+a signed webhook/tombstone. Per-content execution, exceptions, backups and
+operator evidence remain unresolved. Static text is indexed as a source, not
+automatically promoted into verified requirement clauses.
+
 ## Authored domain requirement declarations
 
 The discovery inventory additionally indexes explicitly identified Markdown-table

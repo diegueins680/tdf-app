@@ -42,6 +42,8 @@ class DiscoveryCoverage(unittest.TestCase):
                      "FORMAL_VERIFICATION.md", "SERVICE_STOREFRONT_DEPLOYMENT.md",
                      "formal/system/requirements.json", "formal/social/ConsentTraces.tla",
                      "ops/hetzner/README.md", "ops/hetzner/compose.production.yaml",
+                     "tdf-hq-ui/public/data-deletion.html", "tdf-hq-ui/public/privacy.html",
+                     "tdf-hq-ui/public/account/privacy-es.html", "tdf-hq-ui/public/mobile-app/terms.html",
                      "tdf-mobile/README.md", "tdf-mobile/docs/social-contract.md"]:
             with self.subTest(path=path):
                 self.assertTrue(inventory.is_specification_candidate(path))
@@ -60,6 +62,8 @@ class DiscoveryCoverage(unittest.TestCase):
         self.assertEqual(artifacts["tdf-hq/docs/openapi/social-v2.yaml"]["kind"], "interface-contract")
         self.assertEqual(artifacts["specs.yaml"]["authority"], "historical")
         self.assertEqual(artifacts["formal/system/history-2026-09-20.md"]["authority"], "historical")
+        self.assertEqual(artifacts["tdf-hq-ui/public/data-deletion.html"]["authority"], "inferred")
+        self.assertEqual(artifacts["tdf-hq-ui/public/data-deletion.html"]["kind"], "published-product-page")
 
     def test_material_boundaries_are_fingerprinted(self):
         result = inventory.generate()
@@ -71,6 +75,19 @@ class DiscoveryCoverage(unittest.TestCase):
                 self.assertEqual(surfaces[path]['sha256'], inventory.digest((inventory.ROOT/path).read_bytes()))
                 self.assertEqual(surfaces[path]['semanticConformance'], 'not-established-by-discovery')
         self.assertRegex(result['mobileRevision'], r'^[0-9a-f]{40}$')
+
+    def test_every_shipped_html_page_is_indexed_and_fingerprinted(self):
+        result = inventory.generate()
+        artifacts = {item['path']: item for item in result['artifacts']}
+        surfaces = {item['path']: item for item in result['surfaces']}
+        pages = list((inventory.ROOT/'tdf-hq-ui/public').rglob('*.html'))
+        self.assertGreaterEqual(len(pages), 13)
+        for page in pages:
+            path = str(page.relative_to(inventory.ROOT))
+            with self.subTest(path=path):
+                self.assertEqual(artifacts[path]['kind'], 'published-product-page')
+                self.assertEqual(surfaces[path]['sha256'], inventory.digest(page.read_bytes()))
+                self.assertEqual(artifacts[path]['authority'], 'inferred')
 
 
 if __name__ == "__main__":

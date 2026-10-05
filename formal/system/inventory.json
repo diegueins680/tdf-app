@@ -431,8 +431,21 @@
       "tdf-hq-ui/jest.config.cjs",
       "tdf-hq-ui/jest.polyfills.cjs",
       "tdf-hq-ui/package.json",
+      "tdf-hq-ui/public/account/privacy-es.html",
+      "tdf-hq-ui/public/account/privacy.html",
+      "tdf-hq-ui/public/account/terms-es.html",
+      "tdf-hq-ui/public/account/terms.html",
+      "tdf-hq-ui/public/data-deletion.html",
+      "tdf-hq-ui/public/deauthorize.html",
       "tdf-hq-ui/public/manifest.json",
+      "tdf-hq-ui/public/mobile-app/data-deletion.html",
+      "tdf-hq-ui/public/mobile-app/index.html",
+      "tdf-hq-ui/public/mobile-app/privacy.html",
+      "tdf-hq-ui/public/mobile-app/support.html",
+      "tdf-hq-ui/public/mobile-app/terms.html",
       "tdf-hq-ui/public/mobile-distribution.json",
+      "tdf-hq-ui/public/privacy.html",
+      "tdf-hq-ui/public/terms.html",
       "tdf-hq-ui/public/webtorrent-sw.min.js",
       "tdf-hq-ui/scripts/check-initial-bundle.mjs",
       "tdf-hq-ui/src/App.tsx",
@@ -3993,7 +4006,7 @@
     {
       "id": "SURFACE-d18ca1829df72762",
       "path": "scripts/specification-inventory.py",
-      "sha256": "d2fd062de80b6aacf832714799d7596f13cabf101d2d7073192b2cd6ec6ff275",
+      "sha256": "5d84634a34efe3e9f619063656e2f63a0cae7d71dfacbb4fd8ea035ca5008502",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4461,7 +4474,7 @@
     {
       "id": "SURFACE-0d2014021bc7262a",
       "path": "scripts/test-specification-inventory.py",
-      "sha256": "429bfd7c6ee6600e4010394f476c1247597d3c6c1a88f1fbd5e738c96b221df8",
+      "sha256": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4645,15 +4658,93 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-03e3d269984814cc",
+      "path": "tdf-hq-ui/public/account/privacy-es.html",
+      "sha256": "298a3705baa1d1f44e8319697a685ded7a43d6b036aac2a809f5b4672cc939df",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-bf83998210f0bb9e",
+      "path": "tdf-hq-ui/public/account/privacy.html",
+      "sha256": "baf1f79b4f7f5b28b236b35158ff0e4858272edfb8a6ad24de0ad1de05f5bd61",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-eaa9b5372d91a318",
+      "path": "tdf-hq-ui/public/account/terms-es.html",
+      "sha256": "52919b461eea5d1f1576db4d8e15ca6c8088cb97ca99432095de9a2a0f5c6f14",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ee14fa660066a784",
+      "path": "tdf-hq-ui/public/account/terms.html",
+      "sha256": "7b43da71091fc18e99a47df45688d23dee765316d2e67d7fcb68384782eb9abb",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3104f3d9aa895aea",
+      "path": "tdf-hq-ui/public/data-deletion.html",
+      "sha256": "fe759cb4af0642f024ef31d61f55cb890c8d52e1e05c9e00b409d020f3fc1c13",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-16fd6a7d303023ea",
+      "path": "tdf-hq-ui/public/deauthorize.html",
+      "sha256": "de147edc06aff69a7b8236736dc720d59a3f24e0295ba4c2858609766d6ab5de",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-a2ada5ea1a6d219a",
       "path": "tdf-hq-ui/public/manifest.json",
       "sha256": "55627bc0699a4af5b4cb240c199041ed73966c346ceca712303e30525fba46c7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-6bf3e8831a095bee",
+      "path": "tdf-hq-ui/public/mobile-app/data-deletion.html",
+      "sha256": "0e149f6fdb4e81761d1fd0f3f217ac1b9c5138d4987d935ed103ccbbd7ca1a0d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4c56dddf990a5626",
+      "path": "tdf-hq-ui/public/mobile-app/index.html",
+      "sha256": "988ff3d19252f52958f26f014c70532f5aa510ecff62fdd5bbdbdfeb519b90de",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-1656aae22ee2e9e0",
+      "path": "tdf-hq-ui/public/mobile-app/privacy.html",
+      "sha256": "0b05c5b884c0c58d9a239c4b8be44cd42b7c8b7c1ad200086f3db280c6e801bf",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9ab2dcf023458604",
+      "path": "tdf-hq-ui/public/mobile-app/support.html",
+      "sha256": "82b725aa5da569911df25d4a10ecb44c96da7d9b4720ca347666a47b45ef4061",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-27e00a2c872dcc44",
+      "path": "tdf-hq-ui/public/mobile-app/terms.html",
+      "sha256": "2c3ca861931079bdceefbae8ea3afab63bd2938bd31a448f97d746da3923ed03",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-58b1b762b88c9b8e",
       "path": "tdf-hq-ui/public/mobile-distribution.json",
       "sha256": "edebce0b337da6b5d37e8a468d126f060c7701c1d3bfb048cf7709cd9303cd91",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c13a12d2ea792bdf",
+      "path": "tdf-hq-ui/public/privacy.html",
+      "sha256": "9d5fd58b762f6b5cf8198c0a2ef2c8a29ad994bd7565d5b5009420039ecb6819",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-092f602711fabb68",
+      "path": "tdf-hq-ui/public/terms.html",
+      "sha256": "1da3b383fca43f56822785fd3200507036962d9d9d2f5904b3502114b021001a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20528,7 +20619,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "8e7cfea91477f9f21f29faa9ff4cf7814d745c55e451f532b9a3690295923738",
+      "sha256": "8e32a4e01ea08f3484d01e05732cba6fc693d1420d794ea1441d9f005d5f3272",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -20819,6 +20910,97 @@
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
+    },
+    {
+      "path": "tdf-hq-ui/public/account/privacy-es.html",
+      "sha256": "298a3705baa1d1f44e8319697a685ded7a43d6b036aac2a809f5b4672cc939df",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "published-product-page"
+    },
+    {
+      "path": "tdf-hq-ui/public/account/privacy.html",
+      "sha256": "baf1f79b4f7f5b28b236b35158ff0e4858272edfb8a6ad24de0ad1de05f5bd61",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "published-product-page"
+    },
+    {
+      "path": "tdf-hq-ui/public/account/terms-es.html",
+      "sha256": "52919b461eea5d1f1576db4d8e15ca6c8088cb97ca99432095de9a2a0f5c6f14",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "published-product-page"
+    },
+    {
+      "path": "tdf-hq-ui/public/account/terms.html",
+      "sha256": "7b43da71091fc18e99a47df45688d23dee765316d2e67d7fcb68384782eb9abb",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "published-product-page"
+    },
+    {
+      "path": "tdf-hq-ui/public/data-deletion.html",
+      "sha256": "fe759cb4af0642f024ef31d61f55cb890c8d52e1e05c9e00b409d020f3fc1c13",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "published-product-page"
+    },
+    {
+      "path": "tdf-hq-ui/public/deauthorize.html",
+      "sha256": "de147edc06aff69a7b8236736dc720d59a3f24e0295ba4c2858609766d6ab5de",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "published-product-page"
+    },
+    {
+      "path": "tdf-hq-ui/public/mobile-app/data-deletion.html",
+      "sha256": "0e149f6fdb4e81761d1fd0f3f217ac1b9c5138d4987d935ed103ccbbd7ca1a0d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "published-product-page"
+    },
+    {
+      "path": "tdf-hq-ui/public/mobile-app/index.html",
+      "sha256": "988ff3d19252f52958f26f014c70532f5aa510ecff62fdd5bbdbdfeb519b90de",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "published-product-page"
+    },
+    {
+      "path": "tdf-hq-ui/public/mobile-app/privacy.html",
+      "sha256": "0b05c5b884c0c58d9a239c4b8be44cd42b7c8b7c1ad200086f3db280c6e801bf",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "published-product-page"
+    },
+    {
+      "path": "tdf-hq-ui/public/mobile-app/support.html",
+      "sha256": "82b725aa5da569911df25d4a10ecb44c96da7d9b4720ca347666a47b45ef4061",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "published-product-page"
+    },
+    {
+      "path": "tdf-hq-ui/public/mobile-app/terms.html",
+      "sha256": "2c3ca861931079bdceefbae8ea3afab63bd2938bd31a448f97d746da3923ed03",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "published-product-page"
+    },
+    {
+      "path": "tdf-hq-ui/public/privacy.html",
+      "sha256": "9d5fd58b762f6b5cf8198c0a2ef2c8a29ad994bd7565d5b5009420039ecb6819",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "published-product-page"
+    },
+    {
+      "path": "tdf-hq-ui/public/terms.html",
+      "sha256": "1da3b383fca43f56822785fd3200507036962d9d9d2f5904b3502114b021001a",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "published-product-page"
     },
     {
       "path": "tdf-hq/README.md",
