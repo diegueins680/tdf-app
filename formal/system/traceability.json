@@ -3522,7 +3522,7 @@
     "formal/event-operations/StudioBookingProjection.tla": "748b67ec68ef7f53e990adc6a20afff804f739a1acbd02afabf7d221c17a738a",
     "formal/event-operations/StudioBookingScope.tla": "e8bbb4fdbc1a9ba60576bf0f4d211a1717c9de5ac8d4eaa4565e25ab05b5fb40",
     "formal/event-operations/WorkerCompletionEvidence.cfg": "87d2c50d2acabf44cdd16077f48517a305c08c404a0b3f940974614018b9d970",
-    "formal/event-operations/WorkerCompletionEvidence.tla": "00e7f67a150126775acfa8a55baa9fc9a8b95376e8ceda728f5aa7ec9bbf3de7",
+    "formal/event-operations/WorkerCompletionEvidence.tla": "34025827b6f01adad2d3972c282deb2c4eac2e1ab9ff57795c9ed6011568f205",
     "formal/event-operations/WorkerCompletionEvidenceFailed.cfg": "53f9a011039449cffbfe22d6c418d24cbaa589e8d7cf93aec89a82050383b83e",
     "formal/event-operations/WorkerCompletionEvidenceUnacknowledged.cfg": "ba3fc2fb73be56b89e38433e40dc8fac8689b85330203528ff8b50c9b0575860",
     "formal/social/DmReads.tla": "b322db9a64900980298be4b0ed7f9d8341f8df66a2ed0fa57ebca8868b893eff",

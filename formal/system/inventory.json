@@ -19919,7 +19919,7 @@
     },
     {
       "path": "formal/event-operations/WorkerCompletionEvidence.tla",
-      "sha256": "00e7f67a150126775acfa8a55baa9fc9a8b95376e8ceda728f5aa7ec9bbf3de7",
+      "sha256": "34025827b6f01adad2d3972c282deb2c4eac2e1ab9ff57795c9ed6011568f205",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "formal-model"

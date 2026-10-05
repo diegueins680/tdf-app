@@ -5,7 +5,7 @@ VARIABLES items, phase, outcome, acknowledged, returnedSuccess
 vars == <<items, phase, outcome, acknowledged, returnedSuccess>>
 Init == /\ items = [j \in Jobs |-> "pending"]
         /\ phase = "working" /\ outcome = "none"
-        /\ ~acknowledged /\ ~returnedSuccess
+        /\ acknowledged = FALSE /\ returnedSuccess = FALSE
 Record(j, result) ==
   /\ phase = "working" /\ items[j] = "pending"
   /\ result \in {"succeeded", "failed"}
