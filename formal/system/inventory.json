@@ -2223,7 +2223,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "8204f6fd83fd9f59744c3c337a886c7415564b996bcc62be89a38e7212d36a54",
+      "sha256": "bac1edf01130d59bc9bb183858ad0b1f4beb3d8e2875515fb9a8339d831cd7e9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2547,7 +2547,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "64921de12e4f6ef21a8a65763da451acdf1492ca897c318019c2e835da140114",
+      "sha256": "a431e137bb4669893ee93ab56591b986f7835b97d5da80222db9fa753cbe1417",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20472,7 +20472,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "b24f70ce08c37313abe90c1d01732fdaf6add3c7e6f91ee745b804b2ce5bc518",
+      "sha256": "b2f5f57969d5d5837e991e69f11127ea7011c82c152ac23870c60f9769bcc2a6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

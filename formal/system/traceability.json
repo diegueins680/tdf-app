@@ -902,7 +902,8 @@
       ],
       "effects": [
         "Reject missing fields, invalid status, duplicate IDs, escaping or missing paths, and hand-authored PASS assertions.",
-        "Reject every newly added material implementation/test file without a canonical mapping, including renames and additions between the exact Mobile gitlinks."
+        "Reject every newly added material implementation/test file without a canonical mapping, including renames and additions between the exact Mobile gitlinks.",
+        "Every pull request reaches admission regardless of path; component selection cannot omit new operational/runtime roots or canonical specification edits."
       ],
       "authorization": "Client capability predicates are discovery policy; backend authorization must be separately verified.",
       "privacy": "Only repository code and sanitized metadata enter receipts; no credentials.",
@@ -917,11 +918,13 @@
       "contract": "formal/system/README.md",
       "implementation": [
         "scripts/specification-conformance.py",
-        "scripts/check-new-specification-surfaces.py"
+        "scripts/check-new-specification-surfaces.py",
+        ".github/workflows/ci.yml"
       ],
       "tests": [
         "scripts/test-specification-conformance.py",
-        "scripts/test-new-specification-surfaces.py"
+        "scripts/test-new-specification-surfaces.py",
+        "scripts/__tests__/ci-pipeline.test.mjs"
       ],
       "formalModels": [],
       "verification": "Executable conformance and mutation tests; not a whole-program proof.",
@@ -3226,7 +3229,7 @@
     }
   ],
   "sourceFingerprints": {
-    ".github/workflows/ci.yml": "8204f6fd83fd9f59744c3c337a886c7415564b996bcc62be89a38e7212d36a54",
+    ".github/workflows/ci.yml": "bac1edf01130d59bc9bb183858ad0b1f4beb3d8e2875515fb9a8339d831cd7e9",
     ".github/workflows/event-operations-formal.yml": "8cdbbb59f539a8394fde147ba38dc4f27260b9ac2c371c731da5b342401077d1",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
     "formal/event-operations/ChatMutationBoundary.cfg": "dc76bf1caa1a43de6891a51256da9efc4264ac45b882fef969bc15895068e0fa",
@@ -3282,7 +3285,7 @@
     "scripts/__tests__/checkout-amount-postgres.mjs": "de30456c1bcaebdf22af4f877ee5cfa97e8166f3386eb6dc767466c621ec63ee",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "03fe83c795e80e464e4f0a6dba868723a60c079f6c5631e2b3435732eba649ea",
-    "scripts/__tests__/ci-pipeline.test.mjs": "64921de12e4f6ef21a8a65763da451acdf1492ca897c318019c2e835da140114",
+    "scripts/__tests__/ci-pipeline.test.mjs": "a431e137bb4669893ee93ab56591b986f7835b97d5da80222db9fa753cbe1417",
     "scripts/__tests__/compiled-api-surface.test.mjs": "3570a91a6bff727573ca725986634d348744c288244c39cc86d4cceddbe58fb4",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/disposable-postgres-url.test.mjs": "35c802c14c16ca2e53492845b7023715ed22aea775e39b7e237603d164fbb374",
@@ -3776,6 +3779,10 @@
       {
         "requirement": "SYS-API-002",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-TRACE-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/__tests__/generated-api-conformance.test.mjs": [
@@ -3799,6 +3806,10 @@
     "scripts/__tests__/ci-pipeline.test.mjs": [
       {
         "requirement": "SYS-API-002",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-TRACE-001",
         "relationship": "tests"
       }
     ],
@@ -5050,7 +5061,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "8204f6fd83fd9f59744c3c337a886c7415564b996bcc62be89a38e7212d36a54",
+      "sha256": "bac1edf01130d59bc9bb183858ad0b1f4beb3d8e2875515fb9a8339d831cd7e9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -5059,6 +5070,10 @@
         },
         {
           "requirement": "SYS-API-002",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-TRACE-001",
           "relationship": "implementation"
         }
       ]
@@ -5515,11 +5530,15 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "64921de12e4f6ef21a8a65763da451acdf1492ca897c318019c2e835da140114",
+      "sha256": "a431e137bb4669893ee93ab56591b986f7835b97d5da80222db9fa753cbe1417",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-API-002",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-TRACE-001",
           "relationship": "tests"
         }
       ]

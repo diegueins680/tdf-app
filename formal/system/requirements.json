@@ -901,7 +901,8 @@
       ],
       "effects": [
         "Reject missing fields, invalid status, duplicate IDs, escaping or missing paths, and hand-authored PASS assertions.",
-        "Reject every newly added material implementation/test file without a canonical mapping, including renames and additions between the exact Mobile gitlinks."
+        "Reject every newly added material implementation/test file without a canonical mapping, including renames and additions between the exact Mobile gitlinks.",
+        "Every pull request reaches admission regardless of path; component selection cannot omit new operational/runtime roots or canonical specification edits."
       ],
       "authorization": "Client capability predicates are discovery policy; backend authorization must be separately verified.",
       "privacy": "Only repository code and sanitized metadata enter receipts; no credentials.",
@@ -916,11 +917,13 @@
       "contract": "formal/system/README.md",
       "implementation": [
         "scripts/specification-conformance.py",
-        "scripts/check-new-specification-surfaces.py"
+        "scripts/check-new-specification-surfaces.py",
+        ".github/workflows/ci.yml"
       ],
       "tests": [
         "scripts/test-specification-conformance.py",
-        "scripts/test-new-specification-surfaces.py"
+        "scripts/test-new-specification-surfaces.py",
+        "scripts/__tests__/ci-pipeline.test.mjs"
       ],
       "formalModels": [],
       "verification": "Executable conformance and mutation tests; not a whole-program proof.",

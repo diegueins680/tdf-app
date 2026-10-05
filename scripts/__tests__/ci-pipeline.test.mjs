@@ -1,3 +1,5 @@
+import { parse as parseYaml } from 'yaml';
+import { classifyChangedFiles } from '../ci-change-scope.mjs';
 import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
@@ -322,5 +324,17 @@ test('native PostgreSQL opt-in owns only successfully created loopback databases
     const rejected = invoke('0', extra);
     assert.notEqual(rejected.status, 0);
     assert.doesNotMatch(rejected.stdout, /createdb|dropdb|unexpected-docker/);
+  }
+});
+
+test('every PR reaches specification admission, including previously omitted material roots', async () => {
+  const workflow = parseYaml(await source('.github/workflows/ci.yml'));
+  assert.ok(Object.hasOwn(workflow.on, 'pull_request'));
+  assert.deepEqual(workflow.on.pull_request ?? {}, {},
+    'Workflow-level filters can silently skip the specification admission gate');
+  for (const file of ['ops/new-check.sh', 'functions/new.ts', 'streaming/new.py',
+    'tidal-agent/new.ts', 'e2e/native/new.ts', 'test/contracts/new.json',
+    '.github/new.yml', 'formal/system/requirements.json', '.gitmodules']) {
+    assert.equal(classifyChangedFiles([file]).repo, true, file);
   }
 });
