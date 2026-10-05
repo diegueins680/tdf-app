@@ -268,7 +268,9 @@ inventoryServer user =
       (pageNum, pageSize') <- either throwError pure (validatePageParams mp mps)
       let
           pageOffset = (pageNum - 1) * pageSize'
-      entities <- withPool $ selectList ([] :: [Filter Asset]) [Asc AssetName]
+      -- Asset names are not unique: a stable tie-breaker keeps equal-name rows
+      -- on the same page when clients traverse an unchanged inventory.
+      entities <- withPool $ selectList ([] :: [Filter Asset]) [Asc AssetName, Asc AssetId]
       let filteredEntities = filterAssetsByQuery assetQuery entities
           totalCount = length filteredEntities
           pagedEntities = take pageSize' (drop pageOffset filteredEntities)

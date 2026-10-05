@@ -42,7 +42,6 @@ RUN stack --version || true
 COPY tdf-hq/stack.yaml stack.yaml
 COPY tdf-hq/stack.yaml.lock stack.yaml.lock
 COPY tdf-hq/tdf-hq.cabal tdf-hq.cabal
-# COPY tdf-hq/package.yaml ./   # uncomment if you have it
 
 # Build dependencies with the system compiler that matches the resolver.
 RUN --mount=type=cache,target=/root/.stack,sharing=locked set -e; \

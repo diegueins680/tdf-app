@@ -111,7 +111,7 @@
 **Documentation & Config:**
 - `tdf-hq/docs/openapi/user-roles.yaml` - OpenAPI 3.0 specification
 - `sql/001_multi_role_migration.sql` - Database migration
-- `package.yaml` - Haskell package configuration
+- `tdf-hq/tdf-hq.cabal` - Canonical Haskell package configuration (Stack/Docker)
 - `stack.yaml` - Stack build configuration
 - `README.md` - Backend documentation
 

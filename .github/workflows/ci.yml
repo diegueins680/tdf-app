@@ -2,24 +2,6 @@ name: CI
 
 on:
   pull_request:
-    paths:
-      - 'tdf-hq/**'
-      - 'tdf-hq-ui/**'
-      - 'tdf-mobile'
-      - 'tdf-mobile/**'
-      - 'scripts/**'
-      - 'test/personas/**'
-      - 'test/internships/**'
-      - 'e2e/web/**'
-      - 'playwright.config.mjs'
-      - 'docs/persona-testing/**'
-      - 'docs/internships/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - '.npmrc'
-      - '.dockerignore'
-      - '.github/workflows/**'
-      - 'fly.toml'
   workflow_dispatch:
     inputs:
       inspect_payment_staging:
