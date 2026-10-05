@@ -298,6 +298,24 @@ describe('analytics/posthog (web)', () => {
     expect(JSON.stringify(properties)).not.toContain('PRIVATE-RELATIVE-TOKEN');
   });
 
+  test('does not reinterpret scheme-like scalar labels as custom URL schemes', () => {
+    for (const campaign of ['launch:fall?sale', 'instagram:stories#launch']) {
+      const properties = sanitizeAnalyticsProperties({
+        attribution_campaign: campaign,
+        $initial_utm_campaign: campaign,
+        $current_url: `https://tdf.test/eventos/141?utm_campaign=${encodeURIComponent(campaign)}`,
+      });
+      expect(properties.attribution_campaign).toBe(campaign);
+      expect(properties.$initial_utm_campaign).toBe(campaign);
+      expect(new URL(properties.$current_url).searchParams.get('utm_campaign')).toBe(campaign);
+    }
+    const privateLinks = sanitizeAnalyticsProperties({
+      returnUrl: 'custom:receipt?lookupToken=PRIVATE-CUSTOM-URI',
+      sharedLink: 'tdf://tickets/PRIVATE-CUSTOM-URI',
+    });
+    expect(JSON.stringify(privateLinks)).not.toContain('PRIVATE-CUSTOM-URI');
+  });
+
   test('logs PostHog failures through the app logger', () => {
     testWindow.__ENV__ = { VITE_POSTHOG_KEY: 'phc_unit_test' };
     const resilientAnalyticsClient = getAnalyticsClient();
