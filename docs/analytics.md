@@ -109,7 +109,7 @@ observable action. No referral rewards or inferred destinations are implemented.
 
 - **No session recording.** Disabled at init on both surfaces. Turn on per-context only with explicit user consent.
 - **No personal or credential data in analytics.** Identify only with opaque `partyId`. Never send email, phone, username, display name, roles, passwords, tokens, OAuth codes/state, or free-text personal information as event or person properties.
-- **Sensitive URLs are redacted before delivery.** Web analytics masks credential-bearing query values such as reset tokens and OAuth code/state. New URL-bearing events must use the shared sanitizer and its sentinel-secret regression test.
+- **Sensitive URLs are redacted before delivery.** Web analytics masks reset/OAuth credentials, camel-case ticket lookup and transfer credentials, buyer fields, and private order/ticket resource IDs and known private navigation capabilities (including inventory scans and enrollment completion). Private order and payment-return pages redact every query value (including provider-specific `id`); URL fragments and embedded URL credentials are removed. Public event IDs and campaign parameters on public event pages remain available. This applies to SDK-generated URL properties through `before_send`, not only explicit calls. SDK exceptions are not logged because they can echo payloads. New URL-bearing events must use the shared sanitizer and its sentinel-secret regression tests. A route-inventory test derives sensitive parameter cases from both public and protected route declarations. This protects telemetry; it does not replace backend authorization or implement financial attribution.
 - **DOM autocapture is disabled.** Track only reviewed, named events from the shared taxonomy so labels and user-authored text are not collected implicitly.
 - **No server-side event emission for v1.** When we add it for high-value actions (e.g. RSVP broadcast confirmation from `tdf-hq` Haskell), it gets its own doc + a PostHog `phs_` key in the Haskell env, not in the client envs.
 - **No experiment assignment on the server yet.** `ExperimentProvider` still rolls dice client-side. When traffic grows enough that sticky-across-devices assignment matters, swap to PostHog feature flags.
@@ -130,3 +130,5 @@ VITE_POSTHOG_KEY=phc_your_dev_key npm run dev
 ```
 
 If you see nothing in PostHog, check the browser console / Metro log — the no-op client prints a single `[analytics] PostHog disabled: <reason>` line on startup so you know immediately whether the env var was picked up.
+
+Privacy references: [OWASP Logging Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html) recommends excluding access credentials and unnecessary personal information from logs. The existing PostHog `before_send` integration enforces the same boundary for analytics payloads.

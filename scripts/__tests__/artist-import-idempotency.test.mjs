@@ -22,7 +22,7 @@ assert args[args.index('-X')+1] == 'POST'
 assert any(a.endswith('/parties') for a in args)
 assert '--fail-with-body' in args
 with open(os.environ['IMPORT_TEST_LOG'], 'a') as f:
-    f.write(json.dumps({'key': key, 'body': body})+'\\n')
+    f.write(json.dumps({'key': key, 'body': body, 'url': next(a for a in args if a.endswith('/parties'))})+'\\n')
 if os.environ.get('IMPORT_TEST_FAIL') == '1':
     sys.exit(22)
 print(json.dumps({'partyId': 900+int(key.rsplit('-',1)[1])}))
@@ -37,6 +37,7 @@ test('import retries preserve source keys, explicit entity types, and avoid prof
   for (let i = 0; i < 2; i++) { const result = run(); assert.equal(result.status, 0, result.stderr); }
   const requests = readFileSync(log, 'utf8').trim().split('\n').map(JSON.parse);
   assert.equal(requests.length, 62);
+  assert.ok(requests.every(r => r.url === 'https://invalid.test/parties'));
   assert.deepEqual(requests.slice(0, 31), requests.slice(31));
   assert.equal(new Set(requests.map(r => r.key)).size, 31);
   requests.slice(0,31).forEach((r, i) => assert.equal(r.body.cIsOrg, i % 2 === 0));
@@ -49,4 +50,13 @@ test('an HTTP error stops the batch before another record', () => fixture(({ run
 
 test('missing reviewed entity types reject the import before network access', () => fixture(({ run }) => {
   assert.notEqual(run({ ARTIST_ENTITY_TYPES_FILE: '' }).status, 0);
+}));
+
+test('bundled importer defaults to the current API without changing its guarded payloads', () => fixture(({ run, log }) => {
+  const result = run({ BASE_URL: '' });
+  assert.equal(result.status, 0, result.stderr);
+  const requests = readFileSync(log, 'utf8').trim().split('\n').map(JSON.parse);
+  assert.equal(requests.length, 31);
+  assert.ok(requests.every(r => r.url === 'https://api.tdfrecords.net/parties'));
+  assert.equal(new Set(requests.map(r => r.key)).size, 31);
 }));

@@ -208,6 +208,13 @@ preflight/release commands are retired and reject before remote action. Verify
 the complete current migration manifest rather than treating the three domain
 migrations above as a complete deployment batch.
 
+Prepare the reviewed release/recovery bundle, then follow the canonical
+[Hetzner procedure](../ops/hetzner/README.md). Preparation does not deploy:
+
+```bash
+npm run release:backend:prepare -- FULL_RELEASE_SHA FULL_RECOVERY_SHA NEW_PRIVATE_DIRECTORY
+```
+
 After rollout, verify `/health`, `/version`, the exact release SHA, and
 `[Cron][EventDiscovery]` logs before enabling the master switch.
 

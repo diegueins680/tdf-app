@@ -248,10 +248,15 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 
 ### Webhook Endpoints to Configure
 
+The canonical API moved to Hetzner on 2026-09-28. Preserve the existing provider
+account, webhook IDs, enabled events and signature verification; these addresses
+do not authorize a new payment activation or credential change. Follow the
+[current guarded runbook](ops/hetzner/README.md) before changing provider configuration.
+
 | Provider | URL | Events |
 |----------|-----|--------|
-| Stripe | `https://tdf-hq.fly.dev/social-events/stripe/webhook` | `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded` |
-| PayPal | `https://tdf-hq.fly.dev/services/storefront/paypal/webhook` | `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.DENIED` |
+| Stripe | `https://api.tdfrecords.net/social-events/stripe/webhook` | `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded` |
+| PayPal | `https://api.tdfrecords.net/services/storefront/paypal/webhook` | `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.DENIED` |
 | Datafast | Redirect-based (no webhook needed) | N/A |
 
 ---

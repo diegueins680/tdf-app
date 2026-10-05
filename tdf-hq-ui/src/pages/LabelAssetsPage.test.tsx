@@ -3,17 +3,17 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
-import type { AssetCheckoutDTO, AssetDTO, DropdownOptionDTO, RoomDTO } from '../api/types';
+import type { AssetCheckoutDTO, AssetDTO, DropdownOptionDTO, RoomDTO, PageResponse } from '../api/types';
 import { ToastProvider } from '../contexts/ToastContext';
 
-const listAssetsMock = jest.fn<() => Promise<AssetDTO[]>>();
+const listAssetsMock = jest.fn<(params?: { page?: number; pageSize?: number }) => Promise<AssetDTO[] | PageResponse<AssetDTO>>>();
 const listRoomsMock = jest.fn<() => Promise<RoomDTO[]>>();
 const listDropdownsMock = jest.fn<() => Promise<DropdownOptionDTO[]>>();
 const historyMock = jest.fn<(assetId: string) => Promise<AssetCheckoutDTO[]>>();
 
 jest.unstable_mockModule('../api/inventory', () => ({
   Inventory: {
-    list: () => listAssetsMock(),
+    list: (params?: { page?: number; pageSize?: number }) => listAssetsMock(params),
     history: (assetId: string) => historyMock(assetId),
     generateQr: jest.fn(() => Promise.resolve({ qrUrl: 'https://example.com/qr' })),
     checkout: jest.fn(() => Promise.resolve(null)),
@@ -238,6 +238,19 @@ describe('LabelAssetsPage', () => {
     listRoomsMock.mockResolvedValue([]);
     listDropdownsMock.mockResolvedValue([]);
     historyMock.mockResolvedValue([]);
+  });
+
+  it('loads every inventory page using the API maximum instead of a rejected size', async () => {
+    listAssetsMock.mockResolvedValueOnce({ items: [buildAsset()], page: 1, pageSize: 100, total: 2 })
+      .mockResolvedValueOnce({ items: [buildAsset({ assetId: 'asset-2', name: 'Second page asset' })], page: 2, pageSize: 100, total: 2 });
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await waitForExpectation(() => expect(container.textContent).toContain('Second page asset'));
+      expect(listAssetsMock.mock.calls).toEqual([[{ page: 1, pageSize: 100 }], [{ page: 2, pageSize: 100 }]]);
+      expect(container.textContent).toContain('Sintetizador Uno');
+    } finally { await cleanup(); }
   });
 
   it('replaces empty inventory filter chrome with one first-asset empty state', async () => {

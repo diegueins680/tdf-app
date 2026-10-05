@@ -1,13 +1,14 @@
 #!/bin/bash
 # Stripe Integration Test Script
-# Tests the complete payment flow end-to-end
+# Read-only readiness diagnostic; it does not exercise payment/webhook behavior.
 
 set -e
 
+PROJECT_DIR=${PROJECT_DIR:-"$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"}
 API_BASE=${API_BASE:-http://localhost:8080}
 FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
 
-echo "🧪 Stripe Integration Tests"
+echo "🧪 Stripe readiness diagnostic"
 echo "=========================="
 echo "API: $API_BASE"
 echo "Frontend: $FRONTEND_URL"
@@ -37,7 +38,7 @@ echo ""
 echo "Test 2: API Structure"
 # The Stripe endpoints are under /social-events/ which requires auth
 # Let's just verify the backend compiles with Stripe support
-pass "Backend compiled with Stripe support (verified during build)"
+warn "Stripe support and authenticated payment behavior are not verified by this diagnostic"
 
 # Test 3: Check if Stripe environment variables are configured
 echo ""
@@ -82,9 +83,9 @@ echo "Test Summary"
 echo "=========================="
 echo ""
 echo "✅ Backend Status:"
-echo "  - Health endpoint: Working"
-echo "  - Stripe module: Compiled"
-echo "  - Config loading: Fixed (reads from env)"
+echo "  - Health endpoint: HTTP $HEALTH_STATUS"
+echo "  - Stripe payment/webhook behavior: not exercised"
+echo "  - Runtime configuration: not verified by local file checks"
 echo ""
 echo "📋 Next Steps for Production:"
 echo ""
@@ -95,14 +96,13 @@ echo "   → Copy Secret key (sk_test_...)"
 echo ""
 echo "2. Configure Stripe Webhook:"
 echo "   → https://dashboard.stripe.com/test/webhooks"
-echo "   → Add endpoint: https://tdf-hq.fly.dev/social-events/stripe/webhook"
-echo "   → Select events: payment_intent.succeeded, payment_intent.payment_failed"
-echo "   → Copy Signing secret (whsec_...)"
+echo "   → Verify/edit the existing endpoint URL: https://api.tdfrecords.net/social-events/stripe/webhook"
+echo "   → Preserve approved events, including payment_intent.succeeded and payment_intent.payment_failed"
+echo "   → Preserve the existing endpoint ID/signing secret; do not add a duplicate. Stop if missing."
 echo ""
-echo "3. Deploy Backend to Fly.io:"
-echo "   flyctl secrets set STRIPE_SECRET_KEY=sk_test_... --app tdf-hq"
-echo "   flyctl secrets set STRIPE_WEBHOOK_SECRET=whsec_... --app tdf-hq"
-echo "   flyctl deploy --app tdf-hq"
+echo "3. Apply reviewed backend configuration:"
+echo "   → Use ops/hetzner/README.md; preserve runtime secrets and release/recovery gates"
+echo "   → Do not deploy or update secrets on the retired Fly app"
 echo ""
 echo "4. Deploy Frontend:"
 echo "   → Add VITE_STRIPE_PUBLISHABLE_KEY to Cloudflare Pages"
@@ -114,3 +114,6 @@ echo "   → Buy ticket with card: 4242 4242 4242 4242"
 echo "   → Verify webhook received in Stripe Dashboard"
 echo "   → Check ticket generated with QR code"
 echo ""
+
+# A failed health probe must not be reported as a successful diagnostic.
+[ "$HEALTH_STATUS" = "200" ]

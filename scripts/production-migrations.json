@@ -872,6 +872,16 @@
       "introducedBy": "604c2366edfd2a86478e9d0177dcfeee2dd21678"
     },
     {
+      "id": "2026-10-05_ticket_confirmation_delivery",
+      "path": "tdf-hq/sql/2026-10-05_ticket_confirmation_delivery.sql",
+      "introducedBy": "409293891a255bb722ee026f3c7ba80a8f835589"
+    },
+    {
+      "id": "2026-10-05_ticket_confirmation_lease_index",
+      "path": "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index.sql",
+      "introducedBy": "73fae64015f3058d40f7c237010f7ea975290e7f"
+    },
+    {
       "id": "2026-10-04_auth_recovery_expiry",
       "path": "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql",
       "introducedBy": "57315f2d4b3aafac8ec7242c5913028f157dff8d"

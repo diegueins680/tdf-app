@@ -8,6 +8,7 @@
 
 ## Build, Run, and Dev
 - Toolchain: **stack only** — `stack.yaml` uses `lts-24.42` (GHC 9.10.3). Do **not** use `cabal` or the system GHC; it is a different toolchain the project does not use, its `dist-newstyle/` artifacts are ignored, and a green `cabal` build does not imply a green project build.
+- Package/dependency/module authority: `tdf-hq.cabal`, consumed by Stack and Docker. The obsolete ignored `package.yaml` was removed; do not regenerate the Cabal manifest from historical Hpack metadata.
 - Env: `set -a; source config/default.env; set +a`.
 - Build: `stack setup` then `stack build`.
 - Run: `stack run` (or `bash scripts/dev_run.sh`).
@@ -25,6 +26,7 @@
 - The existing `test/` Hspec/QuickCheck suite runs with `stack test`. PostgreSQL, HTTP and concurrency runners under root `scripts/` cover additional boundaries; see `.github/workflows/ci.yml` for the complete backend lane.
 - Local invitation/event-relation runners can use an existing loopback PostgreSQL server with `TDF_TEST_NATIVE_POSTGRES=1` (optional `TDF_TEST_NATIVE_POSTGRES_USER` / `TDF_TEST_NATIVE_POSTGRES_PORT`). They create and remove only their own new `_test` databases; pre-existing names fail closed. Default local behavior still uses Docker, and CI uses its isolated service. Never inherit libpq routing overrides.
 - Prefer observable handler/database tests with isolated fixtures. Follow `FORMAL_VERIFICATION.md` for critical invariants and negative controls.
+- Pending external-runner cases in Hspec are not a PostgreSQL test pass.
 
 ## Commit & Pull Requests
 - Commits: short, imperative subjects (e.g., "Enable CORS"). Optional prefixes like `feat:`, `fix:`, `chore:` are welcome.
@@ -41,10 +43,18 @@
 - UI snapshots such as `tdf-hq-ui.backup.*` are intentionally ignored in `.gitignore`. Treat them as personal sandboxes—never reference them from build scripts or CI.
 
 ## Deployment Runbooks
-- **Cloudflare Pages** – build from repo root with `npm run build:ui`, output `tdf-hq-ui/dist`. Use the current Node 22+ package/CI requirement. Production's observed API is `https://api.tdfrecords.net`; verify browser `VITE_API_BASE` and preview-function `PUBLIC_API_BASE`. Never place bearer credentials in public `VITE_*` variables.
-- **Vercel** – set the root directory to `tdf-hq-ui`, install via `npm install`, build with `npm run build`, output `dist`.
-- **Backend** – start at `formal/system/README.md` and verify live identity. The October 4 baseline is Hetzner; Koyeb/Fly instructions are historical targets, not permission to redirect production. Preserve reviewed migrations and recovery guards.
-- Whenever you need to test end-to-end, ensure the frontend env vars point at the deployed API and that the API allows the frontend’s origin.
+- Follow `../ops/hetzner/README.md` and its validation record for the current
+  production API at `https://api.tdfrecords.net`. Preserve the production database,
+  backups, reviewed migration manifest and compatible recovery image.
+- Cloudflare Pages builds from the repository root with Node 22 and
+  `npm run build:ui`, output `tdf-hq-ui/dist`. Both `VITE_API_BASE` and
+  `PUBLIC_API_BASE` must use the canonical API host; never put bearer credentials
+  in public `VITE_*` configuration.
+- The retained Fly runner and Koyeb references are historical/legacy scope, not
+  the current production deployment procedure. Do not modify shared Trader resources.
+- Inspect current rollout prerequisites and feature flags before deploying; a
+  successful build does not establish production authentication or upload behavior.
+- The authoritative system index and verification boundaries are in `../formal/system/README.md`.
 
 ## Branding
 - The React shell renders SVG logos through `BrandLogo`. Swap SVG assets (`tdf-hq-ui/src/assets/tdf-*.svg`) rather than hardcoding text to maintain contrast in both themes.
