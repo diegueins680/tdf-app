@@ -1,0 +1,93 @@
+{
+  "checkedAt": "2026-10-05T04:57:43.308Z",
+  "source": "Authenticated App Store Connect and Google Play Developer APIs; no tester identities or credentials retained",
+  "ios": {
+    "appId": "6779786470",
+    "bundleId": "com.tdfrecords.app",
+    "version": "1.0.1",
+    "build": "31",
+    "sourceCommit": "7a1fca3696dada4263c70716c70b763e492807cc",
+    "buildRun": "https://github.com/diegueins680/TDF-mobile/actions/runs/37261008115",
+    "sha256": "fd25ff1b382801ea2e906cd59f84f651df9f086d9053f72c8cc88f006695fd67",
+    "processingState": "VALID",
+    "betaReviewState": "APPROVED",
+    "externalGroupAssigned": true,
+    "testFlightUrl": "https://testflight.apple.com/join/7k3VE2JJ",
+    "appStoreState": "REJECTED",
+    "releaseType": "MANUAL",
+    "physicalGoogleOAuthVerified": false
+  },
+  "android": {
+    "checkedAt": "2026-10-05T04:53:48.922Z",
+    "packageName": "com.tdf.records",
+    "tracks": [
+      {
+        "track": "production"
+      },
+      {
+        "track": "beta"
+      },
+      {
+        "track": "alpha",
+        "releases": [
+          {
+            "name": "1.0.1 (22) - TDF interactions",
+            "versionCodes": [
+              "22"
+            ],
+            "releaseNotes": [
+              {
+                "language": "en-US",
+                "text": "React to content, join conversations, reply and mention people. Edit or delete your comments, manage discussion notifications, and open the exact reply from a link. Includes updated service connectivity and accessibility improvements."
+              }
+            ],
+            "status": "completed"
+          }
+        ]
+      },
+      {
+        "track": "internal",
+        "releases": [
+          {
+            "name": "1.0.1 (11) - Notification navigation",
+            "versionCodes": [
+              "12"
+            ],
+            "releaseNotes": [
+              {
+                "language": "en-US",
+                "text": "Notifications now open the follower profile, access request, or related resource they refer to. Links preserve your destination through sign-in and show current request status. Opening a notification does not approve requests or change permissions."
+              }
+            ],
+            "status": "completed"
+          }
+        ]
+      }
+    ],
+    "closedCountryCount": 177,
+    "closedIncludesEcuador": true,
+    "closedRestOfWorld": true,
+    "sourceCommit22": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "artifact22Sha256": "c9dbbf560702ddc60b5e9634300bd19cbcf12dfb218828e31c4a930af1061aae",
+    "emailListAdmissionVerified": false,
+    "openTestingValidation": "FAILED_PRECONDITION",
+    "inspectionEditsDeleted": true,
+    "publicAvailabilityVerified": false,
+    "playSigningAssociation": {
+      "checkedAt": "2026-10-05T05:01:53.488Z",
+      "versionCode": 22,
+      "status": 200,
+      "certificateSha256Hashes": [
+        "08:76:1D:24:F5:A8:45:2C:89:11:65:82:C7:C8:5D:0A:E2:B1:A7:24:C1:B4:8B:C0:7B:B1:9F:A2:8A:80:8E:B0"
+      ],
+      "assetlinksStatus": 200,
+      "allCertificatesAssociated": true,
+      "physicalHandoffVerified": false
+    }
+  },
+  "analytics": {
+    "existingProvider": "PostHog",
+    "productionProjectKeyConfigured": false,
+    "liveProviderReceiptVerified": false
+  }
+}

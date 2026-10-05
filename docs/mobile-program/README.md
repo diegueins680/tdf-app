@@ -1,6 +1,24 @@
 # TDF Mobile: adquisición y programa de testers
 
-Estado de trabajo, 4 de octubre de 2026. **No es una declaración de despliegue ni de publicación en tiendas.**
+Registro de implementación y distribución. La actualización del 5 de octubre siguiente sustituye los estados anteriores; se conserva el historial para trazabilidad.
+
+## Actualización verificada — 5 de octubre de 2026
+
+La web de [TDF Mobile](https://www.tdfrecords.net/app) está desplegada desde [PR #479](https://github.com/diegueins680/tdf-app/pull/479), merge `5efd7ff31d55c1eb5b66b2f7710ea4ef87328727`; CI y deployment Cloudflare pasaron. La matriz específica de navegación/accesibilidad pasó 20/20 y la comprobación de producción pasó en Chromium, Firefox y WebKit. Los resultados completos y artefactos están en el informe de ese PR.
+
+**iOS 1.0.1 (31):** firmado desde `TDF-mobile/main` `7a1fca3696dada4263c70716c70b763e492807cc`, que incluye los cambios de feedback y la corrección de categorías de #131. [Pipeline firmado](https://github.com/diegueins680/TDF-mobile/actions/runs/37261008115) y [EAS Submit](https://expo.dev/accounts/cuco.saa/projects/tdf-mobile/submissions/0b8442e5-cc27-44f7-a511-a73afca0035a) finalizaron correctamente. Apple confirmó `VALID`; se verificó el acceso de la cuenta demo existente a la API actual (HTTP 200, sin registrar credenciales), se envió a Beta App Review y Apple devolvió `APPROVED`. Build 31 está asignado al grupo externo del [enlace TestFlight existente](https://testflight.apple.com/join/7k3VE2JJ), junto al 19 vigente. La página pública muestra la invitación, pero no el número de build: la asignación del 31 se comprobó por API. No equivale a una instalación física comprobada.
+
+Las instrucciones de prueba de build 31 están en español e inglés. La privacidad de TestFlight apunta ahora a `https://www.tdfrecords.net/mobile-app/privacy.html`: HTTP 200 y contenido idéntico al dominio antiguo antes del cambio. App Store permanece `REJECTED` con release `MANUAL`; no se envió una nueva versión a App Review ni se publicó en App Store. Google OAuth, Universal/App Links y lectores de pantalla siguen pendientes de prueba física; `devicectl` y `adb` no detectaron dispositivos conectados.
+
+**Android:** la credencial de envío ya vinculada a EAS permitió consultar Play. `alpha` contiene 1.0.1 (22), `completed`; `internal`, code 12, `completed`. Los tracks `production` y `beta` no contienen releases. El hash de 22 coincide con el recibo del pipeline de `12a472ecb68e9a9c0bcba81baf0fafa551d59253`. Ecuador está habilitado en closed testing. Una validación de Open Testing en un edit temporal devolvió `FAILED_PRECONDITION`; el edit se eliminó sin commit. No se deduce el motivo preciso ni se eluden los requisitos de Google. La API de testers solo permite grupos Google, no las listas de correos de Console: admisión y capacidad siguen sin verificar. El manifiesto registra `closed_testing` / `approval_required` / `unknown` y conserva el formulario de solicitud sin exponer un botón de instalación que prometa acceso.
+
+El certificado de firma real de los APK generados por Play para code 22 (`08:76:…:8E:B0`) coincide con `assetlinks.json` desplegado, comprobado mediante `generatedApks`. Esto valida la asociación declarada; no sustituye abrir un enlace en un dispositivo real.
+
+**Analytics:** la instrumentación existe y sus payloads se verificaron mediante transporte interceptado, pero no se encontró una clave productiva de PostHog en las configuraciones accesibles. Los tokens del historial Git eran exclusivamente `phc_unit_test`. No se creó otro proveedor ni se afirma recepción productiva de eventos o atribución de instalaciones.
+
+[Evidencia resumida sin datos personales](distribution-2026-10-05.json). Los siete días de vigencia del manifiesto se cuentan desde cada observación real; al vencer, la UI deriva al formulario. No existe una sincronización automática con cuentas privadas de tiendas. La siguiente actualización exige repetir la comprobación de estado, grupo/capacidad y destino.
+
+Fuentes: [Apple, testers externos](https://developer.apple.com/help/app-store-connect/test-a-beta-version/invite-external-testers/); [Google, representación de tracks](https://developers.google.com/android-publisher/api-ref/rest/v3/edits.tracks); [Google, limitación de listas de testers](https://developers.google.com/android-publisher/api-ref/rest/v3/edits.testers); [Google, acceso a producción y Open Testing](https://support.google.com/googleplay/android-developer/answer/14151465).
 
 ## Evidencia de distribución
 
