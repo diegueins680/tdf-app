@@ -1,0 +1,8 @@
+{
+  "revision": "7a43e78131d66646504e40ed2cc380d2bc5336d1",
+  "observedAt": "2026-10-05T11:27:41.499533+00:00",
+  "command": "CI=1 EXPO_NO_TELEMETRY=1 npm run start -- --offline --port 8113",
+  "status": 200,
+  "body": "packager-status:running",
+  "limitation": "Metro startup only; no native bundle, emulator/device or store-distribution claim."
+}

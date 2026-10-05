@@ -18,7 +18,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Network.HTTP.Client as HC
-import Network.HTTP.Types.URI (parseQuery)
+import Network.HTTP.Types.URI (parseQuery, renderQuery)
 import Servant (ServerError, errHTTPCode)
 import Servant.Multipart (FileData(..))
 import System.FilePath ((</>))
@@ -33,6 +33,10 @@ type Attempt = (BS.ByteString, Int, Bool, BS.ByteString, BS.ByteString)
 
 fixtureKey :: Text
 fixtureKey = T.replicate 64 "a"
+
+fixtureQuery :: BS.ByteString
+fixtureQuery = "appProperties has { key='tdfIdempotencyKey' and value='"
+  <> TE.encodeUtf8 fixtureKey <> "' } and trashed=false and 'syntheticFolder' in parents"
 
 fixtureToken :: Text
 fixtureToken = "synthetic-drive-replay-token"
@@ -100,12 +104,21 @@ spec = describe "Drive replay payload binding (no provider network)" $ do
       trace `shouldReturn` (firstUploadTrace <> [listHop])
       expectConflict outcome
 
-  it "does not follow a provider redirect" $
-    withFixture True False $ \manager trace _ directory transport -> do
-      outcome <- trySynchronous (send manager directory "redirect.tmp" "same.webp" "image/webp" "SYNTHETIC_PAYLOAD_A")
-        :: IO (Either SomeException DriveUploadDTO)
+  it "synthetic transport blocks redirects before a second connection" $
+    withFixture True False $ \manager trace _ _ transport -> do
+      -- Explicitly permit a redirect here to exercise the fixture's destination
+      -- guard, independently of any production adapter redirect policy.
+      request <- HC.parseRequest "https://www.googleapis.com/drive/v3/files"
+      outcome <- trySynchronous (HC.httpLbs request
+        { HC.requestHeaders = [("Authorization", "Bearer " <> TE.encodeUtf8 fixtureToken)]
+        , HC.queryString = renderQuery True [("q", Just fixtureQuery)]
+        , HC.redirectCount = 1
+        } manager)
+        :: IO (Either SomeException (HC.Response BL.ByteString))
       trace `shouldReturn` [listHop]
-      transport `shouldReturn` ([("www.googleapis.com", 443, True, "GET", "/drive/v3/files")], 1)
+      transport `shouldReturn`
+        ([("www.googleapis.com", 443, True, "GET", "/drive/v3/files")
+         ,("unexpected.invalid", 443, True, "GET", "/not-allowed")], 1)
       case outcome of
         Left _ -> pure ()
         Right _ -> expectationFailure "Redirect must not produce an upload result"
@@ -189,7 +202,7 @@ withFixture redirectList legacyReplay action = withSystemTempDirectory "tdf-driv
         -- per transport operation. Validate every invocation, but count effects
         -- only when a connection is actually admitted (responses force close).
         writeIORef admittedRequest (Just request)
-        pure request { HC.redirectCount = 0 }
+        pure request
       destination request =
         (HC.host request, HC.port request, HC.secure request, HC.method request, HC.path request)
       connect _ _ _ = do
@@ -202,9 +215,7 @@ withFixture redirectList legacyReplay action = withSystemTempDirectory "tdf-driv
         unless (length seen < 16) $ throwIO (userError "Unexpected provider request loop")
         modifyIORef' hops (<> [hop])
         body <- if hop == listHop then do
-          let expectedQuery = "appProperties has { key='tdfIdempotencyKey' and value='"
-                <> TE.encodeUtf8 fixtureKey <> "' } and trashed=false and 'syntheticFolder' in parents"
-          unless (lookup "q" (parseQuery (HC.queryString request)) == Just (Just expectedQuery)) $
+          unless (lookup "q" (parseQuery (HC.queryString request)) == Just (Just fixtureQuery)) $
             throwIO (userError "Unexpected key/folder lookup")
           exists <- readIORef created
           if not exists then pure "{\"files\":[]}" else do

@@ -1,0 +1,1101 @@
+{
+  "schemaVersion": 1,
+  "revision": "4cc9942940fc8dbf617e63a4e8b407f39605b0f6",
+  "startedAt": "2026-10-05T11:02:19.683Z",
+  "node": "v24.8.0",
+  "command": [
+    "bash",
+    "scripts/verify-event-operations-formal.sh"
+  ],
+  "sourceDigest": "62632d3608a6ef6daee0a33e53578e43585c52c85fe0ce609239201367020876",
+  "status": "bounded-model-checks-passed",
+  "tools": {
+    "TLA2TOOLS_JAR": "fa18543e44ed5974a85bd2c60c0dc16620ae117680ea8e693d2691999ed90b22",
+    "ALLOY_JAR": "6b8c1cb5bc93bedfc7c61435c4e1ab6e688a242dc702a394628d9a9801edb78d",
+    "java": "openjdk version \"21.0.12.1\" 2026-08-18\nOpenJDK Runtime Environment Homebrew (build 21.0.12.1)\nOpenJDK 64-Bit Server VM Homebrew (build 21.0.12.1, mixed mode, sharing)"
+  },
+  "limitations": "Bounded model analysis and translator-integrity tests, not whole-program refinement; mobile identity recorded but mobile source not analyzed by this runner.",
+  "execution": {
+    "status": 0,
+    "signal": null
+  },
+  "tlc": {
+    "positive": 64,
+    "negative": 150,
+    "configurations": [
+      {
+        "kind": "positive",
+        "module": "NativeLanding.tla",
+        "config": "NativeLanding.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "NativeArtistFollow.tla",
+        "config": "NativeArtistFollow.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "ExperimentAuthority.tla",
+        "config": "ExperimentAuthority.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "ExperimentAuthority.tla",
+        "config": "ExperimentAuthorityPaused.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "EventLifecycle.tla",
+        "config": "EventLifecycle.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "EventLifecycle.tla",
+        "config": "EventLifecycleBoundaries.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "SessionCacheIsolation.tla",
+        "config": "SessionCacheIsolation.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "SessionCacheIsolation.tla",
+        "config": "SessionCacheShared.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "SessionCacheIsolation.tla",
+        "config": "SessionCacheActorReuse.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "SessionCacheIsolation.tla",
+        "config": "SessionCacheStaleExpiry.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "CatalogReorder.tla",
+        "config": "CatalogReorder.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "CatalogReorder.tla",
+        "config": "CatalogReorderPartialRollback.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "CatalogReorder.tla",
+        "config": "CatalogReorderStaleRevision.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "CatalogReorder.tla",
+        "config": "CatalogReorderNoAuthorization.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "CatalogReorder.tla",
+        "config": "CatalogReorderNoAudit.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "StudioBookingProjection.tla",
+        "config": "StudioBookingProjection.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "StudioBookingProjection.tla",
+        "config": "StudioBookingProjectionStale.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "StudioBookingProjection.tla",
+        "config": "StudioBookingProjectionReactivation.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "StudioBookingProjection.tla",
+        "config": "StudioBookingProjectionOverlap.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "StudioBookingScope.tla",
+        "config": "StudioBookingScope.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "StudioBookingScope.tla",
+        "config": "StudioBookingScopeModuleOnly.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "StudioBookingScope.tla",
+        "config": "StudioBookingScopeRequestedAssignment.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "StudioBookingScope.tla",
+        "config": "StudioBookingScopeRevokedWrite.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "RestoreIsolation.tla",
+        "config": "RestoreIsolation.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RestoreIsolation.tla",
+        "config": "RestoreIsolationNoLock.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RestoreIsolation.tla",
+        "config": "RestoreIsolationOrphanRetry.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RestoreIsolation.tla",
+        "config": "RestoreIsolationSourceTarget.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RestoreIsolation.tla",
+        "config": "RestoreIsolationEarlyReceipt.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RestoreIsolation.tla",
+        "config": "RestoreIsolationLateCreate.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "RecoveryExpiry.tla",
+        "config": "RecoveryExpiry.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RecoveryExpiry.tla",
+        "config": "RecoveryExpiryNoExpiry.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RecoveryExpiry.tla",
+        "config": "RecoveryExpiryStaleClock.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RecoveryExpiry.tla",
+        "config": "RecoveryExpiryLegacy.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RecoveryExpiry.tla",
+        "config": "RecoveryExpiryRebound.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "DirectoryClaimReview.tla",
+        "config": "DirectoryClaimReview.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "DirectoryClaimReview.tla",
+        "config": "DirectoryClaimReviewConcurrent.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "DirectoryClaimReview.tla",
+        "config": "DirectoryClaimReviewModuleOnly.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "DirectoryClaimReview.tla",
+        "config": "DirectoryClaimReviewSelfReview.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "DirectoryClaimReview.tla",
+        "config": "DirectoryClaimReviewReplay.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "SignupIdentity.tla",
+        "config": "SignupIdentity.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "SignupIdentity.tla",
+        "config": "SignupIdentityPublicClaim.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "SignupIdentity.tla",
+        "config": "SignupIdentityUnreviewed.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "SignupIdentity.tla",
+        "config": "SignupIdentityRebind.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "CredentialLifecycle.tla",
+        "config": "CredentialLifecycle.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "ChatMutationBoundary.tla",
+        "config": "ChatMutationBoundary.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "ChatMutationBoundary.tla",
+        "config": "ChatMutationEarlyCommit.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "ChatMutationBoundary.tla",
+        "config": "ChatMutationNoRollback.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "CredentialLifecycle.tla",
+        "config": "CredentialLifecycleConcurrentReset.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "CredentialLifecycle.tla",
+        "config": "CredentialLifecycleEarlyCommit.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "CredentialLifecycle.tla",
+        "config": "CredentialLifecycleGoogleSession.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "MarketplaceStorage.tla",
+        "config": "MarketplaceStorage.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "MarketplaceStorage.tla",
+        "config": "MarketplaceStorageUnsafeCache.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "MarketplaceStorage.tla",
+        "config": "MarketplaceStorageUnsafeKey.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "OptionalTokenRecovery.tla",
+        "config": "OptionalTokenRecovery.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "OptionalTokenRecovery.tla",
+        "config": "OptionalTokenRecoveryUnsafeStorage.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "OptionalTokenRecovery.tla",
+        "config": "OptionalTokenRecoveryUnsafeFragment.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "NativeLanding.tla",
+        "config": "NativeLandingMarkerOnly.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "NativeArtistFollow.tla",
+        "config": "NativeArtistFollowNamespace.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "NativeArtistFollow.tla",
+        "config": "NativeArtistFollowSession.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "MarketplaceCatalogRead.tla",
+        "config": "MarketplaceCatalogRead.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "MarketplaceCatalogRead.tla",
+        "config": "MarketplaceCatalogReadUnapproved.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "MarketplaceCatalogRead.tla",
+        "config": "MarketplaceCatalogReadUnsafe.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "CalendarConnection.tla",
+        "config": "CalendarConnection.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "CalendarConnection.tla",
+        "config": "CalendarConnectionReplay.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "CalendarConnection.tla",
+        "config": "CalendarConnectionStorage.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "CalendarConnection.tla",
+        "config": "CalendarConnectionStale.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "DirectoryFavoriteAuthority.tla",
+        "config": "DirectoryFavoriteAuthority.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "DirectoryFavoriteAuthority.tla",
+        "config": "DirectoryFavoriteAuthorityUnsafeDispatch.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "DirectoryFavoriteAuthority.tla",
+        "config": "DirectoryFavoriteAuthorityUnsafeReceipt.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "ExperimentAuthority.tla",
+        "config": "ExperimentAuthorityStale.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "ExperimentAuthority.tla",
+        "config": "ExperimentAuthorityDuplicate.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "ExperimentAuthority.tla",
+        "config": "ExperimentAuthorityAccount.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "EventLifecycle.tla",
+        "config": "EventLifecycleUnsafeFinance.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "EventLifecycle.tla",
+        "config": "EventLifecycleUnsafeArchive.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "EventLifecycle.tla",
+        "config": "EventLifecycleUnsafeAudit.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "ReservationRace.tla",
+        "config": "ReservationRace.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "ReservationRace.tla",
+        "config": "ReservationOverride.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "InvitationSafety.tla",
+        "config": "InvitationSafety.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "TaskRaci.tla",
+        "config": "TaskRaci.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "TaskCommit.tla",
+        "config": "TaskCommit.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "PaymentRecovery.tla",
+        "config": "PaymentRecovery.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "PaymentRecovery.tla",
+        "config": "PaymentRecoveryOverwrite.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "PaymentRecovery.tla",
+        "config": "PaymentRecoveryReturn.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "PaymentRecovery.tla",
+        "config": "PaymentRecoveryCompleted.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "WorkerCompletionEvidence.tla",
+        "config": "WorkerCompletionEvidence.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "WorkerCompletionEvidence.tla",
+        "config": "WorkerCompletionEvidenceFailed.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "WorkerCompletionEvidence.tla",
+        "config": "WorkerCompletionEvidenceUnacknowledged.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "ProviderRetryAdmission.tla",
+        "config": "ProviderRetryAdmission.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "ProviderRetryAdmission.tla",
+        "config": "ProviderRetryAdmissionAmbiguous.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "ProviderRetryAdmission.tla",
+        "config": "ProviderRetryAdmissionDuplicate.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "ProviderRetryAdmission.tla",
+        "config": "ProviderRetryAdmissionPayload.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "ProviderRetryAdmission.tla",
+        "config": "ProviderRetryAdmissionClosed.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "ProviderRetryAdmission.tla",
+        "config": "ProviderRetryAdmissionLate.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "HostedServicePayment.tla",
+        "config": "HostedServicePayment.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "HostedServicePayment.tla",
+        "config": "HostedServicePaymentAtomic.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "HostedServicePayment.tla",
+        "config": "HostedServicePaymentReplay.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "HostedServicePayment.tla",
+        "config": "HostedServicePaymentProgress.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "RefundRecovery.tla",
+        "config": "RefundRecovery.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RefundRecovery.tla",
+        "config": "RefundRecoveryExecution.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RefundRecovery.tla",
+        "config": "RefundRecoveryAccounting.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RefundRecovery.tla",
+        "config": "RefundRecoveryAuthority.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "TaskCommit.tla",
+        "config": "TaskCommitEarlyValidation.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "TaskCommit.tla",
+        "config": "TaskCommitWriteSkew.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "TaskCompletion.tla",
+        "config": "TaskCompletion.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "TaskCompletion.tla",
+        "config": "TaskCompletionAuthority.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "TaskCompletion.tla",
+        "config": "TaskCompletionVersion.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "TaskCompletion.tla",
+        "config": "TaskCompletionDependencies.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "TaskCompletion.tla",
+        "config": "TaskCompletionRaci.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "TaskCompletion.tla",
+        "config": "TaskCompletionLifecycle.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "TaskCompletion.tla",
+        "config": "TaskCompletionReplay.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "TaskCompletion.tla",
+        "config": "TaskCompletionAudit.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "TaskRevision.tla",
+        "config": "TaskRevision.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "TaskRevision.tla",
+        "config": "TaskRevisionRaci.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "TaskRevision.tla",
+        "config": "TaskRevisionEarly.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "TaskRevisionRead.tla",
+        "config": "TaskRevisionRead.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "TaskRevisionRead.tla",
+        "config": "TaskRevisionReadMixed.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "TaskRevisionRead.tla",
+        "config": "TaskRevisionReadEarly.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "RaciReassignment.tla",
+        "config": "RaciReassignment.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "CommandBoundary.tla",
+        "config": "CommandBoundary.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "TaskCompletionClient.tla",
+        "config": "TaskCompletionClient.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "TaskCompletionClient.tla",
+        "config": "TaskCompletionClientCapture.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "TaskCompletionClient.tla",
+        "config": "TaskCompletionClientShape.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "TaskCompletionClient.tla",
+        "config": "TaskCompletionClientBinding.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "TaskCompletionClient.tla",
+        "config": "TaskCompletionClientRetry.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "RaciEditorContext.tla",
+        "config": "RaciEditorContext.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "RaciWebEditor.tla",
+        "config": "RaciWebEditor.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RaciWebEditor.tla",
+        "config": "RaciWebEditorConsent.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RaciWebEditor.tla",
+        "config": "RaciWebEditorContext.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RaciWebEditor.tla",
+        "config": "RaciWebEditorFlight.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RaciWebEditor.tla",
+        "config": "RaciWebEditorRetry.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RaciWebEditor.tla",
+        "config": "RaciWebEditorReceipt.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RaciEditorContext.tla",
+        "config": "RaciEditorContextEarly.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RaciEditorContext.tla",
+        "config": "RaciEditorContextCandidate.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RaciEditorContext.tla",
+        "config": "RaciEditorContextMixed.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "CommandBoundary.tla",
+        "config": "CommandBoundaryEarly.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "CommandBoundary.tla",
+        "config": "CommandBoundaryUnbound.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RaciReassignment.tla",
+        "config": "RaciReassignmentEarly.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RaciReassignment.tla",
+        "config": "RaciReassignmentVersion.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RaciReassignment.tla",
+        "config": "RaciReassignmentReplay.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RaciReassignment.tla",
+        "config": "RaciReassignmentScope.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RaciReassignment.tla",
+        "config": "RaciReassignmentSplit.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "RaciReassignment.tla",
+        "config": "RaciReassignmentAudit.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "ReceiptReplay.tla",
+        "config": "ReceiptReplay.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "ReceiptReplay.tla",
+        "config": "ReceiptReplayBypass.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "ReceiptReplay.tla",
+        "config": "ReceiptReplayStaleClock.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "ReceiptReplay.tla",
+        "config": "ReceiptReplayStaleSnapshot.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "SnapshotRead.tla",
+        "config": "SnapshotRead.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "SnapshotRead.tla",
+        "config": "SnapshotReadEarlyAuth.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "SnapshotRead.tla",
+        "config": "SnapshotReadMixedClock.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "SnapshotRead.tla",
+        "config": "SnapshotReadRawLog.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "CommandPrivacy.tla",
+        "config": "CommandPrivacy.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "CommandPrivacy.tla",
+        "config": "CommandPrivacyExistenceLeak.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "CommandPrivacy.tla",
+        "config": "CommandPrivacyReceiptLeak.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "SessionFence.tla",
+        "config": "SessionFence.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "SessionFence.tla",
+        "config": "SessionFenceStale.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "SessionFence.tla",
+        "config": "SessionFenceUnlocked.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "SessionFence.tla",
+        "config": "SessionFenceParty.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "SessionFence.tla",
+        "config": "SessionFenceCredential.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "SessionFence.tla",
+        "config": "SessionFencePurpose.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "SessionFence.tla",
+        "config": "SessionFenceWitness.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "ContractPayment.tla",
+        "config": "ContractPayment.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "CheckoutReadiness.tla",
+        "config": "CheckoutReadiness.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "CheckoutCancellation.tla",
+        "config": "CheckoutCancellation.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "CheckoutCancellation.tla",
+        "config": "CheckoutCancellationUnsafe.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "CheckoutCancellation.tla",
+        "config": "CheckoutCancellationPaymentUnsafe.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "CheckoutReadiness.tla",
+        "config": "CheckoutReadinessUnavailable.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "CheckoutReadiness.tla",
+        "config": "CheckoutReadinessStale.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "CheckoutReadiness.tla",
+        "config": "CheckoutReadinessDuplicate.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "NavigationVisit.tla",
+        "config": "NavigationVisit.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "NavigationVisit.tla",
+        "config": "NavigationVisitUnsafe.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "ProviderRollback.tla",
+        "config": "ProviderRollback.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "ProviderRollback.tla",
+        "config": "ProviderRollbackCompatible.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "ProviderRollback.tla",
+        "config": "ProviderRollbackMixed.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "ProviderRollback.tla",
+        "config": "ProviderRollbackForward.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "ProviderRollback.tla",
+        "config": "ProviderRollbackPartial.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "ProviderRollback.tla",
+        "config": "ProviderRollbackUnsafe.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "OperationalLiveness.tla",
+        "config": "OperationalLiveness.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "FanHubOnboarding.tla",
+        "config": "FanHubOnboarding.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "FanHubOnboarding.tla",
+        "config": "FanHubOnboardingLiveness.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "FanHubOnboarding.tla",
+        "config": "FanHubOnboardingUnfair.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "FanHubOnboarding.tla",
+        "config": "FanHubOnboardingConsent.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "FanHubOnboarding.tla",
+        "config": "FanHubOnboardingContext.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "FanHubOnboarding.tla",
+        "config": "FanHubOnboardingFlight.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "FanHubOnboarding.tla",
+        "config": "FanHubOnboardingTerminal.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "AccessCodeValidation.tla",
+        "config": "AccessCodeValidation.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "AccessCodeValidation.tla",
+        "config": "AccessCodeValidationStale.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "AccessCodeValidation.tla",
+        "config": "AccessCodeValidationSuperficial.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "LiveIntakeAuthority.tla",
+        "config": "LiveIntakeAuthority.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "LiveIntakeAuthority.tla",
+        "config": "LiveIntakeAmbient.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "LiveIntakeAuthority.tla",
+        "config": "LiveIntakeStale.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "LiveIntakeAuthority.tla",
+        "config": "LiveIntakeUnpersisted.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "ArtistActivation.tla",
+        "config": "ArtistActivation.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "ArtistActivation.tla",
+        "config": "ArtistActivationUnsafe.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "ArtistClaimKind.tla",
+        "config": "ArtistClaimKind.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "ArtistClaimKind.tla",
+        "config": "ArtistClaimKindUnsafe.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "ArtistClaimTarget.tla",
+        "config": "ArtistClaimTarget.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "ArtistClaimTarget.tla",
+        "config": "ArtistClaimTargetUnsafe.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "TaskRead.tla",
+        "config": "TaskRead.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "TaskView.tla",
+        "config": "TaskView.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "TaskView.tla",
+        "config": "TaskViewLate.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "TaskView.tla",
+        "config": "TaskViewRetained.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "TaskView.tla",
+        "config": "TaskViewInvalid.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "TaskRead.tla",
+        "config": "TaskReadScope.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "TaskRead.tla",
+        "config": "TaskReadEvent.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "TaskRead.tla",
+        "config": "TaskReadEarly.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "TaskRead.tla",
+        "config": "TaskReadMixed.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "WebOnboardingRecovery.tla",
+        "config": "WebOnboardingRecovery.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "WebOnboardingRecovery.tla",
+        "config": "WebOnboardingRecoveryStale.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "WebOnboardingRecovery.tla",
+        "config": "WebOnboardingRecoveryReceipt.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "WebOnboardingRecovery.tla",
+        "config": "WebOnboardingRecoveryOverlap.cfg"
+      },
+      {
+        "kind": "positive",
+        "module": "ArtistFollowConsent.tla",
+        "config": "ArtistFollowConsent.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "ArtistFollowConsent.tla",
+        "config": "ArtistFollowConsentClick.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "ArtistFollowConsent.tla",
+        "config": "ArtistFollowConsentUnknown.cfg"
+      },
+      {
+        "kind": "negative",
+        "module": "ArtistFollowConsent.tla",
+        "config": "ArtistFollowConsentStale.cfg"
+      }
+    ]
+  },
+  "logSha256": "522cd2f4611a2f8397b07e313f9c1e1d34f673c1f9ce6645578fcc8c64b365a5",
+  "finishedAt": "2026-10-05T11:17:00.498Z",
+  "finalSourceDigest": "62632d3608a6ef6daee0a33e53578e43585c52c85fe0ce609239201367020876"
+}
