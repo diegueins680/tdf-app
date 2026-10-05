@@ -32,8 +32,10 @@ export interface AnalyticsClient {
 
 let cachedClient: AnalyticsClient | null = null;
 
-const SENSITIVE_QUERY_PARAMETER = /(^|[_-])(token|code|state|password|secret|key)($|[_-])/i;
 const REDACTED_QUERY_VALUE = '[REDACTED]';
+// Only acquisition metadata is needed from URL queries. New private navigation
+// parameters must be masked by default, without waiting for a route-specific rule.
+const PUBLIC_ATTRIBUTION_QUERY = /^(?:utm_(?:source|medium|campaign|content|term)|ref|referral|referral_code)$/i;
 const SENSITIVE_PROPERTY_NAMES = new Set([
   'authorization',
   'cookie',
@@ -119,7 +121,7 @@ export function redactSensitiveQueryValues(value: string, depth = 0): string {
     parsed.password = '';
     for (const key of Array.from(parsed.searchParams.keys())) {
       // Return providers may add opaque keys (e.g. `id`) to private pages.
-      if (privateResource || SENSITIVE_QUERY_PARAMETER.test(key) || isSensitivePropertyName(key)) {
+      if (privateResource || !PUBLIC_ATTRIBUTION_QUERY.test(key)) {
         parsed.searchParams.set(key, REDACTED_QUERY_VALUE);
         changed = true;
         continue;
