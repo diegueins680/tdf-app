@@ -3315,7 +3315,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -6543,6 +6543,103 @@
       },
       "verification": "Actual controller tests inject changed head/base/queue/draft/closure, revocation failure and duplicate heads; protected-main enforcement is re-observed during bootstrap.",
       "evidence": "Current-head unit and hosted repository gates plus source-bound metadata/protection receipts; no universal concurrency proof."
+    },
+    {
+      "id": "DEPLOY-PHYSICAL-001",
+      "title": "Physical recovery starts only an admitted cold cluster copy",
+      "domain": "DEPLOY",
+      "statement": "A physical database rehearsal shall verify complete copied content, isolated storage/configuration and exact clean PG17 cluster identity before direct PostgreSQL startup; it shall never initialize a replacement database or admit production storage as its writable copy.",
+      "authority": "User deployment, recovery and persistence requirements",
+      "source": "formal/system/physical-recovery.md",
+      "contract": "formal/system/physical-recovery.md",
+      "critical": true,
+      "actors": [
+        "Authorized release operator",
+        "Guarded recovery coordinator"
+      ],
+      "preconditions": [
+        "Complete trusted cold-cluster manifest and expected system identifier",
+        "Private restored copy under canonical backup root",
+        "No backup-path bind aliases or concurrent privileged mutation",
+        "Reviewed preloaded PG17 image with UID/GID999",
+        "Shared restore reservation and capacity admission"
+      ],
+      "inputs": [
+        "Cold-cluster copy",
+        "Trusted manifest",
+        "Expected cluster identifier",
+        "Image digest",
+        "Release/rehearsal nonce"
+      ],
+      "state": {
+        "states": [
+          "unprepared",
+          "copy-verified",
+          "reserved",
+          "container-admitted",
+          "cold-control-verified",
+          "database-started",
+          "removed",
+          "uncertain"
+        ],
+        "initial": "unprepared",
+        "terminal": [
+          "removed",
+          "uncertain"
+        ]
+      },
+      "allowedTransitions": [
+        "Verify topology and full copy before isolated configuration replacement",
+        "Reserve durably before Docker create",
+        "Admit container and clean cluster control before direct PostgreSQL startup",
+        "Verify live system identifier before reporting startup",
+        "Remove only admitted owned container before clearing reservation"
+      ],
+      "forbiddenTransitions": [
+        "Mutate a production bind alias",
+        "Initialize missing or incompatible data",
+        "Start crashed or wrong-cluster files",
+        "Use copied production auto-conf or provider/network access",
+        "Clear reservation after uncertain cleanup"
+      ],
+      "effects": [
+        "Clone-only configuration replacement and PostgreSQL writes",
+        "Bounded disposable container",
+        "Private retained artifacts and hashes"
+      ],
+      "authorization": "Explicit operator recovery scope; startup library does not authorize production maintenance or deployment.",
+      "privacy": "Cluster contents and role credentials remain inside private host storage and isolated container; only allowlisted metadata/hashes leave the helper.",
+      "concurrency": "Common permanent restore lock plus durable nonce/image reservation excludes logical/physical overlap and uncertain daemon work; privileged noncooperating mount replacement is excluded.",
+      "idempotency": "No repeated start after an attempt; unresolved create/cleanup retains the common reservation and needs independent operator recovery.",
+      "failure": "Reject mismatch before database startup; retain private artifacts and uncertainty, never report initialization or cleanup failure as recovery success.",
+      "recovery": "Own-target cleanup requires complete identity/isolation admission; no in-place production restore or automatic old-data rollback.",
+      "observability": "Original/copy/configuration hashes, exact cluster identity, startup result and separate removal evidence; synthetic tests are not production recovery.",
+      "implementation": [
+        "ops/hetzner/physical-postgres-recovery.py",
+        "ops/hetzner/recovery-files.py",
+        "ops/hetzner/rehearse-postgres-restore.py"
+      ],
+      "tests": [
+        "scripts/test-physical-postgres-recovery.py",
+        "scripts/test-physical-postgres-docker.py",
+        "scripts/quality-repo.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/RestoreIsolation.tla",
+        "formal/event-operations/RestoreIsolation.cfg"
+      ],
+      "status": "specified and implemented",
+      "confidence": "Actual filesystem controls and synthetic PG17 Docker startup/crash tests; production coordinated capture not established.",
+      "ambiguity": [
+        "Integrated writer-fenced capture, complete storage/configuration coverage, off-host custody, application recovery and guarded deployment remain outstanding."
+      ],
+      "verification": "Unit adversarial controls plus opt-in real isolated synthetic PG17 cold-copy tests. Existing bounded model covers reservation only.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Physical copy startup boundary implemented; complete coordinated production recovery and deployment are not established."
+      },
+      "property": "No recovered-cluster startup before exact clean identity, content and storage-isolation admission.",
+      "evidence": "Exact source test receipts; cold-file and mount properties are not formally proven."
     }
   ]
 }

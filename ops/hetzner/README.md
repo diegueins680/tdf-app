@@ -155,6 +155,12 @@ writer fencing and recovery qualification.
 
 ## Routine release status
 
+The [physical PostgreSQL copy boundary](../../formal/system/physical-recovery.md)
+starts a verified cold PG17 copy on isolated disk-backed storage, with exact
+cluster identity and clean-control checks and no initdb fallback. It shares the
+logical rehearsal reservation. Its synthetic Docker checks do not establish
+production capture, off-host custody, coordinated restore or deployment readiness.
+
 The [private file recovery primitive](../../formal/system/recovery-files.md) checks
 file content and metadata in new isolated targets. It is a library for the pending
 coordinated bundle, not a production backup or deployment command. The

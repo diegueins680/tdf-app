@@ -129,11 +129,14 @@ class Canary:
         require(host['IpcMode']=='private' and 'no-new-privileges:true' in host['SecurityOpt'])
         require(host['Tmpfs']=={'/tmp':'rw,nosuid,nodev,size=16777216'})
         mounts={m['Destination']:m for m in data['Mounts']}
-        require(len(mounts)==len(data['Mounts']) and set(mounts)=={'/data/assets','/app/uploads','/tmp'})
+        # Docker can omit tmpfs from Mounts; its exact declaration is required
+        # independently in HostConfig.Tmpfs. Bind mounts remain mandatory.
+        require(len(mounts)==len(data['Mounts']) and set(mounts) in
+                ({'/data/assets','/app/uploads'}, {'/data/assets','/app/uploads','/tmp'}))
         for name,destination in [('canary-assets','/data/assets'),('canary-uploads','/app/uploads')]:
             m=mounts[destination]
             require(m['Type']=='bind' and m['Source']==str(self.directory/name) and m['RW'] is True)
-        require(mounts['/tmp']['Type']=='tmpfs')
+        require('/tmp' not in mounts or mounts['/tmp']['Type']=='tmpfs')
         self.target=target
         return data
 

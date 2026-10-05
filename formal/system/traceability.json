@@ -6544,12 +6544,109 @@
       },
       "verification": "Actual controller tests inject changed head/base/queue/draft/closure, revocation failure and duplicate heads; protected-main enforcement is re-observed during bootstrap.",
       "evidence": "Current-head unit and hosted repository gates plus source-bound metadata/protection receipts; no universal concurrency proof."
+    },
+    {
+      "id": "DEPLOY-PHYSICAL-001",
+      "title": "Physical recovery starts only an admitted cold cluster copy",
+      "domain": "DEPLOY",
+      "statement": "A physical database rehearsal shall verify complete copied content, isolated storage/configuration and exact clean PG17 cluster identity before direct PostgreSQL startup; it shall never initialize a replacement database or admit production storage as its writable copy.",
+      "authority": "User deployment, recovery and persistence requirements",
+      "source": "formal/system/physical-recovery.md",
+      "contract": "formal/system/physical-recovery.md",
+      "critical": true,
+      "actors": [
+        "Authorized release operator",
+        "Guarded recovery coordinator"
+      ],
+      "preconditions": [
+        "Complete trusted cold-cluster manifest and expected system identifier",
+        "Private restored copy under canonical backup root",
+        "No backup-path bind aliases or concurrent privileged mutation",
+        "Reviewed preloaded PG17 image with UID/GID999",
+        "Shared restore reservation and capacity admission"
+      ],
+      "inputs": [
+        "Cold-cluster copy",
+        "Trusted manifest",
+        "Expected cluster identifier",
+        "Image digest",
+        "Release/rehearsal nonce"
+      ],
+      "state": {
+        "states": [
+          "unprepared",
+          "copy-verified",
+          "reserved",
+          "container-admitted",
+          "cold-control-verified",
+          "database-started",
+          "removed",
+          "uncertain"
+        ],
+        "initial": "unprepared",
+        "terminal": [
+          "removed",
+          "uncertain"
+        ]
+      },
+      "allowedTransitions": [
+        "Verify topology and full copy before isolated configuration replacement",
+        "Reserve durably before Docker create",
+        "Admit container and clean cluster control before direct PostgreSQL startup",
+        "Verify live system identifier before reporting startup",
+        "Remove only admitted owned container before clearing reservation"
+      ],
+      "forbiddenTransitions": [
+        "Mutate a production bind alias",
+        "Initialize missing or incompatible data",
+        "Start crashed or wrong-cluster files",
+        "Use copied production auto-conf or provider/network access",
+        "Clear reservation after uncertain cleanup"
+      ],
+      "effects": [
+        "Clone-only configuration replacement and PostgreSQL writes",
+        "Bounded disposable container",
+        "Private retained artifacts and hashes"
+      ],
+      "authorization": "Explicit operator recovery scope; startup library does not authorize production maintenance or deployment.",
+      "privacy": "Cluster contents and role credentials remain inside private host storage and isolated container; only allowlisted metadata/hashes leave the helper.",
+      "concurrency": "Common permanent restore lock plus durable nonce/image reservation excludes logical/physical overlap and uncertain daemon work; privileged noncooperating mount replacement is excluded.",
+      "idempotency": "No repeated start after an attempt; unresolved create/cleanup retains the common reservation and needs independent operator recovery.",
+      "failure": "Reject mismatch before database startup; retain private artifacts and uncertainty, never report initialization or cleanup failure as recovery success.",
+      "recovery": "Own-target cleanup requires complete identity/isolation admission; no in-place production restore or automatic old-data rollback.",
+      "observability": "Original/copy/configuration hashes, exact cluster identity, startup result and separate removal evidence; synthetic tests are not production recovery.",
+      "implementation": [
+        "ops/hetzner/physical-postgres-recovery.py",
+        "ops/hetzner/recovery-files.py",
+        "ops/hetzner/rehearse-postgres-restore.py"
+      ],
+      "tests": [
+        "scripts/test-physical-postgres-recovery.py",
+        "scripts/test-physical-postgres-docker.py",
+        "scripts/quality-repo.sh"
+      ],
+      "formalModels": [
+        "formal/event-operations/RestoreIsolation.tla",
+        "formal/event-operations/RestoreIsolation.cfg"
+      ],
+      "status": "specified and implemented",
+      "confidence": "Actual filesystem controls and synthetic PG17 Docker startup/crash tests; production coordinated capture not established.",
+      "ambiguity": [
+        "Integrated writer-fenced capture, complete storage/configuration coverage, off-host custody, application recovery and guarded deployment remain outstanding."
+      ],
+      "verification": "Unit adversarial controls plus opt-in real isolated synthetic PG17 cold-copy tests. Existing bounded model covers reservation only.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Physical copy startup boundary implemented; complete coordinated production recovery and deployment are not established."
+      },
+      "property": "No recovered-cluster startup before exact clean identity, content and storage-isolation admission.",
+      "evidence": "Exact source test receipts; cold-file and mount properties are not formally proven."
     }
   ],
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
-    ".github/workflows/ci.yml": "053ed9f34026b1ecf12b6bf14cf2eb9430a59f43f3c5236b21d77a72f1575c03",
+    ".github/workflows/ci.yml": "aff98dc45d0ca8b6105d3b242217577ea642abafdaa81ddcd8e8a2f6c2b3f29a",
     ".github/workflows/event-operations-formal.yml": "a038253d968022ed95501359a07f16852bf8dcc1da198b7aa303543f0f95b552",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     "docs/catalog-persistence/catalog-list-decisions.json": "3f5ea00881870b1eb542af0d4a28cee67e5e5fe470b786dad7c5d92c90bc94ed",
@@ -6632,7 +6729,8 @@
     "ops/hetzner/catalog-readonly-role.sql": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
     "ops/hetzner/compose.production.yaml": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
     "ops/hetzner/inspect-runtime.py": "cb6bb20e6dbe00307ea97c9838f7c29d3621e420a9de6f1dce32c59f5f98da14",
-    "ops/hetzner/isolated-application-canary.py": "6c3e861e6f177da093f39eb84366872e42c46f248a73bc196e7e29a800d5f36f",
+    "ops/hetzner/isolated-application-canary.py": "0b7edd6fdd12d5a1f805df7d449f2dec2a43bba74b636815cd803dc031744a6c",
+    "ops/hetzner/physical-postgres-recovery.py": "7da57b99b33ecee82eb70b5c2786bf2f6cb827b0429c7ddd68256751149ad20b",
     "ops/hetzner/recovery-envelope.py": "dd916295bcae2318cbe1e00af9c51e38cf40838993326e284614d0b09e0250fb",
     "ops/hetzner/recovery-files.py": "09c07444444b498d9fe5f9696e8ebec9b3010cc2453c59e72de74ccd60cdcb84",
     "ops/hetzner/recovery-tools.json": "a2427185433ece7d46514d9827eb788a223d09881b3d68adb259c1df44b6c2a4",
@@ -6717,7 +6815,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "37c9c17746f49535fb2d50193a8b615ec2bb88cd3f909676d5195dc85f33e2c1",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "585a3b6e8eff06b42789f69251205e1e3b2dc27e26af89e02c7d8336417bf637",
+    "scripts/quality-repo.sh": "7be2d7ae96f245bfffe5cb6ab84bcf9f0a22275133799417f4672acfd2bf4991",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
@@ -6734,12 +6832,14 @@
     "scripts/test-hetzner-backup.py": "5fd8da9c46206c18d7793a2139a491aec8be3646e4ff9c889a6ac8a8a8fabf29",
     "scripts/test-hetzner-inspection.py": "d1b9b8556b041c71204f0f6dde236f49a5ab9088ec9fce6a766e836a9421f117",
     "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
-    "scripts/test-isolated-application-canary.py": "434a9ca07c7aa04ccfc21177742babbc1e548a8128fab80e9898403911e21f40",
+    "scripts/test-isolated-application-canary.py": "cb1ba29cff2449d949d2c5a5d3f90b4d0d8b505d2c345e58121df4a06986de5b",
     "scripts/test-marketplace-contact-identity.sh": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
     "scripts/test-merge-admission.py": "8aecd20abcaa40bccf7673271cb55b21f66235384be0ea481819285407a12bab",
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
     "scripts/test-payment-arithmetic-verifier.py": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
     "scripts/test-persistent-uploads-container.py": "583c574c0f4b0651cc1477b59e7988bdac64b93a753f843031dd666ab749208c",
+    "scripts/test-physical-postgres-docker.py": "cbb297fcc0f23d205364ef2e05721ee48a21fc6676a711455fb9c1396a6a07b5",
+    "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "ea9812c229d7c71aa7d866034e54eb25a225af9220440d5703daba14cbf6014b",
@@ -8576,6 +8676,10 @@
       {
         "requirement": "OPS-INTEGRATION-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-PHYSICAL-001",
+        "relationship": "tests"
       }
     ],
     "scripts/quality-mobile.sh": [
@@ -8621,6 +8725,10 @@
       },
       {
         "requirement": "DEPLOY-CANARY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-PHYSICAL-001",
         "relationship": "implementation"
       }
     ],
@@ -8670,11 +8778,19 @@
       {
         "requirement": "DEPLOY-RESTORE-001",
         "relationship": "formalModels"
+      },
+      {
+        "requirement": "DEPLOY-PHYSICAL-001",
+        "relationship": "formalModels"
       }
     ],
     "formal/event-operations/RestoreIsolation.cfg": [
       {
         "requirement": "DEPLOY-RESTORE-001",
+        "relationship": "formalModels"
+      },
+      {
+        "requirement": "DEPLOY-PHYSICAL-001",
         "relationship": "formalModels"
       }
     ],
@@ -10196,6 +10312,10 @@
       {
         "requirement": "DEPLOY-FILES-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-PHYSICAL-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/test-recovery-files.py": [
@@ -10693,6 +10813,24 @@
         "requirement": "OPS-INTEGRATION-001",
         "relationship": "tests"
       }
+    ],
+    "ops/hetzner/physical-postgres-recovery.py": [
+      {
+        "requirement": "DEPLOY-PHYSICAL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-physical-postgres-recovery.py": [
+      {
+        "requirement": "DEPLOY-PHYSICAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-physical-postgres-docker.py": [
+      {
+        "requirement": "DEPLOY-PHYSICAL-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -10744,7 +10882,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "053ed9f34026b1ecf12b6bf14cf2eb9430a59f43f3c5236b21d77a72f1575c03",
+      "sha256": "aff98dc45d0ca8b6105d3b242217577ea642abafdaa81ddcd8e8a2f6c2b3f29a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -11190,7 +11328,7 @@
     {
       "id": "SURFACE-cf51ae79e61fc20d",
       "path": "ops/hetzner/isolated-application-canary.py",
-      "sha256": "6c3e861e6f177da093f39eb84366872e42c46f248a73bc196e7e29a800d5f36f",
+      "sha256": "0b7edd6fdd12d5a1f805df7d449f2dec2a43bba74b636815cd803dc031744a6c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -11205,6 +11343,18 @@
       "sha256": "e32a6610db6a6432b2fb5d404a0b9251cd343165d2c43872effb9a204854bad0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-f291d88fdd7054a3",
+      "path": "ops/hetzner/physical-postgres-recovery.py",
+      "sha256": "7da57b99b33ecee82eb70b5c2786bf2f6cb827b0429c7ddd68256751149ad20b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-PHYSICAL-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-64aaa5c506476af5",
@@ -11226,6 +11376,10 @@
       "requirements": [
         {
           "requirement": "DEPLOY-FILES-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DEPLOY-PHYSICAL-001",
           "relationship": "implementation"
         }
       ]
@@ -11254,6 +11408,10 @@
         },
         {
           "requirement": "DEPLOY-CANARY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DEPLOY-PHYSICAL-001",
           "relationship": "implementation"
         }
       ]
@@ -13219,7 +13377,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "585a3b6e8eff06b42789f69251205e1e3b2dc27e26af89e02c7d8336417bf637",
+      "sha256": "7be2d7ae96f245bfffe5cb6ab84bcf9f0a22275133799417f4672acfd2bf4991",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -13257,6 +13415,10 @@
         {
           "requirement": "OPS-INTEGRATION-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "DEPLOY-PHYSICAL-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -14302,7 +14464,7 @@
     {
       "id": "SURFACE-b6d8e853f9192b94",
       "path": "scripts/test-isolated-application-canary.py",
-      "sha256": "434a9ca07c7aa04ccfc21177742babbc1e548a8128fab80e9898403911e21f40",
+      "sha256": "cb1ba29cff2449d949d2c5a5d3f90b4d0d8b505d2c345e58121df4a06986de5b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14448,6 +14610,30 @@
       "requirements": [
         {
           "requirement": "MEDIA-PERSIST-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-99a7ddb4ad51eda9",
+      "path": "scripts/test-physical-postgres-docker.py",
+      "sha256": "cbb297fcc0f23d205364ef2e05721ee48a21fc6676a711455fb9c1396a6a07b5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-PHYSICAL-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-698c1d3e01b14388",
+      "path": "scripts/test-physical-postgres-recovery.py",
+      "sha256": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-PHYSICAL-001",
           "relationship": "tests"
         }
       ]
@@ -32423,7 +32609,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e701d414b9c944bdfa2459efefa2b67df38040f5062894cf7ecbf6bb0102d5a2",
+      "sourceSha256": "dad50c30912b9c14cc377ad89a7d5accffa7baf46c7800a42d48c734ccdf92b5",
       "definition": {
         "states": [
           "absent",
@@ -54227,7 +54413,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 85,
+    "PARTIAL": 86,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

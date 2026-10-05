@@ -156,6 +156,14 @@ jobs:
         timeout-minutes: 8
         run: python3 scripts/test-persistent-uploads-container.py
 
+      - name: Verify synthetic cold PostgreSQL recovery and negative controls
+        timeout-minutes: 8
+        run: |
+          tdf_physical_image='pgvector/pgvector@sha256:3e8b3adfd27b5707128f60956f62a793c3c9326ea8cfaf0eab7adccb5d700b21'
+          docker pull "$tdf_physical_image"
+          sudo install -d -m 700 /opt/tdf/backups
+          sudo env TDF_PHYSICAL_TEST_IMAGE="$tdf_physical_image" PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-physical-postgres-docker.py
+
   ui-quality:
     needs: changes
     if: needs.changes.outputs.ui == 'true'

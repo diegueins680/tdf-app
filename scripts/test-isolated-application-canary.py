@@ -46,6 +46,12 @@ class CanaryTests(unittest.TestCase):
     def test_admits_exact_owned_disposable_runtime(self):
         subject=make();subject.admit(container());self.assertEqual(subject.target,APP)
 
+    def test_omitted_tmpfs_inspection_still_requires_exact_declaration(self):
+        data=container();data['Mounts'].pop()
+        self.assertEqual(make().admit(data)['Id'],APP)
+        data['HostConfig']['Tmpfs']={}
+        with self.assertRaises(ValueError):make().admit(data)
+
     def test_rejects_unknown_source_image_or_revision(self):
         for image,rev in [(IMAGE.replace('@sha256:',':'),REV),('other/tdf@sha256:'+'e'*64,REV),(IMAGE,'main')]:
             with self.subTest(image=image,rev=rev),self.assertRaises(ValueError):

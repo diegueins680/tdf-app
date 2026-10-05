@@ -593,7 +593,7 @@
       "title": "PostgreSQL17 filesystem backup",
       "recommendation": "An ordinary filesystem backup requires server shutdown and complete cluster data including WAL; blocking clients alone is insufficient.",
       "applicability": "Potential coordinated cold database/assets/uploads bundle on current single-host production",
-      "decision": "adopted for next coordinator design, not implemented",
+      "decision": "adopted for cold-copy startup; coordinated capture remains unimplemented",
       "rationale": "Require independently verified clean shutdown and full admitted roots. Current logical rehearsal is not that bundle. External tablespaces/mounts/config and writer fencing must be admitted first."
     },
     {
@@ -604,6 +604,17 @@
       "applicability": "Coordinated PostgreSQL container shutdown",
       "decision": "adopted constraint for pending coordinator",
       "rationale": "Use Docker lifecycle and verify exact stopped container plus PostgreSQL control state. Do not infer clean backup admission from process disappearance."
+    },
+    {
+      "id": "RES-COLD-RECOVERY-003",
+      "source": "https://www.postgresql.org/docs/17/app-pgcontroldata.html",
+      "supportingSource": "https://raw.githubusercontent.com/postgres/postgres/REL_17_STABLE/src/include/catalog/pg_control.h",
+      "title": "PG17 control identity and state",
+      "recommendation": "Read cluster-wide control metadata using the compatible tool; PG17 uses control format1700.",
+      "applicability": "Reject wrong or unclean recovered cluster before startup",
+      "decision": "adopted",
+      "rationale": "Compare exact trusted system identifier and shut-down state; this complements copied bytes and does not establish source writer fencing.",
+      "verifiedAt": "2026-10-05"
     }
   ]
 }
