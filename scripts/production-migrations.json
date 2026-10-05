@@ -850,6 +850,11 @@
       "id": "2026-09-16_payment_intent_refund_sync",
       "path": "tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql",
       "introducedBy": "f965c3d53cbbb3b42f4fb82bf1e373bc0ce2fb6b"
+    },
+    {
+      "id": "2026-10-05_ticket_admission_audit",
+      "path": "tdf-hq/sql/2026-10-05_ticket_admission_audit.sql",
+      "introducedBy": "468410cbe345069295ab52c42becc9f1d9aa9629"
     }
   ]
 }
