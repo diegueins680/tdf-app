@@ -2,14 +2,15 @@
 module TDF.FailureBoundarySpec (spec, main) where
 
 import Control.Exception (AsyncException(ThreadKilled), Exception, SomeException,
-  bracket, fromException, throwIO, toException, try)
+  bracket, evaluate, fromException, throwIO, toException, try)
 import Control.Monad (forM_)
 import Data.ByteString.Builder (toLazyByteString)
 import Data.IORef
 import Data.Text (Text)
-import Network.HTTP.Types (status200, status500)
+import Network.HTTP.Types (status200, status400, status413, status431, status500)
 import Network.Wai
 import Network.Wai.Internal (ResponseReceived(..))
+import qualified Network.Wai.Handler.Warp as Warp
 import System.Environment (lookupEnv, setEnv, unsetEnv)
 import Test.Hspec
 import TDF.App.FailureBoundary
@@ -82,6 +83,14 @@ spec = describe "request and activity failure authority" $ do
     reportUnhandledException logger (toException ThreadKilled)
     readIORef logs `shouldReturn` ["[HTTP] Unhandled request failure"]
     lookup "Access-Control-Allow-Origin" (responseHeaders internalErrorResponse) `shouldBe` Nothing
+  it "Warp retains safe protocol error statuses and asynchronous propagation" $ do
+    forM_ [(Warp.BadFirstLine "PRIVATE_HEADER",status400),
+           (Warp.PayloadTooLarge,status413), (Warp.RequestHeaderFieldsTooLarge,status431)] $ \(err,status) -> do
+      let response = Warp.defaultOnExceptionResponse (toException err)
+      responseStatus response `shouldBe` status
+      lookup "Access-Control-Allow-Origin" (responseHeaders response) `shouldBe` Nothing
+    evaluate (responseStatus (Warp.defaultOnExceptionResponse (toException ThreadKilled)))
+      `shouldThrow` (== ThreadKilled)
   it "activity failures emit fixed diagnostics and preserve cancellation" $ do
     logs <- newIORef ([] :: [Text])
     let logger entry = modifyIORef' logs (entry:)

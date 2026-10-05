@@ -93,7 +93,7 @@ import TDF.Reputation.Worker (startReputationWorker)
 import TDF.Seed (seedAll, seededCredentialSeedingAllowed)
 import TDF.Server (mkApp)
 import TDF.App.StartupResponse (startupApp)
-import TDF.App.FailureBoundary (requestExceptionBoundary, reportUnhandledException, internalErrorResponse)
+import TDF.App.FailureBoundary (requestExceptionBoundary, reportUnhandledException)
 import TDF.Trials.Models (migrateTrials)
 
 runBootServer :: IO ()
@@ -112,8 +112,7 @@ runBootServer = do
     warpSettings =
       Warp.setPort (appPort cfg) $
         Warp.setHost "0.0.0.0" $
-          Warp.setOnException (\_ -> reportUnhandledException errorLogger) $
-            Warp.setOnExceptionResponse (const internalErrorResponse) Warp.defaultSettings
+          Warp.setOnException (\_ -> reportUnhandledException errorLogger) Warp.defaultSettings
     rootOk :: Middleware
     rootOk next req send =
       if null (pathInfo req)

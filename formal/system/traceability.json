@@ -5327,11 +5327,11 @@
     "scripts/test-ticket-confirmation-smtp.py": "ab36fc612102863669f18a8b12db86ee4192f77d56bbad31b5dc7aa3a5834743",
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
-    "scripts/verify-cors-boundary.py": "836906067ac620b64214922f9390c012848abf5bc1c4ca6f15a02757986bcddd",
+    "scripts/verify-cors-boundary.py": "b5ba1d728abbc2181ffd260237e5743f38feb7681cb7fcd4e9cc5c969a2395b0",
     "scripts/verify-event-operations-formal.sh": "9d0da623a08815e4c8e99bd2737083b01a8b7403e2eb32faa6fe54fcfe9c6f20",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-payment-arithmetic.py": "de80630e689e1b39777f8fab0ea3e90325e795379464221fac2570b9cd1a0b3b",
-    "scripts/verify-request-failures.py": "f1616c9e94ea9de834fb69b08cf0213c7b6c134e0756d87922d5d72f4ab6ebba",
+    "scripts/verify-request-failures.py": "962304b68f710adb12c87a530fa4676da0aca761a4c60dbb4f6615b9b934d439",
     "scripts/verify-system-evidence.mjs": "7aa7ac054cebe9a16f39a21afce1b36588c889493716baf3c7629880565e3e3f",
     "streaming/docker-compose.streaming.yml": "27a418566cfbaf8d10fd9da948aecc6bae2b3279b14e67013aae26492e33e249",
     "streaming/mediamtx.yml": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
@@ -5409,7 +5409,7 @@
     "tdf-hq/src/TDF/API/MerchReputation.hs": "84d721478ab6f904dee04ae3568a32d30f37a220937b703fc74a006c44995bdb",
     "tdf-hq/src/TDF/API/Radio.hs": "5c62e0f4a402225202217be3a8361991127ad1ac093fd0f4366789dd1723357f",
     "tdf-hq/src/TDF/API/Types.hs": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
-    "tdf-hq/src/TDF/App/Boot.hs": "b2acd01e02b9ad7187316e8179207ac5b0fa4881c37b08fc5569ea4e9b299a38",
+    "tdf-hq/src/TDF/App/Boot.hs": "129faabf08605150ee2e8854be2d94e8da42eb3c42ee82c9aaabc8707a9af4d1",
     "tdf-hq/src/TDF/App/FailureBoundary.hs": "604d4d6670667d5da5c6a3e34c891dffaa0f7be05feef73671f56897fb41ac07",
     "tdf-hq/src/TDF/Auth.hs": "851a010d990ec981a7410ab1228bfe36a0ebc776008be7f22e7a97fb6701e5c8",
     "tdf-hq/src/TDF/Commerce/CheckoutStore.hs": "6a0395b16a2bafa271dbc051da42972fe6a51da5db9eb2235bf78a46e47d819d",
@@ -5479,7 +5479,7 @@
     "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs": "cdf133bc96409a0c3a56abb7a2023b0d3dc9dd0237bdb50d9a4f46b97f72ab55",
     "tdf-hq/test/TDF/DisposableTicketDatabase.hs": "69a224594a060d9268e72dd314452262c7bc0e1211c9114bb1d9be3e6bcf407d",
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "d4b897b67a0f57930ebc316016eaec1e68787f0c0eb7a821e181332a89ac3964",
-    "tdf-hq/test/TDF/FailureBoundarySpec.hs": "b5d4532c15a065dc1bdaabc4a2af00e4297fff660ee38dadd0d818910bf43faa",
+    "tdf-hq/test/TDF/FailureBoundarySpec.hs": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
     "tdf-hq/test/TDF/Operations/ModelSpec.hs": "9fa9b661b1fd42969a1acb304074b1b3ce5dfed35a19062427779c394ff73f2b",
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": "28b44b8ff03ee17afcfb8d3d0ac3b0837e989eb5174c661bbfb28b026808ebbc",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
@@ -11976,7 +11976,7 @@
     {
       "id": "SURFACE-da360911414286b5",
       "path": "scripts/verify-cors-boundary.py",
-      "sha256": "836906067ac620b64214922f9390c012848abf5bc1c4ca6f15a02757986bcddd",
+      "sha256": "b5ba1d728abbc2181ffd260237e5743f38feb7681cb7fcd4e9cc5c969a2395b0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -12067,7 +12067,7 @@
     {
       "id": "SURFACE-fa1f8b855944ecc5",
       "path": "scripts/verify-request-failures.py",
-      "sha256": "f1616c9e94ea9de834fb69b08cf0213c7b6c134e0756d87922d5d72f4ab6ebba",
+      "sha256": "962304b68f710adb12c87a530fa4676da0aca761a4c60dbb4f6615b9b934d439",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -20503,7 +20503,7 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "b2acd01e02b9ad7187316e8179207ac5b0fa4881c37b08fc5569ea4e9b299a38",
+      "sha256": "129faabf08605150ee2e8854be2d94e8da42eb3c42ee82c9aaabc8707a9af4d1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -22552,7 +22552,7 @@
     {
       "id": "SURFACE-d7524ac1e833fed0",
       "path": "tdf-hq/test/TDF/FailureBoundarySpec.hs",
-      "sha256": "b5d4532c15a065dc1bdaabc4a2af00e4297fff660ee38dadd0d818910bf43faa",
+      "sha256": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

@@ -52,7 +52,8 @@ def verify():
                 raise RuntimeError(f'{name}: incomplete Hspec execution\n{run.stdout}\n{run.stderr}')
             failures = int(summary[2])
             if mutation:
-                if run.returncode == 0 or failures == 0 or mutation[2] not in run.stdout:
+                failure_details = run.stdout.partition('\nFailures:\n')[2]
+                if run.returncode == 0 or failures == 0 or mutation[2] not in failure_details:
                     raise AssertionError(f'{name}: invalid implementation escaped detection')
             elif run.returncode != 0 or failures != 0:
                 raise AssertionError(f'Intended implementation failed\n{run.stdout}\n{run.stderr}')
