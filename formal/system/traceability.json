@@ -4087,7 +4087,7 @@
     "scripts/specification-inventory.py": "d2fd062de80b6aacf832714799d7596f13cabf101d2d7073192b2cd6ec6ff275",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-booking-conformance.py": "8ddd81f1b1abc2384773463bfd10611e2fa425a7d6c6e30e97325dcd75989440",
+    "scripts/test-booking-conformance.py": "0afc012d5980f287d6199e27c1761264fa77baeb4d2991b88aa1d21f546da806",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-inspection.py": "560125d36d6469b3f2f2ca1dea30ba0bf452dc9e9e373f2e0521256052c0ed98",
     "scripts/test-hetzner-restore.py": "279906ce3fca58619f1a4c361c475c810bb666263418ca45a975ee0ad4fd8e41",
@@ -8942,7 +8942,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "8ddd81f1b1abc2384773463bfd10611e2fa425a7d6c6e30e97325dcd75989440",
+      "sha256": "0afc012d5980f287d6199e27c1761264fa77baeb4d2991b88aa1d21f546da806",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
