@@ -3652,7 +3652,7 @@
       "ambiguity": [
         "Official licensed XSD and recipient-profile validation, transactional import and immutable export are deliberately unavailable.",
         "Private storage full durability/deletion, provider delivery, concurrent registry reconfiguration and existing stranded-run reconciliation need separate verification.",
-        "Catalog reorder atomicity is tracked separately as REC-CATALOG-001; legacy webhook raw-payload logging remains an unresolved defect."
+        "Catalog reorder is tracked as REC-CATALOG-001 and webhook receipt privacy as PRIV-WEBHOOK-001."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -3741,6 +3741,73 @@
       "contract": "formal/system/catalog-reorder.md",
       "verification": "Real PostgreSQL HTTP denial/rollback/failure/concurrency checks and bounded TLC model with four named negative controls.",
       "evidence": "Revision-specific receipts required; original empirical reproduction is evidence of the pre-fix bug only."
+    },
+    {
+      "id": "PRIV-WEBHOOK-001",
+      "title": "Private Meta payloads excluded from operational receipt logs",
+      "domain": "PRIV",
+      "statement": "Facebook and Instagram inbound webhook handlers shall log only a fixed channel and extracted-event count after successful persistence, and shall not log raw envelopes, message text, actor identifiers or provider metadata.",
+      "actors": [
+        "Meta provider",
+        "Message participant",
+        "Backend operator"
+      ],
+      "preconditions": [
+        "Provider signature and envelope validation follow existing configured admission",
+        "A receipt denotes completed ingestion transaction"
+      ],
+      "inputs": [
+        "Signed provider JSON envelope"
+      ],
+      "state": {
+        "initial": "received",
+        "terminal": [
+          "rejected",
+          "persisted"
+        ]
+      },
+      "allowedTransitions": [
+        "Validated envelope -> ingestion transaction -> minimal success receipt"
+      ],
+      "forbiddenTransitions": [
+        "Private raw payload is copied into operational logs",
+        "Success receipt before failed persistence"
+      ],
+      "effects": [
+        "Existing authorized message persistence unchanged",
+        "Receipt limited to fixed channel and event count"
+      ],
+      "authorization": "Signature authenticates origin, not public visibility. This patch does not change current missing-secret behavior or provider enablement.",
+      "privacy": "No raw body, sender/recipient/message identifier or message text in handler receipt logs. Database records remain governed separately; historical logs need independent retention/access review.",
+      "concurrency": "Receipt follows its request transaction. Concurrent requests can interleave log lines; no globally ordered delivery guarantee.",
+      "idempotency": "Logging is per accepted delivery; existing message upsert semantics unchanged. No exactly-once logging claim.",
+      "failure": "Invalid signature or malformed envelope retains existing denial response; failed persistence emits no handler success receipt. Other exception/SQL log paths remain outside these receipt checks.",
+      "recovery": "No destructive log purge or database deletion. Retain minimal operational diagnosis and separately review historical log exposure.",
+      "observability": "Fixed channel and extracted-event count, emitted after ingestion; current HTTP outcomes remain observable.",
+      "source": "Observed BL8.hPutStrLn rawBody in both handlers; OWASP Logging guidance; AUTHORITY-029.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerExtra.hs"
+      ],
+      "tests": [
+        "scripts/test-booking-conformance.py"
+      ],
+      "formalModels": [],
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "medium",
+      "ambiguity": [
+        "Full logging/privacy audit, historical log exposure and retention remain open.",
+        "No all-error-path noninterference or provider replay proof."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Narrow receipt privacy repair needs final HTTP and deployment evidence; global logging/retention are not verified."
+      },
+      "authority": "AUTHORITY-029; provider authentication cannot authorize public diagnostic copies of private input.",
+      "property": "Unique synthetic private fields never appear in captured receipt logs; successful acknowledgement and no reply queue remain observable.",
+      "contract": "formal/system/webhook-log-privacy.md",
+      "verification": "Actual signed synthetic HTTP sentinel checks, no real provider calls.",
+      "evidence": "Revision-bound build/runtime receipts; source inspection alone is not runtime validation."
     }
   ],
   "sourceFingerprints": {
@@ -3867,7 +3934,7 @@
     "scripts/specification-inventory.py": "d2fd062de80b6aacf832714799d7596f13cabf101d2d7073192b2cd6ec6ff275",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-booking-conformance.py": "daf405fe4c028085be132272476d7d46d181a230dbe96bdd6db5defffe57af01",
+    "scripts/test-booking-conformance.py": "fcb987b112e0b77d219bae5eba040c2675d3459588586115dbdf6fb83c2c276f",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
     "scripts/test-hetzner-inspection.py": "560125d36d6469b3f2f2ca1dea30ba0bf452dc9e9e373f2e0521256052c0ed98",
     "scripts/test-hetzner-restore.py": "279906ce3fca58619f1a4c361c475c810bb666263418ca45a975ee0ad4fd8e41",
@@ -3955,6 +4022,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
     "tdf-hq/src/TDF/ServerAuth.hs": "f2e6388e573818567db451d3770b88442741fbf5b3724104fc4126346f1aaa36",
+    "tdf-hq/src/TDF/ServerExtra.hs": "8a730148e0a55bb0c1afdc1d0c6d5604d92a5e322e4f7a3e09d8740e1d410796",
     "tdf-hq/src/TDF/ServerFeedback.hs": "55a0f22b890416af1a9e48cccb5fcff733114e4a748a9c87ea616001e2584866",
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
     "tdf-hq/src/TDF/ServerRadio.hs": "74459d8820e98faa2d2567ddcd61e184d430dca96f9a160e31cae83aedf3974d",
@@ -5507,6 +5575,10 @@
       {
         "requirement": "REC-CATALOG-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "PRIV-WEBHOOK-001",
+        "relationship": "tests"
       }
     ],
     "formal/event-operations/StudioBookingScope.tla": [
@@ -5925,6 +5997,12 @@
       {
         "requirement": "REC-CATALOG-001",
         "relationship": "formalModels"
+      }
+    ],
+    "tdf-hq/src/TDF/ServerExtra.hs": [
+      {
+        "requirement": "PRIV-WEBHOOK-001",
+        "relationship": "implementation"
       }
     ]
   },
@@ -8640,7 +8718,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "daf405fe4c028085be132272476d7d46d181a230dbe96bdd6db5defffe57af01",
+      "sha256": "fcb987b112e0b77d219bae5eba040c2675d3459588586115dbdf6fb83c2c276f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -8673,6 +8751,10 @@
         },
         {
           "requirement": "REC-CATALOG-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PRIV-WEBHOOK-001",
           "relationship": "tests"
         }
       ]
@@ -18603,9 +18685,14 @@
     {
       "id": "SURFACE-b1e5f7033f3bdc7c",
       "path": "tdf-hq/src/TDF/ServerExtra.hs",
-      "sha256": "ada6c553cf05bdb376f3b0d2594e1c2b7ed8e3a2099d30ad07c437bac532d8f0",
+      "sha256": "8a730148e0a55bb0c1afdc1d0c6d5604d92a5e322e4f7a3e09d8740e1d410796",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PRIV-WEBHOOK-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-5cfb0ad2589bfb68",
@@ -23947,7 +24034,6 @@
     "SURFACE-e4ab6ea991643db1",
     "SURFACE-b256b583899a43d4",
     "SURFACE-cb2c54ef31474aee",
-    "SURFACE-b1e5f7033f3bdc7c",
     "SURFACE-5cfb0ad2589bfb68",
     "SURFACE-81312ef85a6b405a",
     "SURFACE-b0f11c67be4fa672",
@@ -24461,7 +24547,8 @@
     "AUTH-RADIO-001",
     "COURSE-SUBJECT-001",
     "MKT-REPUTATION-001",
-    "REC-DDEX-001"
+    "REC-DDEX-001",
+    "PRIV-WEBHOOK-001"
   ],
   "stateMachines": [
     {
@@ -46710,7 +46797,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 51,
+    "PARTIAL": 52,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

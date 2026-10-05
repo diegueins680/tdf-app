@@ -7,6 +7,8 @@ Historical green results are not current-candidate evidence.
 
 ## Canonical package
 
+- [webhook-log-privacy.md](webhook-log-privacy.md): private provider payload exclusion from operational receipt logs.
+
 - [catalog-reorder.md](catalog-reorder.md): atomic administrative reordering, revision conflicts and bounded negative controls.
 
 - [ddex-validation.md](ddex-validation.md): canonical validation, atomic failure, shipped Mobile reference compatibility and explicit unavailable responses.

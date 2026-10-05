@@ -165,6 +165,22 @@ try:
               request(path, payload, token=None, method='POST')[0] == 401)
         check('signed empty webhook returns 200 with empty body ' + path,
               request(path, payload, token=None, method='POST', signed=True) == (200, ''))
+    # PRIV-WEBHOOK-001: authenticated provider input is still private input.
+    # These synthetic echoes are ignored by ingestion, so cannot queue replies.
+    for channel, object_name in [('facebook', 'page'), ('instagram', 'instagram')]:
+        sentinel = 'PRIVATE_WEBHOOK_' + channel.upper() + '_' + uuid.uuid4().hex
+        payload = {'object': object_name, 'entry': [{'messaging': [{
+            'sender': {'id': 'sender_' + sentinel},
+            'recipient': {'id': 'recipient_' + sentinel},
+            'message': {'mid': 'message_' + sentinel, 'text': sentinel, 'is_echo': True}}]}]}
+        check('signed private echo accepted without queued reply ' + channel,
+              request('/' + channel + '/webhook', payload, token=None, method='POST', signed=True) == (200, ''))
+        check('private echo does not persist a message ' + channel,
+              sql("SELECT count(*) FROM " + channel + "_message WHERE external_id='message_" + sentinel + "'") == '0')
+        log_text = (OUTPUT / 'backend.log').read_text()
+        check('webhook log excludes body and actor/provider identifiers ' + channel, sentinel not in log_text)
+        check('webhook log retains safe receipt ' + channel, '[' + channel + '] webhook events persisted: 0' in log_text)
+
     check('radio reset rejects anonymous caller', request('/radio/presence', token=None, method='DELETE')[0] == 401)
     check('radio reset returns 200 with empty body', request('/radio/presence', token='fixture-owner', method='DELETE') == (200, ''))
     check('radio reset removes own row', sql('SELECT count(*) FROM party_radio_presence WHERE party_id=' + owner) == '0')

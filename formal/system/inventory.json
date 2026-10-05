@@ -4064,7 +4064,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "daf405fe4c028085be132272476d7d46d181a230dbe96bdd6db5defffe57af01",
+      "sha256": "fcb987b112e0b77d219bae5eba040c2675d3459588586115dbdf6fb83c2c276f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12038,7 +12038,7 @@
     {
       "id": "SURFACE-b1e5f7033f3bdc7c",
       "path": "tdf-hq/src/TDF/ServerExtra.hs",
-      "sha256": "ada6c553cf05bdb376f3b0d2594e1c2b7ed8e3a2099d30ad07c437bac532d8f0",
+      "sha256": "8a730148e0a55bb0c1afdc1d0c6d5604d92a5e322e4f7a3e09d8740e1d410796",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20444,14 +20444,14 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "5cf712372cd55656b55665a2bbbe6c3d9840098b01cedfc4d35f71627eddff44",
+      "sha256": "76952b9ff7d9fcc857e7fdc6bdfb2ef168430349ff40c7a5c9dca88a965d0beb",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "2b5f7b0bc12f77c6956cb597e3aa9c69264cea37fe7d3ec33926ba1febde8934",
+      "sha256": "384448af864f238709af7bee563d22b70613087a0ed54a85c4c342a53c48fd95",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20591,14 +20591,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "b98fff59da677845a3bff12fea30c5074cbd6c405c6c9eed02526c92674af69c",
+      "sha256": "673dbc980665bf589973fb37d751e9f1e4f4a666b22a6da8cf7ecd1e7b5f8d55",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "1392a71326fae356aa94fd3fab7dc2119d51f2a971a7054d65fe6f1c10a96f44",
+      "sha256": "ed7a951a6ba022c2ad30041d2c1e1c3f545206e39645cf62eafaa1874bf53715",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20613,6 +20613,13 @@
     {
       "path": "formal/system/routed-read-boundaries.md",
       "sha256": "e104edf8ce9bebda7c241b2c3bc9c7b5f7d6950342f8877886450a1396115352",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/webhook-log-privacy.md",
+      "sha256": "f4aad0ca7b00b52f4602aa60522282b7ada730d566b95ef9cfb14c33b67ffb17",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

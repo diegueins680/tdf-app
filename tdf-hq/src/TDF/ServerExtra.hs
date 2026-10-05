@@ -4451,9 +4451,9 @@ instagramWebhookServer =
       channel <- either throwError pure (validateMetaWebhookChannel MetaInstagram payload)
       incoming <- either throwError pure (validateMetaInboundPayload payload)
       liftIO $ do
-        hPutStrLn stderr ("[" <> T.unpack (metaChannelLabel channel) <> "] received webhook payload")
-        BL8.hPutStrLn stderr rawBody
         flip runSqlPool envPool (persistMetaInbound channel now incoming)
+        hPutStrLn stderr ("[" <> T.unpack (metaChannelLabel channel)
+          <> "] webhook events persisted: " <> show (length incoming))
       pure NoContent
 
 facebookWebhookServer
@@ -4479,9 +4479,9 @@ facebookWebhookServer =
       channel <- either throwError pure (validateMetaWebhookChannel MetaFacebook payload)
       incoming <- either throwError pure (validateMetaInboundPayload payload)
       liftIO $ do
-        hPutStrLn stderr ("[" <> T.unpack (metaChannelLabel channel) <> "] received webhook payload")
-        BL8.hPutStrLn stderr rawBody
         flip runSqlPool envPool (persistMetaInbound channel now incoming)
+        hPutStrLn stderr ("[" <> T.unpack (metaChannelLabel channel)
+          <> "] webhook events persisted: " <> show (length incoming))
       pure NoContent
 
 instagramServer

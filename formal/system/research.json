@@ -374,6 +374,16 @@
       "applicability": "Administrative catalog reordering and concurrent stale writes.",
       "decision": "adopted with boundary",
       "rationale": "A catalog row serializes competing reorders. Transaction rollback protects item/revision/audit consistency. Other catalog writers and global revocation require independent review; no serializability claim is inferred for them."
+    },
+    {
+      "id": "RES-PRIV-LOG-001",
+      "source": "https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html",
+      "title": "OWASP Logging Cheat Sheet",
+      "reviewedAt": "2026-10-05",
+      "recommendation": "Exclude sensitive personal data and unnecessary payloads from operational logs; retain useful security and outcome evidence.",
+      "applicability": "Facebook/Instagram private inbound message receipts.",
+      "decision": "adopted with boundary",
+      "rationale": "Fixed channel plus event count provides ingestion evidence without customer payloads. This does not establish global log privacy or erase historical exposure."
     }
   ]
 }

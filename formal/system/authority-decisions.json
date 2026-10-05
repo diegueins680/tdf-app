@@ -301,6 +301,15 @@
       "conflict": "A reorder returns409 for an invalid later item but earlier per-item transactions already committed; revision and audit remain unchanged.",
       "authority": "formal/system/catalog-reorder.md",
       "resolution": "Repair transaction atomicity and locked revision admission. Apply the existing OpenAPI incomplete-set rejection as the working authority; product-owner clarification is pending because the old implementation accepted subsets. Require every current item exactly once."
+    },
+    {
+      "id": "AUTHORITY-029",
+      "sources": [
+        "tdf-hq/src/TDF/ServerExtra.hs"
+      ],
+      "conflict": "Authenticated Facebook/Instagram private payloads are copied verbatim into stderr operational logs.",
+      "authority": "formal/system/webhook-log-privacy.md",
+      "resolution": "Remove raw payload receipts; retain only fixed channel and event count after persistence. Preserve governed message records and mark historical log retention/remediation as unresolved, not silently repaired."
     }
   ]
 }
