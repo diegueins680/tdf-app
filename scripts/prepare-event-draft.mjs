@@ -26,6 +26,8 @@ async function main() {
   const planPath = resolve(process.argv[2] ?? '');
   const plan = JSON.parse(await readFile(planPath, 'utf8'));
   validateDraftPlan(plan);
+  // Validate the local asset before any profile/event mutation.
+  const flyerBytes = await readFile(resolve(dirname(planPath), plan.flyer));
   const token = process.env.ADMIN_TOKEN;
   if (!token) throw new Error('Authorized ADMIN_TOKEN required');
   const origin = 'https://api.tdfrecords.net';
@@ -92,7 +94,7 @@ async function main() {
   const path = `/social-events/events/${encodeURIComponent(event.eventId)}`;
   if (!event.eventImageUrl) {
     const form = new FormData();
-    form.append('file', new Blob([await readFile(resolve(dirname(planPath), plan.flyer))], { type: 'image/png' }), 'patch-culture-original-frame.png');
+    form.append('file', new Blob([flyerBytes], { type: 'image/png' }), 'patch-culture-original-frame.png');
     await api(`${path}/image`, 'POST', form);
   }
   const tiers = await api(`${path}/ticket-tiers`);

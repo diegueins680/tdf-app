@@ -266,4 +266,15 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(qrCanvasMock).not.toHaveBeenCalled();
   });
 
+  it('does not present a ticket before fulfillment even when payment is paid', async () => {
+    getCheckoutMock.mockResolvedValue(checkoutFixture({
+      paymentStatus: 'paid', fulfillmentStatus: 'seat_held', paymentMethods: [],
+      tickets: [{ ticketId: 503, ticketCode: 'NOT-YET-ISSUED', status: 'issued', holderName: 'Titular' }],
+    }));
+    await renderTracking('/eventos/41/orden/92');
+    await waitForExpectation(() => expect(container.textContent).toContain('Pago: paid'));
+    expect(container.textContent).not.toContain('NOT-YET-ISSUED');
+    expect(container.querySelector('canvas')).toBeNull();
+  });
+
 });

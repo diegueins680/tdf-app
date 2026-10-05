@@ -515,7 +515,7 @@ export default function PublicEventTicketsPage() {
                         />
                     )}
                   </Stack>
-                  {paid && checkout.tickets.length > 0 && (
+                  {paid && issued && checkout.tickets.length > 0 && (
                     <Stack spacing={1}>
                       <Typography variant="h6">{english ? 'Issued tickets' : 'Entradas emitidas'}</Typography>
                       {checkout.tickets.map((ticket) => <Card key={ticket.ticketId} variant="outlined">

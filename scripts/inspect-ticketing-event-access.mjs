@@ -24,8 +24,15 @@ async function all(kind) {
   throw new Error('Pagination bound reached; deduplication is not complete');
 }
 const [events, venues, artists] = await Promise.all([all('events'), all('venues'), all('artists')]);
+const paymentOverview = await get('/admin/commerce/overview');
 const report = {
   checkedAt: new Date().toISOString(), apiOrigin: origin, mode: 'read-only', mutations: 0,
+  providerReadiness: paymentOverview.cpoProviderAccounts.map((account) => ({
+    provider: account.cpaProvider, environment: account.cpaEnvironment,
+    status: account.cpaStatus, contractStatus: account.cpaContractStatus,
+    credentialStatus: account.cpaCredentialStatus, enabled: account.cpaEnabled,
+    verifiedAt: account.cpaVerifiedAt,
+  })),
   events: events.filter((x) => normalized(x.eventTitle).includes('patch culture')).map((x) => ({
     id: x.eventId, workflow: x.eventWorkflowStateCode, public: x.eventIsPublic,
     purchaseEnabled: x.eventTicketPurchaseEnabled,

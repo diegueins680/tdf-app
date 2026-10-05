@@ -262,9 +262,9 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "c6915506d0f7b802519d",
+      "replacementId": "c66b265a7ea297c37542",
       "reason": "Payment consolidation preserves the complete current-main definition set and its historical review. The new fingerprint adds only the governed payment callback route (158 mobile entries) or six ordered payment migrations (166 manifest entries); all previous migration SHAs and SQL remain unchanged.",
-      "previousReplacementId": "07da55e81a186d26df37",
+      "previousReplacementId": "c6915506d0f7b802519d",
       "currentResolution": {
         "mainRevision": "f8925e339447cb593f7cce5d86403d1396aaf5a5",
         "mobileRevision": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
