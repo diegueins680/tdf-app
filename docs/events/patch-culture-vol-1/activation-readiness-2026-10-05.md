@@ -23,9 +23,25 @@ binding en la respuesta POST de PayPal, asiento de comisión cero y montaje del
 botón dentro del diálogo. El reembolso externo **no** completa todavía el flujo
 financiero de TDF (aprobación, asignación por ticket, asiento y nota de crédito).
 El estado de la revisión administrativa tampoco puede rehabilitar un ticket con
-reembolso verificado. Siguen pendientes el tratamiento fiscal, la integración
+reembolso verificado. El organizador confirmó IVA 0 % para el paquete; sigue pendiente la integración
 protegida y el despliegue, la entrega externa de correo y la validación nativa.
 No se activaron ventas de producción ni se solicita de nuevo la autorización comercial.
+
+## Repetición con IVA 0 % confirmado
+
+La [segunda compra oficial](official-sandbox-iva0-2026-10-05.json), con backend
+`2590f7f7`, capturó USD40, emitió dos tickets y produjo un asiento balanceado
+sin líneas de impuesto ni comisión cero. Los dos QR se decodificaron correctamente;
+ocho escaneos concurrentes admitieron una vez, y tres reintentos de captura
+conservaron las dos entradas. Cotizaciones reales adicionales dieron USD20/60/80
+para una/tres/cuatro entradas, siempre IVA0 y sin emitir tickets impagos.
+
+PayPal completó la devolución USD40. Su callback tuvo firma oficial SUCCESS,
+respondió 200 también en dos reenvíos y bloqueó la entrada no utilizada con 409.
+En esta repetición no se observó el callback de captura: su evidencia proviene
+del endpoint de captura y la consulta autenticada de PayPal. La prueba anterior
+sí verificó ambos callbacks. Se recibió una confirmación en SMTP local; sigue
+sin acreditarse entrega externa ni el ciclo financiero del reembolso en TDF.
 
 ## Continuación: sandbox oficial disponible
 
@@ -92,8 +108,12 @@ La [guía oficial del SRI](https://www.sri.gob.ec/web/intersri/servicios-artisti
 vincula la tarifa cultural cero al servicio efectivamente prestado y a su
 actividad registrada; la sección de espectáculos añade condiciones sobre
 promotor/espacio cultural y aforo. No convertir el reparto interno USD15/USD5
-en bases tributarias sin justificarlo. El tratamiento específico permanece
-sin confirmar; tampoco se configura una exención por defecto.
+en bases tributarias sin justificarlo. Diego confirmó posteriormente: «Por ser un evento artístico, educativo, y cultural, el IVA es 0%.»
+Se registra **IVA 0 % por confirmación del organizador**, para el paquete completo
+de USD20, con emisor TDF Records y RUC 1793215092001. Es una configuración
+expresa basada en esa respuesta, no una conclusión fiscal independiente ni una
+exención aplicada por defecto. El escenario sandbox anterior del 15 % conserva
+su historial y no se modifica retroactivamente.
 
 ## Cálculo del total: discrepancia reproducida
 
@@ -111,20 +131,20 @@ es **un escenario de prueba**, no una determinación fiscal del evento.
 Cambiar el tier a USD17,39 no resuelve el precio final para todas las cantidades
 y además altera el precio mostrado en selección. La continuación implementa un modo explícito `tax_included` de política y
 snapshot de orden, con total autoritativo y etiqueta web de impuesto incluido.
-La aprobación fiscal, las pruebas de integración completas y el despliegue
-siguen siendo requisitos separados.
+La tarifa fiscal del evento ya fue confirmada por el organizador en 0 %.
+Las pruebas con esa configuración y el despliegue siguen siendo pasos separados.
 No se aplicó ninguno de esos dos atajos en producción.
 
 ## Trabajo necesario para activar
 
 1. Desplegar el backend y las migraciones revisadas por la vía canónica Hetzner,
    con comprobación del esquema, versión y recuperación.
-2. Completar la clasificación fiscal del producto y, si corresponde impuesto,
-   resolver el total incluido con pruebas para una a cuatro entradas.
+2. Aplicar la configuración explícita IVA 0 % confirmada por el organizador
+   y comprobar totales USD20/40/60/80 sin modificar órdenes históricas.
 3. Ejecutar una compra de proveedor y reembolso en un entorno oficial utilizable,
    incluyendo callback/webhook, emisión, QR, check-in y entrega de confirmación.
-   El acceso sandbox ya está verificado; falta completar las transacciones
-   del proveedor y corregir cualquier fallo observado.
+   La compra, emisión y check-in sandbox ya pasaron; falta el ciclo financiero
+   completo del reembolso en TDF y la entrega externa de confirmación.
 4. Activar la ruta PayPal y la política del evento solamente con la evidencia
    anterior, luego publicar y comprobar el checkout canónico. La autorización
    del organizador ya está registrada; no constituye una prueba de estos pasos.

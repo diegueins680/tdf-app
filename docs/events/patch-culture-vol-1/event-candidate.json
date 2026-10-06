@@ -119,14 +119,12 @@
     "externalChannelAllocation": null,
     "organizerFeePolicy": null,
     "processorFeePolicy": null,
-    "taxPolicy": null,
     "identificationRequirements": null,
     "requiredEquipment": null,
     "refundPolicy": null,
     "transferPolicy": null,
     "recordingNoticeAndConsent": null,
     "performerSpecificRoles": "Participants confirmed; precise individual teaching roles not asserted",
-    "sellerLegalIdentityAndTaxTreatment": null,
     "processorFees": null,
     "standaloneJamAccessAndCapacity": null,
     "showcaseStartSeparateFromClosingTime": null,
@@ -137,9 +135,9 @@
     "publicEventUrl": null,
     "publicDirectoryMatchesFound": 0,
     "administrativeDeduplicationComplete": false,
-    "officialPaymentSandboxTested": false,
-    "purchaseToCheckinE2ePassed": false,
-    "liveChargesApproved": false,
+    "officialPaymentSandboxTested": true,
+    "purchaseToCheckinE2ePassed": true,
+    "liveChargesApproved": true,
     "draftWorkflow": "planning",
     "draftTierId": "2",
     "draftTierActive": false,
@@ -157,7 +155,11 @@
     "implementationPullRequest": "https://github.com/diegueins680/tdf-app/pull/480",
     "transferConcurrencyLocalPostgresPassed": true,
     "localPostgresTicketingTestCount": 19,
-    "disputedPaymentAdmissionLocalPostgresPassed": true
+    "disputedPaymentAdmissionLocalPostgresPassed": true,
+    "sandboxEvidence": "official-sandbox-purchase-2026-10-05.json",
+    "sandboxTaxScenarioBps": 1500,
+    "approvedZeroTaxSandboxTested": true,
+    "approvedZeroTaxSandboxEvidence": "official-sandbox-iva0-2026-10-05.json"
   },
   "organizerResponse": {
     "source": "Direct user message in this conversation",
@@ -168,15 +170,15 @@
   "approval": {
     "source": "Direct user message: Approved. Continue",
     "policyVersion": "patch-culture-vol-1-proposal-v1",
-    "scope": "Commercial proposal approved; activation still requires verified payment, tax setup and end-to-end release checks."
+    "scope": "Commercial proposal and IVA 0% confirmed by organizer; activation requires verified payment, refunds and end-to-end release checks."
   },
   "invoiceIssuer": {
     "commercialName": "TDF Records",
     "legalNameFromExistingTdfBillingTemplate": "TDF Records S.A.S.",
     "ruc": "1793215092001",
     "source": "Organizer confirmation on 2026-10-05; same RUC and beneficiary already in TDF.Email course billing template",
-    "taxTreatmentConfirmed": false,
-    "taxRate": null,
+    "taxTreatmentConfirmed": true,
+    "taxRate": 0,
     "publicSriRegistrationVerified": false,
     "certificateEvidence": {
       "document": "RUC.pdf in connected organizer Drive",
@@ -192,7 +194,11 @@
         "R900004"
       ],
       "limitation": "Historical certificate, not a current SRI registry lookup or a tax ruling on the combined workshop, showcase and beer product. Address, representative identifiers and verification code omitted."
-    }
+    },
+    "taxRateBps": 0,
+    "taxConfirmationSource": "Direct organizer reply in this conversation on 2026-10-05",
+    "taxConfirmationText": "Por ser un evento artístico, educativo, y cultural, el IVA es 0%.",
+    "taxConfirmationScope": "Organizer-confirmed IVA 0% for the USD20 package; not an independent tax ruling."
   },
   "activationAuthorization": {
     "source": "Direct user message: Continúa y activa cobros",
@@ -221,5 +227,14 @@
     "chargesCreated": 0,
     "smtpTlsAndAuthenticationVerified": true,
     "externalEmailDeliveryVerified": false
+  },
+  "approvedTaxPolicy": {
+    "taxBps": 0,
+    "taxIncluded": true,
+    "finalUnitPriceMinor": 2000,
+    "currency": "USD",
+    "invoiceIssuerRuc": "1793215092001",
+    "source": "Organizer fiscal confirmation on 2026-10-05",
+    "productionApplied": false
   }
 }

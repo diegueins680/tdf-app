@@ -1,0 +1,136 @@
+{
+  "recordedAt": "2026-10-06T00:04:38.265053+00:00",
+  "environment": "official PayPal sandbox with isolated TDF API and synthetic event",
+  "backendCommit": "2590f7f7bedb3833e4c9b589bb49625249bfba17",
+  "fiscalSource": "Organizer confirmation: IVA 0% for USD20 package",
+  "productionSalesActivated": false,
+  "purchase": {
+    "currency": "USD",
+    "quantity": 2,
+    "unitPriceMinor": 2000,
+    "totalMinor": 4000,
+    "taxMinor": 0,
+    "buyerFeeMinor": 0,
+    "providerCaptureStatus": "COMPLETED",
+    "providerOrderReadbackVerified": true,
+    "ticketCount": 2,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "qr": {
+    "results": [
+      {
+        "index": 0,
+        "decoded": true,
+        "matchesIssuedCredential": true,
+        "width": 280,
+        "height": 280
+      },
+      {
+        "index": 1,
+        "decoded": true,
+        "matchesIssuedCredential": true,
+        "width": 280,
+        "height": 280
+      }
+    ]
+  },
+  "checkIn": {
+    "unauthenticatedCheckIn": 401,
+    "invalidCode": 400,
+    "concurrentCheckInStatuses": [
+      200,
+      409,
+      409,
+      409,
+      409,
+      409,
+      409,
+      409
+    ],
+    "replayCheckIn": 409
+  },
+  "retriesAndOtherQuantityQuotes": {
+    "captureReplays": [
+      {
+        "httpStatus": 200,
+        "paymentStatus": "paid",
+        "ticketCount": 2
+      },
+      {
+        "httpStatus": 200,
+        "paymentStatus": "paid",
+        "ticketCount": 2
+      },
+      {
+        "httpStatus": 200,
+        "paymentStatus": "paid",
+        "ticketCount": 2
+      }
+    ],
+    "unpaidQuantityQuotes": [
+      {
+        "quantity": 1,
+        "totalMinor": 2000,
+        "taxMinor": 0,
+        "ticketCount": 0
+      },
+      {
+        "quantity": 3,
+        "totalMinor": 6000,
+        "taxMinor": 0,
+        "ticketCount": 0
+      },
+      {
+        "quantity": 4,
+        "totalMinor": 8000,
+        "taxMinor": 0,
+        "ticketCount": 0
+      }
+    ]
+  },
+  "ledgerAndConfirmation": {
+    "ticketCount": 2,
+    "admissionCount": 1,
+    "captureEntries": [
+      {
+        "account": "cash.paypal",
+        "amountMinor": 4000
+      },
+      {
+        "account": "liability.event_organizer_payable",
+        "amountMinor": -4000
+      }
+    ],
+    "reconciliationCount": 1,
+    "localConfirmationCount": 1
+  },
+  "providerRefund": {
+    "status": "COMPLETED",
+    "amountMinor": 4000,
+    "unusedTicketAfterRefund": 409
+  },
+  "webhook": {
+    "refundWebhooks": [
+      {
+        "type": "PAYMENT.CAPTURE.REFUNDED",
+        "signatureStatus": "SUCCESS",
+        "backendStatus": 200,
+        "duplicateRefundWebhookStatuses": [
+          200,
+          200
+        ]
+      }
+    ],
+    "captureWebhookObserved": false,
+    "captureEvidence": "Official authenticated order readback and TDF capture endpoint; earlier inclusive15 run separately verified capture webhook."
+  },
+  "limitations": [
+    "Local SMTP acceptance only; external inbox delivery not verified.",
+    "TDF financial refund ledger, ticket allocation and credit-note workflow remain incomplete; canonical order remains paid while admission is blocked.",
+    "Capture callback was not observed in this zero-tax run; actual provider readback verified the capture. The separate earlier 15% synthetic run verified both callback types.",
+    "Native-device checkout, production deploy and live sales not verified."
+  ]
+}
