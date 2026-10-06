@@ -106,7 +106,14 @@ def exercise_database_recovery(archive, saved, db):
         abort.request_reboot(lambda:None)  # Deliberate synthetic boot protocol only.
         host=service.a.boot_identity();synthetic={**host,'bootId':'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}
         require(synthetic['bootId']!=host['bootId'])
-        with patch.object(service.a,'boot_identity',return_value=synthetic),recovery.recovery_reservation() as reservation:
+        original_execute=recovery.o.fence.execute
+        start_commands=[];allow_start=False
+        def traced_execute(command):
+            if command[:len(DOCKER)+1]==DOCKER+['start']:
+                start_commands.append(list(command))
+                require(allow_start)  # Trace/reject before dispatch in negative case.
+            return original_execute(command)
+        with patch.object(service.a,'boot_identity',return_value=synthetic),patch.object(recovery.o.fence,'execute',side_effect=traced_execute),recovery.recovery_reservation() as reservation:
             journal=service.ServiceJournal(abort);journal.begin_epoch()
             # This fixture owns no restore/canary containers. No cleanup adapter claim.
             journal.perform('remove-disposables','c'*64,lambda c:{**c,'evidenceHash':'d'*64})
@@ -116,19 +123,21 @@ def exercise_database_recovery(archive, saved, db):
                 refused=False
                 try:adapter.recover()
                 except (ValueError,OSError):refused=True
-                require(refused and not inspect(db)['State']['Running'])
+                require(refused and not start_commands and not inspect(db)['State']['Running'])
             finally:held.rename(version)
             # Repairing a fixture file never erases an uncertain stage. A second
             # recorded synthetic boot epoch is required before any new attempt.
             replay_refused=False
             try:adapter.recover()
             except ValueError:replay_refused=True
-            require(replay_refused and not inspect(db)['State']['Running'])
+            require(replay_refused and not start_commands and not inspect(db)['State']['Running'])
             journal.request_next_reboot(lambda:None)
             synthetic['bootId']='bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
             journal.begin_epoch()
             journal.perform('remove-disposables','c'*64,lambda c:{**c,'evidenceHash':'d'*64})
+            allow_start=True
             status=adapter.recover()
+            require(start_commands==[DOCKER+['start',db]])
             require(status['completedStages']==['remove-disposables','recover-db'])
             denied=False
             try:adapter.recover()

@@ -4970,7 +4970,7 @@
     {
       "id": "SURFACE-b42b59299d730ebb",
       "path": "scripts/test-production-writer-fence-linux.py",
-      "sha256": "d36b40955525af9637ca80db0e6438e2f40de4c8d80b48873a0175bdb378afc8",
+      "sha256": "2471b9580dc8fd22e34137edcc1fb9be2a56477779ba9fa76c307e9f0ce044a4",
       "semanticConformance": "not-established-by-discovery"
     },
     {

@@ -7243,7 +7243,7 @@
     "scripts/test-physical-postgres-recovery.py": "0e8c9bc9f8cdcd61bf11e33d2fe3aaa49ac5614de3a49a8f261d4720aad19a72",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-production-recovery-sources.py": "4021b8fdbb5dc8cebe73c594201149f1207edd89faadb0631e2fd7220898f2dc",
-    "scripts/test-production-writer-fence-linux.py": "d36b40955525af9637ca80db0e6438e2f40de4c8d80b48873a0175bdb378afc8",
+    "scripts/test-production-writer-fence-linux.py": "2471b9580dc8fd22e34137edcc1fb9be2a56477779ba9fa76c307e9f0ce044a4",
     "scripts/test-production-writer-fence.py": "3c3b0a2188e17640376802abd576dd7d3ee9844a411cdb4a6e6d117fec6bfeb5",
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "f3a79f43617c7114ea63e701fe8e81ce3814f3869a6d55f701da6510c5c2aa7e",
@@ -16365,7 +16365,7 @@
     {
       "id": "SURFACE-b42b59299d730ebb",
       "path": "scripts/test-production-writer-fence-linux.py",
-      "sha256": "d36b40955525af9637ca80db0e6438e2f40de4c8d80b48873a0175bdb378afc8",
+      "sha256": "2471b9580dc8fd22e34137edcc1fb9be2a56477779ba9fa76c307e9f0ce044a4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
