@@ -257,7 +257,10 @@ def main():
         if namespace:
             run(['ip','netns','delete',namespace])
         if link and Path('/sys/class/net',link).exists():
-            run(['ip','link','delete',link])
+            # Removing the namespace asynchronously removes its paired host
+            # interface. It may disappear between this observation and delete.
+            result=subprocess.run(['ip','link','delete',link],env=q.ENV,capture_output=True,timeout=15)
+            require(result.returncode==0 or not Path('/sys/class/net',link).exists())
         for target in (peer_container,container):
             if target:
                 row = json.loads(run(DOCKER+['inspect',target]))[0]

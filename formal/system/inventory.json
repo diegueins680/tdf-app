@@ -5098,7 +5098,7 @@
     {
       "id": "SURFACE-dad80c98203057e7",
       "path": "scripts/test-outbound-quarantine-linux.py",
-      "sha256": "5810c45b01ddf838e96544f54e363e558ec80c5768d415a993c6477f5af5c5eb",
+      "sha256": "d440cec3ca9511e885b104d8d3f24021f058b24d5729c101c227899a811cd70c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
