@@ -10,6 +10,8 @@ const getStorefrontMock = jest.fn<(eventId: number) => Promise<unknown>>();
 const createCheckoutMock = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 const createPaypalOrderMock = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 const capturePaypalOrderMock = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const selectBankTransferMock = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const submitBankTransferEvidenceMock = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 const readEnvMock = jest.fn<(key: string) => string | undefined>();
 const funnelCaptureMock = jest.fn();
 const analytics = { ready: true, capture: funnelCaptureMock };
@@ -38,6 +40,8 @@ jest.unstable_mockModule('../api/eventTickets', () => ({
     createDatafastCheckout: jest.fn(),
     createPaypalOrder: createPaypalOrderMock,
     capturePaypalOrder: capturePaypalOrderMock,
+    selectBankTransfer: selectBankTransferMock,
+    submitBankTransferEvidence: submitBankTransferEvidenceMock,
   },
 }));
 
@@ -182,6 +186,8 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     createCheckoutMock.mockReset().mockResolvedValue(checkoutFixture());
     createPaypalOrderMock.mockReset();
     capturePaypalOrderMock.mockReset();
+    selectBankTransferMock.mockReset();
+    submitBankTransferEvidenceMock.mockReset();
     readEnvMock.mockReset();
     funnelCaptureMock.mockClear();
     analytics.ready = true;
@@ -246,6 +252,54 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
       robots: 'noindex,follow',
     });
     expect(metadata).not.toHaveProperty('structuredData');
+  });
+
+  it('reports a bank transfer as pending staff verification, never as paid', async () => {
+    const bankTransfer = {
+      instructions: 'Banco Internacional ahorros 440781141',
+      paymentReference: 'TDF-92',
+      amountMinor: 2040,
+      currency: 'USD',
+      evidenceStatus: 'awaiting_evidence',
+      customerReference: null,
+      reviewNotes: null,
+    };
+    getCheckoutMock.mockResolvedValue(checkoutFixture({
+      paymentStatus: 'awaiting_payment', paymentMethods: ['paypal', 'bank_transfer'],
+    }));
+    selectBankTransferMock.mockResolvedValue(checkoutFixture({
+      paymentStatus: 'awaiting_payment', paymentMethods: ['paypal', 'bank_transfer'], bankTransfer,
+    }));
+    submitBankTransferEvidenceMock.mockResolvedValue(checkoutFixture({
+      paymentStatus: 'awaiting_payment', paymentMethods: ['paypal', 'bank_transfer'],
+      bankTransfer: { ...bankTransfer, evidenceStatus: 'submitted', customerReference: 'COMP-55' },
+    }));
+    await renderTracking('/eventos/41/orden/92');
+    const button = await (async () => {
+      let found: HTMLButtonElement | undefined;
+      await waitForExpectation(() => {
+        found = Array.from(container.querySelectorAll('button'))
+          .find((candidate) => candidate.textContent === 'Transferencia bancaria');
+        expect(found).toBeTruthy();
+      });
+      return found!;
+    })();
+    await act(async () => { fireEvent.click(button); });
+    await waitForExpectation(() => expect(container.textContent).toContain('TDF-92'));
+    expect(selectBankTransferMock).toHaveBeenCalledWith(41, 92, 'secure-lookup-token');
+    expect(container.textContent).toContain('Banco Internacional ahorros 440781141');
+
+    const input = container.querySelector<HTMLInputElement>('input[maxlength="120"]')!;
+    await act(async () => { fireEvent.change(input, { target: { value: 'COMP-55' } }); });
+    const submit = Array.from(container.querySelectorAll('button'))
+      .find((candidate) => candidate.textContent === 'Ya transferí')!;
+    await act(async () => { fireEvent.click(submit); });
+    await waitForExpectation(() => expect(container.textContent).toContain('Estamos verificando el depósito'));
+    expect(submitBankTransferEvidenceMock).toHaveBeenCalledWith(41, 92, 'COMP-55', 'secure-lookup-token');
+    expect(container.textContent).not.toContain('El servidor verificó el pago');
+    const providers = funnelCaptureMock.mock.calls.map((call) => call[1]);
+    expect(providers).toEqual(expect.arrayContaining([expect.objectContaining({ provider: 'bank_transfer' })]));
+    providers.forEach(expectNoPrivateTicketData);
   });
 
   it('keeps a receipt out of search and its order reference out of canonical metadata', async () => {

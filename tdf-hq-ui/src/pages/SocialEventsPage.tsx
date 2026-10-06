@@ -63,6 +63,7 @@ import type { PartySelectorOption } from '../api/partySelector';
 import { formatCurrencyForUser, formatDateForUser, resolveRuntimeCurrency } from '../utils/formatters';
 import { hasStrictAdminAccess } from '../utils/accessControl';
 import EventRsvpControls from '../components/events/EventRsvpControls';
+import EventManualPaymentsPanel from '../components/events/EventManualPaymentsPanel';
 
 interface InvitationState {
   party: PartySelectorOption | null;
@@ -1757,6 +1758,10 @@ export default function SocialEventsPage() {
                               Check-in
                             </Button>
                           </Stack>
+
+                          {eventId && (
+                            <EventManualPaymentsPanel eventId={eventId} formatMoney={formatMoney} formatDate={formatDate} />
+                          )}
 
                           <Divider />
 

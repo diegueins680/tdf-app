@@ -8288,6 +8288,45 @@ paths:
         '404': { description: Order not found or lookup token does not match }
         '409': { description: Provider binding mismatch or payment arrived after hold expiry }
         '502': { description: PayPal capture or immutable payment fields could not be verified }
+  /public/events/{eventId}/ticket-orders/{orderId}/bank-transfer:
+    post:
+      tags: [Public event tickets]
+      summary: Choose staff-verified bank transfer for a held ticket order
+      description: Allowed only while the event policy's selection window is open. Extends the seat hold once, within the approved policy, and returns the transfer instructions and payment reference. No ticket is issued until staff verifies the deposit.
+      operationId: selectPublicEventTicketBankTransfer
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PublicEventId'
+        - $ref: '#/components/parameters/PublicEventTicketOrderId'
+        - $ref: '#/components/parameters/PublicOrderLookupToken'
+      responses:
+        '200':
+          description: Current checkout state with bank transfer instructions
+          content: { application/json: { schema: { $ref: '#/components/schemas/PublicEventTicketCheckout' } } }
+        '404': { description: Order not found or lookup token does not match }
+        '409': { description: Hold expired, order paid, another rail active, or transfer window closed }
+        '503': { description: Bank transfer is not configured in this environment }
+  /public/events/{eventId}/ticket-orders/{orderId}/bank-transfer/evidence:
+    post:
+      tags: [Public event tickets]
+      summary: Report the bank transfer reference for staff verification
+      description: The reference is evidence for review, not payment. Submitting it keeps the seat while staff verifies, bounded by the approved policy.
+      operationId: submitPublicEventTicketBankTransferEvidence
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PublicEventId'
+        - $ref: '#/components/parameters/PublicEventTicketOrderId'
+        - $ref: '#/components/parameters/PublicOrderLookupToken'
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/PublicEventTicketBankTransferEvidenceRequest' } } }
+      responses:
+        '200':
+          description: Current checkout state
+          content: { application/json: { schema: { $ref: '#/components/schemas/PublicEventTicketCheckout' } } }
+        '400': { description: Invalid reference }
+        '404': { description: Order not found or lookup token does not match }
+        '409': { description: Transfer not selected, evidence already under review, or hold expired }
 
   /public/domo:
     get:
@@ -11488,6 +11527,11 @@ components:
         termsSummary: { type: string, minLength: 1 }
         refundPolicy: { type: string, minLength: 1 }
         transferAllowed: { type: boolean }
+        bankTransferAvailableUntil:
+          type: string
+          format: date-time
+          nullable: true
+          description: When set, new checkouts may still choose staff-verified bank transfer until this instant. Null when the policy did not opt in, the window closed, or the rail is not configured.
     PublicEventTicketStorefront:
       type: object
       additionalProperties: false
@@ -11572,11 +11616,39 @@ components:
         quote: { $ref: '#/components/schemas/PublicEventTicketQuote' }
         paymentMethods:
           type: array
-          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet] }
+          items: { type: string, enum: [datafast, paypal, placetopay_card, placetopay_bank_redirect, placetopay_deuna_qr, payphone_wallet, bank_transfer] }
         tickets:
           type: array
           description: Empty until fulfillment issues tickets after verified payment.
           items: { $ref: '#/components/schemas/PublicEventTicket' }
+        bankTransfer:
+          nullable: true
+          description: Present only after the buyer selected bank transfer.
+          allOf:
+            - $ref: '#/components/schemas/PublicEventTicketBankTransfer'
+    PublicEventTicketBankTransfer:
+      type: object
+      additionalProperties: false
+      required: [instructions, paymentReference, amountMinor, currency, evidenceStatus]
+      properties:
+        instructions: { type: string, description: Server-configured account details. }
+        paymentReference: { type: string, description: Public order reference the buyer includes with the transfer. }
+        amountMinor: { type: integer, format: int64, minimum: 1 }
+        currency: { type: string, minLength: 3, maxLength: 3 }
+        evidenceStatus:
+          type: string
+          enum: [awaiting_evidence, submitted, under_review, approved, rejected]
+        customerReference: { type: string, nullable: true }
+        reviewNotes:
+          type: string
+          nullable: true
+          description: Staff reason, shown only after a rejection.
+    PublicEventTicketBankTransferEvidenceRequest:
+      type: object
+      additionalProperties: false
+      required: [customerReference]
+      properties:
+        customerReference: { type: string, minLength: 3, maxLength: 120 }
     PublicEventTicketPaypalCaptureRequest:
       type: object
       additionalProperties: false

@@ -205,6 +205,7 @@ executable tdf-hq-exe
     TDF.Server.Catalog
     TDF.Server.ServiceStorefront
     TDF.Server.ProviderTransport
+    TDF.Server.TicketManualPayments
     TDF.Server.TicketRefunds
     TDF.ServerLiveSessions
     TDF.ServerFeedback
@@ -548,6 +549,7 @@ test-suite tdf-hq-test
     TDF.Server.PaymentAuditSpec
     TDF.Server.ServiceStorefront
     TDF.Server.ProviderTransport
+    TDF.Server.TicketManualPayments
     TDF.Server.TicketRefunds
     TDF.ServerAuth
     TDF.ServerAuthSpec
