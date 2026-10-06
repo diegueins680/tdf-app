@@ -9,7 +9,7 @@ module TDF.Ticketing.Refund
 
 import Control.Monad (forM, forM_, unless, when)
 import Data.Int (Int64)
-import Data.List (nub, sort)
+import Data.List (find, nub, sort)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (UTCTime)
@@ -281,9 +281,18 @@ requestTicketRefundForOrder actor eventKey orderKey requestedAmount reason now =
               M.eventTicketStatus ticket == "issued",M.eventTicketCheckedInAt ticket == Nothing,
               M.eventTicketCurrentHolderPartyId ticket == M.eventTicketOriginalHolderPartyId ticket ]
             target = maybe (sum (map snd available)) fromIntegral requestedAmount
-            selection = takeWhile (\(_,cumulative) -> cumulative <= target) $
-              zip available (drop 1 (scanl (\acc (_,amount) -> acc+amount) 0 available))
-            selected = map fst selection
+            -- Stable allocation has at most two adjacent cent amounts. Search
+            -- their counts (at most 101 squared), not exponential ticket subsets
+            -- or a prefix that excludes a valid remainder-cent ticket.
+            lowAmount = minimum (total : map snd available)
+            low = filter ((== lowAmount) . snd) available
+            high = filter ((/= lowAmount) . snd) available
+            counts = [(lo,hi) | lo <- [0..length low], hi <- [0..length high]]
+            matches (lo,hi) = toInteger lo * toInteger lowAmount +
+              toInteger hi * (toInteger lowAmount + 1) == toInteger target
+            selected = case find matches counts of
+              Just (lo,hi) -> take lo low <> take hi high
+              Nothing -> []
         unless (target > 0 && sum (map snd selected) == target &&
             target <= fromIntegral (maxBound :: Int)) $
           fail "Refund must select a whole number of available tickets"

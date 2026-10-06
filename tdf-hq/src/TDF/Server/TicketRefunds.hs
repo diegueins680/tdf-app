@@ -2,7 +2,8 @@
 
 -- | PayPal execution behind the existing organizer refund endpoints. A durable
 -- canonical claim precedes HTTP; retries can only query the bound provider refund.
-module TDF.Server.TicketRefunds (approvePaypalTicketRefund) where
+module TDF.Server.TicketRefunds
+  (approvePaypalTicketRefund, approvePaypalTicketRefundWithManager) where
 
 import Control.Exception (IOException, try)
 import Control.Monad (unless, void, when)
@@ -14,6 +15,7 @@ import qualified Data.Text as T
 import Data.Time (getCurrentTime)
 import Database.Persist
 import Database.Persist.Sql
+import Network.HTTP.Client (Manager)
 import Servant
 import System.Environment (lookupEnv)
 import TDF.Auth (AuthedUser(..), hasStrictAdminAccess)
@@ -32,7 +34,12 @@ type AppM = ReaderT Env Handler
 
 approvePaypalTicketRefund :: AuthedUser -> M.SocialEventId -> M.TicketRefundRequestId
   -> AppM (Entity M.TicketRefundRequest)
-approvePaypalTicketRefund user eventKey requestKey = do
+approvePaypalTicketRefund = approvePaypalTicketRefundWithManager Http.sharedProviderManager
+
+-- Injection keeps the same bounded HTTP executor for deterministic transport tests.
+approvePaypalTicketRefundWithManager :: Manager -> AuthedUser -> M.SocialEventId
+  -> M.TicketRefundRequestId -> AppM (Entity M.TicketRefundRequest)
+approvePaypalTicketRefundWithManager manager user eventKey requestKey = do
   env <- ask
   now <- liftIO getCurrentTime
   -- Authorize against stored event/order relationships before reading credentials.
@@ -60,6 +67,9 @@ approvePaypalTicketRefund user eventKey requestKey = do
       throwError err503 { errBody="Refund reconciliation is unavailable" }
     let readiness = Q.RefundQueryBinding environment (R.refundReferenceId ref) capture merchant
           (R.rrAmountMinor existing) (R.rrCurrency existing)
+    -- A failed token request has not submitted a refund: keep the request
+    -- pending so it can be safely retried. Never hold database locks during HTTP.
+    token <- paypalAccessTokenForService manager cid secret baseUrl
     (record, shouldIssue) <- transaction $ Ticket.withOrder orderKey $ \event order _ -> do
       unless (M.eventTicketOrderEventId order == eventKey &&
         (hasStrictAdminAccess user || M.socialEventOrganizerPartyId event == Just actor)) $
@@ -73,7 +83,7 @@ approvePaypalTicketRefund user eventKey requestKey = do
          M.TicketRefundRequestApprovedAt =. Just now,M.TicketRefundRequestUpdatedAt =. now]
       pure result
     when shouldIssue $ do
-      outcome <- issuePaypalRefundRemote Http.sharedProviderManager cid secret baseUrl capture record
+      outcome <- issuePaypalRefundWithTokenRemote manager token baseUrl capture record
         `catchError` (\failure -> do
           transaction (R.recordRefundFailure ref "ticket_refund_transport_unknown" now)
           throwError failure)
@@ -89,7 +99,7 @@ approvePaypalTicketRefund user eventKey requestKey = do
         result <- liftIO $ Recovery.reconcileKnownRefund (envPool env) ref actorId
           (\binding -> pure (Q.rqbEnvironment binding == environment && Q.rqbMerchantId binding == merchant))
           (\binding -> do
-            queried <- runHandler (runReaderT (queryRefund cid secret baseUrl binding) env)
+            queried <- runHandler (runReaderT (queryRefund manager token binding) env)
             pure (either (const (Left Recovery.RefundRecoveryQueryFailed)) Right queried))
         case result of
           Right _ -> pure ()
@@ -130,11 +140,10 @@ loadCapture record = do
     [Single capture] | isProviderReference capture -> pure capture
     _ -> fail "Refund requires one exact original capture"
 
-queryRefund :: Text -> Text -> String -> Q.RefundQueryBinding -> AppM Q.RefundQueryOutcome
-queryRefund cid secret baseUrl binding = do
+queryRefund :: Manager -> Text -> Q.RefundQueryBinding -> AppM Q.RefundQueryOutcome
+queryRefund manager token binding = do
   void $ either (const (throwError err409)) pure (Q.validateRefundQueryBinding binding)
-  token <- paypalAccessTokenForService Http.sharedProviderManager cid secret baseUrl
   request <- either (const (throwError err503)) pure (Q.buildRefundQuery token binding)
-  response <- liftIO (Http.executeAdapterRequest Http.sharedProviderManager request)
+  response <- liftIO (Http.executeAdapterRequest manager request)
   value <- either (const (throwError err502)) pure response
   either (const (throwError err502)) pure (Q.parseRefundQuery binding value)

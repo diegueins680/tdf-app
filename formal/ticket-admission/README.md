@@ -101,3 +101,12 @@ Regression qualification must include exhausted signed-event retries before late
 binding, both provider routes, legacy status rejection before/after canonical
 completion, retained transfer and transfer/refund contention. These PostgreSQL
 fixtures use synthetic financial evidence, not real provider payments.
+
+Refund approval obtains the PayPal OAuth token before consuming the durable
+single-POST permit. Token transport/validation failures leave the request pending;
+once the refund POST is attempted, an ambiguous outcome remains fenced and does
+not authorize another POST. The query path reuses the same bounded token. Tests
+exercise the real handler and PostgreSQL with an in-memory HTTP connection, not
+an official provider or TLS handshake. Whole-ticket partial refunds select a
+matching subset of the two stable cent allocations rather than a ticket-ID prefix;
+integer count enumeration is bounded by the existing maximum of 100 tickets.

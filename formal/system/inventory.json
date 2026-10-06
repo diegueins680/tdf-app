@@ -12793,7 +12793,7 @@
     {
       "id": "SURFACE-8bea15f709688422",
       "path": "tdf-hq/src/TDF/Server/ProviderTransport.hs",
-      "sha256": "95d56eec2e997cead3472fddda6d9b62a2a426ab9d0774718a32e3847eeaa8e0",
+      "sha256": "4d9a69a37a2e851b92b8b50c6875c954bdf73b68d55511c0830d9c9bf4e9f940",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12835,7 +12835,7 @@
     {
       "id": "SURFACE-2531a758cf6e10bc",
       "path": "tdf-hq/src/TDF/Server/TicketRefunds.hs",
-      "sha256": "dc589c059b3e254ae0dad96c9a5a845c39228a701282f1f82357a0f2e4a100ca",
+      "sha256": "26f211a5e23875b0139d8baa68e13cf6ede346275d51d181af978b6d54f6b363",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13039,7 +13039,7 @@
     {
       "id": "SURFACE-cf5c4df379b4411b",
       "path": "tdf-hq/src/TDF/Ticketing/Refund.hs",
-      "sha256": "503ac751cd434a62bc9b391e71b76be0cf35e889c85e4ab17e9dcf3fcdda0a88",
+      "sha256": "a0c6d29fa7c83b6342c9905be9c805bad9006ebee97d664120600ca27f1ea002",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13231,7 +13231,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "5962d9b9bb4a90112b0b23f8d4fbdb57539ff6a572d12f88addbf84bd2a8893a",
+      "sha256": "5c0f3a7a0331407ade60420d7aff00aa3ff8e93071d18832e477723f37552113",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22243,7 +22243,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "dbf76adea5ccf99ec345d9467c18c2b613bc478e75cade242eb56721618e2e11",
+      "sha256": "22884db47e9e4f491946040b2bea33a4ba5821bd87369f4366cb76253c8d4887",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -22306,7 +22306,7 @@
     },
     {
       "path": "formal/ticket-admission/README.md",
-      "sha256": "0ff959f5ef65015807e264a796f22c05e374fe13277c58b98364f7798cd70e54",
+      "sha256": "3bcb93cd44c47d8f64e16e0942f3c937d4f40b054ad1c4a296f3abec534d6eea",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

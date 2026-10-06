@@ -3489,6 +3489,66 @@ ticketAllocationSpec = describe "ticket refund allocation transactions" $ do
         `shouldReturn` [Single (if completed then 1 else 0 :: Int64)]
       runSqlPool (rawExecute "UPDATE revenue_feature_flag SET enabled=false WHERE flag_key='checkout.paypal.refund_reconciliation' AND environment='sandbox'" []) pool
 
+  forM_ [4171,8343] $ \amount ->
+    it ("selects a whole-ticket subset with remainder cents: " <> show amount) $ \pool -> do
+      (payment,eventKey,orderKey,tickets) <- ticketAllocationFixture pool
+      let now = Checkout.vpOccurredAt payment
+      request <- runSqlPool (TicketRefund.requestTicketRefundForOrder "1" eventKey orderKey (Just amount) Nothing now) pool
+      Just ref <- runSqlPool (TicketRefund.loadTicketRefundReference (entityKey request)) pool
+      allocations <- runSqlPool (rawSql
+        "SELECT ticket_id,amount_minor FROM event_ticket_refund_allocation WHERE refund_id=?::uuid ORDER BY ticket_id"
+        [PersistText (Refund.refundReferenceId ref)]) pool :: IO [(Single Int64,Single Int64)]
+      sum [value | (_,Single value) <- allocations] `shouldBe` fromIntegral amount
+      map (\(Single key,_) -> key) allocations `shouldContain` [fromSqlKey (last tickets)]
+      _ <- runSqlPool (Refund.approveRefundForProcessing ref 2 now) pool >>= requireRight
+      _ <- runSqlPool (TicketRefund.completeTicketRefund
+        (Refund.VerifiedRefund ref ("R-" <> Refund.refundReferenceId ref) (fromIntegral amount) "USD" now "cent-subset")) pool
+      remaining <- runSqlPool (TicketRefund.requestTicketRefundForOrder "1" eventKey orderKey Nothing Nothing now) pool
+      TM.ticketRefundRequestAmountCents (entityVal remaining) `shouldBe` 12515 - amount
+
+  forM_ [False,True] $ \httpFailure ->
+    it ("retries pre-POST OAuth failure but never ambiguous refund POST, HTTP failure=" <> show httpFailure) $ \pool ->
+      withCompletionEnvironment $ bracket (lookupEnv "PAYPAL_REFUND_RECONCILIATION_ENABLED")
+        (maybe (unsetEnv "PAYPAL_REFUND_RECONCILIATION_ENABLED") (setEnv "PAYPAL_REFUND_RECONCILIATION_ENABLED")) $ \_ -> do
+        setEnv "PAYPAL_REFUND_RECONCILIATION_ENABLED" "true"
+        runSqlPool (rawExecute
+          "INSERT INTO revenue_feature_flag(flag_key,enabled,environment,reason) VALUES ('checkout.paypal.refund_reconciliation',true,'sandbox','synthetic fixture') ON CONFLICT(flag_key,environment) DO UPDATE SET enabled=true" []) pool
+        (payment,eventKey,orderKey,_) <- ticketAllocationFixture pool
+        request <- runSqlPool (TicketRefund.requestTicketRefundForOrder "1" eventKey orderKey (Just 4172) Nothing (Checkout.vpOccurredAt payment)) pool
+        Just ref <- runSqlPool (TicketRefund.loadTicketRefundReference (entityKey request)) pool
+        let approve manager = runHandler (runReaderT (TicketRefundAPI.approvePaypalTicketRefundWithManager
+              manager (AuthedUser (toSqlKey 2) [Admin] mempty Nothing Nothing) eventKey (entityKey request))
+              (Env pool (error "Transport fixture must not load unrelated configuration")))
+            status = fmap Refund.rrStatus <$> runSqlPool (Refund.loadRefund ref) pool
+            failedToken = if httpFailure then "HTTP/1.1 503 Unavailable\r\nContent-Length: 0\r\n\r\n" else jsonWire "{}"
+        reader <- chunkReader [failedToken]
+        withProviderWire reader $ \manager _ writes _ -> do
+          result <- approve manager
+          either errHTTPCode (const 200) result `shouldBe` 502
+          sent <- writes
+          sent `shouldSatisfy` BS.isInfixOf "POST /v1/oauth2/token "
+          sent `shouldSatisfy` (not . BS.isInfixOf "/refund ")
+        status `shouldReturn` Just "requested"
+        Just pending <- runSqlPool (get (entityKey request)) pool
+        TM.ticketRefundRequestStatus pending `shouldBe` "pending"
+        -- Token succeeds on retry; an invalid POST response is ambiguous and
+        -- must retain the processing fence. A later approval sends no second POST.
+        retryReader <- chunkReader [jsonWire oauthFixture,jsonWire "{}"]
+        withProviderWire retryReader $ \manager _ writes _ -> do
+          result <- approve manager
+          either errHTTPCode (const 200) result `shouldBe` 502
+          sent <- writes
+          sent `shouldSatisfy` BS.isInfixOf "/refund "
+        status `shouldReturn` Just "processing"
+        thirdReader <- chunkReader [jsonWire oauthFixture]
+        withProviderWire thirdReader $ \manager _ writes _ -> do
+          result <- approve manager
+          either errHTTPCode (const 200) result `shouldBe` 200
+          sent <- writes
+          sent `shouldSatisfy` (not . BS.isInfixOf "/refund ")
+        status `shouldReturn` Just "processing"
+        runSqlPool (rawExecute "UPDATE revenue_feature_flag SET enabled=false WHERE flag_key='checkout.paypal.refund_reconciliation' AND environment='sandbox'" []) pool
+
   it "binds organizer requests atomically, makes double clicks idempotent, and permits successive partial refunds" $ \pool -> do
     (payment,eventKey,orderKey,_) <- ticketAllocationFixture pool
     let now = Checkout.vpOccurredAt payment

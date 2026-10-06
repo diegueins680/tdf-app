@@ -5,7 +5,7 @@
 module TDF.Server.ProviderTransport
   ( PaypalRefundOutcome(..), parsePaypalRefundOutcome, loadPaypalEnvForService
   , loadRequiredSafeEnv, providerRequest, providerResponse, paypalAccessTokenForService
-  , issuePaypalRefundRemote, isProviderReference ) where
+  , issuePaypalRefundRemote, issuePaypalRefundWithTokenRemote, isProviderReference ) where
 
 import Control.Monad (unless)
 import Control.Monad.IO.Class (liftIO)
@@ -151,6 +151,12 @@ issuePaypalRefundRemote
   -> AppM PaypalRefundOutcome
 issuePaypalRefundRemote manager cid sec baseUrl captureId refundRecord = do
   token <- paypalAccessTokenForService manager cid sec baseUrl
+  issuePaypalRefundWithTokenRemote manager token baseUrl captureId refundRecord
+
+-- OAuth happens before a caller consumes the durable, single-POST permit.
+issuePaypalRefundWithTokenRemote
+  :: Manager -> Text -> String -> Text -> Refund.RefundRecord -> AppM PaypalRefundOutcome
+issuePaypalRefundWithTokenRemote manager token baseUrl captureId refundRecord = do
   req0 <- providerRequest Checkout.ProviderPayPal
     (baseUrl ++ "/v2/payments/captures/" ++ T.unpack captureId ++ "/refund")
   let body = object
