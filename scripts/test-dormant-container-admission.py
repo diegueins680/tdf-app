@@ -23,10 +23,20 @@ class AdmissionTests(unittest.TestCase):
                   'networkMode':'legacy','networkIds':['b'*64],
                   'metadata':{'id':cid,'sha256':'c'*64,'manuallyStopped':True,'startedBefore':True}}
         self.snapshot={'schemaVersion':1,'version':'29.1.3','socket':'/run/docker.sock',
-                       'dataRoot':'/var/lib/docker','daemon':{'sha256':'d'*64,'bytes':100},'containers':[self.row]}
+                       'dataRoot':'/var/lib/docker','daemon':{'sha256':'d'*64,'bytes':100},'daemonProcess':{'pid':47,'startTicks':100},'containers':[self.row]}
         self.policy={'schemaVersion':1,'qualification':{'sourceRevision':'e'*40,
                      'daemonRestartEvidenceSha256':'f'*64,'rebootEvidenceSha256':'1'*64},
                      'snapshot':copy.deepcopy(self.snapshot)}
+
+    def test_same_binary_daemon_restart_or_pid_reuse_between_samples_rejects(self):
+        for incarnation in ({'pid':48,'startTicks':200},{'pid':47,'startTicks':200}):
+            changed=copy.deepcopy(self.snapshot);changed['daemonProcess']=incarnation
+            with patch.object(d,'observe',side_effect=[self.snapshot,changed]),self.assertRaises(ValueError):
+                d.observe_qualified(self.policy)
+        for incarnation in ({'pid':0,'startTicks':100},{'pid':True,'startTicks':100},
+                            {'pid':47,'startTicks':0},{'pid':47}, {'pid':47,'startTicks':True}):
+            changed=copy.deepcopy(self.snapshot);changed['daemonProcess']=incarnation
+            with self.assertRaises(ValueError):d.admit(changed,{**self.policy,'snapshot':changed})
 
     def test_configuration_fingerprint_preserves_all_authority_but_not_runtime_state(self):
         value={'Id':'a'*64,'Image':'sha256:'+'b'*64,

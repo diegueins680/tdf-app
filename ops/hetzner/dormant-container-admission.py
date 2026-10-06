@@ -191,7 +191,7 @@ def observe(socket_path='/run/docker.sock'):
                 and client.get('/info')['DockerRootDir']==root and executable(pid)==daemon
                 and proc_start(pid)==client.peer[1] and not poll.poll(0))
         return {'schemaVersion':1,'version':info['ServerVersion'],'socket':client.path,
-                'dataRoot':root,'daemon':daemon,'containers':rows}
+                'dataRoot':root,'daemon':daemon,'daemonProcess':{'pid':pid,'startTicks':client.peer[1]},'containers':rows}
     finally:
         client.close()
         if pidfd is not None:os.close(pidfd)
@@ -205,9 +205,13 @@ def admit(snapshot,policy):
     require(isinstance(evidence,dict) and set(evidence)=={'sourceRevision','daemonRestartEvidenceSha256','rebootEvidenceSha256'})
     for key,value in evidence.items():
         require(isinstance(value,str) and re.fullmatch('[a-f0-9]{'+('40' if key=='sourceRevision' else '64')+'}',value))
-    require(isinstance(snapshot,dict) and set(snapshot)=={'schemaVersion','version','socket','dataRoot','daemon','containers'}
+    require(isinstance(snapshot,dict) and set(snapshot)=={'schemaVersion','version','socket','dataRoot','daemon','daemonProcess','containers'}
             and type(snapshot['schemaVersion']) is int and snapshot['schemaVersion']==1
             and snapshot['version']=='29.1.3' and snapshot==policy['snapshot'])
+    incarnation=snapshot['daemonProcess']
+    require(isinstance(incarnation,dict) and set(incarnation)=={'pid','startTicks'}
+            and type(incarnation['pid']) is int and incarnation['pid']>1
+            and type(incarnation['startTicks']) is int and incarnation['startTicks']>0)
     ids=[]
     for row in snapshot['containers']:
         ids.append(identifier(row['id']))

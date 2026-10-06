@@ -116,6 +116,12 @@ destinations reject. No configuration secrets are emitted. This supplies stable
 configuration provenance for future stage-aware admission; it does not relax the
 current full-snapshot comparison or authorize skipping runtime/manual-stop checks.
 
+The snapshot also binds the serving daemon PID and process start ticks. A restart
+of the same executable with Docker live restore, or reuse of its PID, therefore
+changes the sample even if container tasks survive unchanged. Existing strict
+admission rejects that change. A future stage-aware guard may admit a new daemon
+incarnation only through its recorded reboot/recovery contract.
+
 The dedicated `scripts/test-dormant-container-reboot-linux.py` fixture runs a second
 daemon using caller-staged, hash-bound Docker29.1.3/runtime binaries. Its explicit
 private configuration, data/exec roots, socket and managed containerd separate it
