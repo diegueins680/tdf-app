@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "4cf82e2d3dd290553e71f5a3b516b4e517676bc3",
+  "mobileRevision": "1ef157072e8bc5b59ed115d32ba438c08c47ed04",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -7657,8 +7657,8 @@
     "tdf-mobile/app/ddex/partners.tsx": "9e2e2baf6b696a5880fd3f59f7d52bd8a6508762296a55564fb873af6d23be61",
     "tdf-mobile/app/eventDetail.tsx": "81718007671292738d4ac815f1b2e39d1a250ed717d3f99714e28905736bd76b",
     "tdf-mobile/app/userProfile.tsx": "cf1d6d3f9896e2d6ced654cfc0f530bc5d7d7869c228ca95c3250297cde2bfe4",
-    "tdf-mobile/package-lock.json": "1d669d0ea79f240494299f22c868f79753b921ad6f06656ad71b5942ccd3ac35",
-    "tdf-mobile/package.json": "2df9f211d1bddbe5467021ac6398e3427b5af467262ae5321be224ebe1603612",
+    "tdf-mobile/package-lock.json": "7b606befffd2ebcc64920e7fe715d2c6a8db7a45b8dc8b50fe815ec02f2dc9eb",
+    "tdf-mobile/package.json": "7d5b13140712c28c351854769e7b3b3f9dd851d23387edbab2501c70dd20fb3c",
     "tdf-mobile/scripts/android-release.py": "359097ccd6ccb3585d544fa40b0a84cd874fc2df0f514cce8d71fdeb5ec95d5c",
     "tdf-mobile/scripts/ios-signing.py": "b82eeb2adf72523c7e82b99458ce85784131afb7b3ab7971eb9052060732b627",
     "tdf-mobile/scripts/release-check.mjs": "134c027743c05c08d93d7696a4b5af88448f375cee8641ea9298907a37a689c4",
@@ -30612,7 +30612,7 @@
     {
       "id": "SURFACE-6bc7940d7e94ca53",
       "path": "tdf-mobile/package-lock.json",
-      "sha256": "1d669d0ea79f240494299f22c868f79753b921ad6f06656ad71b5942ccd3ac35",
+      "sha256": "7b606befffd2ebcc64920e7fe715d2c6a8db7a45b8dc8b50fe815ec02f2dc9eb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -30624,7 +30624,7 @@
     {
       "id": "SURFACE-74d531fc7e7a3fc1",
       "path": "tdf-mobile/package.json",
-      "sha256": "2df9f211d1bddbe5467021ac6398e3427b5af467262ae5321be224ebe1603612",
+      "sha256": "7d5b13140712c28c351854769e7b3b3f9dd851d23387edbab2501c70dd20fb3c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
