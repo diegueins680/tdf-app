@@ -72,6 +72,7 @@
       "ops/hetzner/migrate-owned-urls.sql",
       "ops/hetzner/physical-postgres-recovery.py",
       "ops/hetzner/production-recovery-sources.py",
+      "ops/hetzner/production-writer-fence.py",
       "ops/hetzner/recovery-envelope.py",
       "ops/hetzner/recovery-files.py",
       "ops/hetzner/recovery-tools.json",
@@ -426,6 +427,7 @@
       "scripts/test-physical-postgres-recovery.py",
       "scripts/test-privacy-request-ledger.py",
       "scripts/test-production-recovery-sources.py",
+      "scripts/test-production-writer-fence.py",
       "scripts/test-provider-event-operations-migration.sh",
       "scripts/test-provider-execution-runtime-migration.sh",
       "scripts/test-provider-identity.sh",
@@ -2666,7 +2668,13 @@
     {
       "id": "SURFACE-1b5222b0a6f2443b",
       "path": "ops/hetzner/production-recovery-sources.py",
-      "sha256": "7cb2e9091ffbefa03793e6988ed9c42ab57f6ccecef2d4662d7e8d8baee6ddc8",
+      "sha256": "aeb6f5abaf0accf294d811b95763a888bf9b015e4bbd74f0c0cfda186724a3a9",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-af69c694d5d15a09",
+      "path": "ops/hetzner/production-writer-fence.py",
+      "sha256": "d8e1c5f860def726a3b3ff8b23fb967ba7e54b250f87d0aea96a85686c0d4dde",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3890,7 +3898,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "3646bb3b27a4b20e6571dcb472759d444483f57d8be2a976cbcac5721bf383a3",
+      "sha256": "c11b2a38387f0acc250b2c0dd1f11179115f12b4b5414aead9b79fec226049f1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4755,6 +4763,12 @@
       "id": "SURFACE-d55fcf511cec4c82",
       "path": "scripts/test-production-recovery-sources.py",
       "sha256": "3bc8982f0f7a4ee711c5a85239af4f2791955f1b4de078f95baba840d7c4647d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-07cbab2707e7245c",
+      "path": "scripts/test-production-writer-fence.py",
+      "sha256": "3c3b0a2188e17640376802abd576dd7d3ee9844a411cdb4a6e6d117fec6bfeb5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21998,7 +22012,7 @@
     },
     {
       "path": "formal/system/release-journal.md",
-      "sha256": "e650986f6115c9a898799386872676e70ffa4df6b9e01d7cf261865e81b77929",
+      "sha256": "85fa80a899d3b67f8a9c29a2b0060cd79d16d75a5bb63b95906f735b3a2e4d66",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22012,7 +22026,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "680b5488c5ca6a717d7aa1823f7bdc732d89f46bae1f517f38f494bf0e289f8a",
+      "sha256": "18f0f2e2de3acb69c4cb8cfb73618c673562a4b2ca3c4f640ffe4c1128af29b7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
