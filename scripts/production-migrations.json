@@ -925,6 +925,11 @@
       "id": "2026-10-05_ticket_inclusive_tax",
       "path": "tdf-hq/sql/2026-10-05_ticket_inclusive_tax.sql",
       "introducedBy": "ba309ec13b2b9abb0bfb46fd17b2d0e66aa5e0fb"
+    },
+    {
+      "id": "2026-10-06_ticket_refund_allocation",
+      "path": "tdf-hq/sql/2026-10-06_ticket_refund_allocation.sql",
+      "introducedBy": "507cb9eb95b4b2efe1cae746e345621e5bc730ca"
     }
   ]
 }

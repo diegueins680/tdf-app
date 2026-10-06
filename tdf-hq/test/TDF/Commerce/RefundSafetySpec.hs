@@ -20,10 +20,27 @@ import qualified Test.QuickCheck as QC
 
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.RefundStore as Refund
+import qualified TDF.Ticketing.Refund as TicketRefund
 import qualified TDF.Commerce.StateMachine as State
 
 spec :: Spec
 spec = describe "refund-safety money invariants" $ do
+  it "partitions every Int64 ticket total without overflow or order-dependent cents" $
+    QC.withMaxSuccess 1000 $
+      QC.forAll (QC.choose (1,100) :: QC.Gen Int64) $ \count ->
+      QC.forAll (QC.choose (count,maxBound)) $ \total ->
+        case TicketRefund.ticketRefundAmounts total [count,count-1..1] of
+          Left _ -> QC.property False
+          Right amounts -> QC.conjoin
+            [ sum (map (toInteger . snd) amounts) QC.=== toInteger total
+            , QC.property (all ((>0) . snd) amounts)
+            , TicketRefund.ticketRefundAmounts total [1..count] QC.=== Right amounts
+            , QC.property (maximum (map snd amounts) - minimum (map snd amounts) <= 1)
+            ]
+  it "rejects empty, duplicated, underfunded and oversized ticket selections" $
+    forM_ [(20,[]),(20,[1,1]),(1,[1,2]),(200,[1..101]),(20,[0])] $ \(total,keys) ->
+      TicketRefund.ticketRefundAmounts total keys `shouldSatisfy` isLeft
+
   it "conserves cumulative ticket components without negative rounding adjustments" $
     QC.withMaxSuccess 1000 $
       QC.forAll (QC.choose (1,maxBound) :: QC.Gen Int64) $ \total ->

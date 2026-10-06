@@ -1550,6 +1550,8 @@
       "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history_rollback.sql",
       "tdf-hq/sql/2026-10-05_ticket_transfer_deadline.sql",
       "tdf-hq/sql/2026-10-05_ticket_transfer_deadline_rollback.sql",
+      "tdf-hq/sql/2026-10-06_ticket_refund_allocation.sql",
+      "tdf-hq/sql/2026-10-06_ticket_refund_allocation_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -1764,6 +1766,7 @@
       "tdf-hq/src/TDF/Ticketing/Admission.hs",
       "tdf-hq/src/TDF/Ticketing/Confirmation.hs",
       "tdf-hq/src/TDF/Ticketing/Inventory.hs",
+      "tdf-hq/src/TDF/Ticketing/Refund.hs",
       "tdf-hq/src/TDF/Ticketing/Transfer.hs",
       "tdf-hq/src/TDF/Trials/API.hs",
       "tdf-hq/src/TDF/Trials/DTO.hs",
@@ -2832,7 +2835,7 @@
     {
       "id": "SURFACE-e4c6bf3c31cac943",
       "path": "scripts/__tests__/fixtures/provider-retry-ledger-base.sql",
-      "sha256": "68b93057610625f4d12ef71fb128f58950e6efb3d871b0e7d244c177c2858629",
+      "sha256": "a5abf1a16499fea32d8cf837491501c399104bb1baa66119521c0a970db14444",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3042,7 +3045,7 @@
     {
       "id": "SURFACE-d8883a8baef05202",
       "path": "scripts/__tests__/ticket-admission-model.test.mjs",
-      "sha256": "b18f70f304b0ed5b37f7709f49d50862ac60b2d71fa9f58ad18e9844a1f7e586",
+      "sha256": "1ead83c5f84560ccf0e9428fafc0ace7eb5b7a8c374af20933a786b343561f56",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3732,7 +3735,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "a149bc06cdf1baa3bb5a48430095964435958489648c24d982f17b0ab1cb6d5c",
+      "sha256": "a14762bdc0c420c0cfc791e6201c3d931b04b6863957fcdc47b528c798cf3877",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4614,7 +4617,7 @@
     {
       "id": "SURFACE-1aa70e99c086e23f",
       "path": "scripts/test-provider-retry-runtime.sh",
-      "sha256": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
+      "sha256": "7502bf8541129eaf6a6e916e000ab055ddcbd119b61ba57be841bbaf40ac1b13",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11428,6 +11431,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-306d9974bb1e0aa3",
+      "path": "tdf-hq/sql/2026-10-06_ticket_refund_allocation.sql",
+      "sha256": "663584fe36237bbc6445961b2820165d50be8acd6502d820b60a1c5c7cad08f0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-53cadce51dcf404a",
+      "path": "tdf-hq/sql/2026-10-06_ticket_refund_allocation_rollback.sql",
+      "sha256": "122da89f6fba38f427f2597a7e571c511f3742c1baf9059bebf1fda210e3f184",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -12712,6 +12727,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-cf5c4df379b4411b",
+      "path": "tdf-hq/src/TDF/Ticketing/Refund.hs",
+      "sha256": "667fcb0ff956ebf60ca37b4fc73454278ff100afc68260a0d439b19a891b6c73",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-8ee74c413adf99d2",
       "path": "tdf-hq/src/TDF/Ticketing/Transfer.hs",
       "sha256": "1a97ef0a0fea72f14df03fec59336faf3eac4eccb89a665e32cb1605722dfbe4",
@@ -12804,7 +12825,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "c2f2de27bae619934ebd0f05e680e15c4990f5101478ba08587786d94f9a240c",
+      "sha256": "3ad639efc62c357f8b94cd4c11a1cb5bfd4174f51712cadc5c7c31a86d7aa500",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12900,7 +12921,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "c019e7c60492b9d55fa722dff5f2a153ebb8c226147025d42d21aedcf383a604",
+      "sha256": "e5e153a0e36c7f872b3591037cc0830036d6033335f98ac080d3214cd2eaf63b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12912,7 +12933,7 @@
     {
       "id": "SURFACE-c27282be2474402d",
       "path": "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs",
-      "sha256": "f7ee8051627777f516cac14b79d41d09eab2e6ac37aaf4b97e89fcbd51469c41",
+      "sha256": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21550,7 +21571,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "ead714afe13c748dbeb41a11d759ab8f956e135e39737734f4c53881d899eaa6",
+      "sha256": "991d5de36b2df0a9fad1496838e9e58a5429ee2b128857ea64a3160defc1b465",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -21613,7 +21634,7 @@
     },
     {
       "path": "formal/ticket-admission/README.md",
-      "sha256": "b7d358f5d51c12f09af9964e6fd86c22a5e65502dcf7f82b60e6663b967d35e9",
+      "sha256": "d2ab48a46110a997b88ff2c82d8d0e96392bf9667e2fb0f7c26459b100026c42",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

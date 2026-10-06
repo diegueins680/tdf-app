@@ -25,3 +25,32 @@ Order quantity uses the existing versioned checkout policy's `max_tickets_per_or
 The storefront exposes optional `maxTicketsPerOrder` for gradual client rollout; an older backend omits it and clients retain the legacy limit. UI tests bypass HTML validation to check the application guard and exercise the exact boundary. The real PostgreSQL migration test checks boundary acceptance, oversized rejection with transactional inventory rollback, approval/retirement immutability, migration replay and guarded rollback. These are per-order limits, not proof of a cumulative identity-based buyer quota or a payment-provider purchase. Event 141's approved value is four, but its commercial policy remains inactive/unconfigured until the fiscal and provider gates are resolved.
 
 The shared lock and database constraint choices follow [PostgreSQL row locking](https://www.postgresql.org/docs/17/explicit-locking.html#LOCKING-ROWS) and [constraints](https://www.postgresql.org/docs/17/ddl-constraints.html); cross-table authority uses a trigger, not a CHECK expression that reads another table.
+
+Per-ticket refund projection uses `TDF.Ticketing.Refund` around the existing
+`RefundStore`. The request wrapper locks event/order/tickets before creating the
+canonical financial reservation, so it shares admission/transfer lock ordering.
+A full-ticket selection uses deterministic ID ordering to partition the immutable
+order total, including remainder cents, without overflow. Each selected unused,
+untransferred ticket becomes `refund_pending`; admission and transfer reject it.
+Unknown provider outcomes retain this fence. Only pre-execution canonical
+cancellation restores issuance. Verified completion commits ledger, internal
+credit note, ticket revocation and one inventory release together. Partial refunds
+leave the other tickets paid/issued; a replay cannot release capacity twice.
+An immutable allocation audit and partial unique index prevent competing active
+allocations. Used history cannot be rolled back or deleted.
+
+The finite two-ticket model covers reservation, admission, processing, cancellation
+and completion. Its three deliberate mutants permit a scan during reservation,
+release inventory twice, or cancel uncertain processing; each violates an invariant.
+Actual PostgreSQL tests execute the Haskell financial and ticket stores, including
+concurrent requests/scans/completions and inventory-drift rollback. The provider
+fixture uses a synthetic payment and reduced schema; it does not replace official
+sandbox or full production-schema/API qualification.
+
+This module is an internal primitive: the existing organizer refund endpoint,
+original-method provider execution, per-ticket selection UI and known-refund webhook
+reconciliation still require integration before activation. Arbitrary external
+refunds retain the existing whole-order review fence. Provider requests must use
+the original canonical refund UUID as the stable
+[PayPal idempotency key](https://developer.paypal.com/api/rest/reference/idempotency/)
+and preserve uncertain results; automatic re-POST with a new identity is forbidden.
