@@ -7385,7 +7385,7 @@
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "98a7acba22874c5f446b27c84cb6497ef4da8d05ead57a87cdaf843ac6de8da1",
+    "scripts/verify-event-operations-formal.sh": "1b7b82c966f649adc69ebbb39964a0b88eed0e64eaefc36c33f6ff535c8cb0a4",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -17156,7 +17156,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "98a7acba22874c5f446b27c84cb6497ef4da8d05ead57a87cdaf843ac6de8da1",
+      "sha256": "1b7b82c966f649adc69ebbb39964a0b88eed0e64eaefc36c33f6ff535c8cb0a4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

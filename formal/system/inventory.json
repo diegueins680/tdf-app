@@ -5288,7 +5288,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "98a7acba22874c5f446b27c84cb6497ef4da8d05ead57a87cdaf843ac6de8da1",
+      "sha256": "1b7b82c966f649adc69ebbb39964a0b88eed0e64eaefc36c33f6ff535c8cb0a4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
