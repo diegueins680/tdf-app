@@ -2192,6 +2192,8 @@ socialEventIndirectTicketHandlersFor user =
                     :<|> listRefundsHandler
                     :<|> _approveRefund
                     :<|> rejectRefundHandler
+                    :<|> _listManualPayments
+                    :<|> _reviewManualPayment
                     :<|> _createTransfer
                     :<|> _listTransfers
                     :<|> acceptTransferHandler

@@ -53,6 +53,8 @@ module TDF.DTO.SocialEventsDTO (
     RefundRequestDTO (..),
     RefundDTO (..),
     RejectionReasonDTO (..),
+    TicketManualPaymentDTO (..),
+    TicketManualPaymentReviewDTO (..),
     TicketTransferCreateDTO (..),
     TicketTransferDTO (..),
     WaitlistJoinDTO (..),
@@ -1420,6 +1422,40 @@ instance FromJSON RejectionReasonDTO where
     parseJSON = withObject "RejectionReasonDTO" $ \o -> do
         rejectUnknownObjectFields "RejectionReasonDTO" ["rrReason"] o
         RejectionReasonDTO <$> o .: "rrReason"
+
+-- | Staff view of a public ticket order paid by manual bank transfer.
+data TicketManualPaymentDTO = TicketManualPaymentDTO
+    { tmpOrderId :: Text
+    , tmpPaymentReference :: Text
+    , tmpBuyerName :: Maybe Text
+    , tmpBuyerEmail :: Maybe Text
+    , tmpQuantity :: Int
+    , tmpAmountMinor :: Int
+    , tmpCurrency :: Text
+    , tmpEvidenceStatus :: Text
+    , tmpCustomerReference :: Maybe Text
+    , tmpSubmittedAt :: Maybe UTCTime
+    , tmpReviewedAt :: Maybe UTCTime
+    , tmpReviewNotes :: Maybe Text
+    , tmpCheckoutStatus :: Text
+    , tmpHoldExpiresAt :: UTCTime
+    }
+    deriving (Show, Eq, Generic)
+
+instance ToJSON TicketManualPaymentDTO
+instance FromJSON TicketManualPaymentDTO
+
+data TicketManualPaymentReviewDTO = TicketManualPaymentReviewDTO
+    { tmprAction :: Text
+    , tmprNotes :: Text
+    }
+    deriving (Show, Eq, Generic)
+
+instance ToJSON TicketManualPaymentReviewDTO
+instance FromJSON TicketManualPaymentReviewDTO where
+    parseJSON = withObject "TicketManualPaymentReviewDTO" $ \o -> do
+        rejectUnknownObjectFields "TicketManualPaymentReviewDTO" ["tmprAction", "tmprNotes"] o
+        TicketManualPaymentReviewDTO <$> o .: "tmprAction" <*> o .: "tmprNotes"
 
 -- =============================================================================
 -- TICKET TRANSFERS

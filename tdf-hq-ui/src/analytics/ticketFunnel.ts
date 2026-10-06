@@ -9,7 +9,7 @@ export interface TicketFunnelObservation {
   eventId: number;
   tierId?: number;
   quantity?: number;
-  provider?: 'paypal' | 'datafast' | 'placetopay' | 'payphone';
+  provider?: 'paypal' | 'datafast' | 'placetopay' | 'payphone' | 'bank_transfer';
   hasPromotion?: boolean;
   // Local deduplication only: never included in an analytics payload.
   privateScope?: string;
@@ -67,7 +67,7 @@ export function createTicketFunnelTracker(
     };
     if (positiveInteger(observation.tierId)) properties['tier_id'] = observation.tierId;
     if (positiveInteger(observation.quantity) && observation.quantity <= 100) properties['quantity'] = observation.quantity;
-    if (['paypal', 'datafast', 'placetopay', 'payphone'].includes(observation.provider ?? '')) {
+    if (['paypal', 'datafast', 'placetopay', 'payphone', 'bank_transfer'].includes(observation.provider ?? '')) {
       properties['provider'] = observation.provider;
     }
     if (typeof observation.hasPromotion === 'boolean') properties['has_promotion'] = observation.hasPromotion;

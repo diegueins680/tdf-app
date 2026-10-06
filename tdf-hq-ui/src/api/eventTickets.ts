@@ -8,6 +8,7 @@ export type PublicEventTicketCheckoutRequest = components['schemas']['PublicEven
 export type PublicEventTicketQuote = components['schemas']['PublicEventTicketQuote'];
 export type PublicEventTicket = components['schemas']['PublicEventTicket'];
 export type PublicEventTicketCheckout = components['schemas']['PublicEventTicketCheckout'];
+export type PublicEventTicketBankTransfer = components['schemas']['PublicEventTicketBankTransfer'];
 
 const requirePositiveInteger = (value: number, field: string): number => {
   if (!Number.isSafeInteger(value) || value <= 0) {
@@ -72,6 +73,22 @@ export const EventTickets = {
   ) => post<PublicEventTicketCheckout>(
     `${orderBase(eventId, orderId)}/paypal/capture`,
     { paypalOrderId },
+    lookupHeaders(lookupToken),
+  ),
+  selectBankTransfer: (eventId: number, orderId: number, lookupToken: string) =>
+    post<PublicEventTicketCheckout>(
+      `${orderBase(eventId, orderId)}/bank-transfer`,
+      {},
+      lookupHeaders(lookupToken),
+    ),
+  submitBankTransferEvidence: (
+    eventId: number,
+    orderId: number,
+    customerReference: string,
+    lookupToken: string,
+  ) => post<PublicEventTicketCheckout>(
+    `${orderBase(eventId, orderId)}/bank-transfer/evidence`,
+    { customerReference },
     lookupHeaders(lookupToken),
   ),
 };
