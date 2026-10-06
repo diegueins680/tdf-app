@@ -7575,7 +7575,7 @@
     "scripts/test-physical-postgres-recovery.py": "b68fa3e91d63524ebe21fab0a60f219e80165056c80624e309a1677a077f28b2",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-production-recovery-sources.py": "4021b8fdbb5dc8cebe73c594201149f1207edd89faadb0631e2fd7220898f2dc",
-    "scripts/test-production-writer-fence-linux.py": "d528d0ef0848a68d703e4ffebb8fad9dd38214f4b2c096e5ae9a7d83c26729ff",
+    "scripts/test-production-writer-fence-linux.py": "1fb6eab84bd2c923ea75677704dbfea36b34c43b6d3fb3e8371134066d04e19b",
     "scripts/test-production-writer-fence.py": "3c3b0a2188e17640376802abd576dd7d3ee9844a411cdb4a6e6d117fec6bfeb5",
     "scripts/test-provider-identity.sh": "20b88f842871ab63465a119efa54b0b492c82aa42e00c96c28ba26aafeeecf32",
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
@@ -7601,7 +7601,7 @@
     "scripts/test-ticket-confirmation-smtp.py": "ab36fc612102863669f18a8b12db86ee4192f77d56bbad31b5dc7aa3a5834743",
     "scripts/test-ticket-confirmation.sh": "a7557190ab0174d23944f013e0aa0ea6a64dc564f37f6fd626a9182fb1e1f2e6",
     "scripts/test-trial-identity.sh": "29e6c3a4cdb56b9c6f13fadf86991d97e3b5e9e93392ac6951c742f3b32a2d2b",
-    "scripts/test-writer-fence-fixture-ownership.py": "da855490f9f2f71efcbf6dd906fcd367c384faa2a551b07cdbf822e85205908a",
+    "scripts/test-writer-fence-fixture-ownership.py": "d2262902435c945bbabd292ff868cf21033d7710e790060016f7371b90452e7a",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
@@ -17287,7 +17287,7 @@
     {
       "id": "SURFACE-b42b59299d730ebb",
       "path": "scripts/test-production-writer-fence-linux.py",
-      "sha256": "d528d0ef0848a68d703e4ffebb8fad9dd38214f4b2c096e5ae9a7d83c26729ff",
+      "sha256": "1fb6eab84bd2c923ea75677704dbfea36b34c43b6d3fb3e8371134066d04e19b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -17759,7 +17759,7 @@
     {
       "id": "SURFACE-bde8e6717fb9ee2c",
       "path": "scripts/test-writer-fence-fixture-ownership.py",
-      "sha256": "da855490f9f2f71efcbf6dd906fcd367c384faa2a551b07cdbf822e85205908a",
+      "sha256": "d2262902435c945bbabd292ff868cf21033d7710e790060016f7371b90452e7a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

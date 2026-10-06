@@ -60,6 +60,23 @@ def exclusive_file(path, content):
     path.chmod(0o644)
 
 
+def normalize_empty_fixture(directory, owned):
+    """Remove inherited ACLs only from this invocation's new empty fixture.
+
+    Never normalize recovery sources or a shared parent. Hosted runners can
+    propagate default ACLs into uploads, which the archive correctly rejects.
+    """
+    with s.files.directory(str(directory), private=True) as fd:
+        current = os.fstat(fd)
+        require(owned == (current.st_dev, current.st_ino) and not os.listdir(fd))
+        attributes = set(os.listxattr(fd))
+        require(attributes <= {'system.posix_acl_access', 'system.posix_acl_default'})
+        for name in attributes:
+            os.removexattr(fd, name)
+        os.fchmod(fd, 0o700)
+        s.files.no_extended_attributes(fd)
+
+
 def preserve_owned_directory(directory, destination, owned):
     if owned is None: return
     current = directory.lstat()
@@ -318,6 +335,7 @@ def main():
         DIRECTORY.mkdir(mode=0o700)
         created = DIRECTORY.lstat()
         owned_production = (created.st_dev, created.st_ino)
+        normalize_empty_fixture(DIRECTORY, owned_production)
         (DIRECTORY/'assets').mkdir(mode=0o700)
         if actual_application:
             os.chown(DIRECTORY/'assets',1000,1000)

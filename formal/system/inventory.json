@@ -5094,7 +5094,7 @@
     {
       "id": "SURFACE-b42b59299d730ebb",
       "path": "scripts/test-production-writer-fence-linux.py",
-      "sha256": "d528d0ef0848a68d703e4ffebb8fad9dd38214f4b2c096e5ae9a7d83c26729ff",
+      "sha256": "1fb6eab84bd2c923ea75677704dbfea36b34c43b6d3fb3e8371134066d04e19b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5346,7 +5346,7 @@
     {
       "id": "SURFACE-bde8e6717fb9ee2c",
       "path": "scripts/test-writer-fence-fixture-ownership.py",
-      "sha256": "da855490f9f2f71efcbf6dd906fcd367c384faa2a551b07cdbf822e85205908a",
+      "sha256": "d2262902435c945bbabd292ff868cf21033d7710e790060016f7371b90452e7a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
