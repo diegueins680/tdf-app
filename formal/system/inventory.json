@@ -2405,7 +2405,7 @@
     {
       "id": "SURFACE-5c3fa597431eda03",
       "path": ".github/workflows/build.yml",
-      "sha256": "0b4fafaa721076cfe4974a658cfea0c736767305b22227a6633edf62651d89d4",
+      "sha256": "99429029f8454e2b5a94c9722de870957b4a3f4925cdce8f322fb984b781c1cf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4685,7 +4685,7 @@
     {
       "id": "SURFACE-6c6395b4f7b95c8e",
       "path": "scripts/test-coordinated-disposable-linux.py",
-      "sha256": "90e70ef2b3fd0944b73a9c2365e42dcef2c7d6e41b441fca2b50c6956178f1b4",
+      "sha256": "1e154fdbaefe37d5f3f1d21ebb4e9fc836f8f4e6e1fab6fca33995d1a05b5560",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5129,7 +5129,7 @@
     {
       "id": "SURFACE-b42b59299d730ebb",
       "path": "scripts/test-production-writer-fence-linux.py",
-      "sha256": "f7dfe13e79c60e7a39e75fc0e4dd4c663af79b1f9c7878c1b8593a8ae183ebe0",
+      "sha256": "bc8f887fe8e0280de77ffd3b27079262a2ff0240c4f2b4269846393bec1263b9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5381,7 +5381,7 @@
     {
       "id": "SURFACE-bde8e6717fb9ee2c",
       "path": "scripts/test-writer-fence-fixture-ownership.py",
-      "sha256": "d2262902435c945bbabd292ff868cf21033d7710e790060016f7371b90452e7a",
+      "sha256": "2b3baa150c9cef39cace797d60142ecd0bb505d21b34ab811d77c404c028ba16",
       "semanticConformance": "not-established-by-discovery"
     },
     {

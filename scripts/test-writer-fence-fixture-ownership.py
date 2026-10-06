@@ -55,6 +55,25 @@ class OwnershipTests(unittest.TestCase):
         for index in range(1,len(names)):
             with patch.dict(f.os.environ,{names[index]:'1'},clear=True),self.assertRaises(ValueError):f.validate_recovery_modes()
 
+    @unittest.skipUnless(sys.platform=='linux','Real Linux destination ACL inheritance')
+    def test_archive_parent_acl_rejects_restore_until_empty_fixture_normalized(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory).resolve();source=root/'source';source.mkdir(mode=0o700)
+            (source/'sentinel').write_bytes(b'synthetic')
+            acl=struct.pack('<I',2)+b''.join(struct.pack('<HHI',tag,perm,0xffffffff)
+                    for tag,perm in ((1,7),(4,0),(32,0)))
+            archive=root/'archive';archive.mkdir(mode=0o700)
+            manifest=f.s.files.capture(str(source),str(root/'source.tar'))
+            os.setxattr(archive,'system.posix_acl_default',acl)
+            with self.assertRaises(ValueError):
+                f.s.files.restore(str(root/'source.tar'),manifest,str(archive/'restored'))
+            self.assertTrue((archive/'restored/sentinel').exists())
+            clean=root/'new-archive';clean.mkdir(mode=0o700)
+            os.setxattr(clean,'system.posix_acl_default',acl)
+            st=clean.stat();f.normalize_empty_fixture(clean,(st.st_dev,st.st_ino))
+            f.s.files.restore(str(root/'source.tar'),manifest,str(clean/'restored'))
+            self.assertEqual((clean/'restored/sentinel').read_bytes(),b'synthetic')
+
     def test_owned_tls_trust_removed_even_when_resource_cleanup_fails(self):
         with tempfile.TemporaryDirectory() as directory:
             trust=Path(directory)/'synthetic.crt';trust.write_bytes(b'synthetic-only')
