@@ -8,6 +8,14 @@ import urllib.request
 
 DOCKER = ['env', '-u', 'DOCKER_HOST', '-u', 'DOCKER_CONTEXT', '-u', 'DOCKER_TLS_VERIFY',
           '-u', 'DOCKER_CERT_PATH', 'docker', '--host', 'unix:///var/run/docker.sock']
+COMMAND_ENV = {'PATH': '/usr/local/bin:/usr/bin:/bin', 'LANG': 'C.UTF-8'}
+DATA_DIRECTORY = '/var/lib/postgresql/data'
+# The inventory role cannot read data_directory. This fixed boolean observation
+# uses existing local peer administration; it grants no new SQL capability.
+STORAGE_SQL = """SELECT current_database()='tdf_hq' AND current_user='postgres'
+ AND inet_server_addr() IS NULL AND current_setting('port')='5432'
+ AND current_setting('transaction_read_only')='on'
+ AND current_setting('data_directory')='/var/lib/postgresql/data';"""
 
 PROJECT = 'tdf-production'
 DIRECTORY = '/opt/tdf/production'
@@ -31,7 +39,8 @@ def require(condition):
 
 
 def capture(command, input=None):
-    result = subprocess.run(command, input=input, text=True, capture_output=True, timeout=45)
+    result = subprocess.run(command, input=input, text=True, capture_output=True, timeout=45,
+                            env=COMMAND_ENV)
     # Never forward process stderr: Docker/psql errors can include configuration.
     require(result.returncode == 0 and len(result.stdout) <= 4 * 1024 * 1024)
     return result.stdout
@@ -72,6 +81,13 @@ def summarize_container(service, container):
         require(not any(container['NetworkSettings'].get('Ports', {}).values()))
         mounts = [m for m in container['Mounts'] if m['Destination'] == '/var/lib/postgresql/data']
         require(len(mounts) == 1 and mounts[0]['Type'] == 'volume' and mounts[0]['Name'] == VOLUME)
+        require(not any(m['Destination'].startswith(DATA_DIRECTORY + '/') for m in container['Mounts']))
+        settings = {}
+        for entry in container['Config']['Env']:
+            key, separator, value = entry.partition('=')
+            require(bool(separator) and key not in settings)
+            settings[key] = value
+        require(settings.get('PGDATA') == DATA_DIRECTORY)
         result['volume'] = VOLUME
     if service == 'api':
         require(set(networks) == {PROJECT + '_database', PROJECT + '_outbound'})
@@ -195,11 +211,17 @@ def summarize_database(data):
 
 def database_command(container_id):
     require(re.fullmatch(r'[a-f0-9]{64}', container_id))
-    return DOCKER + ['exec', '-i', container_id, 'env', '-u', 'PGHOSTADDR',
-            '-u', 'PGSERVICE', '-u', 'PGSERVICEFILE',
+    return DOCKER + ['exec', '-i', container_id, 'env', '-i',
+            'PATH=/usr/local/bin:/usr/bin:/bin', 'PGCONNECT_TIMEOUT=10',
             'PGOPTIONS=-c default_transaction_read_only=on -c statement_timeout=15000',
             'psql', '-X', '-h', '/var/run/postgresql', '-p', '5432', '-v', 'ON_ERROR_STOP=1',
             '-qAt', '-U', 'tdf_catalog_inventory', '-d', DATABASE]
+
+
+def verify_storage(container_id):
+    command = database_command(container_id)
+    command[command.index('-U') + 1] = 'postgres'
+    require(capture(command, input=STORAGE_SQL).strip() == 't')
 
 
 def optional_event_flags(container_id):
@@ -223,6 +245,7 @@ def inspect():
         values = json.loads(capture(DOCKER + ['inspect', ids[0]]))
         require(len(values) == 1)
         containers[service] = summarize_container(service, values[0])
+    verify_storage(containers['db']['containerId'])
     data = json.loads(capture(database_command(containers['db']['containerId']), input=SQL))
     data['eventOperationFlags'] = optional_event_flags(containers['db']['containerId'])
     with urllib.request.urlopen('https://api.tdfrecords.net/version', timeout=15) as response:

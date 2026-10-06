@@ -180,7 +180,7 @@ test('@critical synthetic administrator can see all-report controls and prepare 
     ifsTestExecutionId: null, ifsDuplicateOf: null,
     ifsCreatedAt: '2026-08-21T13:00:00Z', ifsUpdatedAt: '2026-08-21T13:00:00Z',
   };
-  await page.route('**/feedback/internal/legacy', (route) => route.fulfill({ json: [] }));
+  await page.route('**/feedback/internal/legacy*', (route) => route.fulfill({ json: [] }));
   await page.route('**/feedback/internal?*', (route) => route.fulfill({ json: [report] }));
   await page.route('**/feedback/internal', (route) => route.fulfill({ json: [report] }));
   await page.route(`**/feedback/internal/${reportId}`, async (route) => {
@@ -203,6 +203,7 @@ test('@critical synthetic administrator can see all-report controls and prepare 
   await page.goto('/feedback/interno');
   await expect(page.getByRole('heading', { name: 'Reportes internos de pruebas' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'CSV' })).toBeVisible();
+  await expect(page.getByText('No hay solicitudes en esta página.')).toBeVisible();
   await expect(page.getByText('Reportó: Martina Salazar')).toBeVisible();
   await page.getByRole('link', { name: 'Abrir seguimiento' }).click();
   await expect(page.getByRole('heading', { name: 'Triage administrativo' })).toBeVisible();

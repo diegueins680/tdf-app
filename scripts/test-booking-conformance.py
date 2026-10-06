@@ -708,8 +708,13 @@ try:
           request('/radio/presence', {'rpuStreamUrl': public_url}, method='POST')[0] == 200)
 
     sys.path.insert(0, str(ROOT / 'scripts/lib'))
+    from invoice_receipt_conformance import verify_invoice_receipts
+    verify_invoice_receipts(sql, request, check, ENV, NAME, OUTPUT, actors)
     from operations_conformance import verify_operations
     verify_operations(sql, request, check, ENV, NAME, OUTPUT, actors)
+
+    from readiness_conformance import verify_readiness
+    verify_readiness(run, NAME, http_port, check)
 
     result = {'revision': revision, 'workingTreeDirty': dirty, 'binarySha256': hashlib.sha256(BINARY.read_bytes()).hexdigest(), 'checks': checks, 'status': 'passed'}
 finally:

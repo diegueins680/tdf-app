@@ -698,6 +698,31 @@ DECLARE
   ticketing_table TEXT;
   enrichment_table TEXT;
 BEGIN
+  IF to_regclass('public.receipt_number_counter') IS NULL THEN
+    RAISE EXCEPTION 'Receipt number allocation counter is missing';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM (VALUES
+      ('receipt', 'unique_receipt_invoice', 'UNIQUE (invoice_id)'),
+      ('invoice', 'invoice_receipt_snapshot_identity', 'UNIQUE (id, currency, subtotal_cents, tax_cents, total_cents)'),
+      ('receipt', 'receipt_invoice_snapshot', 'FOREIGN KEY (invoice_id, currency, subtotal_cents, tax_cents, total_cents) REFERENCES invoice(id, currency, subtotal_cents, tax_cents, total_cents) ON UPDATE RESTRICT ON DELETE RESTRICT')
+    ) expected(relation_name, constraint_name, definition)
+    WHERE NOT EXISTS (
+      SELECT 1 FROM pg_constraint c
+      WHERE c.conrelid=to_regclass('public.' || expected.relation_name)
+        AND c.conname=expected.constraint_name AND c.convalidated
+        AND NOT c.condeferrable AND pg_get_constraintdef(c.oid)=expected.definition
+    )
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conrelid='public.receipt'::regclass
+      AND conname='receipt_nonnegative_snapshot' AND contype='c' AND convalidated
+      AND pg_get_expr(conbin,conrelid) IN (
+        '((currency ~ ''^[A-Z]{3}$''::text) AND (subtotal_cents >= 0) AND (tax_cents >= 0) AND ((total_cents)::numeric = ((subtotal_cents)::numeric + (tax_cents)::numeric)))',
+        '(((currency)::text ~ ''^[A-Z]{3}$''::text) AND (subtotal_cents >= 0) AND (tax_cents >= 0) AND ((total_cents)::numeric = ((subtotal_cents)::numeric + (tax_cents)::numeric)))'
+      )
+  ) THEN
+    RAISE EXCEPTION 'Invoice receipt snapshot authority is missing or changed';
+  END IF;
   IF EXISTS (
     SELECT 1 FROM (VALUES
       ('commerce_checkout_session', 'trg_commerce_checkout_total', 'commerce_check_checkout_line_total', true, 5),

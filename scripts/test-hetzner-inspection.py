@@ -17,7 +17,7 @@ SECRET = 'synthetic-credential-MUST-NOT-APPEAR'
 def container(service='api'):
     return {'Id': 'a'*64, 'Image': 'sha256:'+'b'*64,
             'Config': {'Image': 'ghcr.io/example/image@sha256:'+'c'*64,
-                       'Env': ['DATABASE_URL='+SECRET, 'PASSWORD='+SECRET, 'APP_ENV=production',
+                       'Env': ['PGDATA=/var/lib/postgresql/data', 'DATABASE_URL='+SECRET, 'PASSWORD='+SECRET, 'APP_ENV=production',
                                'ALLOW_ALL_ORIGINS=true', 'ALLOWED_ORIGINS=https://www.tdfrecords.net'],
                        'Labels': {'com.docker.compose.project': module.PROJECT,
                                   'com.docker.compose.service': service,
@@ -161,12 +161,31 @@ class Boundaries(unittest.TestCase):
     def test_actual_database_command_pins_socket_and_clears_routing(self):
         command=module.database_command('a'*64)
         self.assertEqual(command[:len(module.DOCKER)], module.DOCKER)
-        self.assertEqual(command[len(module.DOCKER):len(module.DOCKER)+7], ['exec','-i','a'*64,'env','-u','PGHOSTADDR','-u'])
-        for variable in ['PGHOSTADDR','PGSERVICE','PGSERVICEFILE']:
-            self.assertEqual(command[command.index(variable)-1],'-u')
+        self.assertEqual(command[len(module.DOCKER):len(module.DOCKER)+5], ['exec','-i','a'*64,'env','-i'])
         self.assertEqual(command[command.index('-h')+1],'/var/run/postgresql')
         self.assertEqual(command[command.index('-p')+1],'5432')
         self.assertEqual(command[command.index('-U')+1],'tdf_catalog_inventory')
         self.assertIn('inet_server_addr() IS NULL',module.SQL)
+
+    def test_shadowed_or_redirected_database_storage_rejected(self):
+        for child in ['base', 'pg_wal', 'alternate']:
+            value = container('db')
+            value['Mounts'].append({'Destination': module.DATA_DIRECTORY + '/' + child,
+                                    'Type': 'volume', 'Name': 'foreign'})
+            with self.assertRaises(ValueError): module.summarize_container('db', value)
+        for setting in [[], ['PGDATA=/alternate'], ['PGDATA='+module.DATA_DIRECTORY]*2]:
+            value = container('db'); value['Config']['Env'] = setting
+            with self.assertRaises(ValueError): module.summarize_container('db', value)
+
+    def test_effective_server_directory_must_pass_fixed_boolean_observation(self):
+        for result in ['f', '', 't\nf', 'private-error']:
+            with patch.object(module, 'capture', return_value=result), self.assertRaises(ValueError):
+                module.verify_storage('a'*64)
+        with patch.object(module, 'capture', return_value='t\n') as capture:
+            module.verify_storage('a'*64)
+            command = capture.call_args.args[0]
+            self.assertEqual(command[command.index('-U')+1], 'postgres')
+            self.assertEqual(capture.call_args.kwargs['input'], module.STORAGE_SQL)
+            self.assertIn("current_setting('data_directory')='/var/lib/postgresql/data'", module.STORAGE_SQL)
 
 if __name__=='__main__':unittest.main()

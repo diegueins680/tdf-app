@@ -11,11 +11,11 @@
   "android": {
     "status": "closed_testing",
     "capacity": "available",
-    "verifiedAt": "2026-10-05T12:37:34.407635Z",
+    "verifiedAt": "2026-10-05T21:13:38.053080+00:00",
     "validUntil": "2026-10-12T12:37:34.407635Z",
     "admission": "approval_required",
     "url": "https://play.google.com/apps/testing/com.tdf.records",
     "version": "1.0.1",
-    "build": "23"
+    "build": "24"
   }
 }

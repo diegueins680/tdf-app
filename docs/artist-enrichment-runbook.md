@@ -212,62 +212,6 @@ run succeeded. A successful return requires the final backend update to have
 completed. Process termination may leave a running lease; stale-lease recovery
 and external-provider exactly-once effects are separate obligations.
 
-1. Record the exact current release, immutable image and Hetzner deployment.
-2. Follow the backup, restore, migration-ancestry and recovery gates in
-   [the current portable deployment runbook](../ops/hetzner/README.md).
-   Preserve a verified off-host logical backup and the current production data.
-3. Restore the custom-format PostgreSQL dump into an isolated instance, apply
-   the forward migration twice, execute a full dry-run against the clone, apply
-   the rollback, and verify legacy profile counts and representative rows.
-4. Run all tests and inspect dry-run counts, automatic candidates, corrections,
-   ambiguity queue, and expected zero deletions.
-5. Obtain the required independent review and checks for the immutable release.
-6. An authorized operator uses the current guarded deployment/recovery procedure;
-   do not run the retired Fly release lane or restore service on its stale data.
-7. Execute production enrichment in batches of 25 first. Check errors, duplicate
-   slugs, candidates, public API responses, and frontend pages before raising the
-   batch size.
-
-Useful read-only checks:
-
-```bash
-curl -fsS https://api.tdfrecords.net/health
-curl -fsS https://api.tdfrecords.net/version
-```
-
-Do not paste a bearer token into shell history. Export it through the secure
-operator environment, then omit it from captured command output.
-
-## Rollback
-
-Application rollback is preferred when the additive schema is healthy:
-
-1. Stop production enrichment by disabling the workflow and setting
-   `ARTIST_ENRICHMENT_ENABLED=false` in the current backend configuration, using
-   an authorized maintenance operation.
-2. Use the reviewed compatible recovery image against the current Hetzner
-   database, following the portable recovery runbook; verify `/health` and
-   exact `/version`. Never route traffic back to the stale Fly copy.
-3. Leave the additive tables intact so old application revisions continue to
-   ignore them and audit evidence remains available.
-
-Schema rollback is for a confirmed schema defect and requires a maintenance
-window:
-
-1. Export all eight enrichment tables and verify that export.
-2. Apply `tdf-hq/sql/2026-08-05_artist_enrichment_rollback.sql` with
-   `ON_ERROR_STOP=1`.
-3. Verify legacy `artist_profile`, `party`, releases, bookings, and public artist
-   endpoints.
-4. If legacy data was affected or schema rollback fails, restore the verified
-   current PostgreSQL backup through the guarded recovery procedure. Preserve
-   post-cutover writes; a provider reversal needs a new freeze and reverse
-   migration, not a restore of the retired Fly snapshot.
-
-Never restore a database or volume over production without first confirming the
-exact app, volume, snapshot/dump identifier, recovery point, and maintenance
-window.
-
 ## Tests
 
 ```bash

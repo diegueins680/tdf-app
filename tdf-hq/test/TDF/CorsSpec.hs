@@ -1,14 +1,19 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeOperators #-}
 module TDF.CorsSpec (spec, main) where
 
 import Control.Exception (IOException, bracket)
 import Control.Monad (forM_)
 import Data.List (isInfixOf)
+import Data.Proxy (Proxy(..))
 import qualified Data.ByteString.Char8 as BS
 import Network.Wai (defaultRequest, requestHeaders)
 import qualified Network.Wai as Wai
 import Network.Wai.Internal (ResponseReceived (..))
 import qualified Network.HTTP.Types as HTTPTypes
+import qualified Network.HTTP.Types.URI as URI
+import qualified Servant
 import System.Environment (lookupEnv, setEnv, unsetEnv)
 import Test.Hspec
 import TDF.Cors (corsPolicy)
@@ -115,6 +120,30 @@ spec = do
                     lookup "Access-Control-Allow-Origin" (Wai.responseHeaders response) `shouldBe` Just "https://approved.tdfui.pages.dev"
                     pure ResponseReceived
                 pure ()
+
+
+        -- Use Servant's real route matcher, not a stand-in WAI handler. Empty
+        -- trailing segments are accepted by the route and must not bypass CSRF.
+        forM_ ["/feedback/account-deletion", "/feedback/account-deletion/"] $ \path -> do
+            let application = Servant.serve
+                    (Proxy :: Proxy ("feedback" Servant.:> "account-deletion" Servant.:> Servant.Post '[Servant.JSON] Servant.NoContent))
+                    (pure Servant.NoContent)
+                request headers = defaultRequest
+                    { Wai.requestMethod = "POST", Wai.rawPathInfo = path
+                    , Wai.pathInfo = URI.decodePathSegments path, requestHeaders = headers }
+                permissive = [("APP_ENV", Just "development"), ("ALLOW_ALL_ORIGINS", Just "true")]
+                check headers expected = withProductionCors permissive $ do
+                    middleware <- corsPolicy
+                    _ <- middleware application (request headers) $ \response -> do
+                        Wai.responseStatus response `shouldBe` expected
+                        pure ResponseReceived
+                    pure ()
+            it ("requires deletion proof at actual Servant route " <> show path) $
+                check [] HTTPTypes.status403
+            it ("rejects hostile deletion origin despite permissive CORS at " <> show path) $
+                check [("Origin", "https://attacker.example"), ("X-Requested-With", "TDF-Account-Deletion")] HTTPTypes.status403
+            it ("routes valid deletion proof through Servant at " <> show path) $
+                check [("X-Requested-With", "TDF-Account-Deletion")] HTTPTypes.status200
 
 
 withEnvOverrides :: [(String, Maybe String)] -> IO a -> IO a

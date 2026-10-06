@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import assert from 'node:assert/strict';
+import { verifyAccountDeletion } from './test-account-deletion-api.mjs';
 
 const apiBase = (process.env.TDF_AUDIT_E2E_API_BASE ?? '').replace(/\/$/, '');
 const password = process.env.TDF_AUDIT_E2E_PASSWORD ?? '';
@@ -9,8 +10,8 @@ const otherInternEmail = process.env.TDF_AUDIT_E2E_OTHER_INTERN_EMAIL ?? '';
 assert.match(apiBase, /^http:\/\/(127\.0\.0\.1|localhost):\d+$/, 'E2E API must be an explicit loopback HTTP endpoint');
 assert.ok(password.length >= 16, 'A runtime-only synthetic-persona password is required');
 
-async function request(path, { token, method = 'GET', json, body, expected = 200 } = {}) {
-  const headers = {};
+async function request(path, { token, method = 'GET', json, body, expected = 200, headers: extraHeaders = {} } = {}) {
+  const headers = { ...extraHeaders };
   if (token) headers.Authorization = `Bearer ${token}`;
   if (json !== undefined) headers['Content-Type'] = 'application/json';
   const response = await fetch(`${apiBase}${path}`, {
@@ -50,6 +51,21 @@ const intern = await login('per-11.martina@persona.test');
 const otherIntern = otherInternEmail ? await login(otherInternEmail) : null;
 assert.ok(admin.roles.includes('Studio Manager'));
 assert.ok(intern.roles.includes('Intern'));
+
+if (process.env.TDF_AUDIT_E2E_EXPECT_MISSING_MODULE === '1') {
+  const session = await request('/session', { token: admin.token });
+  assert.ok(session.roles.includes('Studio Manager'), 'Role must remain granted');
+  assert.ok(Array.isArray(session.modules));
+  assert.ok(!session.modules.some(module => module.toLowerCase() === 'internships'), 'The canonical module grant must actually be absent');
+  await request('/feedback/internal/legacy', { token: admin.token, expected: 403 });
+  await request('/feedback/internal/legacy?accountDeletionOnly=true&offset=0', { token: admin.token, expected: 403 });
+  await request('/feedback/internal/account-deletion/00000000-0000-4000-8000-000000000001', {
+    token: admin.token, method: 'POST', expected: 403,
+    json: { adrOutcome: 'completed', adrNote: 'Synthetic forbidden resolution; must not reach object lookup.' },
+  });
+  console.log('Account deletion module boundary passed: role retained, canonical module revoked, queue and resolution denied');
+  process.exit(0);
+}
 
 const catalogs = await request('/catalogs/batch?code=feedback-categories&code=feedback-severities&locale=es&page=1&pageSize=100');
 const feedbackCategories = catalogs.catalogs.find((entry) => entry.catalog.code === 'feedback-categories')?.items ?? [];
@@ -98,6 +114,7 @@ publicFeedback.append('consent', 'true');
 await request('/feedback', { method: 'POST', body: publicFeedback, expected: 200 });
 const legacyFeedback = await request('/feedback/internal/legacy', { token: admin.token });
 assert.ok(legacyFeedback.some((entry) => entry.lfdTitle === 'E2E — compatibilidad del feedback público'));
+await verifyAccountDeletion({ request, requestStatus, admin, account: intern, categoryId: ideaCategory.id, severityId: severity.id });
 
 const activeProject = await request('/internships/projects', {
   token: admin.token,

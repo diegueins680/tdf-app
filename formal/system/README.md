@@ -7,6 +7,18 @@ Historical green results are not current-candidate evidence.
 
 ## Canonical package
 
+- [physical-recovery.md](physical-recovery.md): verified cold PG17 copy startup, isolated configuration and explicit coordinated-recovery exclusions.
+
+- [recovery-envelope.md](recovery-envelope.md): sealed executable encryption/decryption and explicit off-host recovery obligations.
+
+- [recovery-files.md](recovery-files.md): private content/metadata replay and remaining coordinated bundle obligations.
+
+- [isolated-canary.md](isolated-canary.md): candidate startup/identity/failure-recovery on a disconnected disposable restore, with explicit deployment exclusions.
+
+- [readiness.md](readiness.md): fresh database probe, fixed unavailable responses and cancellation/deadline controls.
+
+- [logical-backup.md](logical-backup.md): scheduled archive source admission, private completion evidence and explicit recovery exclusions.
+
 - [mobile-query-isolation.md](mobile-query-isolation.md): shipped Mobile per-occurrence query cache isolation and actual-screen late-response regression.
 
 - [session-query-isolation.md](session-query-isolation.md): web account-switch cache isolation, request epochs and bounded negative controls.
@@ -291,3 +303,12 @@ contracts remain at `docs/analytics.md` and `docs/events/ticket-page-metadata.md
 This checkpoint does not change the current shipped root Mobile23948ec5 baseline
 or the compatible audite7cb33eb source. Later Mobile-main merges are not silently
 substituted for a shipped root gitlink.
+
+Main7b801dedb97f034355d4ddfe8f69762a0632a021 (PR485) subsequently merged
+the scheme-like campaign-label correction. It is retained by normal merge;
+PRIV-ANALYTICS-001 keeps the same serializer boundary and mapped regression suite.
+
+Invoice receipt authority and bounded verification scope: [invoice-receipts.md](invoice-receipts.md) (`PAY-INVOICE-001`). The additive migration rejects incompatible historical receipts; no automatic financial-evidence rewrite is permitted.
+
+The [release intent journal](release-journal.md) orders durable operations and rejects
+uncertain replay. It remains a library, not a guarded production executor.

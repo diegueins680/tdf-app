@@ -27,6 +27,14 @@ describe('feedback api', () => {
     (globalThis as unknown as { fetch: typeof fetch }).fetch = fetchMock;
   });
 
+  it('can preserve a freshly verified cookie identity without a stale bearer override', async () => {
+    buildAuthorizationHeaderMock.mockReturnValue('Bearer stale-other-account');
+    fetchMock.mockResolvedValueOnce(successfulResponse);
+    await submitFeedback({ title: 'Account deletion', description: 'Explicit request', categoryId: 'category', severityId: 'severity', consent: true }, { sessionCookieOnly: true });
+    expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({ credentials: 'include', headers: undefined });
+    expect(buildAuthorizationHeaderMock).not.toHaveBeenCalled();
+  });
+
   it('allows anonymous submissions while including the session cookie when available', async () => {
     fetchMock.mockResolvedValueOnce(successfulResponse);
 
@@ -77,4 +85,23 @@ describe('feedback api', () => {
       }),
     );
   });
+  const deletionPayload = { title: 'Delete account', description: 'account_deletion_request\n', categoryId: 'category', severityId: 'severity', consent: true };
+  it('accepts only an authoritative receipt for the same authenticated account', async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ adrRequestId: 'request-1', adrCreatedBy: 42 }) } as Response);
+    await submitFeedback(deletionPayload, { sessionCookieOnly: true, accountDeletionPartyId: 42 });
+    expect(fetchMock).toHaveBeenCalledWith('/feedback/account-deletion?accountId=42', expect.objectContaining({ credentials: 'include', headers: { 'X-Requested-With': 'TDF-Account-Deletion' } }));
+  });
+  it.each([null, {}, { adrRequestId: 'request-1', adrCreatedBy: null }, { adrRequestId: 'request-1', adrCreatedBy: 43 }, { adrRequestId: '', adrCreatedBy: 42 }])('rejects absent or mismatched acceptance: %j', async receipt => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => receipt } as Response);
+    await expect(submitFeedback(deletionPayload, { accountDeletionPartyId: 42 })).rejects.toThrow();
+  });
+  it('does not accept an expired cookie at POST time after a successful preflight', async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 401, text: async () => 'Session expired' } as Response);
+    await expect(submitFeedback(deletionPayload, { sessionCookieOnly: true, accountDeletionPartyId: 42 })).rejects.toThrow('Session expired');
+  });
+  it('does not accept an old API without a receipt', async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => { throw new SyntaxError('Empty response'); } } as unknown as Response);
+    await expect(submitFeedback(deletionPayload, { accountDeletionPartyId: 42 })).rejects.toThrow();
+  });
+
 });

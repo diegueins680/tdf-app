@@ -50,11 +50,13 @@ for (const mode of ['pass', 'dirty', 'existing', 'remote-error', 'changed-source
   });
 }
 
-for (const mode of ['pass', 'wrong-sql', 'wrong-manifest', 'incomplete-ledger']) {
+for (const mode of ['pass', 'wrong-sql', 'wrong-manifest', 'incomplete-ledger', 'canary-pass', 'canary-wrong-image', 'canary-not-removed', 'canary-provider-connectivity', 'canary-missing-pause', 'canary-wrong-binary', 'canary-wrong-image-id']) {
   test(`candidate migration launcher: ${mode}`, t => {
     const dir = mkdtempSync(path.join(tmpdir(), 'tdf-migration-launcher-'));
     t.after(() => rmSync(dir, { recursive: true, force: true }));
-    const helpers = ['scripts/lib/migration-contract.mjs', 'scripts/lib/production-release.mjs', 'scripts/lib/hetzner-migration-rehearsal.mjs'];
+    const withCanary = mode.startsWith('canary-');
+    const canaryImage = 'diegueins680/tdf-hq@sha256:' + 'f'.repeat(64);
+    const helpers = ['ops/hetzner/isolated-application-canary.py', 'scripts/lib/migration-contract.mjs', 'scripts/lib/production-release.mjs', 'scripts/lib/hetzner-migration-rehearsal.mjs'];
     for (const name of ['scripts/lib', 'ops/hetzner', 'tdf-hq/sql', 'bin']) mkdirSync(path.join(dir, name), { recursive: true });
     for (const file of [...files, ...helpers]) copyFileSync(path.join(root, file), path.join(dir, file));
     writeFileSync(path.join(dir, '.gitignore'), '/receipt.json\n');
@@ -70,7 +72,16 @@ const proof = { sourceRevision: candidate.sourceRevision, sqlSha256: candidate.s
 if (process.env.MODE === 'wrong-sql') proof.sqlSha256 = '0'.repeat(64);
 if (process.env.MODE === 'wrong-manifest') proof.manifestSha256 = '0'.repeat(64);
 if (process.env.MODE === 'incomplete-ledger') proof.migrationCount = 0;
-console.log(JSON.stringify({ ...${JSON.stringify(passing)}, candidateMigrations: proof }));
+const applicationCanary = { sourceRevision: candidate.sourceRevision, image: ${JSON.stringify('diegueins680/tdf-hq@sha256:' + 'f'.repeat(64))},
+ databasePauseProbe: 503, binarySha256: 'a'.repeat(64), imageId: 'sha256:'+'b'.repeat(64),
+ applicationRemoved: true, databaseRecovery: 'passed', productionCredentialsProvided: false, providerConnectivity: false };
+if (process.env.MODE === 'canary-missing-pause') delete applicationCanary.databasePauseProbe;
+if (process.env.MODE === 'canary-wrong-binary') applicationCanary.binarySha256 = 'not-a-hash';
+if (process.env.MODE === 'canary-wrong-image-id') applicationCanary.imageId = 'latest';
+if (process.env.MODE === 'canary-wrong-image') applicationCanary.image = 'wrong';
+if (process.env.MODE === 'canary-not-removed') applicationCanary.applicationRemoved = false;
+if (process.env.MODE === 'canary-provider-connectivity') applicationCanary.providerConnectivity = true;
+console.log(JSON.stringify({ ...${JSON.stringify(passing)}, candidateMigrations: proof, applicationCanary }));
 `, { mode: 0o700 });
     const git = (...args) => execFileSync('git', args, { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
     const commit = message => git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', '-c', 'commit.gpgsign=false', 'commit', '-qm', message);
@@ -80,15 +91,16 @@ console.log(JSON.stringify({ ...${JSON.stringify(passing)}, candidateMigrations:
       migrations: [{ id: 'synthetic', path: 'tdf-hq/sql/synthetic.sql', introducedBy }] }));
     git('add', '.'); commit('register source');
     const output = path.join(dir, 'receipt.json');
-    const result = spawnSync(process.execPath, [path.join(dir, files[0]), '--identity-file', path.join(dir, 'key'), '--output', output, '--with-candidate-migrations'], {
+    const result = spawnSync(process.execPath, [path.join(dir, files[0]), '--identity-file', path.join(dir, 'key'), '--output', output, '--with-candidate-migrations', ...(withCanary ? ['--canary-image',canaryImage] : [])], {
       encoding: 'utf8', env: { PATH: `${dir}/bin:${process.env.PATH}`, MODE: mode },
     });
-    assert.equal(result.status, mode === 'pass' ? 0 : 1, result.stderr);
-    assert.equal(existsSync(output), mode === 'pass');
-    if (mode === 'pass') {
+    const expectedPass = ['pass','canary-pass'].includes(mode);
+    assert.equal(result.status, expectedPass ? 0 : 1, result.stderr);
+    assert.equal(existsSync(output), expectedPass);
+    if (expectedPass) {
       const receipt = JSON.parse(readFileSync(output));
       assert.equal(receipt.snapshot.candidateMigrations.migrationCount, 1);
-      for (const file of helpers) assert.match(receipt.sources[file], /^[a-f0-9]{64}$/);
+      for (const file of helpers.filter(file => withCanary || !file.endsWith('isolated-application-canary.py'))) assert.match(receipt.sources[file], /^[a-f0-9]{64}$/);
     }
   });
 }

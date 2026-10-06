@@ -1235,7 +1235,15 @@ export interface InternalFeedbackDTO {
   ifrPotentialDuplicates: InternalFeedbackSummaryDTO[];
 }
 
+export interface AccountDeletionActionDTO {
+  adaOutcome: 'completed' | 'rejected';
+  adaNote: string;
+  adaActor: number | null;
+  adaCreatedAt: string;
+}
+
 export interface LegacyFeedbackDTO {
+  lfdDeletionHistory?: AccountDeletionActionDTO[];
   lfdId: string;
   lfdTitle: string;
   lfdDescription: string;

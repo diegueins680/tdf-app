@@ -8,6 +8,11 @@
 module TDF.ServerFeedback
   ( feedbackServer
   , internalFeedbackServer
+  , validateAccountDeletionIdentity
+  , validateAccountDeletionOutcome
+  , normalizeAccountDeletionDescription
+  , accountDeletionOwnerMatches
+  , feedbackNotificationRecipients
   , normalizeOptionalFeedbackText
   , validateFeedbackDescription
   , validateFeedbackTitle
@@ -71,8 +76,12 @@ import           Web.PathPieces             (PathPiece, fromPathPiece, toPathPie
 
 import           TDF.API.Feedback
 import           TDF.Auth                   ( AuthedUser(..)
+                                            , ModuleAccess(ModuleInternships)
+                                            , hasModuleAccess
                                             , extractTokenFromHeaders
                                             , loadAuthedUser
+                                            , withCurrentAuthSession
+                                            , withCurrentAuthorization
                                             )
 import           TDF.DB                     (Env(..))
 import qualified TDF.Models                  as M
@@ -83,6 +92,35 @@ import           TDF.Catalog.Security        (selectCanonicalPartyIdsByRole)
 import qualified TDF.Email.Service          as EmailSvc
 import           TDF.UserActivity            (recordUserActivity)
 
+-- The POST itself authenticates the owner. A preceding /session response is
+-- not authority when its cookie has expired or been revoked in between.
+validateAccountDeletionIdentity :: Int64 -> Maybe Int64 -> Either ServerError ()
+validateAccountDeletionIdentity expected actual
+  | expected <= 0 = Left err400
+  | actual == Nothing = Left err401
+  | actual /= Just expected = Left err403
+  | otherwise = Right ()
+
+-- Browser multipart encoders canonicalize text line endings to CRLF.
+-- Store one newline representation so acceptance and queue filtering agree.
+normalizeAccountDeletionDescription :: Text -> Text
+normalizeAccountDeletionDescription = T.replace "\r" "\n" . T.replace "\r\n" "\n"
+
+accountDeletionOwnerMatches :: Int64 -> Text -> Bool
+accountDeletionOwnerMatches owner description =
+  owner > 0 && "account_deletion_request\n" `T.isPrefixOf` normalized
+    && filter ("requested_account_party_id:" `T.isPrefixOf`) (T.lines normalized)
+         == ["requested_account_party_id: " <> T.pack (show owner)]
+  where normalized = normalizeAccountDeletionDescription description
+
+-- Terminal outcomes are immutable; completed requires an authenticated owner.
+validateAccountDeletionOutcome :: Bool -> Bool -> Text -> Either ServerError ()
+validateAccountDeletionOutcome resolved identified outcome
+  | outcome /= "completed" && outcome /= "rejected" = Left err400
+  | resolved = Left err409
+  | outcome == "completed" && not identified = Left err400
+  | otherwise = Right ()
+
 feedbackServer
   :: forall m.
      ( MonadReader Env m
@@ -90,19 +128,27 @@ feedbackServer
      , MonadError ServerError m
      )
   => ServerT FeedbackAPI m
-feedbackServer authorizationHeader cookieHeader = submitFeedback
+feedbackServer authorizationHeader cookieHeader =
+  (\payload -> submitFeedback Nothing payload >> pure NoContent)
+  :<|> (\accountId payload -> do
+    receipt <- submitFeedback (Just accountId) payload
+    case receipt of
+      Just value -> pure value
+      Nothing -> throwError err401)
   where
-    submitFeedback :: FeedbackPayload -> m NoContent
-    submitFeedback FeedbackPayload{..} = do
+    submitFeedback :: Maybe Int64 -> FeedbackPayload -> m (Maybe AccountDeletionReceipt)
+    submitFeedback expectedAccount FeedbackPayload{..} = do
       title <- either throwError pure (validateFeedbackTitle fpTitle)
-      body <- either throwError pure (validateFeedbackDescription fpDescription)
+      let description = case expectedAccount of
+            Nothing -> fpDescription
+            Just _ -> normalizeAccountDeletionDescription fpDescription
+      body <- either throwError pure (validateFeedbackDescription description)
       (categoryId, categoryLabel) <- resolvePublishedFeedbackCategory fpCategoryId
       (severityId, severityLabel) <- resolvePublishedFeedbackSeverity fpSeverityId
       either throwError pure (validateFeedbackConsent fpConsent)
       contactEmail <- either throwError pure (validateOptionalFeedbackContactEmail fpContactEmail)
 
       now <- liftIO getCurrentTime
-      attachmentPath <- traverse validateAndStoreAttachment fpAttachment
 
       Env{..} <- ask
       let emailSvc = EmailSvc.mkEmailService envConfig
@@ -112,25 +158,43 @@ feedbackServer authorizationHeader cookieHeader = submitFeedback
         Right token ->
           liftIO $ runSqlPool (loadAuthedUser token) envPool
 
-      _ <- liftIO $ runSqlPool
-        (insert Feedback
-          { feedbackTitle        = title
-          , feedbackDescription  = body
-          , feedbackCategory     = Nothing
-          , feedbackSeverity     = Nothing
-          , feedbackCategoryId   = Just categoryId
-          , feedbackSeverityId   = Just severityId
-          , feedbackContactEmail = contactEmail
-          , feedbackAttachment   = fmap T.pack attachmentPath
-          , feedbackConsent      = fpConsent
-          , feedbackCreatedBy    = auPartyId <$> creator
-          , feedbackCreatedAt    = now
-          })
-        envPool
+      case expectedAccount of
+        Nothing -> when ("account_deletion_request" `T.isPrefixOf` T.stripStart (normalizeAccountDeletionDescription body))
+          (throwError err400 { errBody = "Account deletion requires the authenticated account-deletion endpoint" })
+        Just expected -> do
+          either throwError pure (validateAccountDeletionIdentity expected (fromSqlKey . auPartyId <$> creator))
+          unless (accountDeletionOwnerMatches expected body)
+            (throwError err400 { errBody = "Account deletion request must identify the authenticated owner" })
+          when (isJust fpAttachment)
+            (throwError err400 { errBody = "Account deletion requests do not accept attachments" })
+      attachmentPath <- traverse validateAndStoreAttachment fpAttachment
+      let insertRequest = insert Feedback
+            { feedbackTitle        = title
+            , feedbackDescription  = body
+            , feedbackCategory     = Nothing
+            , feedbackSeverity     = Nothing
+            , feedbackCategoryId   = Just categoryId
+            , feedbackSeverityId   = Just severityId
+            , feedbackContactEmail = contactEmail
+            , feedbackAttachment   = fmap T.pack attachmentPath
+            , feedbackConsent      = fpConsent
+            , feedbackCreatedBy    = auPartyId <$> creator
+            , feedbackCreatedAt    = now
+            }
+      accepted <- liftIO $ runSqlPool (case expectedAccount of
+        Nothing -> do
+          key <- insertRequest
+          pure (Just (key, True))
+        Just _ -> maybe (pure Nothing) (\owner -> withCurrentAuthSession owner
+          (reuseActiveAccountDeletion (auPartyId owner) insertRequest)) creator) envPool
+      (feedbackKey, inserted) <- maybe (throwError err401) pure accepted
 
-      liftIO $ notify emailSvc title body (Just categoryLabel) (Just severityLabel) contactEmail attachmentPath
+      when inserted $ liftIO $ notify expectedAccount emailSvc title body
+        (Just categoryLabel) (Just severityLabel) contactEmail attachmentPath
 
-      pure NoContent
+      pure $ case expectedAccount of
+        Nothing -> Nothing
+        Just expected -> Just (AccountDeletionReceipt (toPathPiece feedbackKey) expected)
 
     resolvePublishedFeedbackCategory :: Text -> m (Catalog.FeedbackCategoryId, Text)
     resolvePublishedFeedbackCategory rawId = do
@@ -216,6 +280,7 @@ internalFeedbackServer user =
   :<|> exportCsvH
   :<|> exportJsonH
   :<|> listLegacyFeedbackH
+  :<|> resolveAccountDeletionH
   :<|> createReportH
   :<|> reportByIdH
   where
@@ -225,8 +290,15 @@ internalFeedbackServer user =
     ensureInternalAccess = unless (isAdminUser || isInternUser) $
       throwError err403 { errBody = "Internal testing report access required" }
 
-    ensureAdmin = unless isAdminUser $
-      throwError err403 { errBody = "Report administration access required" }
+    -- Match the UI administrator boundary using canonical module grants,
+    -- including direct API calls after a module grant has been removed.
+    validateAdministrator current =
+      if any (`elem` auRoles current) [M.Admin, M.Manager, M.StudioManager]
+         && hasModuleAccess ModuleInternships current
+        then Right ()
+        else Left err403 { errBody = "Report administration access required" }
+
+    ensureAdmin = either throwError pure (validateAdministrator user)
 
     reportByIdH rawReportId =
       getReportH rawReportId
@@ -254,25 +326,73 @@ internalFeedbackServer user =
         : map summaryCsv rows
         )
 
-    listLegacyFeedbackH = do
+    listLegacyFeedbackH deletionOnly offset = do
       ensureAdmin
-      rows <- withPool $ selectList [] [Desc ME.FeedbackCreatedAt, LimitTo 1000]
-      fmap catMaybes $ forM rows $ \(Entity feedbackKey feedback) -> do
-        normalized <- withPool $ getBy (ME.UniqueInternalFeedbackReport feedbackKey)
-        pure $ case normalized of
-          Just _ -> Nothing
-          Nothing -> Just LegacyFeedbackDTO
-            { lfdId = toPathPiece feedbackKey
-            , lfdTitle = feedbackTitle feedback
-            , lfdDescription = feedbackDescription feedback
-            , lfdCategoryId = toPathPiece <$> feedbackCategoryId feedback
-            , lfdSeverityId = toPathPiece <$> feedbackSeverityId feedback
-            , lfdContactEmail = feedbackContactEmail feedback
-            , lfdConsent = feedbackConsent feedback
-            , lfdCreatedBy = fromSqlKey <$> feedbackCreatedBy feedback
-            , lfdHasAttachment = isJust (feedbackAttachment feedback)
-            , lfdCreatedAt = feedbackCreatedAt feedback
-            }
+      let requestedOffset = fromMaybe 0 offset
+      when (requestedOffset < 0) (throwError err400 { errBody = "offset must be non-negative" })
+      -- Filter before pagination: newer ordinary feedback must never evict a
+      -- privacy request. LF and CR prefixes include LF, CRLF and bare-CR legacy
+      -- encodings without rewriting their recorded content. The stable tie-breaker
+      -- makes equal timestamps safe.
+      result <- withPool $ withCurrentAuthorization validateAdministrator user $ do
+        rows <- if deletionOnly == Just True
+          then rawSql
+            "SELECT ?? FROM feedback WHERE left(description, 25) IN (?, ?) ORDER BY created_at DESC, id DESC LIMIT 20 OFFSET ?"
+            [PersistText "account_deletion_request\n", PersistText "account_deletion_request\r", PersistInt64 (fromIntegral requestedOffset)]
+          else selectList [] [Desc ME.FeedbackCreatedAt, Desc ME.FeedbackId, LimitTo 1000, OffsetBy requestedOffset]
+        fmap catMaybes $ forM rows $ \(Entity feedbackKey feedback) -> do
+          history <- if deletionOnly == Just True then accountDeletionHistory feedbackKey else pure []
+          normalized <- getBy (ME.UniqueInternalFeedbackReport feedbackKey)
+          pure $ case normalized of
+            Just _ | deletionOnly /= Just True -> Nothing
+            _ -> Just LegacyFeedbackDTO
+              { lfdId = toPathPiece feedbackKey
+              , lfdTitle = feedbackTitle feedback
+              , lfdDescription = feedbackDescription feedback
+              , lfdCategoryId = toPathPiece <$> feedbackCategoryId feedback
+              , lfdSeverityId = toPathPiece <$> feedbackSeverityId feedback
+              , lfdContactEmail = feedbackContactEmail feedback
+              , lfdConsent = feedbackConsent feedback
+              , lfdCreatedBy = fromSqlKey <$> feedbackCreatedBy feedback
+              , lfdHasAttachment = isJust (feedbackAttachment feedback)
+              , lfdCreatedAt = feedbackCreatedAt feedback
+              , lfdDeletionHistory = history
+              }
+      either throwError pure result
+
+    -- Append-only fulfilment evidence in the existing audit table. A locked
+    -- request can leave pending only once; this records work, never erases data.
+    resolveAccountDeletionH rawFeedbackId AccountDeletionResolution{..} = do
+      ensureAdmin
+      feedbackKey <- parseInternalKey @ME.Feedback rawFeedbackId
+      unless (adrOutcome == "completed" || adrOutcome == "rejected") $
+        throwError err400 { errBody = "Outcome must be completed or rejected" }
+      note <- validateInternalText "note" 2000 adrNote
+      result <- withPool $ withCurrentAuthorization validateAdministrator user $ do
+        -- createdBy is immutable after intake. Acquire the same owner mutex as
+        -- intake BEFORE the row lock; the subsequent query re-reads the row.
+        candidate <- get feedbackKey
+        forM_ (candidate >>= feedbackCreatedBy) lockAccountDeletionOwner
+        rows <- rawSql "SELECT ?? FROM feedback WHERE id = ? FOR UPDATE" [toPersistValue feedbackKey]
+        case rows of
+          [Entity _ feedback] | "account_deletion_request\n" `T.isPrefixOf` normalizeAccountDeletionDescription (feedbackDescription feedback) -> do
+            previous <- accountDeletionHistory feedbackKey
+            let ownerMatches = maybe False (\owner -> accountDeletionOwnerMatches (fromSqlKey owner) (feedbackDescription feedback)) (feedbackCreatedBy feedback)
+            case validateAccountDeletionOutcome (not (null previous)) ownerMatches adrOutcome of
+              Left problem -> pure (Left problem)
+              Right () -> do
+                now <- liftIO getCurrentTime
+                insert_ M.AuditLog
+                  { M.auditLogActorId = Just (auPartyId user)
+                  , M.auditLogEntity = "account_deletion_request"
+                  , M.auditLogEntityId = toPathPiece feedbackKey
+                  , M.auditLogAction = adrOutcome
+                  , M.auditLogDiff = Just note
+                  , M.auditLogCreatedAt = now
+                  }
+                pure (Right (AccountDeletionActionDTO adrOutcome note (Just (fromSqlKey (auPartyId user))) now))
+          _ -> pure (Left err404)
+      either throwError (either throwError pure) result
 
     createReportH InternalFeedbackCreate{..} = do
       ensureInternalAccess
@@ -1666,6 +1786,57 @@ withPool
   -> m a
 withPool action = asks envPool >>= liftIO . runSqlPool action
 
+-- Serialize intake by owner across distinct live sessions. A lost response is
+-- retried against the oldest unresolved receipt without resetting its deadline,
+-- inserting another row or sending another notification. Resolution shares
+-- this mutex, so an intake ordered after it observes the committed outcome.
+reuseActiveAccountDeletion
+  :: M.PartyId
+  -> SqlPersistT IO ME.FeedbackId
+  -> SqlPersistT IO (ME.FeedbackId, Bool)
+reuseActiveAccountDeletion owner insertRequest = do
+  lockAccountDeletionOwner owner
+  findPending 0
+  where
+    -- Pre-upgrade generic feedback may contain an invalid owner claim. Apply
+    -- the same validator as strict intake/resolution before reusing a receipt.
+    -- Page under the owner mutex so poisoned legacy rows neither block valid
+    -- intake nor hide a valid pending receipt beyond the first page.
+    findPending :: Int64 -> SqlPersistT IO (ME.FeedbackId, Bool)
+    findPending offset = do
+      rows <- (rawSql
+        "SELECT ?? FROM feedback WHERE created_by = ? AND left(description, 25) IN (?, ?) AND NOT EXISTS (SELECT 1 FROM audit_log a WHERE a.entity = 'account_deletion_request' AND a.entity_id = feedback.id::text AND a.action IN ('completed', 'rejected')) ORDER BY created_at ASC, id ASC LIMIT 100 OFFSET ?"
+        [toPersistValue owner, PersistText "account_deletion_request\n", PersistText "account_deletion_request\r", PersistInt64 offset]
+        :: SqlPersistT IO [Entity ME.Feedback])
+      case [key | Entity key row <- rows,
+                  accountDeletionOwnerMatches (fromSqlKey owner) (feedbackDescription row)] of
+        key : _ -> pure (key, False)
+        [] | length rows == 100 -> findPending (offset + 100)
+        [] -> do
+          key <- insertRequest
+          pure (key, True)
+
+-- All authenticated deletion writers take session -> owner -> feedback locks.
+-- Legacy anonymous records have no competing owner intake and retain row locking.
+lockAccountDeletionOwner :: M.PartyId -> SqlPersistT IO ()
+lockAccountDeletionOwner owner = do
+  _ <- (rawSql
+    "SELECT 1::bigint FROM (SELECT pg_advisory_xact_lock(hashtextextended(?, 0))) locked"
+    [PersistText ("account-deletion-intake:" <> toPathPiece owner)]
+    :: SqlPersistT IO [Single Int64])
+  pure ()
+
+accountDeletionHistory :: ME.FeedbackId -> SqlPersistT IO [AccountDeletionActionDTO]
+accountDeletionHistory feedbackKey = do
+  rows <- selectList
+    [ M.AuditLogEntity ==. "account_deletion_request"
+    , M.AuditLogEntityId ==. toPathPiece feedbackKey
+    ] [Desc M.AuditLogCreatedAt, Desc M.AuditLogId]
+  pure [ AccountDeletionActionDTO
+           (M.auditLogAction row) (fromMaybe "" (M.auditLogDiff row))
+           (fromSqlKey <$> M.auditLogActorId row) (M.auditLogCreatedAt row)
+       | Entity _ row <- rows ]
+
 lockInternalFeedbackReportsForUpdate
   :: ME.InternalFeedbackReportId
   -> ME.InternalFeedbackReportId
@@ -2148,8 +2319,18 @@ internalFeedbackUploadRoot = do
     Just value | not (null value) -> value
     _ -> "uploads" </> "feedback" </> "internal"
 
-notify :: EmailSvc.EmailService -> Text -> Text -> Maybe Text -> Maybe Text -> Maybe Text -> Maybe FilePath -> IO ()
-notify emailSvc title body mCat mSev mContact attachmentPath = do
+-- The confirmed privacy inbox is the sole intake notification authority.
+-- General feedback recipients are intentionally not inherited by privacy intake.
+feedbackNotificationRecipients :: Maybe Int64 -> [(Text, Text)]
+feedbackNotificationRecipients (Just _) = [("Equipo TDF", "info@tdfrecords.net")]
+feedbackNotificationRecipients Nothing =
+  [ ("Diego Saa", "diego@tdfrecords.net")
+  , ("Equipo TDF", "info@tdfrecords.net")
+  , ("TDF Estudio", "tdfestudiodegrabacion@gmail.com")
+  ]
+
+notify :: Maybe Int64 -> EmailSvc.EmailService -> Text -> Text -> Maybe Text -> Maybe Text -> Maybe Text -> Maybe FilePath -> IO ()
+notify expectedAccount emailSvc title body mCat mSev mContact attachmentPath = do
   let subject = "[TDF Feedback] " <> title
       catLine = maybe "" (\c -> "Categoría: " <> c) mCat
       sevLine = maybe "" (\s -> "Severidad: " <> s) mSev
@@ -2165,11 +2346,7 @@ notify emailSvc title body mCat mSev mContact attachmentPath = do
           , "Descripción:"
           , body
           ]
-      recipients =
-        [ ("Diego Saa", "diego@tdfrecords.net")
-        , ("Equipo TDF", "info@tdfrecords.net")
-        , ("TDF Estudio", "tdfestudiodegrabacion@gmail.com")
-        ]
+      recipients = feedbackNotificationRecipients expectedAccount
   forM_ recipients $ \(name, email) -> do
     sendResult <- try $
       EmailSvc.sendTestEmail emailSvc name email subject bodyLines Nothing

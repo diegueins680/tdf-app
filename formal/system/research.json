@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 §9.2.2",
+      "title": "RFC 9110 \u00a79.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -500,6 +500,120 @@
       "applicability": "Boot request fallback and Warp diagnostic logger",
       "decision": "adopted",
       "rationale": "Retain stock safe protocol responses without wildcard CORS; replace raw diagnostic rendering with a fixed identifier. Exact installed version checked with Stack ghc-pkg.",
+      "verifiedAt": "2026-10-05"
+    },
+    {
+      "id": "RES-RECEIPT-001",
+      "source": "https://www.postgresql.org/docs/17/explicit-locking.html",
+      "supportingSource": "https://www.postgresql.org/docs/17/sql-insert.html",
+      "title": "PostgreSQL17 transaction-held locks and atomic upsert",
+      "recommendation": "Hold conflicting locks through transaction commit; use atomic counter update rather than a separate count/read-derived number.",
+      "applicability": "Invoice receipt issuance, permission revocation and migration counter admission",
+      "decision": "adopted",
+      "rationale": "Serialize per-invoice replay and annual allocation locally; negative HTTP/database controls verify selected implementation boundaries. No distributed exactly-once or provider-side claim.",
+      "verifiedAt": "2026-10-05"
+    },
+    {
+      "id": "RES-OBSERVATION-ROUTING-001",
+      "source": "https://www.postgresql.org/docs/17/libpq-envars.html",
+      "supportingSource": "https://docs.docker.com/engine/manage-resources/contexts/",
+      "title": "Explicit local transport for production observations",
+      "recommendation": "Ambient Docker contexts and libpq connection defaults can select a different endpoint; pin the intended transport and exclude inherited routing configuration.",
+      "applicability": "Read-only production metadata and catalog access through the existing SSH host",
+      "decision": "adopted",
+      "rationale": "Use the local Docker Unix socket, a minimal child environment, and a cleared container environment with explicit PostgreSQL socket/port. Assert SQL connection identity before both catalog coverage and inventory queries. This protects observation routing; it is not an atomic fleet snapshot or protection from a compromised host.",
+      "verifiedAt": "2026-10-05"
+    },
+    {
+      "id": "RES-BACKUP-001",
+      "source": "https://www.postgresql.org/docs/17/app-pgdump.html",
+      "title": "PostgreSQL17 logical backup and restore boundaries",
+      "recommendation": "pg_dump uses a consistent database snapshot; pg_dumpall captures globals separately; archive listing is not restoration.",
+      "applicability": "Verified active TDF daily logical backup timer",
+      "decision": "adopted",
+      "rationale": "Capture protected globals, pin actual storage and record archive-only success. Require separate restore and coordinated assets/off-host evidence; do not infer disaster recovery from exit0."
+    },
+    {
+      "id": "RES-READINESS-001",
+      "source": "https://hackage-content.haskell.org/package/base-4.19.2.0/docs/System-Timeout.html",
+      "title": "Haskell cooperative timeout boundary",
+      "recommendation": "Runtime timeout cannot guarantee interruption of arbitrary foreign blocking calls; external health monitors need their own deadline.",
+      "applicability": "Application database readiness pool/query timeout",
+      "decision": "adopted",
+      "rationale": "Use cooperative timeout with cancellation propagation, explicitly exclude universal wall-clock guarantees and require an independent HTTP deadline. Do not treat timeout alone as provider or release conformance.",
+      "verifiedAt": "2026-10-05"
+    },
+    {
+      "id": "RES-CANARY-001",
+      "source": "https://docs.docker.com/engine/network/drivers/none/",
+      "supportingSource": "https://docs.docker.com/engine/network/#container-networks",
+      "title": "Disconnected shared container namespace for candidate verification",
+      "recommendation": "The none driver provides only loopback; a container can share another container network namespace. Network identity must be checked independently of application configuration.",
+      "applicability": "Candidate application and disposable restored PostgreSQL on canonical host",
+      "decision": "adopted",
+      "rationale": "Share only the fully admitted network-none restore namespace, pin probe namespace handles, supply no production credentials and keep source mounts absent. No inference of full release readiness or protection from a compromised privileged host.",
+      "verifiedAt": "2026-10-05"
+    },
+    {
+      "id": "RES-RECOVERY-FILES-001",
+      "source": "https://docs.python.org/3/library/tarfile.html#extraction-filters",
+      "supportingSource": "https://www.postgresql.org/docs/17/backup-file.html",
+      "title": "Archive containment and coordinated snapshot limitations",
+      "recommendation": "Reject dangerous archive semantics and verify the entire restored tree; separately coordinate database and filesystem backup state.",
+      "applicability": "Private assets/uploads/configuration recovery in the single-host release boundary",
+      "decision": "adopted within file primitive; release coordination pending",
+      "rationale": "Use explicit descriptor-relative exclusive file creation and exact metadata/content checks; do not rely on general tar extraction defaults or infer coordination from independently created archives.",
+      "verifiedAt": "2026-10-05"
+    },
+    {
+      "id": "RES-RECOVERY-ENVELOPE-001",
+      "source": "https://c2sp.org/age",
+      "supportingSource": "https://github.com/FiloSottile/age/releases/tag/v1.3.2",
+      "title": "Authenticated age recovery envelopes",
+      "recommendation": "Use established streamed authenticated encryption and reject truncated final chunks; maintain separate provenance because encryption for a public recipient does not authenticate its sender.",
+      "applicability": "Encryption of coordinated TDF recovery bundles",
+      "decision": "adopted for primitive; off-host workflow pending",
+      "rationale": "Use pinned upstream age rather than implement cryptography; preserve trusted plaintext/ciphertext hashes and keep real key custody and off-host restoration separate.",
+      "verifiedAt": "2026-10-05"
+    },
+    {
+      "id": "RES-RECOVERY-EXECUTION-001",
+      "source": "https://man7.org/linux/man-pages/man2/memfd_create.2.html",
+      "supportingSource": "https://www.kernel.org/doc/html/latest/userspace-api/mfd_noexec.html",
+      "title": "Immutable execution bytes and Linux memfd policy",
+      "recommendation": "Use write/grow/shrink seals for immutable shared bytes; executable memfd availability depends on namespace kernel policy.",
+      "applicability": "Executing precisely the pinned recovery encryption tool",
+      "decision": "adopted with fail-closed runtime support",
+      "rationale": "Hold verified sealed bytes through child exec rather than checking a mutable pathname. Reject unsupported memfd execution; never change system policy to bypass a denial. No claim against compromised privileged code or policy sources.",
+      "verifiedAt": "2026-10-05"
+    },
+    {
+      "id": "RES-COLD-RECOVERY-001",
+      "source": "https://www.postgresql.org/docs/17/backup-file.html",
+      "title": "PostgreSQL17 filesystem backup",
+      "recommendation": "An ordinary filesystem backup requires server shutdown and complete cluster data including WAL; blocking clients alone is insufficient.",
+      "applicability": "Potential coordinated cold database/assets/uploads bundle on current single-host production",
+      "decision": "adopted for cold-copy startup; coordinated capture remains unimplemented",
+      "rationale": "Require independently verified clean shutdown and full admitted roots. Current logical rehearsal is not that bundle. External tablespaces/mounts/config and writer fencing must be admitted first."
+    },
+    {
+      "id": "RES-COLD-RECOVERY-002",
+      "source": "https://docs.docker.com/reference/cli/docker/container/stop/",
+      "title": "Docker container stop semantics",
+      "recommendation": "After its configured grace period, stop can send SIGKILL. A successful stop command alone does not prove clean database shutdown.",
+      "applicability": "Coordinated PostgreSQL container shutdown",
+      "decision": "adopted constraint for pending coordinator",
+      "rationale": "Use Docker lifecycle and verify exact stopped container plus PostgreSQL control state. Do not infer clean backup admission from process disappearance."
+    },
+    {
+      "id": "RES-COLD-RECOVERY-003",
+      "source": "https://www.postgresql.org/docs/17/app-pgcontroldata.html",
+      "supportingSource": "https://raw.githubusercontent.com/postgres/postgres/REL_17_STABLE/src/include/catalog/pg_control.h",
+      "title": "PG17 control identity and state",
+      "recommendation": "Read cluster-wide control metadata using the compatible tool; PG17 uses control format1700.",
+      "applicability": "Reject wrong or unclean recovered cluster before startup",
+      "decision": "adopted",
+      "rationale": "Compare exact trusted system identifier and shut-down state; this complements copied bytes and does not establish source writer fencing.",
       "verifiedAt": "2026-10-05"
     }
   ]

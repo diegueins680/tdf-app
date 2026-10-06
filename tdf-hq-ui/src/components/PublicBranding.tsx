@@ -258,12 +258,12 @@ export default function PublicBranding({
         maxWidth="xl"
         sx={{ py: { xs: showHeader ? 2 : 3, md: showHeader ? 4 : 5 }, minWidth: 0, outline: 'none' }}
       >
-        <SignupMobileInvitation />
+        {location.pathname !== '/cuenta/eliminar' && <SignupMobileInvitation />}
         {showInstagramEntryLinks && <InstagramEntryLinks />}
         {children}
         {!signupInvitation && ['/', '/inicio', '/tdf', '/fans', '/comunidad'].includes(location.pathname) && <MobilePromo surface={location.pathname === '/tdf' ? 'tdf_landing' : (location.pathname === '/fans' || location.pathname === '/comunidad') ? 'community' : session ? 'authenticated_home' : 'homepage'} />}
         {!signupInvitation && profileRoute && <MobilePromo surface="profile" />}
-        {!signupInvitation && !profileRoute && !['/', '/inicio', '/tdf', '/fans', '/comunidad', '/app', '/login', '/reset', '/feedback'].includes(location.pathname) && !location.pathname.includes('/orden/') && !location.pathname.startsWith('/reservar') && <MobilePromo surface="mobile_banner" banner />}
+        {!signupInvitation && !profileRoute && !['/', '/inicio', '/tdf', '/fans', '/comunidad', '/app', '/login', '/reset', '/feedback', '/cuenta/eliminar'].includes(location.pathname) && !location.pathname.includes('/orden/') && !location.pathname.startsWith('/reservar') && <MobilePromo surface="mobile_banner" banner />}
       </Container>
       <Box
         component="footer"
@@ -275,7 +275,7 @@ export default function PublicBranding({
         }}
       >
         <Container maxWidth="xl">
-          {location.pathname !== "/app" && <MobilePromo surface="footer" compact />}
+          {!['/app', '/cuenta/eliminar'].includes(location.pathname) && <MobilePromo surface="footer" compact />}
           <Stack
             direction={{ xs: 'column', xl: 'row' }}
             spacing={3}

@@ -925,6 +925,11 @@
       "id": "2026-10-05_ticket_inclusive_tax",
       "path": "tdf-hq/sql/2026-10-05_ticket_inclusive_tax.sql",
       "introducedBy": "ba309ec13b2b9abb0bfb46fd17b2d0e66aa5e0fb"
+    },
+    {
+      "id": "2026-10-05_invoice_receipt_snapshot",
+      "path": "tdf-hq/sql/2026-10-05_invoice_receipt_snapshot.sql",
+      "introducedBy": "be2d6b1fdff96a7a33e5967da56a1d51f39f15bf"
     }
   ]
 }

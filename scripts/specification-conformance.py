@@ -193,6 +193,13 @@ def generate(root=ROOT):
             models.append({'id': f'{source}#{name}', 'source': source,
                            'sourceSha256': sha(root/source), 'definition': definition,
                            'correspondence': 'requires per-transition implementation review'})
+    for requirement in requirements:
+        state = requirement['state']
+        if isinstance(state, dict) and 'states' in state and 'transitions' in state:
+            models.append({'id': requirement['id'], 'source': 'formal/system/requirements.json',
+                           'sourceSha256': sha(root/'formal/system/requirements.json'),
+                           'definition': state,
+                           'correspondence': 'Mapped requirement evidence required; enumeration alone is not conformance'})
     api_source = root/'tdf-hq/docs/openapi/api.yaml'
     api = load_yaml(api_source)
     documents = {api_source.resolve(): api}

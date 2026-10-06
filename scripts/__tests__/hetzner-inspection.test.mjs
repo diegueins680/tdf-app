@@ -7,20 +7,21 @@ import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 
-test('all retired Fly CLI modes stop before any remote tool', t => {
+test('retired Fly preflight and execution stop before any remote tool', t => {
   const dir = mkdtempSync(path.join(tmpdir(), 'tdf-retired-deploy-'));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   const marker = path.join(dir, 'called');
   for (const tool of ['flyctl', 'docker', 'ssh', 'git']) {
     writeFileSync(path.join(dir, tool), '#!/bin/sh\n: > "$MARKER"\nexit 97\n', { mode: 0o700 });
   }
-  for (const mode of ['plan', 'preflight', 'release', '--help']) {
+  for (const mode of ['preflight', 'release']) {
     const result = spawnSync(process.execPath, [path.join(root, 'scripts/production-release.mjs'), mode,
       '--sha', 'a'.repeat(40), '--execute', '--confirm', 'a'.repeat(40)], {
       env: { PATH: `${dir}:${process.env.PATH}`, MARKER: marker }, encoding: 'utf8',
     });
     assert.equal(result.status, 1);
-    assert.match(result.stderr, /Fly release CLI is retired/);
+    assert.match(result.stderr, /The Fly release CLI is retired/);
+    assert.match(result.stderr, /Preparation does not deploy or authorize database changes/);
     assert.equal(existsSync(marker), false);
   }
 });

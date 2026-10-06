@@ -452,6 +452,51 @@
       "conflict": "Consolidated main182fe6a introduces reviewed analytics credential containment and retires transactional Offer metadata, while the audit register predates those changes.",
       "authority": "Approved main PR487 and explicit privacy/truthful-state audit requirements",
       "resolution": "Preserve main by normal merge and map PRIV-ANALYTICS-001/EVT-PRESENTATION-001 to current source/tests. Historical analytics and metadata observations are not combined-head or provider conformance evidence."
+    },
+    {
+      "id": "AUTHORITY-043",
+      "sources": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "formal/system/invoice-receipts.md"
+      ],
+      "conflict": "Current receipt code relabels currency without conversion and uses count-based concurrent numbering; receipt replay intent is unbound and missing from canonical OpenAPI.",
+      "authority": "User monetary/concurrency invariants and immutable invoice financial evidence",
+      "resolution": "Fix transactional implementation and additive constraints; preserve invoice money, bind explicit replay parameters and current authority; document actual mounted API. Do not redefine reproduced bugs as product intent."
+    },
+    {
+      "id": "AUTHORITY-044",
+      "sources": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "formal/system/readiness.md"
+      ],
+      "conflict": "Health documentation promised a database check while runtime unconditionally returned ok; OpenAPI described an absent version and omitted actual db field.",
+      "authority": "Existing readiness intent and user deployment verification requirements",
+      "resolution": "Repair the handler to query its application pool, bound cooperative waiting, preserve cancellation and return fixed503 failures. Correct the actual response contract and both generated clients; do not treat healthy as full release admission."
+    },
+    {
+      "id": "AUTHORITY-045",
+      "sources": [
+        "ops/hetzner/compose.production.yaml",
+        "ops/hetzner/rehearse-postgres-restore.py",
+        "formal/system/isolated-canary.md"
+      ],
+      "conflict": "The historical compose canary shares the production database; the database-only rehearsal did not establish application startup or unavailable-database behavior.",
+      "authority": "User isolated verification and current canonical operations safety requirements",
+      "resolution": "Retain the shared-database compose service as historical/unadmitted for release testing; add an explicit optional application on the nonce-owned disconnected restore target. Keep default database-only receipts and full coordinated recovery exclusions explicit."
+    },
+    {
+      "id": "AUTHORITY-046",
+      "sources": [
+        "formal/system/requirements.json",
+        "formal/system/mobile-consolidation.md",
+        "scripts/production-migrations.json",
+        "docs/artist-enrichment-runbook.md"
+      ],
+      "conflict": "Main5c2e0bb28 now ships Mobile6297e3f1, seven additional mapped requirements and a consolidated migration order while follow-up233188726 adds receipt/readiness/recovery boundaries. Historical enrichment schema rollback instructions also compete with the current no-data-loss deployment authority.",
+      "authority": "Approved main PR478, prior user instruction to retain newly shipped Mobile and the current canonical operations safety contract",
+      "resolution": "Normal merge preserves every unique requirement and combines observation mappings/privacy. Main analytics scalar-label contract and event supersession remain authoritative. Mobile76d19fc merges the shipped pin with exact generated readiness/receipt compatibility; no unrelated Mobile branch is substituted. Preserve main migration order and historical entries/SQL, append receipt snapshot migration, and rerun actual rehearsal. Keep current enrichment deployment authority and omit duplicated destructive schema rollback instructions; no guarded executor or current-head success is inferred from historical evidence."
     }
   ]
 }
