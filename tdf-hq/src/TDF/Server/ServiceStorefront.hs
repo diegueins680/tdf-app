@@ -1009,10 +1009,13 @@ processPaypalWebhookEventIO Env{envPool = pool} environment merchantRef envelope
           result <- tryAny $ flip runSqlPool pool $ do
             mBound <- loadBoundPaypalCapture environment merchantRef captureId
             case mBound of
-              -- Signed provider events can arrive before the capture binding.
-              -- Retain a retryable inbox entry; terminal ignore would lose the
-              -- admission fence when the delayed capture subsequently commits.
-              Nothing -> pure (PaypalEventRetry "PayPal capture binding is not available yet")
+              -- Retry exhaustion must not discard the admission fence. Persist
+              -- verified capture-scoped evidence before requesting another retry;
+              -- future binding/admission will join it without another webhook.
+              Nothing -> do
+                Checkout.recordUnmatchedCaptureException Checkout.ProviderPayPal
+                  environment merchantRef exceptionType captureId actualAmount currency now
+                pure (PaypalEventRetry "PayPal capture binding is not available yet")
               Just bound
                 | currency /= bpcCurrency bound || actualAmount > bpcExpectedAmount bound ->
                     pure (PaypalEventPermanentFailure

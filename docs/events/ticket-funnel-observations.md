@@ -15,7 +15,8 @@ unsupported browsers omit that observation. Selection requires available checkou
 a real tier, and a quantity within stock and policy limits. Opening an existing
 order never counts as selection. Checkout-start records a validated submission,
 which can still fail server admission. Payment initiation follows the backend
-provider response, not merely a button click. A browser return or approval callback
+provider response, not merely a button click. Prepared, failed and confirmed-no-charge
+responses still represent an initiated attempt and deduplicate per order/provider. A browser return or approval callback
 is not payment completion. Completion requires the fetched checkout to report
 `paid`; ticket phases additionally require `issued` fulfillment and an issued
 ticket. Revoked or unissued ticket displays do not count as ticket opens. Check-in
@@ -24,7 +25,10 @@ with a timestamp. No observation changes payment, inventory or authorization.
 
 Payloads contain only the public event/tier identifiers, bounded quantity, known
 provider, promotion-presence boolean, web platform and optionally bounded source,
-medium and campaign codes from the existing attribution store. They explicitly
+medium and campaign codes from the existing attribution store. Direct event/checkout
+landing parameters are captured before observation; a new campaign replaces stale
+attribution. Only the canonical public event path is retained, never a private
+order path or lookup query. Disabled analytics does not write attribution. They explicitly
 exclude buyer/holder details, order/ticket IDs, QR codes, credentials, raw referral
 or promotion values, landing URLs, and financial amounts. Campaign labels must
 remain non-personal codes; this syntax filter cannot detect a person's name hidden

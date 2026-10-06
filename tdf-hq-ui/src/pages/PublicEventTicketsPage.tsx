@@ -535,7 +535,6 @@ export default function PublicEventTicketsPage() {
                           initialBuyerPhone={buyerPhone}
                           onSafetyLockChange={setHostedPaymentLocked}
                           onSessionChange={(session) => {
-                            if (session.state === 'prepared' || session.state === 'failed' || session.state === 'confirmed_no_charge') return;
                             trackFunnel('payment_initiated', { eventId: checkout.eventId,
                               quantity: checkout.quote.quantity, provider: session.provider,
                               privateScope: `order:${checkout.orderId}` });

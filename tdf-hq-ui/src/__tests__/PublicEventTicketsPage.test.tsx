@@ -52,6 +52,15 @@ const qrCanvasMock = jest.fn<() => Promise<void>>().mockResolvedValue(undefined)
 jest.unstable_mockModule('qrcode', () => ({ default: { toCanvas: qrCanvasMock } }));
 jest.unstable_mockModule('../mobile/MobilePromo', () => ({ default: () => null }));
 
+const hostedCreateMock = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const hostedGetMock = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const hostedApi = await import('../api/providerPaymentSessions');
+jest.unstable_mockModule('../api/providerPaymentSessions', () => ({
+  ...hostedApi,
+  createProviderPaymentSession: hostedCreateMock,
+  getProviderPaymentSession: hostedGetMock,
+}));
+
 const { default: PublicEventTicketsPage } = await import('../pages/PublicEventTicketsPage');
 
 const storefrontFixture = {
@@ -159,6 +168,9 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     capturePaypalOrderMock.mockReset();
     readEnvMock.mockReset();
     funnelCaptureMock.mockClear();
+    analytics.ready = true;
+    hostedCreateMock.mockReset();
+    hostedGetMock.mockReset();
     delete window.paypal;
     getCheckoutMock.mockReset();
     confirmDatafastStatusMock.mockReset();
@@ -336,6 +348,58 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(container.textContent).not.toContain('El servidor verificó el pago');
     expect(container.textContent).not.toContain('TICKET-');
     expect(funnelCaptureMock).not.toHaveBeenCalled();
+  });
+
+  it.each(['prepared', 'failed', 'confirmed_no_charge'])('records a %s hosted initiation once without claiming payment', async (state) => {
+    const session = {
+      checkoutId: checkoutFixture().checkoutId,
+      attemptId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+      operationId: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+      provider: 'placetopay', state, externalId: 'request-7', redirectUrl: null,
+      outcomeCertainty: state === 'prepared' ? 'ambiguous' : 'confirmed_no_charge',
+      canRetryOrFallback: state !== 'prepared',
+    };
+    hostedCreateMock.mockResolvedValue(session);
+    hostedGetMock.mockResolvedValue(session);
+    getCheckoutMock.mockResolvedValue(checkoutFixture({
+      paymentStatus: 'awaiting_payment', paymentMethods: ['placetopay_card'],
+    }));
+    await renderTracking('/eventos/41/orden/92');
+    await waitForExpectation(() => expect(container.textContent).toContain('Tarjeta · PlaceToPay'));
+    const button = [...container.querySelectorAll('button')].find((item) => item.textContent?.includes('Tarjeta · PlaceToPay'));
+    if (!button) throw new Error('Hosted payment button missing');
+    await act(async () => fireEvent.click(button));
+    await waitForExpectation(() => expect(hostedCreateMock).toHaveBeenCalledTimes(1));
+    await waitForExpectation(() => expect(funnelCaptureMock).toHaveBeenCalledWith(
+      'ticketing_payment_initiated', expect.objectContaining({ event_id: 41, provider: 'placetopay' }),
+    ));
+    await renderTracking('/eventos/41/orden/92');
+    expect(funnelCaptureMock.mock.calls.filter(([phase]) => phase === 'ticketing_payment_initiated')).toHaveLength(1);
+    expect(funnelCaptureMock.mock.calls.map(([phase]) => phase)).not.toContain('ticketing_payment_completed');
+  });
+
+  it.each([false, true])('captures current landing attribution and replaces stale campaign (previous=%s)', async (previous) => {
+    if (previous) window.localStorage.setItem('tdf:growth-attribution:v1', JSON.stringify({
+      source: 'stale', campaign: 'old', landingPath: '/old', capturedAt: '2026-01-01T00:00:00Z',
+    }));
+    getCheckoutMock.mockResolvedValue(checkoutFixture({ paymentStatus: 'paid', fulfillmentStatus: 'seat_held' }));
+    await renderTracking('/eventos/41/orden/92?utm_source=instagram&utm_medium=social&utm_campaign=patch&lookup=private-capability');
+    await waitForExpectation(() => expect(funnelCaptureMock).toHaveBeenCalledWith('ticketing_payment_completed', expect.objectContaining({
+      attribution_source: 'instagram', attribution_medium: 'social', attribution_campaign: 'patch',
+    })));
+    const persisted = window.localStorage.getItem('tdf:growth-attribution:v1');
+    expect(JSON.parse(persisted ?? '{}')).toEqual(expect.objectContaining({ landingPath: '/eventos/41', campaign: 'patch' }));
+    expect(persisted).not.toMatch(/private-capability|orden|92|stale/);
+    expect(JSON.stringify(funnelCaptureMock.mock.calls)).not.toMatch(/private-capability|orden|92|stale/);
+  });
+
+  it('does not persist campaign attribution when analytics is disabled', async () => {
+    analytics.ready = false;
+    getCheckoutMock.mockResolvedValue(checkoutFixture({ paymentStatus: 'paid', fulfillmentStatus: 'seat_held' }));
+    await renderTracking('/eventos/41/orden/92?utm_source=instagram&utm_campaign=patch');
+    await waitForExpectation(() => expect(container.textContent).toContain('La emisión de entradas todavía está pendiente.'));
+    expect(funnelCaptureMock).not.toHaveBeenCalled();
+    expect(window.localStorage.getItem('tdf:growth-attribution:v1')).toBeNull();
   });
 
   it('renders only the exact hosted method labels supplied by the server', async () => {

@@ -72,6 +72,12 @@ ALTER TABLE event_ticket_checkout_runtime ADD COLUMN order_id BIGINT UNIQUE REFE
  ADD COLUMN event_id BIGINT, ADD COLUMN currency TEXT, ADD COLUMN checkout_total_minor BIGINT,
  ADD COLUMN payment_status TEXT DEFAULT 'paid';
 
+CREATE TABLE event_ticket_checkout_policy (
+ id UUID PRIMARY KEY DEFAULT gen_random_uuid(), event_id BIGINT NOT NULL,
+ transfer_allowed BOOLEAN NOT NULL DEFAULT true, transfer_deadline TIMESTAMPTZ
+);
+ALTER TABLE event_ticket_checkout_runtime ADD COLUMN policy_id UUID REFERENCES event_ticket_checkout_policy(id);
+
 CREATE TABLE ticket_refund_request (
  id BIGSERIAL PRIMARY KEY, order_id BIGINT NOT NULL REFERENCES event_ticket_order(id),
  requested_by_party_id TEXT, reason TEXT, amount_cents BIGINT NOT NULL,

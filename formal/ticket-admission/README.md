@@ -80,3 +80,24 @@ Protected integration and deployment gates remain before production activation. 
 the original canonical refund UUID as the stable
 [PayPal idempotency key](https://developer.paypal.com/api/rest/reference/idempotency/)
 and preserve uncertain results; automatic re-POST with a new identity is forbidden.
+
+Review hardening extends the existing reconciliation store, without a new schema:
+a verified refund/reversal with no capture binding records an `unmatched-capture:`
+reference and unknown expected amount (NULL). Inbox retries can exhaust without
+losing this evidence. Admission joins either the bound order reference or this
+capture reference, always scoped by provider, environment and merchant; changing
+an administrative reconciliation status does not clear the payment fence.
+
+Runtime-backed orders reject the legacy bulk status endpoint, before remote side
+effects and again within the event/order transaction. This protects partial refund
+allocations, used tickets and exact inventory. The existing refund request handler
+selects the uniquely succeeded provider: PayPal uses canonical allocations; other
+providers retain their existing request path. Missing/ambiguous verification fails
+closed. Retained issued/unused tickets remain transferable after partial refund;
+refunded, cancelled and refund-pending tickets cannot transfer. Transfer and refund
+allocation share the same event/order/ticket lock order.
+
+Regression qualification must include exhausted signed-event retries before late
+binding, both provider routes, legacy status rejection before/after canonical
+completion, retained transfer and transfer/refund contention. These PostgreSQL
+fixtures use synthetic financial evidence, not real provider payments.

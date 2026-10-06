@@ -94,3 +94,40 @@ test('refund negative controls expose admission race, duplicate release and prem
   assert.ok(exploreRefunds({ replayRelease: true }).violations.includes('exact-inventory'));
   assert.ok(exploreRefunds({ cancelProcessing: true }).violations.includes('uncertain-held'));
 });
+
+// An external refund may precede local binding by more than the eight inbox
+// attempts. Design abstraction only: real SQL joins are tested separately.
+function exploreLateRefund({ discardOnExhaustion = false, ignoreLateFence = false } = {}) {
+  const queue = [{ bound: false, observed: false, fence: false, attempts: 0, admitted: false }];
+  const seen = new Set();
+  const violations = new Set();
+  while (queue.length) {
+    const state = queue.shift();
+    const key = JSON.stringify(state);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    if (state.admitted) continue;
+    if (!state.bound) queue.push({ ...state, bound: true });
+    if (!state.observed) queue.push({ ...state, observed: true, fence: true });
+    if (state.observed && !state.bound && state.attempts < 8) {
+      const attempts = state.attempts + 1;
+      queue.push({ ...state, attempts, fence: !(discardOnExhaustion && attempts === 8) });
+    }
+    if (state.bound && (!state.fence || ignoreLateFence)) {
+      if (state.observed) violations.add('refunded-before-admission');
+      queue.push({ ...state, admitted: true });
+    }
+  }
+  return { states: seen.size, violations: [...violations] };
+}
+
+test('capture binding after exhausted refund retries still fences admission', () => {
+  const result = exploreLateRefund();
+  assert.ok(result.states > 15);
+  assert.deepEqual(result.violations, []);
+});
+
+test('late-refund negative controls detect discarded evidence and missed capture joins', () => {
+  assert.deepEqual(exploreLateRefund({ discardOnExhaustion: true }).violations, ['refunded-before-admission']);
+  assert.deepEqual(exploreLateRefund({ ignoreLateFence: true }).violations, ['refunded-before-admission']);
+});

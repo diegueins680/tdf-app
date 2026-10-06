@@ -4461,6 +4461,11 @@ socialEventsServer user =
         mOrder <- liftIO $ runSqlPool (get orderKey) envPool
         order <- maybe (throwError err404{errBody = "Ticket order not found"}) pure mOrder
         when (eventTicketOrderEventId order /= eventKey) $ throwError err400{errBody = "Ticket order does not belong to this event"}
+        canonicalOrder <- liftIO $ runSqlPool
+            (rawSql "SELECT EXISTS(SELECT 1 FROM event_ticket_checkout_runtime WHERE order_id=?)"
+                [toPersistValue orderKey] :: SqlPersistT IO [Single Bool]) envPool
+        when (canonicalOrder /= [Single False]) $
+            throwError err409 {errBody = "Use the canonical cancellation or refund workflow for this order"}
         oldStatus <-
             either
                 throwError
@@ -4534,53 +4539,67 @@ socialEventsServer user =
                 "cancelled" -> "cancelled"
                 "refunded" -> "refunded"
                 _ -> "issued"
-        (statusChanged, orderDto) <-
+        (canonicalBlocked, statusChanged, orderDto) <-
             liftIO $
                 runSqlPool
                     ( do
-                        changedCount <-
-                            updateWhereCount
-                                [ EventTicketOrderId ==. orderKey
-                                , EventTicketOrderStatus ==. eventTicketOrderStatus order
-                                ]
-                                [ EventTicketOrderStatus =. newStatus
-                                , EventTicketOrderUpdatedAt =. now
-                                ]
-                        let changed = changedCount > 0
-                        when changed $ do
-                            when (soldAdjust /= 0) $
-                                update
-                                    (eventTicketOrderTierId order)
-                                    [ EventTicketTierQuantitySold +=. soldAdjust
-                                    , EventTicketTierUpdatedAt =. now
+                        -- Match refund/admission lock order and recheck inside the
+                        -- mutation transaction; an earlier authorization read is not a fence.
+                        backendName <- T.toCaseFold <$> getRDBMS
+                        let lockSuffix = if "postgres" `T.isInfixOf` backendName then " FOR UPDATE" else ""
+                        _ <- (rawSql ("SELECT id FROM social_event WHERE id=?" <> lockSuffix)
+                            [toPersistValue eventKey] :: SqlPersistT IO [Single Int64])
+                        _ <- (rawSql ("SELECT id FROM event_ticket_order WHERE id=?" <> lockSuffix)
+                            [toPersistValue orderKey] :: SqlPersistT IO [Single Int64])
+                        canonical <- (rawSql
+                            "SELECT EXISTS(SELECT 1 FROM event_ticket_checkout_runtime WHERE order_id=?)"
+                            [toPersistValue orderKey] :: SqlPersistT IO [Single Bool])
+                        if canonical /= [Single False] then pure (True, False, Nothing) else do
+                            changedCount <-
+                                updateWhereCount
+                                    [ EventTicketOrderId ==. orderKey
+                                    , EventTicketOrderStatus ==. eventTicketOrderStatus order
                                     ]
-                            when (oldStatus == "pending" && newStatus == "paid") $ do
-                                _ <- issueMissingTicketsForOrder now orderKey order
-                                pure ()
-                            let ticketUpdates =
-                                    [ EventTicketStatus =. nextTicketStatus
-                                    , EventTicketUpdatedAt =. now
+                                    [ EventTicketOrderStatus =. newStatus
+                                    , EventTicketOrderUpdatedAt =. now
                                     ]
-                                        ++ if nextTicketStatus == "issued"
-                                            then [EventTicketCheckedInAt =. Nothing]
-                                            else []
-                            updateWhere [EventTicketOrderRefId ==. orderKey] ticketUpdates
-                            when
-                                ( oldStatus == "pending"
-                                    && newStatus `elem` ["cancelled", "refunded"]
-                                )
-                                $ forM_ (eventTicketOrderPromoCodeId order)
-                                $ \promoKey ->
-                                    update promoKey [PromoCodeCurrentRedemptions +=. (-1)]
-                        mOrderEnt <- getEntity orderKey
-                        case mOrderEnt of
-                            Nothing -> pure (changed, Nothing)
-                            Just orderEnt -> do
-                                tickets <- selectList [EventTicketOrderRefId ==. orderKey] [Asc EventTicketId]
-                                pure (changed, Just (ticketOrderEntityToDTO orderEnt tickets))
+                            let changed = changedCount > 0
+                            when changed $ do
+                                when (soldAdjust /= 0) $
+                                    update
+                                        (eventTicketOrderTierId order)
+                                        [ EventTicketTierQuantitySold +=. soldAdjust
+                                        , EventTicketTierUpdatedAt =. now
+                                        ]
+                                when (oldStatus == "pending" && newStatus == "paid") $ do
+                                    _ <- issueMissingTicketsForOrder now orderKey order
+                                    pure ()
+                                let ticketUpdates =
+                                        [ EventTicketStatus =. nextTicketStatus
+                                        , EventTicketUpdatedAt =. now
+                                        ]
+                                            ++ if nextTicketStatus == "issued"
+                                                then [EventTicketCheckedInAt =. Nothing]
+                                                else []
+                                updateWhere [EventTicketOrderRefId ==. orderKey] ticketUpdates
+                                when
+                                    ( oldStatus == "pending"
+                                        && newStatus `elem` ["cancelled", "refunded"]
+                                    )
+                                    $ forM_ (eventTicketOrderPromoCodeId order)
+                                    $ \promoKey ->
+                                        update promoKey [PromoCodeCurrentRedemptions +=. (-1)]
+                            mOrderEnt <- getEntity orderKey
+                            case mOrderEnt of
+                                Nothing -> pure (False, changed, Nothing)
+                                Just orderEnt -> do
+                                    tickets <- selectList [EventTicketOrderRefId ==. orderKey] [Asc EventTicketId]
+                                    pure (False, changed, Just (ticketOrderEntityToDTO orderEnt tickets))
                     )
                     envPool
 
+        when canonicalBlocked $
+            throwError err409 {errBody = "Use the canonical cancellation or refund workflow for this order"}
         case orderDto of
             Nothing -> throwError err500{errBody = "Could not update ticket order"}
             Just dto
@@ -5274,7 +5293,14 @@ socialEventsServer user =
         canonical <- liftIO $ runSqlPool
             (rawSql "SELECT order_id FROM event_ticket_checkout_runtime WHERE order_id=?" [toPersistValue orderKey]
                 :: SqlPersistT IO [Single Int64]) envPool
-        if not (null canonical) then do
+        providers <- if null canonical then pure [] else liftIO $ runSqlPool
+            (rawSql "SELECT DISTINCT attempt.provider FROM event_ticket_checkout_runtime runtime\
+                \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id=runtime.checkout_id\
+                \ WHERE runtime.order_id=? AND attempt.status='succeeded'"
+                [toPersistValue orderKey] :: SqlPersistT IO [Single T.Text]) envPool
+        when (not (null canonical) && length providers /= 1) $
+            throwError err409 {errBody = "Refund requires one unambiguous verified payment provider"}
+        if providers == [Single "paypal"] then do
             result <- liftIO $ try (runSqlPool
                 (TicketRefund.requestTicketRefundForOrder currentPartyId eventKey orderKey
                     refundRequestAmountCents refundRequestReason now) envPool)

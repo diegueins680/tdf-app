@@ -106,7 +106,8 @@ admitTicket actor eventKey lookupValue now = do
             \ ON exception.provider=binding.provider AND exception.environment=binding.environment\
             \ AND exception.merchant_account_ref=binding.merchant_account_ref\
             \ AND exception.provider_reference=binding.provider_resource_id\
-            \ AND exception.internal_reference=runtime.order_id::text\
+            \ AND (exception.internal_reference=runtime.order_id::text\
+            \ OR exception.internal_reference='unmatched-capture:' || binding.provider_resource_id)\
             \ WHERE runtime.order_id=? AND binding.resource_type='capture'\
             \ AND exception.exception_type IN ('external_refund_detected','external_reversal_detected'))"
             [toPersistValue (M.eventTicketOrderRefId ticket)]

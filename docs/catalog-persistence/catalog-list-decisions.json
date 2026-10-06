@@ -57190,6 +57190,21 @@
           }
         ]
       }
+    },
+    {
+      "id": "8d92943abad9c2a47c8f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Confusing an initiated provider session with a completed payment distorts the funnel.",
+      "justification": "Synthetic PaymentSession response field names in a component regression fixture follow the existing generated API contract. They are protocol keys, not selectable business catalog values or production payment evidence.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "line": 354
+      },
+      "reviewBatch": "ticket-review-regressions-2026-10-06"
     }
   ]
 }

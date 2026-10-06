@@ -32,6 +32,7 @@ module TDF.Commerce.CheckoutStore
   , recordApprovedManualPayment
   , validateApprovedManualPayment
   , recordReconciliationException
+  , recordUnmatchedCaptureException
   , providerEnabledForEnvironment
   , domainEnabledForEnvironment
   , capabilityEnabledForEnvironment
@@ -807,7 +808,23 @@ recordReconciliationException
   -> Text
   -> UTCTime
   -> SqlPersistT IO ()
-recordReconciliationException provider environment merchantRef exceptionType internalRef providerRef expectedAmount actualAmount currency detectedAt = do
+recordReconciliationException provider environment merchantRef exceptionType internalRef providerRef expectedAmount =
+  recordReconciliationExceptionWithExpected provider environment merchantRef exceptionType internalRef providerRef (Just expectedAmount)
+
+-- A verified external change can precede any local capture binding. Preserve a
+-- durable capture-scoped fence independently of the inbox's finite retry budget.
+-- The expected amount is unknown, not an invented zero or a financial posting.
+recordUnmatchedCaptureException
+  :: PaymentProvider -> CheckoutEnvironment -> Text -> Text -> Text -> Int64
+  -> Text -> UTCTime -> SqlPersistT IO ()
+recordUnmatchedCaptureException provider environment merchantRef exceptionType captureId actualAmount =
+  recordReconciliationExceptionWithExpected provider environment merchantRef exceptionType
+    ("unmatched-capture:" <> captureId) captureId Nothing (Just actualAmount)
+
+recordReconciliationExceptionWithExpected
+  :: PaymentProvider -> CheckoutEnvironment -> Text -> Text -> Text -> Text
+  -> Maybe Int64 -> Maybe Int64 -> Text -> UTCTime -> SqlPersistT IO ()
+recordReconciliationExceptionWithExpected provider environment merchantRef exceptionType internalRef providerRef expectedAmount actualAmount currency detectedAt = do
   exceptionId <- liftIO (toText <$> nextRandom)
   rawExecute
     "INSERT INTO commerce_reconciliation_exception (\
@@ -823,7 +840,7 @@ recordReconciliationException provider environment merchantRef exceptionType int
     , PersistText (T.take 120 exceptionType)
     , PersistText internalRef
     , PersistText providerRef
-    , PersistInt64 expectedAmount
+    , maybe PersistNull PersistInt64 expectedAmount
     , maybe PersistNull PersistInt64 actualAmount
     , PersistText (normalizeCurrency currency)
     , PersistUTCTime detectedAt
