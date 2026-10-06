@@ -6090,7 +6090,7 @@
     ".github/workflows/ci.yml": "b5f123f33695eb912cf9f3956a4b2620add70006c42d86f8a52755c663ccc0c3",
     ".github/workflows/event-operations-formal.yml": "8cdbbb59f539a8394fde147ba38dc4f27260b9ac2c371c731da5b342401077d1",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
-    "docs/catalog-persistence/catalog-list-decisions.json": "9b909a41b75dc75874a65804a865bcb1549809d54275037dd5a4f7c1b5e7f310",
+    "docs/catalog-persistence/catalog-list-decisions.json": "ef8c0b5bb4279bebccb4035d6385203c37cc7ee93fec1abcb8131a68d1fe08ce",
     "e2e/web/persona-public.spec.mjs": "6139931ec62f72023f6356c311c677561b5fd4101cb8b4efa06e8e8f51530d38",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
     "formal/event-operations/CatalogReorder.tla": "ab228ae812143f050feac4035e9724fb647a1072cb7816d500894ea1ba335c5d",
