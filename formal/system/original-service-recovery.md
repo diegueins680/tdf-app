@@ -28,8 +28,8 @@ a dangling marker symlink, unrelated stopped container or lost observation
 blocks the stage. It deletes no containers, markers, archives or directories.
 
 This supports aborts before disposable creation. Existing or ambiguously created
-disposables need a separate cleanup adapter with a durably recorded pre-create
-identity; the legacy nonce/image marker alone cannot authorize adoption or
+disposables use `original-disposable-cleanup.py` with a durably recorded pre-create
+identity (see [its contract](disposable-cleanup.md)); the legacy nonce/image marker alone cannot authorize adoption or
 deletion. The actual fresh host boot must quiesce earlier daemon requests, and
 privileged noncooperating creation remains outside the sampled boundary.
 
@@ -238,9 +238,10 @@ All cooperating creators must use the permanent lock; privileged uncoordinated
 creation or rename remains outside sampled absence guarantees.
 
 Real filesystem/journal/lock controls and synthetic Docker observations verify
-these boundaries. Complete real-Docker creation/canary/cleanup composition and
-fresh-boot abort cleanup remain unfinished. The latter must authenticate the
-versioned marker and descriptors, reject unrelated inventory, remove canary before
-database, and retain uncertainty on lost replies. Legacy marker adoption is not
-authorized. The empty-set adapter remains the only complete abort cleanup-stage
-adapter; these component checks confer no production eligibility.
+these boundaries. The owned Linux fixture composes real creation/canary/cleanup with the abort
+adapter described in [disposable-cleanup.md](disposable-cleanup.md). It authenticates
+versioned records, rejects unrelated inventory, removes canary before database and
+retains uncertain replies across recorded synthetic epochs. Actual boot behavior,
+first legacy shutdown, custody and complete coordinator qualification remain open.
+Legacy marker adoption is not authorized; these components confer no production
+eligibility.

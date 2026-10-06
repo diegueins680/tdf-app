@@ -6079,7 +6079,8 @@
         "ops/hetzner/original-disposable-absence.py",
         "ops/hetzner/disposable-creation-spec.py",
         "ops/hetzner/durable-disposable-records.py",
-        "ops/hetzner/coordinated-disposable-creation.py"
+        "ops/hetzner/coordinated-disposable-creation.py",
+        "ops/hetzner/original-disposable-cleanup.py"
       ],
       "tests": [
         "scripts/test-release-journal.py",
@@ -6106,7 +6107,9 @@
         "scripts/test-original-disposable-absence.py",
         "scripts/test-disposable-creation-spec.py",
         "scripts/test-durable-disposable-records.py",
-        "scripts/test-coordinated-disposable-creation.py"
+        "scripts/test-coordinated-disposable-creation.py",
+        "scripts/test-original-disposable-cleanup.py",
+        "scripts/test-coordinated-disposable-linux.py"
       ],
       "formalModels": [
         "formal/event-operations/ReleaseJournal.tla",
@@ -6126,13 +6129,19 @@
         "formal/event-operations/AbortServiceRecoveryNoIntent.cfg",
         "formal/event-operations/AbortServiceRecoveryReplay.cfg",
         "formal/event-operations/AbortServiceRecoverySameBoot.cfg",
-        "formal/event-operations/AbortServiceRecoveryUnbound.cfg"
+        "formal/event-operations/AbortServiceRecoveryUnbound.cfg",
+        "formal/event-operations/DisposableCleanup.tla",
+        "formal/event-operations/DisposableCleanup.cfg",
+        "formal/event-operations/DisposableCleanupOriginal.cfg",
+        "formal/event-operations/DisposableCleanupOrder.cfg",
+        "formal/event-operations/DisposableCleanupReplay.cfg",
+        "formal/event-operations/DisposableCleanupAbsence.cfg"
       ],
       "status": "specified and implemented",
       "confidence": "Real temporary filesystem, crash/child and fault-injection controls; no production coordinator claim.",
       "ambiguity": [
         "Effect validators, fixed global directory admission, terminal rotation, operator recovery and deployment coordinator remain open.",
-        "Versioned reservations bind real journals, original admission, plan images and actual dependent physical CID; normal release requires complete absence observations. Integrated real Docker creation/cleanup, fresh-boot identity-bound abort cleanup and the full coordinator remain unfinished."
+        "Versioned creation and abort cleanup are implemented as components with real-journal controls and owned Docker composition; synthetic boot/crypto observations do not qualify actual reboot, first legacy shutdown, off-host key custody or the full coordinator."
       ],
       "verification": "Actual journal/process death, lock contention, fsync errors, source mutations and observation controls; owned Linux PG17 exit137 recovery and optional real immutable backend namespace probes. The API fixture explicitly distinguishes rejected unclean shutdown from subsequent abort recovery; boot epochs are synthetic there. Separate real-reboot fixture remains scoped. Optional real immutable Caddy fixture verifies trusted TLS routing and rejects untrusted/wrong-host certificates; temporary trust cleanup has failure injection. Timer controls reject changed/busy units, missing services, ledger drift and uncertain replay; Linux fixture optionally restores actual systemd scheduling. Terminal controls require eight fresh API/edge probes, unchanged closing database/timer admission and no restore marker or labeled disposable; failures retain pending intent and cannot reopen the normal release. Empty-disposable controls preserve pending markers/symlinks and extra containers, reject changed inventories and lost-read replay, and check two exact complete inventory reads without deletion.",
       "conformance": {
@@ -7285,7 +7294,7 @@
   ],
   "sourceFingerprints": {
     ".github/workflows/artist-enrichment-daily.yml": "9c03d8d4b12e843409fa87606e773f76ff2fdbfdd4b919a44c34c5e32f5e4ade",
-    ".github/workflows/build.yml": "9742c22b6211816ce5de12874d92b47e4d614941093ee2dd1198a6b311a05c4a",
+    ".github/workflows/build.yml": "0b4fafaa721076cfe4974a658cfea0c736767305b22227a6633edf62651d89d4",
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/ci.yml": "098b6616672b5aaf9addd8c8615c1ba397e0c320e049ce25a986adf5d79c3886",
     ".github/workflows/event-operations-formal.yml": "a038253d968022ed95501359a07f16852bf8dcc1da198b7aa303543f0f95b552",
@@ -7341,6 +7350,12 @@
     "formal/event-operations/ChatMutationNoRollback.cfg": "689d923264fb1fc9bbd57fae69dcc6fac4619d9ff7f050b5f1be15f09090457f",
     "formal/event-operations/CredentialLifecycle.tla": "2930edc753523a7a315cd76a04e389570785c8fd39eb0cd1ea69e700c1f528bc",
     "formal/event-operations/DirectoryClaimReview.tla": "bad88bce95e46906a7f202d7d798efabbd87202fd822e7c9202184479bb1b652",
+    "formal/event-operations/DisposableCleanup.cfg": "c2c9e8d3a413a892a54a9781599bf23c90e43b6361da255014bbf9a567214642",
+    "formal/event-operations/DisposableCleanup.tla": "edf3ccd7395491e6f5f5db583ae47d28109658434df70947a9c7df8440700235",
+    "formal/event-operations/DisposableCleanupAbsence.cfg": "62cfcb44d2e11087a67dde0ddd48b2e052387892c660605b751dc39d8337ec36",
+    "formal/event-operations/DisposableCleanupOrder.cfg": "269021830d347426ac8aaa8227c7a14568253ab494d44a179a7b3aaedccf05b1",
+    "formal/event-operations/DisposableCleanupOriginal.cfg": "943255302af8c48bb94bdb6979d67401959519f982f835868807d3690962561c",
+    "formal/event-operations/DisposableCleanupReplay.cfg": "1fa1797a308c0cf1b722fabe9613a062a001ffbbc4b6acb9ce6238fe97f1fd92",
     "formal/event-operations/FanHubOnboarding.tla": "07defbfba2dad98e7f1ca70700d7521204c8a86af90f356ed42d342f8492e71d",
     "formal/event-operations/HostedServicePayment.cfg": "29663fa3078459cb0abf5de479b7206aa840c6779fc9522f2eefa9d1592d2227",
     "formal/event-operations/HostedServicePayment.tla": "675bacb7fce3962a773608e51901383cd41993b0c079fc20989f231e4df928a1",
@@ -7429,6 +7444,7 @@
     "ops/hetzner/original-database-recovery.py": "94b61ec2db602f4a3a16c9c9b573a8261944c715cbb90e51ff1df24b32183a64",
     "ops/hetzner/original-deployment-admission.py": "74e9dd04c00a7648328ca3c8d4168dec9fcd6a089c580ee1c00d47cf101888a0",
     "ops/hetzner/original-disposable-absence.py": "dafe67a093aca36bd902aac8ba2780d8af47742c41b7f2cc6be98ee2f2c79804",
+    "ops/hetzner/original-disposable-cleanup.py": "5ee11be5857ce6a78c17e8ac733e85b27d1ad116f767310fe755420881e5f5fe",
     "ops/hetzner/original-edge-recovery.py": "6b477fb920b029e05913e6c1315419c507ea9f6bf3570f9fc9119f1e197f18c4",
     "ops/hetzner/original-recovery-completion.py": "c130c481e943507ac0894373ab6f31befc2beebf343f70c5480bddbe1a8c1f96",
     "ops/hetzner/original-timer-recovery.py": "a816d29085d590739d189c27e88753e022d0ef2c6fce6aaa7d0401061ec4a297",
@@ -7526,7 +7542,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "cb2314fd0cabc999f38a5bbb0ce07e7fb48fa054c6dcc9e2306b8976f3f1a2ba",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "58cabf7d6f13eb4b82050fa21d402d9b01725a6eac133a29b74f8c18127778d4",
+    "scripts/quality-repo.sh": "8770f51fd49d485ab31f2811a5056412ae99abac26aa4c51ec4f1d0582743406",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/social/ChatSpec.hs": "2427bc435d4644eebff2635882b7f08aab86fc0618f90b0ef067bb7e7fcf152f",
@@ -7543,6 +7559,7 @@
     "scripts/test-booking-conformance.py": "b3ba31f78fa10e86a14389b11768f8b91f950101db8a565a67e9515e12992361",
     "scripts/test-coordinated-capture.py": "985533f688d3921709a02ca94ff6092c8e806de3633b4302fc135ec9cd34cc5e",
     "scripts/test-coordinated-disposable-creation.py": "42fab595f45f4bd936a3814ee54c669d1a1120cdfaa9164c82eb4287c0a7fb9e",
+    "scripts/test-coordinated-disposable-linux.py": "90e70ef2b3fd0944b73a9c2365e42dcef2c7d6e41b441fca2b50c6956178f1b4",
     "scripts/test-coordinated-encryption.py": "060b6962d1a584aaa7878be2fb97b599040098fabefc6367e1f247a5adfa0636",
     "scripts/test-coordinated-recovery-bundle.py": "eb95fc17e1487074d0cdbe1573c41078575a69ededa0e36d539156fe9be020b5",
     "scripts/test-coordinated-retrieval.py": "70d26c1b7d4b868d9d4ffaa478396132be3d278947145457c5b2709b01a20d3a",
@@ -7568,6 +7585,7 @@
     "scripts/test-original-database-recovery.py": "923fe04cb0ce3df1713120e84e46c856a05f5c413856b501876fe8322752af2d",
     "scripts/test-original-deployment-admission.py": "7603918240c9647bbfcec05c3dd4ed049c74950ea4692be578b49c6a70632795",
     "scripts/test-original-disposable-absence.py": "5aafe03bb0085bfcc536f448b736ee0eb153ed26163e11007542a7b441df0c7c",
+    "scripts/test-original-disposable-cleanup.py": "306cbf7263b67d87521e1aac915c4e5623ce64871b46f31ebdfeb76b92a7bd87",
     "scripts/test-original-edge-recovery.py": "d506f06debf585067596e55a544c3e3eda02567f4bdf9c7c8f2362bdd305fa9f",
     "scripts/test-original-edge-tls.py": "0489ad75134e1edb95e18b4bf91adf41f50665b776b1f07dbe9d2f4d82e09d70",
     "scripts/test-original-recovery-completion.py": "e727984dde800ad650aac46e6ae16e01baaa51b4ef103b97d2f4a619df2b6a52",
@@ -7579,7 +7597,7 @@
     "scripts/test-physical-postgres-recovery.py": "6faa758f68da887d63a96ca72e1fb094838c4abc867ef7b52bd8745ff28bf703",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-production-recovery-sources.py": "4021b8fdbb5dc8cebe73c594201149f1207edd89faadb0631e2fd7220898f2dc",
-    "scripts/test-production-writer-fence-linux.py": "1fb6eab84bd2c923ea75677704dbfea36b34c43b6d3fb3e8371134066d04e19b",
+    "scripts/test-production-writer-fence-linux.py": "f7dfe13e79c60e7a39e75fc0e4dd4c663af79b1f9c7878c1b8593a8ae183ebe0",
     "scripts/test-production-writer-fence.py": "3c3b0a2188e17640376802abd576dd7d3ee9844a411cdb4a6e6d117fec6bfeb5",
     "scripts/test-provider-identity.sh": "20b88f842871ab63465a119efa54b0b492c82aa42e00c96c28ba26aafeeecf32",
     "scripts/test-provider-retry-runtime.sh": "41eee0fc6a222fdfecfd72120812868e6694cb2920ca245e8d383937318a65db",
@@ -7613,7 +7631,7 @@
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-contract-storage.py": "ceae1810751a8311c9771a89b647054a75063c93ea413273a86f6ee6e6a8af07",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
-    "scripts/verify-event-operations-formal.sh": "1b7b82c966f649adc69ebbb39964a0b88eed0e64eaefc36c33f6ff535c8cb0a4",
+    "scripts/verify-event-operations-formal.sh": "e824bbedca41b6bb2b46afeb0cd1be37aaaddc2d45d364fc9bd570ba9a3eff57",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
     "scripts/verify-invoice-receipt-api.mjs": "0f52fda4b37ae2fe9f8087f193f41210c9f099a461f05a0bb9dcde4ea32eb80a",
     "scripts/verify-invoice-receipts.py": "f729a30dcae4061bd555c8137b4e94166fbc575db0a54bb17f72f70a196c0951",
@@ -11588,6 +11606,12 @@
         "relationship": "implementation"
       }
     ],
+    "ops/hetzner/original-disposable-cleanup.py": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-release-journal.py": [
       {
         "requirement": "DEPLOY-JOURNAL-001",
@@ -11722,6 +11746,18 @@
         "relationship": "tests"
       }
     ],
+    "scripts/test-original-disposable-cleanup.py": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-coordinated-disposable-linux.py": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "tests"
+      }
+    ],
     "formal/event-operations/ReleaseJournal.tla": [
       {
         "requirement": "DEPLOY-JOURNAL-001",
@@ -11825,6 +11861,42 @@
       }
     ],
     "formal/event-operations/AbortServiceRecoveryUnbound.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/DisposableCleanup.tla": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/DisposableCleanup.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/DisposableCleanupOriginal.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/DisposableCleanupOrder.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/DisposableCleanupReplay.cfg": [
+      {
+        "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/event-operations/DisposableCleanupAbsence.cfg": [
       {
         "requirement": "DEPLOY-JOURNAL-001",
         "relationship": "formalModels"
@@ -12773,7 +12845,7 @@
     {
       "id": "SURFACE-5c3fa597431eda03",
       "path": ".github/workflows/build.yml",
-      "sha256": "9742c22b6211816ce5de12874d92b47e4d614941093ee2dd1198a6b311a05c4a",
+      "sha256": "0b4fafaa721076cfe4974a658cfea0c736767305b22227a6633edf62651d89d4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -13534,6 +13606,18 @@
       "id": "SURFACE-5d210d33b182d334",
       "path": "ops/hetzner/original-disposable-absence.py",
       "sha256": "dafe67a093aca36bd902aac8ba2780d8af47742c41b7f2cc6be98ee2f2c79804",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-08e58308a0e8d89f",
+      "path": "ops/hetzner/original-disposable-cleanup.py",
+      "sha256": "5ee11be5857ce6a78c17e8ac733e85b27d1ad116f767310fe755420881e5f5fe",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15713,7 +15797,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "58cabf7d6f13eb4b82050fa21d402d9b01725a6eac133a29b74f8c18127778d4",
+      "sha256": "8770f51fd49d485ab31f2811a5056412ae99abac26aa4c51ec4f1d0582743406",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16597,6 +16681,18 @@
       ]
     },
     {
+      "id": "SURFACE-6c6395b4f7b95c8e",
+      "path": "scripts/test-coordinated-disposable-linux.py",
+      "sha256": "90e70ef2b3fd0944b73a9c2365e42dcef2c7d6e41b441fca2b50c6956178f1b4",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-df74c8715e71b50d",
       "path": "scripts/test-coordinated-encryption.py",
       "sha256": "060b6962d1a584aaa7878be2fb97b599040098fabefc6367e1f247a5adfa0636",
@@ -17167,6 +17263,18 @@
       ]
     },
     {
+      "id": "SURFACE-48ac19ebbfc90cfb",
+      "path": "scripts/test-original-disposable-cleanup.py",
+      "sha256": "306cbf7263b67d87521e1aac915c4e5623ce64871b46f31ebdfeb76b92a7bd87",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-2367aa1681a81b5b",
       "path": "scripts/test-original-edge-recovery.py",
       "sha256": "d506f06debf585067596e55a544c3e3eda02567f4bdf9c7c8f2362bdd305fa9f",
@@ -17327,7 +17435,7 @@
     {
       "id": "SURFACE-b42b59299d730ebb",
       "path": "scripts/test-production-writer-fence-linux.py",
-      "sha256": "1fb6eab84bd2c923ea75677704dbfea36b34c43b6d3fb3e8371134066d04e19b",
+      "sha256": "f7dfe13e79c60e7a39e75fc0e4dd4c663af79b1f9c7878c1b8593a8ae183ebe0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -17917,7 +18025,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "1b7b82c966f649adc69ebbb39964a0b88eed0e64eaefc36c33f6ff535c8cb0a4",
+      "sha256": "e824bbedca41b6bb2b46afeb0cd1be37aaaddc2d45d364fc9bd570ba9a3eff57",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35890,7 +35998,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "dfb54540770d172874e2367dbc4eb3edfc0f1ec71f5ce7e5a7a4d3ac2f20356e",
+      "sourceSha256": "fd94975b85c116cafc16a068206e2c1b6de182602b0c3e5e9121ae1833ca436b",
       "definition": {
         "states": [
           "absent",

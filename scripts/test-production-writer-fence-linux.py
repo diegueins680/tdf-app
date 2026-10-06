@@ -160,6 +160,11 @@ def cleanup_preserving_tls(resource_cleanup,tls):
 
 def exercise_database_recovery(archive, saved, db, actual_application=False, actual_edge=False):
     terminal_verified=False
+    disposable_evidence=None
+    if os.environ.get('TDF_TEST_DISPOSABLE_ABORT_RECOVERY')=='1':
+        fixture_spec=importlib.util.spec_from_file_location('owned_disposable_fixture',ROOT/'scripts/test-coordinated-disposable-linux.py')
+        fixture=importlib.util.module_from_spec(fixture_spec);fixture_spec.loader.exec_module(fixture)
+        disposable_evidence=fixture.prepare(sys.modules[__name__],archive,saved)
     """Real PostgreSQL/Docker/files; synthetic boot epoch, explicitly no reboot."""
     recovery=load('linux_original_db_recovery','original-database-recovery.py')
     service=load('linux_original_db_journal','abort-service-journal.py')
@@ -209,7 +214,40 @@ def exercise_database_recovery(archive, saved, db, actual_application=False, act
             absence=load('linux_original_absence','original-disposable-absence.py')
             absence_reservation=absence.d.Reservation(reservation.directory,reservation.descriptor)
             absence_adapter=absence.OriginalDisposableAbsence(journal,archive,absence_reservation)
-            absence_state=absence_adapter.recover()
+            if disposable_evidence is not None:
+                cleanup=load('linux_disposable_cleanup','original-disposable-cleanup.py')
+                cleanup_reservation=cleanup.d.Reservation(reservation.directory,reservation.descriptor)
+                cleanup_adapter=cleanup.OriginalDisposableCleanup(journal,archive,cleanup_reservation)
+                cleanup_execute=cleanup.d.o.fence.execute
+                removal_calls=[]
+                def lose_final_removal_reply(command):
+                    result=cleanup_execute(command)
+                    if command[:len(DOCKER)+2]==DOCKER+['rm','--force']:
+                        removal_calls.append(command[-1])
+                        if command[-1]==disposable_evidence['database']:
+                            raise TimeoutError('Synthetic lost final removal acknowledgement')
+                    return result
+                with patch.object(cleanup.d.o.fence,'execute',side_effect=lose_final_removal_reply):
+                    try:cleanup_adapter.recover()
+                    except TimeoutError:pass
+                    else:require(False)
+                require(removal_calls==[disposable_evidence['canary'],disposable_evidence['database']]
+                        and journal.current()['pendingStage']=='remove-disposables'
+                        and os.path.lexists(reservation.directory/cleanup.d.restore.PENDING_NAME))
+                try:cleanup_adapter.recover()
+                except ValueError:pass
+                else:require(False)
+                journal.request_next_reboot(lambda:None)
+                synthetic['bootId']='cccccccc-cccc-cccc-cccc-cccccccccccc'
+                journal.begin_epoch()
+                absence_state=cleanup_adapter.recover()
+                disposable_evidence['lostFinalRemovalReplyRequiresRecordedEpoch']=True
+                require(not os.path.lexists(reservation.directory/cleanup.d.restore.PENDING_NAME))
+                require(set(run(DOCKER+['ps','--all','--quiet','--no-trunc']).split())==
+                        {row['containerId'] for row in saved['originalDeployment']['expected'].values()})
+                require(Path(disposable_evidence['directory']).is_dir())
+            else:
+                absence_state=absence_adapter.recover()
             require(absence_state['completedStages']==['remove-disposables'])
             adapter=recovery.OriginalDatabase(journal,archive,reservation)
             version.rename(held)
@@ -270,7 +308,8 @@ def exercise_database_recovery(archive, saved, db, actual_application=False, act
                 'SELECT value FROM abort_committed_data;'])=='preserved-after-kill')
     require(recovery.o.database_identity(db)==saved['originalDeployment']['database'])
     return {'actualPostgresExit137Recovered':True,'committedDataPreserved':True,
-            'emptyDisposableSetAdmitted':True,'disposableRemovalExercised':False,
+            'emptyDisposableSetAdmitted':True,'disposableRemovalExercised':disposable_evidence is not None,
+            'disposableCreation':disposable_evidence,
             'terminalRecoverySequenceComplete':terminal_verified,
             'missingClusterControls':rejected,'sameEpochDuplicateDenied':True,'missingClusterDeniedBeforeActualStart':True,
             'secondRecordedSyntheticEpochRequired':True,
@@ -456,6 +495,11 @@ def main():
         plan = {key: ('sha256:'+'1'*64 if key.endswith('Image') else '1'*(40 if key.endswith('Revision') else 64))
                 for key in j.PLAN_KEYS}
         plan['runtimeHash'] = admitted['runtimeConfigurationSha256']
+        if os.environ.get('TDF_TEST_DISPOSABLE_ABORT_RECOVERY')=='1':
+            require(actual_application)
+            plan['recoveryImage']=expected['db']['image'].split('@')[1]
+            plan['candidateImage']=expected['api']['image'].split('@')[1]
+            plan['sourceRevision']=run(DOCKER+['exec',expected['api']['containerId'],'cat','/app/COMMIT'])
         source = None if actual_application else s.RetainedRoot(**dict(target=expected['api']['containerId'],
             image=expected['api']['image'], image_id=expected['api']['imageId']))
         with j.open_journal(str(archive/'journal')) as journal, (source.pinned() if source else nullcontext()):

@@ -103,6 +103,11 @@ run_negative_tlc ApplicationCanaryCleanup.cfg applicationcanarycleanup 'Invarian
 run_negative_tlc ApplicationCanaryFalseGreen.cfg applicationcanaryfalsegreen 'Invariant VerifiedReceipt is violated' ApplicationCanary.tla
 run_tlc ReleaseJournal.tla ReleaseJournal.cfg releasejournal
 run_tlc AbortRecovery.tla AbortRecovery.cfg abortrecovery
+run_tlc DisposableCleanup.tla DisposableCleanup.cfg disposable-cleanup
+run_negative_tlc DisposableCleanupOriginal.cfg disposable-cleanup-original 'Invariant OriginalPreserved is violated' DisposableCleanup.tla
+run_negative_tlc DisposableCleanupOrder.cfg disposable-cleanup-order 'Invariant CanaryRemovedFirst is violated' DisposableCleanup.tla
+run_negative_tlc DisposableCleanupReplay.cfg disposable-cleanup-replay 'Invariant NoSameEpochReplay is violated' DisposableCleanup.tla
+run_negative_tlc DisposableCleanupAbsence.cfg disposable-cleanup-absence 'Invariant MarkerRequiresAbsence is violated' DisposableCleanup.tla
 run_tlc ApplicationShutdown.tla ApplicationShutdown.cfg application-shutdown
 run_negative_tlc ApplicationShutdownLateListener.cfg application-shutdown-late 'Invariant LateListenerClosed is violated' ApplicationShutdown.tla
 run_negative_tlc ApplicationShutdownLatePublication.cfg application-shutdown-publication 'Invariant NoLatePublication is violated' ApplicationShutdown.tla

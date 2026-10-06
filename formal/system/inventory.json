@@ -89,6 +89,7 @@
       "ops/hetzner/original-database-recovery.py",
       "ops/hetzner/original-deployment-admission.py",
       "ops/hetzner/original-disposable-absence.py",
+      "ops/hetzner/original-disposable-cleanup.py",
       "ops/hetzner/original-edge-recovery.py",
       "ops/hetzner/original-recovery-completion.py",
       "ops/hetzner/original-timer-recovery.py",
@@ -400,6 +401,7 @@
       "scripts/test-contextual-reputation-worker-migration.sh",
       "scripts/test-coordinated-capture.py",
       "scripts/test-coordinated-disposable-creation.py",
+      "scripts/test-coordinated-disposable-linux.py",
       "scripts/test-coordinated-encryption.py",
       "scripts/test-coordinated-recovery-bundle.py",
       "scripts/test-coordinated-retrieval.py",
@@ -459,6 +461,7 @@
       "scripts/test-original-database-recovery.py",
       "scripts/test-original-deployment-admission.py",
       "scripts/test-original-disposable-absence.py",
+      "scripts/test-original-disposable-cleanup.py",
       "scripts/test-original-edge-recovery.py",
       "scripts/test-original-edge-tls.py",
       "scripts/test-original-recovery-completion.py",
@@ -2402,7 +2405,7 @@
     {
       "id": "SURFACE-5c3fa597431eda03",
       "path": ".github/workflows/build.yml",
-      "sha256": "9742c22b6211816ce5de12874d92b47e4d614941093ee2dd1198a6b311a05c4a",
+      "sha256": "0b4fafaa721076cfe4974a658cfea0c736767305b22227a6633edf62651d89d4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -2841,6 +2844,12 @@
       "id": "SURFACE-5d210d33b182d334",
       "path": "ops/hetzner/original-disposable-absence.py",
       "sha256": "dafe67a093aca36bd902aac8ba2780d8af47742c41b7f2cc6be98ee2f2c79804",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-08e58308a0e8d89f",
+      "path": "ops/hetzner/original-disposable-cleanup.py",
+      "sha256": "5ee11be5857ce6a78c17e8ac733e85b27d1ad116f767310fe755420881e5f5fe",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4106,7 +4115,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "58cabf7d6f13eb4b82050fa21d402d9b01725a6eac133a29b74f8c18127778d4",
+      "sha256": "8770f51fd49d485ab31f2811a5056412ae99abac26aa4c51ec4f1d0582743406",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4674,6 +4683,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-6c6395b4f7b95c8e",
+      "path": "scripts/test-coordinated-disposable-linux.py",
+      "sha256": "90e70ef2b3fd0944b73a9c2365e42dcef2c7d6e41b441fca2b50c6956178f1b4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-df74c8715e71b50d",
       "path": "scripts/test-coordinated-encryption.py",
       "sha256": "060b6962d1a584aaa7878be2fb97b599040098fabefc6367e1f247a5adfa0636",
@@ -5028,6 +5043,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-48ac19ebbfc90cfb",
+      "path": "scripts/test-original-disposable-cleanup.py",
+      "sha256": "306cbf7263b67d87521e1aac915c4e5623ce64871b46f31ebdfeb76b92a7bd87",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-2367aa1681a81b5b",
       "path": "scripts/test-original-edge-recovery.py",
       "sha256": "d506f06debf585067596e55a544c3e3eda02567f4bdf9c7c8f2362bdd305fa9f",
@@ -5108,7 +5129,7 @@
     {
       "id": "SURFACE-b42b59299d730ebb",
       "path": "scripts/test-production-writer-fence-linux.py",
-      "sha256": "1fb6eab84bd2c923ea75677704dbfea36b34c43b6d3fb3e8371134066d04e19b",
+      "sha256": "f7dfe13e79c60e7a39e75fc0e4dd4c663af79b1f9c7878c1b8593a8ae183ebe0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5420,7 +5441,7 @@
     {
       "id": "SURFACE-39979c9e45d9f71b",
       "path": "scripts/verify-event-operations-formal.sh",
-      "sha256": "1b7b82c966f649adc69ebbb39964a0b88eed0e64eaefc36c33f6ff535c8cb0a4",
+      "sha256": "e824bbedca41b6bb2b46afeb0cd1be37aaaddc2d45d364fc9bd570ba9a3eff57",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20352,6 +20373,48 @@
       "kind": "model-configuration"
     },
     {
+      "path": "formal/event-operations/DisposableCleanup.cfg",
+      "sha256": "c2c9e8d3a413a892a54a9781599bf23c90e43b6361da255014bbf9a567214642",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/DisposableCleanup.tla",
+      "sha256": "edf3ccd7395491e6f5f5db583ae47d28109658434df70947a9c7df8440700235",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "formal-model"
+    },
+    {
+      "path": "formal/event-operations/DisposableCleanupAbsence.cfg",
+      "sha256": "62cfcb44d2e11087a67dde0ddd48b2e052387892c660605b751dc39d8337ec36",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/DisposableCleanupOrder.cfg",
+      "sha256": "269021830d347426ac8aaa8227c7a14568253ab494d44a179a7b3aaedccf05b1",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/DisposableCleanupOriginal.cfg",
+      "sha256": "943255302af8c48bb94bdb6979d67401959519f982f835868807d3690962561c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
+      "path": "formal/event-operations/DisposableCleanupReplay.cfg",
+      "sha256": "1fa1797a308c0cf1b722fabe9613a062a001ffbbc4b6acb9ce6238fe97f1fd92",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "model-configuration"
+    },
+    {
       "path": "formal/event-operations/EventLifecycle.cfg",
       "sha256": "acc8eb27d52d4565654f77be0fbd9eb144fa5843e2aa11f98a8ad01b76be1159",
       "authority": "inferred",
@@ -22655,6 +22718,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/disposable-cleanup.md",
+      "sha256": "836674cf47422501bbfd54ccf31cc9d437bb0c25fa9866f489bcd1f3d9b31352",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/drive-replay.md",
       "sha256": "2d6194a8c331d81e5d1499aeb980cf6e0a5f2457d35e0f8f7d84a8d7f5e6729b",
       "authority": "inferred",
@@ -22796,7 +22866,7 @@
     },
     {
       "path": "formal/system/original-service-recovery.md",
-      "sha256": "f09864e8a3c80df03e1290f3648d35b79fa1beae9b3b85f9759cdecbdef7d594",
+      "sha256": "a3f8c58fd5ffd16f21e4e4f7010947a958f713b9b17bd79646105216be3c4c7b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22866,7 +22936,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "dfb54540770d172874e2367dbc4eb3edfc0f1ec71f5ce7e5a7a4d3ac2f20356e",
+      "sha256": "fd94975b85c116cafc16a068206e2c1b6de182602b0c3e5e9121ae1833ca436b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -31167,6 +31237,81 @@
         "INVARIANTS AuthorizedDispatch CurrentSessionReceipt PersistedReceipt",
         "PROPERTY RequestSettles",
         "CHECK_DEADLOCK FALSE"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/DisposableCleanup.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  GuardOriginal = TRUE",
+        "  GuardOrder = TRUE",
+        "  GuardReplay = TRUE",
+        "  GuardAbsence = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK OriginalPreserved CanaryRemovedFirst NoSameEpochReplay MarkerRequiresAbsence"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/DisposableCleanupAbsence.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  GuardOriginal = TRUE",
+        "  GuardOrder = TRUE",
+        "  GuardReplay = TRUE",
+        "  GuardAbsence = FALSE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK OriginalPreserved CanaryRemovedFirst NoSameEpochReplay MarkerRequiresAbsence"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/DisposableCleanupOrder.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  GuardOriginal = TRUE",
+        "  GuardOrder = FALSE",
+        "  GuardReplay = TRUE",
+        "  GuardAbsence = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK OriginalPreserved CanaryRemovedFirst NoSameEpochReplay MarkerRequiresAbsence"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/DisposableCleanupOriginal.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  GuardOriginal = FALSE",
+        "  GuardOrder = TRUE",
+        "  GuardReplay = TRUE",
+        "  GuardAbsence = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK OriginalPreserved CanaryRemovedFirst NoSameEpochReplay MarkerRequiresAbsence"
+      ],
+      "result": "not-revalidated-by-inventory",
+      "correspondence": "See domain traceability; discovery establishes no refinement"
+    },
+    {
+      "configuration": "formal/event-operations/DisposableCleanupReplay.cfg",
+      "declarations": [
+        "CONSTANTS",
+        "  GuardOriginal = TRUE",
+        "  GuardOrder = TRUE",
+        "  GuardReplay = FALSE",
+        "  GuardAbsence = TRUE",
+        "SPECIFICATION Spec",
+        "CHECK_DEADLOCK FALSE",
+        "INVARIANTS TypeOK OriginalPreserved CanaryRemovedFirst NoSameEpochReplay MarkerRequiresAbsence"
       ],
       "result": "not-revalidated-by-inventory",
       "correspondence": "See domain traceability; discovery establishes no refinement"
