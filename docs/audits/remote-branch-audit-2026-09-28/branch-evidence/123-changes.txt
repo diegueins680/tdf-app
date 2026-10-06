@@ -1,0 +1,13 @@
+ .github/workflows/event-operations-formal.yml      |   8 ++
+ docs/event-operations/README.md                    |   2 +
+ docs/event-operations/delivery-plan.md             |   6 ++
+ .../event-operations/pluscal-integrity-contract.md |  79 +++++++++++++++
+ docs/event-operations/pr-18-pluscal-integrity.md   |  96 ++++++++++++++++++
+ docs/event-operations/traceability-matrix.md       |   1 +
+ formal/event-operations/README.md                  |  20 +++-
+ formal/event-operations/ReservationRace.tla        |   8 +-
+ package.json                                       |   2 +
+ .../__tests__/event-operations-pluscal.test.mjs    | 110 +++++++++++++++++++++
+ scripts/verify-event-operations-formal.sh          |   5 +
+ scripts/verify-event-operations-pluscal.mjs        |  79 +++++++++++++++
+ 12 files changed, 409 insertions(+), 7 deletions(-)

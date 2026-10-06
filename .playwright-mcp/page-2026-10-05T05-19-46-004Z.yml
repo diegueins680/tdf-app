@@ -1,0 +1,116 @@
+- generic [active] [ref=f5e1]:
+  - link "Skip to main content" [ref=f5e2] [cursor=pointer]:
+    - /url: /synthetics/details/rv2-x2n-epx#single-page-app_layout_page__main-content
+  - generic [ref=f5e4]:
+    - generic:
+      - button "Search Datadog" [ref=f5e6] [cursor=pointer]:
+        - text: Search Datadog
+        - generic [ref=f5e9]:
+          - generic "⌘" [ref=f5e10]
+          - generic "k" [ref=f5e11]
+      - navigation "Main" [ref=f5e12]:
+        - group "Header" [ref=f5e13]:
+          - generic [ref=f5e14]:
+            - link "Home" [ref=f5e15] [cursor=pointer]:
+              - /url: /help/quick_start
+            - generic:
+              - button "Hide menu" [ref=f5e20] [cursor=pointer]
+              - button "Minimize menu" [ref=f5e23] [cursor=pointer]
+        - generic [ref=f5e26]:
+          - list "Datadog products" [ref=f5e28]:
+            - listitem [ref=f5e29]:
+              - link "Bits AI" [ref=f5e31] [cursor=pointer]:
+                - /url: /ask
+            - listitem [ref=f5e37]:
+              - link "Dashboards" [ref=f5e39] [cursor=pointer]:
+                - /url: /dashboard/lists
+            - listitem [ref=f5e45]:
+              - link "Monitoring" [ref=f5e47] [cursor=pointer]:
+                - /url: /monitors/manage
+            - listitem [ref=f5e53]:
+              - link "Developer Portal" [ref=f5e55] [cursor=pointer]:
+                - /url: /idp/home
+            - listitem [ref=f5e61]:
+              - link "Incident Response" [ref=f5e63] [cursor=pointer]:
+                - /url: /incidents
+            - listitem [ref=f5e69]:
+              - link "Automation" [ref=f5e71] [cursor=pointer]:
+                - /url: /actions
+            - listitem [ref=f5e77]:
+              - link "Infrastructure" [ref=f5e79] [cursor=pointer]:
+                - /url: /infrastructure
+            - listitem [ref=f5e85]:
+              - link "Cloud Cost" [ref=f5e87] [cursor=pointer]:
+                - /url: /cost/onboarding
+            - listitem [ref=f5e93]:
+              - link "APM" [ref=f5e95] [cursor=pointer]:
+                - /url: /apm/home
+            - listitem [ref=f5e101]:
+              - link "Digital Experience" [ref=f5e103] [cursor=pointer]:
+                - /url: /synthetics/tests
+            - listitem [ref=f5e109]:
+              - link "Software Delivery" [ref=f5e111] [cursor=pointer]:
+                - /url: /ci
+            - listitem [ref=f5e117]:
+              - link "Security" [ref=f5e119] [cursor=pointer]:
+                - /url: /security/getting-started
+            - listitem [ref=f5e125]:
+              - link "Data Observability" [ref=f5e127] [cursor=pointer]:
+                - /url: /data-obs
+            - listitem [ref=f5e133]:
+              - link "AI Observability" [ref=f5e135] [cursor=pointer]:
+                - /url: /llm
+            - listitem [ref=f5e141]:
+              - link "Errors" [ref=f5e143] [cursor=pointer]:
+                - /url: /error-tracking
+            - listitem [ref=f5e149]:
+              - link "Metrics" [ref=f5e151] [cursor=pointer]:
+                - /url: /metric/overview
+            - listitem [ref=f5e157]:
+              - link "Logs" [ref=f5e159] [cursor=pointer]:
+                - /url: /logs
+          - button [ref=f5e165] [cursor=pointer]
+          - generic [ref=f5e166]:
+            - list "Useful links and tools" [ref=f5e167]:
+              - listitem [ref=f5e168]:
+                - link "Integrations" [ref=f5e170] [cursor=pointer]:
+                  - /url: /integrations
+              - listitem [ref=f5e176]:
+                - link "Profile" [ref=f5e178] [cursor=pointer]:
+                  - /url: /personal-settings
+                  - generic [ref=f5e184]:
+                    - generic [ref=f5e186]:
+                      - generic [ref=f5e187]: cuco.saa@gmail.com
+                      - generic [ref=f5e190]: cuco.saa@gmail.com
+                    - generic [ref=f5e192]:
+                      - text: TDF Records
+                      - generic [ref=f5e193]: TDF Records
+            - generic [ref=f5e195]:
+              - link "Invite" [disabled] [ref=f5e197] [cursor=pointer]:
+                - /url: /organization-settings/users/invite
+              - button "Support" [disabled] [ref=f5e203] [cursor=pointer]
+              - link "NEW Help" [ref=f5e209] [cursor=pointer]:
+                - /url: /help
+                - generic [ref=f5e210]:
+                  - generic [ref=f5e211]: NEW
+                  - generic [ref=f5e217]: Help
+    - contentinfo "Datadog Copyright and Legal Information" [ref=f5e219]:
+      - list [ref=f5e221]:
+        - listitem [ref=f5e222]: Copyright Datadog, Inc. 2026
+        - listitem [ref=f5e223]:
+          - generic [ref=f5e224]: "Version:"
+          - text: "35.142257761"
+        - listitem [ref=f5e225]:
+          - link "Master Subscription Agreement" [ref=f5e226] [cursor=pointer]:
+            - /url: https://www.datadoghq.com/legal/msa/
+        - listitem [ref=f5e227]:
+          - link "Privacy Policy" [ref=f5e228] [cursor=pointer]:
+            - /url: https://www.datadoghq.com/legal/privacy/
+        - listitem [ref=f5e229]:
+          - link "Cookie Policy" [ref=f5e230] [cursor=pointer]:
+            - /url: https://www.datadoghq.com/legal/cookies/
+        - listitem [ref=f5e231]:
+          - link "Datadog Status :" [ref=f5e233] [cursor=pointer]:
+            - /url: https://status.datadoghq.com
+            - text: Datadog Status →
+            - generic [ref=f5e234]: ":"

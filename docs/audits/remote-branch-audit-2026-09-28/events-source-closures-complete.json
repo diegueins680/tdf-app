@@ -1,0 +1,215 @@
+{
+  "verified_at": "2026-10-04T02:19:33.013643+00:00",
+  "replacement": 465,
+  "target": "b07f67c3ebe2022d5f70e94578944b6401616696",
+  "post_merge_ci_passed": true,
+  "source_closures": [
+    {
+      "pr": 417,
+      "head": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+      "url": "https://github.com/diegueins680/tdf-app/pull/417",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/417#issuecomment-5975661580"
+    },
+    {
+      "pr": 416,
+      "head": "d5505e2731d395cc2a5859d215e36ffda9e88138",
+      "url": "https://github.com/diegueins680/tdf-app/pull/416",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/416#issuecomment-5975663159"
+    },
+    {
+      "pr": 413,
+      "head": "cbbb3da9f20c2314c73a5114b8c0aa943647054e",
+      "url": "https://github.com/diegueins680/tdf-app/pull/413",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/413#issuecomment-5975664764"
+    },
+    {
+      "pr": 411,
+      "head": "f2f01194090a241777c451d06cb0848af7aa759a",
+      "url": "https://github.com/diegueins680/tdf-app/pull/411",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/411#issuecomment-5975666303"
+    },
+    {
+      "pr": 410,
+      "head": "823da0fa801abe3bdb3b7679550f1315ad0946ed",
+      "url": "https://github.com/diegueins680/tdf-app/pull/410",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/410#issuecomment-5975667904"
+    },
+    {
+      "pr": 407,
+      "head": "78bdd4df465d1c7d8a752f9df0ed714ecad2330d",
+      "url": "https://github.com/diegueins680/tdf-app/pull/407",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/407#issuecomment-5975669466"
+    },
+    {
+      "pr": 403,
+      "head": "6047377348e901c919d7691b849faab30980b952",
+      "url": "https://github.com/diegueins680/tdf-app/pull/403",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/403#issuecomment-5975671064"
+    },
+    {
+      "pr": 399,
+      "head": "d4e7ed0505a87a03706b765fc304ffa50362b8fb",
+      "url": "https://github.com/diegueins680/tdf-app/pull/399",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/399#issuecomment-5975672645"
+    },
+    {
+      "pr": 398,
+      "head": "5ad2333c2a6ce379579a1cffa2708d56cbb21f5f",
+      "url": "https://github.com/diegueins680/tdf-app/pull/398",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/398#issuecomment-5975674115"
+    },
+    {
+      "pr": 395,
+      "head": "7cdd712568311975407cf0b7cb2ee2081a0c0414",
+      "url": "https://github.com/diegueins680/tdf-app/pull/395",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/395#issuecomment-5975675653"
+    },
+    {
+      "pr": 388,
+      "head": "061553d085d3106a9c8877ca08ccb3e2420cdd09",
+      "url": "https://github.com/diegueins680/tdf-app/pull/388",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/388#issuecomment-5975677121"
+    },
+    {
+      "pr": 387,
+      "head": "13abde1cba82b7b79c21b6f35e87c91de676366e",
+      "url": "https://github.com/diegueins680/tdf-app/pull/387",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/387#issuecomment-5975678645"
+    },
+    {
+      "pr": 384,
+      "head": "bfd5f17b92d629f578bc02f4aee338ed15843806",
+      "url": "https://github.com/diegueins680/tdf-app/pull/384",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/384#issuecomment-5975680210"
+    },
+    {
+      "pr": 383,
+      "head": "f6ffb2a27b87ed42d4d49289024d5b8a612b94cf",
+      "url": "https://github.com/diegueins680/tdf-app/pull/383",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/383#issuecomment-5975681727"
+    },
+    {
+      "pr": 381,
+      "head": "503fd7b651843e9f7cadf4fd15931256bb847ece",
+      "url": "https://github.com/diegueins680/tdf-app/pull/381",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/381#issuecomment-5975683294"
+    },
+    {
+      "pr": 379,
+      "head": "3b1ce4d9dbd0efb6d1e354ffd9f58e92a6916320",
+      "url": "https://github.com/diegueins680/tdf-app/pull/379",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/379#issuecomment-5975684926"
+    },
+    {
+      "pr": 375,
+      "head": "221d1205c9cc2e992f8f36f73d441a3f9c6fda21",
+      "url": "https://github.com/diegueins680/tdf-app/pull/375",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/375#issuecomment-5975686657"
+    },
+    {
+      "pr": 373,
+      "head": "f03f366de44c8ad09248e9d399caa5994af06d5a",
+      "url": "https://github.com/diegueins680/tdf-app/pull/373",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/373#issuecomment-5975688555"
+    },
+    {
+      "pr": 372,
+      "head": "ec24b70b1b2319a875099cc118db0e68b62a5ed0",
+      "url": "https://github.com/diegueins680/tdf-app/pull/372",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/372#issuecomment-5975690283"
+    },
+    {
+      "pr": 368,
+      "head": "ff3cd1676a6db7b6ceef56d44407b0846a4f2071",
+      "url": "https://github.com/diegueins680/tdf-app/pull/368",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/368#issuecomment-5975691870"
+    },
+    {
+      "pr": 364,
+      "head": "1299f9c63a325e17dff0bfe1f048ff52f7bb8b15",
+      "url": "https://github.com/diegueins680/tdf-app/pull/364",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/364#issuecomment-5975693527"
+    },
+    {
+      "pr": 359,
+      "head": "827d745629f8cdbaee4429ded3689d3bf520a09d",
+      "url": "https://github.com/diegueins680/tdf-app/pull/359",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/359#issuecomment-5975695199"
+    },
+    {
+      "pr": 357,
+      "head": "881882e15cd1b2400cc2e0452ea50683dea675de",
+      "url": "https://github.com/diegueins680/tdf-app/pull/357",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/357#issuecomment-5975697047"
+    },
+    {
+      "pr": 354,
+      "head": "a1b92c220691b694e5f53e7deaf4d455ce46bc44",
+      "url": "https://github.com/diegueins680/tdf-app/pull/354",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/354#issuecomment-5975698759"
+    },
+    {
+      "pr": 352,
+      "head": "a1895105c6e15e1f95b4b72fd6218b34a311f6e6",
+      "url": "https://github.com/diegueins680/tdf-app/pull/352",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/352#issuecomment-5975700579"
+    },
+    {
+      "pr": 351,
+      "head": "192f9578665109e52d28a96c772e3307bdc684e5",
+      "url": "https://github.com/diegueins680/tdf-app/pull/351",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/351#issuecomment-5975702348"
+    },
+    {
+      "pr": 349,
+      "head": "cf591e1faa975b8023c6c06892fb50a51ba06dff",
+      "url": "https://github.com/diegueins680/tdf-app/pull/349",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/349#issuecomment-5975704149"
+    },
+    {
+      "pr": 348,
+      "head": "3cd978045aa406c55512a6673c2ba5f2983ebc7c",
+      "url": "https://github.com/diegueins680/tdf-app/pull/348",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/348#issuecomment-5975705897"
+    },
+    {
+      "pr": 346,
+      "head": "892038c7d7ec64082b39917127f67748e6d1dca7",
+      "url": "https://github.com/diegueins680/tdf-app/pull/346",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/346#issuecomment-5975707721"
+    },
+    {
+      "pr": 345,
+      "head": "dbe975d3143446c5e7cd9b132b6f994067065e7b",
+      "url": "https://github.com/diegueins680/tdf-app/pull/345",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/345#issuecomment-5975709481"
+    },
+    {
+      "pr": 342,
+      "head": "db81fdbe71d9b8e83d40d279b98c69df3749b316",
+      "url": "https://github.com/diegueins680/tdf-app/pull/342",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/342#issuecomment-5975711232"
+    },
+    {
+      "pr": 341,
+      "head": "6b0913bab2b065b327149a6d3a042efecd9e75d7",
+      "url": "https://github.com/diegueins680/tdf-app/pull/341",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/341#issuecomment-5975712914"
+    },
+    {
+      "pr": 339,
+      "head": "259becd7b3763e084b54da8749b1e6fde8d9d862",
+      "url": "https://github.com/diegueins680/tdf-app/pull/339",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/339#issuecomment-5975714428"
+    },
+    {
+      "pr": 338,
+      "head": "f500b62c453e7da8981bc66138418fa59a586565",
+      "url": "https://github.com/diegueins680/tdf-app/pull/338",
+      "comment": "https://github.com/diegueins680/tdf-app/pull/338#issuecomment-5975715963"
+    }
+  ],
+  "automatic_integration": 337,
+  "source_branches_retained": 35,
+  "audit_branch_deletions": 0
+}

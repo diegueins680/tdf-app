@@ -1,0 +1,70 @@
+{
+  "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4175199097",
+  "pull_request_review_id": 5403162317,
+  "id": 4175199097,
+  "node_id": "PRRC_kwDOQPdUrM743Ht5",
+  "diff_hunk": "@@ -815,6 +815,11 @@\n       \"id\": \"2026-09-30_interaction_classified_expiry\",\n       \"path\": \"tdf-hq/sql/2026-09-30_interaction_classified_expiry.sql\",\n       \"introducedBy\": \"5966161d8cf7c31a776ea5c2778068fbbd78b920\"\n+    },\n+    {\n+      \"id\": \"2026-10-03_discovery_ownership_metadata_boundary\",\n+      \"path\": \"tdf-hq/sql/2026-10-03_discovery_ownership_metadata_boundary.sql\",\n+      \"introducedBy\": \"6e7b87d8ad3a4c56b033484fe7174dceacec5961\"",
+  "path": "scripts/production-migrations.json",
+  "commit_id": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+  "original_commit_id": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+  "user": {
+    "login": "diegueins680",
+    "id": 2753581,
+    "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+    "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/diegueins680",
+    "html_url": "https://github.com/diegueins680",
+    "followers_url": "https://api.github.com/users/diegueins680/followers",
+    "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+    "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+    "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+    "repos_url": "https://api.github.com/users/diegueins680/repos",
+    "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+    "type": "User",
+    "user_view_type": "public",
+    "site_admin": false
+  },
+  "body": "Verified against the actual remote head `4100a04c0de9496e7bf9cd6d656602dee1d8e277`: its direct parent is migration introduction commit `6e7b87d8ad3a4c56b033484fe7174dceacec5961`. All 160 registered `introducedBy` commits pass `git merge-base --is-ancestor <introducedBy> 4100a04c0de9496e7bf9cd6d656602dee1d8e277`. GitHub also confirms this introduction commit is an ancestor of its current proposed merge `eaeb5af7359e2b580c2cd78bbf7861697c75a497` (comparison: behind_by=0). The `a76ecf96` commit cited here is not this PR head. The PR already preserves the original history, and its description explicitly requires a normal merge; squash/rebase must not be used. The ancestry requirement is satisfied by the current branch and proposed normal merge, without changing the release guard or manifest.",
+  "created_at": "2026-10-03T22:36:38Z",
+  "updated_at": "2026-10-03T22:36:38Z",
+  "html_url": "https://github.com/diegueins680/tdf-app/pull/475#discussion_r4175199097",
+  "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/475",
+  "_links": {
+    "self": {
+      "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4175199097"
+    },
+    "html": {
+      "href": "https://github.com/diegueins680/tdf-app/pull/475#discussion_r4175199097"
+    },
+    "pull_request": {
+      "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/475"
+    }
+  },
+  "reactions": {
+    "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4175199097/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "start_line": null,
+  "original_start_line": null,
+  "start_side": null,
+  "line": 822,
+  "original_line": 822,
+  "side": "RIGHT",
+  "in_reply_to_id": 4175169209,
+  "author_association": "OWNER",
+  "original_position": 8,
+  "position": 8,
+  "subject_type": "line"
+}

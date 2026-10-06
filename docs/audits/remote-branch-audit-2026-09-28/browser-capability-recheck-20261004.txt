@@ -1,0 +1,1 @@
+2026-10-04T00:39Z browser_tabs action=list: profile tdf-instagram remains in use by another session. No process/profile changed; actual Google login/upload remains unverified.

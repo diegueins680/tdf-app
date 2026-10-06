@@ -1,0 +1,185 @@
+- generic [ref=f7e1]:
+  - link [ref=f7e232] [cursor=pointer]:
+    - /url: "#main-content"
+    - text: Saltar al contenido principal
+  - generic [ref=f7e3]:
+    - generic [ref=f7e14]:
+      - link [ref=f7e233] [cursor=pointer]:
+        - /url: "#main-content"
+        - text: Saltar al contenido principal
+      - navigation [ref=f7e234]:
+        - generic [ref=f7e17]:
+          - generic [ref=f7e18]: MENÚ
+          - generic [ref=f7e20]:
+            - textbox [ref=f7e235]:
+              - /placeholder: Buscar sección (/)
+            - group
+        - list [ref=f7e25]:
+          - listitem [ref=f7e26]:
+            - generic [ref=f7e27]:
+              - generic [ref=f7e28]: CREAR
+              - button [ref=f7e236] [cursor=pointer]
+          - listitem [ref=f7e36]:
+            - generic [ref=f7e37]:
+              - generic [ref=f7e38]: GENTE
+              - button [ref=f7e237] [cursor=pointer]
+          - listitem [ref=f7e46]:
+            - generic [ref=f7e47]:
+              - generic [ref=f7e48]: SELLO
+              - button [expanded] [ref=f7e238] [cursor=pointer]
+            - list [ref=f7e59]:
+              - listitem [ref=f7e60]:
+                - link [ref=f7e239] [cursor=pointer]:
+                  - /url: /label/artistas
+                  - generic [ref=f7e64]: Artistas
+              - listitem [ref=f7e66]:
+                - link [ref=f7e240] [cursor=pointer]:
+                  - /url: /label/proyectos
+                  - generic [ref=f7e70]: Proyectos
+              - listitem [ref=f7e72]:
+                - link [ref=f7e241] [cursor=pointer]:
+                  - /url: /label/releases
+                  - generic [ref=f7e76]: Lanzamientos
+              - listitem [ref=f7e78]:
+                - link [ref=f7e242] [cursor=pointer]:
+                  - /url: /label/assets
+                  - generic [ref=f7e82]: Activos
+              - listitem [ref=f7e84]:
+                - link [ref=f7e243] [cursor=pointer]:
+                  - /url: /label/tracks
+                  - generic [ref=f7e88]: Pistas
+          - listitem [ref=f7e90]:
+            - generic [ref=f7e91]:
+              - generic [ref=f7e92]: OPERAR
+              - button [ref=f7e244] [cursor=pointer]
+          - listitem [ref=f7e101]:
+            - generic [ref=f7e102]:
+              - generic [ref=f7e103]: ADMIN
+              - button [ref=f7e245] [cursor=pointer]
+          - listitem [ref=f7e114]:
+            - generic [ref=f7e115]:
+              - generic [ref=f7e116]: HERRAMIENTAS
+              - button [ref=f7e246] [cursor=pointer]
+          - listitem [ref=f7e124]:
+            - generic [ref=f7e125]:
+              - generic [ref=f7e126]: AYUDA
+              - button [ref=f7e247] [cursor=pointer]
+      - generic [ref=f7e134]:
+        - banner [ref=f7e135]:
+          - generic [ref=f7e136]:
+            - button [ref=f7e248] [cursor=pointer]
+            - link [ref=f7e249] [cursor=pointer]:
+              - /url: /inicio
+            - button [ref=f7e250] [cursor=pointer]:
+              - generic [ref=f7e146]: Buscar sección
+              - generic [ref=f7e147]: ⌘K
+            - generic [ref=f7e148]:
+              - button [ref=f7e251] [cursor=pointer]:
+                - generic [ref=f7e153]: Crear
+              - button [ref=f7e252] [cursor=pointer]
+              - button [ref=f7e253] [cursor=pointer]:
+                - generic [ref=f7e159]: D
+        - status [ref=f7e160]
+        - main [ref=f7e161]:
+          - generic [ref=f7e162]:
+            - navigation [ref=f7e254]:
+              - list [ref=f7e164]:
+                - listitem [ref=f7e165]:
+                  - link [ref=f7e255] [cursor=pointer]:
+                    - /url: /label/artistas
+                    - text: Artistas
+                - listitem [ref=f7e167]: /
+                - listitem [ref=f7e168]:
+                  - link [ref=f7e256] [cursor=pointer]:
+                    - /url: /label/releases
+                    - text: Lanzamientos
+                - listitem [ref=f7e170]: /
+                - listitem [ref=f7e171]:
+                  - paragraph [ref=f7e172]: Activos
+            - generic [ref=f7e173]:
+              - generic [ref=f7e174]:
+                - generic [ref=f7e175]:
+                  - text: Label / Assets
+                  - heading [level=4] [ref=f7e257]: Catálogo de assets y equipo del label
+                  - paragraph [ref=f7e177]: Reutiliza el inventario para que marketing, estudio y label tengan una sola lista de equipo, préstamos y QR.
+                - generic [ref=f7e178]:
+                  - button [ref=f7e258] [cursor=pointer]: Actualizar
+                  - link [ref=f7e259] [cursor=pointer]:
+                    - /url: /configuracion/opciones-ux?category=asset-category
+                    - text: Gestionar categorías
+                  - button [ref=f7e260] [cursor=pointer]: Agregar asset
+              - alert [ref=f7e188]:
+                - generic [ref=f7e192]: No se pudo cargar el inventario.
+              - alert [ref=f7e195]:
+                - generic [ref=f7e199]: Todavía no hay assets. Agrégalos desde Agregar asset; el buscador y los filtros aparecerán cuando exista al menos uno.
+          - generic [ref=f7e201]:
+            - status [ref=f7e202]:
+              - generic [ref=f7e205]: "API: online"
+            - button [ref=f7e261] [cursor=pointer]
+    - generic [ref=f7e209]:
+      - button [ref=f7e262] [cursor=pointer]
+      - button [ref=f7e264] [cursor=pointer]
+      - button [ref=f7e266] [cursor=pointer]
+      - button [ref=f7e267] [cursor=pointer]
+      - button [ref=f7e268] [cursor=pointer]
+      - button [ref=f7e269] [cursor=pointer]
+      - generic [ref=f7e230]:
+        - generic [ref=f7e231]: "En pausa: stream.rcast.net"
+        - text: Live
+  - dialog [ref=f7e272]:
+    - heading "Nuevo asset" [level=2] [ref=f7e273]
+    - generic [ref=f7e275]:
+      - generic [ref=f7e276]:
+        - generic:
+          - text: Nombre
+          - generic: "*"
+        - generic [ref=f7e277]:
+          - textbox "Nombre" [ref=f7e278]
+          - group:
+            - generic: Nombre *
+      - generic [ref=f7e280]:
+        - generic:
+          - text: Categoría
+          - generic: "*"
+        - generic [ref=f7e281]:
+          - combobox "Categoría" [ref=f7e282]
+          - group:
+            - generic: Categoría *
+        - paragraph [ref=f7e283]: Gestiona categorías en Configuración → Opciones UX.
+      - generic [ref=f7e284]:
+        - button [active] [ref=f7e286] [cursor=pointer]
+        - button [ref=f7e290] [cursor=pointer]:
+          - paragraph [ref=f7e291]: Arrastra archivos aquí o haz clic para seleccionarlos
+        - generic [ref=f7e310]:
+          - img "tdf-upload-smoke-20261005.png" [ref=f7e312]
+          - generic [ref=f7e313]:
+            - paragraph [ref=f7e314]: tdf-upload-smoke-20261005.png
+            - generic [ref=f7e315]: 0.00 MB
+            - progressbar [ref=f7e316]
+            - generic [ref=f7e318]: Missing or invalid auth token
+          - button "Quitar tdf-upload-smoke-20261005.png de la lista de cargas" [ref=f7e319] [cursor=pointer]
+      - generic [ref=f7e292]:
+        - generic: Notas
+        - generic [ref=f7e293]:
+          - textbox "Notas" [ref=f7e294]:
+            - /placeholder: Notas internas u observaciones
+          - group:
+            - generic: Notas
+      - generic [ref=f7e295]:
+        - generic [ref=f7e296]: Estado
+        - generic [ref=f7e297]:
+          - combobox "Estado Activos" [ref=f7e298] [cursor=pointer]: Activos
+          - textbox: Active
+          - group:
+            - generic: Estado
+      - generic [ref=f7e299]:
+        - generic: Ubicación (sala)
+        - generic [ref=f7e300]:
+          - combobox "Ubicación (sala)" [ref=f7e301] [cursor=pointer]
+          - textbox
+          - group:
+            - generic: Ubicación (sala)
+        - paragraph [ref=f7e302]: Opcional. Usa las salas del estudio para ubicar el asset.
+    - generic [ref=f7e303]:
+      - button "Cancelar" [ref=f7e304] [cursor=pointer]
+      - button "Guardar" [ref=f7e305] [cursor=pointer]

@@ -1,0 +1,205 @@
+- generic [ref=f11e5]:
+  - banner [ref=f11e6]:
+    - generic [ref=f11e7]:
+      - generic [ref=f11e10]: Sandbox Live
+      - navigation [ref=f11e18]:
+        - list [ref=f11e19]:
+          - listitem [ref=f11e20]:
+            - link [ref=f11e21] [cursor=pointer]:
+              - /url: /dashboard
+              - paragraph [ref=f11e28]: Home
+          - listitem [ref=f11e29]:
+            - link [ref=f11e30] [cursor=pointer]:
+              - /url: /dashboard/applications/sandbox
+              - paragraph [ref=f11e37]: Apps & Credentials
+          - listitem [ref=f11e38]:
+            - paragraph [ref=f11e46] [cursor=pointer]: Testing Tools
+          - listitem [ref=f11e51]:
+            - paragraph [ref=f11e59] [cursor=pointer]: Event Logs
+          - listitem [ref=f11e66]:
+            - paragraph [ref=f11e74] [cursor=pointer]: Docs
+          - listitem [ref=f11e79]:
+            - paragraph [ref=f11e87] [cursor=pointer]: APIs & SDKs
+          - listitem [ref=f11e92]:
+            - paragraph [ref=f11e101] [cursor=pointer]: Tools
+          - listitem [ref=f11e106]:
+            - link [ref=f11e107] [cursor=pointer]:
+              - /url: https://developer.paypal.com/video/home
+              - paragraph [ref=f11e114]: Video Library
+          - listitem [ref=f11e115]:
+            - link [ref=f11e116] [cursor=pointer]:
+              - /url: https://developer.paypal.com/docs/support
+              - paragraph [ref=f11e123]: Help
+  - generic [ref=f11e124]:
+    - banner [ref=f11e125]:
+      - generic [ref=f11e126]:
+        - generic [ref=f11e127]:
+          - button "Open menu" [ref=f11e128] [cursor=pointer]
+          - heading [level=6] [ref=f11e133]:
+            - strong [ref=f11e134]: Diego Saa Villamar
+        - generic [ref=f11e135]: Search
+        - generic [ref=f11e140]:
+          - link [ref=f11e141] [cursor=pointer]:
+            - /url: https://www.paypal.com/mep/dashboard
+            - paragraph [ref=f11e143]:
+              - generic: Business Dashboard
+          - img "Avatar for Diego Saa Villamar" [ref=f11e148] [cursor=pointer]:
+            - generic [ref=f11e149]: DV
+      - alert [ref=f11e151]:
+        - img "info" [ref=f11e152]
+        - text: PayPal JavaScript SDK v6 is Now Available!
+        - link "Get Started" [ref=f11e155] [cursor=pointer]:
+          - /url: https://docs.paypal.ai/payments/methods/paypal/sdk/js/v6/paypal-checkout
+        - button "dismiss alert" [ref=f11e156] [cursor=pointer]:
+          - generic [ref=f11e157]: close alert
+      - generic [ref=f11e158]: You’re in sandbox mode.
+    - main [ref=f11e161]:
+      - article [ref=f11e162]:
+        - generic [ref=f11e270]:
+          - button [ref=f11e271] [cursor=pointer]
+          - button "Back" [ref=f11e273] [cursor=pointer]
+          - generic [ref=f11e274]: Default Application
+          - alert [ref=f11e277]:
+            - img "warning" [ref=f11e278]
+            - text: Viewing sandbox API credentials.
+            - link "View live credentials" [ref=f11e281] [cursor=pointer]:
+              - /url: /dashboard/applications/live
+            - text: .
+          - generic [ref=f11e282]:
+            - generic [ref=f11e283]: API credentials
+            - alert [ref=f11e286]:
+              - img "info" [ref=f11e287]
+              - text: "Important: Store credentials safely, and never share client IDs or secrets publicly."
+            - separator [ref=f11e290]
+            - generic [ref=f11e292]:
+              - generic [ref=f11e293]:
+                - generic [ref=f11e294]: Display App Name
+                - generic [ref=f11e297]:
+                  - generic [ref=f11e298]: Default Application
+                  - button [ref=f11e300] [cursor=pointer]
+              - generic [ref=f11e302]:
+                - generic [ref=f11e303]: Client ID
+                - generic [ref=f11e306]:
+                  - generic [ref=f11e307]: AV7czSNcIpKggNHzfVh3WW8o9jF96vJ5nvF-vxLd Vz_tIvLNS6Nx2y5MimgV5ge-WDhrleLdToaQ-BXb
+                  - button [ref=f11e309] [cursor=pointer]
+              - generic [ref=f11e311]:
+                - generic [ref=f11e312]: Secret key 1
+                - generic [ref=f11e314]:
+                  - generic [ref=f11e315]:
+                    - generic [ref=f11e316]: ••••••••••••••••
+                    - generic [ref=f11e318]:
+                      - button [ref=f11e319] [cursor=pointer]
+                      - button [ref=f11e321] [cursor=pointer]
+                  - definition [ref=f11e324]
+                  - generic [ref=f11e327]: Created 04/12/2025, 09:10
+              - generic [ref=f11e328]: + Add Second Key
+            - separator [ref=f11e330]
+          - generic [ref=f11e331]:
+            - generic [ref=f11e332]: Sandbox account info
+            - separator [ref=f11e335]
+            - alert [ref=f11e338]:
+              - generic [ref=f11e339]: loading
+            - separator [ref=f11e340]
+          - generic [ref=f11e341]:
+            - generic [ref=f11e342]: Features
+            - separator [ref=f11e345]
+            - generic [ref=f11e348]:
+              - generic [ref=f11e350]:
+                - group "Payment capabilities" [ref=f11e352]:
+                  - generic [ref=f11e355]:
+                    - checkbox "Save payment methods Use the Vault API to save your customer's payment methods to speed up checkout." [checked] [ref=f11e356] [cursor=pointer]
+                    - generic [ref=f11e357] [cursor=pointer]:
+                      - generic [ref=f11e358]: Save payment methods
+                      - paragraph [ref=f11e364]: Use the Vault API to save your customer's payment methods to speed up checkout.
+                  - generic [ref=f11e365]:
+                    - checkbox "Subscriptions Set up recurring payments for customers." [checked] [ref=f11e366] [cursor=pointer]
+                    - generic [ref=f11e367] [cursor=pointer]:
+                      - generic [ref=f11e368]: Subscriptions
+                      - paragraph [ref=f11e374]: Set up recurring payments for customers.
+                  - generic [ref=f11e375]:
+                    - checkbox "Invoicing Send and manage customer invoices." [checked] [ref=f11e376] [cursor=pointer]
+                    - generic [ref=f11e377] [cursor=pointer]:
+                      - generic [ref=f11e378]: Invoicing
+                      - paragraph [ref=f11e384]: Send and manage customer invoices.
+                  - generic [ref=f11e385]:
+                    - checkbox "Payment links and buttons Add payment link, payment button, shopping cart button capabilities." [checked] [ref=f11e386] [cursor=pointer]
+                    - generic [ref=f11e387] [cursor=pointer]:
+                      - generic [ref=f11e388]: Payment links and buttons
+                      - paragraph [ref=f11e394]: Add payment link, payment button, shopping cart button capabilities.
+                  - generic [ref=f11e395]:
+                    - checkbox "Payouts Send payments to multiple PayPal accounts at once." [checked] [ref=f11e396] [cursor=pointer]
+                    - generic [ref=f11e397] [cursor=pointer]:
+                      - generic [ref=f11e398]: Payouts
+                      - paragraph [ref=f11e404]: Send payments to multiple PayPal accounts at once.
+                - generic [ref=f11e405]:
+                  - group "Add-on services" [ref=f11e406]:
+                    - generic [ref=f11e409]:
+                      - checkbox "Customer disputes View, provide evidence, and appeal disputes." [ref=f11e410] [cursor=pointer]
+                      - generic [ref=f11e411] [cursor=pointer]:
+                        - generic [ref=f11e412]: Customer disputes
+                        - paragraph [ref=f11e415]: View, provide evidence, and appeal disputes.
+                    - generic [ref=f11e416]:
+                      - checkbox "Log in with PayPal Let customers log in with their PayPal logins." [ref=f11e417] [cursor=pointer]
+                      - generic [ref=f11e418] [cursor=pointer]:
+                        - generic [ref=f11e419]: Log in with PayPal
+                        - paragraph [ref=f11e422]: Let customers log in with their PayPal logins.
+                    - generic [ref=f11e423]: Manage
+                    - generic [ref=f11e424]:
+                      - checkbox "Transaction search View your PayPal transaction history." [ref=f11e425] [cursor=pointer]
+                      - generic [ref=f11e426] [cursor=pointer]:
+                        - generic [ref=f11e427]: Transaction search
+                        - paragraph [ref=f11e430]: View your PayPal transaction history.
+                  - group "PayPal SDKs" [ref=f11e431]:
+                    - generic [ref=f11e434]:
+                      - checkbox "JavaScript SDK v6 Add support for PayPal, card payments & other APMs for your website JavaScript SDK v6" [checked] [ref=f11e435] [cursor=pointer]
+                      - generic [ref=f11e436] [cursor=pointer]:
+                        - generic [ref=f11e437]: JavaScript SDK v6
+                        - paragraph [ref=f11e443]:
+                          - text: Add support for PayPal, card payments & other APMs for your website
+                          - link [ref=f11e444]:
+                            - /url: https://docs.paypal.ai/payments/methods/paypal/sdk/js/v6/paypal-checkout
+                    - generic [ref=f11e449]:
+                      - checkbox "Mobile SDKs Add support for PayPal, credit, or debit card payments to your mobile apps Mobile SDKs" [checked] [ref=f11e450] [cursor=pointer]
+                      - generic [ref=f11e451] [cursor=pointer]:
+                        - generic [ref=f11e452]: Mobile SDKs
+                        - paragraph [ref=f11e458]:
+                          - text: Add support for PayPal, credit, or debit card payments to your mobile apps
+                          - link [ref=f11e459]:
+                            - /url: https://developer.paypal.com/sdk/mobile/
+              - button "Save Changes" [ref=f11e466] [cursor=pointer]
+            - separator [ref=f11e467]
+          - generic [ref=f11e468]:
+            - generic [ref=f11e469]: Sandbox Webhooks
+            - separator [ref=f11e472]
+            - generic [ref=f11e473]:
+              - generic [ref=f11e474]:
+                - alert [ref=f11e475]:
+                  - img "info" [ref=f11e476]
+                  - text: Maximum of 10 webhooks allowed
+                - text: Configure webhooks to notify your app when certain events occur. To configure a webhook, define your webhook listener URL and a list of events for which to listen. You can configure up to ten webhooks. Each webhook can subscribe to either specific events or all events. To learn more about webhooks, see
+                - link "webhooks notifications." [ref=f11e479] [cursor=pointer]:
+                  - /url: https://developer.paypal.com/docs/api/notifications/webhooks
+              - alert [ref=f11e481]:
+                - generic [ref=f11e482]: loading
+            - separator [ref=f11e483]
+      - generic [ref=f11e247]:
+        - link "Reference" [ref=f11e248] [cursor=pointer]:
+          - /url: https://developer.paypal.com/reference
+        - link "PayPal.com" [ref=f11e249] [cursor=pointer]:
+          - /url: https://www.paypal.com
+        - link "Privacy" [ref=f11e250] [cursor=pointer]:
+          - /url: https://www.paypal.com/us/webapps/mpp/ua/privacy-full
+        - link "Support" [ref=f11e251] [cursor=pointer]:
+          - /url: https://developer.paypal.com/docs/support
+        - link "Legal" [ref=f11e252] [cursor=pointer]:
+          - /url: https://www.paypal.com/us/webapps/mpp/ua/legalhub-full
+        - link "Contact" [ref=f11e253] [cursor=pointer]:
+          - /url: https://www.paypal.com/us/smarthelp/contact-us
+  - generic [ref=f11e255]:
+    - generic [ref=f11e259]:
+      - heading [level=4] [ref=f11e261]:
+        - text: We currently use cookies to improve and customize your experience on our site. If you accept, we’ll also use marketing cookies to show you personalized ads.
+        - link "Manage your cookies and learn more." [ref=f11e262] [cursor=pointer]:
+          - /url: https://www.paypal.com/myaccount/privacy/cookiePrefs?locale=en_EC
+      - button "Yes, I accept" [ref=f11e264]
+    - button "Close" [ref=f11e265]

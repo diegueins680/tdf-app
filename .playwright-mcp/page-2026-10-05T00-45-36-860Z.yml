@@ -1,0 +1,166 @@
+- generic [ref=f36e9]:
+  - generic [ref=f36e12]:
+    - link [ref=f36e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f36e22]
+    - generic [ref=f36e25]:
+      - link [ref=f36e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f36e35]
+      - link [ref=f36e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f36e45]
+      - link [ref=f36e52] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - generic [ref=f36e55]:
+          - img "Messages" [ref=f36e57]
+          - generic "Direct messaging - 6 new notifications link" [ref=f36e59]: "6"
+      - link [ref=f36e65] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f36e70]
+      - link [ref=f36e77] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f36e82]
+      - link [ref=f36e88] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f36e93]
+      - link [ref=f36e98] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f36e103]
+      - link [ref=f36e110] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f36e115]:
+          - img "tdf.records.label's profile picture" [ref=f36e116]
+    - generic [ref=f36e117]:
+      - link [ref=f36e120] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f36e125]
+      - link [ref=f36e128] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f36e133]
+  - main [ref=f36e137]:
+    - generic [ref=f36e142]:
+      - navigation "Thread list" [ref=f36e143]:
+        - generic [ref=f36e144]:
+          - generic [ref=f36e145]:
+            - button [ref=f36e146] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f36e148]
+              - img "Verified" [ref=f36e151]
+              - img "Down chevron icon" [ref=f36e154]
+            - generic [ref=f36e157]:
+              - button [ref=f36e158] [cursor=pointer]:
+                - img "More options" [ref=f36e160]
+              - button [ref=f36e164] [cursor=pointer]:
+                - img "New message" [ref=f36e166]
+          - tablist [ref=f36e171]:
+            - tab "Primary" [selected] [ref=f36e172] [cursor=pointer]
+            - tab "General" [ref=f36e175] [cursor=pointer]
+            - tab "From ads" [ref=f36e178] [cursor=pointer]
+            - tab "Requests" [ref=f36e182] [cursor=pointer]
+          - generic [ref=f36e188]:
+            - img "Search" [ref=f36e190]
+            - textbox "Search" [ref=f36e193]
+          - generic [ref=f36e194]:
+            - generic [ref=f36e196]:
+              - generic [ref=f36e199]:
+                - status "Loading..." [ref=f36e200]
+                - status "Loading..." [ref=f36e201]
+              - generic [ref=f36e204]:
+                - status "Loading..." [ref=f36e205]
+                - status "Loading..." [ref=f36e206]
+              - generic [ref=f36e209]:
+                - status "Loading..." [ref=f36e210]
+                - status "Loading..." [ref=f36e211]
+            - generic [ref=f36e214]:
+              - button [ref=f36e215] [cursor=pointer]:
+                - generic [ref=f36e217]:
+                  - status "Loading..." [ref=f36e220]
+                  - generic [ref=f36e223]:
+                    - status "Loading..." [ref=f36e225]
+                    - status "Loading..." [ref=f36e227]
+              - button [ref=f36e228] [cursor=pointer]:
+                - generic [ref=f36e230]:
+                  - status "Loading..." [ref=f36e233]
+                  - generic [ref=f36e236]:
+                    - status "Loading..." [ref=f36e238]
+                    - status "Loading..." [ref=f36e240]
+              - button [ref=f36e241] [cursor=pointer]:
+                - generic [ref=f36e243]:
+                  - status "Loading..." [ref=f36e246]
+                  - generic [ref=f36e249]:
+                    - status "Loading..." [ref=f36e251]
+                    - status "Loading..." [ref=f36e253]
+              - button [ref=f36e254] [cursor=pointer]:
+                - generic [ref=f36e256]:
+                  - status "Loading..." [ref=f36e259]
+                  - generic [ref=f36e262]:
+                    - status "Loading..." [ref=f36e264]
+                    - status "Loading..." [ref=f36e266]
+      - generic [ref=f36e270]:
+        - generic [ref=f36e274]:
+          - link "Open the profile page of joelduenasc" [ref=f36e275] [cursor=pointer]:
+            - /url: /joelduenasc/
+            - generic [ref=f36e276]:
+              - img "user-profile-picture" [ref=f36e280]
+              - generic [ref=f36e281]:
+                - heading "Joel Dueñas" [level=2] [ref=f36e283]
+                - generic [ref=f36e285]: joelduenasc
+          - button [ref=f36e290] [cursor=pointer]:
+            - img "Conversation information" [ref=f36e292]
+        - generic [ref=f36e296]:
+          - generic [ref=f36e300]:
+            - generic [ref=f36e301]:
+              - img "user-profile-picture" [ref=f36e305]
+              - generic [ref=f36e306]:
+                - heading "Joel Dueñas" [level=2] [ref=f36e309]
+                - generic [ref=f36e311]: joelduenasc · Instagram
+                - link "View profile" [ref=f36e314] [cursor=pointer]:
+                  - /url: /joelduenasc/
+            - generic [ref=f36e318]:
+              - generic [ref=f36e319]: Wed 9:42 PM
+              - group [ref=f36e322]:
+                - generic [ref=f36e325]:
+                  - article [ref=f36e326]:
+                    - generic [ref=f36e328]:
+                      - generic [ref=f36e331]:
+                        - text: Hola, Joel
+                        - img "👋" [ref=f36e333]
+                        - text: "Vimos tu trabajo en batería con Delirio y su paso por el Teatro Capitol. Tu escena necesita un espacio propio para que la música de Quito siga encontrando gente. Te invitamos a explorar perfiles y lanzamientos en TDF y seguir un primer proyecto; el enlace abre la intención profesional por tu trabajo como productor:"
+                        - link "https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=Producer&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a" [ref=f36e335] [cursor=pointer]:
+                          - /url: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=Producer&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a
+                        - text: "Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - link "TDF Records" [ref=f36e336] [cursor=pointer]:
+                        - /url: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=Producer&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a
+                  - generic [ref=f36e341]:
+                    - group "Message actions":
+                      - generic:
+                        - generic:
+                          - generic:
+                            - button "React to message from tdf.records.label":
+                              - generic:
+                                - img "React to message from tdf.records.label"
+                        - generic:
+                          - generic:
+                            - button "Reply to message from tdf.records.label":
+                              - generic:
+                                - img "Reply to message from tdf.records.label"
+                        - generic:
+                          - generic:
+                            - button "See more options for message from tdf.records.label":
+                              - generic:
+                                - img "See more options for message from tdf.records.label"
+            - generic [ref=f36e342]: Seen
+          - generic [ref=f36e353]:
+            - button [ref=f36e356] [cursor=pointer]:
+              - img "Choose an emoji" [ref=f36e358]
+            - generic [ref=f36e360]:
+              - textbox [active] [ref=f36e361]:
+                - paragraph [ref=f36e362]
+              - generic: Message...
+            - generic [ref=f36e363]:
+              - button [ref=f36e364] [cursor=pointer]:
+                - img "Voice Clip" [ref=f36e366]
+              - button [ref=f36e369] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=f36e371]
+              - button [ref=f36e376] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=f36e378]

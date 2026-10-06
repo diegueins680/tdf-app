@@ -1,0 +1,29 @@
+[
+  {
+    "log": "events-editorial-catalog-final.log",
+    "command": [
+      "node",
+      "--test",
+      "scripts/__tests__/catalog-list-audit.test.mjs"
+    ],
+    "exit_code": 0
+  },
+  {
+    "log": "events-editorial-release-final.log",
+    "command": [
+      "npm",
+      "run",
+      "test:production-release"
+    ],
+    "exit_code": 0
+  },
+  {
+    "log": "events-editorial-inventory-final.log",
+    "command": [
+      "python3",
+      "scripts/specification-inventory.py",
+      "--check"
+    ],
+    "exit_code": 0
+  }
+]

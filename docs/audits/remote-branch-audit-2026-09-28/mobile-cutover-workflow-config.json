@@ -1,0 +1,18 @@
+[
+  {
+    "workflow": ".github/workflows/android-release-build.yml",
+    "job": "bundle",
+    "api": "https://api.tdfrecords.net",
+    "upload": "https://api.tdfrecords.net/drive/upload",
+    "configuration_exit": 0,
+    "other_environment_values_preserved": true
+  },
+  {
+    "workflow": ".github/workflows/ios-release-build.yml",
+    "job": "archive",
+    "api": "https://api.tdfrecords.net",
+    "upload": "https://api.tdfrecords.net/drive/upload",
+    "configuration_exit": 0,
+    "other_environment_values_preserved": true
+  }
+]

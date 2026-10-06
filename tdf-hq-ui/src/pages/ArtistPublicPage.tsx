@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMetaTags } from '../hooks/useMetaTags';
 import {
@@ -22,8 +22,10 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import GroupsIcon from '@mui/icons-material/Groups';
 import LaunchIcon from '@mui/icons-material/Launch';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
-import { Link as RouterLink, useParams } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Fans } from '../api/fans';
+import { musicReleases, type MusicPublicReleaseSummary } from '../api/musicReleases';
 import type { ArtistReleaseDTO } from '../api/types';
 import { useSession } from '../session/SessionContext';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
@@ -34,6 +36,7 @@ import { formatDateForUser } from '../utils/formatters';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 import { ArtistMerchStores } from '../components/merch/MerchReputationSummary';
+import { parsePositiveSafeInt } from '../utils/ids';
 
 interface ReleaseCardProps {
   release: ArtistReleaseDTO;
@@ -48,6 +51,26 @@ type ArtistPublicPageDisplayContract = Readonly<{
 const ARTIST_PUBLIC_PAGE_DISPLAY_CONTRACTS = {
   releaseDescriptionPreviewChars: 100 + 4 * 10,
 } as const satisfies ArtistPublicPageDisplayContract;
+
+export const isArtistFollowResume = (search: string, artistId: number | null): boolean => {
+  if (!artistId) return false;
+  const params = new URLSearchParams(search);
+  return params.get('resume') === 'follow'
+    && parsePositiveSafeInt(params.get('artistId')) === artistId;
+};
+
+export const buildArtistFollowAuthPath = (profileLink: string | null, artistId: number | null): string => {
+  if (!profileLink || !artistId) return '/login?signup=1&intent=follow_artists&redirect=%2Ffans';
+  const resumePath = `${profileLink}?${new URLSearchParams({
+    resume: 'follow',
+    artistId: String(artistId),
+  }).toString()}`;
+  return `/login?${new URLSearchParams({
+    signup: '1',
+    intent: 'follow_artists',
+    redirect: resumePath,
+  }).toString()}`;
+};
 
 const parseJsonObject = (raw?: string | null): Record<string, unknown> => {
   if (!raw) return {};
@@ -141,8 +164,29 @@ function ReleaseCard({ release }: ReleaseCardProps) {
   );
 }
 
+function CanonicalReleaseCard({ release }: { release: MusicPublicReleaseSummary }) {
+  const cover = useQuery({
+    queryKey: ['music-release-cover', release.coverAssetId],
+    queryFn: () => musicReleases.getAssetAccess(release.coverAssetId!),
+    enabled: Boolean(release.coverAssetId),
+    retry: false,
+  });
+  return <Card variant="outlined" sx={{ borderRadius: 3, height: '100%' }}>
+    {cover.data?.url && <CardMedia component="img" height="180" image={cover.data.url} alt={`Portada de ${release.title}`} loading="lazy" />}
+    <CardContent><Stack spacing={1}>
+      <Chip label={`${release.kind.toUpperCase()} · TDF`} size="small" sx={{ alignSelf: 'flex-start' }} />
+      <Typography component="h3" fontWeight={800}>{release.title}</Typography>
+      <Typography variant="body2" color="text.secondary">{release.displayArtist}</Typography>
+      <Button size="small" component={RouterLink} to={`/musica/${release.slug}`} startIcon={<MusicNoteIcon />}>Escuchar en TDF</Button>
+    </Stack></CardContent>
+  </Card>;
+}
+
 export default function ArtistPublicPage() {
+  const { t } = useTranslation();
   const { slugOrId } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const { session } = useSession();
   const viewerId = session?.partyId ?? null;
@@ -158,10 +202,30 @@ export default function ArtistPublicPage() {
   });
 
   const artistId = artistQuery.data?.apArtistId ?? null;
+  const profileLink = useMemo(() => {
+    const artist = artistQuery.data;
+    if (!artist) return null;
+    if (artist.apSlug) return `/a/${artist.apSlug}`;
+    return `/a/${artist.apArtistId}`;
+  }, [artistQuery.data]);
+  const resumeFollow = useMemo(
+    () => isArtistFollowResume(location.search, artistId),
+    [artistId, location.search],
+  );
+  const followAuthPath = useMemo(
+    () => buildArtistFollowAuthPath(profileLink, artistId),
+    [artistId, profileLink],
+  );
 
   const releasesQuery = useQuery({
     queryKey: ['public-artist-releases', artistId],
     queryFn: () => Fans.getReleases(artistId!),
+    enabled: Boolean(artistId),
+    retry: false,
+  });
+  const canonicalReleasesQuery = useQuery({
+    queryKey: ['public-canonical-music-releases', artistId],
+    queryFn: () => musicReleases.listPublic('', artistId!),
     enabled: Boolean(artistId),
     retry: false,
   });
@@ -190,12 +254,21 @@ export default function ArtistPublicPage() {
       void qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
       void qc.invalidateQueries({ queryKey: ['fan-artists'] });
       void qc.invalidateQueries({ queryKey: ['public-artist', segment] });
-      if (!isFollowing) captureFirstValueOnce(getAnalyticsClient(), session?.partyId, 'artist_followed');
+      if (!isFollowing) {
+        void captureFirstValueOnce(getAnalyticsClient(), session?.partyId, 'artist_followed');
+      }
+      if (resumeFollow && profileLink) navigate(profileLink, { replace: true });
     },
   });
 
   const artist = artistQuery.data ?? null;
   const releases = releasesQuery.data ?? [];
+  const canonicalReleases = canonicalReleasesQuery.data ?? [];
+
+  useEffect(() => {
+    if (!resumeFollow || !profileLink || followsQuery.isLoading || !isFollowing) return;
+    navigate(profileLink, { replace: true });
+  }, [followsQuery.isLoading, isFollowing, navigate, profileLink, resumeFollow]);
 
   useMetaTags({
     title: artist?.apDisplayName ?? 'Artista',
@@ -203,12 +276,6 @@ export default function ArtistPublicPage() {
     ogImage: artist?.apHeroImageUrl ?? undefined,
     ogType: 'profile',
   });
-
-  const profileLink = useMemo(() => {
-    if (!artist) return null;
-    if (artist.apSlug) return `/a/${artist.apSlug}`;
-    return `/a/${artist.apArtistId}`;
-  }, [artist]);
 
   if (!segment) {
     return (
@@ -347,11 +414,11 @@ export default function ArtistPublicPage() {
                     variant="contained"
                     color="secondary"
                     component={RouterLink}
-                    to={`/login?${new URLSearchParams({ redirect: profileLink ?? '/fans' }).toString()}`}
+                    to={followAuthPath}
                     startIcon={<FavoriteBorderIcon />}
                     sx={{ textTransform: 'none' }}
                   >
-                    Inicia sesión para seguir
+                    {t('artistFollow.authCta')}
                   </Button>
                 ) : (
                   <Button
@@ -392,6 +459,28 @@ export default function ArtistPublicPage() {
         </section>
         <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
           <Stack spacing={2.5}>
+            {resumeFollow && !isFollowing && (
+              <Alert
+                severity="info"
+                action={(
+                  <Button
+                    color="inherit"
+                    size="small"
+                    onClick={() => followMutation.mutate()}
+                    disabled={followMutation.isPending || followsQuery.isLoading}
+                  >
+                    {t('artistFollow.resumeAction')}
+                  </Button>
+                )}
+              >
+                {t('artistFollow.resumeMessage', { artist: artist.apDisplayName })}
+              </Alert>
+            )}
+            {resumeFollow && followMutation.isError && (
+              <Alert severity="error">
+                {t('artistFollow.resumeError', { artist: artist.apDisplayName })}
+              </Alert>
+            )}
             {canClaim && (
               <Alert
                 severity="info"
@@ -568,7 +657,7 @@ export default function ArtistPublicPage() {
                 )}
               </Stack>
 
-              {releasesQuery.isLoading && (
+              {(releasesQuery.isLoading || canonicalReleasesQuery.isLoading) && (
                 <Box display="flex" alignItems="center" gap={1.5} py={2}>
                   <CircularProgress size={18} aria-label="Cargando lanzamientos del artista" />
                   <Typography variant="body2" color="text.secondary">
@@ -577,11 +666,15 @@ export default function ArtistPublicPage() {
                 </Box>
               )}
 
-              {!releasesQuery.isLoading && releases.length === 0 && (
+              {!releasesQuery.isLoading && !canonicalReleasesQuery.isLoading && releases.length === 0 && canonicalReleases.length === 0 && (
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                   No hay releases publicados todavía.
                 </Typography>
               )}
+
+              {canonicalReleases.length > 0 && <Grid container spacing={2} sx={{ mt: 0.5, mb: releases.length > 0 ? 2 : 0 }}>
+                {canonicalReleases.map((release) => <Grid key={release.id} item xs={12} sm={6} md={4}><CanonicalReleaseCard release={release} /></Grid>)}
+              </Grid>}
 
               {releases.length > 0 && (
                 <LazyPaginatedList

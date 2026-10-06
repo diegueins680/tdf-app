@@ -1,0 +1,417 @@
+- generic [ref=f3e1]:
+  - link "Skip to main content" [ref=f3e2] [cursor=pointer]:
+    - /url: /organization-settings/application-keys#single-page-app_layout_page__main-content
+  - generic [ref=f3e4]:
+    - generic [ref=f3e5]:
+      - generic [ref=f3e6]:
+        - generic [ref=f3e7]: Welcome, Diego!
+        - generic [ref=f3e9]:
+          - generic [ref=f3e10]: Your trial period has expired!
+          - link [ref=f3e574] [cursor=pointer]:
+            - /url: /billing/plan/subscribe
+            - text: Upgrade
+      - generic [ref=f3e13]:
+        - button [ref=f3e575] [cursor=pointer]:
+          - text: Search Datadog
+          - generic [ref=f3e17]:
+            - generic [ref=f3e576]: ⌘
+            - generic [ref=f3e577]: k
+        - button [ref=f3e578] [cursor=pointer]:
+          - generic [ref=f3e26]: Ask Bits
+      - navigation [ref=f3e579]:
+        - group [ref=f3e580]:
+          - generic [ref=f3e29]:
+            - link [ref=f3e581] [cursor=pointer]:
+              - /url: /help/quick_start
+            - button [ref=f3e582] [cursor=pointer]
+            - button [ref=f3e583] [cursor=pointer]
+        - generic [ref=f3e41]:
+          - list [ref=f3e584]:
+            - listitem [ref=f3e44]:
+              - link [ref=f3e585] [cursor=pointer]:
+                - /url: /ask
+                - generic [ref=f3e47]: Bits AI
+            - listitem [ref=f3e52]:
+              - link [ref=f3e586] [cursor=pointer]:
+                - /url: /dashboard/lists
+                - generic [ref=f3e55]: Dashboards
+            - listitem [ref=f3e60]:
+              - link [ref=f3e587] [cursor=pointer]:
+                - /url: /monitors/manage
+                - generic [ref=f3e63]: Monitoring
+            - listitem [ref=f3e68]:
+              - link [ref=f3e588] [cursor=pointer]:
+                - /url: /idp/home
+                - generic [ref=f3e71]: Developer Portal
+            - listitem [ref=f3e76]:
+              - link [ref=f3e589] [cursor=pointer]:
+                - /url: /incidents
+                - generic [ref=f3e79]: Incident Response
+            - listitem [ref=f3e84]:
+              - link [ref=f3e590] [cursor=pointer]:
+                - /url: /actions
+                - generic [ref=f3e87]: Automation
+            - listitem [ref=f3e92]:
+              - link [ref=f3e591] [cursor=pointer]:
+                - /url: /infrastructure
+                - generic [ref=f3e95]: Infrastructure
+            - listitem [ref=f3e100]:
+              - link [ref=f3e592] [cursor=pointer]:
+                - /url: /cost/onboarding
+                - generic [ref=f3e103]: Cloud Cost
+            - listitem [ref=f3e108]:
+              - link [ref=f3e593] [cursor=pointer]:
+                - /url: /apm/home
+                - generic [ref=f3e111]: APM
+            - listitem [ref=f3e116]:
+              - link [ref=f3e594] [cursor=pointer]:
+                - /url: /synthetics/tests
+                - generic [ref=f3e119]: Digital Experience
+            - listitem [ref=f3e124]:
+              - link [ref=f3e595] [cursor=pointer]:
+                - /url: /ci
+                - generic [ref=f3e127]: Software Delivery
+            - listitem [ref=f3e132]:
+              - link [ref=f3e596] [cursor=pointer]:
+                - /url: /security/getting-started
+                - generic [ref=f3e135]: Security
+            - listitem [ref=f3e140]:
+              - link [ref=f3e597] [cursor=pointer]:
+                - /url: /data-obs
+                - generic [ref=f3e143]: Data Observability
+            - listitem [ref=f3e148]:
+              - link [ref=f3e598] [cursor=pointer]:
+                - /url: /llm
+                - generic [ref=f3e151]: AI Observability
+            - listitem [ref=f3e156]:
+              - link [ref=f3e599] [cursor=pointer]:
+                - /url: /error-tracking
+                - generic [ref=f3e159]: Errors
+            - listitem [ref=f3e164]:
+              - link [ref=f3e600] [cursor=pointer]:
+                - /url: /metric/overview
+                - generic [ref=f3e167]: Metrics
+            - listitem [ref=f3e172]:
+              - link [ref=f3e601] [cursor=pointer]:
+                - /url: /logs
+                - generic [ref=f3e175]: Logs
+          - button [ref=f3e180] [cursor=pointer]
+          - generic [ref=f3e181]:
+            - list [ref=f3e602]:
+              - listitem [ref=f3e183]:
+                - link [ref=f3e603] [cursor=pointer]:
+                  - /url: /integrations
+                  - generic [ref=f3e186]: Integrations
+              - listitem [ref=f3e191]:
+                - link [ref=f3e604] [cursor=pointer]:
+                  - /url: /personal-settings
+                  - generic [ref=f3e199]:
+                    - generic [ref=f3e201]:
+                      - generic [ref=f3e202]: cuco.saa@gmail.com
+                      - generic [ref=f3e205]: cuco.saa@gmail.com
+                    - generic [ref=f3e207]:
+                      - text: TDF Records
+                      - generic [ref=f3e208]: TDF Records
+            - generic [ref=f3e210]:
+              - link [disabled] [ref=f3e605] [cursor=pointer]:
+                - /url: /organization-settings/users/invite
+                - generic [ref=f3e213]: Invite
+              - button [disabled] [ref=f3e606] [cursor=pointer]:
+                - generic [ref=f3e219]: Support
+              - link [ref=f3e607] [cursor=pointer]:
+                - /url: /help
+                - generic [ref=f3e225]:
+                  - generic [ref=f3e226]: NEW
+                  - generic [ref=f3e232]: Help
+    - generic [ref=f3e234]:
+      - banner [ref=f3e235]:
+        - banner [ref=f3e236]:
+          - button [ref=f3e608] [cursor=pointer]:
+            - heading [level=2] [ref=f3e609]: Organization Settings
+          - generic [ref=f3e247]:
+            - generic [ref=f3e248]: "Organization: TDF Records"
+            - generic [ref=f3e250]: "Site: datadoghq.com"
+            - button [ref=f3e610] [cursor=pointer]: Log Out
+      - generic [ref=f3e255]:
+        - button [ref=f3e611] [cursor=pointer]
+        - generic [ref=f3e262]:
+          - heading [level=1] [ref=f3e612]: Set up Security Contacts
+          - text: new
+          - list [ref=f3e264]:
+            - listitem [ref=f3e265]: Receive timely alerts for vital security events
+            - listitem [ref=f3e266]: Swiftly address and mitigate potential security risks
+            - listitem [ref=f3e267]:
+              - link [ref=f3e613] [cursor=pointer]:
+                - /url: /organization-settings/preferences#security-contacts
+                - text: Set Up Security Contacts
+              - link [ref=f3e614] [cursor=pointer]:
+                - /url: https://www.datadoghq.com/trust/#security-contacts
+                - text: Learn More
+      - generic [ref=f3e272]:
+        - complementary [ref=f3e273]:
+          - generic [ref=f3e274]:
+            - generic [ref=f3e283]:
+              - generic [ref=f3e284]: Search
+              - textbox [ref=f3e285]
+            - generic [ref=f3e286]:
+              - generic [ref=f3e287]: Identity & Accounts
+              - link [ref=f3e615] [cursor=pointer]:
+                - /url: /organization-settings/users
+                - generic [ref=f3e289]: Users
+              - link [ref=f3e616] [cursor=pointer]:
+                - /url: /organization-settings/teams
+                - generic [ref=f3e292]: Teams
+              - link [ref=f3e617] [cursor=pointer]:
+                - /url: /organization-settings/service-accounts
+                - generic [ref=f3e297]: Service Accounts
+              - generic [ref=f3e299]: Authentication
+              - link [ref=f3e618] [cursor=pointer]:
+                - /url: /organization-settings/login-methods
+                - generic [ref=f3e301]: Login Methods
+              - link [ref=f3e619] [cursor=pointer]:
+                - /url: /organization-settings/mappings
+                - generic [ref=f3e304]: SAML Group Mappings
+              - link [ref=f3e620] [cursor=pointer]:
+                - /url: /organization-settings/oauth-applications
+                - generic [ref=f3e307]: Mobile and Third-Party Access
+              - link [ref=f3e621] [cursor=pointer]:
+                - /url: /organization-settings/cross-app-access
+                - generic [ref=f3e311]:
+                  - text: Cross-App Access
+                  - generic [ref=f3e312]: new
+              - link [ref=f3e622] [cursor=pointer]:
+                - /url: /organization-settings/workload-identity-federation
+                - generic [ref=f3e315]:
+                  - text: Workload Identity Federation
+                  - generic [ref=f3e316]: new
+              - generic [ref=f3e317]: Access
+              - link [ref=f3e623] [cursor=pointer]:
+                - /url: /organization-settings/api-keys
+                - generic [ref=f3e319]: API Keys
+              - generic [ref=f3e321]: Application Keys
+              - link [ref=f3e624] [cursor=pointer]:
+                - /url: /organization-settings/access-tokens
+                - generic [ref=f3e326]:
+                  - text: Access Tokens
+                  - generic [ref=f3e327]: new
+              - link [ref=f3e625] [cursor=pointer]:
+                - /url: /organization-settings/roles
+                - generic [ref=f3e329]: Roles
+              - link [ref=f3e626] [cursor=pointer]:
+                - /url: /organization-settings/data-access-controls
+                - generic [ref=f3e332]: Data Access Control
+              - link [ref=f3e627] [cursor=pointer]:
+                - /url: /organization-settings/client-tokens
+                - generic [ref=f3e335]: Client Tokens
+              - link [ref=f3e628] [cursor=pointer]:
+                - /url: /organization-settings/events-api-emails
+                - generic [ref=f3e338]: Events API Emails
+              - link [ref=f3e629] [cursor=pointer]:
+                - /url: /organization-settings/cross-org-visibility
+                - generic [ref=f3e341]: Cross-Org Visibility
+              - link [ref=f3e630] [cursor=pointer]:
+                - /url: /organization-settings/mcp
+                - generic [ref=f3e345]:
+                  - text: MCP Server
+                  - generic [ref=f3e346]: new
+              - generic [ref=f3e347]: Security
+              - link [ref=f3e631] [cursor=pointer]:
+                - /url: /organization-settings/safety-center
+                - generic [ref=f3e350]:
+                  - text: Safety Center
+                  - generic [ref=f3e351]: new
+              - link [ref=f3e632] [cursor=pointer]:
+                - /url: /organization-settings/public-sharing
+                - generic [ref=f3e353]: Public Sharing
+              - link [ref=f3e633] [cursor=pointer]:
+                - /url: /organization-settings/remote-config
+                - generic [ref=f3e356]: Remote Configuration
+              - link [ref=f3e634] [cursor=pointer]:
+                - /url: /organization-settings/smtp-configuration
+                - generic [ref=f3e359]: SMTP Configuration
+              - generic [ref=f3e361]: Compliance
+              - link [ref=f3e635] [cursor=pointer]:
+                - /url: /audit-trail
+                - generic [ref=f3e363]: Audit Trail
+              - link [ref=f3e636] [cursor=pointer]:
+                - /url: /organization-settings/audit-trail-settings
+                - generic [ref=f3e366]: Audit Trail Settings
+              - link [ref=f3e637] [cursor=pointer]:
+                - /url: /sensitive-data-scanner?source=org-settings
+                - generic [ref=f3e369]: Sensitive Data Scanner
+              - generic [ref=f3e371]: General
+              - link [ref=f3e638] [cursor=pointer]:
+                - /url: /organization-settings/preferences
+                - generic [ref=f3e373]: Preferences
+              - generic [ref=f3e375]: Products
+              - link [ref=f3e639] [cursor=pointer]:
+                - /url: /ci/settings/visibility
+                - generic [ref=f3e377]: CI
+              - link [ref=f3e640] [cursor=pointer]:
+                - /url: /event/settings
+                - generic [ref=f3e380]: Event Management
+              - link [ref=f3e641] [cursor=pointer]:
+                - /url: /incidents/settings
+                - generic [ref=f3e383]: Incidents
+              - link [ref=f3e642] [cursor=pointer]:
+                - /url: /integrations
+                - generic [ref=f3e386]: Integrations
+              - link [ref=f3e643] [cursor=pointer]:
+                - /url: /logs/pipelines
+                - generic [ref=f3e389]: Logs
+              - link [ref=f3e644] [cursor=pointer]:
+                - /url: /monitors/settings
+                - generic [ref=f3e392]: Monitors
+              - link [ref=f3e645] [cursor=pointer]:
+                - /url: /on-call/settings
+                - generic [ref=f3e395]: On-Call
+              - link [ref=f3e646] [cursor=pointer]:
+                - /url: /process/metrics
+                - generic [ref=f3e398]: Processes
+              - link [ref=f3e647] [cursor=pointer]:
+                - /url: /rum/list
+                - generic [ref=f3e401]: RUM
+              - link [ref=f3e648] [cursor=pointer]:
+                - /url: /services/settings/get-started
+                - generic [ref=f3e404]: Software Catalog
+              - link [ref=f3e649] [cursor=pointer]:
+                - /url: /synthetics/settings
+                - generic [ref=f3e407]: Synthetic Tests
+        - main [ref=f3e409]:
+          - button [ref=f3e650] [cursor=pointer]
+          - generic [ref=f3e415]:
+            - generic [ref=f3e416]:
+              - heading [level=1] [ref=f3e651]: Application Keys
+              - button [ref=f3e652] [cursor=pointer]: New Key
+            - generic [ref=f3e422]: Application keys work with your organization's API key to access Datadog API endpoints. They belong to a user and can only do what that user is allowed to do. By default, keys inherit all of the user's permissions, and can be scoped down if needed.
+            - alert [ref=f3e423]:
+              - generic [ref=f3e424]:
+                - button [ref=f3e653] [cursor=pointer]
+                - generic [ref=f3e427]:
+                  - heading [level=4] [ref=f3e654]: Try a Personal Access Token instead
+                  - generic [ref=f3e429]:
+                    - generic [ref=f3e430]: Personal Access Tokens are scoped and short-lived, so access is limited to what you need and expires automatically.
+                    - link [ref=f3e655] [cursor=pointer]:
+                      - /url: /organization-settings/access-tokens#new-access-token
+                      - text: Create a Personal Access Token
+            - textbox [ref=f3e657]:
+              - /placeholder: Filter by name, id, or owner
+            - checkbox [ref=f3e658] [cursor=pointer]:
+              - generic: Only My Keys
+            - generic [ref=f3e442]:
+              - generic [ref=f3e444]:
+                - text: Showing
+                - generic [ref=f3e445]: 1 – 1
+                - text: of
+                - generic [ref=f3e446]: "1"
+                - text: Application Key
+              - table [ref=f3e450]:
+                - rowgroup [ref=f3e451]:
+                  - row [ref=f3e659]:
+                    - columnheader [ref=f3e660] [cursor=pointer]:
+                      - button [ref=f3e661]
+                      - status [ref=f3e455]
+                      - generic [ref=f3e457]:
+                        - generic [ref=f3e458]: Name
+                        - generic [ref=f3e464]: Name
+                    - columnheader [ref=f3e663]:
+                      - generic [ref=f3e470]: Key Id
+                      - separator [ref=f3e474]
+                    - columnheader [ref=f3e664]:
+                      - generic [ref=f3e476]: Key
+                      - separator [ref=f3e480]
+                    - columnheader [ref=f3e665]:
+                      - generic [ref=f3e482]: Owner
+                      - separator [ref=f3e486]
+                    - columnheader [ref=f3e666] [cursor=pointer]:
+                      - button [ref=f3e667]
+                      - status [ref=f3e489]
+                      - generic [ref=f3e490]: Created On
+                      - separator [ref=f3e494]
+                    - columnheader [ref=f3e668]:
+                      - generic [ref=f3e496]: Last Used
+                      - separator [ref=f3e500]
+                - rowgroup [ref=f3e501]:
+                  - row [ref=f3e669]:
+                    - cell [ref=f3e670]:
+                      - button [ref=f3e671]
+                    - cell [ref=f3e672] [cursor=pointer]:
+                      - generic [ref=f3e507]:
+                        - generic [ref=f3e508]: tdf-app GitHub Actions Synthetics
+                        - generic [ref=f3e509]: scoped
+                    - cell [ref=f3e673] [cursor=pointer]:
+                      - generic [ref=f3e514]: 200789f5-dcf5-40a2-b96f-ff39eb839528
+                    - cell [ref=f3e674] [cursor=pointer]:
+                      - generic [ref=f3e517]: ••••••••••••jogw
+                    - cell [ref=f3e675] [cursor=pointer]:
+                      - button [ref=f3e676]:
+                        - generic [ref=f3e528]:
+                          - generic [ref=f3e529]: Diego Saa
+                          - generic [ref=f3e532]: Diego Saa
+                    - cell [ref=f3e677] [cursor=pointer]:
+                      - generic [ref=f3e535]: Sep 14, 2026, 5:05 pm
+                    - cell [ref=f3e678] [cursor=pointer]:
+                      - generic [ref=f3e538]: In the past hour
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - button
+              - generic [ref=f3e542]:
+                - generic [ref=f3e543]: "Results per page:"
+                - button [ref=f3e679]:
+                  - option [selected] [ref=f3e680] [cursor=pointer]: "50"
+    - contentinfo [ref=f3e681]:
+      - list [ref=f3e554]:
+        - listitem [ref=f3e555]: Copyright Datadog, Inc. 2026
+        - listitem [ref=f3e556]:
+          - generic [ref=f3e557]: "Version:"
+          - text: "35.142257761"
+        - listitem [ref=f3e558]:
+          - link [ref=f3e682] [cursor=pointer]:
+            - /url: https://www.datadoghq.com/legal/msa/
+            - text: Master Subscription Agreement
+        - listitem [ref=f3e560]:
+          - link [ref=f3e683] [cursor=pointer]:
+            - /url: https://www.datadoghq.com/legal/privacy/
+            - text: Privacy Policy
+        - listitem [ref=f3e562]:
+          - link [ref=f3e684] [cursor=pointer]:
+            - /url: https://www.datadoghq.com/legal/cookies/
+            - text: Cookie Policy
+        - listitem [ref=f3e564]:
+          - generic [ref=f3e565]:
+            - link [ref=f3e685] [cursor=pointer]:
+              - /url: https://status.datadoghq.com
+              - text: Datadog Status →
+              - generic [ref=f3e567]: ": All Systems Operational"
+            - generic [ref=f3e570]: All Systems Operational
+  - generic:
+    - dialog "New Key" [ref=f3e687]:
+      - generic [ref=f3e688]:
+        - heading "New Key" [level=2] [ref=f3e689]
+        - button "Close" [ref=f3e690] [cursor=pointer]
+      - generic [ref=f3e692]:
+        - alert [ref=f3e693]:
+          - generic [ref=f3e697]:
+            - heading "Try a Personal Access Token instead" [level=4] [ref=f3e698]
+            - text: Personal Access Tokens are scoped and short-lived, so access is limited to what you need and expires automatically.
+            - link "Create a Personal Access Token" [ref=f3e699] [cursor=pointer]:
+              - /url: /organization-settings/access-tokens#new-access-token
+        - generic [ref=f3e700]:
+          - generic [ref=f3e701]: Name
+          - textbox "Name" [active] [ref=f3e708]:
+            - /placeholder: e.g. UX Monitoring Key
+      - button "Create Key" [disabled] [ref=f3e710]
+    - generic: Sorted ascending. Activate to sort descending.
+    - generic: Not sorted. Activate to sort ascending.
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - option "50" [selected]
+            - combobox
+  - iframe [ref=f3e573]:
+    

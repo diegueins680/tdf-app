@@ -1,0 +1,31 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 349,
+          "reviewDecision": "REVIEW_REQUIRED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "cf591e1faa975b8023c6c06892fb50a51ba06dff",
+          "baseRefName": "fix/event-session-transaction-fence",
+          "isDraft": true,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          }
+        }
+      }
+    }
+  }
+]

@@ -1,0 +1,1 @@
+2026-10-04T01:21:20.430008+00:00 browser_tabs action=list failed: configured tdf-instagram profile is occupied by another session; no profile/process changed. Actual Google interactive login/authenticated upload remains unverified.

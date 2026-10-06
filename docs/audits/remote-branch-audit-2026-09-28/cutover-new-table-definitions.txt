@@ -1,0 +1,308 @@
+tdf-hq/sql/2026-09-14_social_v2_foundation.sql
+CREATE TABLE IF NOT EXISTS social_v2_command (
+  actor bigint NOT NULL REFERENCES party(id) ON DELETE RESTRICT,
+  request_key text NOT NULL CHECK (length(request_key) BETWEEN 1 AND 80),
+  target bigint NOT NULL REFERENCES party(id) ON DELETE RESTRICT,
+  operation text NOT NULL,
+  expected_revision bigint NOT NULL,
+  result jsonb NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+  PRIMARY KEY(actor,request_key)
+);
+
+tdf-hq/sql/2026-09-14_social_v2_foundation.sql
+CREATE TABLE IF NOT EXISTS social_v2_pair (
+  party_a bigint NOT NULL REFERENCES party(id) ON DELETE RESTRICT,
+  party_b bigint NOT NULL REFERENCES party(id) ON DELETE RESTRICT,
+  consent_a boolean NOT NULL DEFAULT false,
+  consent_b boolean NOT NULL DEFAULT false,
+  follow_a boolean NOT NULL DEFAULT false,
+  follow_b boolean NOT NULL DEFAULT false,
+  block_a boolean NOT NULL DEFAULT false,
+  block_b boolean NOT NULL DEFAULT false,
+  mute_a boolean NOT NULL DEFAULT false,
+  mute_b boolean NOT NULL DEFAULT false,
+  dismiss_a boolean NOT NULL DEFAULT false,
+  dismiss_b boolean NOT NULL DEFAULT false,
+  revision bigint NOT NULL DEFAULT 0 CHECK (revision >= 0),
+  created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+  updated_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+  PRIMARY KEY(party_a, party_b), CHECK (party_a < party_b),
+  CHECK (NOT (block_a OR block_b) OR NOT (consent_a OR consent_b OR follow_a OR follow_b))
+);
+
+tdf-hq/sql/2026-09-14_social_v2_foundation.sql
+CREATE TABLE IF NOT EXISTS social_v2_preference (
+  party_id bigint PRIMARY KEY REFERENCES party(id) ON DELETE RESTRICT,
+  discoverable boolean NOT NULL DEFAULT false,
+  personalized boolean NOT NULL DEFAULT true,
+  closed boolean NOT NULL DEFAULT false,
+  revision bigint NOT NULL DEFAULT 0 CHECK (revision >= 0),
+  updated_at timestamptz NOT NULL DEFAULT clock_timestamp()
+);
+
+tdf-hq/sql/2026-09-14_social_v2_foundation.sql
+CREATE TABLE IF NOT EXISTS social_v2_runtime (
+  singleton boolean PRIMARY KEY DEFAULT true CHECK (singleton),
+  enabled boolean NOT NULL DEFAULT false
+);
+
+tdf-hq/sql/2026-09-14_social_v2_read_models.sql
+CREATE TABLE IF NOT EXISTS social_v2_publication (
+  post_id bigint PRIMARY KEY REFERENCES fan_club_post(id) ON DELETE CASCADE,
+  position bigint NOT NULL UNIQUE,
+  published_at timestamptz NOT NULL DEFAULT clock_timestamp()
+);
+
+tdf-hq/sql/2026-09-27_event_ingestion_boundaries.sql
+CREATE TABLE IF NOT EXISTS event_discovery_publication_approval (
+  id bigserial PRIMARY KEY,
+  source_id bigint NOT NULL REFERENCES event_discovery_source(id),
+  approval_reference text NOT NULL CHECK(length(trim(approval_reference)) BETWEEN 1 AND 500),
+  approved_by_party_id bigint NOT NULL REFERENCES party(id),
+  approved_at timestamptz NOT NULL DEFAULT now(),
+  revoked_at timestamptz,
+  CHECK(revoked_at IS NULL OR revoked_at>=approved_at)
+);
+
+tdf-hq/sql/2026-09-28_interaction_discussions.sql
+CREATE TABLE IF NOT EXISTS interaction_comment_total (
+ target_id uuid NOT NULL REFERENCES interaction_target(id),
+ root_id uuid NOT NULL REFERENCES interaction_comment(id),
+ author_id bigint NOT NULL REFERENCES party(id),
+ comments bigint NOT NULL DEFAULT 0 CHECK(comments>=0),
+ roots bigint NOT NULL DEFAULT 0 CHECK(roots BETWEEN 0 AND 1),
+ PRIMARY KEY(target_id,root_id,author_id)
+);
+
+tdf-hq/sql/2026-09-28_interaction_legacy.sql
+CREATE TABLE IF NOT EXISTS interaction_legacy_cutover (
+ singleton boolean PRIMARY KEY DEFAULT true CHECK(singleton),
+ completed_at timestamptz NOT NULL,
+ source_counts jsonb NOT NULL,
+ migrated_counts jsonb NOT NULL
+);
+
+tdf-hq/sql/2026-09-28_interaction_notifications.sql
+CREATE TABLE IF NOT EXISTS interaction_event (
+ id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+ target_id uuid NOT NULL REFERENCES interaction_target(id),
+ actor_id bigint NOT NULL REFERENCES party(id),
+ comment_id uuid REFERENCES interaction_comment(id),
+ kind text NOT NULL CHECK(kind IN ('reaction','comment','edit','moderation')),
+ request_key uuid NOT NULL,
+ recipient_cursor bigint NOT NULL DEFAULT 0,
+ completed_at timestamptz,
+ created_at timestamptz NOT NULL DEFAULT now(),
+ UNIQUE(actor_id,request_key)
+);
+
+tdf-hq/sql/2026-09-28_interaction_notifications.sql
+CREATE TABLE IF NOT EXISTS interaction_migration_state (
+ key text PRIMARY KEY,value jsonb NOT NULL
+);
+
+tdf-hq/sql/2026-09-28_interaction_read_optimization.sql
+CREATE TABLE IF NOT EXISTS interaction_target_comment_total (
+ target_id uuid NOT NULL REFERENCES interaction_target(id),
+ author_id bigint NOT NULL REFERENCES party(id),
+ comments bigint NOT NULL DEFAULT 0 CHECK(comments>=0),
+ roots bigint NOT NULL DEFAULT 0 CHECK(roots>=0 AND roots<=comments),
+ PRIMARY KEY(target_id,author_id)
+);
+
+tdf-hq/sql/2026-09-28_universal_interactions.sql
+CREATE TABLE IF NOT EXISTS interaction_audit (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  target_id uuid REFERENCES interaction_target(id) ON DELETE RESTRICT,
+  comment_id uuid REFERENCES interaction_comment(id) ON DELETE RESTRICT,
+  actor_id bigint REFERENCES party(id) ON DELETE RESTRICT,
+  operation text NOT NULL,
+  reason text,
+  previous_state text,
+  new_state text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+tdf-hq/sql/2026-09-28_universal_interactions.sql
+CREATE TABLE IF NOT EXISTS interaction_comment (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  target_id uuid NOT NULL REFERENCES interaction_target(id) ON DELETE RESTRICT,
+  author_id bigint REFERENCES party(id) ON DELETE RESTRICT,
+  parent_id uuid,
+  root_id uuid NOT NULL,
+  depth integer NOT NULL DEFAULT 0 CHECK(depth BETWEEN 0 AND 1000),
+  body text NOT NULL CHECK(length(body)<=4096),
+  state text NOT NULL DEFAULT 'visible'
+    CHECK(state IN ('visible','deleted','hidden','removed')),
+  version bigint NOT NULL DEFAULT 1 CHECK(version>0),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  edited_at timestamptz,
+  legacy_kind text,
+  legacy_key text,
+  UNIQUE(id,target_id),
+  UNIQUE(legacy_kind,legacy_key),
+  FOREIGN KEY(parent_id,target_id) REFERENCES interaction_comment(id,target_id)
+    ON DELETE RESTRICT DEFERRABLE INITIALLY DEFERRED,
+  FOREIGN KEY(root_id,target_id) REFERENCES interaction_comment(id,target_id)
+    ON DELETE RESTRICT DEFERRABLE INITIALLY DEFERRED,
+  CHECK ((parent_id IS NULL AND root_id=id AND depth=0)
+      OR (parent_id IS NOT NULL AND parent_id<>id AND root_id<>id AND depth>0)),
+  CHECK ((legacy_kind IS NULL)=(legacy_key IS NULL)),
+  CHECK ((state IN ('visible','hidden') AND length(btrim(body))>0) OR (state IN ('deleted','removed') AND body=''))
+);
+
+tdf-hq/sql/2026-09-28_universal_interactions.sql
+CREATE TABLE IF NOT EXISTS interaction_comment_attachment (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  comment_id uuid NOT NULL REFERENCES interaction_comment(id) ON DELETE RESTRICT,
+  asset_id uuid NOT NULL,
+  position smallint NOT NULL CHECK(position BETWEEN 0 AND 9),
+  UNIQUE(comment_id,position)
+);
+
+tdf-hq/sql/2026-09-28_universal_interactions.sql
+CREATE TABLE IF NOT EXISTS interaction_comment_mention (
+  comment_id uuid NOT NULL REFERENCES interaction_comment(id) ON DELETE RESTRICT,
+  party_id bigint NOT NULL REFERENCES party(id) ON DELETE RESTRICT,
+  start_offset integer NOT NULL CHECK(start_offset>=0),
+  end_offset integer NOT NULL CHECK(end_offset>start_offset),
+  PRIMARY KEY(comment_id,start_offset),
+  UNIQUE(comment_id,party_id,start_offset)
+);
+
+tdf-hq/sql/2026-09-28_universal_interactions.sql
+CREATE TABLE IF NOT EXISTS interaction_entity_kind (
+  code text PRIMARY KEY CHECK (code ~ '^[a-z][a-z_]{0,47}$'),
+  reactable boolean NOT NULL DEFAULT false,
+  commentable boolean NOT NULL DEFAULT false,
+  shareable boolean NOT NULL DEFAULT false,
+  enabled boolean NOT NULL DEFAULT false
+);
+
+tdf-hq/sql/2026-09-28_universal_interactions.sql
+CREATE TABLE IF NOT EXISTS interaction_legacy_mapping (
+  legacy_kind text NOT NULL,
+  legacy_id text NOT NULL,
+  target_id uuid NOT NULL REFERENCES interaction_target(id) ON DELETE RESTRICT,
+  comment_id uuid REFERENCES interaction_comment(id) ON DELETE RESTRICT,
+  source_value jsonb NOT NULL,
+  migrated_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY(legacy_kind,legacy_id)
+);
+
+tdf-hq/sql/2026-09-28_universal_interactions.sql
+CREATE TABLE IF NOT EXISTS interaction_notification (
+  notification_id bigint PRIMARY KEY REFERENCES notification(id) ON DELETE CASCADE,
+  target_id uuid NOT NULL REFERENCES interaction_target(id) ON DELETE RESTRICT,
+  comment_id uuid REFERENCES interaction_comment(id) ON DELETE RESTRICT,
+  recipient_id bigint NOT NULL REFERENCES party(id) ON DELETE RESTRICT,
+  event_kind text NOT NULL CHECK(event_kind IN ('reaction','comment','reply','mention','moderation')),
+  dedupe_key text NOT NULL,
+  UNIQUE(recipient_id,event_kind,dedupe_key),
+  FOREIGN KEY(comment_id,target_id) REFERENCES interaction_comment(id,target_id)
+);
+
+tdf-hq/sql/2026-09-28_universal_interactions.sql
+CREATE TABLE IF NOT EXISTS interaction_notification_actor (
+  notification_id bigint NOT NULL REFERENCES interaction_notification(notification_id) ON DELETE CASCADE,
+  actor_id bigint NOT NULL REFERENCES party(id) ON DELETE RESTRICT,
+  PRIMARY KEY(notification_id,actor_id)
+);
+
+tdf-hq/sql/2026-09-28_universal_interactions.sql
+CREATE TABLE IF NOT EXISTS interaction_notification_preference (
+  party_id bigint PRIMARY KEY REFERENCES party(id) ON DELETE RESTRICT,
+  reactions boolean NOT NULL DEFAULT true,
+  comments boolean NOT NULL DEFAULT true,
+  replies boolean NOT NULL DEFAULT true,
+  mentions boolean NOT NULL DEFAULT true,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+tdf-hq/sql/2026-09-28_universal_interactions.sql
+CREATE TABLE IF NOT EXISTS interaction_reaction (
+  target_id uuid NOT NULL REFERENCES interaction_target(id) ON DELETE RESTRICT,
+  actor_id bigint NOT NULL REFERENCES party(id) ON DELETE RESTRICT,
+  reaction_type_id uuid NOT NULL REFERENCES content_reaction_type(id),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY(target_id,actor_id)
+);
+
+tdf-hq/sql/2026-09-28_universal_interactions.sql
+CREATE TABLE IF NOT EXISTS interaction_reaction_choice (
+  reaction_type_id uuid PRIMARY KEY REFERENCES content_reaction_type(id),
+  default_order smallint UNIQUE CHECK(default_order BETWEEN 0 AND 15)
+);
+
+tdf-hq/sql/2026-09-28_universal_interactions.sql
+CREATE TABLE IF NOT EXISTS interaction_reaction_total (
+  target_id uuid NOT NULL REFERENCES interaction_target(id) ON DELETE RESTRICT,
+  reaction_type_id uuid NOT NULL REFERENCES content_reaction_type(id),
+  total bigint NOT NULL DEFAULT 0 CHECK(total>=0),
+  PRIMARY KEY(target_id,reaction_type_id)
+);
+
+tdf-hq/sql/2026-09-28_universal_interactions.sql
+CREATE TABLE IF NOT EXISTS interaction_report (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  target_id uuid NOT NULL REFERENCES interaction_target(id) ON DELETE RESTRICT,
+  comment_id uuid NOT NULL,
+  reporter_id bigint NOT NULL REFERENCES party(id) ON DELETE RESTRICT,
+  reason text NOT NULL CHECK(length(btrim(reason)) BETWEEN 1 AND 1000),
+  state text NOT NULL DEFAULT 'open' CHECK(state IN ('open','reviewed','dismissed')),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  FOREIGN KEY(comment_id,target_id) REFERENCES interaction_comment(id,target_id),
+  UNIQUE(comment_id,reporter_id)
+);
+
+tdf-hq/sql/2026-09-28_universal_interactions.sql
+CREATE TABLE IF NOT EXISTS interaction_request (
+  actor_id bigint NOT NULL REFERENCES party(id) ON DELETE RESTRICT,
+  request_key uuid NOT NULL,
+  target_id uuid NOT NULL REFERENCES interaction_target(id) ON DELETE RESTRICT,
+  payload_hash text NOT NULL,
+  result jsonb NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY(actor_id,request_key)
+);
+
+tdf-hq/sql/2026-09-28_universal_interactions.sql
+CREATE TABLE IF NOT EXISTS interaction_runtime (
+  singleton boolean PRIMARY KEY DEFAULT true CHECK (singleton),
+  enabled boolean NOT NULL DEFAULT false,
+  activated_once boolean NOT NULL DEFAULT false,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+tdf-hq/sql/2026-09-28_universal_interactions.sql
+CREATE TABLE IF NOT EXISTS interaction_subscription (
+  target_id uuid NOT NULL REFERENCES interaction_target(id) ON DELETE RESTRICT,
+  party_id bigint NOT NULL REFERENCES party(id) ON DELETE RESTRICT,
+  mode text NOT NULL DEFAULT 'participating' CHECK(mode IN ('all','participating','muted')),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY(target_id,party_id)
+);
+
+tdf-hq/sql/2026-09-28_universal_interactions.sql
+CREATE TABLE IF NOT EXISTS interaction_target (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  entity_kind text NOT NULL REFERENCES interaction_entity_kind(code),
+  entity_key text NOT NULL CHECK (length(entity_key) BETWEEN 1 AND 128),
+  comment_policy text NOT NULL DEFAULT 'everyone'
+    CHECK (comment_policy IN ('everyone','followers','mentioned','off')),
+  version bigint NOT NULL DEFAULT 1 CHECK (version > 0),
+  retired_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(entity_kind,entity_key)
+);
+
+tdf-hq/sql/2026-09-28_universal_interactions.sql
+CREATE TABLE IF NOT EXISTS interaction_target_mention (
+  target_id uuid NOT NULL REFERENCES interaction_target(id) ON DELETE RESTRICT,
+  party_id bigint NOT NULL REFERENCES party(id) ON DELETE RESTRICT,
+  PRIMARY KEY(target_id,party_id)
+);

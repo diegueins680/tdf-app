@@ -1,0 +1,45 @@
+- generic [ref=e1]:
+  - generic [ref=e7]:
+    - generic [ref=e8]:
+      - img "Datadog Logo" [ref=e10]
+      - generic [ref=e11]:
+        - generic [ref=e13]:
+          - heading "Log in to Datadog" [level=1] [ref=e14]
+          - button "Select Region" [ref=e16]:
+            - option "🇺🇸 US1 - East" [selected] [ref=e20] [cursor=pointer]
+        - generic [ref=e22]:
+          - text: New user?
+          - link "Try for free" [ref=e23] [cursor=pointer]:
+            - /url: https://app.datadoghq.eu/signup
+        - button "Sign in with Google" [ref=e26] [cursor=pointer]
+        - link "Using Single Sign-On?" [ref=e37] [cursor=pointer]:
+          - /url: /account/login/by_email?force_login=true&next=%2Fsynthetics%2Ftests
+        - generic [ref=e40]:
+          - textbox "Username/Email" [active] [ref=e45]
+          - textbox "Password" [ref=e50]
+          - button "Log in" [ref=e51] [cursor=pointer]
+          - link "Forgot password?" [ref=e52] [cursor=pointer]:
+            - /url: /account/forgot_password
+    - contentinfo "Datadog Copyright and Legal Information" [ref=e53]:
+      - list [ref=e55]:
+        - listitem [ref=e56]: Copyright Datadog, Inc. 2026
+        - listitem [ref=e57]:
+          - generic [ref=e58]: "Version:"
+          - text: "35.140594615"
+        - listitem [ref=e59]:
+          - link "Master Subscription Agreement" [ref=e60] [cursor=pointer]:
+            - /url: https://www.datadoghq.com/legal/msa/
+        - listitem [ref=e61]:
+          - link "Privacy Policy" [ref=e62] [cursor=pointer]:
+            - /url: https://www.datadoghq.com/legal/privacy/
+        - listitem [ref=e63]:
+          - link "Cookie Policy" [ref=e64] [cursor=pointer]:
+            - /url: https://www.datadoghq.com/legal/cookies/
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - option "🇺🇸 US1 - East" [selected]
+            - combobox

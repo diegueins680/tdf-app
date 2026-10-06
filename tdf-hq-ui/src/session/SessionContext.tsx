@@ -3,7 +3,6 @@ import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { loadSessionSnapshot, logoutSessionRequest, reconcileOnboardingProgress } from '../api/session';
-import { captureReconciledFirstValue } from '../analytics/onboardingProgress';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { AUTH_SESSION_EXPIRED_EVENT } from './authEvents';
 import type { LocalePreferences } from '../api/preferences';
@@ -337,7 +336,13 @@ export function SessionProvider({ children }: SessionProviderProps) {
     let cancelled = false;
 
     void reconcileOnboardingProgress(apiToken)
-      .then((result) => {
+      .then(async (result) => {
+        if (
+          cancelled
+          || versionAtStart !== sessionVersionRef.current
+          || currentSession?.partyId !== partyId
+        ) return;
+        const { captureReconciledFirstValue } = await import('../analytics/onboardingProgress');
         if (
           cancelled
           || versionAtStart !== sessionVersionRef.current

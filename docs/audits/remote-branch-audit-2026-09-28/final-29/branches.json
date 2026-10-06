@@ -1,0 +1,1228 @@
+[
+  [
+    {
+      "name": "audit/critical-completion-20260916",
+      "commit": {
+        "sha": "d24e025b8bf8c90ce373fab277ebe869eaf0fce5",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/d24e025b8bf8c90ce373fab277ebe869eaf0fce5"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/audit/critical-completion-20260916/protection"
+    },
+    {
+      "name": "audit/editorial-ownership-repair-20261003",
+      "commit": {
+        "sha": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/4100a04c0de9496e7bf9cd6d656602dee1d8e277"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/audit/editorial-ownership-repair-20261003/protection"
+    },
+    {
+      "name": "audit/event-stack-consolidation-20260928",
+      "commit": {
+        "sha": "08acdfa897832c42ef1582f26ffdd7c23f019b4c",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/08acdfa897832c42ef1582f26ffdd7c23f019b4c"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/audit/event-stack-consolidation-20260928/protection"
+    },
+    {
+      "name": "audit/provider-reviewed-release-tooling-20260918",
+      "commit": {
+        "sha": "fcc03784895f08761483e1e7a844d6e6e95b443e",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/fcc03784895f08761483e1e7a844d6e6e95b443e"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/audit/provider-reviewed-release-tooling-20260918/protection"
+    },
+    {
+      "name": "chore/event-catalog-stale-reconciliation",
+      "commit": {
+        "sha": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/ea79b46addea67087c85c03ea6f9c29d45ca19da"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/chore/event-catalog-stale-reconciliation/protection"
+    },
+    {
+      "name": "chore/event-operations-catalog-review",
+      "commit": {
+        "sha": "d5505e2731d395cc2a5859d215e36ffda9e88138",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/d5505e2731d395cc2a5859d215e36ffda9e88138"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/chore/event-operations-catalog-review/protection"
+    },
+    {
+      "name": "codex/event-ingestion-boundaries-20260927",
+      "commit": {
+        "sha": "a125a347cacb8d941a515171e2a81d4c92f2c2d2",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/a125a347cacb8d941a515171e2a81d4c92f2c2d2"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/event-ingestion-boundaries-20260927/protection"
+    },
+    {
+      "name": "codex/event-ingestion-editorial-20260928",
+      "commit": {
+        "sha": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/fdfcd7e4a78273c0e010f5515c061ee4086d26b7"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/event-ingestion-editorial-20260928/protection"
+    },
+    {
+      "name": "codex/hetzner-cutover-evidence-20260928",
+      "commit": {
+        "sha": "7c1389ade026964354214da2d78a634014056561",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/7c1389ade026964354214da2d78a634014056561"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/hetzner-cutover-evidence-20260928/protection"
+    },
+    {
+      "name": "codex/payment-capture-replay-integrity-20260915",
+      "commit": {
+        "sha": "c8ef56f404dc12f5311635214549221a7090ea70",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/c8ef56f404dc12f5311635214549221a7090ea70"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/payment-capture-replay-integrity-20260915/protection"
+    },
+    {
+      "name": "codex/payment-checkout-surfaces-20260914",
+      "commit": {
+        "sha": "70823741bd33ed713cb2e703f812a884ad8ba1e7",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/70823741bd33ed713cb2e703f812a884ad8ba1e7"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/payment-checkout-surfaces-20260914/protection"
+    },
+    {
+      "name": "codex/payment-closed-checkout-evidence-20260915",
+      "commit": {
+        "sha": "9d0d84dbb4e5afafbfda7f0074421246926fd98d",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/9d0d84dbb4e5afafbfda7f0074421246926fd98d"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/payment-closed-checkout-evidence-20260915/protection"
+    },
+    {
+      "name": "codex/payment-held-refund-query-20260916",
+      "commit": {
+        "sha": "365561aecff57e76d38cb0e98217a34f1d642ff4",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/365561aecff57e76d38cb0e98217a34f1d642ff4"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/payment-held-refund-query-20260916/protection"
+    },
+    {
+      "name": "codex/payment-http-boundary-20260914",
+      "commit": {
+        "sha": "aac15a69e9bc2e6de01652282d9da4012a0af067",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/aac15a69e9bc2e6de01652282d9da4012a0af067"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/payment-http-boundary-20260914/protection"
+    },
+    {
+      "name": "codex/payment-notification-identity-20260914",
+      "commit": {
+        "sha": "86a8ce38cd131bfcb1b3e3035fd9a3e3aea1d503",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/86a8ce38cd131bfcb1b3e3035fd9a3e3aea1d503"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/payment-notification-identity-20260914/protection"
+    },
+    {
+      "name": "codex/payment-notification-minimization-20260914",
+      "commit": {
+        "sha": "6bd0c9316f1816ccfc1873363787a99f33ff72e0",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/6bd0c9316f1816ccfc1873363787a99f33ff72e0"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/payment-notification-minimization-20260914/protection"
+    },
+    {
+      "name": "codex/payment-platform-20260911",
+      "commit": {
+        "sha": "e9c81a2a3977ab1f69c92e82805bdeff6550ea03",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/e9c81a2a3977ab1f69c92e82805bdeff6550ea03"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/payment-platform-20260911/protection"
+    },
+    {
+      "name": "codex/payment-provider-execution-20260913",
+      "commit": {
+        "sha": "536964de601c5e031835781b3af07ff797cd249e",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/536964de601c5e031835781b3af07ff797cd249e"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/payment-provider-execution-20260913/protection"
+    },
+    {
+      "name": "codex/payment-reconciliation-atomicity-20260914",
+      "commit": {
+        "sha": "a5ba14f0be4e4f6da1df666b31dd6ae343afedab",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/a5ba14f0be4e4f6da1df666b31dd6ae343afedab"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/payment-reconciliation-atomicity-20260914/protection"
+    },
+    {
+      "name": "codex/payment-reconciliation-evidence-view-20260915",
+      "commit": {
+        "sha": "a64ea1b580faab59e547e3b307f74b0313d58866",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/a64ea1b580faab59e547e3b307f74b0313d58866"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/payment-reconciliation-evidence-view-20260915/protection"
+    },
+    {
+      "name": "codex/payment-reconciliation-safety-20260914",
+      "commit": {
+        "sha": "b8c0e38cdd365e7f977d5cf15f93c164ebfc2149",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/b8c0e38cdd365e7f977d5cf15f93c164ebfc2149"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/payment-reconciliation-safety-20260914/protection"
+    },
+    {
+      "name": "codex/payment-reconciliation-worker-20260915",
+      "commit": {
+        "sha": "139a45102c4b715cc8762b5653d0a2db061b167c",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/139a45102c4b715cc8762b5653d0a2db061b167c"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/payment-reconciliation-worker-20260915/protection"
+    },
+    {
+      "name": "codex/payment-recovery-observability-20260915",
+      "commit": {
+        "sha": "c19c4f5d87abdb5a9b3e935e79af2238fdb99c43",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/c19c4f5d87abdb5a9b3e935e79af2238fdb99c43"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/payment-recovery-observability-20260915/protection"
+    },
+    {
+      "name": "codex/payment-refund-execution-safety-20260916",
+      "commit": {
+        "sha": "20566eab9e99685983beac359f2462386e59f8f7",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/20566eab9e99685983beac359f2462386e59f8f7"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/payment-refund-execution-safety-20260916/protection"
+    },
+    {
+      "name": "codex/payment-refund-reconciliation-20260916",
+      "commit": {
+        "sha": "66fa88e90c80866e0090761addfabd9f1e817cc2",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/66fa88e90c80866e0090761addfabd9f1e817cc2"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/payment-refund-reconciliation-20260916/protection"
+    },
+    {
+      "name": "codex/payment-stack-integration-20260915",
+      "commit": {
+        "sha": "824e1e9aeaa99d399c31bc5755c4967c03cb17fc",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/824e1e9aeaa99d399c31bc5755c4967c03cb17fc"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/payment-stack-integration-20260915/protection"
+    },
+    {
+      "name": "codex/payment-stack-integration-20260916",
+      "commit": {
+        "sha": "4ff7109a378d640a179601fd0ad88b38f3074526",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/4ff7109a378d640a179601fd0ad88b38f3074526"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/payment-stack-integration-20260916/protection"
+    },
+    {
+      "name": "codex/payment-staging-qualification-20260914",
+      "commit": {
+        "sha": "0081b6b03bd58716090c57d936f31a364e944522",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/0081b6b03bd58716090c57d936f31a364e944522"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/payment-staging-qualification-20260914/protection"
+    },
+    {
+      "name": "codex/payment-terminal-recovery-20260914",
+      "commit": {
+        "sha": "c263a499cc760ce7f97fe7833211f4d7de7494ea",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/c263a499cc760ce7f97fe7833211f4d7de7494ea"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/payment-terminal-recovery-20260914/protection"
+    },
+    {
+      "name": "codex/payment-worker-log-safety-20260915",
+      "commit": {
+        "sha": "ed064a7549f93bdd9239c5781706400c6fad5aa7",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/ed064a7549f93bdd9239c5781706400c6fad5aa7"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/payment-worker-log-safety-20260915/protection"
+    },
+    {
+      "name": "codex/payphone-cancellation-compatibility-20260915",
+      "commit": {
+        "sha": "4ccaaa190c4ae6b1d041d8eabd7eed8fd5327c5e",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/4ccaaa190c4ae6b1d041d8eabd7eed8fd5327c5e"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/codex/payphone-cancellation-compatibility-20260915/protection"
+    },
+    {
+      "name": "docs/critical-completion-closeout-20260917",
+      "commit": {
+        "sha": "9523a4816b4668581eb7232212cc53398bd844ac",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/9523a4816b4668581eb7232212cc53398bd844ac"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/docs/critical-completion-closeout-20260917/protection"
+    },
+    {
+      "name": "feat/event-logistics-transaction-hardening",
+      "commit": {
+        "sha": "f500b62c453e7da8981bc66138418fa59a586565",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/f500b62c453e7da8981bc66138418fa59a586565"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/feat/event-logistics-transaction-hardening/protection"
+    },
+    {
+      "name": "feat/event-operations-api-foundation",
+      "commit": {
+        "sha": "b6ba963623861d1e2804b18adb46e6e4f5f5be80",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/b6ba963623861d1e2804b18adb46e6e4f5f5be80"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/feat/event-operations-api-foundation/protection"
+    },
+    {
+      "name": "feat/event-raci-editor-context",
+      "commit": {
+        "sha": "13abde1cba82b7b79c21b6f35e87c91de676366e",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/13abde1cba82b7b79c21b6f35e87c91de676366e"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/feat/event-raci-editor-context/protection"
+    },
+    {
+      "name": "feat/event-raci-reassignment-api",
+      "commit": {
+        "sha": "bfd5f17b92d629f578bc02f4aee338ed15843806",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/bfd5f17b92d629f578bc02f4aee338ed15843806"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/feat/event-raci-reassignment-api/protection"
+    },
+    {
+      "name": "feat/event-raci-reassignment-command",
+      "commit": {
+        "sha": "f6ffb2a27b87ed42d4d49289024d5b8a612b94cf",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/f6ffb2a27b87ed42d4d49289024d5b8a612b94cf"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/feat/event-raci-reassignment-command/protection"
+    },
+    {
+      "name": "feat/event-raci-web-editor",
+      "commit": {
+        "sha": "061553d085d3106a9c8877ca08ccb3e2420cdd09",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/061553d085d3106a9c8877ca08ccb3e2420cdd09"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/feat/event-raci-web-editor/protection"
+    },
+    {
+      "name": "feat/event-task-aggregate-revision",
+      "commit": {
+        "sha": "3b1ce4d9dbd0efb6d1e354ffd9f58e92a6916320",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/3b1ce4d9dbd0efb6d1e354ffd9f58e92a6916320"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/feat/event-task-aggregate-revision/protection"
+    },
+    {
+      "name": "feat/event-task-commit-invariants",
+      "commit": {
+        "sha": "259becd7b3763e084b54da8749b1e6fde8d9d862",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/259becd7b3763e084b54da8749b1e6fde8d9d862"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/feat/event-task-commit-invariants/protection"
+    },
+    {
+      "name": "feat/event-task-completion-api",
+      "commit": {
+        "sha": "823da0fa801abe3bdb3b7679550f1315ad0946ed",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/823da0fa801abe3bdb3b7679550f1315ad0946ed"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/feat/event-task-completion-api/protection"
+    },
+    {
+      "name": "feat/event-task-completion-client",
+      "commit": {
+        "sha": "f2f01194090a241777c451d06cb0848af7aa759a",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/f2f01194090a241777c451d06cb0848af7aa759a"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/feat/event-task-completion-client/protection"
+    },
+    {
+      "name": "feat/event-task-completion-command",
+      "commit": {
+        "sha": "78bdd4df465d1c7d8a752f9df0ed714ecad2330d",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/78bdd4df465d1c7d8a752f9df0ed714ecad2330d"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/feat/event-task-completion-command/protection"
+    },
+    {
+      "name": "feat/event-task-raci-view",
+      "commit": {
+        "sha": "f03f366de44c8ad09248e9d399caa5994af06d5a",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/f03f366de44c8ad09248e9d399caa5994af06d5a"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/feat/event-task-raci-view/protection"
+    },
+    {
+      "name": "feat/event-task-read-api",
+      "commit": {
+        "sha": "881882e15cd1b2400cc2e0452ea50683dea675de",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/881882e15cd1b2400cc2e0452ea50683dea675de"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/feat/event-task-read-api/protection"
+    },
+    {
+      "name": "feat/event-task-read-projection",
+      "commit": {
+        "sha": "a1b92c220691b694e5f53e7deaf4d455ce46bc44",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/a1b92c220691b694e5f53e7deaf4d455ce46bc44"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/feat/event-task-read-projection/protection"
+    },
+    {
+      "name": "feat/event-task-revisioned-read",
+      "commit": {
+        "sha": "503fd7b651843e9f7cadf4fd15931256bb847ece",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/503fd7b651843e9f7cadf4fd15931256bb847ece"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/feat/event-task-revisioned-read/protection"
+    },
+    {
+      "name": "fix/access-request-name-production-20260916",
+      "commit": {
+        "sha": "954e995f1cd08f363afe2b0e34ccf02dcd80ea8c",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/954e995f1cd08f363afe2b0e34ccf02dcd80ea8c"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/fix/access-request-name-production-20260916/protection"
+    },
+    {
+      "name": "fix/access-request-requester-name-20260916",
+      "commit": {
+        "sha": "efb09219be25941af574eaac4ec5d2e7e3a421b2",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/efb09219be25941af574eaac4ec5d2e7e3a421b2"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/fix/access-request-requester-name-20260916/protection"
+    },
+    {
+      "name": "fix/artist-follow-onboarding-continuity",
+      "commit": {
+        "sha": "1299f9c63a325e17dff0bfe1f048ff52f7bb8b15",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/1299f9c63a325e17dff0bfe1f048ff52f7bb8b15"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/fix/artist-follow-onboarding-continuity/protection"
+    },
+    {
+      "name": "fix/event-command-existence-privacy",
+      "commit": {
+        "sha": "892038c7d7ec64082b39917127f67748e6d1dca7",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/892038c7d7ec64082b39917127f67748e6d1dca7"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/fix/event-command-existence-privacy/protection"
+    },
+    {
+      "name": "fix/event-command-replay-authorization",
+      "commit": {
+        "sha": "6b0913bab2b065b327149a6d3a042efecd9e75d7",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/6b0913bab2b065b327149a6d3a042efecd9e75d7"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/fix/event-command-replay-authorization/protection"
+    },
+    {
+      "name": "fix/event-raci-review-contrast",
+      "commit": {
+        "sha": "cbbb3da9f20c2314c73a5114b8c0aa943647054e",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/cbbb3da9f20c2314c73a5114b8c0aa943647054e"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/fix/event-raci-review-contrast/protection"
+    },
+    {
+      "name": "fix/event-schema-migration-dependencies",
+      "commit": {
+        "sha": "192f9578665109e52d28a96c772e3307bdc684e5",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/192f9578665109e52d28a96c772e3307bdc684e5"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/fix/event-schema-migration-dependencies/protection"
+    },
+    {
+      "name": "fix/event-session-transaction-fence",
+      "commit": {
+        "sha": "3cd978045aa406c55512a6673c2ba5f2983ebc7c",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/3cd978045aa406c55512a6673c2ba5f2983ebc7c"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/fix/event-session-transaction-fence/protection"
+    },
+    {
+      "name": "fix/event-snapshot-privacy-boundary",
+      "commit": {
+        "sha": "db81fdbe71d9b8e83d40d279b98c69df3749b316",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/db81fdbe71d9b8e83d40d279b98c69df3749b316"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/fix/event-snapshot-privacy-boundary/protection"
+    },
+    {
+      "name": "fix/event-ui-lazy-validation",
+      "commit": {
+        "sha": "d4e7ed0505a87a03706b765fc304ffa50362b8fb",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/d4e7ed0505a87a03706b765fc304ffa50362b8fb"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/fix/event-ui-lazy-validation/protection"
+    },
+    {
+      "name": "fix/fanhub-authoritative-onboarding",
+      "commit": {
+        "sha": "ff3cd1676a6db7b6ceef56d44407b0846a4f2071",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/ff3cd1676a6db7b6ceef56d44407b0846a4f2071"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/fix/fanhub-authoritative-onboarding/protection"
+    },
+    {
+      "name": "fix/instagram-checkpoint-metadata-20260916",
+      "commit": {
+        "sha": "40034a31e32ca7d1dbbf6dae67efda8eef982586",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/40034a31e32ca7d1dbbf6dae67efda8eef982586"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/fix/instagram-checkpoint-metadata-20260916/protection"
+    },
+    {
+      "name": "fix/notification-mobile-release-pin-20260918",
+      "commit": {
+        "sha": "6449b75fe5387fcb1b80e55f4a71602a3fed2403",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/6449b75fe5387fcb1b80e55f4a71602a3fed2403"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/fix/notification-mobile-release-pin-20260918/protection"
+    },
+    {
+      "name": "fix/preserve-enabled-paypal-webhooks-20260916",
+      "commit": {
+        "sha": "a28b94d74a49ebdf71481694bc910ab95298e027",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/a28b94d74a49ebdf71481694bc910ab95298e027"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/fix/preserve-enabled-paypal-webhooks-20260916/protection"
+    },
+    {
+      "name": "fix/release-artwork-20260915",
+      "commit": {
+        "sha": "760763642ae9641b19ef0adfb317f4243ff30a25",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/760763642ae9641b19ef0adfb317f4243ff30a25"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/fix/release-artwork-20260915/protection"
+    },
+    {
+      "name": "fix/reservation-pluscal-integrity",
+      "commit": {
+        "sha": "ec24b70b1b2319a875099cc118db0e68b62a5ed0",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/ec24b70b1b2319a875099cc118db0e68b62a5ed0"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/fix/reservation-pluscal-integrity/protection"
+    },
+    {
+      "name": "fix/web-onboarding-reconciliation-integration",
+      "commit": {
+        "sha": "827d745629f8cdbaee4429ded3689d3bf520a09d",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/827d745629f8cdbaee4429ded3689d3bf520a09d"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/fix/web-onboarding-reconciliation-integration/protection"
+    },
+    {
+      "name": "main",
+      "commit": {
+        "sha": "f8925e339447cb593f7cce5d86403d1396aaf5a5",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/f8925e339447cb593f7cce5d86403d1396aaf5a5"
+      },
+      "protected": true,
+      "protection": {
+        "enabled": true,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/main/protection"
+    },
+    {
+      "name": "test/event-operations-http-boundary",
+      "commit": {
+        "sha": "dbe975d3143446c5e7cd9b132b6f994067065e7b",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/dbe975d3143446c5e7cd9b132b6f994067065e7b"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/test/event-operations-http-boundary/protection"
+    },
+    {
+      "name": "test/event-operations-schema-rehearsal",
+      "commit": {
+        "sha": "cf591e1faa975b8023c6c06892fb50a51ba06dff",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/cf591e1faa975b8023c6c06892fb50a51ba06dff"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/test/event-operations-schema-rehearsal/protection"
+    },
+    {
+      "name": "test/event-raci-accessibility-evidence",
+      "commit": {
+        "sha": "6047377348e901c919d7691b849faab30980b952",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/6047377348e901c919d7691b849faab30980b952"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/test/event-raci-accessibility-evidence/protection"
+    },
+    {
+      "name": "test/event-raci-full-stack",
+      "commit": {
+        "sha": "7cdd712568311975407cf0b7cb2ee2081a0c0414",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/7cdd712568311975407cf0b7cb2ee2081a0c0414"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/test/event-raci-full-stack/protection"
+    },
+    {
+      "name": "test/event-rsvp-ci-contracts",
+      "commit": {
+        "sha": "5ad2333c2a6ce379579a1cffa2708d56cbb21f5f",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/5ad2333c2a6ce379579a1cffa2708d56cbb21f5f"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/test/event-rsvp-ci-contracts/protection"
+    },
+    {
+      "name": "test/event-task-browser-startup",
+      "commit": {
+        "sha": "221d1205c9cc2e992f8f36f73d441a3f9c6fda21",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/221d1205c9cc2e992f8f36f73d441a3f9c6fda21"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/test/event-task-browser-startup/protection"
+    },
+    {
+      "name": "test/merch-expiry-checkout-contract",
+      "commit": {
+        "sha": "a1895105c6e15e1f95b4b72fd6218b34a311f6e6",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/a1895105c6e15e1f95b4b72fd6218b34a311f6e6"
+      },
+      "protected": false,
+      "protection": {
+        "enabled": false,
+        "required_status_checks": {
+          "enforcement_level": "off",
+          "contexts": [],
+          "checks": []
+        }
+      },
+      "protection_url": "https://api.github.com/repos/diegueins680/tdf-app/branches/test/merch-expiry-checkout-contract/protection"
+    }
+  ]
+]

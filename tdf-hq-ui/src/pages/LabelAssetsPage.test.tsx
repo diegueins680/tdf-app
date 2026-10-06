@@ -3,17 +3,19 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
-import type { AssetCheckoutDTO, AssetDTO, DropdownOptionDTO, RoomDTO } from '../api/types';
+import type { AssetCheckoutDTO, AssetDTO, DropdownOptionDTO, PageResponse, RoomDTO } from '../api/types';
 import { ToastProvider } from '../contexts/ToastContext';
 
-const listAssetsMock = jest.fn<() => Promise<AssetDTO[]>>();
+const listAssetsMock = jest.fn<
+  (params?: { page?: number; pageSize?: number }) => Promise<AssetDTO[] | PageResponse<AssetDTO>>
+>();
 const listRoomsMock = jest.fn<() => Promise<RoomDTO[]>>();
 const listDropdownsMock = jest.fn<() => Promise<DropdownOptionDTO[]>>();
 const historyMock = jest.fn<(assetId: string) => Promise<AssetCheckoutDTO[]>>();
 
 jest.unstable_mockModule('../api/inventory', () => ({
   Inventory: {
-    list: () => listAssetsMock(),
+    list: (params?: { page?: number; pageSize?: number }) => listAssetsMock(params),
     history: (assetId: string) => historyMock(assetId),
     generateQr: jest.fn(() => Promise.resolve({ qrUrl: 'https://example.com/qr' })),
     checkout: jest.fn(() => Promise.resolve(null)),
@@ -238,6 +240,69 @@ describe('LabelAssetsPage', () => {
     listRoomsMock.mockResolvedValue([]);
     listDropdownsMock.mockResolvedValue([]);
     historyMock.mockResolvedValue([]);
+  });
+
+  it('loads all inventory pages within the API limit and searches later pages', async () => {
+    const firstPage = Array.from({ length: 100 }, (_, index) =>
+      buildAsset({ assetId: `asset-${index}`, name: `Equipo ${index}` }));
+    listAssetsMock
+      .mockResolvedValueOnce({ items: firstPage, page: 1, pageSize: 100, total: 101 })
+      .mockResolvedValueOnce({
+        items: [buildAsset({ assetId: 'last-asset', name: 'Ultimo sintetizador' })],
+        page: 2, pageSize: 100, total: 101,
+      });
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await waitForExpectation(() => expect(container.textContent).toContain('Mostrando 101 de 101 assets'));
+      expect(listAssetsMock.mock.calls).toEqual([
+        [{ page: 1, pageSize: 100 }], [{ page: 2, pageSize: 100 }],
+      ]);
+      await setInputValue(getInputByLabel(container, 'Buscar assets'), 'Ultimo');
+      await waitForExpectation(() => expect(container.textContent).toContain('Ultimo sintetizador'));
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('shows a load error without claiming the inventory is empty and allows retry', async () => {
+    listAssetsMock.mockRejectedValueOnce(new Error('Request failed'));
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('No se pudo cargar el inventario.');
+        expect(container.textContent).not.toContain('Todavía no hay assets.');
+      });
+      listAssetsMock.mockResolvedValue([buildAsset()]);
+      await clickElement(getButtonByText(container, 'Actualizar'));
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('Sintetizador Uno');
+        expect(container.textContent).not.toContain('No se pudo cargar el inventario.');
+      });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it('does not present a partial inventory when a later page fails', async () => {
+    listAssetsMock
+      .mockResolvedValueOnce({ items: [buildAsset()], page: 1, pageSize: 100, total: 2 })
+      .mockRejectedValueOnce(new Error('Second page failed'));
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await waitForExpectation(() => {
+        expect(container.textContent).toContain('No se pudo cargar el inventario.');
+        expect(container.textContent).not.toContain('Todavía no hay assets.');
+        expect(container.textContent).not.toContain('Sintetizador Uno');
+      });
+    } finally {
+      await cleanup();
+    }
   });
 
   it('replaces empty inventory filter chrome with one first-asset empty state', async () => {

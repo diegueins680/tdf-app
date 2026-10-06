@@ -1,0 +1,1 @@
+5ad2333c2a6ce379579a1cffa2708d56cbb21f5f 2026-09-15T23:53:04-05:00 continuous-improvement-loop[bot] fix(events): restore directory contact continuity and RSVP test contracts

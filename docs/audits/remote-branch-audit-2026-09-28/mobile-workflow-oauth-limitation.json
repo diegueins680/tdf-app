@@ -1,0 +1,11 @@
+{
+  "observed_error": "refusing to allow an OAuth App to create or update workflow .github/workflows/android-release-build.yml without workflow scope",
+  "rejected_head": "cb7426258e2aa87b1fcd52b275a85be83394132f",
+  "verified_unchanged_remote_before_retry": "c921f5d7d0dc7b0119588b962587ed1d6885163f",
+  "resolution": "Explicitly approved use of existing SSH credential, same repository and branch; normal push verified. No token permission change, rule change or build dispatch.",
+  "evidence": [
+    "mobile-workflow-inputs-before.json",
+    "mobile-workflow-inputs-after.json"
+  ],
+  "recorded_at": "2026-09-28T18:35:20.676490+00:00"
+}

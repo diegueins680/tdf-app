@@ -1,0 +1,9 @@
+ docs/adr/0124-closed-checkout-approval-evidence.md |  90 +++++++++
+ .../closed-checkout-approval-2026-09-15.md         | 215 +++++++++++++++++++++
+ .../ecuador-payment-platform-audit-2026-09-11.md   |   7 +
+ docs/payments/operator-runbooks.md                 |   5 +
+ .../payments/HostedProviderCheckout.test.tsx       |  28 +++
+ tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs  | 123 +++++++++++-
+ tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs  |  10 +
+ tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs      | 209 +++++++++++++++++++-
+ 8 files changed, 677 insertions(+), 10 deletions(-)

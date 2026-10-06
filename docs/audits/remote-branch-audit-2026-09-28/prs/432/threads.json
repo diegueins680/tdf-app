@@ -1,0 +1,31 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 432,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "9213b1334aca9b34f377790ed992b869185483c8",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          }
+        }
+      }
+    }
+  }
+]

@@ -1,0 +1,380 @@
+- generic [ref=f15e9]:
+  - generic [ref=f15e12]:
+    - link [ref=f15e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f15e22]
+    - generic [ref=f15e25]:
+      - link [ref=f15e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f15e35]
+      - link [ref=f15e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f15e45]
+      - link [ref=f15e719] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - generic [ref=f15e55]:
+          - img "Messages" [ref=f15e57]
+          - generic "Direct messaging - 3 new notifications link" [ref=f15e720]: "3"
+      - link [ref=f15e62] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f15e67]
+      - link [ref=f15e725] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f15e730]
+      - link [ref=f15e85] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f15e90]
+      - link [ref=f15e95] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f15e100]
+      - link [ref=f15e107] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f15e112]:
+          - img "tdf.records.label's profile picture" [ref=f15e113]
+    - generic [ref=f15e114]:
+      - link [ref=f15e117] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f15e122]
+      - link [ref=f15e125] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f15e130]
+  - main [ref=f15e134]:
+    - generic [ref=f15e220]:
+      - navigation "Thread list" [ref=f15e221]:
+        - generic [ref=f15e222]:
+          - generic [ref=f15e223]:
+            - button [ref=f15e224] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f15e226]
+              - img "Verified" [ref=f15e229]
+              - img "Down chevron icon" [ref=f15e232]
+            - generic [ref=f15e235]:
+              - button [ref=f15e236] [cursor=pointer]:
+                - img "More options" [ref=f15e238]
+              - button [ref=f15e242] [cursor=pointer]:
+                - img "New message" [ref=f15e244]
+          - tablist [ref=f15e249]:
+            - tab "Primary" [selected] [ref=f15e250] [cursor=pointer]
+            - tab "General" [ref=f15e253] [cursor=pointer]
+            - tab "From ads" [ref=f15e256] [cursor=pointer]
+            - tab "Requests" [ref=f15e260] [cursor=pointer]
+          - generic [ref=f15e266]:
+            - img "Search" [ref=f15e268]
+            - textbox "Search" [ref=f15e271]
+          - generic [ref=f15e272]:
+            - generic [ref=f15e274]:
+              - list [ref=f15e276]:
+                - listitem [ref=f15e277]
+                - listitem [ref=f15e278]:
+                  - button "What's on your mind? Your note" [ref=f15e280] [cursor=pointer]:
+                    - generic [ref=f15e281]:
+                      - generic [ref=f15e282]: What's on your mind?
+                      - generic [ref=f15e288]:
+                        - link [ref=f15e290]
+                        - generic [ref=f15e291]: Your note
+                - listitem [ref=f15e293]:
+                  - button "New Home 🩵 planblu.ec's profile picture MODA SUSTENTABLE" [ref=f15e296] [cursor=pointer]:
+                    - generic [ref=f15e297]:
+                      - generic [ref=f15e298]: New Home 🩵
+                      - generic [ref=f15e305]:
+                        - link [ref=f15e307]:
+                          - img "planblu.ec's profile picture" [ref=f15e308]
+                        - generic [ref=f15e309]: MODA SUSTENTABLE
+                - listitem [ref=f15e312]:
+                  - button "De vuelta al rancho reemus___'s profile picture REEMUS" [ref=f15e315] [cursor=pointer]:
+                    - generic [ref=f15e316]:
+                      - generic [ref=f15e317]: De vuelta al rancho
+                      - generic [ref=f15e324]:
+                        - link [ref=f15e326]:
+                          - img "reemus___'s profile picture" [ref=f15e327]
+                        - generic [ref=f15e328]: REEMUS
+                - listitem [ref=f15e331]:
+                  - button "la democracia es una mentira mijin rojelioelrojorojas's profile picture Andrés Martín Arauz" [ref=f15e334] [cursor=pointer]:
+                    - generic [ref=f15e335]:
+                      - generic [ref=f15e336]: la democracia es una mentira mijin
+                      - generic [ref=f15e343]:
+                        - link [ref=f15e345]:
+                          - img "rojelioelrojorojas's profile picture" [ref=f15e346]
+                        - generic [ref=f15e347]: Andrés Martín Arauz
+                - listitem [ref=f15e350]:
+                  - button "🫶🤤 quirola_777's profile picture QUIROLA" [ref=f15e353] [cursor=pointer]:
+                    - generic [ref=f15e354]:
+                      - generic [ref=f15e355]: 🫶🤤
+                      - generic [ref=f15e362]:
+                        - link [ref=f15e364]:
+                          - img "quirola_777's profile picture" [ref=f15e365]
+                        - generic [ref=f15e366]: QUIROLA
+                - listitem [ref=f15e369]:
+                  - button "I ching nunca me dejas de sorprender solcordovamusic's profile picture Sol Córdova 🌞" [ref=f15e372] [cursor=pointer]:
+                    - generic [ref=f15e373]:
+                      - generic [ref=f15e374]: I ching nunca me dejas de sorprender
+                      - generic [ref=f15e381]:
+                        - link [ref=f15e383]:
+                          - img "solcordovamusic's profile picture" [ref=f15e384]
+                        - generic [ref=f15e385]: Sol Córdova 🌞
+                - listitem [ref=f15e388]:
+                  - button "Ameba va a volver luis_cdvg's profile picture misticbafu" [ref=f15e391] [cursor=pointer]:
+                    - generic [ref=f15e392]:
+                      - generic [ref=f15e393]: Ameba va a volver
+                      - generic [ref=f15e400]:
+                        - link [ref=f15e402]:
+                          - img "luis_cdvg's profile picture" [ref=f15e403]
+                        - generic [ref=f15e404]: misticbafu
+                - listitem [ref=f15e407]:
+                  - button "Si tienen fotos o vídeos de nuestros sets enviennos 😝 tgthr.djs's profile picture TGTHR" [ref=f15e410] [cursor=pointer]:
+                    - generic [ref=f15e411]:
+                      - generic [ref=f15e412]: Si tienen fotos o vídeos de nuestros sets enviennos 😝
+                      - generic [ref=f15e419]:
+                        - link [ref=f15e421]:
+                          - img "tgthr.djs's profile picture" [ref=f15e422]
+                        - generic [ref=f15e423]: TGTHR
+                - listitem [ref=f15e426]:
+                  - button "Hoy tenemos sorpresas ❤️ quitobohemio's profile picture Quito Bohemio" [ref=f15e429] [cursor=pointer]:
+                    - generic [ref=f15e430]:
+                      - generic [ref=f15e431]: Hoy tenemos sorpresas ❤️
+                      - generic [ref=f15e438]:
+                        - link [ref=f15e440]:
+                          - img "quitobohemio's profile picture" [ref=f15e441]
+                        - generic [ref=f15e442]: Quito Bohemio
+              - button "Next" [ref=f15e445] [cursor=pointer]
+            - generic [ref=f15e450]:
+              - button "user-profile-picture Quito Bohemio Typing... More options" [pressed] [ref=f15e734] [cursor=pointer]:
+                - generic [ref=f15e456]:
+                  - img "user-profile-picture" [ref=f15e460]
+                  - generic [ref=f15e463]:
+                    - generic [ref=f15e464]: Quito Bohemio
+                    - generic [ref=f15e468]: Typing...
+                  - button [ref=f15e740]:
+                    - img "More options" [ref=f15e743]
+              - button "user-profile-picture Gza_cx Gza_cx replied to an ad. View ad(https://www.instagram.com/p/DL58rbRgiys/) 5 minutes ago Unread" [ref=f15e483] [cursor=pointer]:
+                - generic [ref=f15e485]:
+                  - img "user-profile-picture" [ref=f15e489]
+                  - generic [ref=f15e492]:
+                    - generic [ref=f15e493]: Gza_cx
+                    - generic [ref=f15e499]:
+                      - generic [ref=f15e500]: Gza_cx replied to an ad. View ad(https://www.instagram.com/p/DL58rbRgiys/)
+                      - generic [ref=f15e502]:
+                        - generic [ref=f15e503]: ·
+                        - generic "5 minutes ago" [ref=f15e508]: 5m
+                  - generic [ref=f15e509]: Unread
+              - 'button "user-profile-picture | QUITO SKA SOCIETY | You: Hola, equipo de Quito Ska Society 👋 Un único recordatorio de nuestra invitación, pensando en su trabajo alrededor de Ska Ba Boom. Pueden explorar los perfiles y lanzamientos de TDF y contarnos si les servirían para su labor con la escena: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a Si no les interesa, todo bien; aquí dejamos la invitación y no volvemos a escribirles. — TDF Records 7 minutes ago" [ref=f15e516] [cursor=pointer]':
+                - generic [ref=f15e518]:
+                  - img "user-profile-picture" [ref=f15e522]
+                  - generic [ref=f15e525]:
+                    - generic [ref=f15e526]: "| QUITO SKA SOCIETY |"
+                    - generic [ref=f15e532]:
+                      - generic [ref=f15e533]: "You: Hola, equipo de Quito Ska Society 👋 Un único recordatorio de nuestra invitación, pensando en su trabajo alrededor de Ska Ba Boom. Pueden explorar los perfiles y lanzamientos de TDF y contarnos si les servirían para su labor con la escena: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a Si no les interesa, todo bien; aquí dejamos la invitación y no volvemos a escribirles. — TDF Records"
+                      - generic [ref=f15e535]:
+                        - generic [ref=f15e536]: ·
+                        - generic "7 minutes ago" [ref=f15e541]: 7m
+              - 'button "user-profile-picture Joel Dueñas You: Hola, Joel 👋 Te dejamos un único recordatorio de la invitación que te enviamos por tu trabajo con Delirio. Puedes empezar explorando un proyecto y seguirlo desde tu cuenta de TDF: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=Producer&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a Si no te interesa, todo bien; aquí dejamos la invitación y no volvemos a escribirte. — TDF Records 9 minutes ago" [ref=f15e545] [cursor=pointer]':
+                - generic [ref=f15e547]:
+                  - img "user-profile-picture" [ref=f15e551]
+                  - generic [ref=f15e554]:
+                    - generic [ref=f15e555]: Joel Dueñas
+                    - generic [ref=f15e561]:
+                      - generic [ref=f15e562]: "You: Hola, Joel 👋 Te dejamos un único recordatorio de la invitación que te enviamos por tu trabajo con Delirio. Puedes empezar explorando un proyecto y seguirlo desde tu cuenta de TDF: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=Producer&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a Si no te interesa, todo bien; aquí dejamos la invitación y no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f15e564]:
+                        - generic [ref=f15e565]: ·
+                        - generic "9 minutes ago" [ref=f15e570]: 9m
+              - button "user-profile-picture Isaac Quiero saber cómo es su método de trabajo 9 hours ago" [ref=f15e574] [cursor=pointer]:
+                - generic [ref=f15e576]:
+                  - img "user-profile-picture" [ref=f15e580]
+                  - generic [ref=f15e583]:
+                    - generic [ref=f15e584]: Isaac
+                    - generic [ref=f15e590]:
+                      - generic [ref=f15e591]: Quiero saber cómo es su método de trabajo
+                      - generic [ref=f15e593]:
+                        - generic [ref=f15e594]: ·
+                        - generic "9 hours ago" [ref=f15e599]: 9h
+              - 'button "user-profile-picture Ciscú Mastó You: ¡Hola, Francisco! TDF es una plataforma para conectar proyectos musicales y gente que vive la escena de Quito. Puedes explorar perfiles de artistas y lanzamientos, seguir proyectos y crear tu perfil público de artista con biografía y enlaces a tu música. El enlace que te compartimos abre el registro general: puedes crear tu cuenta con correo y contraseña, elegir el rol que te corresponda y empezar siguiendo un proyecto. Si te animas a probarla, cuéntanos qué te resulta útil o qué te falta para tu música. — TDF Records 13 hours ago" [ref=f15e603] [cursor=pointer]':
+                - generic [ref=f15e605]:
+                  - img "user-profile-picture" [ref=f15e609]
+                  - generic [ref=f15e612]:
+                    - generic [ref=f15e613]: Ciscú Mastó
+                    - generic [ref=f15e619]:
+                      - generic [ref=f15e620]: "You: ¡Hola, Francisco! TDF es una plataforma para conectar proyectos musicales y gente que vive la escena de Quito. Puedes explorar perfiles de artistas y lanzamientos, seguir proyectos y crear tu perfil público de artista con biografía y enlaces a tu música. El enlace que te compartimos abre el registro general: puedes crear tu cuenta con correo y contraseña, elegir el rol que te corresponda y empezar siguiendo un proyecto. Si te animas a probarla, cuéntanos qué te resulta útil o qué te falta para tu música. — TDF Records"
+                      - generic [ref=f15e622]:
+                        - generic [ref=f15e623]: ·
+                        - generic "13 hours ago" [ref=f15e628]: 13h
+              - button "user-profile-picture Emanuele Pilo-Pais L. Y varios de arriba tambien 15 hours ago" [ref=f15e632] [cursor=pointer]:
+                - generic [ref=f15e634]:
+                  - img "user-profile-picture" [ref=f15e638]
+                  - generic [ref=f15e641]:
+                    - generic [ref=f15e642]: Emanuele Pilo-Pais L.
+                    - generic [ref=f15e648]:
+                      - generic [ref=f15e649]: Y varios de arriba tambien
+                      - generic [ref=f15e651]:
+                        - generic [ref=f15e652]: ·
+                        - generic "15 hours ago" [ref=f15e657]: 15h
+              - button [ref=f15e689] [cursor=pointer]:
+                - generic [ref=f15e691]:
+                  - status "Loading..." [ref=f15e694]
+                  - generic [ref=f15e697]:
+                    - status "Loading..." [ref=f15e699]
+                    - status "Loading..." [ref=f15e701]
+      - generic [ref=f15e748]:
+        - generic [ref=f15e752]:
+          - link "Open the profile page of quitobohemio" [ref=f15e753] [cursor=pointer]:
+            - /url: /quitobohemio/
+            - generic [ref=f15e754]:
+              - img "user-profile-picture" [ref=f15e758]
+              - generic [ref=f15e759]:
+                - heading "Quito Bohemio" [level=2] [ref=f15e761]
+                - generic [ref=f15e763]: quitobohemio
+          - generic [ref=f15e767]:
+            - button [ref=f15e768] [cursor=pointer]:
+              - img "Audio call" [ref=f15e770]
+            - button [ref=f15e772] [cursor=pointer]:
+              - img "Video call" [ref=f15e774]
+            - button [ref=f15e777] [cursor=pointer]:
+              - img "Conversation information" [ref=f15e779]
+        - generic [ref=f15e783]:
+          - generic [ref=f15e787]:
+            - generic [ref=f15e788]:
+              - img "user-profile-picture" [ref=f15e792]
+              - generic [ref=f15e793]:
+                - heading "Quito Bohemio" [level=2] [ref=f15e796]
+                - generic [ref=f15e798]: quitobohemio · Instagram
+                - link "View profile" [ref=f15e801] [cursor=pointer]:
+                  - /url: /quitobohemio/
+            - generic [ref=f15e802]:
+              - group [ref=f15e810]:
+                - generic [ref=f15e812]:
+                  - link "Open the profile page of quitobohemio" [ref=f15e815] [cursor=pointer]:
+                    - /url: /quitobohemio
+                    - img "user-profile-picture" [ref=f15e818]
+                  - generic [ref=f15e820]:
+                    - article "Listo amigos, ya revisamos su pag" [ref=f15e821]
+                    - generic [ref=f15e825]:
+                      - group "Message actions":
+                        - generic:
+                          - generic:
+                            - generic:
+                              - button "React to message from quitobohemio":
+                                - generic:
+                                  - img "React to message from quitobohemio"
+                          - generic:
+                            - generic:
+                              - button "Reply to message from quitobohemio":
+                                - generic:
+                                  - img "Reply to message from quitobohemio"
+                          - generic:
+                            - generic:
+                              - button "See more options for message from quitobohemio":
+                                - generic:
+                                  - img "See more options for message from quitobohemio"
+              - group [ref=f15e829]:
+                - generic [ref=f15e831]:
+                  - link "Open the profile page of quitobohemio" [ref=f15e834] [cursor=pointer]:
+                    - /url: /quitobohemio
+                    - img "user-profile-picture" [ref=f15e837]
+                  - generic [ref=f15e839]:
+                    - article "A ver, tomando en cuenta el tipo de clientes que son artistas y público general, yo lo que le veo como una opción viable es desde Quito Bohemio ayudar a Tdf a promocionar los artistas que vayan llegando a ustedes o con los que ya estén trabajando con producciones antiguas y nuevas." [ref=f15e840]
+                    - generic [ref=f15e844]:
+                      - group "Message actions":
+                        - generic:
+                          - generic:
+                            - generic:
+                              - button "React to message from quitobohemio":
+                                - generic:
+                                  - img "React to message from quitobohemio"
+                          - generic:
+                            - generic:
+                              - button "Reply to message from quitobohemio":
+                                - generic:
+                                  - img "Reply to message from quitobohemio"
+                          - generic:
+                            - generic:
+                              - button "See more options for message from quitobohemio":
+                                - generic:
+                                  - img "See more options for message from quitobohemio"
+              - group [ref=f15e848]:
+                - generic [ref=f15e852]:
+                  - article "De ese modo nosotros funcionaríamos como un amplificador de su gestión" [ref=f15e853]
+                  - generic [ref=f15e857]:
+                    - group "Message actions":
+                      - generic:
+                        - generic:
+                          - generic:
+                            - button "React to message from quitobohemio":
+                              - generic:
+                                - img "React to message from quitobohemio"
+                        - generic:
+                          - generic:
+                            - button "Reply to message from quitobohemio":
+                              - generic:
+                                - img "Reply to message from quitobohemio"
+                        - generic:
+                          - generic:
+                            - button "See more options for message from quitobohemio":
+                              - generic:
+                                - img "See more options for message from quitobohemio"
+              - group [ref=f15e861]:
+                - generic [ref=f15e863]:
+                  - link "Open the profile page of quitobohemio" [ref=f15e866] [cursor=pointer]:
+                    - /url: /quitobohemio
+                    - img "user-profile-picture" [ref=f15e869]
+                  - generic [ref=f15e871]:
+                    - article "Cuéntame cómo le tienen pensado ustedes la viabilidad de trabajo en conjunto?" [ref=f15e872]
+                    - generic [ref=f15e876]:
+                      - group "Message actions":
+                        - generic:
+                          - generic:
+                            - generic:
+                              - button "React to message from quitobohemio":
+                                - generic:
+                                  - img "React to message from quitobohemio"
+                          - generic:
+                            - generic:
+                              - button "Reply to message from quitobohemio":
+                                - generic:
+                                  - img "Reply to message from quitobohemio"
+                          - generic:
+                            - generic:
+                              - button "See more options for message from quitobohemio":
+                                - generic:
+                                  - img "See more options for message from quitobohemio"
+              - generic [ref=f15e879]:
+                - generic [ref=f15e880]: 9:12 AM
+                - group [ref=f15e883]:
+                  - generic [ref=f15e884]:
+                    - generic [ref=f15e886]:
+                      - article [ref=f15e887]:
+                        - generic [ref=f15e890]:
+                          - text: ¡Gracias por revisar la plataforma, amigos! Nos interesa esa idea de amplificar lo que está pasando en la escena de Quito
+                          - img "🤟" [ref=f15e892]
+                          - text: "Podríamos empezar con una colaboración puntual alrededor de un lanzamiento: conectar al proyecto con ustedes y acordar juntos un formato de difusión que tenga sentido para su comunidad. ¿Cómo suelen trabajar estas colaboraciones? Nos serviría conocer sus formatos, qué necesitarían de TDF y si manejan tarifas o intercambio, para armar una propuesta concreta. — TDF Records"
+                      - generic [ref=f15e893]:
+                        - group "Message actions":
+                          - generic:
+                            - generic:
+                              - generic:
+                                - button "React to message from tdf.records.label":
+                                  - generic:
+                                    - img "React to message from tdf.records.label"
+                            - generic:
+                              - generic:
+                                - button "Reply to message from tdf.records.label":
+                                  - generic:
+                                    - img "Reply to message from tdf.records.label"
+                            - generic:
+                              - generic:
+                                - button "See more options for message from tdf.records.label":
+                                  - generic:
+                                    - img "See more options for message from tdf.records.label"
+                    - button "❤️" [ref=f15e895] [cursor=pointer]
+            - img "user-profile-picture" [ref=f15e904]
+          - generic [ref=f15e923]:
+            - button [ref=f15e926] [cursor=pointer]:
+              - img "Choose an emoji" [ref=f15e928]
+            - generic [ref=f15e930]:
+              - textbox [active] [ref=f15e931]:
+                - paragraph [ref=f15e932]
+              - generic: Message...
+            - generic [ref=f15e933]:
+              - button [ref=f15e934] [cursor=pointer]:
+                - img "Voice Clip" [ref=f15e936]
+              - button [ref=f15e939] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=f15e941]
+              - button [ref=f15e946] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=f15e948]

@@ -1,0 +1,1949 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4123803371",
+      "pull_request_review_id": 5340691203,
+      "id": 4123803371,
+      "node_id": "PRRC_kwDOQPdUrM71zD7r",
+      "diff_hunk": "@@ -1,11 +1,65 @@\n-# Hetzner restore evidence \u2014 2026-09-28\n+# Hetzner cutover evidence \u2014 2026-09-28\n \n-## Result\n+## Live result\n \n-An isolated CPX12 restore serves trusted HTTPS health/version checks at\n-`https://api.tdfrecords.net`. Production remains on Fly. The production Pages\n-environment still uses `https://tdf-hq.fly.dev`; no live traffic or database\n-writes have been moved.\n+The authorized web-first cutover completed on 2026-09-28. Production\n+`https://www.tdfrecords.net` now uses `https://api.tdfrecords.net` on the dedicated\n+Hetzner CPX12. Cloudflare deployment\n+`4f1e7744-460e-46c7-bdd9-b47d6ae706ad` succeeded at 14:42:14 UTC with frontend\n+merge `7e7106b36e7ac427711c2f64af650527d619f9ce` from reviewed PR #467.\n+Both production API bindings changed; all sixteen other bindings were preserved.\n+The backend runs the reviewed video-ingestion release `cc244b1f86603055997b51379b297baebfd3e7ce`.\n+All six post-merge main workflows completed successfully.\n+\n+| Final cutover check | Observed result |\n+| --- | --- |\n+| Old writers | TDF source role NOLOGIN; zero TDF connections; both old API machines stopped and cordoned |",
+      "path": "ops/hetzner/validation-2026-09-28.md",
+      "commit_id": "7f1d2d74877c5e603097e44cc643834e1932a69e",
+      "original_commit_id": "85bc69a766f88f002fa1362ba26a1a2e4f8b41ba",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Retarget scheduled enrichment before stopping Fly**\n\nFor scheduled production runs, `.github/workflows/artist-enrichment-daily.yml:33` still sets `TDF_API_BASE` to `https://tdf-hq.fly.dev` and lines 67\u201378 execute enrichment in production mode. With both Fly API machines stopped and their TDF role set to `NOLOGIN` as recorded here, every daily run targets the retired backend rather than the current Hetzner database and cannot perform enrichment. Retarget or pause this workflow before treating the old writers as retired.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T15:10:14Z",
+      "updated_at": "2026-09-28T15:10:15Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4123803371",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4123803371"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4123803371"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4123803371/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 19,
+      "original_line": 16,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 22,
+      "position": 25,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4123803395",
+      "pull_request_review_id": 5340691203,
+      "id": 4123803395,
+      "node_id": "PRRC_kwDOQPdUrM71zD8D",
+      "diff_hunk": "@@ -1,11 +1,65 @@\n-# Hetzner restore evidence \u2014 2026-09-28\n+# Hetzner cutover evidence \u2014 2026-09-28\n \n-## Result\n+## Live result\n \n-An isolated CPX12 restore serves trusted HTTPS health/version checks at\n-`https://api.tdfrecords.net`. Production remains on Fly. The production Pages\n-environment still uses `https://tdf-hq.fly.dev`; no live traffic or database\n-writes have been moved.\n+The authorized web-first cutover completed on 2026-09-28. Production\n+`https://www.tdfrecords.net` now uses `https://api.tdfrecords.net` on the dedicated\n+Hetzner CPX12. Cloudflare deployment\n+`4f1e7744-460e-46c7-bdd9-b47d6ae706ad` succeeded at 14:42:14 UTC with frontend\n+merge `7e7106b36e7ac427711c2f64af650527d619f9ce` from reviewed PR #467.\n+Both production API bindings changed; all sixteen other bindings were preserved.\n+The backend runs the reviewed video-ingestion release `cc244b1f86603055997b51379b297baebfd3e7ce`.\n+All six post-merge main workflows completed successfully.\n+\n+| Final cutover check | Observed result |\n+| --- | --- |\n+| Old writers | TDF source role NOLOGIN; zero TDF connections; both old API machines stopped and cordoned |\n+| Shared Fly database | Retained running for Trader; four Trader connections observed after cleanup |\n+| Final export | 10,215,235 bytes; SHA256 `b94ed77e2de06f57be280691c5e197b5eecfbf19480798c38b21b30c20e52541` |\n+| Restore equivalence | All 616 original tables / 33,189 rows match by sorted row-content hash before migrations |\n+| Guarded schema | 115 ledger entries, 623 public tables; schema and emergency database-readiness checks passed |\n+| Assets | 62 uploaded files / 15,399,112 bytes preserved; all 37 referenced local image URLs returned HTTPS 200 |\n+| Final restricted canary | 64/64 reads passed; concurrency 8; median 165.69 ms, p95 279.26 ms; outbound access blocked |\n+| Live writer transition | Canary stopped, reader NOLOGIN, production role LOGIN with fresh credentials; live health and exact version passed |\n+| Browser | Directory search and video feed use the new API with HTTP 200; records page 11 images, zero broken |\n+| Event preview | `/directory/events/24` and canonical `/eventos/24` return 200; event-specific title and canonical metadata present |\n+| Payment callbacks | Existing PayPal and Stripe webhook URLs updated; IDs, secrets and subscribed event types preserved |\n+| Signature rejection | Invalid Stripe signature 400; invalid PayPal signature 401; no real charge created |\n+| Mail | SMTP STARTTLS and credential authentication passed without sending a message |\n+| Release leases | This migration's exact token removed on both databases; both lease tables empty |\n+| Obsolete staging | TDF staging API stopped and cordoned; its TDF-only database stopped; volumes retained |\n+| Backup | Daily logical timer active; first backup independently restored and schema-verified; hash-verified off-host copy retained |\n+\n+The first production logical backup is 10,440,643 bytes, SHA256\n+`229c3b61a22a27865c2fda8e2ee62ed93fb0951547c4d5bf5038a03258faa868`.\n+Its separate verification database passed the 115-entry schema check before\n+being dropped. Native Hetzner backups are enabled; this does not assert a\n+post-cutover server snapshot has already completed.\n+\n+New writes have been enabled. **Do not reopen the old Fly TDF role or route\n+traffic back to its stale database.** Application recovery must use the tested\n+compatible image against the current Hetzner database. A provider reversal\n+requires another write freeze and fresh reverse migration.\n+\n+Older installed mobile builds still point at Fly and need an updated release;\n+the operator explicitly accepted that downtime. Google interactive login and\n+authenticated uploads have not been exercised end to end after cutover.",
+      "path": "ops/hetzner/validation-2026-09-28.md",
+      "commit_id": "7f1d2d74877c5e603097e44cc643834e1932a69e",
+      "original_commit_id": "85bc69a766f88f002fa1362ba26a1a2e4f8b41ba",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Complete the authentication and upload gates before declaring success**\n\nIn this deployed state, writes have already been enabled even though these end-to-end checks remain unperformed, while the cutover procedure in `ops/hetzner/README.md:143-145` explicitly requires Google authentication and uploads to be verified before reopening writes. This leaves two user-facing write paths unvalidated after the hostname, database, and asset-storage migration despite the record calling the cutover complete; either perform those gates or record an explicit waiver and keep the cutover status incomplete.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T15:10:14Z",
+      "updated_at": "2026-09-28T15:10:15Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4123803395",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4123803395"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4123803395"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4123803395/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 47,
+      "original_start_line": 44,
+      "start_side": "RIGHT",
+      "line": 49,
+      "original_line": 46,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 52,
+      "position": 55,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124034948",
+      "pull_request_review_id": 5340974693,
+      "id": 4124034948,
+      "node_id": "PRRC_kwDOQPdUrM71z8eE",
+      "diff_hunk": "@@ -1,11 +1,84 @@\n-# Hetzner restore evidence \u2014 2026-09-28\n+# Hetzner cutover evidence \u2014 2026-09-28\n \n-## Result\n+## Live result\n \n-An isolated CPX12 restore serves trusted HTTPS health/version checks at\n-`https://api.tdfrecords.net`. Production remains on Fly. The production Pages\n-environment still uses `https://tdf-hq.fly.dev`; no live traffic or database\n-writes have been moved.\n+The authorized web-first cutover completed on 2026-09-28. Production\n+`https://www.tdfrecords.net` now uses `https://api.tdfrecords.net` on the dedicated\n+Hetzner CPX12. Cloudflare deployment\n+`4f1e7744-460e-46c7-bdd9-b47d6ae706ad` succeeded at 14:42:14 UTC with frontend\n+merge `7e7106b36e7ac427711c2f64af650527d619f9ce` from reviewed PR #467.\n+Both production API bindings changed; all sixteen other bindings were preserved.\n+The backend runs the reviewed video-ingestion release `cc244b1f86603055997b51379b297baebfd3e7ce`.\n+All six post-merge main workflows completed successfully.\n+\n+| Final cutover check | Observed result |\n+| --- | --- |\n+| Old writers | TDF source role NOLOGIN; zero TDF connections; both old API machines stopped and cordoned |",
+      "path": "ops/hetzner/validation-2026-09-28.md",
+      "commit_id": "7f1d2d74877c5e603097e44cc643834e1932a69e",
+      "original_commit_id": "9c29fd5bd19d256a60e8a877552a854fee881be6",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Retarget messaging-token refreshes to Hetzner**\n\nIn the stopped-Fly state recorded here, the hourly `.github/workflows/check-messaging-token.yml:56-65` still runs mutating maintenance with `FLY_APP_NAME=tdf-hq`, and `scripts/check-messaging-token.mjs:175-188` persists refreshed Instagram/Facebook tokens only through `flyctl secrets set`. When either credential enters its refresh window, the live Hetzner `api.env` will not receive the replacement, so messaging will eventually use an expired credential while the retired Fly app is mutated instead; move rotation to the current deployment's secret store or make this schedule read-only.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T15:32:14Z",
+      "updated_at": "2026-09-28T15:32:15Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124034948",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124034948"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124034948"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124034948/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 19,
+      "original_line": 16,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 22,
+      "position": 25,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124034955",
+      "pull_request_review_id": 5340974693,
+      "id": 4124034955,
+      "node_id": "PRRC_kwDOQPdUrM71z8eL",
+      "diff_hunk": "@@ -1,11 +1,84 @@\n-# Hetzner restore evidence \u2014 2026-09-28\n+# Hetzner cutover evidence \u2014 2026-09-28\n \n-## Result\n+## Live result\n \n-An isolated CPX12 restore serves trusted HTTPS health/version checks at\n-`https://api.tdfrecords.net`. Production remains on Fly. The production Pages\n-environment still uses `https://tdf-hq.fly.dev`; no live traffic or database\n-writes have been moved.\n+The authorized web-first cutover completed on 2026-09-28. Production\n+`https://www.tdfrecords.net` now uses `https://api.tdfrecords.net` on the dedicated",
+      "path": "ops/hetzner/validation-2026-09-28.md",
+      "commit_id": "9c29fd5bd19d256a60e8a877552a854fee881be6",
+      "original_commit_id": "9c29fd5bd19d256a60e8a877552a854fee881be6",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Point the course publisher at the live API**\n\nAfter this cutover, the documented production command in `docs/courses/README.md:19-28` still leaves the API base unset and identifies the Fly hostname as live, while `scripts/upsert-course.mjs:8-12` therefore posts to `https://tdf-hq.fly.dev`. With the old machines stopped and their database role disabled, operators following that runbook cannot publish courses to the live Hetzner database; update both the helper default and its production instructions to use `https://api.tdfrecords.net`.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T15:32:15Z",
+      "updated_at": "2026-09-28T15:32:15Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124034955",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124034955"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124034955"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124034955/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 5,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 6,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 12,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124521504",
+      "pull_request_review_id": 5341567481,
+      "id": 4124521504,
+      "node_id": "PRRC_kwDOQPdUrM711zQg",
+      "diff_hunk": "@@ -1,11 +1,65 @@\n-# Hetzner restore evidence \u2014 2026-09-28\n+# Hetzner cutover evidence \u2014 2026-09-28\n \n-## Result\n+## Live result\n \n-An isolated CPX12 restore serves trusted HTTPS health/version checks at\n-`https://api.tdfrecords.net`. Production remains on Fly. The production Pages\n-environment still uses `https://tdf-hq.fly.dev`; no live traffic or database\n-writes have been moved.\n+The authorized web-first cutover completed on 2026-09-28. Production\n+`https://www.tdfrecords.net` now uses `https://api.tdfrecords.net` on the dedicated\n+Hetzner CPX12. Cloudflare deployment\n+`4f1e7744-460e-46c7-bdd9-b47d6ae706ad` succeeded at 14:42:14 UTC with frontend\n+merge `7e7106b36e7ac427711c2f64af650527d619f9ce` from reviewed PR #467.\n+Both production API bindings changed; all sixteen other bindings were preserved.\n+The backend runs the reviewed video-ingestion release `cc244b1f86603055997b51379b297baebfd3e7ce`.\n+All six post-merge main workflows completed successfully.\n+\n+| Final cutover check | Observed result |\n+| --- | --- |\n+| Old writers | TDF source role NOLOGIN; zero TDF connections; both old API machines stopped and cordoned |",
+      "path": "ops/hetzner/validation-2026-09-28.md",
+      "commit_id": "7f1d2d74877c5e603097e44cc643834e1932a69e",
+      "original_commit_id": "85bc69a766f88f002fa1362ba26a1a2e4f8b41ba",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Follow-up 7def35976f62dd153127d25217e22d3f0d19f3aa: Retargeted the scheduled/manual artist enrichment API base to https://api.tdfrecords.net. Existing scope, publication policy, authentication and concurrency are unchanged. All messaging/enrichment regressions (111 tests) and CI contract tests (25) passed. No production enrichment run or deployment was manually triggered.",
+      "created_at": "2026-09-28T16:20:04Z",
+      "updated_at": "2026-09-28T16:20:04Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124521504",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124521504"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124521504"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124521504/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 19,
+      "original_line": 16,
+      "side": "RIGHT",
+      "in_reply_to_id": 4123803371,
+      "author_association": "OWNER",
+      "original_position": 22,
+      "position": 25,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124522558",
+      "pull_request_review_id": 5341568634,
+      "id": 4124522558,
+      "node_id": "PRRC_kwDOQPdUrM711zg-",
+      "diff_hunk": "@@ -1,11 +1,84 @@\n-# Hetzner restore evidence \u2014 2026-09-28\n+# Hetzner cutover evidence \u2014 2026-09-28\n \n-## Result\n+## Live result\n \n-An isolated CPX12 restore serves trusted HTTPS health/version checks at\n-`https://api.tdfrecords.net`. Production remains on Fly. The production Pages\n-environment still uses `https://tdf-hq.fly.dev`; no live traffic or database\n-writes have been moved.\n+The authorized web-first cutover completed on 2026-09-28. Production\n+`https://www.tdfrecords.net` now uses `https://api.tdfrecords.net` on the dedicated\n+Hetzner CPX12. Cloudflare deployment\n+`4f1e7744-460e-46c7-bdd9-b47d6ae706ad` succeeded at 14:42:14 UTC with frontend\n+merge `7e7106b36e7ac427711c2f64af650527d619f9ce` from reviewed PR #467.\n+Both production API bindings changed; all sixteen other bindings were preserved.\n+The backend runs the reviewed video-ingestion release `cc244b1f86603055997b51379b297baebfd3e7ce`.\n+All six post-merge main workflows completed successfully.\n+\n+| Final cutover check | Observed result |\n+| --- | --- |\n+| Old writers | TDF source role NOLOGIN; zero TDF connections; both old API machines stopped and cordoned |",
+      "path": "ops/hetzner/validation-2026-09-28.md",
+      "commit_id": "7f1d2d74877c5e603097e44cc643834e1932a69e",
+      "original_commit_id": "9c29fd5bd19d256a60e8a877552a854fee881be6",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Follow-up 7def35976f62dd153127d25217e22d3f0d19f3aa: The hourly and manual workflow now invokes the existing read-only --check path, rejects refresh requests, and contains no Fly setup or credentials. Missing, invalid, expired and soon-expiring tokens still fail and notify. Existing exhaustive validity/expiry tests and workflow guard tests pass. A reviewed Hetzner secret-store integration remains pending; the runbook explicitly requires operator rotation and synchronization of GitHub check credentials and does not mistake those for live-service verification. No credentials were changed.",
+      "created_at": "2026-09-28T16:20:10Z",
+      "updated_at": "2026-09-28T16:20:10Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124522558",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124522558"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124522558"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124522558/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 19,
+      "original_line": 16,
+      "side": "RIGHT",
+      "in_reply_to_id": 4124034948,
+      "author_association": "OWNER",
+      "original_position": 22,
+      "position": 25,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124523869",
+      "pull_request_review_id": 5341570228,
+      "id": 4124523869,
+      "node_id": "PRRC_kwDOQPdUrM711z1d",
+      "diff_hunk": "@@ -1,11 +1,84 @@\n-# Hetzner restore evidence \u2014 2026-09-28\n+# Hetzner cutover evidence \u2014 2026-09-28\n \n-## Result\n+## Live result\n \n-An isolated CPX12 restore serves trusted HTTPS health/version checks at\n-`https://api.tdfrecords.net`. Production remains on Fly. The production Pages\n-environment still uses `https://tdf-hq.fly.dev`; no live traffic or database\n-writes have been moved.\n+The authorized web-first cutover completed on 2026-09-28. Production\n+`https://www.tdfrecords.net` now uses `https://api.tdfrecords.net` on the dedicated",
+      "path": "ops/hetzner/validation-2026-09-28.md",
+      "commit_id": "9c29fd5bd19d256a60e8a877552a854fee881be6",
+      "original_commit_id": "9c29fd5bd19d256a60e8a877552a854fee881be6",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Follow-up 7def35976f62dd153127d25217e22d3f0d19f3aa: Updated the course publisher default and production documentation to https://api.tdfrecords.net. Three mocked-request checks passed: production default, explicit course-base override precedence, and legacy VITE base override. Bearer authentication and request payload are unchanged; no course was published.",
+      "created_at": "2026-09-28T16:20:18Z",
+      "updated_at": "2026-09-28T16:20:18Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124523869",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124523869"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124523869"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124523869/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 5,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 6,
+      "side": "RIGHT",
+      "in_reply_to_id": 4124034955,
+      "author_association": "OWNER",
+      "original_position": 12,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124524755",
+      "pull_request_review_id": 5341571328,
+      "id": 4124524755,
+      "node_id": "PRRC_kwDOQPdUrM7110DT",
+      "diff_hunk": "@@ -1,11 +1,65 @@\n-# Hetzner restore evidence \u2014 2026-09-28\n+# Hetzner cutover evidence \u2014 2026-09-28\n \n-## Result\n+## Live result\n \n-An isolated CPX12 restore serves trusted HTTPS health/version checks at\n-`https://api.tdfrecords.net`. Production remains on Fly. The production Pages\n-environment still uses `https://tdf-hq.fly.dev`; no live traffic or database\n-writes have been moved.\n+The authorized web-first cutover completed on 2026-09-28. Production\n+`https://www.tdfrecords.net` now uses `https://api.tdfrecords.net` on the dedicated\n+Hetzner CPX12. Cloudflare deployment\n+`4f1e7744-460e-46c7-bdd9-b47d6ae706ad` succeeded at 14:42:14 UTC with frontend\n+merge `7e7106b36e7ac427711c2f64af650527d619f9ce` from reviewed PR #467.\n+Both production API bindings changed; all sixteen other bindings were preserved.\n+The backend runs the reviewed video-ingestion release `cc244b1f86603055997b51379b297baebfd3e7ce`.\n+All six post-merge main workflows completed successfully.\n+\n+| Final cutover check | Observed result |\n+| --- | --- |\n+| Old writers | TDF source role NOLOGIN; zero TDF connections; both old API machines stopped and cordoned |\n+| Shared Fly database | Retained running for Trader; four Trader connections observed after cleanup |\n+| Final export | 10,215,235 bytes; SHA256 `b94ed77e2de06f57be280691c5e197b5eecfbf19480798c38b21b30c20e52541` |\n+| Restore equivalence | All 616 original tables / 33,189 rows match by sorted row-content hash before migrations |\n+| Guarded schema | 115 ledger entries, 623 public tables; schema and emergency database-readiness checks passed |\n+| Assets | 62 uploaded files / 15,399,112 bytes preserved; all 37 referenced local image URLs returned HTTPS 200 |\n+| Final restricted canary | 64/64 reads passed; concurrency 8; median 165.69 ms, p95 279.26 ms; outbound access blocked |\n+| Live writer transition | Canary stopped, reader NOLOGIN, production role LOGIN with fresh credentials; live health and exact version passed |\n+| Browser | Directory search and video feed use the new API with HTTP 200; records page 11 images, zero broken |\n+| Event preview | `/directory/events/24` and canonical `/eventos/24` return 200; event-specific title and canonical metadata present |\n+| Payment callbacks | Existing PayPal and Stripe webhook URLs updated; IDs, secrets and subscribed event types preserved |\n+| Signature rejection | Invalid Stripe signature 400; invalid PayPal signature 401; no real charge created |\n+| Mail | SMTP STARTTLS and credential authentication passed without sending a message |\n+| Release leases | This migration's exact token removed on both databases; both lease tables empty |\n+| Obsolete staging | TDF staging API stopped and cordoned; its TDF-only database stopped; volumes retained |\n+| Backup | Daily logical timer active; first backup independently restored and schema-verified; hash-verified off-host copy retained |\n+\n+The first production logical backup is 10,440,643 bytes, SHA256\n+`229c3b61a22a27865c2fda8e2ee62ed93fb0951547c4d5bf5038a03258faa868`.\n+Its separate verification database passed the 115-entry schema check before\n+being dropped. Native Hetzner backups are enabled; this does not assert a\n+post-cutover server snapshot has already completed.\n+\n+New writes have been enabled. **Do not reopen the old Fly TDF role or route\n+traffic back to its stale database.** Application recovery must use the tested\n+compatible image against the current Hetzner database. A provider reversal\n+requires another write freeze and fresh reverse migration.\n+\n+Older installed mobile builds still point at Fly and need an updated release;\n+the operator explicitly accepted that downtime. Google interactive login and\n+authenticated uploads have not been exercised end to end after cutover.",
+      "path": "ops/hetzner/validation-2026-09-28.md",
+      "commit_id": "7f1d2d74877c5e603097e44cc643834e1932a69e",
+      "original_commit_id": "85bc69a766f88f002fa1362ba26a1a2e4f8b41ba",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Follow-up 7def35976f62dd153127d25217e22d3f0d19f3aa: Corrected both documents to label cutover validation incomplete and distinguish the observed traffic/writer transition from the unperformed Google interactive-login and authenticated-upload gates. No gate waiver is claimed. This thread remains open until an authorized operator performs and records those end-to-end checks; the audit has not deployed or performed production writes.",
+      "created_at": "2026-09-28T16:20:23Z",
+      "updated_at": "2026-09-28T16:20:23Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124524755",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124524755"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124524755"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124524755/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 47,
+      "original_start_line": 44,
+      "start_side": "RIGHT",
+      "line": 49,
+      "original_line": 46,
+      "side": "RIGHT",
+      "in_reply_to_id": 4123803395,
+      "author_association": "OWNER",
+      "original_position": 52,
+      "position": 55,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124537650",
+      "pull_request_review_id": 5341586368,
+      "id": 4124537650,
+      "node_id": "PRRC_kwDOQPdUrM7113My",
+      "diff_hunk": "@@ -30,7 +30,7 @@ jobs:\n     runs-on: ubuntu-latest\n     timeout-minutes: 120\n     env:\n-      TDF_API_BASE: https://tdf-hq.fly.dev\n+      TDF_API_BASE: https://api.tdfrecords.net",
+      "path": ".github/workflows/artist-enrichment-daily.yml",
+      "commit_id": "7f1d2d74877c5e603097e44cc643834e1932a69e",
+      "original_commit_id": "7def35976f62dd153127d25217e22d3f0d19f3aa",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Retarget the manual artist-enrichment entry point**\n\nAlthough this retargets the scheduled job, the fresh missed path beyond the prior scheduled-run issue is the documented manual workflow: `scripts/artist-enrichment.mjs:19` still defaults to `https://tdf-hq.fly.dev`, and every command in `docs/artist-enrichment-runbook.md:80-121` relies on that default. After the old machines and database role are disabled, operators running dry-runs, bounded production runs, or media ingestion from the runbook will contact the retired backend unless they know to add an undocumented override; update the script default and runbook alongside this workflow.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T16:21:39Z",
+      "updated_at": "2026-09-28T16:21:39Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124537650",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124537650"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124537650"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124537650/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 33,
+      "original_line": 33,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 5,
+      "position": 5,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124537658",
+      "pull_request_review_id": 5341586368,
+      "id": 4124537658,
+      "node_id": "PRRC_kwDOQPdUrM7113M6",
+      "diff_hunk": "@@ -28,7 +27,7 @@ jobs:\n           REQUESTED_ACTION: ${{ inputs.action }}\n         run: |\n           case \"$WORKFLOW_EVENT:$REQUESTED_ACTION\" in\n-            schedule:|workflow_dispatch:check|workflow_dispatch:refresh) ;;\n+            schedule:|workflow_dispatch:check) ;;",
+      "path": ".github/workflows/check-messaging-token.yml",
+      "commit_id": "7f1d2d74877c5e603097e44cc643834e1932a69e",
+      "original_commit_id": "7def35976f62dd153127d25217e22d3f0d19f3aa",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Update the messaging-token operator guide**\n\nWhen an expiring token requires maintenance, the primary guide still states at `docs/INSTAGRAM_TOKEN_SETUP.md:160-164` that the hourly schedule and manual `action=refresh` perform automatic refresh and update Fly. This change instead rejects `refresh` and makes the schedule read-only, so an operator following that guide cannot rotate the credential and may incorrectly assume the hourly job still maintains it until messaging fails; replace those instructions with the new Hetzner rotation procedure.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T16:21:39Z",
+      "updated_at": "2026-09-28T16:21:39Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124537658",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124537658"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124537658"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124537658/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 30,
+      "original_line": 30,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 13,
+      "position": 13,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124537666",
+      "pull_request_review_id": 5341586368,
+      "id": 4124537666,
+      "node_id": "PRRC_kwDOQPdUrM7113NC",
+      "diff_hunk": "@@ -1,11 +1,87 @@\n-# Hetzner restore evidence \u2014 2026-09-28\n+# Hetzner cutover evidence \u2014 2026-09-28\n \n-## Result\n+## Live transition \u2014 validation incomplete\n \n-An isolated CPX12 restore serves trusted HTTPS health/version checks at\n-`https://api.tdfrecords.net`. Production remains on Fly. The production Pages\n-environment still uses `https://tdf-hq.fly.dev`; no live traffic or database\n-writes have been moved.\n+The authorized web-first traffic and writer transition occurred on 2026-09-28.\n+Cutover validation remains **incomplete**: Google interactive login and\n+authenticated uploads have not passed their end-to-end gates. No waiver of\n+those gates is recorded here. Production\n+`https://www.tdfrecords.net` now uses `https://api.tdfrecords.net` on the dedicated\n+Hetzner CPX12. Cloudflare deployment\n+`4f1e7744-460e-46c7-bdd9-b47d6ae706ad` succeeded at 14:42:14 UTC with frontend\n+merge `7e7106b36e7ac427711c2f64af650527d619f9ce` from reviewed PR #467.\n+Both production API bindings changed; all sixteen other bindings were preserved.\n+The backend runs the reviewed video-ingestion release `cc244b1f86603055997b51379b297baebfd3e7ce`.\n+All six post-merge main workflows completed successfully.\n+\n+| Final cutover check | Observed result |\n+| --- | --- |\n+| Old writers | TDF source role NOLOGIN; zero TDF connections; both old API machines stopped and cordoned |\n+| Shared Fly database | Retained running for Trader; four Trader connections observed after cleanup |\n+| Final export | 10,215,235 bytes; SHA256 `b94ed77e2de06f57be280691c5e197b5eecfbf19480798c38b21b30c20e52541` |\n+| Restore equivalence | All 616 original tables / 33,189 rows match by sorted row-content hash before migrations |\n+| Guarded schema | 115 ledger entries, 623 public tables; schema and emergency database-readiness checks passed |\n+| Assets | 62 uploaded files / 15,399,112 bytes preserved; all 37 referenced local image URLs returned HTTPS 200 |\n+| Final restricted canary | 64/64 reads passed; concurrency 8; median 165.69 ms, p95 279.26 ms; outbound access blocked |\n+| Live writer transition | Canary stopped, reader NOLOGIN, production role LOGIN with fresh credentials; live health and exact version passed |\n+| Browser | Directory search and video feed use the new API with HTTP 200; records page 11 images, zero broken |\n+| Event preview | `/directory/events/24` and canonical `/eventos/24` return 200; event-specific title and canonical metadata present |\n+| Payment callbacks | Existing PayPal and Stripe webhook URLs updated; IDs, secrets and subscribed event types preserved |\n+| Signature rejection | Invalid Stripe signature 400; invalid PayPal signature 401; no real charge created |\n+| Mail | SMTP STARTTLS and credential authentication passed without sending a message |\n+| Release leases | This migration's exact token removed on both databases; both lease tables empty |\n+| Obsolete staging | TDF staging API stopped and cordoned; its TDF-only database stopped; volumes retained |\n+| Backup | Daily logical timer active; first backup independently restored and schema-verified; hash-verified off-host copy retained |\n+\n+The first production logical backup is 10,440,643 bytes, SHA256\n+`229c3b61a22a27865c2fda8e2ee62ed93fb0951547c4d5bf5038a03258faa868`.\n+Its separate verification database passed the 115-entry schema check before\n+being dropped. Native Hetzner backups are enabled; this does not assert a\n+post-cutover server snapshot has already completed.\n+\n+New writes have been enabled. **Do not reopen the old Fly TDF role or route\n+traffic back to its stale database.** Application recovery must use the tested",
+      "path": "ops/hetzner/validation-2026-09-28.md",
+      "commit_id": "7f1d2d74877c5e603097e44cc643834e1932a69e",
+      "original_commit_id": "7def35976f62dd153127d25217e22d3f0d19f3aa",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Retarget social-webhook repair commands before stopping Fly**\n\nOnce the old Fly API is stopped as recorded here, the active diagnostic at `scripts/diagnose-social.mjs:53-60` still tells operators to repair missing Instagram and Facebook subscriptions by registering callbacks under `tdf-hq.fly.dev`. In the exact scenario where either subscription must be recreated, following the generated command routes inbound messages to the stopped backend; change those callback URLs to `api.tdfrecords.net` as part of the cutover.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T16:21:39Z",
+      "updated_at": "2026-09-28T16:21:39Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124537666",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124537666"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124537666"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124537666/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 42,
+      "original_start_line": 42,
+      "start_side": "RIGHT",
+      "line": 43,
+      "original_line": 43,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 49,
+      "position": 49,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124691860",
+      "pull_request_review_id": 5341764096,
+      "id": 4124691860,
+      "node_id": "PRRC_kwDOQPdUrM712c2U",
+      "diff_hunk": "@@ -30,7 +30,7 @@ jobs:\n     runs-on: ubuntu-latest\n     timeout-minutes: 120\n     env:\n-      TDF_API_BASE: https://tdf-hq.fly.dev\n+      TDF_API_BASE: https://api.tdfrecords.net",
+      "path": ".github/workflows/artist-enrichment-daily.yml",
+      "commit_id": "7f1d2d74877c5e603097e44cc643834e1932a69e",
+      "original_commit_id": "7def35976f62dd153127d25217e22d3f0d19f3aa",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 5486b49144f9b0d5576cef5f2e59d927c66e334f. Manual enrichment now defaults to https://api.tdfrecords.net and retains explicit TDF_API_BASE/API_BASE overrides. The runbook documents these and points backup/recovery operations to the current guarded Hetzner procedure, preserving post-cutover writes. A mocked production-API boundary regression verifies all three routing cases without network writes. All 113 messaging/enrichment tests and the exact specification gate (3 inventory and 9 evidence/escrow regressions) pass.",
+      "created_at": "2026-09-28T16:37:23Z",
+      "updated_at": "2026-09-28T16:37:23Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124691860",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124691860"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124691860"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124691860/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 33,
+      "original_line": 33,
+      "side": "RIGHT",
+      "in_reply_to_id": 4124537650,
+      "author_association": "OWNER",
+      "original_position": 5,
+      "position": 5,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124693569",
+      "pull_request_review_id": 5341766062,
+      "id": 4124693569,
+      "node_id": "PRRC_kwDOQPdUrM712dRB",
+      "diff_hunk": "@@ -28,7 +27,7 @@ jobs:\n           REQUESTED_ACTION: ${{ inputs.action }}\n         run: |\n           case \"$WORKFLOW_EVENT:$REQUESTED_ACTION\" in\n-            schedule:|workflow_dispatch:check|workflow_dispatch:refresh) ;;\n+            schedule:|workflow_dispatch:check) ;;",
+      "path": ".github/workflows/check-messaging-token.yml",
+      "commit_id": "7f1d2d74877c5e603097e44cc643834e1932a69e",
+      "original_commit_id": "7def35976f62dd153127d25217e22d3f0d19f3aa",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 5486b49144f9b0d5576cef5f2e59d927c66e334f. Updated the primary messaging guide: scheduled/manual checks are read-only, action=refresh is rejected, and legacy Fly maintenance is explicitly retired. The guide states automated Hetzner rotation is not implemented and gives the authorized operator sequence: validated replacement, secure current runtime persistence under existing deployment controls, live verification, then GitHub check-secret synchronization. Failures remain visible. No credential rotation, deployment or completion claim was made. All 113 messaging/enrichment tests and the exact specification gate (3 inventory and 9 evidence/escrow regressions) pass.",
+      "created_at": "2026-09-28T16:37:35Z",
+      "updated_at": "2026-09-28T16:37:35Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124693569",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124693569"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124693569"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124693569/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 30,
+      "original_line": 30,
+      "side": "RIGHT",
+      "in_reply_to_id": 4124537658,
+      "author_association": "OWNER",
+      "original_position": 13,
+      "position": 13,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124694517",
+      "pull_request_review_id": 5341767211,
+      "id": 4124694517,
+      "node_id": "PRRC_kwDOQPdUrM712df1",
+      "diff_hunk": "@@ -1,11 +1,87 @@\n-# Hetzner restore evidence \u2014 2026-09-28\n+# Hetzner cutover evidence \u2014 2026-09-28\n \n-## Result\n+## Live transition \u2014 validation incomplete\n \n-An isolated CPX12 restore serves trusted HTTPS health/version checks at\n-`https://api.tdfrecords.net`. Production remains on Fly. The production Pages\n-environment still uses `https://tdf-hq.fly.dev`; no live traffic or database\n-writes have been moved.\n+The authorized web-first traffic and writer transition occurred on 2026-09-28.\n+Cutover validation remains **incomplete**: Google interactive login and\n+authenticated uploads have not passed their end-to-end gates. No waiver of\n+those gates is recorded here. Production\n+`https://www.tdfrecords.net` now uses `https://api.tdfrecords.net` on the dedicated\n+Hetzner CPX12. Cloudflare deployment\n+`4f1e7744-460e-46c7-bdd9-b47d6ae706ad` succeeded at 14:42:14 UTC with frontend\n+merge `7e7106b36e7ac427711c2f64af650527d619f9ce` from reviewed PR #467.\n+Both production API bindings changed; all sixteen other bindings were preserved.\n+The backend runs the reviewed video-ingestion release `cc244b1f86603055997b51379b297baebfd3e7ce`.\n+All six post-merge main workflows completed successfully.\n+\n+| Final cutover check | Observed result |\n+| --- | --- |\n+| Old writers | TDF source role NOLOGIN; zero TDF connections; both old API machines stopped and cordoned |\n+| Shared Fly database | Retained running for Trader; four Trader connections observed after cleanup |\n+| Final export | 10,215,235 bytes; SHA256 `b94ed77e2de06f57be280691c5e197b5eecfbf19480798c38b21b30c20e52541` |\n+| Restore equivalence | All 616 original tables / 33,189 rows match by sorted row-content hash before migrations |\n+| Guarded schema | 115 ledger entries, 623 public tables; schema and emergency database-readiness checks passed |\n+| Assets | 62 uploaded files / 15,399,112 bytes preserved; all 37 referenced local image URLs returned HTTPS 200 |\n+| Final restricted canary | 64/64 reads passed; concurrency 8; median 165.69 ms, p95 279.26 ms; outbound access blocked |\n+| Live writer transition | Canary stopped, reader NOLOGIN, production role LOGIN with fresh credentials; live health and exact version passed |\n+| Browser | Directory search and video feed use the new API with HTTP 200; records page 11 images, zero broken |\n+| Event preview | `/directory/events/24` and canonical `/eventos/24` return 200; event-specific title and canonical metadata present |\n+| Payment callbacks | Existing PayPal and Stripe webhook URLs updated; IDs, secrets and subscribed event types preserved |\n+| Signature rejection | Invalid Stripe signature 400; invalid PayPal signature 401; no real charge created |\n+| Mail | SMTP STARTTLS and credential authentication passed without sending a message |\n+| Release leases | This migration's exact token removed on both databases; both lease tables empty |\n+| Obsolete staging | TDF staging API stopped and cordoned; its TDF-only database stopped; volumes retained |\n+| Backup | Daily logical timer active; first backup independently restored and schema-verified; hash-verified off-host copy retained |\n+\n+The first production logical backup is 10,440,643 bytes, SHA256\n+`229c3b61a22a27865c2fda8e2ee62ed93fb0951547c4d5bf5038a03258faa868`.\n+Its separate verification database passed the 115-entry schema check before\n+being dropped. Native Hetzner backups are enabled; this does not assert a\n+post-cutover server snapshot has already completed.\n+\n+New writes have been enabled. **Do not reopen the old Fly TDF role or route\n+traffic back to its stale database.** Application recovery must use the tested",
+      "path": "ops/hetzner/validation-2026-09-28.md",
+      "commit_id": "7f1d2d74877c5e603097e44cc643834e1932a69e",
+      "original_commit_id": "7def35976f62dd153127d25217e22d3f0d19f3aa",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 5486b49144f9b0d5576cef5f2e59d927c66e334f. Both missing-subscription repair commands now target the canonical API callbacks. They print environment placeholders instead of supplied secret values; the refresh guidance uses the current secret-store procedure and no longer recommends Fly updates/restarts. The mocked diagnostic regression verifies both URLs and absence of supplied credentials/retired repair commands. No provider subscription was changed. All 113 messaging/enrichment tests and the exact specification gate (3 inventory and 9 evidence/escrow regressions) pass.",
+      "created_at": "2026-09-28T16:37:42Z",
+      "updated_at": "2026-09-28T16:37:42Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124694517",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124694517"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124694517"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124694517/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 42,
+      "original_start_line": 42,
+      "start_side": "RIGHT",
+      "line": 43,
+      "original_line": 43,
+      "side": "RIGHT",
+      "in_reply_to_id": 4124537666,
+      "author_association": "OWNER",
+      "original_position": 49,
+      "position": 49,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124717225",
+      "pull_request_review_id": 5341795702,
+      "id": 4124717225,
+      "node_id": "PRRC_kwDOQPdUrM712jCp",
+      "diff_hunk": "@@ -52,12 +51,12 @@ async function main() {\n \n   if (!igSub) {\n     console.log('\\n\ud83d\udd27 To fix Instagram subscription:');\n-    console.log(`  curl -X POST \"https://graph.facebook.com/v18.0/${APP_ID}/subscriptions?object=instagram&callback_url=https%3A%2F%2Ftdf-hq.fly.dev%2Finstagram%2Fwebhook&fields=messages&verify_token=${IG_VERIFY_TOKEN || 'YOUR_VERIFY_TOKEN'}&access_token=${APP_ID}|${APP_SECRET}\"`);\n+    console.log('  curl -X POST \"https://graph.facebook.com/v18.0/${FACEBOOK_APP_ID}/subscriptions\" --data-urlencode \"object=instagram\" --data-urlencode \"callback_url=https://api.tdfrecords.net/instagram/webhook\" --data-urlencode \"fields=messages\" --data-urlencode \"verify_token=${INSTAGRAM_VERIFY_TOKEN}\" --data-urlencode \"access_token=${FACEBOOK_APP_ID}|${FACEBOOK_APP_SECRET}\"');",
+      "path": "scripts/diagnose-social.mjs",
+      "commit_id": "e762f67b2720b3337c8409b6c3b652224f090083",
+      "original_commit_id": "5486b49144f9b0d5576cef5f2e59d927c66e334f",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Detect stale webhook callbacks before suppressing repairs**\n\nWhen Meta returns an existing `instagram` or `page` subscription whose `callback_url` still targets `tdf-hq.fly.dev` (or whose `active` flag is false), the object remains truthy, so these new Hetzner repair commands are never shown and the summary reports no subscription issue. In that post-cutover state inbound messages continue going to the stopped backend; compare the returned callback and active state with the expected `api.tdfrecords.net` endpoint and offer repair whenever either is wrong.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T16:40:15Z",
+      "updated_at": "2026-09-28T16:40:16Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124717225",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124717225"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124717225"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124717225/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 54,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 23,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124717234",
+      "pull_request_review_id": 5341795702,
+      "id": 4124717234,
+      "node_id": "PRRC_kwDOQPdUrM712jCy",
+      "diff_hunk": "@@ -52,12 +51,12 @@ async function main() {\n \n   if (!igSub) {\n     console.log('\\n\ud83d\udd27 To fix Instagram subscription:');\n-    console.log(`  curl -X POST \"https://graph.facebook.com/v18.0/${APP_ID}/subscriptions?object=instagram&callback_url=https%3A%2F%2Ftdf-hq.fly.dev%2Finstagram%2Fwebhook&fields=messages&verify_token=${IG_VERIFY_TOKEN || 'YOUR_VERIFY_TOKEN'}&access_token=${APP_ID}|${APP_SECRET}\"`);\n+    console.log('  curl -X POST \"https://graph.facebook.com/v18.0/${FACEBOOK_APP_ID}/subscriptions\" --data-urlencode \"object=instagram\" --data-urlencode \"callback_url=https://api.tdfrecords.net/instagram/webhook\" --data-urlencode \"fields=messages\" --data-urlencode \"verify_token=${INSTAGRAM_VERIFY_TOKEN}\" --data-urlencode \"access_token=${FACEBOOK_APP_ID}|${FACEBOOK_APP_SECRET}\"');\n   }\n \n   if (!fbSub) {\n     console.log('\\n\ud83d\udd27 To fix Facebook subscription:');\n-    console.log(`  curl -X POST \"https://graph.facebook.com/v18.0/${APP_ID}/subscriptions?object=page&callback_url=https%3A%2F%2Ftdf-hq.fly.dev%2Ffacebook%2Fwebhook&fields=messages&verify_token=${FB_MSG_TOKEN || 'YOUR_VERIFY_TOKEN'}&access_token=${APP_ID}|${APP_SECRET}\"`);\n+    console.log('  curl -X POST \"https://graph.facebook.com/v18.0/${FACEBOOK_APP_ID}/subscriptions\" --data-urlencode \"object=page\" --data-urlencode \"callback_url=https://api.tdfrecords.net/facebook/webhook\" --data-urlencode \"fields=messages\" --data-urlencode \"verify_token=YOUR_FACEBOOK_WEBHOOK_VERIFY_TOKEN\" --data-urlencode \"access_token=${FACEBOOK_APP_ID}|${FACEBOOK_APP_SECRET}\"');",
+      "path": "scripts/diagnose-social.mjs",
+      "commit_id": "5486b49144f9b0d5576cef5f2e59d927c66e334f",
+      "original_commit_id": "5486b49144f9b0d5576cef5f2e59d927c66e334f",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Use the configured token in the Facebook repair command**\n\nWhen the Facebook subscription is missing, copying this generated command submits the literal `YOUR_FACEBOOK_WEBHOOK_VERIFY_TOKEN`, even though no such environment variable or separate backend setting exists. The Facebook verifier in `tdf-hq/src/TDF/ServerExtra.hs` accepts the configured Facebook messaging token, with `INSTAGRAM_VERIFY_TOKEN` as fallback, so Meta's callback challenge will be rejected unless the operator notices and manually substitutes the placeholder; emit one of the configured accepted values as the Instagram command already does.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T16:40:15Z",
+      "updated_at": "2026-09-28T16:40:16Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124717234",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124717234"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124717234"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124717234/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 59,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 29,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124869582",
+      "pull_request_review_id": 5341998913,
+      "id": 4124869582,
+      "node_id": "PRRC_kwDOQPdUrM713IPO",
+      "diff_hunk": "@@ -52,12 +51,12 @@ async function main() {\n \n   if (!igSub) {\n     console.log('\\n\ud83d\udd27 To fix Instagram subscription:');\n-    console.log(`  curl -X POST \"https://graph.facebook.com/v18.0/${APP_ID}/subscriptions?object=instagram&callback_url=https%3A%2F%2Ftdf-hq.fly.dev%2Finstagram%2Fwebhook&fields=messages&verify_token=${IG_VERIFY_TOKEN || 'YOUR_VERIFY_TOKEN'}&access_token=${APP_ID}|${APP_SECRET}\"`);\n+    console.log('  curl -X POST \"https://graph.facebook.com/v18.0/${FACEBOOK_APP_ID}/subscriptions\" --data-urlencode \"object=instagram\" --data-urlencode \"callback_url=https://api.tdfrecords.net/instagram/webhook\" --data-urlencode \"fields=messages\" --data-urlencode \"verify_token=${INSTAGRAM_VERIFY_TOKEN}\" --data-urlencode \"access_token=${FACEBOOK_APP_ID}|${FACEBOOK_APP_SECRET}\"');",
+      "path": "scripts/diagnose-social.mjs",
+      "commit_id": "e762f67b2720b3337c8409b6c3b652224f090083",
+      "original_commit_id": "5486b49144f9b0d5576cef5f2e59d927c66e334f",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in e762f67b2720b3337c8409b6c3b652224f090083. The diagnostic now requires active=true and the exact current callback URL for each subscription. Missing, inactive or stale callbacks trigger the corresponding repair command and summary issue. Regression cases exercise both channels with stale URLs, inactive current URLs and active current URLs, without provider calls. All 115 messaging/enrichment regressions and the unchanged specification inventory check pass.",
+      "created_at": "2026-09-28T16:57:42Z",
+      "updated_at": "2026-09-28T16:57:43Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124869582",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124869582"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124869582"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124869582/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 54,
+      "side": "RIGHT",
+      "in_reply_to_id": 4124717225,
+      "author_association": "OWNER",
+      "original_position": 23,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124870424",
+      "pull_request_review_id": 5342000021,
+      "id": 4124870424,
+      "node_id": "PRRC_kwDOQPdUrM713IcY",
+      "diff_hunk": "@@ -52,12 +51,12 @@ async function main() {\n \n   if (!igSub) {\n     console.log('\\n\ud83d\udd27 To fix Instagram subscription:');\n-    console.log(`  curl -X POST \"https://graph.facebook.com/v18.0/${APP_ID}/subscriptions?object=instagram&callback_url=https%3A%2F%2Ftdf-hq.fly.dev%2Finstagram%2Fwebhook&fields=messages&verify_token=${IG_VERIFY_TOKEN || 'YOUR_VERIFY_TOKEN'}&access_token=${APP_ID}|${APP_SECRET}\"`);\n+    console.log('  curl -X POST \"https://graph.facebook.com/v18.0/${FACEBOOK_APP_ID}/subscriptions\" --data-urlencode \"object=instagram\" --data-urlencode \"callback_url=https://api.tdfrecords.net/instagram/webhook\" --data-urlencode \"fields=messages\" --data-urlencode \"verify_token=${INSTAGRAM_VERIFY_TOKEN}\" --data-urlencode \"access_token=${FACEBOOK_APP_ID}|${FACEBOOK_APP_SECRET}\"');\n   }\n \n   if (!fbSub) {\n     console.log('\\n\ud83d\udd27 To fix Facebook subscription:');\n-    console.log(`  curl -X POST \"https://graph.facebook.com/v18.0/${APP_ID}/subscriptions?object=page&callback_url=https%3A%2F%2Ftdf-hq.fly.dev%2Ffacebook%2Fwebhook&fields=messages&verify_token=${FB_MSG_TOKEN || 'YOUR_VERIFY_TOKEN'}&access_token=${APP_ID}|${APP_SECRET}\"`);\n+    console.log('  curl -X POST \"https://graph.facebook.com/v18.0/${FACEBOOK_APP_ID}/subscriptions\" --data-urlencode \"object=page\" --data-urlencode \"callback_url=https://api.tdfrecords.net/facebook/webhook\" --data-urlencode \"fields=messages\" --data-urlencode \"verify_token=YOUR_FACEBOOK_WEBHOOK_VERIFY_TOKEN\" --data-urlencode \"access_token=${FACEBOOK_APP_ID}|${FACEBOOK_APP_SECRET}\"');",
+      "path": "scripts/diagnose-social.mjs",
+      "commit_id": "5486b49144f9b0d5576cef5f2e59d927c66e334f",
+      "original_commit_id": "5486b49144f9b0d5576cef5f2e59d927c66e334f",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in e762f67b2720b3337c8409b6c3b652224f090083. The Facebook repair command now expands the configured FACEBOOK_MESSAGING_TOKEN, its supported FACEBOOK_PAGE_ACCESS_TOKEN alias, or INSTAGRAM_VERIFY_TOKEN fallback. These match the existing Config/ServerExtra verification contract. The command prints environment references rather than secret values. A local curl-stub regression executes all three expansions and verifies the accepted token is supplied without network writes. All 115 messaging/enrichment regressions and the unchanged specification inventory check pass.",
+      "created_at": "2026-09-28T16:57:49Z",
+      "updated_at": "2026-09-28T16:57:49Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124870424",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124870424"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124870424"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124870424/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 59,
+      "side": "RIGHT",
+      "in_reply_to_id": 4124717234,
+      "author_association": "OWNER",
+      "original_position": 29,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124902602",
+      "pull_request_review_id": 5342043933,
+      "id": 4124902602,
+      "node_id": "PRRC_kwDOQPdUrM713QTK",
+      "diff_hunk": "@@ -1,11 +1,87 @@\n-# Hetzner restore evidence \u2014 2026-09-28\n+# Hetzner cutover evidence \u2014 2026-09-28\n \n-## Result\n+## Live transition \u2014 validation incomplete\n \n-An isolated CPX12 restore serves trusted HTTPS health/version checks at\n-`https://api.tdfrecords.net`. Production remains on Fly. The production Pages\n-environment still uses `https://tdf-hq.fly.dev`; no live traffic or database\n-writes have been moved.\n+The authorized web-first traffic and writer transition occurred on 2026-09-28.\n+Cutover validation remains **incomplete**: Google interactive login and\n+authenticated uploads have not passed their end-to-end gates. No waiver of\n+those gates is recorded here. Production\n+`https://www.tdfrecords.net` now uses `https://api.tdfrecords.net` on the dedicated\n+Hetzner CPX12. Cloudflare deployment\n+`4f1e7744-460e-46c7-bdd9-b47d6ae706ad` succeeded at 14:42:14 UTC with frontend\n+merge `7e7106b36e7ac427711c2f64af650527d619f9ce` from reviewed PR #467.\n+Both production API bindings changed; all sixteen other bindings were preserved.\n+The backend runs the reviewed video-ingestion release `cc244b1f86603055997b51379b297baebfd3e7ce`.\n+All six post-merge main workflows completed successfully.\n+\n+| Final cutover check | Observed result |\n+| --- | --- |\n+| Old writers | TDF source role NOLOGIN; zero TDF connections; both old API machines stopped and cordoned |",
+      "path": "ops/hetzner/validation-2026-09-28.md",
+      "commit_id": "7f1d2d74877c5e603097e44cc643834e1932a69e",
+      "original_commit_id": "e762f67b2720b3337c8409b6c3b652224f090083",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Retarget the bundled artist importer**\n\nWith both old API machines stopped, running the active, tested importer without an explicit override still sends its mutating party POSTs to Fly because `tdf-hq/scripts/create_artists_from_list.sh:17` defaults `BASE_URL` to `https://tdf-hq.fly.dev`. Operators following the documented bundled-import flow will therefore fail against the retired backend rather than create parties in the live Hetzner database; retarget this default alongside the other manual artist tools.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T17:01:27Z",
+      "updated_at": "2026-09-28T17:01:27Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124902602",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124902602"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124902602"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124902602/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 19,
+      "original_line": 19,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 25,
+      "position": 25,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124902612",
+      "pull_request_review_id": 5342043933,
+      "id": 4124902612,
+      "node_id": "PRRC_kwDOQPdUrM713QTU",
+      "diff_hunk": "@@ -1,11 +1,87 @@\n-# Hetzner restore evidence \u2014 2026-09-28\n+# Hetzner cutover evidence \u2014 2026-09-28\n \n-## Result\n+## Live transition \u2014 validation incomplete\n \n-An isolated CPX12 restore serves trusted HTTPS health/version checks at\n-`https://api.tdfrecords.net`. Production remains on Fly. The production Pages\n-environment still uses `https://tdf-hq.fly.dev`; no live traffic or database\n-writes have been moved.\n+The authorized web-first traffic and writer transition occurred on 2026-09-28.\n+Cutover validation remains **incomplete**: Google interactive login and\n+authenticated uploads have not passed their end-to-end gates. No waiver of\n+those gates is recorded here. Production\n+`https://www.tdfrecords.net` now uses `https://api.tdfrecords.net` on the dedicated\n+Hetzner CPX12. Cloudflare deployment\n+`4f1e7744-460e-46c7-bdd9-b47d6ae706ad` succeeded at 14:42:14 UTC with frontend\n+merge `7e7106b36e7ac427711c2f64af650527d619f9ce` from reviewed PR #467.\n+Both production API bindings changed; all sixteen other bindings were preserved.\n+The backend runs the reviewed video-ingestion release `cc244b1f86603055997b51379b297baebfd3e7ce`.\n+All six post-merge main workflows completed successfully.\n+\n+| Final cutover check | Observed result |\n+| --- | --- |\n+| Old writers | TDF source role NOLOGIN; zero TDF connections; both old API machines stopped and cordoned |\n+| Shared Fly database | Retained running for Trader; four Trader connections observed after cleanup |\n+| Final export | 10,215,235 bytes; SHA256 `b94ed77e2de06f57be280691c5e197b5eecfbf19480798c38b21b30c20e52541` |\n+| Restore equivalence | All 616 original tables / 33,189 rows match by sorted row-content hash before migrations |\n+| Guarded schema | 115 ledger entries, 623 public tables; schema and emergency database-readiness checks passed |\n+| Assets | 62 uploaded files / 15,399,112 bytes preserved; all 37 referenced local image URLs returned HTTPS 200 |\n+| Final restricted canary | 64/64 reads passed; concurrency 8; median 165.69 ms, p95 279.26 ms; outbound access blocked |\n+| Live writer transition | Canary stopped, reader NOLOGIN, production role LOGIN with fresh credentials; live health and exact version passed |\n+| Browser | Directory search and video feed use the new API with HTTP 200; records page 11 images, zero broken |\n+| Event preview | `/directory/events/24` and canonical `/eventos/24` return 200; event-specific title and canonical metadata present |\n+| Payment callbacks | Existing PayPal and Stripe webhook URLs updated; IDs, secrets and subscribed event types preserved |",
+      "path": "ops/hetzner/validation-2026-09-28.md",
+      "commit_id": "7f1d2d74877c5e603097e44cc643834e1932a69e",
+      "original_commit_id": "e762f67b2720b3337c8409b6c3b652224f090083",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Retarget payment webhook runbooks**\n\nWhen a Stripe or PayPal callback must be recreated, the production instructions still direct operators to the stopped backend: `SERVICE_STOREFRONT_DEPLOYMENT.md:49-50`, `STRIPE_DEPLOYMENT_GUIDE.md:30`, `STRIPE_TICKETING_CHECKLIST.md:21`, and `scripts/test-stripe-integration.sh:98` all prescribe `tdf-hq.fly.dev`. Following any of these after the recorded callback migration would route payment events away from the live API, so update the active payment runbooks and helper output to the canonical Hetzner endpoints.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T17:01:27Z",
+      "updated_at": "2026-09-28T17:01:27Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124902612",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124902612"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124902612"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124902612/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 29,
+      "original_line": 29,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 35,
+      "position": 35,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124902624",
+      "pull_request_review_id": 5342043933,
+      "id": 4124902624,
+      "node_id": "PRRC_kwDOQPdUrM713QTg",
+      "diff_hunk": "@@ -47,17 +46,20 @@ async function main() {\n   const igSub = subs.data?.find(s => s.object === 'instagram');\n   const fbSub = subs.data?.find(s => s.object === 'page');\n \n-  check('Instagram webhook subscribed', !!igSub, igSub ? `callback=${igSub.callback_url}, active=${igSub.active}` : 'missing');\n-  check('Facebook webhook subscribed', !!fbSub, fbSub ? `callback=${fbSub.callback_url}, active=${fbSub.active}` : 'missing');\n+  const igSubscribed = igSub?.active === true && igSub.callback_url === 'https://api.tdfrecords.net/instagram/webhook';\n+  const fbSubscribed = fbSub?.active === true && fbSub.callback_url === 'https://api.tdfrecords.net/facebook/webhook';\n \n-  if (!igSub) {\n+  check('Instagram webhook subscribed', igSubscribed, igSub ? `callback=${igSub.callback_url}, active=${igSub.active}` : 'missing');\n+  check('Facebook webhook subscribed', fbSubscribed, fbSub ? `callback=${fbSub.callback_url}, active=${fbSub.active}` : 'missing');\n+\n+  if (!igSubscribed) {\n     console.log('\\n\ud83d\udd27 To fix Instagram subscription:');\n-    console.log(`  curl -X POST \"https://graph.facebook.com/v18.0/${APP_ID}/subscriptions?object=instagram&callback_url=https%3A%2F%2Ftdf-hq.fly.dev%2Finstagram%2Fwebhook&fields=messages&verify_token=${IG_VERIFY_TOKEN || 'YOUR_VERIFY_TOKEN'}&access_token=${APP_ID}|${APP_SECRET}\"`);\n+    console.log('  curl -X POST \"https://graph.facebook.com/v18.0/${FACEBOOK_APP_ID}/subscriptions\" --data-urlencode \"object=instagram\" --data-urlencode \"callback_url=https://api.tdfrecords.net/instagram/webhook\" --data-urlencode \"fields=messages\" --data-urlencode \"verify_token=${INSTAGRAM_VERIFY_TOKEN}\" --data-urlencode \"access_token=${FACEBOOK_APP_ID}|${FACEBOOK_APP_SECRET}\"');",
+      "path": "scripts/diagnose-social.mjs",
+      "commit_id": "e762f67b2720b3337c8409b6c3b652224f090083",
+      "original_commit_id": "e762f67b2720b3337c8409b6c3b652224f090083",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Honor aliases in the Instagram repair command**\n\nWhen the diagnostic is run with the aliases it explicitly accepts (`META_APP_ID`/`META_APP_SECRET`), or with the backend-supported `IG_VERIFY_TOKEN`, it can detect a stale subscription but the printed command expands only `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`, and `INSTAGRAM_VERIFY_TOKEN`. Copying that command therefore submits an empty app path, access token, or verify token even though the diagnostic itself had valid credentials; use shell fallbacks for the accepted aliases without interpolating their secret values.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T17:01:27Z",
+      "updated_at": "2026-09-28T17:01:27Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124902624",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124902624"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124902624"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4124902624/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 57,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 34,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4125002009",
+      "pull_request_review_id": 5342179091,
+      "id": 4125002009,
+      "node_id": "PRRC_kwDOQPdUrM713okZ",
+      "diff_hunk": "@@ -1,11 +1,87 @@\n-# Hetzner restore evidence \u2014 2026-09-28\n+# Hetzner cutover evidence \u2014 2026-09-28\n \n-## Result\n+## Live transition \u2014 validation incomplete\n \n-An isolated CPX12 restore serves trusted HTTPS health/version checks at\n-`https://api.tdfrecords.net`. Production remains on Fly. The production Pages\n-environment still uses `https://tdf-hq.fly.dev`; no live traffic or database\n-writes have been moved.\n+The authorized web-first traffic and writer transition occurred on 2026-09-28.\n+Cutover validation remains **incomplete**: Google interactive login and\n+authenticated uploads have not passed their end-to-end gates. No waiver of\n+those gates is recorded here. Production\n+`https://www.tdfrecords.net` now uses `https://api.tdfrecords.net` on the dedicated\n+Hetzner CPX12. Cloudflare deployment\n+`4f1e7744-460e-46c7-bdd9-b47d6ae706ad` succeeded at 14:42:14 UTC with frontend\n+merge `7e7106b36e7ac427711c2f64af650527d619f9ce` from reviewed PR #467.\n+Both production API bindings changed; all sixteen other bindings were preserved.\n+The backend runs the reviewed video-ingestion release `cc244b1f86603055997b51379b297baebfd3e7ce`.\n+All six post-merge main workflows completed successfully.\n+\n+| Final cutover check | Observed result |\n+| --- | --- |\n+| Old writers | TDF source role NOLOGIN; zero TDF connections; both old API machines stopped and cordoned |",
+      "path": "ops/hetzner/validation-2026-09-28.md",
+      "commit_id": "7f1d2d74877c5e603097e44cc643834e1932a69e",
+      "original_commit_id": "e762f67b2720b3337c8409b6c3b652224f090083",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 36aff567c1d6daeb63088a765dc5e48e69fe2d09. The bundled importer now defaults to https://api.tdfrecords.net while preserving BASE_URL overrides, reviewed entity types and stable idempotency keys. The curl-stub regression verifies all 31 default requests, override routing, retry identity and fail-fast behavior. The login-helper production example is also corrected. No parties were created. All 121 helper/token/enrichment/import tests, 34 CI/evidence regressions, three inventory tests and the current inventory check pass.",
+      "created_at": "2026-09-28T17:12:52Z",
+      "updated_at": "2026-09-28T17:12:53Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4125002009",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4125002009"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4125002009"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4125002009/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 19,
+      "original_line": 19,
+      "side": "RIGHT",
+      "in_reply_to_id": 4124902602,
+      "author_association": "OWNER",
+      "original_position": 25,
+      "position": 25,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4125002935",
+      "pull_request_review_id": 5342180308,
+      "id": 4125002935,
+      "node_id": "PRRC_kwDOQPdUrM713oy3",
+      "diff_hunk": "@@ -1,11 +1,87 @@\n-# Hetzner restore evidence \u2014 2026-09-28\n+# Hetzner cutover evidence \u2014 2026-09-28\n \n-## Result\n+## Live transition \u2014 validation incomplete\n \n-An isolated CPX12 restore serves trusted HTTPS health/version checks at\n-`https://api.tdfrecords.net`. Production remains on Fly. The production Pages\n-environment still uses `https://tdf-hq.fly.dev`; no live traffic or database\n-writes have been moved.\n+The authorized web-first traffic and writer transition occurred on 2026-09-28.\n+Cutover validation remains **incomplete**: Google interactive login and\n+authenticated uploads have not passed their end-to-end gates. No waiver of\n+those gates is recorded here. Production\n+`https://www.tdfrecords.net` now uses `https://api.tdfrecords.net` on the dedicated\n+Hetzner CPX12. Cloudflare deployment\n+`4f1e7744-460e-46c7-bdd9-b47d6ae706ad` succeeded at 14:42:14 UTC with frontend\n+merge `7e7106b36e7ac427711c2f64af650527d619f9ce` from reviewed PR #467.\n+Both production API bindings changed; all sixteen other bindings were preserved.\n+The backend runs the reviewed video-ingestion release `cc244b1f86603055997b51379b297baebfd3e7ce`.\n+All six post-merge main workflows completed successfully.\n+\n+| Final cutover check | Observed result |\n+| --- | --- |\n+| Old writers | TDF source role NOLOGIN; zero TDF connections; both old API machines stopped and cordoned |\n+| Shared Fly database | Retained running for Trader; four Trader connections observed after cleanup |\n+| Final export | 10,215,235 bytes; SHA256 `b94ed77e2de06f57be280691c5e197b5eecfbf19480798c38b21b30c20e52541` |\n+| Restore equivalence | All 616 original tables / 33,189 rows match by sorted row-content hash before migrations |\n+| Guarded schema | 115 ledger entries, 623 public tables; schema and emergency database-readiness checks passed |\n+| Assets | 62 uploaded files / 15,399,112 bytes preserved; all 37 referenced local image URLs returned HTTPS 200 |\n+| Final restricted canary | 64/64 reads passed; concurrency 8; median 165.69 ms, p95 279.26 ms; outbound access blocked |\n+| Live writer transition | Canary stopped, reader NOLOGIN, production role LOGIN with fresh credentials; live health and exact version passed |\n+| Browser | Directory search and video feed use the new API with HTTP 200; records page 11 images, zero broken |\n+| Event preview | `/directory/events/24` and canonical `/eventos/24` return 200; event-specific title and canonical metadata present |\n+| Payment callbacks | Existing PayPal and Stripe webhook URLs updated; IDs, secrets and subscribed event types preserved |",
+      "path": "ops/hetzner/validation-2026-09-28.md",
+      "commit_id": "7f1d2d74877c5e603097e44cc643834e1932a69e",
+      "original_commit_id": "e762f67b2720b3337c8409b6c3b652224f090083",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 36aff567c1d6daeb63088a765dc5e48e69fe2d09. Updated all identified active payment callback URLs and helper output to the canonical API. The guides point to the current guarded runtime procedure and preserve webhook IDs/signing secrets and existing provider/environment gates; obsolete deployment instructions are removed or explicitly marked historical. The helper no longer claims unperformed payment tests passed and fails on an unhealthy/unreachable health probe, covered by a mocked regression in the existing repo-quality suite. No payment, webhook or deployment was performed. All 121 helper/token/enrichment/import tests, 34 CI/evidence regressions, three inventory tests and the current inventory check pass.",
+      "created_at": "2026-09-28T17:12:58Z",
+      "updated_at": "2026-09-28T17:12:58Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4125002935",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4125002935"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4125002935"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4125002935/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 29,
+      "original_line": 29,
+      "side": "RIGHT",
+      "in_reply_to_id": 4124902612,
+      "author_association": "OWNER",
+      "original_position": 35,
+      "position": 35,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4125003794",
+      "pull_request_review_id": 5342181693,
+      "id": 4125003794,
+      "node_id": "PRRC_kwDOQPdUrM713pAS",
+      "diff_hunk": "@@ -47,17 +46,20 @@ async function main() {\n   const igSub = subs.data?.find(s => s.object === 'instagram');\n   const fbSub = subs.data?.find(s => s.object === 'page');\n \n-  check('Instagram webhook subscribed', !!igSub, igSub ? `callback=${igSub.callback_url}, active=${igSub.active}` : 'missing');\n-  check('Facebook webhook subscribed', !!fbSub, fbSub ? `callback=${fbSub.callback_url}, active=${fbSub.active}` : 'missing');\n+  const igSubscribed = igSub?.active === true && igSub.callback_url === 'https://api.tdfrecords.net/instagram/webhook';\n+  const fbSubscribed = fbSub?.active === true && fbSub.callback_url === 'https://api.tdfrecords.net/facebook/webhook';\n \n-  if (!igSub) {\n+  check('Instagram webhook subscribed', igSubscribed, igSub ? `callback=${igSub.callback_url}, active=${igSub.active}` : 'missing');\n+  check('Facebook webhook subscribed', fbSubscribed, fbSub ? `callback=${fbSub.callback_url}, active=${fbSub.active}` : 'missing');\n+\n+  if (!igSubscribed) {\n     console.log('\\n\ud83d\udd27 To fix Instagram subscription:');\n-    console.log(`  curl -X POST \"https://graph.facebook.com/v18.0/${APP_ID}/subscriptions?object=instagram&callback_url=https%3A%2F%2Ftdf-hq.fly.dev%2Finstagram%2Fwebhook&fields=messages&verify_token=${IG_VERIFY_TOKEN || 'YOUR_VERIFY_TOKEN'}&access_token=${APP_ID}|${APP_SECRET}\"`);\n+    console.log('  curl -X POST \"https://graph.facebook.com/v18.0/${FACEBOOK_APP_ID}/subscriptions\" --data-urlencode \"object=instagram\" --data-urlencode \"callback_url=https://api.tdfrecords.net/instagram/webhook\" --data-urlencode \"fields=messages\" --data-urlencode \"verify_token=${INSTAGRAM_VERIFY_TOKEN}\" --data-urlencode \"access_token=${FACEBOOK_APP_ID}|${FACEBOOK_APP_SECRET}\"');",
+      "path": "scripts/diagnose-social.mjs",
+      "commit_id": "e762f67b2720b3337c8409b6c3b652224f090083",
+      "original_commit_id": "e762f67b2720b3337c8409b6c3b652224f090083",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 36aff567c1d6daeb63088a765dc5e48e69fe2d09. Both printed callback commands now retain FACEBOOK/META app credential fallbacks and INSTAGRAM_VERIFY_TOKEN/IG_VERIFY_TOKEN fallback without interpolating secret values. A local curl-stub regression verifies canonical and alias-only configurations expand the correct app URL, access token and verifier. Existing Facebook primary/alias/fallback and redaction tests still pass. All 121 helper/token/enrichment/import tests, 34 CI/evidence regressions, three inventory tests and the current inventory check pass.",
+      "created_at": "2026-09-28T17:13:04Z",
+      "updated_at": "2026-09-28T17:13:04Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4125003794",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4125003794"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4125003794"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4125003794/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 57,
+      "side": "RIGHT",
+      "in_reply_to_id": 4124902624,
+      "author_association": "OWNER",
+      "original_position": 34,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4125036632",
+      "pull_request_review_id": 5342226185,
+      "id": 4125036632,
+      "node_id": "PRRC_kwDOQPdUrM713xBY",
+      "diff_hunk": "@@ -16,7 +16,7 @@ import { promisify } from 'node:util';\n import { fileURLToPath } from 'node:url';\n \n const execFileAsync = promisify(execFile);\n-const DEFAULT_API_BASE = 'https://tdf-hq.fly.dev';\n+const DEFAULT_API_BASE = 'https://api.tdfrecords.net';",
+      "path": "scripts/artist-enrichment.mjs",
+      "commit_id": "7f1d2d74877c5e603097e44cc643834e1932a69e",
+      "original_commit_id": "36aff567c1d6daeb63088a765dc5e48e69fe2d09",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Recognize the Hetzner asset host as managed**\n\nWhen enrichment now runs against the new production API, artist hero images served from `https://api.tdfrecords.net/assets/serve/...` are still rejected by `isTdfManagedImageUrl`, whose allowlist only includes the retired Fly host and `.tdfrecords.com`. Production and audit runs consequently call `persistHotlinkReview`, persist a false `link_validation_broken` source, and report `existing_third_party_hotlink_requires_authorized_ingestion` for first-party assets; add the canonical `.net` API host to the managed-image check and cover it in the retargeting test.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T17:16:43Z",
+      "updated_at": "2026-09-28T17:16:43Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4125036632",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4125036632"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4125036632"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4125036632/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 19,
+      "original_line": 19,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 5,
+      "position": 5,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4125036642",
+      "pull_request_review_id": 5342226185,
+      "id": 4125036642,
+      "node_id": "PRRC_kwDOQPdUrM713xBi",
+      "diff_hunk": "@@ -1,11 +1,87 @@\n-# Hetzner restore evidence \u2014 2026-09-28\n+# Hetzner cutover evidence \u2014 2026-09-28\n \n-## Result\n+## Live transition \u2014 validation incomplete\n \n-An isolated CPX12 restore serves trusted HTTPS health/version checks at\n-`https://api.tdfrecords.net`. Production remains on Fly. The production Pages\n-environment still uses `https://tdf-hq.fly.dev`; no live traffic or database\n-writes have been moved.\n+The authorized web-first traffic and writer transition occurred on 2026-09-28.\n+Cutover validation remains **incomplete**: Google interactive login and\n+authenticated uploads have not passed their end-to-end gates. No waiver of\n+those gates is recorded here. Production\n+`https://www.tdfrecords.net` now uses `https://api.tdfrecords.net` on the dedicated\n+Hetzner CPX12. Cloudflare deployment\n+`4f1e7744-460e-46c7-bdd9-b47d6ae706ad` succeeded at 14:42:14 UTC with frontend\n+merge `7e7106b36e7ac427711c2f64af650527d619f9ce` from reviewed PR #467.\n+Both production API bindings changed; all sixteen other bindings were preserved.\n+The backend runs the reviewed video-ingestion release `cc244b1f86603055997b51379b297baebfd3e7ce`.\n+All six post-merge main workflows completed successfully.\n+\n+| Final cutover check | Observed result |\n+| --- | --- |\n+| Old writers | TDF source role NOLOGIN; zero TDF connections; both old API machines stopped and cordoned |\n+| Shared Fly database | Retained running for Trader; four Trader connections observed after cleanup |",
+      "path": "ops/hetzner/validation-2026-09-28.md",
+      "commit_id": "7f1d2d74877c5e603097e44cc643834e1932a69e",
+      "original_commit_id": "36aff567c1d6daeb63088a765dc5e48e69fe2d09",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Retarget the production catalog inventory**\n\nWith both old API machines stopped and the TDF Fly role disabled, the documented production inventory command can no longer inspect production: `scripts/production-catalog-inventory.mjs:192-213` still fetches Fly health/version, lists Fly machines, and shells into the retained Fly database. It will either fail on the stopped API or, if the app is restarted, inventory the stale pre-cutover TDF database rather than Hetzner, so catalog governance reports can no longer be refreshed accurately; retarget this helper to the current deployment or explicitly retire it.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T17:16:43Z",
+      "updated_at": "2026-09-28T17:16:43Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4125036642",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4125036642"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4125036642"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4125036642/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 19,
+      "original_start_line": 19,
+      "start_side": "RIGHT",
+      "line": 20,
+      "original_line": 20,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 26,
+      "position": 26,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4125036647",
+      "pull_request_review_id": 5342226185,
+      "id": 4125036647,
+      "node_id": "PRRC_kwDOQPdUrM713xBn",
+      "diff_hunk": "@@ -1,11 +1,87 @@\n-# Hetzner restore evidence \u2014 2026-09-28\n+# Hetzner cutover evidence \u2014 2026-09-28\n \n-## Result\n+## Live transition \u2014 validation incomplete\n \n-An isolated CPX12 restore serves trusted HTTPS health/version checks at\n-`https://api.tdfrecords.net`. Production remains on Fly. The production Pages\n-environment still uses `https://tdf-hq.fly.dev`; no live traffic or database\n-writes have been moved.\n+The authorized web-first traffic and writer transition occurred on 2026-09-28.\n+Cutover validation remains **incomplete**: Google interactive login and\n+authenticated uploads have not passed their end-to-end gates. No waiver of\n+those gates is recorded here. Production\n+`https://www.tdfrecords.net` now uses `https://api.tdfrecords.net` on the dedicated\n+Hetzner CPX12. Cloudflare deployment\n+`4f1e7744-460e-46c7-bdd9-b47d6ae706ad` succeeded at 14:42:14 UTC with frontend\n+merge `7e7106b36e7ac427711c2f64af650527d619f9ce` from reviewed PR #467.\n+Both production API bindings changed; all sixteen other bindings were preserved.\n+The backend runs the reviewed video-ingestion release `cc244b1f86603055997b51379b297baebfd3e7ce`.\n+All six post-merge main workflows completed successfully.\n+\n+| Final cutover check | Observed result |\n+| --- | --- |\n+| Old writers | TDF source role NOLOGIN; zero TDF connections; both old API machines stopped and cordoned |\n+| Shared Fly database | Retained running for Trader; four Trader connections observed after cleanup |\n+| Final export | 10,215,235 bytes; SHA256 `b94ed77e2de06f57be280691c5e197b5eecfbf19480798c38b21b30c20e52541` |\n+| Restore equivalence | All 616 original tables / 33,189 rows match by sorted row-content hash before migrations |\n+| Guarded schema | 115 ledger entries, 623 public tables; schema and emergency database-readiness checks passed |\n+| Assets | 62 uploaded files / 15,399,112 bytes preserved; all 37 referenced local image URLs returned HTTPS 200 |\n+| Final restricted canary | 64/64 reads passed; concurrency 8; median 165.69 ms, p95 279.26 ms; outbound access blocked |\n+| Live writer transition | Canary stopped, reader NOLOGIN, production role LOGIN with fresh credentials; live health and exact version passed |\n+| Browser | Directory search and video feed use the new API with HTTP 200; records page 11 images, zero broken |\n+| Event preview | `/directory/events/24` and canonical `/eventos/24` return 200; event-specific title and canonical metadata present |\n+| Payment callbacks | Existing PayPal and Stripe webhook URLs updated; IDs, secrets and subscribed event types preserved |\n+| Signature rejection | Invalid Stripe signature 400; invalid PayPal signature 401; no real charge created |\n+| Mail | SMTP STARTTLS and credential authentication passed without sending a message |",
+      "path": "ops/hetzner/validation-2026-09-28.md",
+      "commit_id": "7f1d2d74877c5e603097e44cc643834e1932a69e",
+      "original_commit_id": "36aff567c1d6daeb63088a765dc5e48e69fe2d09",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Move mail monitoring off the stopped Fly API**\n\nAfter this cutover, the installed daily mail-deliverability monitor cannot read the mailbox credentials: `scripts/mail-deliverability-monitor.py:125-140` requires a healthy `tdf-hq` Fly API machine and obtains `SMTP_USERNAME`/`SMTP_PASSWORD` through `flyctl ssh`, while the runbook says both machines are stopped. Every scheduled run will therefore record `mailbox_read_failed` and skip bounce/DMARC mailbox collection; update the monitor and its installed copy to use an authorized Hetzner secret source.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T17:16:43Z",
+      "updated_at": "2026-09-28T17:16:43Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4125036647",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4125036647"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4125036647"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4125036647/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 31,
+      "original_line": 31,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 37,
+      "position": 37,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4125787865",
+      "pull_request_review_id": 5343121311,
+      "id": 4125787865,
+      "node_id": "PRRC_kwDOQPdUrM716obZ",
+      "diff_hunk": "@@ -16,7 +16,7 @@ import { promisify } from 'node:util';\n import { fileURLToPath } from 'node:url';\n \n const execFileAsync = promisify(execFile);\n-const DEFAULT_API_BASE = 'https://tdf-hq.fly.dev';\n+const DEFAULT_API_BASE = 'https://api.tdfrecords.net';",
+      "path": "scripts/artist-enrichment.mjs",
+      "commit_id": "7f1d2d74877c5e603097e44cc643834e1932a69e",
+      "original_commit_id": "36aff567c1d6daeb63088a765dc5e48e69fe2d09",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 7f1d2d74877c5e603097e44cc643834e1932a69e. Added only the exact canonical api.tdfrecords.net host to managed-image recognition, retaining existing managed/legacy hosts. Canonical assets no longer receive third-party hotlink reviews solely because of the cutover. Regressions accept the canonical asset and existing legacy/Drive hosts while rejecting lookalike hosts, unrelated third-party hosts and malformed URLs. All 122 helper/token/enrichment/import tests and the current specification inventory check pass.",
+      "created_at": "2026-09-28T18:41:42Z",
+      "updated_at": "2026-09-28T18:41:42Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4125787865",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4125787865"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4125787865"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4125787865/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 19,
+      "original_line": 19,
+      "side": "RIGHT",
+      "in_reply_to_id": 4125036632,
+      "author_association": "OWNER",
+      "original_position": 5,
+      "position": 5,
+      "subject_type": "line"
+    }
+  ]
+]

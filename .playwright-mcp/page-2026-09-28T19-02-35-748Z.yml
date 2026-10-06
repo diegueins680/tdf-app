@@ -1,0 +1,841 @@
+- generic [active] [ref=f12e1]:
+  - link "Skip to main content" [ref=f12e2144] [cursor=pointer]:
+    - /url: /synthetics/edit/r2d-i82-3jy#single-page-app_layout_page__main-content
+  - generic [ref=f12e4]:
+    - generic [ref=f12e5]:
+      - generic [ref=f12e6]:
+        - generic [ref=f12e7]:
+          - generic [ref=f12e8]: Welcome, Diego!
+          - generic [ref=f12e9]:
+            - button "Get Started" [ref=f12e1145] [cursor=pointer]
+            - generic [ref=f12e13]:
+              - generic [ref=f12e14]:
+                - text: You are
+                - generic [ref=f12e15]: 33%
+                - text: done setting up
+              - generic "33.3%" [ref=f12e1146]
+        - generic [ref=f12e19]:
+          - generic [ref=f12e20]: You have 1 day left in your trial.
+          - link "Upgrade" [ref=f12e1147] [cursor=pointer]:
+            - /url: /billing/plan/subscribe
+      - generic [ref=f12e23]:
+        - button "Search Datadog" [ref=f12e1148] [cursor=pointer]:
+          - text: Search Datadog
+          - generic [ref=f12e2145]:
+            - generic "⌘" [ref=f12e2146]
+            - generic "k" [ref=f12e2147]
+        - button "Toggle Bits Chat" [ref=f12e1151] [cursor=pointer]:
+          - generic [ref=f12e36]: Ask Bits
+      - navigation "Main" [ref=f12e1152]:
+        - group "Header" [ref=f12e1153]:
+          - generic [ref=f12e39]:
+            - link "Home" [ref=f12e1154] [cursor=pointer]:
+              - /url: /help/quick_start
+            - generic:
+              - button "Hide menu" [ref=f12e1155] [cursor=pointer]
+              - button "Minimize menu" [ref=f12e1156] [cursor=pointer]
+        - generic [ref=f12e51]:
+          - list "Datadog products" [ref=f12e1157]:
+            - listitem [ref=f12e54]:
+              - link "Bits AI" [ref=f12e1158] [cursor=pointer]:
+                - /url: /ask
+            - listitem [ref=f12e62]:
+              - link "Dashboards" [ref=f12e1159] [cursor=pointer]:
+                - /url: /dashboard/lists
+            - listitem [ref=f12e70]:
+              - link "Monitoring" [ref=f12e1160] [cursor=pointer]:
+                - /url: /monitors/manage
+            - listitem [ref=f12e78]:
+              - link "Developer Portal" [ref=f12e1161] [cursor=pointer]:
+                - /url: /idp/home
+            - listitem [ref=f12e86]:
+              - link "Incident Response" [ref=f12e1162] [cursor=pointer]:
+                - /url: /incidents
+            - listitem [ref=f12e94]:
+              - link "Automation" [ref=f12e1163] [cursor=pointer]:
+                - /url: /actions
+            - listitem [ref=f12e102]:
+              - link "Infrastructure" [ref=f12e1164] [cursor=pointer]:
+                - /url: /infrastructure
+            - listitem [ref=f12e110]:
+              - link "Cloud Cost" [ref=f12e1165] [cursor=pointer]:
+                - /url: /cost/onboarding
+            - listitem [ref=f12e118]:
+              - link "APM" [ref=f12e1166] [cursor=pointer]:
+                - /url: /apm/home
+            - listitem [ref=f12e126]:
+              - link "Digital Experience" [ref=f12e1167] [cursor=pointer]:
+                - /url: /synthetics/tests
+            - listitem [ref=f12e134]:
+              - link "Software Delivery" [ref=f12e1168] [cursor=pointer]:
+                - /url: /ci
+            - listitem [ref=f12e142]:
+              - link "Security" [ref=f12e1169] [cursor=pointer]:
+                - /url: /security/getting-started
+            - listitem [ref=f12e150]:
+              - link "Data Observability" [ref=f12e1170] [cursor=pointer]:
+                - /url: /data-obs
+            - listitem [ref=f12e158]:
+              - link "AI Observability" [ref=f12e1171] [cursor=pointer]:
+                - /url: /llm
+            - listitem [ref=f12e166]:
+              - link "Errors" [ref=f12e1172] [cursor=pointer]:
+                - /url: /error-tracking
+            - listitem [ref=f12e174]:
+              - link "Metrics" [ref=f12e1173] [cursor=pointer]:
+                - /url: /metric/overview
+            - listitem [ref=f12e182]:
+              - link "Logs" [ref=f12e1174] [cursor=pointer]:
+                - /url: /logs
+          - button [ref=f12e190] [cursor=pointer]
+          - generic [ref=f12e191]:
+            - list "Useful links and tools" [ref=f12e1175]:
+              - listitem [ref=f12e193]:
+                - link "Integrations" [ref=f12e1176] [cursor=pointer]:
+                  - /url: /integrations
+              - listitem [ref=f12e201]:
+                - link "Profile" [ref=f12e1177] [cursor=pointer]:
+                  - /url: /personal-settings
+                  - generic [ref=f12e209]:
+                    - generic [ref=f12e211]:
+                      - generic [ref=f12e212]: cuco.saa@gmail.com
+                      - generic [ref=f12e215]: cuco.saa@gmail.com
+                    - generic [ref=f12e217]:
+                      - text: TDF Records
+                      - generic [ref=f12e218]: TDF Records
+            - generic [ref=f12e220]:
+              - link "Invite" [disabled] [ref=f12e1178] [cursor=pointer]:
+                - /url: /organization-settings/users/invite
+              - button "Support" [disabled] [ref=f12e1179] [cursor=pointer]
+              - link "NEW Help" [ref=f12e1180] [cursor=pointer]:
+                - /url: /help
+                - generic [ref=f12e235]:
+                  - generic [ref=f12e236]: NEW
+                  - generic [ref=f12e242]: Help
+    - generic [ref=f12e2150]:
+      - generic [ref=f12e2152]:
+        - link "Test List" [ref=f12e2154] [cursor=pointer]:
+          - /url: /synthetics/tests
+        - generic [ref=f12e2159]: /
+        - generic [ref=f12e2160]: TDF production API health contract
+      - generic [ref=f12e2170]:
+        - generic [ref=f12e2171]:
+          - generic [ref=f12e2172]: Edit Test
+          - link "View Results" [ref=f12e2179] [cursor=pointer]:
+            - /url: /synthetics/details/r2d-i82-3jy/
+        - generic [ref=f12e2184]:
+          - button "Documentation" [ref=f12e2187] [cursor=pointer]
+          - button "Expand" [ref=f12e2193] [cursor=pointer]
+      - generic [ref=f12e2199]:
+        - generic [ref=f12e2201]:
+          - generic [ref=f12e2202]:
+            - button "Step 1 Request Type" [expanded] [ref=f12e2203] [cursor=pointer]:
+              - generic "Step 1" [ref=f12e2204]: "1"
+              - generic [ref=f12e2207]: Request Type
+            - generic [ref=f12e2209]:
+              - radiogroup [ref=f12e2210]:
+                - radio "HTTP" [checked] [ref=f12e2212] [cursor=pointer]
+              - generic [ref=f12e2213]: Request type can't be changed in existing tests
+          - generic [ref=f12e2214]:
+            - button "Step 2 Define Request" [expanded] [ref=f12e2215] [cursor=pointer]:
+              - generic "Step 2" [ref=f12e2216]: "2"
+              - generic [ref=f12e2219]: Define Request
+            - generic [ref=f12e2221]:
+              - generic [ref=f12e2224]:
+                - generic [ref=f12e2225]: URL*
+                - group [ref=f12e2227]:
+                  - button [ref=f12e2229]:
+                    - option "GET" [selected] [ref=f12e2233] [cursor=pointer]
+                  - generic [ref=f12e2234]:
+                    - textbox "https://www.example.com" [ref=f12e2239]: https://tdf-hq.fly.dev/health
+                    - generic [ref=f12e2240]: "{{"
+                  - button "Send" [ref=f12e2243] [cursor=pointer]
+                - button "Advanced Options (1 configured)" [ref=f12e2245] [cursor=pointer]
+              - generic [ref=f12e2247]:
+                - generic [ref=f12e2248]:
+                  - generic [ref=f12e2249]: Name*
+                  - textbox "Name*" [ref=f12e2256]:
+                    - /placeholder: Give your test a name
+                    - text: TDF production API health contract
+                - generic [ref=f12e2259]:
+                  - generic [ref=f12e2260]:
+                    - generic [ref=f12e2261]: Environment
+                    - button "Environment tags" [ref=f12e2264]:
+                      - generic [ref=f12e2265] [cursor=pointer]:
+                        - generic [ref=f12e2267]:
+                          - option [selected] [ref=f12e2271]: production
+                          - option "production" [selected] [ref=f12e2276]
+                        - button "Clear all" [ref=f12e2277]
+                  - generic [ref=f12e2280]:
+                    - generic [ref=f12e2281]: Team
+                    - button "Select Teams" [ref=f12e2284]:
+                      - generic [ref=f12e2287] [cursor=pointer]:
+                        - generic [ref=f12e2288]: Select Teams
+                        - generic: Select Teams
+                  - generic [ref=f12e2290]:
+                    - generic [ref=f12e2291]: Additional Tags
+                    - button "Additional tags" [ref=f12e2294]:
+                      - generic [ref=f12e2295] [cursor=pointer]:
+                        - generic [ref=f12e2297]:
+                          - generic [ref=f12e2300]:
+                            - option [selected] [ref=f12e2305]: e2e-tests
+                            - option [selected] [ref=f12e2310]: service:tdf-app
+                            - option [selected] [ref=f12e2315]: component:api
+                          - generic:
+                            - option "e2e-tests" [selected] [ref=f12e2320]
+                            - option "service:tdf-app" [selected] [ref=f12e2325]
+                            - option "component:api" [selected] [ref=f12e2330]
+                        - button "Clear all" [ref=f12e2331]
+          - generic [ref=f12e2334]:
+            - button "Step 3 Assertions" [expanded] [ref=f12e2335] [cursor=pointer]:
+              - generic "Step 3" [ref=f12e2336]: "3"
+              - generic [ref=f12e2339]: Assertions
+            - generic [ref=f12e2341]:
+              - generic [ref=f12e2342]: "Your test is successful:"
+              - generic [ref=f12e2343]:
+                - generic [ref=f12e2344]: When
+                - generic [ref=f12e2347]:
+                  - button "Assertion Type" [ref=f12e2349]:
+                    - option "status code" [selected] [ref=f12e2353] [cursor=pointer]
+                  - button [ref=f12e2355]:
+                    - option "is" [selected] [ref=f12e2359] [cursor=pointer]
+                  - textbox "Status Code" [ref=f12e2364]:
+                    - /placeholder: "0"
+                    - text: "200"
+                - button [ref=f12e2366] [cursor=pointer]
+              - generic [ref=f12e2368]:
+                - generic [ref=f12e2369]: And
+                - generic [ref=f12e2372]:
+                  - button "Assertion Type" [ref=f12e2374]:
+                    - option "header" [selected] [ref=f12e2378] [cursor=pointer]
+                  - textbox "name" [ref=f12e2383]: content-type
+                  - button [ref=f12e2385]:
+                    - option "contains" [selected] [ref=f12e2389] [cursor=pointer]
+                  - generic [ref=f12e2390]:
+                    - textbox "Header" [ref=f12e2395]:
+                      - /placeholder: value
+                      - text: application/json
+                    - generic [ref=f12e2396]: "{{"
+                - button [ref=f12e2399] [cursor=pointer]
+              - generic [ref=f12e2401]:
+                - generic [ref=f12e2402]: And
+                - generic [ref=f12e2405]:
+                  - button "Assertion Type" [ref=f12e2407]:
+                    - option "body" [selected] [ref=f12e2411] [cursor=pointer]
+                  - button [ref=f12e2413]:
+                    - option "jsonpath" [selected] [ref=f12e2417] [cursor=pointer]
+                  - generic [ref=f12e2419]:
+                    - textbox "JSON path" [ref=f12e2424]: $.status
+                    - generic [ref=f12e2425]: "{{"
+                  - button [ref=f12e2428]:
+                    - option "first element" [selected] [ref=f12e2432] [cursor=pointer]
+                  - button [ref=f12e2434]:
+                    - option "is" [selected] [ref=f12e2438] [cursor=pointer]
+                  - generic [ref=f12e2440]:
+                    - textbox "value" [ref=f12e2445]: ok
+                    - generic [ref=f12e2446]: "{{"
+                - button [ref=f12e2449] [cursor=pointer]
+              - generic [ref=f12e2451]:
+                - generic [ref=f12e2452]: And
+                - generic [ref=f12e2455]:
+                  - button "Assertion Type" [ref=f12e2457]:
+                    - option "body" [selected] [ref=f12e2461] [cursor=pointer]
+                  - button [ref=f12e2463]:
+                    - option "jsonpath" [selected] [ref=f12e2467] [cursor=pointer]
+                  - generic [ref=f12e2469]:
+                    - textbox "JSON path" [ref=f12e2474]: $.db
+                    - generic [ref=f12e2475]: "{{"
+                  - button [ref=f12e2478]:
+                    - option "first element" [selected] [ref=f12e2482] [cursor=pointer]
+                  - button [ref=f12e2484]:
+                    - option "is" [selected] [ref=f12e2488] [cursor=pointer]
+                  - generic [ref=f12e2490]:
+                    - textbox "value" [ref=f12e2495]: ok
+                    - generic [ref=f12e2496]: "{{"
+                - button [ref=f12e2499] [cursor=pointer]
+              - generic [ref=f12e2501]:
+                - button "New Assertion" [ref=f12e2502] [cursor=pointer]
+                - button "New JavaScript Assertion" [ref=f12e2505] [cursor=pointer]
+          - generic [ref=f12e2507]:
+            - button "Step 4 Locations" [expanded] [ref=f12e2508] [cursor=pointer]:
+              - generic "Step 4" [ref=f12e2509]: "4"
+              - generic [ref=f12e2512]: Locations
+            - generic [ref=f12e2514]:
+              - generic [ref=f12e2515]:
+                - checkbox "All Locations (1)" [checked=mixed] [ref=f12e2516]
+                - generic [ref=f12e2517] [cursor=pointer]: All Locations (1)
+              - generic [ref=f12e2523]:
+                - generic [ref=f12e2525]:
+                  - checkbox "Managed Locations (1)" [checked=mixed] [ref=f12e2526]
+                  - generic [ref=f12e2527] [cursor=pointer]: Managed Locations (1)
+                - generic [ref=f12e2531]:
+                  - generic [ref=f12e2532]:
+                    - generic [ref=f12e2533]:
+                      - checkbox "Americas (1)" [checked=mixed] [ref=f12e2534]
+                      - generic [ref=f12e2535] [cursor=pointer]: Americas (1)
+                    - generic [ref=f12e2539]:
+                      - checkbox "Canada Central (AWS)" [ref=f12e2540]
+                      - generic [ref=f12e2545] [cursor=pointer]:
+                        - generic [ref=f12e2546]: Canada Central (AWS)
+                        - generic [ref=f12e2547]: Canada Central (AWS)
+                    - generic [ref=f12e2552]:
+                      - checkbox "Dallas (GCP)" [ref=f12e2553]
+                      - generic [ref=f12e2558] [cursor=pointer]:
+                        - generic [ref=f12e2559]: Dallas (GCP)
+                        - generic [ref=f12e2560]: Dallas (GCP)
+                    - generic [ref=f12e2565]:
+                      - checkbox "Los Angeles (GCP)" [ref=f12e2566]
+                      - generic [ref=f12e2571] [cursor=pointer]:
+                        - generic [ref=f12e2572]: Los Angeles (GCP)
+                        - generic [ref=f12e2573]: Los Angeles (GCP)
+                    - generic [ref=f12e2578]:
+                      - checkbox "N. California (AWS)" [ref=f12e2579]
+                      - generic [ref=f12e2584] [cursor=pointer]:
+                        - generic [ref=f12e2585]: N. California (AWS)
+                        - generic [ref=f12e2586]: N. California (AWS)
+                    - generic [ref=f12e2591]:
+                      - checkbox "N. Virginia (AWS)" [ref=f12e2592]
+                      - generic [ref=f12e2597] [cursor=pointer]:
+                        - generic [ref=f12e2598]: N. Virginia (AWS)
+                        - generic [ref=f12e2599]: N. Virginia (AWS)
+                    - generic [ref=f12e2604]:
+                      - checkbox "Ohio (AWS)" [ref=f12e2605]
+                      - generic [ref=f12e2610] [cursor=pointer]:
+                        - generic [ref=f12e2611]: Ohio (AWS)
+                        - generic [ref=f12e2612]: Ohio (AWS)
+                    - generic [ref=f12e2617]:
+                      - checkbox "Oregon (AWS)" [ref=f12e2618]
+                      - generic [ref=f12e2623] [cursor=pointer]:
+                        - generic [ref=f12e2624]: Oregon (AWS)
+                        - generic [ref=f12e2625]: Oregon (AWS)
+                    - generic [ref=f12e2630]:
+                      - checkbox "Oregon (GCP)" [ref=f12e2631]
+                      - generic [ref=f12e2636] [cursor=pointer]:
+                        - generic [ref=f12e2637]: Oregon (GCP)
+                        - generic [ref=f12e2638]: Oregon (GCP)
+                    - generic [ref=f12e2643]:
+                      - checkbox "São Paulo (AWS)" [checked] [ref=f12e2644]
+                      - generic [ref=f12e2649] [cursor=pointer]:
+                        - generic [ref=f12e2650]: São Paulo (AWS)
+                        - generic [ref=f12e2651]: São Paulo (AWS)
+                    - generic [ref=f12e2656]:
+                      - checkbox "Virginia (Azure)" [ref=f12e2657]
+                      - generic [ref=f12e2662] [cursor=pointer]:
+                        - generic [ref=f12e2663]: Virginia (Azure)
+                        - generic [ref=f12e2664]: Virginia (Azure)
+                    - generic [ref=f12e2669]:
+                      - checkbox "Virginia (GCP)" [ref=f12e2670]
+                      - generic [ref=f12e2675] [cursor=pointer]:
+                        - generic [ref=f12e2676]: Virginia (GCP)
+                        - generic [ref=f12e2677]: Virginia (GCP)
+                  - generic [ref=f12e2682]:
+                    - generic [ref=f12e2683]:
+                      - checkbox "Asia Pacific (0)" [ref=f12e2684]
+                      - generic [ref=f12e2685] [cursor=pointer]: Asia Pacific (0)
+                    - generic [ref=f12e2689]:
+                      - checkbox "Hong Kong (AWS)" [ref=f12e2690]
+                      - generic [ref=f12e2695] [cursor=pointer]:
+                        - generic [ref=f12e2696]: Hong Kong (AWS)
+                        - generic [ref=f12e2697]: Hong Kong (AWS)
+                    - generic [ref=f12e2702]:
+                      - checkbox "Jakarta (AWS)" [ref=f12e2703]
+                      - generic [ref=f12e2708] [cursor=pointer]:
+                        - generic [ref=f12e2709]: Jakarta (AWS)
+                        - generic [ref=f12e2710]: Jakarta (AWS)
+                    - generic [ref=f12e2715]:
+                      - checkbox "Mumbai (AWS)" [ref=f12e2716]
+                      - generic [ref=f12e2721] [cursor=pointer]:
+                        - generic [ref=f12e2722]: Mumbai (AWS)
+                        - generic [ref=f12e2723]: Mumbai (AWS)
+                    - generic [ref=f12e2728]:
+                      - checkbox "Osaka (AWS)" [ref=f12e2729]
+                      - generic [ref=f12e2734] [cursor=pointer]:
+                        - generic [ref=f12e2735]: Osaka (AWS)
+                        - generic [ref=f12e2736]: Osaka (AWS)
+                    - generic [ref=f12e2741]:
+                      - checkbox "Seoul (AWS)" [ref=f12e2742]
+                      - generic [ref=f12e2747] [cursor=pointer]:
+                        - generic [ref=f12e2748]: Seoul (AWS)
+                        - generic [ref=f12e2749]: Seoul (AWS)
+                    - generic [ref=f12e2754]:
+                      - checkbox "Singapore (AWS)" [ref=f12e2755]
+                      - generic [ref=f12e2760] [cursor=pointer]:
+                        - generic [ref=f12e2761]: Singapore (AWS)
+                        - generic [ref=f12e2762]: Singapore (AWS)
+                    - generic [ref=f12e2767]:
+                      - checkbox "Sydney (AWS)" [ref=f12e2768]
+                      - generic [ref=f12e2773] [cursor=pointer]:
+                        - generic [ref=f12e2774]: Sydney (AWS)
+                        - generic [ref=f12e2775]: Sydney (AWS)
+                    - generic [ref=f12e2780]:
+                      - checkbox "Tokyo (AWS)" [ref=f12e2781]
+                      - generic [ref=f12e2786] [cursor=pointer]:
+                        - generic [ref=f12e2787]: Tokyo (AWS)
+                        - generic [ref=f12e2788]: Tokyo (AWS)
+                    - generic [ref=f12e2793]:
+                      - checkbox "Tokyo (GCP)" [ref=f12e2794]
+                      - generic [ref=f12e2799] [cursor=pointer]:
+                        - generic [ref=f12e2800]: Tokyo (GCP)
+                        - generic [ref=f12e2801]: Tokyo (GCP)
+                  - generic [ref=f12e2806]:
+                    - generic [ref=f12e2807]:
+                      - checkbox "EMEA (0)" [ref=f12e2808]
+                      - generic [ref=f12e2809] [cursor=pointer]: EMEA (0)
+                    - generic [ref=f12e2813]:
+                      - checkbox "Cape Town (AWS)" [ref=f12e2814]
+                      - generic [ref=f12e2819] [cursor=pointer]:
+                        - generic [ref=f12e2820]: Cape Town (AWS)
+                        - generic [ref=f12e2821]: Cape Town (AWS)
+                    - generic [ref=f12e2826]:
+                      - checkbox "Frankfurt (AWS)" [ref=f12e2827]
+                      - generic [ref=f12e2832] [cursor=pointer]:
+                        - generic [ref=f12e2833]: Frankfurt (AWS)
+                        - generic [ref=f12e2834]: Frankfurt (AWS)
+                    - generic [ref=f12e2839]:
+                      - checkbox "Frankfurt (GCP)" [ref=f12e2840]
+                      - generic [ref=f12e2845] [cursor=pointer]:
+                        - generic [ref=f12e2846]: Frankfurt (GCP)
+                        - generic [ref=f12e2847]: Frankfurt (GCP)
+                    - generic [ref=f12e2852]:
+                      - checkbox "Ireland (AWS)" [ref=f12e2853]
+                      - generic [ref=f12e2858] [cursor=pointer]:
+                        - generic [ref=f12e2859]: Ireland (AWS)
+                        - generic [ref=f12e2860]: Ireland (AWS)
+                    - generic [ref=f12e2865]:
+                      - checkbox "London (AWS)" [ref=f12e2866]
+                      - generic [ref=f12e2871] [cursor=pointer]:
+                        - generic [ref=f12e2872]: London (AWS)
+                        - generic [ref=f12e2873]: London (AWS)
+                    - generic [ref=f12e2878]:
+                      - checkbox "Milan (AWS)" [ref=f12e2879]
+                      - generic [ref=f12e2884] [cursor=pointer]:
+                        - generic [ref=f12e2885]: Milan (AWS)
+                        - generic [ref=f12e2886]: Milan (AWS)
+                    - generic [ref=f12e2891]:
+                      - checkbox "Paris (AWS)" [ref=f12e2892]
+                      - generic [ref=f12e2897] [cursor=pointer]:
+                        - generic [ref=f12e2898]: Paris (AWS)
+                        - generic [ref=f12e2899]: Paris (AWS)
+                    - generic [ref=f12e2904]:
+                      - checkbox "Stockholm (AWS)" [ref=f12e2905]
+                      - generic [ref=f12e2910] [cursor=pointer]:
+                        - generic [ref=f12e2911]: Stockholm (AWS)
+                        - generic [ref=f12e2912]: Stockholm (AWS)
+              - link "You don't have any private locations. Set up private locations to monitor internal endpoints. Add New Private Location" [ref=f12e2917] [cursor=pointer]:
+                - /url: /synthetics/settings/private-locations/form
+                - generic [ref=f12e2918]:
+                  - generic [ref=f12e2921]:
+                    - generic [ref=f12e2922]: You don't have any private locations.
+                    - generic [ref=f12e2924]: Set up private locations to monitor internal endpoints.
+                  - generic [ref=f12e2925]:
+                    - button "Add New Private Location" [ref=f12e2926]
+                    - button [ref=f12e2928]
+              - generic [ref=f12e2931]:
+                - generic [ref=f12e2934]:
+                  - generic [ref=f12e2935]: Run tests with the testing tunnel
+                  - generic [ref=f12e2937]: You can use the testing tunnel to easily trigger tests on your local development setup or in your CI/CD pipeline to test internal environments.
+                - generic [ref=f12e2938]:
+                  - link "Learn more" [ref=f12e2939] [cursor=pointer]:
+                    - /url: https://docs.datadoghq.com/synthetics/testing_tunnel/
+                  - button [ref=f12e2942] [cursor=pointer]
+          - generic [ref=f12e2944]:
+            - button "Step 5 Retry Conditions" [expanded] [ref=f12e2945] [cursor=pointer]:
+              - generic "Step 5" [ref=f12e2946]: "5"
+              - generic [ref=f12e2949]: Retry Conditions
+            - generic [ref=f12e2953]:
+              - text: In case of failure retry test
+              - textbox "0" [ref=f12e2958]
+              - text: times with
+              - textbox "0" [ref=f12e2963]: "300"
+              - text: ms of wait between failures.
+          - generic [ref=f12e2964]:
+            - button "Step 6 Scheduling & Alert Conditions" [expanded] [ref=f12e2965] [cursor=pointer]:
+              - generic "Step 6" [ref=f12e2966]: "6"
+              - generic [ref=f12e2969]: Scheduling & Alert Conditions
+            - generic [ref=f12e2971]:
+              - generic [ref=f12e2974]:
+                - tablist [ref=f12e2977]:
+                  - generic [ref=f12e2978]:
+                    - tab "Basic" [selected] [ref=f12e2980] [cursor=pointer]
+                    - tab "Advanced" [ref=f12e2985] [cursor=pointer]
+                - radiogroup [ref=f12e2991]:
+                  - generic [ref=f12e2994]:
+                    - radio "30s" [ref=f12e2995]
+                    - generic [ref=f12e2996]: 30s
+                  - generic [ref=f12e2999]:
+                    - radio "1m" [ref=f12e3000]
+                    - generic [ref=f12e3001]: 1m
+                  - generic [ref=f12e3004]:
+                    - radio "5m" [ref=f12e3005]
+                    - generic [ref=f12e3006]: 5m
+                  - generic [ref=f12e3009]:
+                    - radio "10m" [ref=f12e3010]
+                    - generic [ref=f12e3011]: 10m
+                  - generic [ref=f12e3014]:
+                    - radio "15m" [ref=f12e3015]
+                    - generic [ref=f12e3016]: 15m
+                  - generic [ref=f12e3019]:
+                    - radio "30m" [ref=f12e3020]
+                    - generic [ref=f12e3021]: 30m
+                  - generic [ref=f12e3024]:
+                    - radio "1h" [checked] [ref=f12e3025]
+                    - generic [ref=f12e3026]: 1h
+                  - generic [ref=f12e3029]:
+                    - radio "12h" [ref=f12e3030]
+                    - generic [ref=f12e3031]: 12h
+                  - generic [ref=f12e3034]:
+                    - radio "1d" [ref=f12e3035]
+                    - generic [ref=f12e3036]: 1d
+                  - generic [ref=f12e3039]:
+                    - radio "1w" [ref=f12e3040]
+                    - generic [ref=f12e3041]: 1w
+              - generic [ref=f12e3043]:
+                - text: An alert is triggered if your test fails for
+                - textbox "0" [ref=f12e3048]
+                - text: minutes from any
+                - textbox "0" [ref=f12e3053]: "1"
+                - text: of 1 location
+              - alert [ref=f12e3054]:
+                - generic [ref=f12e3055]: A notification is sent and the test is set to "alert" status if it fails in one location.
+          - generic [ref=f12e3057]:
+            - button "Step 7 Downtimes" [expanded] [ref=f12e3058] [cursor=pointer]:
+              - generic "Step 7" [ref=f12e3059]: "7"
+              - generic [ref=f12e3062]: Downtimes
+            - group [ref=f12e3065]:
+              - button "Select downtimes…" [ref=f12e3067]
+              - button [ref=f12e3072] [cursor=pointer]
+          - generic [ref=f12e3074]:
+            - button "Step 8 Monitor" [expanded] [ref=f12e3075] [cursor=pointer]:
+              - generic "Step 8" [ref=f12e3076]: "8"
+              - generic [ref=f12e3079]: Monitor
+            - generic [ref=f12e3081]:
+              - generic [ref=f12e3082]:
+                - generic [ref=f12e3085]:
+                  - generic [ref=f12e3086]:
+                    - tablist [ref=f12e3087]:
+                      - tab "Edit" [selected] [ref=f12e3089] [cursor=pointer]
+                      - tab "Preview" [ref=f12e3094] [cursor=pointer]
+                    - button "Use Message Template Variables" [ref=f12e3100] [cursor=pointer]
+                  - generic [ref=f12e3103]:
+                    - group [ref=f12e3105]:
+                      - generic [ref=f12e3106]:
+                        - textbox "It will default to “[Synthetics] test name” filled with the synthetics name" [ref=f12e3111]
+                        - generic [ref=f12e3112]: "@ {{"
+                    - group [ref=f12e3116]:
+                      - button "Focus Group" [ref=f12e3117]
+                      - generic [ref=f12e3118]:
+                        - button "Open Heading" [ref=f12e3121] [cursor=pointer]
+                        - button "Bold" [ref=f12e3124] [cursor=pointer]
+                        - button "Italic" [ref=f12e3127] [cursor=pointer]
+                        - button "Strikethrough" [ref=f12e3130] [cursor=pointer]
+                        - button "Link" [ref=f12e3134] [cursor=pointer]
+                        - button "Block Quote" [ref=f12e3137] [cursor=pointer]
+                        - button "Inline Code" [ref=f12e3140] [cursor=pointer]
+                        - button "Open Code Block" [ref=f12e3144] [cursor=pointer]
+                        - button "Bulleted List" [ref=f12e3148] [cursor=pointer]
+                        - button "Numbered List" [ref=f12e3151] [cursor=pointer]
+                        - button "Task List" [ref=f12e3154] [cursor=pointer]
+                        - button "Image" [ref=f12e3158] [cursor=pointer]
+                        - button "Table" [ref=f12e3161] [cursor=pointer]
+                        - button "Horizontal Rule" [ref=f12e3164] [cursor=pointer]
+                        - button "Mention" [ref=f12e3168] [cursor=pointer]
+                        - button "Variable" [ref=f12e3171] [cursor=pointer]
+                      - button "Focus Group" [ref=f12e3173]
+                    - group [ref=f12e3174]:
+                      - 'textbox "You can use @ handles to notify other teams or team members. Example message: Your test is failing from one or more locations!" [ref=f12e3179]':
+                        - /placeholder: "You can use @ handles to notify other teams or team members.\nExample message:\nYour test is failing from one or more locations!"
+                        - text: "CI production API liveness contract. The health handler returns fixed status/db fields; this does not prove database connectivity. Managed by tdf-app correction PR #333."
+                    - generic [ref=f12e3181]:
+                      - button "Add Mention" [ref=f12e3182] [cursor=pointer]
+                      - button "Add Variable" [ref=f12e3184] [cursor=pointer]
+                      - button "Add Workflow" [ref=f12e3186] [cursor=pointer]
+                      - button "Add Work Item" [ref=f12e3192] [cursor=pointer]
+                      - button "Add On-Call" [ref=f12e3198] [cursor=pointer]
+                      - button "Add Incident" [ref=f12e3204] [cursor=pointer]
+                - generic [ref=f12e3215]:
+                  - generic [ref=f12e3221]:
+                    - generic [ref=f12e3222]: Launch Bits Investigation
+                    - generic [ref=f12e3223]: new
+                    - generic [ref=f12e3224]: ·
+                    - generic [ref=f12e3225]:
+                      - generic [ref=f12e3226]: Automatically investigate monitor alerts.
+                      - link "Learn more" [ref=f12e3229] [cursor=pointer]:
+                        - /url: https://docs.datadoghq.com/bits_ai/bits_ai_sre/investigate_alerts#enable-bits-on-monitors-for-automated-investigations
+                  - checkbox "Points to the left Not enabled" [ref=f12e3231] [cursor=pointer]:
+                    - generic:
+                      - generic:
+                        - generic "Points to the left"
+                    - generic: Not enabled
+                - generic [ref=f12e3233]:
+                  - generic [ref=f12e3234]: Content displayed in notification
+                  - button [ref=f12e3236]:
+                    - option "Default" [selected] [ref=f12e3240] [cursor=pointer]
+                - checkbox "Points to the left Enable renotification" [ref=f12e3243] [cursor=pointer]:
+                  - generic:
+                    - generic:
+                      - generic "Points to the left"
+                  - generic: Enable renotification
+                - generic [ref=f12e3244]:
+                  - generic [ref=f12e3245]: Priority
+                  - button [ref=f12e3248]:
+                    - option "Not Defined" [selected] [ref=f12e3252] [cursor=pointer]
+              - button "Simulate Notifications" [disabled] [ref=f12e3254]
+          - generic [ref=f12e3256]:
+            - button "Step 9 Permissions" [expanded] [ref=f12e3257] [cursor=pointer]:
+              - generic "Step 9" [ref=f12e3258]: "9"
+              - generic [ref=f12e3261]: Permissions
+            - generic [ref=f12e3265]:
+              - generic [ref=f12e3269]:
+                - heading "Unrestricted" [level=4] [ref=f12e3270]
+                - generic [ref=f12e3271]: Everyone in my org has full access
+              - button "Edit Access" [ref=f12e3272] [cursor=pointer]
+          - generic [ref=f12e3275]:
+            - link "Cancel" [ref=f12e3276] [cursor=pointer]:
+              - /url: /synthetics/details/r2d-i82-3jy/
+            - button "Save Test" [ref=f12e3278] [cursor=pointer]
+        - generic [ref=f12e3279]:
+          - banner [ref=f12e3280]:
+            - tablist [ref=f12e3282]:
+              - generic [ref=f12e3283]:
+                - tab "Snippets" [selected] [ref=f12e3285] [cursor=pointer]
+                - tab "Response Preview" [ref=f12e3290] [cursor=pointer]
+                - tab "Variables 0" [ref=f12e3295] [cursor=pointer]:
+                  - generic [ref=f12e3297]:
+                    - generic [ref=f12e3298]: Variables
+                    - generic [ref=f12e3299]: "0"
+          - generic [ref=f12e3303]:
+            - generic [ref=f12e3304]:
+              - button "Dismiss" [ref=f12e3305] [cursor=pointer]
+              - generic [ref=f12e3308]:
+                - generic [ref=f12e3309]:
+                  - heading "Snippets" [level=1] [ref=f12e3312]
+                  - generic [ref=f12e3313]: new
+                - generic [ref=f12e3314]: Speed up test creation with Snippets that pre-fill sections of your test based on common configurations
+            - region [ref=f12e3315]:
+              - button "Authentication 4 snippets" [expanded] [ref=f12e3316] [cursor=pointer]:
+                - generic [ref=f12e3318]:
+                  - generic [ref=f12e3322]: Authentication
+                  - generic [ref=f12e3323]: 4 snippets
+              - generic [ref=f12e3328]:
+                - button "Basic Authentication in HTTP Test Test your API endpoints using Basic Auth Click to Apply" [ref=f12e3330] [cursor=pointer]:
+                  - generic [ref=f12e3331]:
+                    - generic [ref=f12e3332]:
+                      - generic [ref=f12e3333]: Basic Authentication in HTTP Test
+                      - generic [ref=f12e3335]: Test your API endpoints using Basic Auth
+                    - generic "Click to Apply" [ref=f12e3336]
+                - button "HMAC Authentication in HTTP Test using JavaScript Test API endpoints requiring HMAC Authentication using JavaScript Click to Apply" [ref=f12e3339] [cursor=pointer]:
+                  - generic [ref=f12e3340]:
+                    - generic [ref=f12e3341]:
+                      - generic [ref=f12e3342]: HMAC Authentication in HTTP Test using JavaScript
+                      - generic [ref=f12e3344]: Test API endpoints requiring HMAC Authentication using JavaScript
+                    - generic "Click to Apply" [ref=f12e3345]
+                - button "Bearer Token Authentication in HTTP Test Test API endpoints requiring Bearer Token Authentication Click to Apply" [ref=f12e3348] [cursor=pointer]:
+                  - generic [ref=f12e3349]:
+                    - generic [ref=f12e3350]:
+                      - generic [ref=f12e3351]: Bearer Token Authentication in HTTP Test
+                      - generic [ref=f12e3353]: Test API endpoints requiring Bearer Token Authentication
+                    - generic "Click to Apply" [ref=f12e3354]
+                - button "API / App Key Authentication in HTTP Test Test API endpoints requiring API / App Key Authentication Click to Apply" [ref=f12e3357] [cursor=pointer]:
+                  - generic [ref=f12e3358]:
+                    - generic [ref=f12e3359]:
+                      - generic [ref=f12e3360]: API / App Key Authentication in HTTP Test
+                      - generic [ref=f12e3362]: Test API endpoints requiring API / App Key Authentication
+                    - generic "Click to Apply" [ref=f12e3363]
+            - region [ref=f12e3365]:
+              - button "Performance 3 snippets" [expanded] [ref=f12e3366] [cursor=pointer]:
+                - generic [ref=f12e3368]:
+                  - generic [ref=f12e3372]: Performance
+                  - generic [ref=f12e3373]: 3 snippets
+              - generic [ref=f12e3378]:
+                - button "High Uptime / Availability Configure a test with the shortest frequency available e.g. 1m Click to Apply" [ref=f12e3380] [cursor=pointer]:
+                  - generic [ref=f12e3381]:
+                    - generic [ref=f12e3382]:
+                      - generic [ref=f12e3383]: High Uptime / Availability
+                      - generic [ref=f12e3385]: Configure a test with the shortest frequency available e.g. 1m
+                    - generic "Click to Apply" [ref=f12e3386]
+                - button "gRPC Health Check Determine if your gRPC servers and services are responsive, running, and capable of handling remote procedure calls Click to Apply" [ref=f12e3389] [cursor=pointer]:
+                  - generic [ref=f12e3390]:
+                    - generic [ref=f12e3391]:
+                      - generic [ref=f12e3392]: gRPC Health Check
+                      - generic [ref=f12e3394]: Determine if your gRPC servers and services are responsive, running, and capable of handling remote procedure calls
+                    - generic "Click to Apply" [ref=f12e3395]
+                - button "Latency / Response Time Test for overall response time latency with a breakdown of network timing (DNS, Connection, SSL, Time to first Byte, Download) Click to Apply" [ref=f12e3398] [cursor=pointer]:
+                  - generic [ref=f12e3399]:
+                    - generic [ref=f12e3400]:
+                      - generic [ref=f12e3401]: Latency / Response Time
+                      - generic [ref=f12e3403]: Test for overall response time latency with a breakdown of network timing (DNS, Connection, SSL, Time to first Byte, Download)
+                    - generic "Click to Apply" [ref=f12e3404]
+            - region [ref=f12e3406]:
+              - button "Regions 1 snippet" [expanded] [ref=f12e3407] [cursor=pointer]:
+                - generic [ref=f12e3409]:
+                  - generic [ref=f12e3413]: Regions
+                  - generic [ref=f12e3414]: 1 snippet
+              - button "Multi Region Check Test your API endpoint against a location in each of the three primary geographic regions (AMER, APAC and EMEA) Click to Apply" [ref=f12e3421] [cursor=pointer]:
+                - generic [ref=f12e3422]:
+                  - generic [ref=f12e3423]:
+                    - generic [ref=f12e3424]: Multi Region Check
+                    - generic [ref=f12e3426]: Test your API endpoint against a location in each of the three primary geographic regions (AMER, APAC and EMEA)
+                  - generic "Click to Apply" [ref=f12e3427]
+    - contentinfo "Datadog Copyright and Legal Information" [ref=f12e1358]:
+      - list [ref=f12e1105]:
+        - listitem [ref=f12e1106]: Copyright Datadog, Inc. 2026
+        - listitem [ref=f12e1107]:
+          - generic [ref=f12e1108]: "Version:"
+          - text: "35.140594615"
+        - listitem [ref=f12e1109]:
+          - link "Master Subscription Agreement" [ref=f12e1359] [cursor=pointer]:
+            - /url: https://www.datadoghq.com/legal/msa/
+        - listitem [ref=f12e1111]:
+          - link "Privacy Policy" [ref=f12e1360] [cursor=pointer]:
+            - /url: https://www.datadoghq.com/legal/privacy/
+        - listitem [ref=f12e1113]:
+          - link "Cookie Policy" [ref=f12e1361] [cursor=pointer]:
+            - /url: https://www.datadoghq.com/legal/cookies/
+        - listitem [ref=f12e1115]:
+          - generic [ref=f12e1116]:
+            - 'link "Datadog Status : All Systems Operational" [ref=f12e1362] [cursor=pointer]':
+              - /url: https://status.datadoghq.com
+              - text: Datadog Status →
+              - generic [ref=f12e1118]: ": All Systems Operational"
+            - generic [ref=f12e1121]: All Systems Operational
+  - tooltip "Edit Test" [ref=f12e3430]
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - option "GET" [selected]
+            - combobox
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - option "production" [selected]
+            - combobox
+          - button "Clear all"
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic: Select Teams
+            - combobox
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - option "e2e-tests" [selected]
+            - generic:
+              - option "service:tdf-app" [selected]
+            - generic:
+              - option "component:api" [selected]
+            - combobox
+          - button "Clear all"
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - option "status code" [selected]
+            - combobox
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - option "is" [selected]
+            - combobox
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - option "header" [selected]
+            - combobox
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - option "contains" [selected]
+            - combobox
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - option "body" [selected]
+            - combobox
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - option "jsonpath" [selected]
+            - combobox
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - option "first element" [selected]
+            - combobox
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - option "is" [selected]
+            - combobox
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - option "body" [selected]
+            - combobox
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - option "jsonpath" [selected]
+            - combobox
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - option "first element" [selected]
+            - combobox
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - option "is" [selected]
+            - combobox
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic: Select downtimes…
+            - combobox
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - option "Default" [selected]
+            - combobox
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - option "Not Defined" [selected]
+            - combobox
+  - iframe [ref=f12e1144]:
+    

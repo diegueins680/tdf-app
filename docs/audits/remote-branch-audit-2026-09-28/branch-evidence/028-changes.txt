@@ -1,0 +1,9 @@
+ ...0123-idempotent-capture-evidence-and-binding.md |  84 +++++++
+ .../capture-replay-integrity-2026-09-15.md         | 189 ++++++++++++++++
+ .../ecuador-payment-platform-audit-2026-09-11.md   |   7 +
+ docs/payments/operator-runbooks.md                 |   7 +
+ .../fixtures/provider-retry-ledger-base.sql        |   4 +
+ scripts/test-provider-retry-runtime.sh             |   2 +
+ tdf-hq/src/TDF/Commerce/CheckoutStore.hs           | 243 ++++++++++++---------
+ tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs      | 229 +++++++++++++++++++
+ 8 files changed, 663 insertions(+), 102 deletions(-)

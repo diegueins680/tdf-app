@@ -1,0 +1,31 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 403,
+          "reviewDecision": null,
+          "mergeStateStatus": "UNSTABLE",
+          "mergeable": "MERGEABLE",
+          "headRefOid": "6047377348e901c919d7691b849faab30980b952",
+          "baseRefName": "fix/event-ui-lazy-validation",
+          "isDraft": true,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          }
+        }
+      }
+    }
+  }
+]

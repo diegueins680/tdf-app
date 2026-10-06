@@ -1,0 +1,1297 @@
+{
+  "total_count": 11,
+  "jobs": [
+    {
+      "id": 108997923992,
+      "run_id": 36442971151,
+      "workflow_name": "CI",
+      "head_branch": "audit/event-discovery-integration-20260928",
+      "run_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/runs/36442971151",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOQPdUrM8AAAAZYMhUmA",
+      "head_sha": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/jobs/108997923992",
+      "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971151/job/108997923992",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-28T15:21:37Z",
+      "started_at": "2026-09-28T15:21:40Z",
+      "completed_at": "2026-09-28T15:22:03Z",
+      "name": "changes",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-28T15:21:40Z",
+          "completed_at": "2026-09-28T15:21:41Z"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-28T15:21:41Z",
+          "completed_at": "2026-09-28T15:22:00Z"
+        },
+        {
+          "name": "Classify changed paths",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-28T15:22:00Z",
+          "completed_at": "2026-09-28T15:22:00Z"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-28T15:22:00Z",
+          "completed_at": "2026-09-28T15:22:00Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-28T15:22:00Z",
+          "completed_at": "2026-09-28T15:22:01Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/108997923992",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000044633,
+      "runner_name": "GitHub Actions 1000044633",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 108998108719,
+      "run_id": 36442971151,
+      "workflow_name": "CI",
+      "head_branch": "audit/event-discovery-integration-20260928",
+      "run_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/runs/36442971151",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOQPdUrM8AAAAZYMsmLw",
+      "head_sha": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/jobs/108998108719",
+      "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971151/job/108998108719",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-28T15:22:03Z",
+      "started_at": "2026-09-28T15:22:06Z",
+      "completed_at": "2026-09-28T15:24:19Z",
+      "name": "mobile-quality",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-28T15:22:07Z",
+          "completed_at": "2026-09-28T15:22:07Z"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-28T15:22:07Z",
+          "completed_at": "2026-09-28T15:22:17Z"
+        },
+        {
+          "name": "Setup Node",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-28T15:22:17Z",
+          "completed_at": "2026-09-28T15:22:18Z"
+        },
+        {
+          "name": "Install root dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-28T15:22:18Z",
+          "completed_at": "2026-09-28T15:22:44Z"
+        },
+        {
+          "name": "Install mobile dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-28T15:22:44Z",
+          "completed_at": "2026-09-28T15:23:08Z"
+        },
+        {
+          "name": "Verify shared notification destinations",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-28T15:23:08Z",
+          "completed_at": "2026-09-28T15:23:08Z"
+        },
+        {
+          "name": "Run mobile checks",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-28T15:23:08Z",
+          "completed_at": "2026-09-28T15:24:17Z"
+        },
+        {
+          "name": "Post Setup Node",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-09-28T15:24:17Z",
+          "completed_at": "2026-09-28T15:24:17Z"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-09-28T15:24:17Z",
+          "completed_at": "2026-09-28T15:24:17Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-28T15:24:17Z",
+          "completed_at": "2026-09-28T15:24:17Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/108998108719",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000044636,
+      "runner_name": "GitHub Actions 1000044636",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 108998108859,
+      "run_id": 36442971151,
+      "workflow_name": "CI",
+      "head_branch": "audit/event-discovery-integration-20260928",
+      "run_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/runs/36442971151",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOQPdUrM8AAAAZYMsmuw",
+      "head_sha": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/jobs/108998108859",
+      "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971151/job/108998108859",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-28T15:22:03Z",
+      "started_at": "2026-09-28T15:22:06Z",
+      "completed_at": "2026-09-28T15:23:07Z",
+      "name": "repo-quality",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-28T15:22:07Z",
+          "completed_at": "2026-09-28T15:22:07Z"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-28T15:22:08Z",
+          "completed_at": "2026-09-28T15:22:24Z"
+        },
+        {
+          "name": "Setup Node",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-28T15:22:24Z",
+          "completed_at": "2026-09-28T15:22:27Z"
+        },
+        {
+          "name": "Install root dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-28T15:22:27Z",
+          "completed_at": "2026-09-28T15:22:54Z"
+        },
+        {
+          "name": "Run repository checks",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-28T15:22:54Z",
+          "completed_at": "2026-09-28T15:23:05Z"
+        },
+        {
+          "name": "Post Setup Node",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-09-28T15:23:05Z",
+          "completed_at": "2026-09-28T15:23:05Z"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-09-28T15:23:05Z",
+          "completed_at": "2026-09-28T15:23:05Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-09-28T15:23:05Z",
+          "completed_at": "2026-09-28T15:23:05Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/108998108859",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000044638,
+      "runner_name": "GitHub Actions 1000044638",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 108998108930,
+      "run_id": 36442971151,
+      "workflow_name": "CI",
+      "head_branch": "audit/event-discovery-integration-20260928",
+      "run_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/runs/36442971151",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOQPdUrM8AAAAZYMsnAg",
+      "head_sha": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/jobs/108998108930",
+      "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971151/job/108998108930",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-28T15:22:03Z",
+      "started_at": "2026-09-28T15:22:06Z",
+      "completed_at": "2026-09-28T15:24:13Z",
+      "name": "api-contract-tests",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-28T15:22:07Z",
+          "completed_at": "2026-09-28T15:22:08Z"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-28T15:22:08Z",
+          "completed_at": "2026-09-28T15:23:28Z"
+        },
+        {
+          "name": "Setup Node",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-28T15:23:28Z",
+          "completed_at": "2026-09-28T15:23:30Z"
+        },
+        {
+          "name": "Install root dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-28T15:23:30Z",
+          "completed_at": "2026-09-28T15:23:49Z"
+        },
+        {
+          "name": "Install mobile dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-28T15:23:49Z",
+          "completed_at": "2026-09-28T15:24:07Z"
+        },
+        {
+          "name": "Regenerate shared API clients",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-28T15:24:07Z",
+          "completed_at": "2026-09-28T15:24:09Z"
+        },
+        {
+          "name": "Verify generated clients are committed",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-28T15:24:09Z",
+          "completed_at": "2026-09-28T15:24:10Z"
+        },
+        {
+          "name": "Post Setup Node",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-09-28T15:24:10Z",
+          "completed_at": "2026-09-28T15:24:10Z"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-09-28T15:24:10Z",
+          "completed_at": "2026-09-28T15:24:10Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-28T15:24:10Z",
+          "completed_at": "2026-09-28T15:24:10Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/108998108930",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000044639,
+      "runner_name": "GitHub Actions 1000044639",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 108998108943,
+      "run_id": 36442971151,
+      "workflow_name": "CI",
+      "head_branch": "audit/event-discovery-integration-20260928",
+      "run_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/runs/36442971151",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOQPdUrM8AAAAZYMsnDw",
+      "head_sha": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/jobs/108998108943",
+      "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971151/job/108998108943",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-28T15:22:03Z",
+      "started_at": "2026-09-28T15:22:06Z",
+      "completed_at": "2026-09-28T15:33:50Z",
+      "name": "persona-web-e2e",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-28T15:22:07Z",
+          "completed_at": "2026-09-28T15:22:08Z"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-28T15:22:08Z",
+          "completed_at": "2026-09-28T15:22:35Z"
+        },
+        {
+          "name": "Setup Node",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-28T15:22:35Z",
+          "completed_at": "2026-09-28T15:22:38Z"
+        },
+        {
+          "name": "Install dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-28T15:22:38Z",
+          "completed_at": "2026-09-28T15:22:57Z"
+        },
+        {
+          "name": "Install Playwright browsers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-28T15:22:57Z",
+          "completed_at": "2026-09-28T15:23:39Z"
+        },
+        {
+          "name": "Run isolated persona web journeys",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-28T15:23:39Z",
+          "completed_at": "2026-09-28T15:33:46Z"
+        },
+        {
+          "name": "Upload sanitized browser evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-28T15:33:46Z",
+          "completed_at": "2026-09-28T15:33:48Z"
+        },
+        {
+          "name": "Post Setup Node",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-09-28T15:33:48Z",
+          "completed_at": "2026-09-28T15:33:48Z"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-09-28T15:33:48Z",
+          "completed_at": "2026-09-28T15:33:49Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-28T15:33:49Z",
+          "completed_at": "2026-09-28T15:33:49Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/108998108943",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000044637,
+      "runner_name": "GitHub Actions 1000044637",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 108998108995,
+      "run_id": 36442971151,
+      "workflow_name": "CI",
+      "head_branch": "audit/event-discovery-integration-20260928",
+      "run_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/runs/36442971151",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOQPdUrM8AAAAZYMsnQw",
+      "head_sha": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/jobs/108998108995",
+      "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971151/job/108998108995",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-28T15:22:03Z",
+      "started_at": "2026-09-28T15:22:07Z",
+      "completed_at": "2026-09-28T15:28:57Z",
+      "name": "ui-quality",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-28T15:22:07Z",
+          "completed_at": "2026-09-28T15:22:08Z"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-28T15:22:08Z",
+          "completed_at": "2026-09-28T15:22:14Z"
+        },
+        {
+          "name": "Setup Node",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-28T15:22:14Z",
+          "completed_at": "2026-09-28T15:22:16Z"
+        },
+        {
+          "name": "Install root dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-28T15:22:16Z",
+          "completed_at": "2026-09-28T15:22:41Z"
+        },
+        {
+          "name": "Run UI checks",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-28T15:22:41Z",
+          "completed_at": "2026-09-28T15:28:55Z"
+        },
+        {
+          "name": "Post Setup Node",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-09-28T15:28:55Z",
+          "completed_at": "2026-09-28T15:28:55Z"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-09-28T15:28:55Z",
+          "completed_at": "2026-09-28T15:28:56Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-09-28T15:28:56Z",
+          "completed_at": "2026-09-28T15:28:56Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/108998108995",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000044642,
+      "runner_name": "GitHub Actions 1000044642",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 108998109038,
+      "run_id": 36442971151,
+      "workflow_name": "CI",
+      "head_branch": "audit/event-discovery-integration-20260928",
+      "run_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/runs/36442971151",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOQPdUrM8AAAAZYMsnbg",
+      "head_sha": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/jobs/108998109038",
+      "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971151/job/108998109038",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-28T15:22:03Z",
+      "started_at": "2026-09-28T15:22:07Z",
+      "completed_at": "2026-09-28T15:31:46Z",
+      "name": "backend-quality",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-28T15:22:08Z",
+          "completed_at": "2026-09-28T15:22:09Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-28T15:22:09Z",
+          "completed_at": "2026-09-28T15:22:50Z"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-28T15:22:50Z",
+          "completed_at": "2026-09-28T15:22:56Z"
+        },
+        {
+          "name": "Install native build dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-28T15:22:56Z",
+          "completed_at": "2026-09-28T15:23:01Z"
+        },
+        {
+          "name": "Restore immutable Stack dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-28T15:23:01Z",
+          "completed_at": "2026-09-28T15:23:24Z"
+        },
+        {
+          "name": "Restore incremental backend objects",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-28T15:23:24Z",
+          "completed_at": "2026-09-28T15:23:34Z"
+        },
+        {
+          "name": "Build and test backend once",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-28T15:23:34Z",
+          "completed_at": "2026-09-28T15:26:01Z"
+        },
+        {
+          "name": "Verify artist self-service transactions and migration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-09-28T15:26:01Z",
+          "completed_at": "2026-09-28T15:26:04Z"
+        },
+        {
+          "name": "Verify social session revocation and model-derived HTTP fixtures",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-09-28T15:26:04Z",
+          "completed_at": "2026-09-28T15:28:43Z"
+        },
+        {
+          "name": "Verify authenticated artist merch HTTP runtime",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-09-28T15:28:43Z",
+          "completed_at": "2026-09-28T15:28:47Z"
+        },
+        {
+          "name": "Verify provider identity authentication and concurrent linking",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-09-28T15:28:47Z",
+          "completed_at": "2026-09-28T15:28:50Z"
+        },
+        {
+          "name": "Verify atomic Live Session identity intake",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-09-28T15:28:50Z",
+          "completed_at": "2026-09-28T15:28:53Z"
+        },
+        {
+          "name": "Verify source-scoped course contacts and registration retries",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-09-28T15:28:53Z",
+          "completed_at": "2026-09-28T15:28:59Z"
+        },
+        {
+          "name": "Verify trial enquiries and actor-scoped student creation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-09-28T15:28:59Z",
+          "completed_at": "2026-09-28T15:29:05Z"
+        },
+        {
+          "name": "Verify marketplace contact identity and evidence retries",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-28T15:29:05Z",
+          "completed_at": "2026-09-28T15:29:11Z"
+        },
+        {
+          "name": "Verify reversible identity reconciliation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-09-28T15:29:11Z",
+          "completed_at": "2026-09-28T15:29:12Z"
+        },
+        {
+          "name": "Verify resumable video ingestion and migration invariants",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-09-28T15:29:12Z",
+          "completed_at": "2026-09-28T15:30:04Z"
+        },
+        {
+          "name": "Verify shared event pilot and publication boundaries",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-09-28T15:30:04Z",
+          "completed_at": "2026-09-28T15:31:06Z"
+        },
+        {
+          "name": "Verify automatic migrations against the production schema",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-09-28T15:31:06Z",
+          "completed_at": "2026-09-28T15:31:15Z"
+        },
+        {
+          "name": "Verify contact HTTP concurrency, authorization, archival and rollback",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 20,
+          "started_at": "2026-09-28T15:31:15Z",
+          "completed_at": "2026-09-28T15:31:17Z"
+        },
+        {
+          "name": "Verify artist claim preparation concurrency and privacy",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21,
+          "started_at": "2026-09-28T15:31:17Z",
+          "completed_at": "2026-09-28T15:31:19Z"
+        },
+        {
+          "name": "Verify public catalog persistence contract and database round trips",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22,
+          "started_at": "2026-09-28T15:31:19Z",
+          "completed_at": "2026-09-28T15:31:20Z"
+        },
+        {
+          "name": "Verify calendar runtime schema and admin HTTP contract",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23,
+          "started_at": "2026-09-28T15:31:20Z",
+          "completed_at": "2026-09-28T15:31:22Z"
+        },
+        {
+          "name": "Verify navigation first-visit concurrency and account isolation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 24,
+          "started_at": "2026-09-28T15:31:22Z",
+          "completed_at": "2026-09-28T15:31:26Z"
+        },
+        {
+          "name": "Verify paused experiment authority and concurrent HTTP persistence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 25,
+          "started_at": "2026-09-28T15:31:26Z",
+          "completed_at": "2026-09-28T15:31:29Z"
+        },
+        {
+          "name": "Exercise public booking HTTP idempotency and resource conflicts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 26,
+          "started_at": "2026-09-28T15:31:29Z",
+          "completed_at": "2026-09-28T15:31:40Z"
+        },
+        {
+          "name": "Upload tested backend executable",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 27,
+          "started_at": "2026-09-28T15:31:40Z",
+          "completed_at": "2026-09-28T15:31:40Z"
+        },
+        {
+          "name": "Post Restore incremental backend objects",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 51,
+          "started_at": "2026-09-28T15:31:40Z",
+          "completed_at": "2026-09-28T15:31:40Z"
+        },
+        {
+          "name": "Post Restore immutable Stack dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 52,
+          "started_at": "2026-09-28T15:31:40Z",
+          "completed_at": "2026-09-28T15:31:40Z"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 53,
+          "started_at": "2026-09-28T15:31:40Z",
+          "completed_at": "2026-09-28T15:31:41Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 54,
+          "started_at": "2026-09-28T15:31:41Z",
+          "completed_at": "2026-09-28T15:31:43Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 55,
+          "started_at": "2026-09-28T15:31:43Z",
+          "completed_at": "2026-09-28T15:31:43Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/108998109038",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000044641,
+      "runner_name": "GitHub Actions 1000044641",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 108998109137,
+      "run_id": 36442971151,
+      "workflow_name": "CI",
+      "head_branch": "audit/event-discovery-integration-20260928",
+      "run_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/runs/36442971151",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOQPdUrM8AAAAZYMsn0Q",
+      "head_sha": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/jobs/108998109137",
+      "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971151/job/108998109137",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-28T15:22:03Z",
+      "started_at": "2026-09-28T15:22:06Z",
+      "completed_at": "2026-09-28T15:25:11Z",
+      "name": "migration-tests",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-28T15:22:07Z",
+          "completed_at": "2026-09-28T15:22:08Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-28T15:22:08Z",
+          "completed_at": "2026-09-28T15:22:23Z"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-28T15:22:23Z",
+          "completed_at": "2026-09-28T15:22:39Z"
+        },
+        {
+          "name": "Setup Node",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-09-28T15:22:39Z",
+          "completed_at": "2026-09-28T15:22:40Z"
+        },
+        {
+          "name": "Test the production release contract",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-09-28T15:22:40Z",
+          "completed_at": "2026-09-28T15:22:40Z"
+        },
+        {
+          "name": "Rehearse access-request notification compatibility migration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-09-28T15:22:40Z",
+          "completed_at": "2026-09-28T15:22:51Z"
+        },
+        {
+          "name": "Rehearse notification navigation and history-preserving rollback",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-09-28T15:22:51Z",
+          "completed_at": "2026-09-28T15:22:52Z"
+        },
+        {
+          "name": "Rehearse Party selector rate-limit scope migration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-09-28T15:22:52Z",
+          "completed_at": "2026-09-28T15:22:55Z"
+        },
+        {
+          "name": "Rehearse the studio internship audit migration and rollback",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-09-28T15:22:55Z",
+          "completed_at": "2026-09-28T15:23:05Z"
+        },
+        {
+          "name": "Rehearse service-storefront checkout runtime migration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-09-28T15:23:05Z",
+          "completed_at": "2026-09-28T15:23:13Z"
+        },
+        {
+          "name": "Rehearse checkout event and refund runtime migration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-09-28T15:23:13Z",
+          "completed_at": "2026-09-28T15:23:18Z"
+        },
+        {
+          "name": "Rehearse provider event operations migration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-09-28T15:23:18Z",
+          "completed_at": "2026-09-28T15:23:23Z"
+        },
+        {
+          "name": "Rehearse contextual reputation staging worker migration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-09-28T15:23:23Z",
+          "completed_at": "2026-09-28T15:24:22Z"
+        },
+        {
+          "name": "Rehearse merch reputation migration with synthetic evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-09-28T15:24:22Z",
+          "completed_at": "2026-09-28T15:24:31Z"
+        },
+        {
+          "name": "Rehearse service booking checkout runtime migration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-09-28T15:24:31Z",
+          "completed_at": "2026-09-28T15:24:38Z"
+        },
+        {
+          "name": "Rehearse public tentative booking idempotency migration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-09-28T15:24:38Z",
+          "completed_at": "2026-09-28T15:24:41Z"
+        },
+        {
+          "name": "Rehearse course checkout runtime migration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-09-28T15:24:41Z",
+          "completed_at": "2026-09-28T15:24:45Z"
+        },
+        {
+          "name": "Rehearse Domo quote and deposit checkout runtime migration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 18,
+          "started_at": "2026-09-28T15:24:45Z",
+          "completed_at": "2026-09-28T15:24:49Z"
+        },
+        {
+          "name": "Rehearse marketplace customer operations and deposit settlement migration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-09-28T15:24:49Z",
+          "completed_at": "2026-09-28T15:24:55Z"
+        },
+        {
+          "name": "Rehearse verified experience review migration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 20,
+          "started_at": "2026-09-28T15:24:55Z",
+          "completed_at": "2026-09-28T15:24:59Z"
+        },
+        {
+          "name": "Create production baseline fixture",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21,
+          "started_at": "2026-09-28T15:24:59Z",
+          "completed_at": "2026-09-28T15:25:00Z"
+        },
+        {
+          "name": "Verify pristine production preflight",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22,
+          "started_at": "2026-09-28T15:25:00Z",
+          "completed_at": "2026-09-28T15:25:00Z"
+        },
+        {
+          "name": "Apply the authoritative migration batch twice",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23,
+          "started_at": "2026-09-28T15:25:00Z",
+          "completed_at": "2026-09-28T15:25:04Z"
+        },
+        {
+          "name": "Verify catalog dry-runs and raw cutover idempotency",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 24,
+          "started_at": "2026-09-28T15:25:04Z",
+          "completed_at": "2026-09-28T15:25:07Z"
+        },
+        {
+          "name": "Verify raw migration idempotency and the release schema contract",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 25,
+          "started_at": "2026-09-28T15:25:07Z",
+          "completed_at": "2026-09-28T15:25:08Z"
+        },
+        {
+          "name": "Reject a changed applied migration",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 26,
+          "started_at": "2026-09-28T15:25:08Z",
+          "completed_at": "2026-09-28T15:25:08Z"
+        },
+        {
+          "name": "Verify artist enrichment migration rollback preserves base profiles",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 27,
+          "started_at": "2026-09-28T15:25:08Z",
+          "completed_at": "2026-09-28T15:25:08Z"
+        },
+        {
+          "name": "Post Setup Node",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 52,
+          "started_at": "2026-09-28T15:25:08Z",
+          "completed_at": "2026-09-28T15:25:09Z"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 53,
+          "started_at": "2026-09-28T15:25:09Z",
+          "completed_at": "2026-09-28T15:25:09Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 54,
+          "started_at": "2026-09-28T15:25:09Z",
+          "completed_at": "2026-09-28T15:25:09Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 55,
+          "started_at": "2026-09-28T15:25:09Z",
+          "completed_at": "2026-09-28T15:25:09Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/108998109137",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000044640,
+      "runner_name": "GitHub Actions 1000044640",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 108999054087,
+      "run_id": 36442971151,
+      "workflow_name": "CI",
+      "head_branch": "audit/event-discovery-integration-20260928",
+      "run_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/runs/36442971151",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOQPdUrM8AAAAZYNmTBw",
+      "head_sha": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/jobs/108999054087",
+      "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971151/job/108999054087",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-28T15:24:13Z",
+      "started_at": "2026-09-28T15:24:16Z",
+      "completed_at": "2026-09-28T15:24:20Z",
+      "name": "api-contracts",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-28T15:24:17Z",
+          "completed_at": "2026-09-28T15:24:17Z"
+        },
+        {
+          "name": "Require API contract validation when selected",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-28T15:24:17Z",
+          "completed_at": "2026-09-28T15:24:17Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-28T15:24:17Z",
+          "completed_at": "2026-09-28T15:24:17Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/108999054087",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000044647,
+      "runner_name": "GitHub Actions 1000044647",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 108999488618,
+      "run_id": 36442971151,
+      "workflow_name": "CI",
+      "head_branch": "audit/event-discovery-integration-20260928",
+      "run_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/runs/36442971151",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOQPdUrM8AAAAZYOA0ag",
+      "head_sha": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/jobs/108999488618",
+      "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971151/job/108999488618",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-28T15:25:12Z",
+      "started_at": "2026-09-28T15:25:15Z",
+      "completed_at": "2026-09-28T15:25:18Z",
+      "name": "production-migrations",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-28T15:25:16Z",
+          "completed_at": "2026-09-28T15:25:16Z"
+        },
+        {
+          "name": "Require production migration validation when selected",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-28T15:25:16Z",
+          "completed_at": "2026-09-28T15:25:16Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-28T15:25:16Z",
+          "completed_at": "2026-09-28T15:25:16Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/108999488618",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000044648,
+      "runner_name": "GitHub Actions 1000044648",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    },
+    {
+      "id": 109003262710,
+      "run_id": 36442971151,
+      "workflow_name": "CI",
+      "head_branch": "audit/event-discovery-integration-20260928",
+      "run_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/runs/36442971151",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOQPdUrM8AAAAZYRnK9g",
+      "head_sha": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/jobs/109003262710",
+      "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971151/job/109003262710",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-09-28T15:33:51Z",
+      "started_at": "2026-09-28T15:33:53Z",
+      "completed_at": "2026-09-28T15:33:56Z",
+      "name": "quality",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-09-28T15:33:54Z",
+          "completed_at": "2026-09-28T15:33:54Z"
+        },
+        {
+          "name": "Require every selected quality job to pass",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-09-28T15:33:54Z",
+          "completed_at": "2026-09-28T15:33:55Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-09-28T15:33:55Z",
+          "completed_at": "2026-09-28T15:33:55Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/109003262710",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000044657,
+      "runner_name": "GitHub Actions 1000044657",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    }
+  ]
+}

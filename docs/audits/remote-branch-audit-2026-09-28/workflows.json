@@ -1,0 +1,163 @@
+[
+  {
+    "total_count": 13,
+    "workflows": [
+      {
+        "id": 330128321,
+        "node_id": "W_kwDOQPdUrM4TrVvB",
+        "name": "Daily artist enrichment",
+        "path": ".github/workflows/artist-enrichment-daily.yml",
+        "state": "active",
+        "created_at": "2026-08-08T21:22:29.000+02:00",
+        "updated_at": "2026-08-08T21:22:29.000+02:00",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/workflows/330128321",
+        "html_url": "https://github.com/diegueins680/tdf-app/blob/main/.github/workflows/artist-enrichment-daily.yml",
+        "badge_url": "https://github.com/diegueins680/tdf-app/workflows/Daily%20artist%20enrichment/badge.svg"
+      },
+      {
+        "id": 208327593,
+        "node_id": "W_kwDOQPdUrM4MatOp",
+        "name": "Build Image",
+        "path": ".github/workflows/build.yml",
+        "state": "active",
+        "created_at": "2025-11-19T05:35:59.000+01:00",
+        "updated_at": "2025-12-25T09:50:31.000+01:00",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/workflows/208327593",
+        "html_url": "https://github.com/diegueins680/tdf-app/blob/main/.github/workflows/build.yml",
+        "badge_url": "https://github.com/diegueins680/tdf-app/workflows/Build%20Image/badge.svg"
+      },
+      {
+        "id": 333757760,
+        "node_id": "W_kwDOQPdUrM4T5L1A",
+        "name": "Catalog list authority",
+        "path": ".github/workflows/catalog-list-audit.yml",
+        "state": "active",
+        "created_at": "2026-08-13T19:44:26.000+02:00",
+        "updated_at": "2026-08-14T01:47:16.000+02:00",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/workflows/333757760",
+        "html_url": "https://github.com/diegueins680/tdf-app/blob/main/.github/workflows/catalog-list-audit.yml",
+        "badge_url": "https://github.com/diegueins680/tdf-app/workflows/Catalog%20list%20authority/badge.svg"
+      },
+      {
+        "id": 282251173,
+        "node_id": "W_kwDOQPdUrM4Q0s-l",
+        "name": "Check Messaging Token",
+        "path": ".github/workflows/check-messaging-token.yml",
+        "state": "active",
+        "created_at": "2026-05-24T03:14:50.000+02:00",
+        "updated_at": "2026-05-24T03:14:50.000+02:00",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/workflows/282251173",
+        "html_url": "https://github.com/diegueins680/tdf-app/blob/main/.github/workflows/check-messaging-token.yml",
+        "badge_url": "https://github.com/diegueins680/tdf-app/workflows/Check%20Messaging%20Token/badge.svg"
+      },
+      {
+        "id": 257661975,
+        "node_id": "W_kwDOQPdUrM4PW5wX",
+        "name": "CI Safe Install",
+        "path": ".github/workflows/ci-safe-install.yml",
+        "state": "active",
+        "created_at": "2026-04-08T03:21:56.000+02:00",
+        "updated_at": "2026-04-08T03:21:56.000+02:00",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/workflows/257661975",
+        "html_url": "https://github.com/diegueins680/tdf-app/blob/main/.github/workflows/ci-safe-install.yml",
+        "badge_url": "https://github.com/diegueins680/tdf-app/workflows/CI%20Safe%20Install/badge.svg"
+      },
+      {
+        "id": 256051393,
+        "node_id": "W_kwDOQPdUrM4PQwjB",
+        "name": "CI",
+        "path": ".github/workflows/ci.yml",
+        "state": "active",
+        "created_at": "2026-04-04T06:21:08.000+02:00",
+        "updated_at": "2026-04-04T06:23:24.000+02:00",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/workflows/256051393",
+        "html_url": "https://github.com/diegueins680/tdf-app/blob/main/.github/workflows/ci.yml",
+        "badge_url": "https://github.com/diegueins680/tdf-app/workflows/CI/badge.svg"
+      },
+      {
+        "id": 257661977,
+        "node_id": "W_kwDOQPdUrM4PW5wZ",
+        "name": "Run Datadog Synthetic tests",
+        "path": ".github/workflows/datadog-synthetics.yml",
+        "state": "active",
+        "created_at": "2026-04-08T03:21:56.000+02:00",
+        "updated_at": "2026-04-08T03:29:31.000+02:00",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/workflows/257661977",
+        "html_url": "https://github.com/diegueins680/tdf-app/blob/main/.github/workflows/datadog-synthetics.yml",
+        "badge_url": "https://github.com/diegueins680/tdf-app/workflows/Run%20Datadog%20Synthetic%20tests/badge.svg"
+      },
+      {
+        "id": 358209715,
+        "node_id": "W_kwDOQPdUrM4VWdiz",
+        "name": "Event operations verification",
+        "path": ".github/workflows/event-operations-formal.yml",
+        "state": "active",
+        "created_at": "2026-09-14T23:38:55.000+02:00",
+        "updated_at": "2026-09-16T23:24:16.000+02:00",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/workflows/358209715",
+        "html_url": "https://github.com/diegueins680/tdf-app/blob/main/.github/workflows/event-operations-formal.yml",
+        "badge_url": "https://github.com/diegueins680/tdf-app/workflows/Event%20operations%20verification/badge.svg"
+      },
+      {
+        "id": 359304634,
+        "node_id": "W_kwDOQPdUrM4Vao26",
+        "name": "Event RACI real browser integration",
+        "path": ".github/workflows/event-raci-browser.yml",
+        "state": "active",
+        "created_at": "2026-09-16T06:24:12.000+02:00",
+        "updated_at": "2026-09-16T06:24:12.000+02:00",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/workflows/359304634",
+        "html_url": "https://github.com/diegueins680/tdf-app/blob/main/.github/workflows/event-raci-browser.yml",
+        "badge_url": "https://github.com/diegueins680/tdf-app/workflows/Event%20RACI%20real%20browser%20integration/badge.svg"
+      },
+      {
+        "id": 281313438,
+        "node_id": "W_kwDOQPdUrM4QxICe",
+        "name": "Refresh Instagram Token",
+        "path": ".github/workflows/refresh-instagram-token.yml",
+        "state": "active",
+        "created_at": "2026-05-22T05:27:31.000+02:00",
+        "updated_at": "2026-05-22T05:27:31.000+02:00",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/workflows/281313438",
+        "html_url": "https://github.com/diegueins680/tdf-app/blob/main/.github/workflows/refresh-instagram-token.yml",
+        "badge_url": "https://github.com/diegueins680/tdf-app/workflows/Refresh%20Instagram%20Token/badge.svg"
+      },
+      {
+        "id": 358388826,
+        "node_id": "W_kwDOQPdUrM4VXJRa",
+        "name": "Social formal and persistence verification",
+        "path": ".github/workflows/social-verification.yml",
+        "state": "active",
+        "created_at": "2026-09-15T05:57:33.000+02:00",
+        "updated_at": "2026-09-16T21:25:27.000+02:00",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/workflows/358388826",
+        "html_url": "https://github.com/diegueins680/tdf-app/blob/main/.github/workflows/social-verification.yml",
+        "badge_url": "https://github.com/diegueins680/tdf-app/workflows/Social%20formal%20and%20persistence%20verification/badge.svg"
+      },
+      {
+        "id": 204102651,
+        "node_id": "W_kwDOQPdUrM4MKlv7",
+        "name": "Copilot code review",
+        "path": "dynamic/copilot-pull-request-reviewer/copilot-pull-request-reviewer",
+        "state": "active",
+        "created_at": "2025-11-05T09:52:41.000+01:00",
+        "updated_at": "2025-11-05T09:52:41.000+01:00",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/workflows/204102651",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/workflows/copilot-pull-request-reviewer/copilot-pull-request-reviewer",
+        "badge_url": "https://github.com/diegueins680/tdf-app/actions/workflows/copilot-pull-request-reviewer/copilot-pull-request-reviewer/badge.svg"
+      },
+      {
+        "id": 204022956,
+        "node_id": "W_kwDOQPdUrM4MKSSs",
+        "name": "Copilot coding agent",
+        "path": "dynamic/copilot-swe-agent/copilot",
+        "state": "active",
+        "created_at": "2025-11-05T04:21:54.000+01:00",
+        "updated_at": "2025-11-05T04:21:54.000+01:00",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/workflows/204022956",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/workflows/copilot-swe-agent/copilot",
+        "badge_url": "https://github.com/diegueins680/tdf-app/actions/workflows/copilot-swe-agent/copilot/badge.svg"
+      }
+    ]
+  }
+]

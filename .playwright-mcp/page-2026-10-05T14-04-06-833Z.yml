@@ -1,0 +1,359 @@
+- generic [ref=e642]:
+  - generic [ref=e647]:
+    - generic [ref=e650]:
+      - link [ref=e655] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=e660]
+      - generic [ref=e663]:
+        - link [ref=e668] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=e673]
+        - link [ref=e678] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=e683]
+        - link [ref=e690] [cursor=pointer]:
+          - /url: /direct/t/108906533838316
+          - generic [ref=e693]:
+            - img "Messages" [ref=e695]
+            - generic "Direct messaging - 3 new notifications link" [ref=e698]: "3"
+        - link [ref=e704] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=e709]
+        - link [ref=e717] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=e722]
+        - link [ref=e730] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=e735]
+        - link [ref=e740] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=e745]
+        - link [ref=e752] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=e757]:
+            - img "tdf.records.label's profile picture" [ref=e758]
+      - generic [ref=e759]:
+        - link [ref=e762] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=e767]
+        - link [ref=e770] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=e775]
+    - generic [ref=e778]:
+      - main [ref=e779]:
+        - generic [ref=e781]:
+          - generic [ref=e782]:
+            - generic [ref=e783]:
+              - link [ref=e789] [cursor=pointer]:
+                - /url: /joelduenasc/
+                - img "joelduenasc's profile picture" [ref=e790]
+              - generic [ref=e791]:
+                - generic [ref=e792]:
+                  - generic [ref=e793]:
+                    - link [ref=e795] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "joelduenasc" [level=2] [ref=e796]
+                    - button [ref=e798] [cursor=pointer]:
+                      - img "Options" [ref=e800]
+                  - generic [ref=e804]: Joel Dueñas
+                  - generic [ref=e806]:
+                    - generic [ref=e808]:
+                      - generic [ref=e809]: "7"
+                      - text: posts
+                    - link "1,143 followers" [ref=e811] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=e812]:
+                        - generic "1,143" [ref=e813]
+                        - text: followers
+                    - link "1,266 following" [ref=e815] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=e816]:
+                        - generic [ref=e817]: 1,266
+                        - text: following
+                - generic [ref=e818]:
+                  - generic [ref=e819]:
+                    - generic [ref=e820]: Artist
+                    - button [ref=e823] [cursor=pointer]:
+                      - generic [ref=e824]:
+                        - text: 🎛️
+                        - link "#sounddesigner" [ref=e825]:
+                          - /url: /explore/tags/sounddesigner/
+                        - link "#producer" [ref=e826]:
+                          - /url: /explore/tags/producer/
+                        - text: . 🎼
+                        - link "#composer" [ref=e827]:
+                          - /url: /explore/tags/composer/
+                        - link "#drummer" [ref=e828]:
+                          - /url: /explore/tags/drummer/
+                  - link "Followed by mauricionoproa7, rojelioelrojorojas + 15 more" [ref=e829] [cursor=pointer]:
+                    - /url: /joelduenasc/followers/mutualOnly
+                    - generic [ref=e831]:
+                      - generic [ref=e833]:
+                        - button [ref=e834]:
+                          - link [ref=e835]
+                        - button [ref=e836]:
+                          - link [ref=e837]
+                        - button [ref=e838]:
+                          - link [ref=e839]
+                      - generic [ref=e840]: Followed by mauricionoproa7, rojelioelrojorojas + 15 more
+            - generic [ref=e845]:
+              - button "Following Down chevron icon" [ref=e847] [cursor=pointer]:
+                - generic [ref=e848]:
+                  - generic [ref=e849]: Following
+                  - img "Down chevron icon" [ref=e852]
+              - button "Message" [active] [ref=e855] [cursor=pointer]
+              - button [ref=e857] [cursor=pointer]:
+                - img "Similar accounts" [ref=e859]
+            - generic:
+              - menu
+          - generic [ref=e862]:
+            - tablist [ref=e863]:
+              - link [ref=e865] [cursor=pointer]:
+                - /url: /joelduenasc/
+                - img "Posts" [ref=e867]
+              - link [ref=e878] [cursor=pointer]:
+                - /url: /joelduenasc/reels/
+                - img "Reels" [ref=e880]
+              - link [ref=e883] [cursor=pointer]:
+                - /url: /joelduenasc/reposts/
+                - img "Reposts" [ref=e885]
+              - link [ref=e888] [cursor=pointer]:
+                - /url: /joelduenasc/tagged/
+                - img "Tagged" [ref=e890]
+            - tabpanel
+          - generic [ref=e897]:
+            - generic [ref=e898]:
+              - link [ref=e900] [cursor=pointer]:
+                - /url: /me_fui_a_volver/p/DdCr21XGBh3/
+                - img "HOLADEMONIO Félix Martín — South American Tour 2026 @holademonio.ec tremenda banda que se mete con fuerza en la escena pesada nacional. Que bacán poder retratar este momento. 🤘🏻 Filmed, edited & color graded by Camila Muñoz @me_fui_a_volver Sony FX30 DaVinci Resolve" [ref=e903]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=e906] [cursor=pointer]:
+                - /url: /holademonio.ec/reel/DbqUrCeu2WM/
+                - img "Escúchanos, rómpete el cuello Nuestra música en el link en la bio 👁️" [ref=e909]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=e912] [cursor=pointer]:
+                - /url: /delirio_593/p/DVcAK-bkRmR/
+                - img "¿Ya se agasajaron con la sesión de Delirio en @elrotortvl ? Anda ahora mismo a la bio que ahí está el link para YouTube, subirle el volumen es lo recomendado. 🤘🏽 Próximo show es a favor de los animales rescatados en el @allku_festt este 28 de marzo en @azaresespacio , pilas que hay unas bandotas. Pronto nos vemos!" [ref=e915]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=e917]:
+              - link [ref=e919] [cursor=pointer]:
+                - /url: /holademonio.ec/reel/DQ5TC8Pj8sp/
+                - img "Chequea el videoclip de Above Reality 👹 Link In Bio" [ref=e922]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=e925] [cursor=pointer]:
+                - /url: /holademonio.ec/p/DQChaimEaGh/
+                - 'img "Fotos del primer ensayo, específicamente de Joel y Nano partiéndose el cuello en uno de los breakdowns. 👹 Nuestro primer single \"Above Reality\" se publicará dentro de 16 días, y aprovechamos para spoilearles fechas importantes: 07/11: Lanzamiento de Above Reality + Videoclip 12/12: Lanzamiento de... 23/01: 👁" [ref=e928]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=e931] [cursor=pointer]:
+                - /url: /josueguerra_777gd/p/DM6zeK7ucWI/
+                - img "@delirio_593 3 de Agosto 2025 Teatro Capitol 🤟🤟🔥 @miguel.de.la.cueva @prisciyc @josue7cuerdas @joelduenasc" [ref=e934]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - link [ref=e938] [cursor=pointer]:
+              - /url: /joelduenasc/p/CkJpFxDudJI/
+              - img "Agradecido de ser parte de la vida de estos seres🖤" [ref=e941]
+      - contentinfo [ref=e945]:
+        - generic [ref=e946]:
+          - generic [ref=e948]:
+            - link "Meta" [ref=e950] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=e953] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=e956] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=e959] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=e962] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=e965] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=e968] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=e971] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=e974] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=e977] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=e980] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=e983] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=e986] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=e989] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=e992] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=e995] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=e997]:
+            - generic [ref=e998] [cursor=pointer]:
+              - generic [ref=e999]:
+                - generic [ref=e1000]: English
+                - img "Down chevron icon" [ref=e1003]
+              - combobox "Switch Display Language" [ref=e1005]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=e1006]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=e1024] [cursor=pointer]:
+              - generic "Messages - 3 new notifications" [ref=e1025]:
+                - generic [ref=e1026]:
+                  - generic [ref=e1028]:
+                    - img "Messages" [ref=e1029]
+                    - generic "Direct messaging - 3 new notifications link" [ref=e1032]: "3"
+                  - generic [ref=e1035]: Messages
+                - generic [ref=e1036]:
+                  - button "User avatar Águeda 𓂀𓋹" [ref=e1038]:
+                    - img "User avatar" [ref=e1041]
+                  - button "User avatar Jonathan Campoverde" [ref=e1043]:
+                    - img "User avatar" [ref=e1046]
+                  - button "User avatar Fundación Kunayan" [ref=e1048]:
+                    - img "User avatar" [ref=e1051]
+            - generic [ref=e1052]:
+              - generic [ref=e1054]:
+                - generic [ref=e1055]:
+                  - button [ref=e1057] [cursor=pointer]:
+                    - img "Go back" [ref=e1059]
+                  - link "Open the profile page of joelduenasc" [ref=e1062] [cursor=pointer]:
+                    - /url: /joelduenasc/
+                    - generic [ref=e1063]:
+                      - img "user-profile-picture" [ref=e1066]
+                      - heading "Joel Dueñas" [level=2] [ref=e1070]
+                  - generic [ref=e1072]:
+                    - button [ref=e1073] [cursor=pointer]:
+                      - img "Expand" [ref=e1075]
+                    - button [ref=e1077] [cursor=pointer]:
+                      - img "Close" [ref=e1079]
+                - separator [ref=e1082]
+              - generic "Joel Dueñas" [ref=e1083]:
+                - generic [ref=e1085]:
+                  - generic [ref=e1089]:
+                    - generic [ref=e1090]:
+                      - img "user-profile-picture" [ref=e1094]
+                      - generic [ref=e1095]:
+                        - heading "Joel Dueñas" [level=2] [ref=e1098]
+                        - generic [ref=e1100]: joelduenasc · Instagram
+                        - link "View profile" [ref=e1103] [cursor=pointer]:
+                          - /url: /joelduenasc/
+                    - generic [ref=e1107]:
+                      - generic [ref=e1108]: Wed 9:42 PM
+                      - group [ref=e1111]:
+                        - generic [ref=e1114]:
+                          - article [ref=e1115]:
+                            - generic [ref=e1117]:
+                              - generic [ref=e1120]:
+                                - text: Hola, Joel
+                                - img "👋" [ref=e1122]
+                                - text: "Vimos tu trabajo en batería con Delirio y su paso por el Teatro Capitol. Tu escena necesita un espacio propio para que la música de Quito siga encontrando gente. Te invitamos a explorar perfiles y lanzamientos en TDF y seguir un primer proyecto; el enlace abre la intención profesional por tu trabajo como productor:"
+                                - link "https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=Producer&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a" [ref=e1124] [cursor=pointer]:
+                                  - /url: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=Producer&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a
+                                - text: "Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                              - link "TDF Records" [ref=e1125] [cursor=pointer]:
+                                - /url: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=Producer&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a
+                          - generic [ref=e1130]:
+                            - group "Message actions":
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - button "React to message from tdf.records.label":
+                                      - generic:
+                                        - img "React to message from tdf.records.label"
+                                - generic:
+                                  - generic:
+                                    - button "Reply to message from tdf.records.label":
+                                      - generic:
+                                        - img "Reply to message from tdf.records.label"
+                                - generic:
+                                  - generic:
+                                    - button "See more options for message from tdf.records.label":
+                                      - generic:
+                                        - img "See more options for message from tdf.records.label"
+                    - generic [ref=e1131]: Seen
+                  - generic [ref=e1141]:
+                    - button [ref=e1144] [cursor=pointer]:
+                      - img "Choose an emoji" [ref=e1146]
+                    - generic [ref=e1148]:
+                      - textbox [ref=e1149]:
+                        - paragraph [ref=e1150]
+                      - generic: Message...
+                    - generic [ref=e1151]:
+                      - button [ref=e1152] [cursor=pointer]:
+                        - img "Voice Clip" [ref=e1154]
+                      - button [ref=e1157] [cursor=pointer]:
+                        - img "Add Photo or Video" [ref=e1159]
+                      - button [ref=e1164] [cursor=pointer]:
+                        - img "Choose a GIF or sticker" [ref=e1166]

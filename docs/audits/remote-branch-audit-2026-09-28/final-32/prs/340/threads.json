@@ -1,0 +1,31 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 340,
+          "reviewDecision": "REVIEW_REQUIRED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "b8c0e38cdd365e7f977d5cf15f93c164ebfc2149",
+          "baseRefName": "codex/payment-checkout-surfaces-20260914",
+          "isDraft": true,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          }
+        }
+      }
+    }
+  }
+]

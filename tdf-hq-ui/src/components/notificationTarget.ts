@@ -11,5 +11,9 @@ export function notificationTargetPath(notification: NotificationDTO): string | 
       : '/solicitudes-acceso';
   }
 
+  if (notification.nTargetType === 'music_release') {
+    return '/label/releases';
+  }
+
   return null;
 }

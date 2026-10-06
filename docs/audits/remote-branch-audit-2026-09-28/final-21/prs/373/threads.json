@@ -1,0 +1,31 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 373,
+          "reviewDecision": null,
+          "mergeStateStatus": "UNSTABLE",
+          "mergeable": "MERGEABLE",
+          "headRefOid": "f03f366de44c8ad09248e9d399caa5994af06d5a",
+          "baseRefName": "fix/reservation-pluscal-integrity",
+          "isDraft": true,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          }
+        }
+      }
+    }
+  }
+]

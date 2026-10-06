@@ -1,0 +1,92 @@
+{
+  "id": 111326002813,
+  "run_id": 37164998146,
+  "workflow_name": "Event operations verification",
+  "head_branch": "audit/event-stack-consolidation-20260928",
+  "run_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/runs/37164998146",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOQPdUrM8AAAAZ64v-fQ",
+  "head_sha": "34ca75d3d92d2a6def22e63ddd47baa96edca878",
+  "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/jobs/111326002813",
+  "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/37164998146/job/111326002813",
+  "status": "completed",
+  "conclusion": "failure",
+  "created_at": "2026-10-04T00:27:23Z",
+  "started_at": "2026-10-04T00:27:26Z",
+  "completed_at": "2026-10-04T00:28:08Z",
+  "name": "postgres-task-completion",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-10-04T00:27:26Z",
+      "completed_at": "2026-10-04T00:27:27Z"
+    },
+    {
+      "name": "Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-10-04T00:27:27Z",
+      "completed_at": "2026-10-04T00:27:33Z"
+    },
+    {
+      "name": "Run actions/setup-node@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-10-04T00:27:33Z",
+      "completed_at": "2026-10-04T00:27:33Z"
+    },
+    {
+      "name": "Verify completion runner isolation and formal gates",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-10-04T00:27:33Z",
+      "completed_at": "2026-10-04T00:27:33Z"
+    },
+    {
+      "name": "Verify completion guards, rollback and concurrent writers",
+      "status": "completed",
+      "conclusion": "failure",
+      "number": 5,
+      "started_at": "2026-10-04T00:27:33Z",
+      "completed_at": "2026-10-04T00:28:05Z"
+    },
+    {
+      "name": "Post Run actions/setup-node@v7",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 9,
+      "started_at": "2026-10-04T00:28:05Z",
+      "completed_at": "2026-10-04T00:28:05Z"
+    },
+    {
+      "name": "Post Run actions/checkout@v7",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10,
+      "started_at": "2026-10-04T00:28:05Z",
+      "completed_at": "2026-10-04T00:28:06Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 11,
+      "started_at": "2026-10-04T00:28:06Z",
+      "completed_at": "2026-10-04T00:28:06Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/111326002813",
+  "labels": [
+    "ubuntu-latest"
+  ],
+  "runner_id": 1000047288,
+  "runner_name": "GitHub Actions 1000047288",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}

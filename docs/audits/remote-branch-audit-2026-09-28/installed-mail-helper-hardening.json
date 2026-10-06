@@ -1,0 +1,8 @@
+{
+  "time": "2026-09-30T09:57:39.195872+00:00",
+  "action": "updated_installed_mail_provenance_helper",
+  "path": "/Users/diegosaa/GitHub/tdf-app/tmp/mail-deliverability/production_access.py",
+  "before_sha256": "63ac7637eac3b2eb8619e5dfffd4e9a6500f9d99910b2e7986ceb46abd30d2b2",
+  "sha256": "e5c9d751e8590f544d9a7777b37a02d3b7d20e0c8a78910fa44760e2d5b03586",
+  "launchagent_unchanged": true
+}

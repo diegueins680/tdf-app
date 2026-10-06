@@ -1,0 +1,14 @@
+ docs/adr/0117-shared-bounded-payment-transport.md  | 123 +++++++++
+ .../ecuador-payment-platform-audit-2026-09-11.md   |  11 +
+ docs/payments/http-boundary-2026-09-14.md          | 100 +++++++
+ docs/payments/operator-runbooks.md                 |   7 +
+ tdf-hq/src/TDF/Commerce/ProviderAdapter/Http.hs    | 174 ++++++++----
+ tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs  |   6 +-
+ tdf-hq/src/TDF/Server.hs                           | 154 ++---------
+ tdf-hq/src/TDF/Server/CourseCheckout.hs            |   7 +-
+ tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs         |   7 +-
+ tdf-hq/src/TDF/Server/EventTicketCheckout.hs       |   7 +-
+ tdf-hq/src/TDF/Server/ProviderExecution.hs         |   6 +-
+ tdf-hq/src/TDF/Server/ServiceStorefront.hs         | 174 +++++-------
+ tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs      | 302 ++++++++++++++++++++-
+ 13 files changed, 772 insertions(+), 306 deletions(-)

@@ -1,0 +1,223 @@
+{
+  "state": "OPEN",
+  "headRefOid": "36aff567c1d6daeb63088a765dc5e48e69fe2d09",
+  "baseRefName": "main",
+  "reviewThreads": {
+    "nodes": [
+      {
+        "id": "PRRT_kwDOQPdUrM6mvT5q",
+        "isResolved": true,
+        "comments": {
+          "nodes": [
+            {
+              "id": "PRRC_kwDOQPdUrM71zD7r",
+              "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Retarget scheduled enrichment before stopping Fly**\n\nFor scheduled production runs, `.github/workflows/artist-enrichment-daily.yml:33` still sets `TDF_API_BASE` to `https://tdf-hq.fly.dev` and lines 67\u201378 execute enrichment in production mode. With both Fly API machines stopped and their TDF role set to `NOLOGIN` as recorded here, every daily run targets the retired backend rather than the current Hetzner database and cannot perform enrichment. Retarget or pause this workflow before treating the old writers as retired.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4123803371"
+            },
+            {
+              "id": "PRRC_kwDOQPdUrM711zQg",
+              "body": "Follow-up 7def35976f62dd153127d25217e22d3f0d19f3aa: Retargeted the scheduled/manual artist enrichment API base to https://api.tdfrecords.net. Existing scope, publication policy, authentication and concurrency are unchanged. All messaging/enrichment regressions (111 tests) and CI contract tests (25) passed. No production enrichment run or deployment was manually triggered.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124521504"
+            }
+          ]
+        }
+      },
+      {
+        "id": "PRRT_kwDOQPdUrM6mvT6B",
+        "isResolved": false,
+        "comments": {
+          "nodes": [
+            {
+              "id": "PRRC_kwDOQPdUrM71zD8D",
+              "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Complete the authentication and upload gates before declaring success**\n\nIn this deployed state, writes have already been enabled even though these end-to-end checks remain unperformed, while the cutover procedure in `ops/hetzner/README.md:143-145` explicitly requires Google authentication and uploads to be verified before reopening writes. This leaves two user-facing write paths unvalidated after the hostname, database, and asset-storage migration despite the record calling the cutover complete; either perform those gates or record an explicit waiver and keep the cutover status incomplete.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4123803395"
+            },
+            {
+              "id": "PRRC_kwDOQPdUrM7110DT",
+              "body": "Follow-up 7def35976f62dd153127d25217e22d3f0d19f3aa: Corrected both documents to label cutover validation incomplete and distinguish the observed traffic/writer transition from the unperformed Google interactive-login and authenticated-upload gates. No gate waiver is claimed. This thread remains open until an authorized operator performs and records those end-to-end checks; the audit has not deployed or performed production writes.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124524755"
+            }
+          ]
+        }
+      },
+      {
+        "id": "PRRT_kwDOQPdUrM6mv4sP",
+        "isResolved": true,
+        "comments": {
+          "nodes": [
+            {
+              "id": "PRRC_kwDOQPdUrM71z8eE",
+              "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Retarget messaging-token refreshes to Hetzner**\n\nIn the stopped-Fly state recorded here, the hourly `.github/workflows/check-messaging-token.yml:56-65` still runs mutating maintenance with `FLY_APP_NAME=tdf-hq`, and `scripts/check-messaging-token.mjs:175-188` persists refreshed Instagram/Facebook tokens only through `flyctl secrets set`. When either credential enters its refresh window, the live Hetzner `api.env` will not receive the replacement, so messaging will eventually use an expired credential while the retired Fly app is mutated instead; move rotation to the current deployment's secret store or make this schedule read-only.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124034948"
+            },
+            {
+              "id": "PRRC_kwDOQPdUrM711zg-",
+              "body": "Follow-up 7def35976f62dd153127d25217e22d3f0d19f3aa: The hourly and manual workflow now invokes the existing read-only --check path, rejects refresh requests, and contains no Fly setup or credentials. Missing, invalid, expired and soon-expiring tokens still fail and notify. Existing exhaustive validity/expiry tests and workflow guard tests pass. A reviewed Hetzner secret-store integration remains pending; the runbook explicitly requires operator rotation and synchronization of GitHub check credentials and does not mistake those for live-service verification. No credentials were changed.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124522558"
+            }
+          ]
+        }
+      },
+      {
+        "id": "PRRT_kwDOQPdUrM6mv4sV",
+        "isResolved": true,
+        "comments": {
+          "nodes": [
+            {
+              "id": "PRRC_kwDOQPdUrM71z8eL",
+              "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Point the course publisher at the live API**\n\nAfter this cutover, the documented production command in `docs/courses/README.md:19-28` still leaves the API base unset and identifies the Fly hostname as live, while `scripts/upsert-course.mjs:8-12` therefore posts to `https://tdf-hq.fly.dev`. With the old machines stopped and their database role disabled, operators following that runbook cannot publish courses to the live Hetzner database; update both the helper default and its production instructions to use `https://api.tdfrecords.net`.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124034955"
+            },
+            {
+              "id": "PRRC_kwDOQPdUrM711z1d",
+              "body": "Follow-up 7def35976f62dd153127d25217e22d3f0d19f3aa: Updated the course publisher default and production documentation to https://api.tdfrecords.net. Three mocked-request checks passed: production default, explicit course-base override precedence, and legacy VITE base override. Bearer authentication and request payload are unchanged; no course was published.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124523869"
+            }
+          ]
+        }
+      },
+      {
+        "id": "PRRT_kwDOQPdUrM6mxHze",
+        "isResolved": true,
+        "comments": {
+          "nodes": [
+            {
+              "id": "PRRC_kwDOQPdUrM7113My",
+              "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Retarget the manual artist-enrichment entry point**\n\nAlthough this retargets the scheduled job, the fresh missed path beyond the prior scheduled-run issue is the documented manual workflow: `scripts/artist-enrichment.mjs:19` still defaults to `https://tdf-hq.fly.dev`, and every command in `docs/artist-enrichment-runbook.md:80-121` relies on that default. After the old machines and database role are disabled, operators running dry-runs, bounded production runs, or media ingestion from the runbook will contact the retired backend unless they know to add an undocumented override; update the script default and runbook alongside this workflow.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124537650"
+            },
+            {
+              "id": "PRRC_kwDOQPdUrM712c2U",
+              "body": "Fixed in 5486b49144f9b0d5576cef5f2e59d927c66e334f. Manual enrichment now defaults to https://api.tdfrecords.net and retains explicit TDF_API_BASE/API_BASE overrides. The runbook documents these and points backup/recovery operations to the current guarded Hetzner procedure, preserving post-cutover writes. A mocked production-API boundary regression verifies all three routing cases without network writes. All 113 messaging/enrichment tests and the exact specification gate (3 inventory and 9 evidence/escrow regressions) pass.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124691860"
+            }
+          ]
+        }
+      },
+      {
+        "id": "PRRT_kwDOQPdUrM6mxHzk",
+        "isResolved": true,
+        "comments": {
+          "nodes": [
+            {
+              "id": "PRRC_kwDOQPdUrM7113M6",
+              "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Update the messaging-token operator guide**\n\nWhen an expiring token requires maintenance, the primary guide still states at `docs/INSTAGRAM_TOKEN_SETUP.md:160-164` that the hourly schedule and manual `action=refresh` perform automatic refresh and update Fly. This change instead rejects `refresh` and makes the schedule read-only, so an operator following that guide cannot rotate the credential and may incorrectly assume the hourly job still maintains it until messaging fails; replace those instructions with the new Hetzner rotation procedure.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124537658"
+            },
+            {
+              "id": "PRRC_kwDOQPdUrM712dRB",
+              "body": "Fixed in 5486b49144f9b0d5576cef5f2e59d927c66e334f. Updated the primary messaging guide: scheduled/manual checks are read-only, action=refresh is rejected, and legacy Fly maintenance is explicitly retired. The guide states automated Hetzner rotation is not implemented and gives the authorized operator sequence: validated replacement, secure current runtime persistence under existing deployment controls, live verification, then GitHub check-secret synchronization. Failures remain visible. No credential rotation, deployment or completion claim was made. All 113 messaging/enrichment tests and the exact specification gate (3 inventory and 9 evidence/escrow regressions) pass.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124693569"
+            }
+          ]
+        }
+      },
+      {
+        "id": "PRRT_kwDOQPdUrM6mxHzr",
+        "isResolved": true,
+        "comments": {
+          "nodes": [
+            {
+              "id": "PRRC_kwDOQPdUrM7113NC",
+              "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Retarget social-webhook repair commands before stopping Fly**\n\nOnce the old Fly API is stopped as recorded here, the active diagnostic at `scripts/diagnose-social.mjs:53-60` still tells operators to repair missing Instagram and Facebook subscriptions by registering callbacks under `tdf-hq.fly.dev`. In the exact scenario where either subscription must be recreated, following the generated command routes inbound messages to the stopped backend; change those callback URLs to `api.tdfrecords.net` as part of the cutover.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124537666"
+            },
+            {
+              "id": "PRRC_kwDOQPdUrM712df1",
+              "body": "Fixed in 5486b49144f9b0d5576cef5f2e59d927c66e334f. Both missing-subscription repair commands now target the canonical API callbacks. They print environment placeholders instead of supplied secret values; the refresh guidance uses the current secret-store procedure and no longer recommends Fly updates/restarts. The mocked diagnostic regression verifies both URLs and absence of supplied credentials/retired repair commands. No provider subscription was changed. All 113 messaging/enrichment tests and the exact specification gate (3 inventory and 9 evidence/escrow regressions) pass.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124694517"
+            }
+          ]
+        }
+      },
+      {
+        "id": "PRRT_kwDOQPdUrM6mxj_I",
+        "isResolved": true,
+        "comments": {
+          "nodes": [
+            {
+              "id": "PRRC_kwDOQPdUrM712jCp",
+              "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Detect stale webhook callbacks before suppressing repairs**\n\nWhen Meta returns an existing `instagram` or `page` subscription whose `callback_url` still targets `tdf-hq.fly.dev` (or whose `active` flag is false), the object remains truthy, so these new Hetzner repair commands are never shown and the summary reports no subscription issue. In that post-cutover state inbound messages continue going to the stopped backend; compare the returned callback and active state with the expected `api.tdfrecords.net` endpoint and offer repair whenever either is wrong.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124717225"
+            },
+            {
+              "id": "PRRC_kwDOQPdUrM713IPO",
+              "body": "Fixed in e762f67b2720b3337c8409b6c3b652224f090083. The diagnostic now requires active=true and the exact current callback URL for each subscription. Missing, inactive or stale callbacks trigger the corresponding repair command and summary issue. Regression cases exercise both channels with stale URLs, inactive current URLs and active current URLs, without provider calls. All 115 messaging/enrichment regressions and the unchanged specification inventory check pass.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124869582"
+            }
+          ]
+        }
+      },
+      {
+        "id": "PRRT_kwDOQPdUrM6mxj_P",
+        "isResolved": true,
+        "comments": {
+          "nodes": [
+            {
+              "id": "PRRC_kwDOQPdUrM712jCy",
+              "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Use the configured token in the Facebook repair command**\n\nWhen the Facebook subscription is missing, copying this generated command submits the literal `YOUR_FACEBOOK_WEBHOOK_VERIFY_TOKEN`, even though no such environment variable or separate backend setting exists. The Facebook verifier in `tdf-hq/src/TDF/ServerExtra.hs` accepts the configured Facebook messaging token, with `INSTAGRAM_VERIFY_TOKEN` as fallback, so Meta's callback challenge will be rejected unless the operator notices and manually substitutes the placeholder; emit one of the configured accepted values as the Instagram command already does.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124717234"
+            },
+            {
+              "id": "PRRC_kwDOQPdUrM713IcY",
+              "body": "Fixed in e762f67b2720b3337c8409b6c3b652224f090083. The Facebook repair command now expands the configured FACEBOOK_MESSAGING_TOKEN, its supported FACEBOOK_PAGE_ACCESS_TOKEN alias, or INSTAGRAM_VERIFY_TOKEN fallback. These match the existing Config/ServerExtra verification contract. The command prints environment references rather than secret values. A local curl-stub regression executes all three expansions and verifies the accepted token is supplied without network writes. All 115 messaging/enrichment regressions and the unchanged specification inventory check pass.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124870424"
+            }
+          ]
+        }
+      },
+      {
+        "id": "PRRT_kwDOQPdUrM6myA5L",
+        "isResolved": true,
+        "comments": {
+          "nodes": [
+            {
+              "id": "PRRC_kwDOQPdUrM713QTK",
+              "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Retarget the bundled artist importer**\n\nWith both old API machines stopped, running the active, tested importer without an explicit override still sends its mutating party POSTs to Fly because `tdf-hq/scripts/create_artists_from_list.sh:17` defaults `BASE_URL` to `https://tdf-hq.fly.dev`. Operators following the documented bundled-import flow will therefore fail against the retired backend rather than create parties in the live Hetzner database; retarget this default alongside the other manual artist tools.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124902602"
+            },
+            {
+              "id": "PRRC_kwDOQPdUrM713okZ",
+              "body": "Fixed in 36aff567c1d6daeb63088a765dc5e48e69fe2d09. The bundled importer now defaults to https://api.tdfrecords.net while preserving BASE_URL overrides, reviewed entity types and stable idempotency keys. The curl-stub regression verifies all 31 default requests, override routing, retry identity and fail-fast behavior. The login-helper production example is also corrected. No parties were created. All 121 helper/token/enrichment/import tests, 34 CI/evidence regressions, three inventory tests and the current inventory check pass.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4125002009"
+            }
+          ]
+        }
+      },
+      {
+        "id": "PRRT_kwDOQPdUrM6myA5Q",
+        "isResolved": true,
+        "comments": {
+          "nodes": [
+            {
+              "id": "PRRC_kwDOQPdUrM713QTU",
+              "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Retarget payment webhook runbooks**\n\nWhen a Stripe or PayPal callback must be recreated, the production instructions still direct operators to the stopped backend: `SERVICE_STOREFRONT_DEPLOYMENT.md:49-50`, `STRIPE_DEPLOYMENT_GUIDE.md:30`, `STRIPE_TICKETING_CHECKLIST.md:21`, and `scripts/test-stripe-integration.sh:98` all prescribe `tdf-hq.fly.dev`. Following any of these after the recorded callback migration would route payment events away from the live API, so update the active payment runbooks and helper output to the canonical Hetzner endpoints.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124902612"
+            },
+            {
+              "id": "PRRC_kwDOQPdUrM713oy3",
+              "body": "Fixed in 36aff567c1d6daeb63088a765dc5e48e69fe2d09. Updated all identified active payment callback URLs and helper output to the canonical API. The guides point to the current guarded runtime procedure and preserve webhook IDs/signing secrets and existing provider/environment gates; obsolete deployment instructions are removed or explicitly marked historical. The helper no longer claims unperformed payment tests passed and fails on an unhealthy/unreachable health probe, covered by a mocked regression in the existing repo-quality suite. No payment, webhook or deployment was performed. All 121 helper/token/enrichment/import tests, 34 CI/evidence regressions, three inventory tests and the current inventory check pass.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4125002935"
+            }
+          ]
+        }
+      },
+      {
+        "id": "PRRT_kwDOQPdUrM6myA5W",
+        "isResolved": false,
+        "comments": {
+          "nodes": [
+            {
+              "id": "PRRC_kwDOQPdUrM713QTg",
+              "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Honor aliases in the Instagram repair command**\n\nWhen the diagnostic is run with the aliases it explicitly accepts (`META_APP_ID`/`META_APP_SECRET`), or with the backend-supported `IG_VERIFY_TOKEN`, it can detect a stale subscription but the printed command expands only `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`, and `INSTAGRAM_VERIFY_TOKEN`. Copying that command therefore submits an empty app path, access token, or verify token even though the diagnostic itself had valid credentials; use shell fallbacks for the accepted aliases without interpolating their secret values.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124902624"
+            }
+          ]
+        }
+      }
+    ],
+    "pageInfo": {
+      "hasNextPage": false
+    }
+  }
+}

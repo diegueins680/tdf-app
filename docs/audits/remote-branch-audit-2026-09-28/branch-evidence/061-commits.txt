@@ -1,0 +1,4 @@
+259becd7b3763e084b54da8749b1e6fde8d9d862 2026-09-15T14:38:06-05:00 diegueins680 Retain fence deletion and dependency exception guards in successor
+831e4b93f1798d478c1d46d18da2d48ce25a9188 2026-09-15T12:01:37-05:00 diegueins680 fix(events): preserve RACI validity in task commit checks
+35f261097d9e295794f4db7404ae7d9556a8e9d4 2026-09-14T16:41:59-05:00 continuous-improvement-loop[bot] docs(events): record draft PR chain and activation blockers
+a6cd9d1892ddafda06eab73a4e71389e802a5f7a 2026-09-14T16:35:55-05:00 continuous-improvement-loop[bot] fix(events): validate task invariants at transaction commit

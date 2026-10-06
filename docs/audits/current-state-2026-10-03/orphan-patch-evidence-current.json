@@ -1,0 +1,32 @@
+[
+  {
+    "branch": "audit/critical-completion-20260916",
+    "patches": [
+      "- d24e025b8bf8c90ce373fab277ebe869eaf0fce5"
+    ]
+  },
+  {
+    "branch": "docs/critical-completion-closeout-20260917",
+    "patches": [
+      "- 9523a4816b4668581eb7232212cc53398bd844ac"
+    ]
+  },
+  {
+    "branch": "fix/access-request-requester-name-20260916",
+    "patches": [
+      "- efb09219be25941af574eaac4ec5d2e7e3a421b2"
+    ]
+  },
+  {
+    "branch": "fix/instagram-checkpoint-metadata-20260916",
+    "patches": [
+      "- 40034a31e32ca7d1dbbf6dae67efda8eef982586"
+    ]
+  },
+  {
+    "branch": "fix/preserve-enabled-paypal-webhooks-20260916",
+    "patches": [
+      "- a28b94d74a49ebdf71481694bc910ab95298e027"
+    ]
+  }
+]

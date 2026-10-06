@@ -1,0 +1,1253 @@
+{
+  "time": "2026-10-03T22:35:50.009554+00:00",
+  "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+  "proposed_merge": "eaeb5af7359e2b580c2cd78bbf7861697c75a497",
+  "proposed_merge_comparison": {
+    "url": "https://api.github.com/repos/diegueins680/tdf-app/compare/6e7b87d8ad3a4c56b033484fe7174dceacec5961...eaeb5af7359e2b580c2cd78bbf7861697c75a497",
+    "html_url": "https://github.com/diegueins680/tdf-app/compare/6e7b87d8ad3a4c56b033484fe7174dceacec5961...eaeb5af7359e2b580c2cd78bbf7861697c75a497",
+    "permalink_url": "https://github.com/diegueins680/tdf-app/compare/diegueins680:6e7b87d...diegueins680:eaeb5af",
+    "diff_url": "https://github.com/diegueins680/tdf-app/compare/6e7b87d8ad3a4c56b033484fe7174dceacec5961...eaeb5af7359e2b580c2cd78bbf7861697c75a497.diff",
+    "patch_url": "https://github.com/diegueins680/tdf-app/compare/6e7b87d8ad3a4c56b033484fe7174dceacec5961...eaeb5af7359e2b580c2cd78bbf7861697c75a497.patch",
+    "base_commit": {
+      "sha": "6e7b87d8ad3a4c56b033484fe7174dceacec5961",
+      "node_id": "C_kwDOQPdUrNoAKDZlN2I4N2Q4YWQzYTRjNTZiMDMzNDg0ZmU3MTc0ZGNlYWNlYzU5NjE",
+      "commit": {
+        "author": {
+          "name": "diegueins680",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-10-03T21:53:23Z"
+        },
+        "committer": {
+          "name": "diegueins680",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-10-03T21:53:23Z"
+        },
+        "message": "Align directory visibility with private discovery ownership",
+        "tree": {
+          "sha": "fbe29413a94f45b58298649ce5cc7ac6764d2563",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/fbe29413a94f45b58298649ce5cc7ac6764d2563"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/6e7b87d8ad3a4c56b033484fe7174dceacec5961",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/6e7b87d8ad3a4c56b033484fe7174dceacec5961",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/6e7b87d8ad3a4c56b033484fe7174dceacec5961",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/6e7b87d8ad3a4c56b033484fe7174dceacec5961/comments",
+      "author": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "committer": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "parents": [
+        {
+          "sha": "9ecac924a43f71e59b3b9b2d713aa3eed4a8772d",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/9ecac924a43f71e59b3b9b2d713aa3eed4a8772d",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/9ecac924a43f71e59b3b9b2d713aa3eed4a8772d"
+        }
+      ]
+    },
+    "merge_base_commit": {
+      "sha": "6e7b87d8ad3a4c56b033484fe7174dceacec5961",
+      "node_id": "C_kwDOQPdUrNoAKDZlN2I4N2Q4YWQzYTRjNTZiMDMzNDg0ZmU3MTc0ZGNlYWNlYzU5NjE",
+      "commit": {
+        "author": {
+          "name": "diegueins680",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-10-03T21:53:23Z"
+        },
+        "committer": {
+          "name": "diegueins680",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-10-03T21:53:23Z"
+        },
+        "message": "Align directory visibility with private discovery ownership",
+        "tree": {
+          "sha": "fbe29413a94f45b58298649ce5cc7ac6764d2563",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/fbe29413a94f45b58298649ce5cc7ac6764d2563"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/6e7b87d8ad3a4c56b033484fe7174dceacec5961",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/6e7b87d8ad3a4c56b033484fe7174dceacec5961",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/6e7b87d8ad3a4c56b033484fe7174dceacec5961",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/6e7b87d8ad3a4c56b033484fe7174dceacec5961/comments",
+      "author": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "committer": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "parents": [
+        {
+          "sha": "9ecac924a43f71e59b3b9b2d713aa3eed4a8772d",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/9ecac924a43f71e59b3b9b2d713aa3eed4a8772d",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/9ecac924a43f71e59b3b9b2d713aa3eed4a8772d"
+        }
+      ]
+    },
+    "status": "ahead",
+    "ahead_by": 2,
+    "behind_by": 0,
+    "total_commits": 2,
+    "commits": [
+      {
+        "sha": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "node_id": "C_kwDOQPdUrNoAKDQxMDBhMDRjMGRlOTQ5NmU3YmY5Y2Q2ZDY1NjYwMmRlZTFkOGUyNzc",
+        "commit": {
+          "author": {
+            "name": "diegueins680",
+            "email": "cuco.saa@gmail.com",
+            "date": "2026-10-03T22:04:05Z"
+          },
+          "committer": {
+            "name": "diegueins680",
+            "email": "cuco.saa@gmail.com",
+            "date": "2026-10-03T22:04:05Z"
+          },
+          "message": "Register and verify discovery metadata visibility migration",
+          "tree": {
+            "sha": "cffbdc75b78a52998e091ad6b8e74e0d55f486e0",
+            "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/cffbdc75b78a52998e091ad6b8e74e0d55f486e0"
+          },
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+          "comment_count": 0,
+          "verification": {
+            "verified": false,
+            "reason": "unsigned",
+            "signature": null,
+            "payload": null,
+            "verified_at": null
+          }
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "html_url": "https://github.com/diegueins680/tdf-app/commit/4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/4100a04c0de9496e7bf9cd6d656602dee1d8e277/comments",
+        "author": {
+          "login": "diegueins680",
+          "id": 2753581,
+          "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+          "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/diegueins680",
+          "html_url": "https://github.com/diegueins680",
+          "followers_url": "https://api.github.com/users/diegueins680/followers",
+          "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+          "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+          "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+          "repos_url": "https://api.github.com/users/diegueins680/repos",
+          "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "committer": {
+          "login": "diegueins680",
+          "id": 2753581,
+          "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+          "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/diegueins680",
+          "html_url": "https://github.com/diegueins680",
+          "followers_url": "https://api.github.com/users/diegueins680/followers",
+          "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+          "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+          "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+          "repos_url": "https://api.github.com/users/diegueins680/repos",
+          "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "parents": [
+          {
+            "sha": "6e7b87d8ad3a4c56b033484fe7174dceacec5961",
+            "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/6e7b87d8ad3a4c56b033484fe7174dceacec5961",
+            "html_url": "https://github.com/diegueins680/tdf-app/commit/6e7b87d8ad3a4c56b033484fe7174dceacec5961"
+          }
+        ]
+      },
+      {
+        "sha": "eaeb5af7359e2b580c2cd78bbf7861697c75a497",
+        "node_id": "C_kwDOQPdUrNoAKGVhZWI1YWY3MzU5ZTJiNTgwYzJjZDc4YmJmNzg2MTY5N2M3NWE0OTc",
+        "commit": {
+          "author": {
+            "name": "Diego Saa",
+            "email": "cuco.saa@gmail.com",
+            "date": "2026-10-03T22:05:30Z"
+          },
+          "committer": {
+            "name": "GitHub",
+            "email": "noreply@github.com",
+            "date": "2026-10-03T22:05:30Z"
+          },
+          "message": "Merge 4100a04c0de9496e7bf9cd6d656602dee1d8e277 into 49f1f0ec087067d17f62d91df1b616eb053eb894",
+          "tree": {
+            "sha": "cffbdc75b78a52998e091ad6b8e74e0d55f486e0",
+            "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/cffbdc75b78a52998e091ad6b8e74e0d55f486e0"
+          },
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/eaeb5af7359e2b580c2cd78bbf7861697c75a497",
+          "comment_count": 0,
+          "verification": {
+            "verified": true,
+            "reason": "valid",
+            "signature": "-----BEGIN PGP SIGNATURE-----\n\nwsFcBAABCAAQBQJqwXwqCRC1aQ7uu5UhlAAAf9IQAAiiMO9vWEvwQQ4borU5hljO\nrvn5mJiQfJm9d31miUFqtKVhh9BslY5Ic396NsEmZ/vna2QTHZnCYi2tU0NwLkSV\nvvoLgK2iecAt2rPRw3ht7YoafajycjEJOKUFr4e9zD9m64L4lUnSGlmp9viBXNQO\nrAmwDqRfjUwtnZMPjVCBXkAAQvRlDRb7F3V7wu26T+B2qKDvJA+kE/ez+tyC7oDf\n6klnr2bUzjNvm1kXmNvRNFp6YqguWvUCqKokQIYX9j0i0EAJmftcujfYZkAQRues\n6xZxkwAcyHhZkiBIQ2kQ9xkEN4t7jb93uAJkSbVnaIa4xSUnYMZ4VxJZBXM8h6UG\nGKCeCAQUH/bRPSQ054M/SDT2cSf9l4BTKKbuR1HPf1OYZ6fObOLeRKxfyI8qhnzf\nRZJPhQqw1iD4SUEC0mxkENMBTV4Hvkz80ogJQGCrRuQXUHi+dsi5wYC9F8Ms9ejr\n+83JlRapyFaw6s6MQcsRlfMFwln89GVvxZRk0Y+uM626N5L7l2F8Oq09X3rhxNhr\nl+WBR6d8IeLqAF+eaHh8Vs9FffjFVt2Vss6GmLvAuGjtFuT5MGkKW85MyeSdUhvQ\nvO5pgNdUGn5Wh1rf+ITn7x5gXkmw2FmmfiO4seVj0cwmk2M07MkqNqWL7NAaEEfe\nrgTnfu+TlEOPEOrI28rq\n=nYgs\n-----END PGP SIGNATURE-----\n",
+            "payload": "tree cffbdc75b78a52998e091ad6b8e74e0d55f486e0\nparent 49f1f0ec087067d17f62d91df1b616eb053eb894\nparent 4100a04c0de9496e7bf9cd6d656602dee1d8e277\nauthor Diego Saa <cuco.saa@gmail.com> 1791065130 +0000\ncommitter GitHub <noreply@github.com> 1791065130 +0000\n\nMerge 4100a04c0de9496e7bf9cd6d656602dee1d8e277 into 49f1f0ec087067d17f62d91df1b616eb053eb894\n",
+            "verified_at": "2026-10-03T22:05:31Z"
+          }
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/eaeb5af7359e2b580c2cd78bbf7861697c75a497",
+        "html_url": "https://github.com/diegueins680/tdf-app/commit/eaeb5af7359e2b580c2cd78bbf7861697c75a497",
+        "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/eaeb5af7359e2b580c2cd78bbf7861697c75a497/comments",
+        "author": {
+          "login": "diegueins680",
+          "id": 2753581,
+          "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+          "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/diegueins680",
+          "html_url": "https://github.com/diegueins680",
+          "followers_url": "https://api.github.com/users/diegueins680/followers",
+          "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+          "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+          "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+          "repos_url": "https://api.github.com/users/diegueins680/repos",
+          "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "committer": {
+          "login": "web-flow",
+          "id": 19864447,
+          "node_id": "MDQ6VXNlcjE5ODY0NDQ3",
+          "avatar_url": "https://avatars.githubusercontent.com/u/19864447?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/web-flow",
+          "html_url": "https://github.com/web-flow",
+          "followers_url": "https://api.github.com/users/web-flow/followers",
+          "following_url": "https://api.github.com/users/web-flow/following{/other_user}",
+          "gists_url": "https://api.github.com/users/web-flow/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/web-flow/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/web-flow/subscriptions",
+          "organizations_url": "https://api.github.com/users/web-flow/orgs",
+          "repos_url": "https://api.github.com/users/web-flow/repos",
+          "events_url": "https://api.github.com/users/web-flow/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/web-flow/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "parents": [
+          {
+            "sha": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+            "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/49f1f0ec087067d17f62d91df1b616eb053eb894",
+            "html_url": "https://github.com/diegueins680/tdf-app/commit/49f1f0ec087067d17f62d91df1b616eb053eb894"
+          },
+          {
+            "sha": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+            "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+            "html_url": "https://github.com/diegueins680/tdf-app/commit/4100a04c0de9496e7bf9cd6d656602dee1d8e277"
+          }
+        ]
+      }
+    ],
+    "files": [
+      {
+        "sha": "b2e617c0ee2b353dbb25661aef5fcc5e5bd2084a",
+        "filename": "docs/Event_Discovery_Cron.md",
+        "status": "modified",
+        "additions": 11,
+        "deletions": 1,
+        "changes": 12,
+        "blob_url": "https://github.com/diegueins680/tdf-app/blob/eaeb5af7359e2b580c2cd78bbf7861697c75a497/docs%2FEvent_Discovery_Cron.md",
+        "raw_url": "https://github.com/diegueins680/tdf-app/raw/eaeb5af7359e2b580c2cd78bbf7861697c75a497/docs%2FEvent_Discovery_Cron.md",
+        "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/docs%2FEvent_Discovery_Cron.md?ref=eaeb5af7359e2b580c2cd78bbf7861697c75a497",
+        "patch": "@@ -265,4 +265,14 @@ provider-page implementation and verified source permission.\n \n Editorial updates and image uploads compare against the row locked for that write. Changed fields permanently lose ingestion ownership; unchanged fields retain their prior source evidence. Metadata edits and lineup replacement commit with the event update. A concurrent ownership, suppression or explicit workflow change is rechecked before writing.\n \n-Both provider and subscription reconciliation retain editorial visibility, ticket URLs and workflow choices. Source expiry or disappearance can still hide an event, but returning source data cannot claim an editor-owned or unproven legacy publication flag. Reconciliation advances the snapshot only for fields it still owns. No migration, feature activation or production rollout is introduced.\n+Both provider and subscription reconciliation retain editorial visibility, ticket URLs and workflow choices. Source expiry or disappearance can still hide an event, but returning source data cannot claim an editor-owned or unproven legacy publication flag. Reconciliation advances the snapshot only for fields it still owns. No feature activation or production rollout is introduced.\n+\n+The forward migration `2026-10-03_discovery_ownership_metadata_boundary.sql`\n+aligns the anonymous directory predicate with this stored-data boundary. It\n+changes only the existing function, preserving metadata validation, the composed\n+suppression view and all source data. Apply/reapply and both historical privacy\n+migration orders are covered by the production-schema rehearsal. Recovery is\n+forward-only: preserve the private snapshot and suppression predicates; restoring\n+the older allowlist would hide otherwise public imported events. If ingestion\n+must be paused operationally, use its existing source enablement controls and\n+retain all canonical/editorial data. This change does not activate any source."
+      },
+      {
+        "sha": "8e97b68a4f7ce21626a0e9b28127d0aacf8a24f8",
+        "filename": "docs/catalog-persistence/catalog-list-decisions.json",
+        "status": "modified",
+        "additions": 8,
+        "deletions": 3,
+        "changes": 11,
+        "blob_url": "https://github.com/diegueins680/tdf-app/blob/eaeb5af7359e2b580c2cd78bbf7861697c75a497/docs%2Fcatalog-persistence%2Fcatalog-list-decisions.json",
+        "raw_url": "https://github.com/diegueins680/tdf-app/raw/eaeb5af7359e2b580c2cd78bbf7861697c75a497/docs%2Fcatalog-persistence%2Fcatalog-list-decisions.json",
+        "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/docs%2Fcatalog-persistence%2Fcatalog-list-decisions.json?ref=eaeb5af7359e2b580c2cd78bbf7861697c75a497",
+        "patch": "@@ -13988,19 +13988,24 @@\n       }\n     },\n     {\n-      \"id\": \"7bf93825f1431a6d52d6\",\n+      \"id\": \"dc6d60d733c6eb69ebbf\",\n       \"classification\": \"genuine-technical-constant\",\n       \"disposition\": \"explicit-allowlist\",\n       \"specializedModel\": \"technical_constant_allowlist\",\n       \"priority\": \"P1-integrity\",\n       \"risk\": \"Divergence from persisted interaction authority can change privacy, counts or delivery.\",\n-      \"justification\": \"Ordered, checksum-pinned 159-entry migration registry: retains all 116 current-main entries in order, including event ingestion boundaries, followed by the 43 interaction and social compatibility entries. Original introduction commits and SQL bytes remain unchanged. This is immutable release authority, not editable product choices.\",\n+      \"justification\": \"Ordered, checksum-pinned 160-entry production migration protocol. All 159 previous entries, introduction SHAs and SQL bytes remain unchanged; one forward-only directory ownership metadata function repair follows the composed privacy prerequisite. The new introduction commit contains the exact SQL. This remains immutable release authority, not administrator-selectable product data.\",\n       \"reviewed\": true,\n       \"evidence\": {\n         \"file\": \"scripts/production-migrations.json\",\n         \"line\": 3\n       },\n-      \"reviewBatch\": \"universal-interactions-2026-09-28\"\n+      \"reviewBatch\": \"event-editorial-ownership-2026-10-03\",\n+      \"previousDecision\": {\n+        \"id\": \"7bf93825f1431a6d52d6\",\n+        \"justification\": \"Ordered, checksum-pinned 159-entry migration registry: retains all 116 current-main entries in order, including event ingestion boundaries, followed by the 43 interaction and social compatibility entries. Original introduction commits and SQL bytes remain unchanged. This is immutable release authority, not editable product choices.\",\n+        \"reviewBatch\": \"universal-interactions-2026-09-28\"\n+      }\n     },\n     {\n       \"id\": \"f4937ace95206e118d30\","
+      },
+      {
+        "sha": "f5e9f2f613bf677b7e375a000f697013ec6a4b2a",
+        "filename": "formal/system/inventory.json",
+        "status": "modified",
+        "additions": 2,
+        "deletions": 1,
+        "changes": 3,
+        "blob_url": "https://github.com/diegueins680/tdf-app/blob/eaeb5af7359e2b580c2cd78bbf7861697c75a497/formal%2Fsystem%2Finventory.json",
+        "raw_url": "https://github.com/diegueins680/tdf-app/raw/eaeb5af7359e2b580c2cd78bbf7861697c75a497/formal%2Fsystem%2Finventory.json",
+        "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/formal%2Fsystem%2Finventory.json?ref=eaeb5af7359e2b580c2cd78bbf7861697c75a497",
+        "patch": "@@ -1404,6 +1404,7 @@\n       \"tdf-hq/sql/2026-09-30_interaction_classified_expiry.sql\",\n       \"tdf-hq/sql/2026-09-30_interaction_records_publication.sql\",\n       \"tdf-hq/sql/2026-09-30_interaction_report_content_version.sql\",\n+      \"tdf-hq/sql/2026-10-03_discovery_ownership_metadata_boundary.sql\",\n       \"tdf-hq/sql/benchmark_admin_operations_control_center.sql\",\n       \"tdf-hq/sql/init_schema.sql\",\n       \"tdf-hq/sql/preflight_security_emergency_readiness.sql\",\n@@ -2002,7 +2003,7 @@\n     },\n     {\n       \"path\": \"docs/Event_Discovery_Cron.md\",\n-      \"sha256\": \"2d208d18b0d93a97b50c5ad61ffcf3abc52d58c5841d61a96adadb31ff2ddfb2\",\n+      \"sha256\": \"b7790a5027207efd6409ebd8efb207d8f8747e606b2cb855c3fafb6321cc3ef3\",\n       \"authority\": \"inferred\",\n       \"authorityBasis\": \"No explicit approval declaration extracted; retain source provenance for review\",\n       \"kind\": \"requirement-candidate\""
+      },
+      {
+        "sha": "699db6d39a9d92288abd300e8730e06324a2f63b",
+        "filename": "scripts/__tests__/production-release.test.mjs",
+        "status": "modified",
+        "additions": 1,
+        "deletions": 0,
+        "changes": 1,
+        "blob_url": "https://github.com/diegueins680/tdf-app/blob/eaeb5af7359e2b580c2cd78bbf7861697c75a497/scripts%2F__tests__%2Fproduction-release.test.mjs",
+        "raw_url": "https://github.com/diegueins680/tdf-app/raw/eaeb5af7359e2b580c2cd78bbf7861697c75a497/scripts%2F__tests__%2Fproduction-release.test.mjs",
+        "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/scripts%2F__tests__%2Fproduction-release.test.mjs?ref=eaeb5af7359e2b580c2cd78bbf7861697c75a497",
+        "patch": "@@ -165,6 +165,7 @@ test('production migration manifest uses immutable full commit SHAs', () => {\n     ['2026-09-07_directory_event_visibility_and_favorite_evidence', '2026-09-08_event_rsvp_identity_privacy_feed'],\n     ['2026-09-07_directory_event_visibility_and_favorite_evidence', '2026-09-17_directory_event_privacy_composition'],\n     ['2026-09-09_music_directory_suppressed_event_privacy', '2026-09-17_directory_event_privacy_composition'],\n+    ['2026-09-17_directory_event_privacy_composition', '2026-10-03_discovery_ownership_metadata_boundary'],\n     ['2026-09-07_artist_merch_storefronts', '2026-09-08_merch_reputation'],\n     ['2026-09-09_canonical_payment_lifecycle', '2026-09-10_payment_attempt_intent_binding'],\n   ]) {"
+      },
+      {
+        "sha": "3a5711f59517acd4b70c4b59c01a248e7f400576",
+        "filename": "scripts/lib/production-release.mjs",
+        "status": "modified",
+        "additions": 7,
+        "deletions": 0,
+        "changes": 7,
+        "blob_url": "https://github.com/diegueins680/tdf-app/blob/eaeb5af7359e2b580c2cd78bbf7861697c75a497/scripts%2Flib%2Fproduction-release.mjs",
+        "raw_url": "https://github.com/diegueins680/tdf-app/raw/eaeb5af7359e2b580c2cd78bbf7861697c75a497/scripts%2Flib%2Fproduction-release.mjs",
+        "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/scripts%2Flib%2Fproduction-release.mjs?ref=eaeb5af7359e2b580c2cd78bbf7861697c75a497",
+        "patch": "@@ -929,6 +929,13 @@ BEGIN\n        NOT ILIKE '%directory_social_event_metadata_is_public%' THEN\n     RAISE EXCEPTION 'directory_public_event does not enforce event metadata privacy';\n   END IF;\n+  IF directory_social_event_metadata_is_public('{\"isPublic\":true,\"_discoveryOwned\":{}}') IS DISTINCT FROM TRUE\n+     OR directory_social_event_metadata_is_public('{\"isPublic\":false,\"_discoveryOwned\":{}}') IS DISTINCT FROM FALSE\n+     OR directory_social_event_metadata_is_public('{\"isPublic\":true,\"_discoveryOwned\":null}') IS DISTINCT FROM FALSE\n+     OR directory_social_event_metadata_is_public('{\"isPublic\":true,\"_discoveryOwned\":{},\"unexpected\":1}') IS DISTINCT FROM FALSE\n+     OR directory_social_event_metadata_is_public('{\"isPublic\":true,\"_discoveryOwned\":{},\"_discoveryOwned\":{}}') IS DISTINCT FROM FALSE THEN\n+    RAISE EXCEPTION 'Directory metadata ownership/privacy boundary is missing or invalid';\n+  END IF;\n   IF pg_get_viewdef('public.directory_public_search_document'::regclass, TRUE)\n        NOT ILIKE '%directory_public_event%'\n      OR pg_get_viewdef('public.directory_public_search_document'::regclass, TRUE)"
+      },
+      {
+        "sha": "4e15805d4aee9f0902288ed30ef4ad09e9bfc3e3",
+        "filename": "scripts/production-migrations.json",
+        "status": "modified",
+        "additions": 5,
+        "deletions": 0,
+        "changes": 5,
+        "blob_url": "https://github.com/diegueins680/tdf-app/blob/eaeb5af7359e2b580c2cd78bbf7861697c75a497/scripts%2Fproduction-migrations.json",
+        "raw_url": "https://github.com/diegueins680/tdf-app/raw/eaeb5af7359e2b580c2cd78bbf7861697c75a497/scripts%2Fproduction-migrations.json",
+        "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/scripts%2Fproduction-migrations.json?ref=eaeb5af7359e2b580c2cd78bbf7861697c75a497",
+        "patch": "@@ -815,6 +815,11 @@\n       \"id\": \"2026-09-30_interaction_classified_expiry\",\n       \"path\": \"tdf-hq/sql/2026-09-30_interaction_classified_expiry.sql\",\n       \"introducedBy\": \"5966161d8cf7c31a776ea5c2778068fbbd78b920\"\n+    },\n+    {\n+      \"id\": \"2026-10-03_discovery_ownership_metadata_boundary\",\n+      \"path\": \"tdf-hq/sql/2026-10-03_discovery_ownership_metadata_boundary.sql\",\n+      \"introducedBy\": \"6e7b87d8ad3a4c56b033484fe7174dceacec5961\"\n     }\n   ]\n }"
+      },
+      {
+        "sha": "836f259a08953beb99af8064df55625f97b42ba2",
+        "filename": "scripts/test-automatic-migrations-production-schema.sh",
+        "status": "modified",
+        "additions": 3,
+        "deletions": 0,
+        "changes": 3,
+        "blob_url": "https://github.com/diegueins680/tdf-app/blob/eaeb5af7359e2b580c2cd78bbf7861697c75a497/scripts%2Ftest-automatic-migrations-production-schema.sh",
+        "raw_url": "https://github.com/diegueins680/tdf-app/raw/eaeb5af7359e2b580c2cd78bbf7861697c75a497/scripts%2Ftest-automatic-migrations-production-schema.sh",
+        "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/scripts%2Ftest-automatic-migrations-production-schema.sh?ref=eaeb5af7359e2b580c2cd78bbf7861697c75a497",
+        "patch": "@@ -87,6 +87,7 @@ node \"${repo_root}/scripts/render-production-schema-verification.mjs\" \\\n # Both historical orders occurred: late registration can apply an older view\n # after a newer privacy repair is already recorded in the immutable ledger.\n privacy_repair=\"${repo_root}/tdf-hq/sql/2026-09-17_directory_event_privacy_composition.sql\"\n+ownership_repair=\"${repo_root}/tdf-hq/sql/2026-10-03_discovery_ownership_metadata_boundary.sql\"\n for older_view in \\\n   2026-09-07_directory_event_visibility_and_favorite_evidence \\\n   2026-09-09_music_directory_suppressed_event_privacy; do\n@@ -100,6 +101,8 @@ for older_view in \\\n   # A fresh migration entry repairs either ledger history; retries are safe.\n   psql \"${database_url}\" -X -v ON_ERROR_STOP=1 -f \"${privacy_repair}\" >/dev/null\n   psql \"${database_url}\" -X -v ON_ERROR_STOP=1 -f \"${privacy_repair}\" >/dev/null\n+  psql \"${database_url}\" -X -v ON_ERROR_STOP=1 -f \"${ownership_repair}\" >/dev/null\n+  psql \"${database_url}\" -X -v ON_ERROR_STOP=1 -f \"${ownership_repair}\" >/dev/null\n   node \"${repo_root}/scripts/render-production-schema-verification.mjs\" \\\n     | psql \"${database_url}\" -X -v ON_ERROR_STOP=1 >/dev/null\n   psql \"${database_url}\" -X -v ON_ERROR_STOP=1 \\"
+      },
+      {
+        "sha": "5ff72cd0aa3e04ad51781516f38b37cb6b4f2959",
+        "filename": "tdf-hq/test/integration/directory_event_privacy_composition_postgres.sql",
+        "status": "modified",
+        "additions": 26,
+        "deletions": 1,
+        "changes": 27,
+        "blob_url": "https://github.com/diegueins680/tdf-app/blob/eaeb5af7359e2b580c2cd78bbf7861697c75a497/tdf-hq%2Ftest%2Fintegration%2Fdirectory_event_privacy_composition_postgres.sql",
+        "raw_url": "https://github.com/diegueins680/tdf-app/raw/eaeb5af7359e2b580c2cd78bbf7861697c75a497/tdf-hq%2Ftest%2Fintegration%2Fdirectory_event_privacy_composition_postgres.sql",
+        "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/tdf-hq%2Ftest%2Fintegration%2Fdirectory_event_privacy_composition_postgres.sql?ref=eaeb5af7359e2b580c2cd78bbf7861697c75a497",
+        "patch": "@@ -6,6 +6,7 @@ DECLARE\n   public_event_type_id UUID;\n   fixture_venue_id BIGINT;\n   fixture_event_id BIGINT;\n+  invalid_metadata TEXT;\n BEGIN\n   SELECT state.id INTO STRICT public_state_id\n   FROM workflow_state state\n@@ -67,13 +68,37 @@ BEGIN\n   IF NOT EXISTS (SELECT 1 FROM directory_public_event WHERE id=fixture_event_id) THEN\n     RAISE EXCEPTION 'Public active event is missing';\n   END IF;\n+  UPDATE social_event\n+  SET metadata='{\"isPublic\":true,\"_discoveryOwned\":{\"title\":\"Source title\",\"isPublic\":true}}'\n+  WHERE id=fixture_event_id;\n+  IF NOT EXISTS (SELECT 1 FROM directory_public_event WHERE id=fixture_event_id)\n+    OR NOT EXISTS (SELECT 1 FROM directory_public_search_document WHERE entity_kind='event' AND entity_id=fixture_event_id::text)\n+    OR NOT EXISTS (SELECT 1 FROM directory_public_venue WHERE id=fixture_venue_id) THEN\n+    RAISE EXCEPTION 'Valid private ownership evidence hid a public directory projection';\n+  END IF;\n+  FOREACH invalid_metadata IN ARRAY ARRAY[\n+    '{\"isPublic\":false,\"_discoveryOwned\":{}}',\n+    '{\"isPublic\":true,\"_discoveryOwned\":null}',\n+    '{\"isPublic\":true,\"_discoveryOwned\":false}',\n+    '{\"isPublic\":true,\"_discoveryOwned\":[]}',\n+    '{\"isPublic\":true,\"_discoveryOwned\":{},\"unexpected\":1}',\n+    '{\"isPublic\":true,\"_discoveryOwned\":{},\"_discoveryOwned\":{}}',\n+    '{\"isPublic\":true,\"budgetCents\":1.5,\"_discoveryOwned\":{}}'\n+  ] LOOP\n+    UPDATE social_event SET metadata=invalid_metadata WHERE id=fixture_event_id;\n+    IF EXISTS (SELECT 1 FROM directory_public_event WHERE id=fixture_event_id)\n+      OR EXISTS (SELECT 1 FROM directory_public_search_document WHERE entity_kind='event' AND entity_id=fixture_event_id::text)\n+      OR EXISTS (SELECT 1 FROM directory_public_venue WHERE id=fixture_venue_id) THEN\n+      RAISE EXCEPTION 'Invalid/private ownership metadata leaked through a public projection';\n+    END IF;\n+  END LOOP;\n   UPDATE social_event SET metadata='{\"isPublic\":false}' WHERE id=fixture_event_id;\n   IF EXISTS (SELECT 1 FROM directory_public_event WHERE id=fixture_event_id)\n     OR EXISTS (SELECT 1 FROM directory_public_search_document WHERE entity_kind='event' AND entity_id=fixture_event_id::text)\n     OR EXISTS (SELECT 1 FROM directory_public_venue WHERE id=fixture_venue_id) THEN\n     RAISE EXCEPTION 'Private metadata leaked through a public projection';\n   END IF;\n-  UPDATE social_event SET metadata='{\"isPublic\":true}' WHERE id=fixture_event_id;\n+  UPDATE social_event SET metadata='{\"isPublic\":true,\"_discoveryOwned\":{}}' WHERE id=fixture_event_id;\n   UPDATE external_event_ref SET source_status=' Suppressed ' WHERE event_id=fixture_event_id;\n   IF EXISTS (SELECT 1 FROM directory_public_event WHERE id=fixture_event_id)\n     OR EXISTS (SELECT 1 FROM directory_public_search_document WHERE entity_kind='event' AND entity_id=fixture_event_id::text)"
+      }
+    ]
+  },
+  "all_registered_ancestry_checks": [
+    {
+      "id": "2026-07-12_ticketing_runtime_schema",
+      "introducedBy": "4ed9a0826f9f1924422dabe45a6b569bbf02968d",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-07-12_ticket_checkout_idempotency",
+      "introducedBy": "4ec247f222ec6b6b6e91a7fb0829b1ebbd463d32",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-07-12_event_discovery_imports",
+      "introducedBy": "4d1f1fe1a7736b967001fc02b2c21d59ced343ce",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-07-15_social_sync_runtime_schema",
+      "introducedBy": "22073e900aa0c8edadcc6f4682366ecf7f760363",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-07-15_social_discovery_reviews",
+      "introducedBy": "f4805f72b4749029741373798da659566b5c4ea5",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-07-21_event_logistics",
+      "introducedBy": "8b4ba1edf9248ca70a895b8b6a12d9a47c741dbc",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-07-29_campaign_automation",
+      "introducedBy": "6fabdb5bd0d728efd4c042d8b6cca438ae73cd48",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-07-30_event_city_subscriptions",
+      "introducedBy": "a0e130a06e97497006e89a785e0c3da2c252df99",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-02_ddex_catalog_core",
+      "introducedBy": "185f94510ff6d96e0027b0c699fbde2b11c8deb9",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-04_service_storefront",
+      "introducedBy": "11a6687bec7526e8addae1aeaff2d3b3f50b59de",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-05_platform_internationalization",
+      "introducedBy": "79d88cacc8baf2eb9bf670c87f15ceedd4342f5e",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-05_artist_promotion_slots",
+      "introducedBy": "45bd44ec73787b71b491bcfb9a43c4cde1b62a59",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-05_artist_enrichment",
+      "introducedBy": "47c9d394fa9255acb2b440e07c32c4597247c3b6",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-06_feature_access_requests",
+      "introducedBy": "b3d952079b759886ff4454edf926d81aa3c1db0b",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-06_feature_navigation_preferences",
+      "introducedBy": "b3d952079b759886ff4454edf926d81aa3c1db0b",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-09_admin_operations_control_center",
+      "introducedBy": "daffea31e8e90d576fa047dda8aa5831885836ea",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-13_service_storefront_phase0_hardening",
+      "introducedBy": "588fdef6ace56ffe077eb85063ad82d583130f48",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-14_catalog_canonical_schema",
+      "introducedBy": "15d0d0b607344e62025f39208861c313c08b7eaa",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-14_catalog_consumer_expand",
+      "introducedBy": "15d0d0b607344e62025f39208861c313c08b7eaa",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-14_catalog_integrity",
+      "introducedBy": "15d0d0b607344e62025f39208861c313c08b7eaa",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-14_catalog_foundation_seed",
+      "introducedBy": "15d0d0b607344e62025f39208861c313c08b7eaa",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-16_catalog_locale_preference_resume",
+      "introducedBy": "07c76a2b59aec66997924c7b2809d6c66b451898",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-16_catalog_transitional_writer_resume",
+      "introducedBy": "2562222e99580202c7675f1d58aa5c942f308223",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-07_catalog_backfill_apply",
+      "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-07_label_project_notes_backfill_apply",
+      "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-07_records_cms_backfill_apply",
+      "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-11_instrument_input_cutover_apply",
+      "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-11_feedback_catalog_cutover_apply",
+      "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-11_pipeline_workflow_cutover_apply",
+      "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-11_social_event_type_cutover_apply",
+      "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-11_social_event_workflow_cutover_apply",
+      "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-12_event_moment_reaction_cutover_apply",
+      "introducedBy": "081de2ebe339f56585618010f994f65a4e21fe12",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-12_content_reaction_cutover_apply",
+      "introducedBy": "2574ee6c7629084836e75efe8b3264f33870e0ac",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-12_creator_badge_cutover_apply",
+      "introducedBy": "0e41edacebcd7ff381ccd6c2fa7401d6f8476cf2",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-12_ddex_reference_cutover_apply",
+      "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-12_ddex_validation_reference_cutover_apply",
+      "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-12_ddex_operational_cutover_apply",
+      "introducedBy": "451bc99e0c96d1922b19f463be4a4c3cc1e1ff39",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-13_unified_checkout_core",
+      "introducedBy": "c79d22d3e150d9a492ee5eafad7e3052426e0c2b",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-13_distribution_accounting_core",
+      "introducedBy": "9c4a621e62073d263989fde9bf51ef5b16107e55",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-13_versioned_revenue_products",
+      "introducedBy": "62a9cfaed413a50fe80c88ee834325648da6324d",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-13_distribution_product_seeds",
+      "introducedBy": "b43065808494a7ed9e94ce8e6a87dcb33d25c96f",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-14_service_storefront_checkout_runtime",
+      "introducedBy": "b52f48534ec196b03223f2f5203cf35f98a68278",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-14_checkout_event_refund_runtime",
+      "introducedBy": "df8b615cf4780d450550db6a93bb94a1fc21e968",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-14_provider_event_operations",
+      "introducedBy": "1f992718f5fe3ce8493f4508ab23424a46ebdc6c",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-15_marketplace_sale_checkout_runtime",
+      "introducedBy": "4ca1dfcf4a38d0defa1079b3193f29e5a4c61301",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-15_marketplace_rental_checkout_runtime",
+      "introducedBy": "66bce4ef0d97ca00b8167c2fc898bb15ad9f5917",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-16_service_booking_checkout_runtime",
+      "introducedBy": "a69c29f28f5e026e90885d6c0bb1280e07011f79",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-17_service_booking_provider_actions",
+      "introducedBy": "8553147dc3e41fc56aea2c12eb70c203e65a2c48",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-17_service_booking_manual_payments",
+      "introducedBy": "973ab7495ac01ae0e52702719bd236e6e85f2656",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-16_event_research_ingestion",
+      "introducedBy": "6198311849a0e12d7e44499051a88188b1ef3fd9",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-14_music_directory_core",
+      "introducedBy": "6dfc2281dce1837189fba869dc80ea548b2e942f",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-16_music_directory_verified_reviews",
+      "introducedBy": "657198a14cb2a6bc20279ee47ffd5696144a74ba",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-17_marketplace_customer_requests_and_deposit_settlement",
+      "introducedBy": "583c91e82aa2d05860b338d0c2695b9c4d0df434",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-17_course_checkout_runtime",
+      "introducedBy": "ae4b2317c0d450453dc20758e03d9942b6683a28",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-17_social_event_optional_end",
+      "introducedBy": "c48f388938eecd92272f377f02c673ac784461be",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-18_ddex_partner_legacy_compatibility",
+      "introducedBy": "d0f7b80957610014fd436009247be3fc9e0904a0",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-18_public_ticket_checkout_runtime",
+      "introducedBy": "313c8f96950dba0fd1706f08ce4d0e971002ca80",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-18_domo_quote_checkout_runtime",
+      "introducedBy": "431293245e1bf4a392efa927fcdd12b5172b2f1a",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-18_music_directory_profile_images",
+      "introducedBy": "f1665e92c8db9d86a890c7d3e61173de0ca8226d",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-18_music_directory_profile_image_host_compatibility",
+      "introducedBy": "bc594785274f9f1b692c6da3b69ce439e060b27a",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-20_verified_experience_reviews",
+      "introducedBy": "bf0c1b2abc0d5488efb9218639393c470f4563ec",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-21_studio_internship_audit",
+      "introducedBy": "d68b794e531501589e18c24dbb60aa00ada0a0f7",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-24_ticket_qr_constraint_compatibility",
+      "introducedBy": "be0b3a36d9c659a3d343907036a92d0d5c947e96",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-24_studio_audit_completion_exception",
+      "introducedBy": "e73f91871f81682ef96266a73ed9d4f2092c1ae1",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-24_studio_audit_historical_failure_gate",
+      "introducedBy": "f0ea79a2304202c0bb8c55dcc4c91f5b57aeb4ab",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-08_studio_audit_historical_failure_gate_repair",
+      "introducedBy": "46f6ecdc78e49c6745fd2c9450c5763dc60d71dd",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-25_commerce_trigger_row_binding_compatibility",
+      "introducedBy": "fa7621b3014923677916bdd2e6e2e2dea8bbf339",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-25_distribution_trigger_row_binding_compatibility",
+      "introducedBy": "fa7621b3014923677916bdd2e6e2e2dea8bbf339",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-08-26_music_directory_profile_media_reconciliation",
+      "introducedBy": "a8fa00463d60dbd5df9d02565a9694aaaba4c14e",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-02_party_selector_search_indexes",
+      "introducedBy": "442f758a6f901ea5151f13783ce21042302750a4",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-01_contextual_reputation",
+      "introducedBy": "c94a7899329e7c126afd11bccef10b3d9f45bb6c",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-04_contextual_reputation_integrity",
+      "introducedBy": "e17cc72f92c39977251197cf1611fb3c33b33735",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-04_contextual_reputation_legacy_signals",
+      "introducedBy": "e83930c959b74aaad21414b6b83c7a2889a0668b",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-04_contextual_reputation_private_preferences",
+      "introducedBy": "4acced6bf433966ceafb929ffa7ccff8ac668351",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-04_contextual_reputation_category_safety",
+      "introducedBy": "c9d1688b44c16deea4cd4e44104275bb02d19057",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-04_contextual_reputation_preference_save",
+      "introducedBy": "65968b300d5f5af3e3989be539bea5d4de5535ba",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-04_party_selector_trigram_indexes",
+      "introducedBy": "2c204d475b1943346acd94327f2ad5ab61c27cc6",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-04_party_selector_punctuation_indexes",
+      "introducedBy": "2b61953659cb43d711046639ae49f9806049cdf3",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-04_access_request_notification_types",
+      "introducedBy": "7bee4009634844fe20a02bd3bce09eeb4bdb05e3",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-08_notification_notif_type_not_null_repair",
+      "introducedBy": "d5ecbf3f97f62940c7d66537e5b9a1141c45128c",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-08_notification_notif_type_text_compatibility",
+      "introducedBy": "714060ffcc1db56448f6d3cb82e055e0085af4e7",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-05_party_selector_username_diacritic_indexes",
+      "introducedBy": "85b89f5a9795d6ecc51cb4faaed36e450e5fac1a",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-05_contextual_reputation_preference_rounding",
+      "introducedBy": "000ef9f0c9be11250eebfbe13e35c373c767512e",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-06_contextual_reputation_staging_worker",
+      "introducedBy": "41eb1f3c109c2201a31305775e277abcfe62b383",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-07_contextual_reputation_invalidation_repair",
+      "introducedBy": "114400d7eac3b4b1b54de1e1e676d75afc76388d",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-07_contextual_reputation_consent",
+      "introducedBy": "79d73a25e6d6a74250dc55cd0e888b6eaa34ea3d",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-06_records_youtube_catalog",
+      "introducedBy": "0258057e726097c584a4619ad521c1ee2740639c",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-07_service_storefront_package_bounds_repair",
+      "introducedBy": "e84cfa0e495034a0b321e3510cd84611609bcc76",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-07_catalog_slug_alias_integrity_revalidation",
+      "introducedBy": "349bd9ba4f8e63b43a4046538083ef9c6b8aec96",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-06_user_onboarding_progress",
+      "introducedBy": "64702d26ac2129f96f40b921f943dea907828419",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-07_user_experiment_assignment",
+      "introducedBy": "8c296087431a191234000311862a4287ef819bd7",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-07_directory_event_visibility_and_favorite_evidence",
+      "introducedBy": "dfea3d01484395c62b080a4adee270308d0ed912",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-07_artist_merch_storefronts",
+      "introducedBy": "5bca2c33df5cd9367adb91ec84ab2d6bc3772b8f",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-08_event_rsvp_identity_privacy_feed",
+      "introducedBy": "520222366178a2725172e3d54ec9928a1596f20d",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-08_merch_reputation",
+      "introducedBy": "ec790e9c352bd085c07b66a6fa00d8df1c45d747",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-09_music_directory_suppressed_event_privacy",
+      "introducedBy": "849444cdcce0254c3091293edce8a4cc5f8175fa",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-10_contextual_reputation_pilot_cohort",
+      "introducedBy": "c69a9f420dde761ffe06cfa3271ef22875438362",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-09_experience_review_ticket_buyer_type_repair",
+      "introducedBy": "0e76d6ff36bae6b0a9d1b22515b8f60abdcaafd0",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-10_party_selector_rate_limit_scopes",
+      "introducedBy": "565ed7d0a1c5381719538c6e2bcae83ac30c3a92",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-09_public_booking_tentative_idempotency",
+      "introducedBy": "2da5c939baca7cdeec8aba623a83e9b42440f2e3",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-09_canonical_payment_lifecycle",
+      "introducedBy": "b3007f580fc51afb03aa73d339e9945232adcc8e",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-10_payment_attempt_intent_binding",
+      "introducedBy": "709036630fcad32102b67a34996c4da73bc4d128",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-17_directory_event_privacy_composition",
+      "introducedBy": "9ddd014b9d6a897d15608d9d23f4445c4c7118eb",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-16_artist_self_service",
+      "introducedBy": "d8fd169c1bfec56c4f24bab7a49a0d56bbadeb37",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-17_identity_reconciliation",
+      "introducedBy": "ab0a7cc211c0ad1be72fcc60ed3ad324d8227501",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-18_identity_review_dependencies",
+      "introducedBy": "d442013ce79b2afefdda6a203500cf2a58532ca7",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-18_notification_navigation",
+      "introducedBy": "3cf19c64bd60610059af6c26ec40104093be21c5",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-18_provider_subject_identity",
+      "introducedBy": "b0779951f9010263fcda9c9165d3ec14ba6f9e55",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-18_live_intake_idempotency",
+      "introducedBy": "062143d3cb98befb6a52a987c7d42980f70313f3",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-18_calendar_runtime_schema",
+      "introducedBy": "49ff02de5ade1b8923f099c22af0bbf57350a078",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-18_course_identity_requests",
+      "introducedBy": "9bc040b718db0a297c9766a6c4084e0803765599",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-18_trial_identity_requests",
+      "introducedBy": "8a83c8cfb84296b21ccd5c4fecbcc35f1ebd95e7",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-18_ads_identity_requests",
+      "introducedBy": "948036699799dae2cffd45bde073fb8b02cbbbca",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-18_records_resource_availability",
+      "introducedBy": "bec94317473fa8f2016ba165b5813a391c81b9ac",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-20_records_ingestion_runtime",
+      "introducedBy": "633d3dc8f2451397c8bb51beee51700c172aad98",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-27_event_ingestion_boundaries",
+      "introducedBy": "441dfcc968559f829e84c89751f008657566138c",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-14_social_v2_foundation",
+      "introducedBy": "fa6b99e7a4e718f7e6db7226ed01301ff762e4f9",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-14_social_v2_read_models",
+      "introducedBy": "aa56289c3b01d0d74d45c5e590882eca98fd5b2c",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-15_social_v2_dm_write_boundary",
+      "introducedBy": "efc827f7628afe084db173be627d0d7f71d0142a",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-15_social_v2_chat_api",
+      "introducedBy": "02755bc410eecb5c3e03938121f1197102c709e1",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-15_social_v2_relationship_reads",
+      "introducedBy": "8b2d1557a5e72e0346af1fd43dc7cf36033da067",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-15_social_v2_profile_reads",
+      "introducedBy": "7706258a9e8ecbe0b99b4fd23903df606848ad03",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-16_social_v2_legacy_writes",
+      "introducedBy": "7e601607f60b2987e502c4a14db821bbf37df296",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-16_social_v2_fan_effects",
+      "introducedBy": "daf6c5a680b81928c2e2c66df98063328e6d5e9c",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-28_universal_interactions",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-28_interaction_policy",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-28_interaction_discussions",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-28_interaction_locks",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-28_interaction_commands",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-28_interaction_blocks",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-28_interaction_summary",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-28_interaction_notifications",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-28_interaction_navigation",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-28_interaction_read_optimization",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-28_interaction_legacy",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-28_interaction_compatibility",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-28_interaction_account_controls",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-28_interaction_integrity",
+      "introducedBy": "74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-29_interaction_review_repairs",
+      "introducedBy": "5eb0ac922528c814951aafa9f9fc57a435d48b98",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-29_interaction_publication_authority",
+      "introducedBy": "d6c52fad19c22062b6f85921ffc55335460c5724",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-29_interaction_reaction_withdrawal",
+      "introducedBy": "7d8de4c5d84aa8faf83b6558093bbb571dc0615d",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-29_interaction_moderation_block_boundary",
+      "introducedBy": "e2dc17a5153d7f734f419d73c1d1575a696dfe30",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-29_interaction_moderation_access",
+      "introducedBy": "3f6a1b7528ed4a6b4a68e36337dcc5f37d5d6a2d",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-29_interaction_legacy_reply_aliases",
+      "introducedBy": "e415244248058c13043bd1bbd3f40d12241e209f",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-29_interaction_moderation_delivery",
+      "introducedBy": "96a2fc934a978dd10df235f9ac15567d4d4294c2",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-29_interaction_event_destinations",
+      "introducedBy": "1a884dff86b51ccb7905a58a280bd9fbe7fa8d75",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-29_interaction_mention_privacy",
+      "introducedBy": "6334d897c573ae7b2e03c917ad26177e1c0b1958",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-29_interaction_inactive_allowlists",
+      "introducedBy": "8e6a2a80bafd9949f7f9aada2ec73301e02b2184",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-29_interaction_legacy_moment_choices",
+      "introducedBy": "7c2f5d3246e19c424200aba206cebe8d06942401",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-29_interaction_catalog_authority",
+      "introducedBy": "70f9d3031f1c783070e087e295345f9f36c30720",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-29_interaction_report_reopen",
+      "introducedBy": "712687c976075925d475e9c0ddbe6b06e6590bef",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-29_interaction_ownerless_policy",
+      "introducedBy": "3624766ea78cc6663be0a8be5d4c7a9a94d2961c",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-29_interaction_author_moderation_notices",
+      "introducedBy": "d1ecc182f8041e0f5341514fc2c67e2b27269b4a",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-29_interaction_nonblank_comments",
+      "introducedBy": "de95fbd6a631104880cc0fc88039a24932ecc84f",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-29_interaction_pause_boundary",
+      "introducedBy": "5ab4b9d09868f05b529fa4c230e64ef437441f1a",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-29_interaction_nonblank_reasons",
+      "introducedBy": "5ab4b9d09868f05b529fa4c230e64ef437441f1a",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-30_interaction_report_content_version",
+      "introducedBy": "0b63d746a5b720e7cacffd41ed04ae849e4a3284",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-30_interaction_records_publication",
+      "introducedBy": "9dd2cefc7af63096417b7e14a59a37e35022bd43",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-09-30_interaction_classified_expiry",
+      "introducedBy": "5966161d8cf7c31a776ea5c2778068fbbd78b920",
+      "exit_code": 0
+    },
+    {
+      "id": "2026-10-03_discovery_ownership_metadata_boundary",
+      "introducedBy": "6e7b87d8ad3a4c56b033484fe7174dceacec5961",
+      "exit_code": 0
+    }
+  ],
+  "result": "PASS",
+  "count": 160
+}

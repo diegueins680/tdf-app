@@ -1,0 +1,9 @@
+M	docs/social/database.md
+A	docs/social/evidence/postgres-large-feed-baseline.txt
+A	docs/social/evidence/postgres-large-feed-final.txt
+M	docs/social/performance.md
+M	docs/social/research.md
+A	scripts/social/feed-benchmark.sql
+M	scripts/social/read-model-tests.sql
+M	scripts/social/test-postgres.sh
+M	tdf-hq/sql/2026-09-14_social_v2_read_models.sql

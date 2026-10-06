@@ -1,0 +1,31 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 389,
+          "reviewDecision": null,
+          "mergeStateStatus": "CLEAN",
+          "mergeable": "MERGEABLE",
+          "headRefOid": "824e1e9aeaa99d399c31bc5755c4967c03cb17fc",
+          "baseRefName": "codex/payment-reconciliation-evidence-view-20260915",
+          "isDraft": true,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          }
+        }
+      }
+    }
+  }
+]

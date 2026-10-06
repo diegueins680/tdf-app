@@ -1,0 +1,181 @@
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - heading [level=4] [ref=e7]:
+            - link [ref=e8] [cursor=pointer]:
+              - /url: /
+              - img "Webador" [ref=e9]
+          - text:  
+        - navigation [ref=e10]:
+          - list [ref=e11]:
+            - listitem [ref=e12]:
+              - button "Productos" [ref=e13] [cursor=pointer]:  Productos
+            - listitem [ref=e15]:
+              - link "Cómo funciona" [ref=e16] [cursor=pointer]:
+                - /url: /como-funciona
+                - text:  Cómo funciona
+            - listitem [ref=e17]:
+              - link "Ejemplos" [ref=e18] [cursor=pointer]:
+                - /url: /ejemplos
+                - text:  Ejemplos
+            - listitem [ref=e19]:
+              - link "Precios" [ref=e20] [cursor=pointer]:
+                - /url: /precios
+                - text:  Precios
+            - listitem [ref=e21]:
+              - link "Centro de ayuda" [ref=e22] [cursor=pointer]:
+                - /url: https://help.webador.com/hc/es
+                - text:  Centro de ayuda
+      - generic [ref=e23]:
+        - link "Iniciar sesión" [ref=e24] [cursor=pointer]:
+          - /url: /iniciar-sesion
+          - text:  Iniciar sesión
+        - button "Empezar ahora" [ref=e25] [cursor=pointer]
+  - generic [ref=e28]:
+    - heading "Iniciar sesión" [level=1] [ref=e29]
+    - generic [ref=e30]:
+      - generic [ref=e31]:
+        - textbox "Dirección de correo electrónico :" [active] [ref=e32]:
+          - /placeholder: Dirección de correo electrónico
+        - generic: "Dirección de correo electrónico :"
+      - generic [ref=e33]:
+        - textbox "Contraseña :" [ref=e34]:
+          - /placeholder: Contraseña
+        - generic: "Contraseña :"
+        - button "" [ref=e35] [cursor=pointer]
+      - generic [ref=e37]:
+        - button "Iniciar sesión" [ref=e38] [cursor=pointer]
+        - link "¿Has olvidado tu contraseña?" [ref=e39] [cursor=pointer]:
+          - /url: /v2/account/password-recovery
+    - generic [ref=e40]:
+      - generic [ref=e41]: o
+      - generic [ref=e42]:
+        - link [ref=e44] [cursor=pointer]:
+          - /url: https://www.webador.es/login/oauth-redirect/facebook?state%5Bredirect%5D=/v2/website/3478563/dns/tdfrecords.net
+          - img "Facebook" [ref=e45]
+          - text: Iniciar sesión con Facebook
+        - link [ref=e47] [cursor=pointer]:
+          - /url: https://www.webador.es/login/oauth-redirect/google?state%5Bredirect%5D=/v2/website/3478563/dns/tdfrecords.net
+          - img "Google" [ref=e48]
+          - text: Iniciar sesión con Google
+      - separator [ref=e49]
+      - generic [ref=e50]:
+        - text: Al utilizar nuestro servicio, aceptas nuestros
+        - link "términos y condiciones" [ref=e51] [cursor=pointer]:
+          - /url: /condiciones-generales
+  - contentinfo [ref=e52]:
+    - generic [ref=e54]:
+      - generic [ref=e56]:
+        - group [ref=e57]:
+          - generic "Empresa":
+            - heading "Empresa" [level=4]: Empresa 
+          - list [ref=e59]:
+            - listitem [ref=e60]:
+              - link "Acerca de Webador" [ref=e61] [cursor=pointer]:
+                - /url: /acerca-de-webador
+            - listitem [ref=e62]:
+              - button "100 % sostenible " [ref=e63] [cursor=pointer]:
+                - text: 100 % sostenible
+                - generic [ref=e64]: 
+            - listitem [ref=e65]:
+              - link "Opiniones" [ref=e66] [cursor=pointer]:
+                - /url: /opiniones
+            - listitem [ref=e67]:
+              - link "Empleo 🚀" [ref=e68] [cursor=pointer]:
+                - /url: https://jobs.jouwweb.nl/l/en
+            - listitem [ref=e69]:
+              - link "Afiliados" [ref=e70] [cursor=pointer]:
+                - /url: /affiliates
+            - listitem [ref=e71]:
+              - link "Privacidad" [ref=e72] [cursor=pointer]:
+                - /url: /privacidad
+            - listitem [ref=e73]:
+              - link "Cookies" [ref=e74] [cursor=pointer]:
+                - /url: /privacidad#cookie-consent-management
+            - listitem [ref=e75]:
+              - link "Condiciones" [ref=e76] [cursor=pointer]:
+                - /url: /condiciones-generales
+        - group [ref=e77]:
+          - generic "Producto":
+            - heading "Producto" [level=4]: Producto 
+          - list [ref=e79]:
+            - listitem [ref=e80]:
+              - link "Crea tu página web" [ref=e81] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=e82]:
+              - link "Crear negocio online" [ref=e83] [cursor=pointer]:
+                - /url: /crear-tienda-online
+            - listitem [ref=e84]:
+              - link "Crear un blog" [ref=e85] [cursor=pointer]:
+                - /url: /crear-blog
+            - listitem [ref=e86]:
+              - link "Crear página web con IA " [ref=e87] [cursor=pointer]:
+                - /url: /creador-paginas-web
+                - text: Crear página web con IA
+                - generic [ref=e88]: 
+            - listitem [ref=e89]:
+              - link "Página web con nombre de dominio" [ref=e90] [cursor=pointer]:
+                - /url: /dominio
+            - listitem [ref=e91]:
+              - link "Dirección de correo electrónico con tu dominio" [ref=e92] [cursor=pointer]:
+                - /url: /correo-electronico-dominio
+            - listitem [ref=e93]:
+              - link "Plantillas" [ref=e94] [cursor=pointer]:
+                - /url: /plantillas
+        - group [ref=e95]:
+          - generic "Comunidad":
+            - heading "Comunidad" [level=4]: Comunidad 
+          - list [ref=e97]:
+            - listitem [ref=e98]:
+              - link "Facebook" [ref=e99] [cursor=pointer]:
+                - /url: https://www.facebook.com/webador
+            - listitem [ref=e100]:
+              - link "YouTube" [ref=e101] [cursor=pointer]:
+                - /url: https://www.youtube.com/channel/UCrC3lhdHjeFiYgjoxrpt0Hw
+            - listitem [ref=e102]:
+              - link "Instagram" [ref=e103] [cursor=pointer]:
+                - /url: https://www.instagram.com/webador
+            - listitem [ref=e104]:
+              - link "LinkedIn" [ref=e105] [cursor=pointer]:
+                - /url: https://www.linkedin.com/company/webador
+        - group [ref=e106]:
+          - generic "Soporte técnico":
+            - heading "Soporte técnico" [level=4]: Soporte técnico 
+          - list [ref=e108]:
+            - listitem [ref=e109]:
+              - link "Centro de ayuda" [ref=e110] [cursor=pointer]:
+                - /url: https://help.webador.com/hc/es
+            - listitem [ref=e111]:
+              - link "Blog" [ref=e112] [cursor=pointer]:
+                - /url: https://www.webador.es/blog?utm_source=webador&utm_medium=landing&utm_campaign=footer
+            - listitem [ref=e113]:
+              - link "Contacto" [ref=e114] [cursor=pointer]:
+                - /url: /contacto
+      - generic [ref=e115]:
+        - paragraph [ref=e116]: © Webador Todos los derechos reservados
+        - button "Español (España) " [ref=e117]:
+          - text: Español (España)
+          - generic [ref=e119]: 
+        - list [ref=e120]:
+          - listitem [ref=e121]:
+            - link "" [ref=e122] [cursor=pointer]:
+              - /url: https://www.facebook.com/webador
+          - listitem [ref=e124]:
+            - link "" [ref=e125] [cursor=pointer]:
+              - /url: https://www.youtube.com/channel/UCrC3lhdHjeFiYgjoxrpt0Hw
+          - listitem [ref=e127]:
+            - link "" [ref=e128] [cursor=pointer]:
+              - /url: https://www.instagram.com/webador
+          - listitem [ref=e130]:
+            - link "" [ref=e131] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/webador
+  - text: " : : :       "
+  - dialog "cookieconsent" [ref=e133]:
+    - generic [ref=e134]: Tus preferencias de cookies
+    - generic [ref=e135]: Nosotros y nuestros socios comerciales (33) utilizamos cookies para personalizar el contenido y los anuncios, y para analizar nuestro tráfico.Puedes retirar tu consentimiento en cualquier momento ajustando tus preferencias en nuestra página de privacidad, donde también puedes leer más sobre cómo utilizamos las cookies y procesamos los datos personales.
+    - button "learn more about cookies" [ref=e136] [cursor=pointer]: Más información »
+    - generic [ref=e137]:
+      - button "deny cookies" [ref=e138] [cursor=pointer]: Rechazar
+      - button "allow cookies" [ref=e139] [cursor=pointer]: Aceptar

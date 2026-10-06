@@ -1,0 +1,419 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044078790",
+      "pull_request_review_id": 5244565432,
+      "id": 4044078790,
+      "node_id": "PRRC_kwDOQPdUrM7xC77G",
+      "diff_hunk": "@@ -550,6 +550,11 @@\n       \"id\": \"2026-09-18_identity_review_dependencies\",\n       \"path\": \"tdf-hq/sql/2026-09-18_identity_review_dependencies.sql\",\n       \"introducedBy\": \"d442013ce79b2afefdda6a203500cf2a58532ca7\"\n+    },\n+    {\n+      \"id\": \"2026-09-18_provider_subject_identity\",\n+      \"path\": \"tdf-hq/sql/2026-09-18_provider_subject_identity.sql\",\n+      \"introducedBy\": \"b0779951f9010263fcda9c9165d3ec14ba6f9e55\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "da0b02d90b57c4f78ce8f20df0bb9345edf824a1",
+      "original_commit_id": "2e2e85e118a92aa9fece47cf88574a3232de64ba",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Point migration provenance at an ancestor of this release**\n\nThe registered introduction commit `b0779951...` is not an ancestor of the reviewed release: it and `d8883a20...` are sibling commits with parent `a81e48ea...`. The guarded release path in `scripts/production-release.mjs` runs `git merge-base --is-ancestor introducedBy releaseSha` and explicitly aborts when it returns false (`git merge-base -h` confirms that this option tests whether the first commit is an ancestor of the second), so attempting to release this commit cannot render or apply the new migration. Record provenance using a commit that is actually in this release's ancestry.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T05:32:41Z",
+      "updated_at": "2026-09-18T05:32:41Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/430#discussion_r4044078790",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044078790"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/430#discussion_r4044078790"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044078790/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 562,
+      "original_line": 557,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 8,
+      "position": 8,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044078792",
+      "pull_request_review_id": 5244565432,
+      "id": 4044078792,
+      "node_id": "PRRC_kwDOQPdUrM7xC77I",
+      "diff_hunk": "@@ -1262,6 +1267,35 @@ export default function LoginPage() {\n           </Box>\n         </Stack>\n       </Container>\n+      <Dialog open={googleLinkToken !== null} fullWidth maxWidth=\"xs\"\n+        onClose={() => { setGoogleLinkToken(null); setGoogleLinkAccount({ username: '', password: '' }); }}>\n+        <DialogTitle>{t('authEntry.googleLinkTitle')}</DialogTitle>\n+        <Box component=\"form\" onSubmit={(event: FormEvent<HTMLFormElement>) => {\n+          event.preventDefault();\n+          if (googleLinkToken) void handleGoogleCredential({ credential: googleLinkToken }, googleLinkAccount);\n+        }}>\n+          <DialogContent>\n+            <Stack spacing={2}>\n+              <Typography>{t('authEntry.googleLinkExplanation')}</Typography>\n+              <TextField required autoComplete=\"username\" label={t('authEntry.googleLinkUsername')}\n+                value={googleLinkAccount.username} onChange={event => setGoogleLinkAccount(value => ({ ...value, username: event.target.value }))} />\n+              <TextField required type=\"password\" autoComplete=\"current-password\" label={t('authEntry.googleLinkPassword')}\n+                value={googleLinkAccount.password} onChange={event => setGoogleLinkAccount(value => ({ ...value, password: event.target.value }))} />\n+              {googleError && <Alert severity=\"error\">{googleError}</Alert>}",
+      "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
+      "commit_id": "da0b02d90b57c4f78ce8f20df0bb9345edf824a1",
+      "original_commit_id": "2e2e85e118a92aa9fece47cf88574a3232de64ba",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Show failed account-link attempts inside the dialog**\n\nWhen the second Google request includes `linkAccount` and fails\u2014for example because the current password is wrong\u2014the catch path runs with `signupDialogOpen === false` and calls `setFormError(...)`, not `setGoogleError(...)`. This dialog only renders `googleError`, while the ordinary form error is obscured behind the open modal, so the user receives no visible failure feedback and cannot tell whether to correct the credentials or retry. Route link-attempt failures to the error state displayed here.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T05:32:41Z",
+      "updated_at": "2026-09-18T05:32:41Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/430#discussion_r4044078792",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044078792"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/430#discussion_r4044078792"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044078792/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 1285,
+      "original_line": 1284,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 63,
+      "position": 73,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044126541",
+      "pull_request_review_id": 5244619813,
+      "id": 4044126541,
+      "node_id": "PRRC_kwDOQPdUrM7xDHlN",
+      "diff_hunk": "@@ -131,8 +133,9 @@ function CreateCompanyDialog({ open, onClose }: CreateCompanyDialogProps) {\n   }, [open]);\n \n   const createCompanyMutation = useMutation({\n-    mutationFn: (body: PartyCreate) => Parties.create(body),\n+    mutationFn: (body: PartyCreate) => contactCreation.create(body),\n     onSuccess: () => {\n+      contactCreation.reset();",
+      "path": "tdf-hq-ui/src/pages/CompaniesPage.tsx",
+      "commit_id": "da0b02d90b57c4f78ce8f20df0bb9345edf824a1",
+      "original_commit_id": "07f175d0e435fdeead6f578861bb34fe02ca0314",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Reset contact keys when abandoning a creation attempt**\n\nWhen a create request succeeds on the server but its response is lost, closing this dialog leaves `contactCreation` mounted with the old key even though the closed-state effect clears every field. Reopening the dialog and submitting an identical body for a distinct company therefore replays the permanent `(actor, key)` entry and silently returns the earlier Party instead of creating the new contact. Reset the helper when the dialog is abandoned, while retaining the key only for retries within the same open attempt; `LeadCreateDialog` and the Bookings contact dialog have the same lifecycle.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T05:43:34Z",
+      "updated_at": "2026-09-18T05:43:34Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/430#discussion_r4044126541",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044126541"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/430#discussion_r4044126541"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044126541/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 141,
+      "original_line": 138,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 20,
+      "position": 35,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044226745",
+      "pull_request_review_id": 5244737079,
+      "id": 4044226745,
+      "node_id": "PRRC_kwDOQPdUrM7xDgC5",
+      "diff_hunk": "@@ -203,11 +205,11 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO\n \n   const createPartyAndUser = async (entry: MusicianEntry): Promise<PartyDTO> => {\n     const instrumentName = instrumentOptions.find((item) => item.id === entry.instrumentId)?.name;\n-    const created = await Parties.create({\n+    const created = await contactCreation.create({\n       cDisplayName: entry.name,\n       cIsOrg: false,\n       cInstagram: asNullableString(entry.instagram),\n-    });\n+    }, entry.id);",
+      "path": "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
+      "commit_id": "1216fe4ffe3b78d5579c77d6b5090320c9a30e1d",
+      "original_commit_id": "1216fe4ffe3b78d5579c77d6b5090320c9a30e1d",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Make retried musician account creation idempotent**\n\nWhen an internal Live Session submission creates an emailed musician and then fails later\u2014for example on another musician or the final intake request\u2014the retained key makes this call return the already-created Party on retry. `createPartyAndUser` then unconditionally calls `Admin.createUser` again, while that endpoint returns 409 whenever the Party already has a credential, so the intended retry can never progress past the first previously completed musician. Treat that existing account as success or make the downstream step idempotent.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T06:04:32Z",
+      "updated_at": "2026-09-18T06:04:32Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/430#discussion_r4044226745",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044226745"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/430#discussion_r4044226745"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044226745/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 208,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 212,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 23,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044330223",
+      "pull_request_review_id": 5244863844,
+      "id": 4044330223,
+      "node_id": "PRRC_kwDOQPdUrM7xD5Tv",
+      "diff_hunk": "@@ -122,17 +124,19 @@ function CreateCompanyDialog({ open, onClose }: CreateCompanyDialogProps) {\n \n   useEffect(() => {\n     if (!open) {\n+      contactCreation.reset();",
+      "path": "tdf-hq-ui/src/pages/CompaniesPage.tsx",
+      "commit_id": "da0b02d90b57c4f78ce8f20df0bb9345edf824a1",
+      "original_commit_id": "c53b33e7ef868fb7b64f876199ed66be0f617efc",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Prevent closing contact dialogs while creation is pending**\n\nWhen a user dismisses this dialog via Cancel, Escape, or the backdrop while `createCompanyMutation` is still pending, `open` becomes false and this reset discards the in-flight request's idempotency key even though the HTTP request continues. If the server commits but the response is lost, reopening and retrying sends a new key and creates a duplicate company. Keep the dialog from closing while pending or defer clearing the key until the request settles; `LeadCreateDialog` has the same unguarded close/reset sequence.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T06:25:47Z",
+      "updated_at": "2026-09-18T06:25:47Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/430#discussion_r4044330223",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044330223"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/430#discussion_r4044330223"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044330223/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 129,
+      "original_line": 127,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 17,
+      "position": 21,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044699657",
+      "pull_request_review_id": 5245318808,
+      "id": 4044699657,
+      "node_id": "PRRC_kwDOQPdUrM7xFTgJ",
+      "diff_hunk": "@@ -122,17 +124,19 @@ function CreateCompanyDialog({ open, onClose }: CreateCompanyDialogProps) {\n \n   useEffect(() => {\n     if (!open) {\n+      contactCreation.reset();",
+      "path": "tdf-hq-ui/src/pages/CompaniesPage.tsx",
+      "commit_id": "da0b02d90b57c4f78ce8f20df0bb9345edf824a1",
+      "original_commit_id": "c53b33e7ef868fb7b64f876199ed66be0f617efc",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 18b7994a1. Company and lead creation now block Cancel/Escape/backdrop closure while a synchronous pending ref is set, and reject duplicate submit events. Success still closes normally; failed responses retain the request key. Both rendered-dialog regression tests passed, including lost-response retries; TypeScript passed. Fresh required CI is running.",
+      "created_at": "2026-09-18T07:28:23Z",
+      "updated_at": "2026-09-18T07:28:23Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/430#discussion_r4044699657",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044699657"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/430#discussion_r4044699657"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044699657/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 129,
+      "original_line": 127,
+      "side": "RIGHT",
+      "in_reply_to_id": 4044330223,
+      "author_association": "OWNER",
+      "original_position": 17,
+      "position": 21,
+      "subject_type": "line"
+    }
+  ]
+]

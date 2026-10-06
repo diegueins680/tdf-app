@@ -1,0 +1,15 @@
+M	.github/workflows/social-verification.yml
+A	docs/social/chat-client-isolation.md
+A	docs/social/evidence/chat-client-isolation/app-typecheck.txt
+A	docs/social/evidence/chat-client-isolation/catalog.txt
+A	docs/social/evidence/chat-client-isolation/ci-8b7daf9c8.json
+A	docs/social/evidence/chat-client-isolation/commands.txt
+A	docs/social/evidence/chat-client-isolation/extra-test-inclusive-typecheck-failed.txt
+A	docs/social/evidence/chat-client-isolation/lint.txt
+A	docs/social/evidence/chat-client-isolation/source-sha256.txt
+A	docs/social/evidence/chat-client-isolation/tests.txt
+M	tdf-hq-ui/src/hooks/useChatUnreadCount.ts
+A	tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx
+M	tdf-hq-ui/src/pages/ChatPage.tsx
+M	tdf-hq-ui/src/utils/chatReadState.test.ts
+M	tdf-hq-ui/src/utils/chatReadState.ts

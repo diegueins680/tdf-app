@@ -1,0 +1,421 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049577808",
+      "pull_request_review_id": 5251244778,
+      "id": 4049577808,
+      "node_id": "PRRC_kwDOQPdUrM7xX6dQ",
+      "diff_hunk": "@@ -5,50 +5,86 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las\n superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,\n sus dependencias y las regresiones introducidas siguen dentro del alcance.\n \n-## Checkpoint verificado \u2014 2026-09-18 16:34 UTC\n-\n-Este bloque sustituye los estados de los checkpoints hist\u00f3ricos inferiores.\n-#449 est\u00e1 fusionado como `e1a825bda26dbb16b1c732e551cc4880d5626943` desde15:42UTC;\n-435 y442\u2013448 quedaron incorporados conservando sus commits. El backend termin\u00f3\n-el release guardado a16:02:10UTC, sin rollback: ambas m\u00e1quinas saludables,110\n-migraciones, tablas de calendario presentes y lease liberado. Imagen inmutable\n-`sha256:637b749539975072aa78efd2180ce42438e81dc95f768f1c6b9e3557d3ed3a3f`.\n-Web p\u00fablica e1 coincide con Cloudflare `061e1fe4-97d8-431c-aeb9-24b90c53a98b`.\n-[Recibo de release, snapshot y recuperaci\u00f3n compatible](evidence/release-e1-verification.json).\n-Se verificaron lectura p\u00fablica y login/sesi\u00f3n/onboarding con la cuenta App Review\n-leg\u00edtima; Customer/Fan recibe403 al calendario administrativo. No se afirma un\n-consentimiento Google administrativo ni revocaci\u00f3n real. Las latencias son muestras\n-de laboratorio individuales, no percentiles de campo.\n-\n-La observaci\u00f3n posterior confirm\u00f3 un pendiente de UX007: Marketplace a\u00fan cae\n-cuando se bloquea almacenamiento. [La continuaci\u00f3n](marketplace-storage.md) pasa\n-23 pruebas,30 casos distintos en tres motores y el conjunto formal, pero todav\u00eda\n-requiere revisi\u00f3n independiente, CI, merge y despliegue. No reemplaza las dem\u00e1s\n-entradas de007 ya publicadas ni relaja la idempotencia de pedidos.\n-\n-El usuario entreg\u00f3 la coordinaci\u00f3n de tiendas. Apple1.0.1 fue cambiado y le\u00eddo\n-como `MANUAL`/`WAITING_FOR_REVIEW` a15:51UTC; una aprobaci\u00f3n no publicar\u00e1 sola la\n-versi\u00f3n antigua. Contin\u00faa pendiente el iPhone f\u00edsico para Google OAuth. Play\n-muestra Alpha10 disponible a testers; a13:45 segu\u00eda1de12 inscritos para14d\u00edas.\n-No se repiten las80 invitaciones aceptadas previamente ni se inventa inscripci\u00f3n.\n-\n-El usuario eligi\u00f3 GitHub Actions gratuito y sustituy\u00f3 Starter antes de pagar.\n-No se contrat\u00f3 plan. Mobile#105 est\u00e1 fusionado en `a72ee5be1e66bad9d1a23e2d67a2e693ff3ce613`:\n-runner est\u00e1ndar macos-15/Xcode26.2, certificados existentes cifrados y environment\n-restringido a main, IPA con recibo y sin publicaci\u00f3n autom\u00e1tica. Primer run\n-35368454882: Xcode y dependencias pasan;1de507 pruebas falla por variables de\n-producci\u00f3n capturadas en el fixture Jest. #106 `7e709dc` a\u00edsla ese proceso;\n-cuatro pruebas afectadas locales y CI pasan. Archivo firmado a\u00fan pendiente.\n-Android15 `96622c14-8ac2-4780-aa25-903ef788ae88` y QA\n-`46b1cca1-f38e-4105-b9c4-68947bcdd52d` siguen construy\u00e9ndose. QA4602 us\u00f3 un perfil\n-incorrecto con API de producci\u00f3n: queda excluido de la aceptaci\u00f3n aislada; el\n-Samsung est\u00e1 conectado y s\u00f3lo se usar\u00e1 `com.tdf.records.uxaudit`.\n-\n-Siguientes acciones: fusionar106 tras refrescar gates y ejecutar iOS23; verificar\n-los artefactos Android antes de instalar/subir; publicar la continuaci\u00f3n007 para\n-revisi\u00f3n; mantener la cobertura inicial faltante y la publicaci\u00f3n m\u00f3vil abiertas.\n-No actualizar el gitlink90ca s\u00f3lo para obtener archivos de CI: el producto de105/106\n-es id\u00e9ntico; registrar el SHA exacto del artefacto nuevo cuando exista.\n+## Checkpoint verificado \u2014 2026-09-18 18:24 UTC\n+\n+Este bloque sustituye los estados hist\u00f3ricos inferiores. #450 est\u00e1 fusionado como\n+`3f0a56c0ded55fa9525dc80c895505ffcb069449`. Cloudflare `8f01e9e1` y la web p\u00fablica\n+coincidieron; seis casos reales en tres motores verificaron Marketplace con\n+almacenamiento denegado, b\u00fasqueda y recarga, sin errores ni infracciones axe.\n+UX007 queda desplegado. [Evidencia y l\u00edmites](evidence/marketplace-storage-deployment.json).\n+\n+La API contin\u00faa en `e1a825bda26dbb16b1c732e551cc4880d5626943` (comprobaci\u00f3n\n+18:09 UTC). El release guardado termin\u00f3 a las 16:02 UTC: 110 migraciones, dos\n+m\u00e1quinas saludables y lease liberado. La recuperaci\u00f3n conserva la imagen compatible\n+`5c11577a5` y el snapshot `vs_LRqNAqabQP5Upg7NwLqaVPX`; no se deben restaurar\n+binarios antiguos de autenticaci\u00f3n ni borrar migraciones.\n+[Recibo](evidence/release-e1-verification.json). El intermedio #436 de otro operador\n+no debe desplegarse por separado; su integraci\u00f3n final tiene coordinaci\u00f3n propia.\n+\n+**GitHub Actions gratuito produce iOS firmado.** Los workflows m\u00f3viles #105\u2013114\n+est\u00e1n fusionados hasta `2a0e5a99535d9ef199a3e3464a660192f882f72b`. Se utilizan\n+runners est\u00e1ndar `macos-15` y `ubuntu-24.04`, identidades de firma existentes,\n+secretos cifrados y artefactos con retenci\u00f3n de un d\u00eda. No se contrat\u00f3 Starter;\n+la decisi\u00f3n vigente del usuario es GitHub Actions gratuito. La cuota Free de EAS\n+sigue agotada en ambos sistemas. Los intentos fallidos por entorno Jest,\n+CocoaPods/JSON y memoria Gradle se conservan; no se debilitaron los controles.\n+\n+El build **iOS 1.0.1 (25)** termin\u00f3 en el\n+[run 35376470123](https://github.com/diegueins680/TDF-mobile/actions/runs/35376470123),\n+source `9f4d0e89c430e25fcd572b4c87736cad15e12012`, SDK 26.2. La verificaci\u00f3n\n+independiente del IPA confirma firma, perfil App Store, enlaces Google y API de\n+producci\u00f3n. Apple lo valid\u00f3 y recibi\u00f3 a las 18:08 UTC; a las 18:12 UTC ya estaba\n+VALID e IN_BETA_TESTING. [Recibo](evidence/ios-github25-artifact.json). El n\u00famero remoto de EAS\n+se sincroniz\u00f3 a 25 para evitar reutilizarlo, sin iniciar otro build. iOS 24 ya est\u00e1\n+VALID/IN_BETA_TESTING, pero es intermedio: no contiene la correcci\u00f3n final de texto.\n+Se retir\u00f3 de revisi\u00f3n el build antiguo y se vincul\u00f3 el 25. El nuevo env\u00edo\n+`c59f5706-f10e-4caf-ad00-3fff47911f3b` est\u00e1 WAITING_FOR_REVIEW desde las 18:16 UTC,\n+con publicaci\u00f3n MANUAL; no se publicar\u00e1 autom\u00e1ticamente. La cuenta de demostraci\u00f3n existente pas\u00f3 acceso,\n+sesi\u00f3n y onboarding a las 18:01 UTC, sin crear cuentas ni divulgar credenciales.\n+[Comprobaci\u00f3n](evidence/app-review-account-recheck.json).\n+\n+**Android 15 ya est\u00e1 disponible para los testers seleccionados** en Alpha,\n+seg\u00fan Play Console a las 18:09 UTC. [Estado](evidence/android15-available-state.json).\n+El panel muestra dos inscritos; siguen faltando doce personas durante catorce d\u00edas\n+para solicitar producci\u00f3n. [Requisito vigente](evidence/play-production-eligibility.json).",
+      "path": "docs/ux-ui-audit/2026-09-17/README.md",
+      "commit_id": "8449ba292e5a1cf1a88f776eee9dea2e8cb801db",
+      "original_commit_id": "8449ba292e5a1cf1a88f776eee9dea2e8cb801db",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Subtract enrolled testers from the remaining count**\n\nThe linked eligibility evidence records 2 testers currently opted in against a required total of 12, so only 10 additional testers are needed to reach the threshold, not 12. Reporting 12 as still missing can misdirect recruitment and invitation planning; clarify that the requirement is 12 total for 14 days or change the remaining count to 10.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T18:31:10Z",
+      "updated_at": "2026-09-18T18:31:10Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/454#discussion_r4049577808",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/454",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049577808"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/454#discussion_r4049577808"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/454"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049577808/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 48,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 49,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 89,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049607426",
+      "pull_request_review_id": 5251277330,
+      "id": 4049607426,
+      "node_id": "PRRC_kwDOQPdUrM7xYBsC",
+      "diff_hunk": "@@ -5,50 +5,86 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las\n superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,\n sus dependencias y las regresiones introducidas siguen dentro del alcance.\n \n-## Checkpoint verificado \u2014 2026-09-18 16:34 UTC\n-\n-Este bloque sustituye los estados de los checkpoints hist\u00f3ricos inferiores.\n-#449 est\u00e1 fusionado como `e1a825bda26dbb16b1c732e551cc4880d5626943` desde15:42UTC;\n-435 y442\u2013448 quedaron incorporados conservando sus commits. El backend termin\u00f3\n-el release guardado a16:02:10UTC, sin rollback: ambas m\u00e1quinas saludables,110\n-migraciones, tablas de calendario presentes y lease liberado. Imagen inmutable\n-`sha256:637b749539975072aa78efd2180ce42438e81dc95f768f1c6b9e3557d3ed3a3f`.\n-Web p\u00fablica e1 coincide con Cloudflare `061e1fe4-97d8-431c-aeb9-24b90c53a98b`.\n-[Recibo de release, snapshot y recuperaci\u00f3n compatible](evidence/release-e1-verification.json).\n-Se verificaron lectura p\u00fablica y login/sesi\u00f3n/onboarding con la cuenta App Review\n-leg\u00edtima; Customer/Fan recibe403 al calendario administrativo. No se afirma un\n-consentimiento Google administrativo ni revocaci\u00f3n real. Las latencias son muestras\n-de laboratorio individuales, no percentiles de campo.\n-\n-La observaci\u00f3n posterior confirm\u00f3 un pendiente de UX007: Marketplace a\u00fan cae\n-cuando se bloquea almacenamiento. [La continuaci\u00f3n](marketplace-storage.md) pasa\n-23 pruebas,30 casos distintos en tres motores y el conjunto formal, pero todav\u00eda\n-requiere revisi\u00f3n independiente, CI, merge y despliegue. No reemplaza las dem\u00e1s\n-entradas de007 ya publicadas ni relaja la idempotencia de pedidos.\n-\n-El usuario entreg\u00f3 la coordinaci\u00f3n de tiendas. Apple1.0.1 fue cambiado y le\u00eddo\n-como `MANUAL`/`WAITING_FOR_REVIEW` a15:51UTC; una aprobaci\u00f3n no publicar\u00e1 sola la\n-versi\u00f3n antigua. Contin\u00faa pendiente el iPhone f\u00edsico para Google OAuth. Play\n-muestra Alpha10 disponible a testers; a13:45 segu\u00eda1de12 inscritos para14d\u00edas.\n-No se repiten las80 invitaciones aceptadas previamente ni se inventa inscripci\u00f3n.\n-\n-El usuario eligi\u00f3 GitHub Actions gratuito y sustituy\u00f3 Starter antes de pagar.\n-No se contrat\u00f3 plan. Mobile#105 est\u00e1 fusionado en `a72ee5be1e66bad9d1a23e2d67a2e693ff3ce613`:\n-runner est\u00e1ndar macos-15/Xcode26.2, certificados existentes cifrados y environment\n-restringido a main, IPA con recibo y sin publicaci\u00f3n autom\u00e1tica. Primer run\n-35368454882: Xcode y dependencias pasan;1de507 pruebas falla por variables de\n-producci\u00f3n capturadas en el fixture Jest. #106 `7e709dc` a\u00edsla ese proceso;\n-cuatro pruebas afectadas locales y CI pasan. Archivo firmado a\u00fan pendiente.\n-Android15 `96622c14-8ac2-4780-aa25-903ef788ae88` y QA\n-`46b1cca1-f38e-4105-b9c4-68947bcdd52d` siguen construy\u00e9ndose. QA4602 us\u00f3 un perfil\n-incorrecto con API de producci\u00f3n: queda excluido de la aceptaci\u00f3n aislada; el\n-Samsung est\u00e1 conectado y s\u00f3lo se usar\u00e1 `com.tdf.records.uxaudit`.\n-\n-Siguientes acciones: fusionar106 tras refrescar gates y ejecutar iOS23; verificar\n-los artefactos Android antes de instalar/subir; publicar la continuaci\u00f3n007 para\n-revisi\u00f3n; mantener la cobertura inicial faltante y la publicaci\u00f3n m\u00f3vil abiertas.\n-No actualizar el gitlink90ca s\u00f3lo para obtener archivos de CI: el producto de105/106\n-es id\u00e9ntico; registrar el SHA exacto del artefacto nuevo cuando exista.\n+## Checkpoint verificado \u2014 2026-09-18 18:24 UTC\n+\n+Este bloque sustituye los estados hist\u00f3ricos inferiores. #450 est\u00e1 fusionado como\n+`3f0a56c0ded55fa9525dc80c895505ffcb069449`. Cloudflare `8f01e9e1` y la web p\u00fablica\n+coincidieron; seis casos reales en tres motores verificaron Marketplace con\n+almacenamiento denegado, b\u00fasqueda y recarga, sin errores ni infracciones axe.\n+UX007 queda desplegado. [Evidencia y l\u00edmites](evidence/marketplace-storage-deployment.json).\n+\n+La API contin\u00faa en `e1a825bda26dbb16b1c732e551cc4880d5626943` (comprobaci\u00f3n\n+18:09 UTC). El release guardado termin\u00f3 a las 16:02 UTC: 110 migraciones, dos\n+m\u00e1quinas saludables y lease liberado. La recuperaci\u00f3n conserva la imagen compatible\n+`5c11577a5` y el snapshot `vs_LRqNAqabQP5Upg7NwLqaVPX`; no se deben restaurar\n+binarios antiguos de autenticaci\u00f3n ni borrar migraciones.\n+[Recibo](evidence/release-e1-verification.json). El intermedio #436 de otro operador\n+no debe desplegarse por separado; su integraci\u00f3n final tiene coordinaci\u00f3n propia.\n+\n+**GitHub Actions gratuito produce iOS firmado.** Los workflows m\u00f3viles #105\u2013114\n+est\u00e1n fusionados hasta `2a0e5a99535d9ef199a3e3464a660192f882f72b`. Se utilizan\n+runners est\u00e1ndar `macos-15` y `ubuntu-24.04`, identidades de firma existentes,\n+secretos cifrados y artefactos con retenci\u00f3n de un d\u00eda. No se contrat\u00f3 Starter;\n+la decisi\u00f3n vigente del usuario es GitHub Actions gratuito. La cuota Free de EAS\n+sigue agotada en ambos sistemas. Los intentos fallidos por entorno Jest,\n+CocoaPods/JSON y memoria Gradle se conservan; no se debilitaron los controles.\n+\n+El build **iOS 1.0.1 (25)** termin\u00f3 en el\n+[run 35376470123](https://github.com/diegueins680/TDF-mobile/actions/runs/35376470123),\n+source `9f4d0e89c430e25fcd572b4c87736cad15e12012`, SDK 26.2. La verificaci\u00f3n\n+independiente del IPA confirma firma, perfil App Store, enlaces Google y API de\n+producci\u00f3n. Apple lo valid\u00f3 y recibi\u00f3 a las 18:08 UTC; a las 18:12 UTC ya estaba\n+VALID e IN_BETA_TESTING. [Recibo](evidence/ios-github25-artifact.json). El n\u00famero remoto de EAS\n+se sincroniz\u00f3 a 25 para evitar reutilizarlo, sin iniciar otro build. iOS 24 ya est\u00e1\n+VALID/IN_BETA_TESTING, pero es intermedio: no contiene la correcci\u00f3n final de texto.\n+Se retir\u00f3 de revisi\u00f3n el build antiguo y se vincul\u00f3 el 25. El nuevo env\u00edo\n+`c59f5706-f10e-4caf-ad00-3fff47911f3b` est\u00e1 WAITING_FOR_REVIEW desde las 18:16 UTC,\n+con publicaci\u00f3n MANUAL; no se publicar\u00e1 autom\u00e1ticamente. La cuenta de demostraci\u00f3n existente pas\u00f3 acceso,\n+sesi\u00f3n y onboarding a las 18:01 UTC, sin crear cuentas ni divulgar credenciales.\n+[Comprobaci\u00f3n](evidence/app-review-account-recheck.json).\n+\n+**Android 15 ya est\u00e1 disponible para los testers seleccionados** en Alpha,\n+seg\u00fan Play Console a las 18:09 UTC. [Estado](evidence/android15-available-state.json).\n+El panel muestra dos inscritos; siguen faltando doce personas durante catorce d\u00edas\n+para solicitar producci\u00f3n. [Requisito vigente](evidence/play-production-eligibility.json).",
+      "path": "docs/ux-ui-audit/2026-09-17/README.md",
+      "commit_id": "8449ba292e5a1cf1a88f776eee9dea2e8cb801db",
+      "original_commit_id": "8449ba292e5a1cf1a88f776eee9dea2e8cb801db",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Corrected in b22d3e99b: the checkpoint now explicitly requires twelve total for fourteen days and says ten additional opt-ins are missing. Existing evidence remains two enrolled; no invitations or eligibility state were altered.",
+      "created_at": "2026-09-18T18:34:51Z",
+      "updated_at": "2026-09-18T18:34:51Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/454#discussion_r4049607426",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/454",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049607426"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/454#discussion_r4049607426"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/454"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049607426/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 48,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 49,
+      "side": "RIGHT",
+      "in_reply_to_id": 4049577808,
+      "author_association": "OWNER",
+      "original_position": 89,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049650885",
+      "pull_request_review_id": 5251328610,
+      "id": 4049650885,
+      "node_id": "PRRC_kwDOQPdUrM7xYMTF",
+      "diff_hunk": "@@ -89,9 +89,9 @@\n     \"verificationMethod\": \"Old pin 326/327 with timeout; current main 456/456 plus typecheck; remaining checks recorded separately.\",\n     \"releaseStatus\": \"Current mobile corrections not publicly distributed. Android15 source90ca EAS96622c14 and isolatedQA46b1 in progress. Old4602 used preview/production API and is disqualified for isolated QA; wrong-profile download removed with receipt. iOS23 GitHub first attempt failed1/507 tests from production env leaking into Jest;106 isolates test env. Apple1.0.1 release MANUAL and WAITING_FOR_REVIEW verified15:51. Physical iPhone OAuth pending.\",\n     \"status\": \"merged\",\n-    \"implementationStatus\": \"in progress\",\n+    \"implementationStatus\": \"implemented; merge evidence below, release and remaining verification tracked separately\",\n     \"verificationStatus\": \"Historical onboarding recovery is incorporated. Current main430 pins7b7ecaf; tab fix667 must be integrated without losing required Google provider contract. Parent435 reconciliation and cold-start release blocker UX035 remain pending.\",\n-    \"mergeStatus\": \"Mobile90ca source merged; parent pin90ca merged through435/449 as e1. GitHub build workflow merged mobile#105 a72ee5; workflow-only successor106 pending.\"\n+    \"mergeStatus\": \"Original product corrections contained in mobile90cae070 and parent435/449 e1. Mobile105\u2013114 merged through2a0e5a99535d9ef199a3e3464a660192f882f72b, including native text and GitHub tooling. Parent454 pin pending independent review/merge. Generated API contracts unchanged; evidence/mobile-artifact-pin-equivalence.json relates the exact signed sources.\"",
+      "path": "docs/ux-ui-audit/2026-09-17/findings.json",
+      "commit_id": "33efe613f45a0a14208795591d5972a9e538e9a4",
+      "original_commit_id": "b22d3e99b46fd0e489aad35ec2b04d907c5662aa",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Synchronize UX-260917-004's status fields**\n\nThis new merge status says mobile #105\u2013114 are merged and parent #435/#449 already contain the correction, but the same record's `releaseStatus` still says #106 is pending and Android 15/QA 46b1 are in progress, while `verificationStatus` still says parent #435 is pending. Consumers of `findings.json` therefore receive mutually incompatible release state; update the entire finding to the Android 17/iOS 25/parent #454 checkpoint rather than only its merge and implementation fields.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T18:40:13Z",
+      "updated_at": "2026-09-18T18:40:13Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/454#discussion_r4049650885",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/454",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049650885"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/454#discussion_r4049650885"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/454"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049650885/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 94,
+      "original_line": 94,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 8,
+      "position": 14,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049650901",
+      "pull_request_review_id": 5251328610,
+      "id": 4049650901,
+      "node_id": "PRRC_kwDOQPdUrM7xYMTV",
+      "diff_hunk": "@@ -5,50 +5,90 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las\n superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,\n sus dependencias y las regresiones introducidas siguen dentro del alcance.\n \n-## Checkpoint verificado \u2014 2026-09-18 16:34 UTC\n-\n-Este bloque sustituye los estados de los checkpoints hist\u00f3ricos inferiores.\n-#449 est\u00e1 fusionado como `e1a825bda26dbb16b1c732e551cc4880d5626943` desde15:42UTC;\n-435 y442\u2013448 quedaron incorporados conservando sus commits. El backend termin\u00f3\n-el release guardado a16:02:10UTC, sin rollback: ambas m\u00e1quinas saludables,110\n-migraciones, tablas de calendario presentes y lease liberado. Imagen inmutable\n-`sha256:637b749539975072aa78efd2180ce42438e81dc95f768f1c6b9e3557d3ed3a3f`.\n-Web p\u00fablica e1 coincide con Cloudflare `061e1fe4-97d8-431c-aeb9-24b90c53a98b`.\n-[Recibo de release, snapshot y recuperaci\u00f3n compatible](evidence/release-e1-verification.json).\n-Se verificaron lectura p\u00fablica y login/sesi\u00f3n/onboarding con la cuenta App Review\n-leg\u00edtima; Customer/Fan recibe403 al calendario administrativo. No se afirma un\n-consentimiento Google administrativo ni revocaci\u00f3n real. Las latencias son muestras\n-de laboratorio individuales, no percentiles de campo.\n-\n-La observaci\u00f3n posterior confirm\u00f3 un pendiente de UX007: Marketplace a\u00fan cae\n-cuando se bloquea almacenamiento. [La continuaci\u00f3n](marketplace-storage.md) pasa\n-23 pruebas,30 casos distintos en tres motores y el conjunto formal, pero todav\u00eda\n-requiere revisi\u00f3n independiente, CI, merge y despliegue. No reemplaza las dem\u00e1s\n-entradas de007 ya publicadas ni relaja la idempotencia de pedidos.\n-\n-El usuario entreg\u00f3 la coordinaci\u00f3n de tiendas. Apple1.0.1 fue cambiado y le\u00eddo\n-como `MANUAL`/`WAITING_FOR_REVIEW` a15:51UTC; una aprobaci\u00f3n no publicar\u00e1 sola la\n-versi\u00f3n antigua. Contin\u00faa pendiente el iPhone f\u00edsico para Google OAuth. Play\n-muestra Alpha10 disponible a testers; a13:45 segu\u00eda1de12 inscritos para14d\u00edas.\n-No se repiten las80 invitaciones aceptadas previamente ni se inventa inscripci\u00f3n.\n-\n-El usuario eligi\u00f3 GitHub Actions gratuito y sustituy\u00f3 Starter antes de pagar.\n-No se contrat\u00f3 plan. Mobile#105 est\u00e1 fusionado en `a72ee5be1e66bad9d1a23e2d67a2e693ff3ce613`:\n-runner est\u00e1ndar macos-15/Xcode26.2, certificados existentes cifrados y environment\n-restringido a main, IPA con recibo y sin publicaci\u00f3n autom\u00e1tica. Primer run\n-35368454882: Xcode y dependencias pasan;1de507 pruebas falla por variables de\n-producci\u00f3n capturadas en el fixture Jest. #106 `7e709dc` a\u00edsla ese proceso;\n-cuatro pruebas afectadas locales y CI pasan. Archivo firmado a\u00fan pendiente.\n-Android15 `96622c14-8ac2-4780-aa25-903ef788ae88` y QA\n-`46b1cca1-f38e-4105-b9c4-68947bcdd52d` siguen construy\u00e9ndose. QA4602 us\u00f3 un perfil\n-incorrecto con API de producci\u00f3n: queda excluido de la aceptaci\u00f3n aislada; el\n-Samsung est\u00e1 conectado y s\u00f3lo se usar\u00e1 `com.tdf.records.uxaudit`.\n-\n-Siguientes acciones: fusionar106 tras refrescar gates y ejecutar iOS23; verificar\n-los artefactos Android antes de instalar/subir; publicar la continuaci\u00f3n007 para\n-revisi\u00f3n; mantener la cobertura inicial faltante y la publicaci\u00f3n m\u00f3vil abiertas.\n-No actualizar el gitlink90ca s\u00f3lo para obtener archivos de CI: el producto de105/106\n-es id\u00e9ntico; registrar el SHA exacto del artefacto nuevo cuando exista.\n+## Checkpoint verificado \u2014 2026-09-18 18:34 UTC\n+\n+Este bloque sustituye los estados hist\u00f3ricos inferiores. #450 est\u00e1 fusionado como\n+`3f0a56c0ded55fa9525dc80c895505ffcb069449`. Cloudflare `8f01e9e1` y la web p\u00fablica\n+coincidieron; seis casos reales en tres motores verificaron Marketplace con\n+almacenamiento denegado, b\u00fasqueda y recarga, sin errores ni infracciones axe.\n+UX007 queda desplegado. [Evidencia y l\u00edmites](evidence/marketplace-storage-deployment.json).\n+\n+La API contin\u00faa en `e1a825bda26dbb16b1c732e551cc4880d5626943` (comprobaci\u00f3n\n+18:09 UTC). El release guardado termin\u00f3 a las 16:02 UTC: 110 migraciones, dos\n+m\u00e1quinas saludables y lease liberado. La recuperaci\u00f3n conserva la imagen compatible\n+`5c11577a5` y el snapshot `vs_LRqNAqabQP5Upg7NwLqaVPX`; no se deben restaurar\n+binarios antiguos de autenticaci\u00f3n ni borrar migraciones.\n+[Recibo](evidence/release-e1-verification.json). El intermedio #436 de otro operador\n+no debe desplegarse por separado; su integraci\u00f3n final tiene coordinaci\u00f3n propia.\n+\n+**GitHub Actions gratuito produce iOS firmado.** Los workflows m\u00f3viles #105\u2013114\n+est\u00e1n fusionados hasta `2a0e5a99535d9ef199a3e3464a660192f882f72b`. Se utilizan\n+runners est\u00e1ndar `macos-15` y `ubuntu-24.04`, identidades de firma existentes,\n+secretos cifrados y artefactos con retenci\u00f3n de un d\u00eda. No se contrat\u00f3 Starter;\n+la decisi\u00f3n vigente del usuario es GitHub Actions gratuito. La cuota Free de EAS\n+sigue agotada en ambos sistemas. Los intentos fallidos por entorno Jest,\n+CocoaPods/JSON y memoria Gradle se conservan; no se debilitaron los controles.\n+\n+El build **iOS 1.0.1 (25)** termin\u00f3 en el\n+[run 35376470123](https://github.com/diegueins680/TDF-mobile/actions/runs/35376470123),\n+source `9f4d0e89c430e25fcd572b4c87736cad15e12012`, SDK 26.2. La verificaci\u00f3n\n+independiente del IPA confirma firma, perfil App Store, enlaces Google y API de\n+producci\u00f3n. Apple lo valid\u00f3 y recibi\u00f3 a las 18:08 UTC; a las 18:12 UTC ya estaba\n+VALID e IN_BETA_TESTING. [Recibo](evidence/ios-github25-artifact.json). El n\u00famero remoto de EAS\n+se sincroniz\u00f3 a 25 para evitar reutilizarlo, sin iniciar otro build. iOS 24 ya est\u00e1\n+VALID/IN_BETA_TESTING, pero es intermedio: no contiene la correcci\u00f3n final de texto.\n+Se retir\u00f3 de revisi\u00f3n el build antiguo y se vincul\u00f3 el 25. El nuevo env\u00edo\n+`c59f5706-f10e-4caf-ad00-3fff47911f3b` est\u00e1 WAITING_FOR_REVIEW desde las 18:16 UTC,\n+con publicaci\u00f3n MANUAL; no se publicar\u00e1 autom\u00e1ticamente. La cuenta de demostraci\u00f3n existente pas\u00f3 acceso,\n+sesi\u00f3n y onboarding a las 18:01 UTC, sin crear cuentas ni divulgar credenciales.\n+[Comprobaci\u00f3n](evidence/app-review-account-recheck.json).\n+\n+**Android 15 ya est\u00e1 disponible para los testers seleccionados** en Alpha,\n+seg\u00fan Play Console a las 18:09 UTC. [Estado](evidence/android15-available-state.json).\n+El panel muestra dos inscritos. Se exigen doce en total durante catorce d\u00edas\n+para solicitar producci\u00f3n: faltan diez inscritos adicionales. [Requisito vigente](evidence/play-production-eligibility.json).\n+No se repiten las 80 invitaciones enviadas. Android 17, con texto ampliado corregido,\n+termin\u00f3 correctamente en el [run 35376997735](https://github.com/diegueins680/TDF-mobile/actions/runs/35376997735).\n+El primer build nativo fall\u00f3 por Metaspace de 512 MiB durante lint; #113 aumenta\n+heap/Metaspace a 4/2 GiB y limita workers a dos, conservando lint, arquitecturas y\n+verificaci\u00f3n de dependencias. El AAB 17 pas\u00f3 verificaci\u00f3n independiente de firma, certificado, manifest,\n+configuraci\u00f3n de producci\u00f3n y SHA256. El env\u00edo se valid\u00f3 y registr\u00f3 en Alpha a las 18:18 UTC; Play Console confirma\n+**in review**. [Recibo](evidence/android17-alpha-submission.json) y\n+[estado de revisi\u00f3n](evidence/android17-review-state.json). Android 15 sigue\n+disponible mientras se revisa el 17.\n+\n+UX033 conserva las pruebas nativas originales de idioma, conteo y retorno. La\n+ampliaci\u00f3n real confirm\u00f3 truncamiento adicional: #109 corrige Android y #112 mide\n+las etiquetas iOS fuera de la barra para permitir su altura completa. Pasaron\n+510 pruebas, los gates de CI y siete casos focalizados; las im\u00e1genes y el \u00e1rbol\n+accesible del simulador muestran cinco pesta\u00f1as y ning\u00fan auxiliar expuesto.\n+En Samsung, el prototipo QA mantiene completas las etiquetas a 1\u00d7/2\u00d7; se restaur\u00f3\n+la preferencia original. Ese prototipo verifica presentaci\u00f3n, no autenticaci\u00f3n.\n+El APK aislado completo 46b1 s\u00ed pas\u00f3 acceso, seguimiento persistente y sesi\u00f3n al\n+reabrir en Samsung. [Recibo](evidence/android-physical-46b1.json).\n+El Samsung volvi\u00f3 por ADB a las 18:29 UTC. La comprobaci\u00f3n del APK QA instalado\n+confirma su SHA256, seguimiento y sesi\u00f3n tras reapertura, respuesta autoritativa\n+HTTP200 y un seguimiento persistido. Las cinco pesta\u00f1as quedan completas a 1\u00d7/2\u00d7;\n+se restaur\u00f3 font_scale1.0 y la instalaci\u00f3n personal permanece id\u00e9ntica.\n+[Comprobaci\u00f3n adicional](evidence/android-reconnect-verification.json). El\n+simulador temporal de esta auditor\u00eda se elimin\u00f3 despu\u00e9s de conservar su evidencia\n+para resolver la falta de espacio que interrumpi\u00f3 la primera descarga Android17. Sigue\n+faltando el iPhone f\u00edsico para Google OAuth y no se acredita lectura humana con\n+VoiceOver/TalkBack ni rendimiento de campo.\n+\n+El parent #454 prepara el pin `2a0e5a9`, con contratos generados id\u00e9nticos a `90ca`\n+y ambos informes de cat\u00e1logo regenerados y verificados. #114 hace que los comandos\n+production/store usen GitHub y elimina el n\u00famero iOS usado que estaba prellenado.\n+Las diferencias posteriores a las fuentes de ambos binarios s\u00f3lo afectan workflows,\n+documentaci\u00f3n y scripts npm; c\u00f3digo de app, nativo, dependencias y metadatos de\n+ejecuci\u00f3n son id\u00e9nticos. [Comparaci\u00f3n](evidence/mobile-artifact-pin-equivalence.json).\n+El parent a\u00fan no est\u00e1 fusionado.\n+Siguiente acci\u00f3n: verificar el env\u00edo de Android 17 y las revisiones de tiendas,",
+      "path": "docs/ux-ui-audit/2026-09-17/README.md",
+      "commit_id": "b22d3e99b46fd0e489aad35ec2b04d907c5662aa",
+      "original_commit_id": "b22d3e99b46fd0e489aad35ec2b04d907c5662aa",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Remove the completed Android submission step**\n\nFor an operator following the current top checkpoint, this next action is already complete: lines 55\u201357 record that Android 17 was validated, committed to Alpha, submitted, and confirmed `in review`. Keeping \u201cverificar el env\u00edo\u201d as the next step can trigger redundant release work; the remaining action should instead be to monitor review and eventual tester availability.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T18:40:13Z",
+      "updated_at": "2026-09-18T18:40:13Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/454#discussion_r4049650901",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/454",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049650901"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/454#discussion_r4049650901"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/454"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049650901/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 86,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 126,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049833669",
+      "pull_request_review_id": 5251544297,
+      "id": 4049833669,
+      "node_id": "PRRC_kwDOQPdUrM7xY47F",
+      "diff_hunk": "@@ -89,9 +89,9 @@\n     \"verificationMethod\": \"Old pin 326/327 with timeout; current main 456/456 plus typecheck; remaining checks recorded separately.\",\n     \"releaseStatus\": \"Current mobile corrections not publicly distributed. Android15 source90ca EAS96622c14 and isolatedQA46b1 in progress. Old4602 used preview/production API and is disqualified for isolated QA; wrong-profile download removed with receipt. iOS23 GitHub first attempt failed1/507 tests from production env leaking into Jest;106 isolates test env. Apple1.0.1 release MANUAL and WAITING_FOR_REVIEW verified15:51. Physical iPhone OAuth pending.\",\n     \"status\": \"merged\",\n-    \"implementationStatus\": \"in progress\",\n+    \"implementationStatus\": \"implemented; merge evidence below, release and remaining verification tracked separately\",\n     \"verificationStatus\": \"Historical onboarding recovery is incorporated. Current main430 pins7b7ecaf; tab fix667 must be integrated without losing required Google provider contract. Parent435 reconciliation and cold-start release blocker UX035 remain pending.\",\n-    \"mergeStatus\": \"Mobile90ca source merged; parent pin90ca merged through435/449 as e1. GitHub build workflow merged mobile#105 a72ee5; workflow-only successor106 pending.\"\n+    \"mergeStatus\": \"Original product corrections contained in mobile90cae070 and parent435/449 e1. Mobile105\u2013114 merged through2a0e5a99535d9ef199a3e3464a660192f882f72b, including native text and GitHub tooling. Parent454 pin pending independent review/merge. Generated API contracts unchanged; evidence/mobile-artifact-pin-equivalence.json relates the exact signed sources.\"",
+      "path": "docs/ux-ui-audit/2026-09-17/findings.json",
+      "commit_id": "33efe613f45a0a14208795591d5972a9e538e9a4",
+      "original_commit_id": "b22d3e99b46fd0e489aad35ec2b04d907c5662aa",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Addressed in 33efe613f: all UX004 verification/release/merge fields now use published mobile2a0e5a9, signed iOS25/Android17, actual Samsung QA and pending parent454. Superseded status text is preserved explicitly as historical evidence. Related obsolete finding/static-page states were reconciled without closing unexecuted acceptance. Main7635a5f is integrated; regeneration proves current mobile/web contract parity with no mobile code change. User has no physical iPhone; that gate remains blocked.",
+      "created_at": "2026-09-18T19:03:55Z",
+      "updated_at": "2026-09-18T19:03:55Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/454#discussion_r4049833669",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/454",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049833669"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/454#discussion_r4049833669"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/454"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049833669/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 94,
+      "original_line": 94,
+      "side": "RIGHT",
+      "in_reply_to_id": 4049650885,
+      "author_association": "OWNER",
+      "original_position": 8,
+      "position": 14,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049835184",
+      "pull_request_review_id": 5251546336,
+      "id": 4049835184,
+      "node_id": "PRRC_kwDOQPdUrM7xY5Sw",
+      "diff_hunk": "@@ -5,50 +5,90 @@ no reduce el encargo a los hallazgos ya observados ni acredita cobertura de las\n superficies pendientes. Todos los hallazgos confirmados, incluidos los menores,\n sus dependencias y las regresiones introducidas siguen dentro del alcance.\n \n-## Checkpoint verificado \u2014 2026-09-18 16:34 UTC\n-\n-Este bloque sustituye los estados de los checkpoints hist\u00f3ricos inferiores.\n-#449 est\u00e1 fusionado como `e1a825bda26dbb16b1c732e551cc4880d5626943` desde15:42UTC;\n-435 y442\u2013448 quedaron incorporados conservando sus commits. El backend termin\u00f3\n-el release guardado a16:02:10UTC, sin rollback: ambas m\u00e1quinas saludables,110\n-migraciones, tablas de calendario presentes y lease liberado. Imagen inmutable\n-`sha256:637b749539975072aa78efd2180ce42438e81dc95f768f1c6b9e3557d3ed3a3f`.\n-Web p\u00fablica e1 coincide con Cloudflare `061e1fe4-97d8-431c-aeb9-24b90c53a98b`.\n-[Recibo de release, snapshot y recuperaci\u00f3n compatible](evidence/release-e1-verification.json).\n-Se verificaron lectura p\u00fablica y login/sesi\u00f3n/onboarding con la cuenta App Review\n-leg\u00edtima; Customer/Fan recibe403 al calendario administrativo. No se afirma un\n-consentimiento Google administrativo ni revocaci\u00f3n real. Las latencias son muestras\n-de laboratorio individuales, no percentiles de campo.\n-\n-La observaci\u00f3n posterior confirm\u00f3 un pendiente de UX007: Marketplace a\u00fan cae\n-cuando se bloquea almacenamiento. [La continuaci\u00f3n](marketplace-storage.md) pasa\n-23 pruebas,30 casos distintos en tres motores y el conjunto formal, pero todav\u00eda\n-requiere revisi\u00f3n independiente, CI, merge y despliegue. No reemplaza las dem\u00e1s\n-entradas de007 ya publicadas ni relaja la idempotencia de pedidos.\n-\n-El usuario entreg\u00f3 la coordinaci\u00f3n de tiendas. Apple1.0.1 fue cambiado y le\u00eddo\n-como `MANUAL`/`WAITING_FOR_REVIEW` a15:51UTC; una aprobaci\u00f3n no publicar\u00e1 sola la\n-versi\u00f3n antigua. Contin\u00faa pendiente el iPhone f\u00edsico para Google OAuth. Play\n-muestra Alpha10 disponible a testers; a13:45 segu\u00eda1de12 inscritos para14d\u00edas.\n-No se repiten las80 invitaciones aceptadas previamente ni se inventa inscripci\u00f3n.\n-\n-El usuario eligi\u00f3 GitHub Actions gratuito y sustituy\u00f3 Starter antes de pagar.\n-No se contrat\u00f3 plan. Mobile#105 est\u00e1 fusionado en `a72ee5be1e66bad9d1a23e2d67a2e693ff3ce613`:\n-runner est\u00e1ndar macos-15/Xcode26.2, certificados existentes cifrados y environment\n-restringido a main, IPA con recibo y sin publicaci\u00f3n autom\u00e1tica. Primer run\n-35368454882: Xcode y dependencias pasan;1de507 pruebas falla por variables de\n-producci\u00f3n capturadas en el fixture Jest. #106 `7e709dc` a\u00edsla ese proceso;\n-cuatro pruebas afectadas locales y CI pasan. Archivo firmado a\u00fan pendiente.\n-Android15 `96622c14-8ac2-4780-aa25-903ef788ae88` y QA\n-`46b1cca1-f38e-4105-b9c4-68947bcdd52d` siguen construy\u00e9ndose. QA4602 us\u00f3 un perfil\n-incorrecto con API de producci\u00f3n: queda excluido de la aceptaci\u00f3n aislada; el\n-Samsung est\u00e1 conectado y s\u00f3lo se usar\u00e1 `com.tdf.records.uxaudit`.\n-\n-Siguientes acciones: fusionar106 tras refrescar gates y ejecutar iOS23; verificar\n-los artefactos Android antes de instalar/subir; publicar la continuaci\u00f3n007 para\n-revisi\u00f3n; mantener la cobertura inicial faltante y la publicaci\u00f3n m\u00f3vil abiertas.\n-No actualizar el gitlink90ca s\u00f3lo para obtener archivos de CI: el producto de105/106\n-es id\u00e9ntico; registrar el SHA exacto del artefacto nuevo cuando exista.\n+## Checkpoint verificado \u2014 2026-09-18 18:34 UTC\n+\n+Este bloque sustituye los estados hist\u00f3ricos inferiores. #450 est\u00e1 fusionado como\n+`3f0a56c0ded55fa9525dc80c895505ffcb069449`. Cloudflare `8f01e9e1` y la web p\u00fablica\n+coincidieron; seis casos reales en tres motores verificaron Marketplace con\n+almacenamiento denegado, b\u00fasqueda y recarga, sin errores ni infracciones axe.\n+UX007 queda desplegado. [Evidencia y l\u00edmites](evidence/marketplace-storage-deployment.json).\n+\n+La API contin\u00faa en `e1a825bda26dbb16b1c732e551cc4880d5626943` (comprobaci\u00f3n\n+18:09 UTC). El release guardado termin\u00f3 a las 16:02 UTC: 110 migraciones, dos\n+m\u00e1quinas saludables y lease liberado. La recuperaci\u00f3n conserva la imagen compatible\n+`5c11577a5` y el snapshot `vs_LRqNAqabQP5Upg7NwLqaVPX`; no se deben restaurar\n+binarios antiguos de autenticaci\u00f3n ni borrar migraciones.\n+[Recibo](evidence/release-e1-verification.json). El intermedio #436 de otro operador\n+no debe desplegarse por separado; su integraci\u00f3n final tiene coordinaci\u00f3n propia.\n+\n+**GitHub Actions gratuito produce iOS firmado.** Los workflows m\u00f3viles #105\u2013114\n+est\u00e1n fusionados hasta `2a0e5a99535d9ef199a3e3464a660192f882f72b`. Se utilizan\n+runners est\u00e1ndar `macos-15` y `ubuntu-24.04`, identidades de firma existentes,\n+secretos cifrados y artefactos con retenci\u00f3n de un d\u00eda. No se contrat\u00f3 Starter;\n+la decisi\u00f3n vigente del usuario es GitHub Actions gratuito. La cuota Free de EAS\n+sigue agotada en ambos sistemas. Los intentos fallidos por entorno Jest,\n+CocoaPods/JSON y memoria Gradle se conservan; no se debilitaron los controles.\n+\n+El build **iOS 1.0.1 (25)** termin\u00f3 en el\n+[run 35376470123](https://github.com/diegueins680/TDF-mobile/actions/runs/35376470123),\n+source `9f4d0e89c430e25fcd572b4c87736cad15e12012`, SDK 26.2. La verificaci\u00f3n\n+independiente del IPA confirma firma, perfil App Store, enlaces Google y API de\n+producci\u00f3n. Apple lo valid\u00f3 y recibi\u00f3 a las 18:08 UTC; a las 18:12 UTC ya estaba\n+VALID e IN_BETA_TESTING. [Recibo](evidence/ios-github25-artifact.json). El n\u00famero remoto de EAS\n+se sincroniz\u00f3 a 25 para evitar reutilizarlo, sin iniciar otro build. iOS 24 ya est\u00e1\n+VALID/IN_BETA_TESTING, pero es intermedio: no contiene la correcci\u00f3n final de texto.\n+Se retir\u00f3 de revisi\u00f3n el build antiguo y se vincul\u00f3 el 25. El nuevo env\u00edo\n+`c59f5706-f10e-4caf-ad00-3fff47911f3b` est\u00e1 WAITING_FOR_REVIEW desde las 18:16 UTC,\n+con publicaci\u00f3n MANUAL; no se publicar\u00e1 autom\u00e1ticamente. La cuenta de demostraci\u00f3n existente pas\u00f3 acceso,\n+sesi\u00f3n y onboarding a las 18:01 UTC, sin crear cuentas ni divulgar credenciales.\n+[Comprobaci\u00f3n](evidence/app-review-account-recheck.json).\n+\n+**Android 15 ya est\u00e1 disponible para los testers seleccionados** en Alpha,\n+seg\u00fan Play Console a las 18:09 UTC. [Estado](evidence/android15-available-state.json).\n+El panel muestra dos inscritos. Se exigen doce en total durante catorce d\u00edas\n+para solicitar producci\u00f3n: faltan diez inscritos adicionales. [Requisito vigente](evidence/play-production-eligibility.json).\n+No se repiten las 80 invitaciones enviadas. Android 17, con texto ampliado corregido,\n+termin\u00f3 correctamente en el [run 35376997735](https://github.com/diegueins680/TDF-mobile/actions/runs/35376997735).\n+El primer build nativo fall\u00f3 por Metaspace de 512 MiB durante lint; #113 aumenta\n+heap/Metaspace a 4/2 GiB y limita workers a dos, conservando lint, arquitecturas y\n+verificaci\u00f3n de dependencias. El AAB 17 pas\u00f3 verificaci\u00f3n independiente de firma, certificado, manifest,\n+configuraci\u00f3n de producci\u00f3n y SHA256. El env\u00edo se valid\u00f3 y registr\u00f3 en Alpha a las 18:18 UTC; Play Console confirma\n+**in review**. [Recibo](evidence/android17-alpha-submission.json) y\n+[estado de revisi\u00f3n](evidence/android17-review-state.json). Android 15 sigue\n+disponible mientras se revisa el 17.\n+\n+UX033 conserva las pruebas nativas originales de idioma, conteo y retorno. La\n+ampliaci\u00f3n real confirm\u00f3 truncamiento adicional: #109 corrige Android y #112 mide\n+las etiquetas iOS fuera de la barra para permitir su altura completa. Pasaron\n+510 pruebas, los gates de CI y siete casos focalizados; las im\u00e1genes y el \u00e1rbol\n+accesible del simulador muestran cinco pesta\u00f1as y ning\u00fan auxiliar expuesto.\n+En Samsung, el prototipo QA mantiene completas las etiquetas a 1\u00d7/2\u00d7; se restaur\u00f3\n+la preferencia original. Ese prototipo verifica presentaci\u00f3n, no autenticaci\u00f3n.\n+El APK aislado completo 46b1 s\u00ed pas\u00f3 acceso, seguimiento persistente y sesi\u00f3n al\n+reabrir en Samsung. [Recibo](evidence/android-physical-46b1.json).\n+El Samsung volvi\u00f3 por ADB a las 18:29 UTC. La comprobaci\u00f3n del APK QA instalado\n+confirma su SHA256, seguimiento y sesi\u00f3n tras reapertura, respuesta autoritativa\n+HTTP200 y un seguimiento persistido. Las cinco pesta\u00f1as quedan completas a 1\u00d7/2\u00d7;\n+se restaur\u00f3 font_scale1.0 y la instalaci\u00f3n personal permanece id\u00e9ntica.\n+[Comprobaci\u00f3n adicional](evidence/android-reconnect-verification.json). El\n+simulador temporal de esta auditor\u00eda se elimin\u00f3 despu\u00e9s de conservar su evidencia\n+para resolver la falta de espacio que interrumpi\u00f3 la primera descarga Android17. Sigue\n+faltando el iPhone f\u00edsico para Google OAuth y no se acredita lectura humana con\n+VoiceOver/TalkBack ni rendimiento de campo.\n+\n+El parent #454 prepara el pin `2a0e5a9`, con contratos generados id\u00e9nticos a `90ca`\n+y ambos informes de cat\u00e1logo regenerados y verificados. #114 hace que los comandos\n+production/store usen GitHub y elimina el n\u00famero iOS usado que estaba prellenado.\n+Las diferencias posteriores a las fuentes de ambos binarios s\u00f3lo afectan workflows,\n+documentaci\u00f3n y scripts npm; c\u00f3digo de app, nativo, dependencias y metadatos de\n+ejecuci\u00f3n son id\u00e9nticos. [Comparaci\u00f3n](evidence/mobile-artifact-pin-equivalence.json).\n+El parent a\u00fan no est\u00e1 fusionado.\n+Siguiente acci\u00f3n: verificar el env\u00edo de Android 17 y las revisiones de tiendas,",
+      "path": "docs/ux-ui-audit/2026-09-17/README.md",
+      "commit_id": "b22d3e99b46fd0e489aad35ec2b04d907c5662aa",
+      "original_commit_id": "b22d3e99b46fd0e489aad35ec2b04d907c5662aa",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Addressed in 33efe613f. The next action now concerns parent review/merge and eventual store review/tester availability, expressly prohibiting repetition of completed uploads. Live read-only Apple and Play observations retain iOS25 WAITING_FOR_REVIEW/MANUAL and Android17 in review. Backend observation is also refreshed to the other operator\u2019s mail-only ab9 release; this parent does not initiate a competing backend rollout.",
+      "created_at": "2026-09-18T19:04:05Z",
+      "updated_at": "2026-09-18T19:04:05Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/454#discussion_r4049835184",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/454",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049835184"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/454#discussion_r4049835184"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/454"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049835184/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 86,
+      "side": "RIGHT",
+      "in_reply_to_id": 4049650901,
+      "author_association": "OWNER",
+      "original_position": 126,
+      "position": 1,
+      "subject_type": "line"
+    }
+  ]
+]

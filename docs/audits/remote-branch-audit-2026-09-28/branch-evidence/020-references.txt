@@ -1,0 +1,2 @@
+origin/main:docs/ux-ui-audit/2026-09-17/README.md:122:La rama `audit/ux-release-integration-20260918` reúne únicamente los incrementos
+origin/main:docs/ux-ui-audit/2026-09-17/evidence/release-integration-verification.json:4:  "integrationBranch": "audit/ux-release-integration-20260918",

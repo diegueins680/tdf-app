@@ -1,0 +1,125 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 454,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "33efe613f45a0a14208795591d5972a9e538e9a4",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6j2fNb",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "docs/ux-ui-audit/2026-09-17/README.md",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Subtract enrolled testers from the remaining count**\n\nThe linked eligibility evidence records 2 testers currently opted in against a required total of 12, so only 10 additional testers are needed to reach the threshold, not 12. Reporting 12 as still missing can misdirect recruitment and invitation planning; clarify that the requirement is 12 total for 14 days or change the remaining count to 10.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/454#discussion_r4049577808",
+                      "createdAt": "2026-09-18T18:31:10Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Corrected in b22d3e99b: the checkpoint now explicitly requires twelve total for fourteen days and says ten additional opt-ins are missing. Existing evidence remains two enrolled; no invitations or eligibility state were altered.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/454#discussion_r4049607426",
+                      "createdAt": "2026-09-18T18:34:51Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxODozNDo1MVrO8WAbAg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6j2rMJ",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "docs/ux-ui-audit/2026-09-17/findings.json",
+                "line": 94,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Synchronize UX-260917-004's status fields**\n\nThis new merge status says mobile #105\u2013114 are merged and parent #435/#449 already contain the correction, but the same record's `releaseStatus` still says #106 is pending and Android 15/QA 46b1 are in progress, while `verificationStatus` still says parent #435 is pending. Consumers of `findings.json` therefore receive mutually incompatible release state; update the entire finding to the Android 17/iOS 25/parent #454 checkpoint rather than only its merge and implementation fields.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/454#discussion_r4049650885",
+                      "createdAt": "2026-09-18T18:40:13Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Addressed in 33efe613f: all UX004 verification/release/merge fields now use published mobile2a0e5a9, signed iOS25/Android17, actual Samsung QA and pending parent454. Superseded status text is preserved explicitly as historical evidence. Related obsolete finding/static-page states were reconciled without closing unexecuted acceptance. Main7635a5f is integrated; regeneration proves current mobile/web contract parity with no mobile code change. User has no physical iPhone; that gate remains blocked.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/454#discussion_r4049833669",
+                      "createdAt": "2026-09-18T19:03:55Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxOTowMzo1NVrO8WOOxQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6j2rMW",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "docs/ux-ui-audit/2026-09-17/README.md",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Remove the completed Android submission step**\n\nFor an operator following the current top checkpoint, this next action is already complete: lines 55\u201357 record that Android 17 was validated, committed to Alpha, submitted, and confirmed `in review`. Keeping \u201cverificar el env\u00edo\u201d as the next step can trigger redundant release work; the remaining action should instead be to monitor review and eventual tester availability.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/454#discussion_r4049650901",
+                      "createdAt": "2026-09-18T18:40:13Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Addressed in 33efe613f. The next action now concerns parent review/merge and eventual store review/tester availability, expressly prohibiting repetition of completed uploads. Live read-only Apple and Play observations retain iOS25 WAITING_FOR_REVIEW/MANUAL and Android17 in review. Backend observation is also refreshed to the other operator\u2019s mail-only ab9 release; this parent does not initiate a competing backend rollout.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/454#discussion_r4049835184",
+                      "createdAt": "2026-09-18T19:04:05Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxOTowNDowNVrO8WOUsA=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxODo0MDoxM1rOo9qzFg=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

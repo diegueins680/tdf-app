@@ -1,0 +1,245 @@
+{
+  "timestamp": "2026-09-28T16:40:36.819980+00:00",
+  "active_ids": [
+    "51691537fc71f2b0"
+  ],
+  "lsof_exit": 0,
+  "caches": [
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/15c61037b1978c83",
+      "kib": 14096,
+      "active_process_reference": false,
+      "package": {
+        "chrome-devtools-mcp": "^1.8.0"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/c15e4b19a90d9797",
+      "kib": 1252,
+      "active_process_reference": false,
+      "package": {
+        "expo-doctor": "^1.20.3"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/d77349f55c2be1c0",
+      "kib": 219516,
+      "active_process_reference": false,
+      "package": {
+        "wrangler": "^4.119.0"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/0b83cd9ca5e1325c",
+      "kib": 44,
+      "active_process_reference": false,
+      "package": {
+        "only-allow": "^1.2.2"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/1415fee72ff6294b",
+      "kib": 868,
+      "active_process_reference": false,
+      "package": {
+        "create-vite": "^8.0.1"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/249ca9fcd30c476a",
+      "kib": 195136,
+      "active_process_reference": false,
+      "package": {
+        "expo": "^55.0.24"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/94207acffe67148d",
+      "kib": 2300,
+      "active_process_reference": false,
+      "package": {
+        "typescript-language-server": "^5.3.0"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/520e866687cefe78",
+      "kib": 13872,
+      "active_process_reference": false,
+      "package": {
+        "playwright": "^1.58.2"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/51691537fc71f2b0",
+      "kib": 18988,
+      "active_process_reference": true,
+      "package": {
+        "@playwright/mcp": "^0.0.79"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/118cdd991bfdaaba",
+      "kib": 20276,
+      "active_process_reference": false,
+      "package": {}
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/9ed06546b0653f96",
+      "kib": 18568,
+      "active_process_reference": false,
+      "package": {
+        "vite": "^7.2.2"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/b388654678d519d9",
+      "kib": 8552,
+      "active_process_reference": false,
+      "package": {
+        "prettier": "^3.8.3"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/1c42e2583fe60b26",
+      "kib": 164424,
+      "active_process_reference": false,
+      "package": {
+        "node": "^22.14.0"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/1d6e82a4126006c4",
+      "kib": 32,
+      "active_process_reference": false,
+      "package": {
+        "tsc": "^2.0.4"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/e25a38a8cc65d08e",
+      "kib": 126888,
+      "active_process_reference": false,
+      "package": {
+        "eas-cli": "^18.13.0"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/c5e9bca3acff8f7b",
+      "kib": 315992,
+      "active_process_reference": false,
+      "package": {
+        "vercel": "^59.11.7"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/8125ebe10bdf1a44",
+      "kib": 19084,
+      "active_process_reference": false,
+      "package": {
+        "chrome-devtools-mcp": "^0.25.0"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/69c381f8ad94b576",
+      "kib": 5272,
+      "active_process_reference": false,
+      "package": {
+        "vitest": "^5.0.1"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/69f9afb961c37556",
+      "kib": 297836,
+      "active_process_reference": false,
+      "package": {
+        "vercel": "^59.1.4"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/bcc018885adf43c0",
+      "kib": 302232,
+      "active_process_reference": false,
+      "package": {
+        "expo": "^54.0.23"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/1e1a98b8a3049f1f",
+      "kib": 144948,
+      "active_process_reference": false,
+      "package": {
+        "node": "^20.19.4"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/753985bec210f4c7",
+      "kib": 17820,
+      "active_process_reference": false,
+      "package": {
+        "npm": "^10.9.2"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/32026684e21afda6",
+      "kib": 245444,
+      "active_process_reference": false,
+      "package": {
+        "wrangler": "^4.122.0"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/834910fc56e36730",
+      "kib": 0,
+      "active_process_reference": false,
+      "package": {}
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/e1f8d26b7d2b9e10",
+      "kib": 44248,
+      "active_process_reference": false,
+      "package": {
+        "detox": "^20.50.4"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/8d2e8001be657ecc",
+      "kib": 14800,
+      "active_process_reference": false,
+      "package": {
+        "@playwright/test": "^1.59.1"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/e41f203b7505f1fb",
+      "kib": 18520,
+      "active_process_reference": false,
+      "package": {
+        "playwright": "^1.62.1"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/ac0ed6aa23b37c1e",
+      "kib": 5616,
+      "active_process_reference": false,
+      "package": {
+        "skills": "^1.5.21"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/6bc7bae5c2059953",
+      "kib": 144980,
+      "active_process_reference": false,
+      "package": {
+        "eas-cli": "^20.2.0"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/a712338f43e79bae",
+      "kib": 1204,
+      "active_process_reference": false,
+      "package": {
+        "create-expo-app": "^3.5.3"
+      }
+    }
+  ]
+}

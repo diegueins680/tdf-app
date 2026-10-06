@@ -48,6 +48,7 @@ import TDF.ServerAuth
   , validateOptionalSignupPhone
   , validateOnboardingFirstValue
   , validateOnboardingIntent
+  , validateArtistInvitation
   , isOnboardingEligible
   )
 
@@ -68,6 +69,7 @@ spec = do
   signupPhoneSpec
   signupFanArtistIdsSpec
   signupArtistClaimEmailSpec
+  artistInvitationSpec
   onboardingProgressSpec
   passwordResetTokenSpec
   googleIdTokenInputSpec
@@ -493,6 +495,18 @@ signupArtistClaimEmailSpec = describe "validateSignupArtistClaimEmail" $ do
       `shouldBe` Left "Artist profile email does not match signup email"
     validateSignupArtistClaimEmail "ada@example.com" (Just "not-an-email")
       `shouldBe` Left "Artist profile email does not match signup email"
+
+artistInvitationSpec :: Spec
+artistInvitationSpec = describe "validateArtistInvitation" $ do
+  it "accepts only the explicit Tu Escena campaign invitation" $ do
+    validateArtistInvitation " Tu_Escena_Conectada_Piloto "
+      `shouldBe` Right "tu_escena_conectada_piloto"
+    case validateArtistInvitation "unknown_campaign" of
+      Left err -> do
+        errHTTPCode err `shouldBe` 400
+        BL8.unpack (errBody err) `shouldContain` "artistInvitation is unsupported"
+      Right value ->
+        expectationFailure ("Expected an unknown artist invitation to fail, got " <> show value)
 
 onboardingProgressSpec :: Spec
 onboardingProgressSpec = describe "account-bound onboarding progress" $ do

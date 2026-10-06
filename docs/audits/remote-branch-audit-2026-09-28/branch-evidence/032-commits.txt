@@ -1,0 +1,3 @@
+aac15a69e9bc2e6de01652282d9da4012a0af067 2026-09-14T20:59:51-05:00 continuous-improvement-loop[bot] docs(payments): record HTTP boundary risks and verified regressions
+1c27d2d8561f1effa10e2bea7d12193249f36961 2026-09-14T20:48:22-05:00 continuous-improvement-loop[bot] test(payments): assert cookie handling without requiring CookieJar equality
+74ccf95942202a82c3ac67418ac91a0eea058951 2026-09-14T20:42:36-05:00 continuous-improvement-loop[bot] fix(payments): bound shared provider HTTP transport and disable implicit retries

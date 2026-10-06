@@ -1,0 +1,124 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 468,
+          "reviewDecision": "REVIEW_REQUIRED",
+          "mergeStateStatus": "BLOCKED",
+          "mergeable": "MERGEABLE",
+          "headRefOid": "9c29fd5bd19d256a60e8a877552a854fee881be6",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6mvT5q",
+                "isResolved": false,
+                "isOutdated": false,
+                "path": "ops/hetzner/validation-2026-09-28.md",
+                "line": 16,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Retarget scheduled enrichment before stopping Fly**\n\nFor scheduled production runs, `.github/workflows/artist-enrichment-daily.yml:33` still sets `TDF_API_BASE` to `https://tdf-hq.fly.dev` and lines 67\u201378 execute enrichment in production mode. With both Fly API machines stopped and their TDF role set to `NOLOGIN` as recorded here, every daily run targets the retired backend rather than the current Hetzner database and cannot perform enrichment. Retarget or pause this workflow before treating the old writers as retired.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4123803371",
+                      "createdAt": "2026-09-28T15:10:14Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQxNToxMDoxNFrO9cw-6w=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6mvT6B",
+                "isResolved": false,
+                "isOutdated": false,
+                "path": "ops/hetzner/validation-2026-09-28.md",
+                "line": 46,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Complete the authentication and upload gates before declaring success**\n\nIn this deployed state, writes have already been enabled even though these end-to-end checks remain unperformed, while the cutover procedure in `ops/hetzner/README.md:143-145` explicitly requires Google authentication and uploads to be verified before reopening writes. This leaves two user-facing write paths unvalidated after the hostname, database, and asset-storage migration despite the record calling the cutover complete; either perform those gates or record an explicit waiver and keep the cutover status incomplete.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4123803395",
+                      "createdAt": "2026-09-28T15:10:14Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQxNToxMDoxNFrO9cw_Aw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6mv4sP",
+                "isResolved": false,
+                "isOutdated": false,
+                "path": "ops/hetzner/validation-2026-09-28.md",
+                "line": 16,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Retarget messaging-token refreshes to Hetzner**\n\nIn the stopped-Fly state recorded here, the hourly `.github/workflows/check-messaging-token.yml:56-65` still runs mutating maintenance with `FLY_APP_NAME=tdf-hq`, and `scripts/check-messaging-token.mjs:175-188` persists refreshed Instagram/Facebook tokens only through `flyctl secrets set`. When either credential enters its refresh window, the live Hetzner `api.env` will not receive the replacement, so messaging will eventually use an expired credential while the retired Fly app is mutated instead; move rotation to the current deployment's secret store or make this schedule read-only.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124034948",
+                      "createdAt": "2026-09-28T15:32:14Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQxNTozMjoxNFrO9c_HhA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6mv4sV",
+                "isResolved": false,
+                "isOutdated": false,
+                "path": "ops/hetzner/validation-2026-09-28.md",
+                "line": 6,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Point the course publisher at the live API**\n\nAfter this cutover, the documented production command in `docs/courses/README.md:19-28` still leaves the API base unset and identifies the Fly hostname as live, while `scripts/upsert-course.mjs:8-12` therefore posts to `https://tdf-hq.fly.dev`. With the old machines stopped and their database role disabled, operators following that runbook cannot publish courses to the live Hetzner database; update both the helper default and its production instructions to use `https://api.tdfrecords.net`.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124034955",
+                      "createdAt": "2026-09-28T15:32:15Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQxNTozMjoxNVrO9c_Hiw=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQxNTozMjoxNVrOpr-LFQ=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

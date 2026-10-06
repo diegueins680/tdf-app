@@ -1,0 +1,1 @@
+823da0fa801abe3bdb3b7679550f1315ad0946ed 2026-09-16T13:00:32-05:00 continuous-improvement-loop[bot] feat(events): expose session-fenced task completion API

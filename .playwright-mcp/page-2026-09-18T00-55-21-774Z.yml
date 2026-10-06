@@ -1,0 +1,367 @@
+- generic [ref=e4]:
+  - generic [ref=e7]:
+    - generic [ref=e9]:
+      - generic [ref=e12]:
+        - link [ref=e17] [cursor=pointer]:
+          - /url: /
+          - img "Instagram" [ref=e22]
+        - generic [ref=e25]:
+          - link [ref=e30] [cursor=pointer]:
+            - /url: /
+            - img "Home" [ref=e35]
+          - link [ref=e40] [cursor=pointer]:
+            - /url: /reels/
+            - img "Reels" [ref=e45]
+          - link [ref=e52] [cursor=pointer]:
+            - /url: /direct/inbox/
+            - generic [ref=e55]:
+              - img "Messages" [ref=e57]
+              - generic "Direct messaging - 2 new notifications link" [ref=e60]: "2"
+          - link [ref=e66] [cursor=pointer]:
+            - /url: /explore/
+            - img "Search" [ref=e71]
+          - link [ref=e79] [cursor=pointer]:
+            - /url: "#"
+            - img "Notifications" [ref=e84]
+          - link [ref=e92] [cursor=pointer]:
+            - /url: "#"
+            - img "New post" [ref=e97]
+          - link [ref=e102] [cursor=pointer]:
+            - /url: "#"
+            - img "Professional dashboard" [ref=e107]
+          - link [ref=e114] [cursor=pointer]:
+            - /url: /tdf.records.label/
+            - link [ref=e119]:
+              - img "tdf.records.label's profile picture" [ref=e120]
+        - generic [ref=e121]:
+          - link [ref=e124] [cursor=pointer]:
+            - /url: "#"
+            - img "Settings" [ref=e129]
+          - link [ref=e132] [cursor=pointer]:
+            - /url: "#"
+            - img "Also from Meta" [ref=e137]
+      - generic [ref=e140]:
+        - main [ref=e141]:
+          - generic [ref=e143]:
+            - generic [ref=e144]:
+              - generic [ref=e145]:
+                - button [ref=e150] [cursor=pointer]:
+                  - link [ref=e152]:
+                    - img "oskarfrancisdj's profile picture" [ref=e153]
+                - generic [ref=e154]:
+                  - generic [ref=e155]:
+                    - generic [ref=e156]:
+                      - link [ref=e158] [cursor=pointer]:
+                        - /url: "#"
+                        - heading "oskarfrancisdj" [level=2] [ref=e159]
+                      - button [ref=e161] [cursor=pointer]:
+                        - img "Options" [ref=e163]
+                    - generic [ref=e167]: OSKAR FRANCIS DJ OFICIAL
+                    - generic [ref=e169]:
+                      - generic [ref=e171]:
+                        - generic [ref=e172]: "104"
+                        - text: posts
+                      - link "269 followers" [ref=e174] [cursor=pointer]:
+                        - /url: "#"
+                        - generic [ref=e175]:
+                          - generic "269" [ref=e176]
+                          - text: followers
+                      - link "3,615 following" [ref=e178] [cursor=pointer]:
+                        - /url: "#"
+                        - generic [ref=e179]:
+                          - generic [ref=e180]: 3,615
+                          - text: following
+                  - generic [ref=e181]:
+                    - generic [ref=e182]:
+                      - generic [ref=e183]: Artist
+                      - button [ref=e186] [cursor=pointer]:
+                        - generic [ref=e187]: 💎🇨🇴🇩🇪🇺🇸| DJ & Productor 🎚️🎶 Tech House | Latin Music🎵📞Booking 📱0986603538📱🎛️ Channels & DJ Sets👇😎
+                      - link "Threads oskarfrancisdj" [ref=e190] [cursor=pointer]:
+                        - /url: https://www.threads.com/@oskarfrancisdj?xmt=AQG0vfNaAKHhoMPu-khVN4JjlTNZL-IQL0dr_d_GJFg7yIU
+                        - img "Threads" [ref=e192]
+                        - generic [ref=e194]: oskarfrancisdj
+                    - link "Followed by helpcolectivo and atv__ec" [ref=e196] [cursor=pointer]:
+                      - /url: /oskarfrancisdj/followers/mutualOnly
+                      - generic [ref=e198]:
+                        - generic [ref=e200]:
+                          - button [ref=e201]:
+                            - link [ref=e202]
+                          - button [ref=e203]:
+                            - link [ref=e204]
+                        - generic [ref=e205]: Followed by helpcolectivo and atv__ec
+              - generic [ref=e210]:
+                - button "Follow Back" [ref=e212] [cursor=pointer]
+                - button "Message" [ref=e216] [cursor=pointer]
+                - button [ref=e218] [cursor=pointer]:
+                  - img "Similar accounts" [ref=e220]
+              - menu [ref=e224]:
+                - generic [ref=e226]:
+                  - list [ref=e228]:
+                    - listitem [ref=e229]
+                    - listitem [ref=e230]
+                    - listitem [ref=e231]:
+                      - link "View Destacada highlight" [ref=e234] [cursor=pointer]:
+                        - /url: /stories/highlights/17989931553029297/
+                        - button "oskarfrancisdj's highlight story picture Destacada" [ref=e235]:
+                          - button [ref=e236]:
+                            - img "oskarfrancisdj's highlight story picture" [ref=e239]
+                          - generic [ref=e240]: Destacada
+                    - listitem [ref=e243]:
+                      - link "View Destacada highlight" [ref=e246] [cursor=pointer]:
+                        - /url: /stories/highlights/17899940157375356/
+                        - button "oskarfrancisdj's highlight story picture Destacada" [ref=e247]:
+                          - button [ref=e248]:
+                            - img "oskarfrancisdj's highlight story picture" [ref=e251]
+                          - generic [ref=e252]: Destacada
+                    - listitem [ref=e255]:
+                      - link "View Destacada highlight" [ref=e258] [cursor=pointer]:
+                        - /url: /stories/highlights/18094267799359625/
+                        - button "oskarfrancisdj's highlight story picture Destacada" [ref=e259]:
+                          - button [ref=e260]:
+                            - img "oskarfrancisdj's highlight story picture" [ref=e263]
+                          - generic [ref=e264]: Destacada
+                    - listitem [ref=e267]:
+                      - link "View Photo Friends highlight" [ref=e270] [cursor=pointer]:
+                        - /url: /stories/highlights/18103957429942907/
+                        - button "oskarfrancisdj's highlight story picture Photo Friends" [ref=e271]:
+                          - button [ref=e272]:
+                            - img "oskarfrancisdj's highlight story picture" [ref=e275]
+                          - generic [ref=e276]: Photo Friends
+                    - listitem [ref=e279]:
+                      - link "View Tiki Tattoo BS highlight" [ref=e282] [cursor=pointer]:
+                        - /url: /stories/highlights/18118581038298170/
+                        - button "oskarfrancisdj's highlight story picture Tiki Tattoo BS" [ref=e283]:
+                          - button [ref=e284]:
+                            - img "oskarfrancisdj's highlight story picture" [ref=e287]
+                          - generic [ref=e288]: Tiki Tattoo BS
+                    - listitem [ref=e291]:
+                      - link "View Luna Roja highlight" [ref=e294] [cursor=pointer]:
+                        - /url: /stories/highlights/18622186621036872/
+                        - button "oskarfrancisdj's highlight story picture Luna Roja" [ref=e295]:
+                          - button [ref=e296]:
+                            - img "oskarfrancisdj's highlight story picture" [ref=e299]
+                          - generic [ref=e300]: Luna Roja
+                    - listitem [ref=e303]:
+                      - link "View Apertura VD highlight" [ref=e306] [cursor=pointer]:
+                        - /url: /stories/highlights/18099419462104890/
+                        - button "oskarfrancisdj's highlight story picture Apertura VD" [ref=e307]:
+                          - button [ref=e308]:
+                            - img "oskarfrancisdj's highlight story picture" [ref=e311]
+                          - generic [ref=e312]: Apertura VD
+                    - listitem [ref=e315]:
+                      - link "View B2b after highlight" [ref=e318] [cursor=pointer]:
+                        - /url: /stories/highlights/17958167036999606/
+                        - button "oskarfrancisdj's highlight story picture B2b after" [ref=e319]:
+                          - button [ref=e320]:
+                            - img "oskarfrancisdj's highlight story picture" [ref=e323]
+                          - generic [ref=e324]: B2b after
+                    - listitem [ref=e327]:
+                      - link "View PIAZZA highlight" [ref=e330] [cursor=pointer]:
+                        - /url: /stories/highlights/18102465083202775/
+                        - button "oskarfrancisdj's highlight story picture PIAZZA" [ref=e331]:
+                          - button [ref=e332]:
+                            - img "oskarfrancisdj's highlight story picture" [ref=e335]
+                          - generic [ref=e336]: PIAZZA
+                    - listitem [ref=e339]:
+                      - link "View Cosmos highlight" [ref=e342] [cursor=pointer]:
+                        - /url: /stories/highlights/18134876068628197/
+                        - button "oskarfrancisdj's highlight story picture Cosmos" [ref=e343]:
+                          - button [ref=e344]:
+                            - img "oskarfrancisdj's highlight story picture" [ref=e347]
+                          - generic [ref=e348]: Cosmos
+                    - listitem [ref=e351]:
+                      - link "View Sendero Glampin highlight" [ref=e354] [cursor=pointer]:
+                        - /url: /stories/highlights/18091592783145827/
+                        - button "oskarfrancisdj's highlight story picture Sendero Glampin" [ref=e355]:
+                          - button [ref=e356]:
+                            - img "oskarfrancisdj's highlight story picture" [ref=e359]
+                          - generic [ref=e360]: Sendero Glampin
+                    - listitem [ref=e363]:
+                      - link "View Cosmos house highlight" [ref=e366] [cursor=pointer]:
+                        - /url: /stories/highlights/18424429948146509/
+                        - button "oskarfrancisdj's highlight story picture Cosmos house" [ref=e367]:
+                          - button [ref=e368]:
+                            - img "oskarfrancisdj's highlight story picture" [ref=e371]
+                          - generic [ref=e372]: Cosmos house
+                    - listitem [ref=e375]:
+                      - link "View Me in cartoon 😎 highlight" [ref=e378] [cursor=pointer]:
+                        - /url: /stories/highlights/18091223945163296/
+                        - button "oskarfrancisdj's highlight story picture Me in cartoon 😎" [ref=e379]:
+                          - button [ref=e380]:
+                            - img "oskarfrancisdj's highlight story picture" [ref=e383]
+                          - generic [ref=e384]: Me in cartoon 😎
+                    - listitem [ref=e387]:
+                      - link "View God is mi boss highlight" [ref=e390] [cursor=pointer]:
+                        - /url: /stories/highlights/18214373539352512/
+                        - button "oskarfrancisdj's highlight story picture God is mi boss" [ref=e391]:
+                          - button [ref=e392]:
+                            - img "oskarfrancisdj's highlight story picture" [ref=e395]
+                          - generic [ref=e396]: God is mi boss
+                  - button "Next" [ref=e399] [cursor=pointer]
+            - generic [ref=e401]:
+              - tablist [ref=e402]:
+                - link [ref=e404] [cursor=pointer]:
+                  - /url: /oskarfrancisdj/
+                  - img "Posts" [ref=e406]
+                - link [ref=e417] [cursor=pointer]:
+                  - /url: /oskarfrancisdj/reels/
+                  - img "Reels" [ref=e419]
+                - link [ref=e422] [cursor=pointer]:
+                  - /url: /oskarfrancisdj/reposts/
+                  - img "Reposts" [ref=e424]
+                - link [ref=e427] [cursor=pointer]:
+                  - /url: /oskarfrancisdj/tagged/
+                  - img "Tagged" [ref=e429]
+              - tabpanel
+            - generic [ref=e436]:
+              - generic [ref=e437]:
+                - link [ref=e439] [cursor=pointer]:
+                  - /url: /oskarfrancisdj/p/DdYUIEjSp32/
+                  - img "Photo by OSKAR FRANCIS DJ OFICIAL on September 17, 2026. May be an image of duffle coat, overcoat, suit, sportswear, raincoat, cloak, parka and text." [ref=e442]
+                - link [ref=e445] [cursor=pointer]:
+                  - /url: /oskarfrancisdj/p/DdVW3cmt3Ag/
+                - link [ref=e450] [cursor=pointer]:
+                  - /url: /oskarfrancisdj/p/DdVWzWDN24d/
+              - generic [ref=e454]:
+                - link [ref=e456] [cursor=pointer]:
+                  - /url: /oskarfrancisdj/p/DdVWsUoNA9D/
+                  - img "Photo by OSKAR FRANCIS DJ OFICIAL on September 15, 2026. May be an image of the Guadalajara Cathedral and text." [ref=e459]
+                - link [ref=e462] [cursor=pointer]:
+                  - /url: /oskarfrancisdj/p/DdSxkR1Nj58/
+                  - img "Photo by OSKAR FRANCIS DJ OFICIAL on September 14, 2026. May be an image of text." [ref=e465]
+                - link [ref=e468] [cursor=pointer]:
+                  - /url: /oskarfrancisdj/p/DdSv2XNsE6O/
+              - generic [ref=e472]:
+                - link [ref=e474] [cursor=pointer]:
+                  - /url: /oskarfrancisdj/p/DdSvUOCt-8c/
+                - link [ref=e479] [cursor=pointer]:
+                  - /url: /oskarfrancisdj/p/DdSrPiEN2yp/
+                  - img "Photo by OSKAR FRANCIS DJ OFICIAL on September 14, 2026. May be a selfie of hat, eyewear and text." [ref=e482]
+                - link [ref=e485] [cursor=pointer]:
+                  - /url: /oskarfrancisdj/p/DdSqmDUtns3/
+                  - img "Photo by OSKAR FRANCIS DJ OFICIAL on September 14, 2026. May be an image of one or more people, kitten and text." [ref=e488]
+              - generic [ref=e490]:
+                - link "Clip" [ref=e492] [cursor=pointer]:
+                  - /url: /oskarfrancisdj/reel/DdPml_2R2BG/
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img "Clip"
+                - link [ref=e497] [cursor=pointer]:
+                  - /url: /oskarfrancisdj/p/DdPAFpexGo2/
+                  - img "Photo by OSKAR FRANCIS DJ OFICIAL on September 13, 2026. May be an image of terminal and text that says 'Colemtia Colombia 밥 5 Bienyenidosa 3 enidosa Bien ーーゲ→'." [ref=e500]
+                - link [ref=e503] [cursor=pointer]:
+                  - /url: /oskarfrancisdj/p/DdO_M1gxXtv/
+                  - img "Photo by OSKAR FRANCIS DJ OFICIAL on September 13, 2026. May be an image of helicopter and text." [ref=e506]
+        - contentinfo [ref=e508]:
+          - generic [ref=e509]:
+            - generic [ref=e511]:
+              - link "Meta" [ref=e513] [cursor=pointer]:
+                - /url: https://about.meta.com/
+              - link "About" [ref=e516] [cursor=pointer]:
+                - /url: https://about.instagram.com/
+              - link "Blog" [ref=e519] [cursor=pointer]:
+                - /url: https://about.instagram.com/blog/
+              - link "Jobs" [ref=e522] [cursor=pointer]:
+                - /url: https://about.instagram.com/about-us/careers
+              - link "Help" [ref=e525] [cursor=pointer]:
+                - /url: https://help.instagram.com/
+              - link "API" [ref=e528] [cursor=pointer]:
+                - /url: https://developers.facebook.com/docs/instagram
+              - link "Privacy" [ref=e531] [cursor=pointer]:
+                - /url: /legal/privacy/
+              - link "Terms" [ref=e534] [cursor=pointer]:
+                - /url: /legal/terms/
+              - link "Locations" [ref=e537] [cursor=pointer]:
+                - /url: /explore/locations/
+              - link "Popular" [ref=e540] [cursor=pointer]:
+                - /url: /popular/
+              - link "Instagram Lite" [ref=e543] [cursor=pointer]:
+                - /url: /web/lite/
+              - link "Meta AI" [ref=e546] [cursor=pointer]:
+                - /url: https://www.meta.ai/?utm_source=foa_web_footer
+              - link "Muse" [ref=e549] [cursor=pointer]:
+                - /url: https://muse.ai/
+              - link "Threads" [ref=e552] [cursor=pointer]:
+                - /url: https://www.threads.com/
+              - link "Contact Uploading & Non-Users" [ref=e555] [cursor=pointer]:
+                - /url: https://www.facebook.com/help/instagram/261704639352628
+              - link "Meta Verified" [ref=e558] [cursor=pointer]:
+                - /url: /accounts/meta_verified/?entrypoint=web_footer
+            - generic [ref=e560]:
+              - generic [ref=e561] [cursor=pointer]:
+                - generic [ref=e562]:
+                  - generic [ref=e563]: English
+                  - img "Down chevron icon" [ref=e566]
+                - combobox "Switch Display Language" [ref=e568]:
+                  - option "Afrikaans"
+                  - option "العربية"
+                  - option "Čeština"
+                  - option "Dansk"
+                  - option "Deutsch"
+                  - option "Ελληνικά"
+                  - option "English" [selected]
+                  - option "English (UK)"
+                  - option "Español (España)"
+                  - option "Español"
+                  - option "فارسی"
+                  - option "Suomi"
+                  - option "Français"
+                  - option "עברית"
+                  - option "Bahasa Indonesia"
+                  - option "Italiano"
+                  - option "日本語"
+                  - option "한국어"
+                  - option "Bahasa Melayu"
+                  - option "Norsk"
+                  - option "Nederlands"
+                  - option "Polski"
+                  - option "Português (Brasil)"
+                  - option "Português (Portugal)"
+                  - option "Русский"
+                  - option "Svenska"
+                  - option "ภาษาไทย"
+                  - option "Filipino"
+                  - option "Türkçe"
+                  - option "中文(简体)"
+                  - option "中文(台灣)"
+                  - option "বাংলা"
+                  - option "ગુજરાતી"
+                  - option "हिन्दी"
+                  - option "Hrvatski"
+                  - option "Magyar"
+                  - option "ಕನ್ನಡ"
+                  - option "മലയാളം"
+                  - option "मराठी"
+                  - option "नेपाली"
+                  - option "ਪੰਜਾਬੀ"
+                  - option "සිංහල"
+                  - option "Slovenčina"
+                  - option "தமிழ்"
+                  - option "తెలుగు"
+                  - option "اردو"
+                  - option "Tiếng Việt"
+                  - option "中文(香港)"
+                  - option "Български"
+                  - option "Français (Canada)"
+                  - option "Română"
+                  - option "Српски"
+                  - option "Українська"
+              - generic [ref=e569]: © 2026 Instagram from Meta
+    - button [ref=e572] [cursor=pointer]:
+      - tooltip "Like 1" [ref=e574]:
+        - generic [ref=e577]:
+          - generic "Like" [ref=e578]
+          - generic [ref=e579]: "1"
+  - button [ref=e583] [cursor=pointer]:
+    - generic "Messages - 2 new notifications" [ref=e584]:
+      - generic [ref=e585]:
+        - generic [ref=e587]:
+          - img "Messages" [ref=e588]
+          - generic "Direct messaging - 2 new notifications link" [ref=e591]: "2"
+        - generic [ref=e594]: Messages
+      - generic [ref=e595]:
+        - button "User avatar Andrés Martín Arauz" [ref=e597]:
+          - img "User avatar" [ref=e600]
+        - button "User avatar Llama Este Pez" [ref=e602]:
+          - img "User avatar" [ref=e605]

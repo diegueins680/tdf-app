@@ -46,6 +46,8 @@ const LabelArtistsPage = lazy(() => import('../pages/LabelArtistsPage'));
 const LabelAssetsPage = lazy(() => import('../pages/LabelAssetsPage'));
 const LabelProjectsPage = lazy(() => import('../pages/LabelProjectsPage'));
 const LabelReleasesPage = lazy(() => import('../pages/LabelReleasesPage'));
+const MusicReleaseStudioPage = lazy(() => import('../pages/MusicReleaseStudioPage'));
+const MusicLibraryPage = lazy(() => import('../pages/MusicLibraryPage'));
 const LabelTracksPage = lazy(() => import('../pages/LabelTracksPage'));
 const DdexInboxPage = lazy(() => import('../features/ddex/DdexInboxPage'));
 const DdexDocumentPage = lazy(() => import('../features/ddex/DdexDocumentPage'));
@@ -117,6 +119,7 @@ export function renderProtectedRoutes() {
         <Route path="/operacion/control" element={<Navigate to="/dashboard/operations" replace />} />
 
         <Route path="/dashboard/operations" element={<OperationsControlCenterPage />} />
+        <Route path="/musica/biblioteca" element={<MusicLibraryPage />} />
         <Route path="/mis-clasificados" element={<DirectoryManagePage />} />
         <Route path="/admin/directorio" element={<DirectoryAdminPage />} />
         <Route path="/mi-profesor" element={<TeacherPortalPage />} />
@@ -182,6 +185,8 @@ export function renderProtectedRoutes() {
           <Route path="artistas" element={<LabelArtistsPage />} />
           <Route path="proyectos" element={<LabelProjectsPage />} />
           <Route path="releases" element={<LabelReleasesPage />} />
+          <Route path="releases/nuevo" element={<MusicReleaseStudioPage />} />
+          <Route path="releases/:releaseId/versions/:versionId" element={<MusicReleaseStudioPage />} />
           <Route path="assets" element={<LabelAssetsPage />} />
           <Route path="tracks" element={<LabelTracksPage />} />
           <Route path="ddex" element={<DdexInboxPage />} />

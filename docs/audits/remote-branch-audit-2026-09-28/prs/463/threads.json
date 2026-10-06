@@ -1,0 +1,31 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 463,
+          "reviewDecision": null,
+          "mergeStateStatus": "UNSTABLE",
+          "mergeable": "MERGEABLE",
+          "headRefOid": "6ba185a697b3b6b6983ebb48e0ab6454f716cf23",
+          "baseRefName": "fix/event-confirmed-end-20260920",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          }
+        }
+      }
+    }
+  }
+]

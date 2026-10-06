@@ -1,0 +1,690 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 331,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "DIRTY",
+          "mergeable": "CONFLICTING",
+          "headRefOid": "e9c81a2a3977ab1f69c92e82805bdeff6550ea03",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6ik4iM",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+                "line": 142,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Keep Datafast status confirmation routable**\n\nWhen a mixing/mastering Datafast payment returns successfully, `confirmDatafastStatusHandler` calls `beginCanonicalPaymentAttempt` with `OperationCapture` before recording the verified payment. This mapping requires `CapabilityCapture`, but the Datafast provider profile does not support or seed that capability, so `routePayments` always rejects the attempt and the already-captured payment cannot be finalized. Treat Datafast's status verification as its supported one-time/server-verification operation rather than requiring a separate capture capability.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4017093437",
+                      "createdAt": "2026-09-15T15:04:25Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in a8d31238aaef8e919551c74010d6f8f820ac231a. Datafast status confirmation retains the historical capture attempt/idempotency identity but requires its actual verified one_time and server_verification capabilities. Other providers still require Capture, and all contract/environment/marketplace gates remain. Regression tests exercise real route selection with either required capability absent, wrong environment and unapproved contract. Stack full backend: 2549 examples, zero failures; production executable build and repository quality passed. No provider activated. See docs/payments/completion-capability-repair-2026-09-15.md.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4019503542",
+                      "createdAt": "2026-09-15T19:37:19Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQxOTozNzoxOVrO75TBtg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6ik4iU",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
+                "line": 79,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Require PayPal capture before advertising the method**\n\nIf a PayPal account has its method and `one_time` capability verified but its independently modeled `capture` capability remains unverified, this availability check still exposes PayPal in the public API and UI. Order creation then succeeds and the customer can approve it, but every PayPal completion handler starts an `OperationCapture`, which the attempt boundary rejects for lacking `CapabilityCapture`; require the capabilities needed by the complete implemented flow before presenting the method.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4017093462",
+                      "createdAt": "2026-09-15T15:04:25Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in a8d31238aaef8e919551c74010d6f8f820ac231a. Public runtime availability adds complete-checkout capabilities even when callers omit them: PayPal requires OneTime plus Capture; card requires server verification. Additional caller and marketplace restrictions are retained. Regression confirms creation-only PayPal is hidden and becomes routable only with method-specific capture evidence, while each missing marketplace/caller requirement rejects routing. Full Stack suite: 2549 examples, zero failures; repository quality, 24 messaging tests, 13 artwork tests and strict catalog JSON/CSV passed. No credentials, security gate or provider activation changed.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4019504123",
+                      "createdAt": "2026-09-15T19:37:23Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQxOTozNzoyM1rO75TD-w=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iq8y6",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq/src/TDF/Server.hs",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Keep contact orders out of marketplace payment routing**\n\n`checkoutCart` is still the default \u201cCoordinar por correo/WhatsApp\u201d path, but routing its bank-transfer attempt through `PaymentRuntime.beginPaymentAttempt` makes it fail for every marketplace sale or rental: those domains map to `FlowMarketplace`, while the bank-transfer profile supports only `directFlows` and cannot satisfy the connected-account, split-settlement, and seller-payout requirements. Consequently, when online payments are unavailable, the UI's promised no-payment request path returns a conflict after `prepareMarketplaceSaleCheckout` has already created the order; preserve this path as a non-payment request or route it through a marketplace-capable settlement flow.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4019517098",
+                      "createdAt": "2026-09-15T19:39:02Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 79715507b5ddf6368145ff6f75244c5f0398a472. Contact checkout now prepares a contact-only unpaid request without selecting bank transfer or creating payment intents, attempts or evidence. Active online attempts still prevent a contact switch. Two real PostgreSQL regression examples passed, including sale/rental idempotent retries with bank unavailable and environment-separated totals. Full backend: 2550 examples, zero failures. The bounded fixture verifies existing-order retry behavior; it is not a full production migration rehearsal. See docs/payments/review-boundaries-2026-09-16.md. Strict catalog JSON/CSV and repository quality passed.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4022334418",
+                      "createdAt": "2026-09-16T03:52:58Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQwMzo1Mjo1OFrO77_z0g=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iq8zC",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+                "line": 100,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Require completion capabilities before creating provider resources**\n\nThe fresh evidence after fixing method availability is that the server-side attempt boundary still checks only the current operation's capabilities. With a Datafast account that has `one_time` verified but lacks `server_verification`, a direct or stale client can call the public create-checkout endpoint, receive a payment widget, and complete a debit, while the subsequent status-confirmation attempt is rejected; PayPal similarly allows order approval when `capture` is unverified. The availability endpoint is not an authorization boundary, so provider creation must also require the capabilities needed to complete that provider's implemented checkout.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4019517107",
+                      "createdAt": "2026-09-15T19:39:03Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 79715507b5ddf6368145ff6f75244c5f0398a472. Direct resource creation now requires complete-flow capability evidence: Datafast server verification and PayPal capture, in addition to existing one-time, marketplace, contract and environment restrictions. A real route-selection regression rejects each missing completion capability. Full backend: 2550 examples, zero failures; production executable build passed. No provider was activated. See docs/payments/review-boundaries-2026-09-16.md. Strict catalog JSON/CSV and repository quality passed.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4022335013",
+                      "createdAt": "2026-09-16T03:53:05Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQwMzo1MzowNVrO77_2JQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iq8zF",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq/src/TDF/Server/CommerceOperations.hs",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Split canonical payment totals by environment**\n\nWhen sandbox and production both contain payment intents, this query groups them together solely by status and currency, and the DTO exposes no environment field. The new operator overview therefore adds test captures and refunds to production-looking canonical totals, unlike the refund, dispute, settlement, and payout sections that explicitly group by environment; join the checkout environment and include it in the grouping and response.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4019517110",
+                      "createdAt": "2026-09-15T19:39:03Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 79715507b5ddf6368145ff6f75244c5f0398a472. Canonical payment totals now join their immutable checkout environment and group by environment/status/currency. DTO, OpenAPI, generated web/mobile clients and operator cards expose the environment. PostgreSQL verifies distinct production 7000/0-refund and sandbox 5000/500-refund totals; three UI tests pass including a clearly labeled legacy missing-environment response. Web/mobile typechecks and byte-identical generated contracts passed. Mobile contract commit 80aed785 is published in dependent draft TDF-mobile#83, and this branch pins it. See docs/payments/review-boundaries-2026-09-16.md. Strict catalog JSON/CSV and repository quality passed.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4022335354",
+                      "createdAt": "2026-09-16T03:53:10Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQwMzo1MzoxMFrO77_3eg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6ix_H7",
+                "isResolved": false,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+                "line": 50,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Retire failed intents before allowing another provider**\n\nWhen a provider returns a definitive decline, handlers such as the event-ticket Datafast path call `recordPaymentFailure`, which marks only the attempt and checkout failed; the synchronization trigger intentionally ignores failures, leaving this newly created canonical intent active. The failed checkout advertises payment methods again, but selecting a different provider creates a different intent key and `createPaymentIntent` rejects it because the first active intent still exists, so legitimate Datafast-to-PayPal (or reverse) fallback cannot proceed even when the provider confirmed no charge. Transition the intent to a terminal state for authoritative no-charge failures before permitting the alternate attempt.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4022349405",
+                      "createdAt": "2026-09-16T03:56:33Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "BLOCKED_OR_AMBIGUOUS: keeping this concern open. recordPaymentFailure receives untyped codes from transport failures, verification mismatches and provider status responses. These do not uniformly establish zero exposure or terminal provider-resource state, so converting all failed attempts into terminal intents would weaken the existing cross-provider double-charge guard. The canonical PaymentFailureConfirmed event exists; the remaining work is a qualified, bound provider-specific no-charge evidence contract plus atomic audited transition/replay tests. No blanket failure synchronization or provider activation was added. Current head 790b239760206cec0c88e2aae29838fa4b4c3fa6 fixes the separate instruction-scope and amount-component environment findings. See docs/payments/component-environment-review-2026-09-16.md for exact code paths, reference limits and the smallest next step.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4022606690",
+                      "createdAt": "2026-09-16T04:51:46Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "I researched Datafast\u2019s official documentation rather than relying on generic decline codes. https://developers.datafast.com.ec/index.aspx documents 30-minute checkout expiry, delayed bank responses that may still produce a consumption notice, and verification by payment ID or merchantTransactionId. Its RF/anulaci\u00f3n flow reverses an approved transaction; it is not documented as invalidating every possible retry of a hosted checkout. https://datafast.docs.oppwa.com/tutorials/integration-guide permits multiple failed/successful transactions on one checkout, and https://datafast.docs.oppwa.com/reporting-transaction supports querying all transactions for the merchant reference. I could not establish a documented finality/consistency guarantee sufficient for automatic fallback. The decline-based prototype was withdrawn before push; the fail-closed active-intent guard remains. This finding is still blocked, not resolved. Required merchant qualification: Datafast must confirm an authenticated terminal-resource/cancellation condition and how to exclude pending or late authorizations/captures; then validate sandbox traces for delayed response, callback replay and hosted retry, binding all evidence to the configured merchant, environment and immutable checkout. No production payment or credential change was performed, and no secret should be shared in this thread.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4029195834",
+                      "createdAt": "2026-09-16T18:04:17Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQxODowNDoxN1rO8CimOg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6ix_H_",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Keep merch transfer configuration scoped to merch**\n\nIf only `MERCH_BANK_TRANSFER_INSTRUCTIONS` is configured, this provider-wide readiness check also returns true for booking and other non-merch requests because `runtimeReady` receives no product flow. With an otherwise verified bank-transfer account, those public checkouts advertise and accept the manual rail even though the generic `COMMERCE_BANK_TRANSFER_INSTRUCTIONS` configuration that is meant to gate them is blank; evaluate the merch-specific variable only for `FlowMerchandise` or pass the requested flow into this check.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4022349411",
+                      "createdAt": "2026-09-16T03:56:33Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 790b239760206cec0c88e2aae29838fa4b4c3fa6. Runtime readiness now receives the requested product flow. MERCH_BANK_TRANSFER_INSTRUCTIONS qualifies merchandise only; the other seven flows require COMMERCE_BANK_TRANSFER_INSTRUCTIONS. Tests exercise actual environment reads for merch-only, generic and blank configuration across flows. Existing capability/contract/environment/enablement checks remain. Full Stack backend2554, repository quality and strict catalog JSON/CSV passed. See docs/payments/component-environment-review-2026-09-16.md.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4022606060",
+                      "createdAt": "2026-09-16T04:51:37Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQwNDo1MTozN1rO78QY7A=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6ix_IF",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq/src/TDF/Server/CommerceOperations.hs",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Split amount-component totals by environment**\n\nEven though the intent summary now joins the checkout to separate sandbox and production, the adjacent financial-breakdown query still aggregates amount components only by type, source, and currency, and its DTO carries no environment. Whenever both environments contain intents, the operator page therefore combines sandbox quote/tax/fee components with production amounts under one production-looking card; join through `commerce_payment_intent` and `commerce_checkout_session` and include the environment in the grouping and response.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4022349417",
+                      "createdAt": "2026-09-16T03:56:33Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 790b239760206cec0c88e2aae29838fa4b4c3fa6. Amount-component summaries now join canonical intent and immutable checkout environment and group by environment/component/source/currency. DTO, OpenAPI, generated web/mobile and UI cards include cacEnvironment with explicit legacy unknown labeling. Three real PostgreSQL examples pass, including distinct component groups with equal totals but different counts; five operator UI tests and both typechecks pass. Mobile83 publishes337d46f25a8b7c7c688aa3657ffb599ecb4c47c7 and the root pins it. Full Stack backend2554, repository quality and strict catalog JSON/CSV passed. See docs/payments/component-environment-review-2026-09-16.md.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4022606363",
+                      "createdAt": "2026-09-16T04:51:41Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQwNDo1MTo0MVrO78QaGw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iyMTd",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Require recurring capability for subscription routes**\n\nWhen callers query the public capability endpoint with `productFlow=subscription`, this unconditional addition of `CapabilityOneTime` lets Datafast or PayPal appear when only their one-time completion capabilities are verified; `FlowSubscription` is present in both provider profiles, but no recurring capability is required. An account lacking verified `recurring` evidence can therefore be advertised for subscriptions even though it is only qualified for one-time checkout, so either require `CapabilityRecurring` for this flow or keep subscriptions out of runtime availability.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4022432166",
+                      "createdAt": "2026-09-16T04:14:50Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 19af56e441e51c2ca9a378b967f07872d4d2c993. Public subscription routes now require verified recurring capability in addition to one-time, provider-specific completion and caller restrictions. Both Datafast and PayPal regressions remove each capability independently and reject the incomplete route. No provider activation or live subscription qualification is claimed. Stack2555 examples, UI6 tests, typecheck, targeted ESLint, repository quality and strict JSON/CSV catalogs passed. See docs/payments/recurring-readiness-review-2026-09-16.md. The distinct no-charge/resource-finality concern remains open.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4028232901",
+                      "createdAt": "2026-09-16T16:16:14Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQxNjoxNjoxNFrO8Bn0xQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iyMTh",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Match capability verification to the account environment**\n\nFor a production provider account whose capability row is only `sandbox_verified`, this suffix check still lists that capability as verified on the production card, even though `loadProviderActivations` correctly requires `production_verified` before routing it. Because the schema permits either verification status on either account, the operator overview can present sandbox evidence as production readiness; filter for the exact `${account.cpaEnvironment}_verified` status.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4022432171",
+                      "createdAt": "2026-09-16T04:14:50Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 19af56e441e51c2ca9a378b967f07872d4d2c993. Operator capability cards now match the exact account environment verification status. UI coverage mixes sandbox and production evidence on both accounts and proves neither cross-environment nor cross-account evidence appears. Stack2555 examples, UI6 tests, typecheck, targeted ESLint, repository quality and strict JSON/CSV catalogs passed. See docs/payments/recurring-readiness-review-2026-09-16.md. The distinct no-charge/resource-finality concern remains open.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4028234403",
+                      "createdAt": "2026-09-16T16:16:22Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQxNjoxNjoyMlrO8Bn6ow=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iysTr",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "scripts/test-payment-audit-runtime.sh",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Use the configured CI database instead of launching Docker**\n\nWhen `quality-backend.sh` runs in the `backend-quality` job, it executes inside the `haskell:9.10.3-bookworm` container, whose install step adds PostgreSQL tooling but neither a Docker CLI nor a daemon; this unconditional `docker run` therefore fails after the Stack suite completes. The workflow already provisions a `postgres` service, so pass that service URL into this test (or explicitly provision Docker) rather than requiring nested Docker.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4022631888",
+                      "createdAt": "2026-09-16T04:57:15Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Verified current head ce802c976f6347c71ce00ac5d0313e5c69aaae3a. The backend Actions container already provisions PostgreSQL, so CI now creates a dedicated service database and passes TDF_PAYMENT_AUDIT_DATABASE_URL. The runner verifies the exact test database name and empty schema, then applies its fixture transactionally. A real PostgreSQL run with Docker disabled for the child passed3 examples; populated and wrong-name databases were rejected. Local owned-Docker fallback remains. The failing job log104857160527 was directly inspected. UI7, typecheck, targeted ESLint, repository quality, canonical migration suite and strict JSON/CSV catalogs passed. The full production-shaped migration rehearsal is recorded separately in the audit; no production deployment occurred. See docs/payments/runtime-review-followup-2026-09-16.md. The separate no-charge/resource-finality concern remains open.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4028510849",
+                      "createdAt": "2026-09-16T16:47:46Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQxNjo0Nzo0NlrO8B4ygQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iysTu",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Show the environment on every financial summary card**\n\nWhen sandbox and production contain settlements with the same provider, currency, and status, the API correctly returns separate summaries but both cards render identical headings because `cssEnvironment` is omitted. The same omission affects refund, dispute, seller-balance, payout, and reconciliation cards below, making test and live amounts indistinguishable to the operator; include each summary's environment in the visible heading as is already done for commissions and canonical intents.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4022631893",
+                      "createdAt": "2026-09-16T04:57:15Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Verified current head ce802c976f6347c71ce00ac5d0313e5c69aaae3a. All six remaining financial summary headings now display the environment: settlement, refund, dispute, seller balance, payout and reconciliation. The7-test UI suite verifies sandbox and production rows with otherwise matching dimensions for every family. UI7, typecheck, targeted ESLint, repository quality, canonical migration suite and strict JSON/CSV catalogs passed. The full production-shaped migration rehearsal is recorded separately in the audit; no production deployment occurred. See docs/payments/runtime-review-followup-2026-09-16.md. The separate no-charge/resource-finality concern remains open.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4028512351",
+                      "createdAt": "2026-09-16T16:47:55Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQxNjo0Nzo1NVrO8B44Xw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6i_uzi",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 537,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Point migration introductions at ancestors of the release**\n\nThe `introducedBy` commits for all three new migrations are not ancestors of `e6ef717` (each `git merge-base --is-ancestor <introducedBy> e6ef717` exits 1). `scripts/production-release.mjs` explicitly rejects that relationship before applying migrations, so releasing this commit through the guarded production lane stops before deployment. Register these migrations with commits that are actually in this commit's ancestry; the same issue affects the entries ending on lines 542 and 547.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4027724807",
+                      "createdAt": "2026-09-16T15:23:51Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Verified current head ce802c976f6347c71ce00ac5d0313e5c69aaae3a. The cited e6ef717 ancestry no longer describes this branch. Direct Git checks on19af56e44 and this published descendant verify the five payment introducedBy SHAs are ancestors and each introduction tree contains its registered SQL path. No manifest SHA, ancestry check or release guard was weakened. Separate older manifest entries with absent paths are retained as a repository-wide release validation finding, not concealed by this resolution. UI7, typecheck, targeted ESLint, repository quality, canonical migration suite and strict JSON/CSV catalogs passed. The full production-shaped migration rehearsal is recorded separately in the audit; no production deployment occurred. See docs/payments/runtime-review-followup-2026-09-16.md. The separate no-charge/resource-finality concern remains open.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4028513930",
+                      "createdAt": "2026-09-16T16:48:03Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQxNjo0ODowM1rO8B4-ig=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6i_uzo",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-11_payment_intent_runtime_sync.sql",
+                "line": 95,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Synchronize verified refunds into canonical intents**\n\nWhen `RefundStore.recordVerifiedRefund` completes a real refund, it updates `commerce_refund` and the checkout but never the newly linked `commerce_payment_intent`. This trigger only observes attempt status/binding updates, so after either a partial or full refund the intent remains `captured` with `refunded_minor = 0`; consequently the new canonical overview reports stale refunded totals and the canonical lifecycle disagrees with the authoritative refund records. Add synchronization for successful refunds, including the corresponding state-history transition.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4027724817",
+                      "createdAt": "2026-09-16T15:23:51Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Verified current head ce802c976f6347c71ce00ac5d0313e5c69aaae3a. Verified refund completion now synchronizes the bound canonical intent and correlated state history transactionally through the runtime-sync migration. Existing distinct approver, allocations, provider/environment/merchant and evidence guards remain. Actual PostgreSQL tests cover partial600, replay without duplication, canonical capture-limit rejection with refund-row rollback, cross-environment rejection, then full2500 with exactly2 refund history entries. Rollback preserves capture/refund history. Legacy unbound attempts are unchanged; historical backfill is not claimed. UI7, typecheck, targeted ESLint, repository quality, canonical migration suite and strict JSON/CSV catalogs passed. The full production-shaped migration rehearsal is recorded separately in the audit; no production deployment occurred. See docs/payments/runtime-review-followup-2026-09-16.md. The separate no-charge/resource-finality concern remains open.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4028515273",
+                      "createdAt": "2026-09-16T16:48:11Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQxNjo0ODoxMVrO8B5DyQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jBy38",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Bind route approval to the configured merchant account**\n\nWhen runtime credentials point to merchant B while the enabled `commerce_provider_account` row still represents verified merchant A, this predicate accepts the route because `loadProviderActivations` omits `merchant_account_ref` and the selection compares only the provider. The handlers then create resources using `pacMerchantRef` from B's environment configuration under A's contract and capability approval; retain the verified account reference in the activation and require it to match the attempt's merchant reference.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4028537948",
+                      "createdAt": "2026-09-16T16:50:41Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Verified current head e29c1a0dc2cd803754397137b43d125b87f27329. Provider activations now retain the verified account merchant reference. Canonical route validation requires exact nonblank equality with the runtime attempt merchant before intent/attempt creation or provider contact. The real PostgreSQL test loads approved merchant-A rows, allowsA and rejectsB, blank, padded and missing approved references. Existing environment, capability and contract restrictions remain. Stack2555 examples and actual PostgreSQL4 examples passed, plus repository quality and strict JSON/CSV1117. The full default-optimization quality job is still recorded separately until completion. See docs/payments/merchant-routing-review-2026-09-16.md. The CI fixture-sequencing discussion remains open until its complete job finishes; no-charge/resource-finality remains a separate blocker.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4029098314",
+                      "createdAt": "2026-09-16T17:53:16Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQxNzo1MzoxNlrO8CcpSg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jBy4E",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/quality-backend.sh",
+                "line": 34,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Initialize the audit fixture before the first Stack test run**\n\nIn the updated `backend-quality` job, `TDF_PAYMENT_AUDIT_DATABASE_URL` is exported before `quality-backend.sh` starts, so the initial `stack test` enables `PaymentAuditSpec`; however, this invocation that loads `payment_audit_fixture.sql` runs only afterward. Because CI has merely created an empty database at that point, the first audit example attempts to insert into missing tables such as `marketplace_order`, and the backend job fails before reaching this script. Initialize the fixture before `stack test`, or expose the URL only to the dedicated second test invocation.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4028537957",
+                      "createdAt": "2026-09-16T16:50:41Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Verified current head 35a92e04b1f3f1a7def3f9c126d19cde3d00b5c3. The initial Stack invocation explicitly removes TDF_PAYMENT_AUDIT_DATABASE_URL. The dedicated PostgreSQL runner creates its owned CI database and initializes its fixture only afterward. Current-head hosted backend-quality passed: 2558 general examples followed by 4 actual PostgreSQL payment-audit examples, zero failures; the fixture PASS marker is present. Concurrent commits retain the audit sequencing repair and supply the service-database helper. Verified hosted run https://github.com/diegueins680/tdf-app/actions/runs/35132218326 and backend job104915856857; current aggregate quality and production-migrations also passed. Local selected-tree repository quality, web typecheck and 22 targeted web examples passed. No-charge/resource-finality, runtime merchant advertisement and expiry verification concerns remain separate and open.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4029949358",
+                      "createdAt": "2026-09-16T19:26:40Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQxOToyNjo0MFrO8DQlrg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jDGvi",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 537,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Point squashed migrations at an ancestor**\n\nFresh evidence after the prior thread is that the reviewed squash changed the release ancestry again: `git merge-base --is-ancestor` exits 1 for this SHA and the two `introducedBy` values on lines 542 and 547 against `aea09a6c`. `production-release.mjs` checks this relationship for every manifest entry and rejects a non-ancestor before applying migrations, so the guarded production release of this commit is blocked; update these three entries in a descendant commit to reference an actual ancestor of the release.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4029051575",
+                      "createdAt": "2026-09-16T17:48:10Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Verified against the actual pushed head 35a92e04b1f3f1a7def3f9c126d19cde3d00b5c3: all 106 manifest introducedBy values pass git merge-base --is-ancestor and every referenced commit contains its declared SQL path (git cat-file -e SHA:path). Main #404 is included. Concurrent payment commits and the additive refund migration introduction f965c3d53cbbb3b42f4fb82bf1e373bc0ce2fb6b were integrated with ordinary merges, not a rewritten/squashed history. No ancestry check or checksum was weakened. The proposed merge method remains a history-preserving merge, so these ancestors remain reachable.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4029342636",
+                      "createdAt": "2026-09-16T18:20:27Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQxODoyMDoyN1rO8CrjrA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jDGvp",
+                "isResolved": false,
+                "isOutdated": true,
+                "path": "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Filter advertised routes by the configured merchant account**\n\nAfter the merchant-boundary fix, a PayPal configuration for merchant B still passes this readiness check when the verified provider account belongs to merchant A, because only the environment is compared. The capability endpoint therefore advertises PayPal and the UI offers checkout, but `validateCanonicalRoute` later rejects every creation attempt due to the merchant mismatch; compare the runtime merchant ID with the activation's `paMerchantRef` before returning the route (and apply the equivalent check to Datafast).\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4029051585",
+                      "createdAt": "2026-09-16T17:48:10Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQxNzo0ODoxMFrO8CZywQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jDloE",
+                "isResolved": false,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+                "line": 49,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Allow verification of attempts after checkout expiry**\n\nWhen a Datafast payment completes near a ticket, course, or Domo hold deadline but its return/status request arrives after expiry, this call rejects before the provider is queried: `createPaymentIntent` validates checkout status and `expires_at` before loading the already-existing idempotent intent. The confirmation handlers deliberately accept expired contexts and contain `payment_after_*_hold_expiry` reconciliation branches, but those branches are now unreachable, leaving a potentially captured payment without the intended reconciliation exception. Permit an existing bound intent/attempt to be reopened for verification while continuing to reject creation of new provider resources after expiry.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4029243599",
+                      "createdAt": "2026-09-16T18:09:26Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQxODowOToyNlrO8Clgzw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jDloL",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 552,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Use an ancestor for the refund migration**\n\nFresh evidence beyond the earlier ancestry comments is the newly added refund-sync entry: `git merge-base --is-ancestor f965c3d53cbbb3b42f4fb82bf1e373bc0ce2fb6b a8e7df394bc5ceb12e6c8327b58ea9a3d915be11` exits 1. `production-release.mjs` runs that exact ancestry check for every manifest entry, so the guarded release rejects this commit before applying migrations; point this entry at a commit in the release ancestry that already contains the SQL file.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4029243609",
+                      "createdAt": "2026-09-16T18:09:26Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Verified current head 35a92e04b1f3f1a7def3f9c126d19cde3d00b5c3. The refund-sync introduction f965c3d53cbbb3b42f4fb82bf1e373bc0ce2fb6b is now an ancestor of this head and contains tdf-hq/sql/2026-09-16_payment_intent_refund_sync.sql. Current production-migrations passed. This addresses the older reviewed snapshot; it does not claim the separate refund stack #401 is integrated. Verified hosted run https://github.com/diegueins680/tdf-app/actions/runs/35132218326 and backend job104915856857; current aggregate quality and production-migrations also passed. Local selected-tree repository quality, web typecheck and 22 targeted web examples passed. No-charge/resource-finality, runtime merchant advertisement and expiry verification concerns remain separate and open.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4029950748",
+                      "createdAt": "2026-09-16T19:26:50Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQxOToyNjo1MFrO8DQrHA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jGT2X",
+                "isResolved": false,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 537,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Anchor migration introductions in this squash's ancestry**\n\nFresh evidence for the reviewed squash `335a69a62` is that `git merge-base --is-ancestor` exits 1 for this `introducedBy` SHA and for the entries on lines 542, 547, and 552, because they refer to commits that are descendants rather than ancestors of the squash. `production-release.mjs` performs this check before reading or applying migrations, so releasing this exact commit through the guarded production lane is blocked; point all four entries at ancestors of this commit that contain their respective SQL files.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4030319661",
+                      "createdAt": "2026-09-16T20:09:53Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQyMDowOTo1M1rO8DnMLQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jGT2d",
+                "isResolved": false,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
+                "line": 104,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Match bank-transfer availability to the approved merchant**\n\nWhen an enabled bank-transfer account has any `merchant_account_ref` other than the fixed `tdf-manual-settlement` used by the public booking and service-storefront handlers, this branch still advertises bank transfer as long as instructions exist. Selection then reaches `validateCanonicalRoute`, whose exact merchant comparison rejects every attempt, leaving users with a visible but unusable payment method; require the activation's merchant reference to match the manual-settlement reference before returning this route.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/331#discussion_r4030319667",
+                      "createdAt": "2026-09-16T20:09:53Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQyMDowOTo1M1rO8DnMMw=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQyMDowOTo1M1rOoxk9nQ=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

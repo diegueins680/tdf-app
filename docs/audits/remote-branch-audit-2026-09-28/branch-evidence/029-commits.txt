@@ -1,0 +1,8 @@
+70823741bd33ed713cb2e703f812a884ad8ba1e7 2026-09-15T09:48:27-05:00 diegueins680 docs: refresh checkout catalog evidence after dependency merge
+d4dc830390e4736835bba202f67bde687740657e 2026-09-15T09:41:46-05:00 diegueins680 merge: propagate validated provider foundation into checkout
+3b81b687753520c6b56a6128d6c110846f1a8995 2026-09-14T13:53:34-05:00 continuous-improvement-loop[bot] fix(checkout): register provider return route
+b7896d652ea23c27fe61473a2f456967841988a2 2026-09-14T12:53:16-05:00 continuous-improvement-loop[bot] fix(ci): govern hosted payment client lists
+6d4a40a5ba7a10d005acd128f17a822afe8e54c2 2026-09-14T12:30:36-05:00 continuous-improvement-loop[bot] docs(payments): update dependency CI status
+1fe96de87c79ba9034152b6bc6ab0a76657d4de6 2026-09-14T12:28:53-05:00 continuous-improvement-loop[bot] docs(payments): record Ecuador market and checkout evidence
+fa11c3044c24cc42f18b599617909421a47cf4a2 2026-09-14T12:23:08-05:00 continuous-improvement-loop[bot] feat(checkout): add durable hosted provider recovery
+df92012aa225944cfd1cd3da1219f12c2c9930d5 2026-09-14T12:22:57-05:00 continuous-improvement-loop[bot] feat(payments): expose executable hosted method contracts

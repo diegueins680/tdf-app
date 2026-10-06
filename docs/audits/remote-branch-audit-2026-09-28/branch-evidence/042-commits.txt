@@ -1,0 +1,6 @@
+20566eab9e99685983beac359f2462386e59f8f7 2026-09-15T23:56:07-05:00 continuous-improvement-loop[bot] docs(payments): record CI proof and local verification limits
+f19fda5922fafe1e1290ec316a37c7c7a30da98b 2026-09-15T23:31:14-05:00 continuous-improvement-loop[bot] docs(payments): record refund safety evidence and activation limits
+28f0652a503dcc6e2c602633e2f3b8f327e6ee01 2026-09-15T23:26:02-05:00 continuous-improvement-loop[bot] fix(payments): align refund admin actions with reconciliation holds
+bdfafd96486ce04bbe6190938fc6d8f5f8341f6b 2026-09-15T23:25:12-05:00 continuous-improvement-loop[bot] test(payments): cover held refund admin controls
+5b80af6b4d3ba1367f49d7d464f720bc19d278fb 2026-09-15T23:19:22-05:00 continuous-improvement-loop[bot] fix(payments): fence refund execution and hold uncertain balances
+e9ac411f0d2763eae3ffdef9c3c074fcb6ecc23c 2026-09-15T23:06:24-05:00 continuous-improvement-loop[bot] test(payments): expose refund execution and reservation gaps

@@ -1,0 +1,16 @@
+{
+  "head": "34ca75d3d92d2a6def22e63ddd47baa96edca878",
+  "previous_head": "08acdfa897832c42ef1582f26ffdd7c23f019b4c",
+  "ref": {
+    "ref": "refs/heads/audit/event-stack-consolidation-20260928",
+    "node_id": "REF_kwDOQPdUrNoAM3JlZnMvaGVhZHMvYXVkaXQvZXZlbnQtc3RhY2stY29uc29saWRhdGlvbi0yMDI2MDkyOA",
+    "url": "https://api.github.com/repos/diegueins680/tdf-app/git/refs/heads/audit/event-stack-consolidation-20260928",
+    "object": {
+      "sha": "34ca75d3d92d2a6def22e63ddd47baa96edca878",
+      "type": "commit",
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/34ca75d3d92d2a6def22e63ddd47baa96edca878"
+    }
+  },
+  "local_validation": "110 compiled HTTP/boundary examples; old SQL race reproduced and fixed races pass; formal/catalog/inventory gates pass",
+  "hosted_validation": "pending current-head CI and fresh independent approval"
+}

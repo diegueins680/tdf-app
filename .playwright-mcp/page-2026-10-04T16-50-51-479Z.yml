@@ -1,0 +1,261 @@
+- generic [ref=f9e696]:
+  - generic [ref=f9e699]:
+    - link [ref=f9e704] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f9e709]
+    - generic [ref=f9e712]:
+      - link [ref=f9e717] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f9e722]
+      - link [ref=f9e727] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f9e732]
+      - link [ref=f9e739] [cursor=pointer]:
+        - /url: /direct/t/103987857667022
+        - generic [ref=f9e742]:
+          - img "Messages" [ref=f9e744]
+          - generic "Direct messaging - 6 new notifications link" [ref=f9e746]: "6"
+      - link [ref=f9e752] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f9e757]
+      - link [ref=f9e764] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f9e769]
+      - link [ref=f9e775] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f9e780]
+      - link [ref=f9e785] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f9e790]
+      - link [ref=f9e797] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f9e802]:
+          - img "tdf.records.label's profile picture" [ref=f9e803]
+    - generic [ref=f9e804]:
+      - link [ref=f9e807] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f9e812]
+      - link [ref=f9e815] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f9e820]
+  - main [ref=f9e824]:
+    - generic [ref=f9e829]:
+      - navigation "Thread list" [ref=f9e830]:
+        - generic [ref=f9e831]:
+          - generic [ref=f9e832]:
+            - button [ref=f9e833] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f9e835]
+              - img "Verified" [ref=f9e838]
+              - img "Down chevron icon" [ref=f9e841]
+            - generic [ref=f9e844]:
+              - button [ref=f9e845] [cursor=pointer]:
+                - img "More options" [ref=f9e847]
+              - button [ref=f9e851] [cursor=pointer]:
+                - img "New message" [ref=f9e853]
+          - tablist [ref=f9e858]:
+            - tab "Primary" [selected] [ref=f9e859] [cursor=pointer]
+            - tab "General" [ref=f9e862] [cursor=pointer]
+            - tab "From ads" [ref=f9e865] [cursor=pointer]
+            - tab "Requests" [ref=f9e869] [cursor=pointer]
+          - generic [ref=f9e875]:
+            - img "Search" [ref=f9e877]
+            - textbox "Search" [ref=f9e880]
+          - generic [ref=f9e881]:
+            - generic [ref=f9e883]:
+              - list [ref=f9e885]:
+                - listitem [ref=f9e886]
+                - listitem [ref=f9e887]:
+                  - button "Friday feeling... Your note" [ref=f9e889] [cursor=pointer]:
+                    - generic [ref=f9e890]:
+                      - generic [ref=f9e891]: Friday feeling...
+                      - generic [ref=f9e897]:
+                        - link [ref=f9e899]
+                        - generic [ref=f9e900]: Your note
+                - listitem [ref=f9e902]:
+                  - button "NO TOMAR cuando estás triste 🤦🏽‍♀️✍️ saraking30's profile picture Sara King" [ref=f9e905] [cursor=pointer]:
+                    - generic [ref=f9e906]:
+                      - generic [ref=f9e907]: NO TOMAR cuando estás triste 🤦🏽‍♀️✍️
+                      - generic [ref=f9e914]:
+                        - link [ref=f9e916]:
+                          - img "saraking30's profile picture" [ref=f9e917]
+                        - generic [ref=f9e918]: Sara King
+                - listitem [ref=f9e921]:
+                  - button "I ❤️ drugs ferchcho's profile picture Fernando" [ref=f9e924] [cursor=pointer]:
+                    - generic [ref=f9e925]:
+                      - generic [ref=f9e926]: I ❤️ drugs
+                      - generic [ref=f9e933]:
+                        - link [ref=f9e935]:
+                          - img "ferchcho's profile picture" [ref=f9e936]
+                        - generic [ref=f9e937]: Fernando
+                - listitem [ref=f9e940]:
+                  - button "Felizzzzzzzzzzzzzzzz🥰 naoenpatines's profile picture nao✨" [ref=f9e943] [cursor=pointer]:
+                    - generic [ref=f9e944]:
+                      - generic [ref=f9e945]: Felizzzzzzzzzzzzzzzz🥰
+                      - generic [ref=f9e952]:
+                        - link [ref=f9e954]:
+                          - img "naoenpatines's profile picture" [ref=f9e955]
+                        - generic [ref=f9e956]: nao✨
+                - listitem [ref=f9e959]:
+                  - button "Guayaquil📍🔥🪘 dayane_music's profile picture Dayané" [ref=f9e962] [cursor=pointer]:
+                    - generic [ref=f9e963]:
+                      - generic [ref=f9e964]: Guayaquil📍🔥🪘
+                      - generic [ref=f9e971]:
+                        - link [ref=f9e973]:
+                          - img "dayane_music's profile picture" [ref=f9e974]
+                        - generic [ref=f9e975]: Dayané
+                - listitem [ref=f9e978]:
+                  - button "I ching nunca me dejas de sorprender solcordovamusic's profile picture Sol Córdova 🌞" [ref=f9e981] [cursor=pointer]:
+                    - generic [ref=f9e982]:
+                      - generic [ref=f9e983]: I ching nunca me dejas de sorprender
+                      - generic [ref=f9e990]:
+                        - link [ref=f9e992]:
+                          - img "solcordovamusic's profile picture" [ref=f9e993]
+                        - generic [ref=f9e994]: Sol Córdova 🌞
+                - listitem [ref=f9e997]:
+                  - button "La noche quirola_777's profile picture QUIROLA" [ref=f9e1000] [cursor=pointer]:
+                    - generic [ref=f9e1001]:
+                      - generic [ref=f9e1002]: La noche
+                      - generic [ref=f9e1009]:
+                        - link [ref=f9e1011]:
+                          - img "quirola_777's profile picture" [ref=f9e1012]
+                        - generic [ref=f9e1013]: QUIROLA
+                - listitem [ref=f9e1016]:
+                  - button "Que la música me salve! zeretofficial's profile picture Zeret 🧑‍🩰Dj" [ref=f9e1019] [cursor=pointer]:
+                    - generic [ref=f9e1020]:
+                      - generic [ref=f9e1021]: Que la música me salve!
+                      - generic [ref=f9e1028]:
+                        - link [ref=f9e1030]:
+                          - img "zeretofficial's profile picture" [ref=f9e1031]
+                        - generic [ref=f9e1032]: Zeret 🧑‍🩰Dj
+                - listitem [ref=f9e1035]:
+                  - button "Climb or die mishamuluca's profile picture Misha Muluca | Audiovisual Creative" [ref=f9e1038] [cursor=pointer]:
+                    - generic [ref=f9e1039]:
+                      - generic [ref=f9e1040]: Climb or die
+                      - generic [ref=f9e1047]:
+                        - link [ref=f9e1049]:
+                          - img "mishamuluca's profile picture" [ref=f9e1050]
+                        - generic [ref=f9e1051]: Misha Muluca | Audiovisual Creative
+              - button "Next" [ref=f9e1054] [cursor=pointer]
+            - generic [ref=f9e1059]:
+              - 'button "user-profile-picture El Bloque You: Hola, El Bloque 👋 Vimos su rap en el Star Fest de Quito. En TDF reunimos perfiles, artistas y lanzamientos para que cada proyecto tenga un punto de encuentro con quienes escuchan. Pueden empezar el perfil de la banda con sus enlaces musicales y recorrer la comunidad. Les invitamos a probar: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records a few seconds ago" [ref=f9e1063] [cursor=pointer]':
+                - generic [ref=f9e1065]:
+                  - img "user-profile-picture" [ref=f9e1069]
+                  - generic [ref=f9e1072]:
+                    - generic [ref=f9e1073]: El Bloque
+                    - generic [ref=f9e1079]:
+                      - generic [ref=f9e1080]: "You: Hola, El Bloque 👋 Vimos su rap en el Star Fest de Quito. En TDF reunimos perfiles, artistas y lanzamientos para que cada proyecto tenga un punto de encuentro con quienes escuchan. Pueden empezar el perfil de la banda con sus enlaces musicales y recorrer la comunidad. Les invitamos a probar: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f9e1082]:
+                        - generic [ref=f9e1083]: ·
+                        - generic "a few seconds ago" [ref=f9e1088]: 1m
+              - 'button "user-profile-picture Los Argonautas You: Hola, Los Argonautas 👋 Vimos «Audionáutica» y su mezcla de ska, dub y soul desde Quito. Tu escena necesita un espacio propio para que las bandas y su gente puedan encontrarse. En TDF pueden empezar el perfil del proyecto con sus enlaces y explorar a otros artistas. Les invitamos a probar: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records about a minute ago" [ref=f9e1092] [cursor=pointer]':
+                - generic [ref=f9e1094]:
+                  - img "user-profile-picture" [ref=f9e1098]
+                  - generic [ref=f9e1101]:
+                    - generic [ref=f9e1102]: Los Argonautas
+                    - generic [ref=f9e1108]:
+                      - generic [ref=f9e1109]: "You: Hola, Los Argonautas 👋 Vimos «Audionáutica» y su mezcla de ska, dub y soul desde Quito. Tu escena necesita un espacio propio para que las bandas y su gente puedan encontrarse. En TDF pueden empezar el perfil del proyecto con sus enlaces y explorar a otros artistas. Les invitamos a probar: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f9e1111]:
+                        - generic [ref=f9e1112]: ·
+                        - generic "about a minute ago" [ref=f9e1117]: 1m
+              - 'button "user-profile-picture Gura Verified You: Hola, Gura 👋 Vimos tu presentación en Excéntrico UIO junto a Ricardo Subía. Tu escena necesita un espacio propio para que las canciones sigan circulando después del concierto. En TDF puedes empezar tu perfil de artista con tus enlaces y explorar otros proyectos. Te invitamos a sumarte: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records 3 minutes ago" [ref=f9e1121] [cursor=pointer]':
+                - generic [ref=f9e1123]:
+                  - img "user-profile-picture" [ref=f9e1127]
+                  - generic [ref=f9e1130]:
+                    - generic [ref=f9e1132]:
+                      - generic [ref=f9e1133]: Gura
+                      - img "Verified" [ref=f9e1136]
+                    - generic [ref=f9e1140]:
+                      - generic [ref=f9e1141]: "You: Hola, Gura 👋 Vimos tu presentación en Excéntrico UIO junto a Ricardo Subía. Tu escena necesita un espacio propio para que las canciones sigan circulando después del concierto. En TDF puedes empezar tu perfil de artista con tus enlaces y explorar otros proyectos. Te invitamos a sumarte: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f9e1143]:
+                        - generic [ref=f9e1144]: ·
+                        - generic "3 minutes ago" [ref=f9e1149]: 3m
+              - 'button "user-profile-picture Isaac You: Hola Isaac, ¡gracias por escribirnos y por tu interés en las clases de DJ! 🎧 Nuestro paquete completo de clases es de 16 horas y tiene un costo de $500. Además, puedes tomar una clase de prueba para conocer nuestra forma de trabajar y resolver todas tus dudas. La puedes solicitar aquí: https://www.tdfrecords.net/trials Si quieres, cuéntame también qué experiencia tienes como DJ y qué horarios te acomodan, así te recomiendo la opción ideal para ti. 😉 about an hour ago Unread" [ref=f9e1153] [cursor=pointer]':
+                - generic [ref=f9e1155]:
+                  - img "user-profile-picture" [ref=f9e1159]
+                  - generic [ref=f9e1162]:
+                    - generic [ref=f9e1163]: Isaac
+                    - generic [ref=f9e1169]:
+                      - generic [ref=f9e1170]: "You: Hola Isaac, ¡gracias por escribirnos y por tu interés en las clases de DJ! 🎧 Nuestro paquete completo de clases es de 16 horas y tiene un costo de $500. Además, puedes tomar una clase de prueba para conocer nuestra forma de trabajar y resolver todas tus dudas. La puedes solicitar aquí: https://www.tdfrecords.net/trials Si quieres, cuéntame también qué experiencia tienes como DJ y qué horarios te acomodan, así te recomiendo la opción ideal para ti. 😉"
+                      - generic [ref=f9e1172]:
+                        - generic [ref=f9e1173]: ·
+                        - generic "about an hour ago" [ref=f9e1178]: 1h
+                  - generic [ref=f9e1179]: Unread
+              - button "user-profile-picture Fundación Kunayan Verified Fundación sent an attachment. 2 hours ago Unread" [ref=f9e1186] [cursor=pointer]:
+                - generic [ref=f9e1188]:
+                  - img "user-profile-picture" [ref=f9e1192]
+                  - generic [ref=f9e1195]:
+                    - generic [ref=f9e1197]:
+                      - generic [ref=f9e1198]: Fundación Kunayan
+                      - img "Verified" [ref=f9e1201]
+                    - generic [ref=f9e1205]:
+                      - generic [ref=f9e1206]: Fundación sent an attachment.
+                      - generic [ref=f9e1208]:
+                        - generic [ref=f9e1209]: ·
+                        - generic "2 hours ago" [ref=f9e1214]: 2h
+                  - generic [ref=f9e1215]: Unread
+              - button "user-profile-picture Jonathan Campoverde Jonathan Campoverde replied to an ad. View ad(https://www.instagram.com/p/DL58rbRgiys/) 3 hours ago Unread" [ref=f9e1222] [cursor=pointer]:
+                - generic [ref=f9e1224]:
+                  - img "user-profile-picture" [ref=f9e1228]
+                  - generic [ref=f9e1231]:
+                    - generic [ref=f9e1232]: Jonathan Campoverde
+                    - generic [ref=f9e1238]:
+                      - generic [ref=f9e1239]: Jonathan Campoverde replied to an ad. View ad(https://www.instagram.com/p/DL58rbRgiys/)
+                      - generic [ref=f9e1241]:
+                        - generic [ref=f9e1242]: ·
+                        - generic "3 hours ago" [ref=f9e1247]: 3h
+                  - generic [ref=f9e1248]: Unread
+              - button "user-profile-picture Carla Román Super !! Gracias 3 hours ago Unread" [ref=f9e1255] [cursor=pointer]:
+                - generic [ref=f9e1257]:
+                  - img "user-profile-picture" [ref=f9e1261]
+                  - generic [ref=f9e1264]:
+                    - generic [ref=f9e1265]: Carla Román
+                    - generic [ref=f9e1271]:
+                      - generic [ref=f9e1272]: Super !! Gracias
+                      - generic [ref=f9e1274]:
+                        - generic [ref=f9e1275]: ·
+                        - generic "3 hours ago" [ref=f9e1280]: 3h
+                  - generic [ref=f9e1281]: Unread
+              - button [ref=f9e1316] [cursor=pointer]:
+                - generic [ref=f9e1318]:
+                  - status "Loading..." [ref=f9e1321]
+                  - generic [ref=f9e1324]:
+                    - status "Loading..." [ref=f9e1326]
+                    - status "Loading..." [ref=f9e1328]
+      - generic [ref=f9e1333]:
+        - generic [ref=f9e1337]:
+          - link "Open the profile page of franlaurito" [ref=f9e1338] [cursor=pointer]:
+            - /url: /franlaurito/
+            - generic [ref=f9e1339]:
+              - img "user-profile-picture" [ref=f9e1343]
+              - generic [ref=f9e1344]:
+                - heading "Ciscú Mastó" [level=2] [ref=f9e1346]
+                - generic [ref=f9e1348]: franlaurito
+          - generic [ref=f9e1352]:
+            - button [ref=f9e1353] [cursor=pointer]:
+              - img "Audio call" [ref=f9e1355]
+            - button [ref=f9e1357] [cursor=pointer]:
+              - img "Video call" [ref=f9e1359]
+            - button [ref=f9e1362] [cursor=pointer]:
+              - img "Conversation information" [ref=f9e1364]
+        - generic [ref=f9e1368]:
+          - generic [ref=f9e1373]:
+            - img "user-profile-picture" [ref=f9e1377]
+            - generic [ref=f9e1378]:
+              - heading "Ciscú Mastó" [level=2] [ref=f9e1381]
+              - generic [ref=f9e1383]: franlaurito · Instagram
+              - link "View profile" [ref=f9e1386] [cursor=pointer]:
+                - /url: /franlaurito/
+          - generic [ref=f9e1397]:
+            - button [ref=f9e1400] [cursor=pointer]:
+              - img "Choose an emoji" [ref=f9e1402]
+            - generic [ref=f9e1404]:
+              - textbox [active] [ref=f9e1405]:
+                - paragraph [ref=f9e1406]
+              - generic: Message...
+            - generic [ref=f9e1407]:
+              - button [ref=f9e1408] [cursor=pointer]:
+                - img "Voice Clip" [ref=f9e1410]
+              - button [ref=f9e1413] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=f9e1415]
+              - button [ref=f9e1420] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=f9e1422]

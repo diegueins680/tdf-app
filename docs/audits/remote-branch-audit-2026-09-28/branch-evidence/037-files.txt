@@ -1,0 +1,8 @@
+A	docs/adr/0119-atomic-provider-query-application.md
+M	docs/payments/ecuador-payment-platform-audit-2026-09-11.md
+M	docs/payments/operator-runbooks.md
+A	docs/payments/reconciliation-atomicity-2026-09-14.md
+A	scripts/__tests__/fixtures/provider-retry-ledger-base.sql
+M	scripts/test-provider-retry-runtime.sh
+M	tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs
+M	tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs

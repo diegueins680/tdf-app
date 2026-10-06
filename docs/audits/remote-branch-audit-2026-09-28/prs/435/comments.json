@@ -1,0 +1,282 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044811994",
+      "pull_request_review_id": 5245455405,
+      "id": 4044811994,
+      "node_id": "PRRC_kwDOQPdUrM7xFu7a",
+      "diff_hunk": "@@ -774,3 +774,55 @@ variant1.0.1/build1 does not prove App Store build19 acceptance.\n The nearest-scroll correction passes10 local cases in five profiles/three engines;\n production build365428gzip and affected lint pass. Linux CI must confirm the same\n regression on the successor head. Synthetic fixtures prevent campaign submissions.\n+\n+## Checkpoint \u2014 2026-09-18 07:36 UTC\n+\n+#431 is deployed as2f01b20b0c2a2e2088570c3dc5deba6197266452 through the guarded\n+release lane: complete07:32:24Z, both machines healthy on the immutable artifact,\n+107migration ledger rows, no lease remaining and no rollback. Fresh snapshot\n+vs_OzXgpX4lyQnsnqNk2YZ6Vb9 completed07:25:22Z. Existing discovery/autopublish\n+settings remain true; onboarding experiment remains false. Actual legitimate demo\n+GETs return200 for persisted onboarding and paused assignment, with no assignment\n+or exposure; production assignment table remains empty. Public health/version\n+still match07:36UTC. Rollback reference is the prior compatible4b0 image captured\n+in the guarded report; no SQL rollback is needed for this contract-only release.\n+\n+#433 merged6d49c0f055b24743a13991a5fbb94e3774c07c9a after exactdabb approval,\n+all applicable checks and no unresolved threads. Cloudflare345dbb80 succeeded;\n+public assets match the immutable deployment. Ten production-bundle campaign\n+cases pass in5profiles/3engines; transport is synthetic. Final local bundle365447\n+bytes gzip remains below410KiB. The earlier Firefox axe timeout under simulator\n+pressure passed unchanged after the owned simulator was shut down.\n+\n+Mobile101 mergedebec681092ba12a9f8a58019e35ae52a6949eb6f. This increment pins\n+published source667193e15517ecb087fbbacf6041b1296814da78, preserving the349 API\n+contract and excluding unrelated provider/intake runtime changes from mobile main.\n+The actual afbd simulator artifact has identical application code; authenticated\n+return/relaunch and ES\u2192EN\u2192ES visible-tab labels passed, Spanish restored. Source\n+667 adds only the durable flow/evidence. iOS21 artifact0771998e is built and verified,\n+submissionc06c203d scheduled; Android12d16877f8 is building. These are separate\n+from Apple19 still waiting for App Review/beta review and Android10 now active in\n+Alpha. No current accessibility-fix store publication or human reader/device claim.\n+\n+Play Console now verifies Alpha10 active in177regions and the saved68-person\n+registered-user list selected alongside the prior1/11 lists. Current active-account\n+recipient set matches the prior83 after reserved-address exclusions. The authorized\n+82-recipient invitation run is in progress with per-recipient receipts; never retry\n+an ambiguous DATA result or resend an accepted message. Private audience stays off\n+Git. Real12-person/14-day testing and production access remain external gates.\n+\n+#432 successor9213b1334 also repairs UX034: actual HTTP proved web preference keys\n+were rejected by the strict decoder. Canonical/legacy schema compatibility and\n+negative/generative cases are implemented; hosted corrected HTTP gate and renewed\n+exact-head review remain required. Do not claim the earlier failed gate passed.\n+Coverage remains bounded:31-role static arrivals, targeted actual isolated journeys,\n+models and controlled browser cases are not every dynamic resource/state, physical\n+platform, human screen-reader session or representative field-performance evidence.\n+\n+Invitation batch completed07:38:54UTC:80SMTP-accepted,2recipient-address rejections,\n+0ambiguous and0unattempted among82 intended recipients. One invalid-domain and two\n+reserved addresses were excluded earlier. No accepted invitation was resent. The\n+private ledger/audience and retry safeguards are durably stored with owner-only\n+permissions; delivery, reading, enrollment and actual testing are not inferred.\n+iOS21 submissionc06c203d FINISHED (upload), not App Review/publication. Android12\n+buildd16877f8 FINISHED; artifact verification and upload are the next step.",
+      "path": "docs/ux-ui-audit/2026-09-17/README.md",
+      "commit_id": "06d5f47b488ea3b5406db62defc8b87c621bff2a",
+      "original_commit_id": "06d5f47b488ea3b5406db62defc8b87c621bff2a",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Record Android artifact verification consistently**\n\nWhen this checkpoint is used to determine Android release readiness, it incorrectly lists artifact verification as a next step even though the newly committed `android12-artifact-verification.json` records the source, build, SHA-256, and signature check, and `findings.json` also marks the signed AAB as verified. The upload status is likewise inconsistent (`next step` here versus `in progress` there), so align these records to distinguish completed verification from the actual current upload state and avoid duplicate or skipped release work.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T07:46:17Z",
+      "updated_at": "2026-09-18T07:46:17Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/435#discussion_r4044811994",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/435",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044811994"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/435#discussion_r4044811994"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/435"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044811994/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 828,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 55,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045589363",
+      "pull_request_review_id": 5246414672,
+      "id": 4045589363,
+      "node_id": "PRRC_kwDOQPdUrM7xIstz",
+      "diff_hunk": "@@ -774,3 +774,55 @@ variant1.0.1/build1 does not prove App Store build19 acceptance.\n The nearest-scroll correction passes10 local cases in five profiles/three engines;\n production build365428gzip and affected lint pass. Linux CI must confirm the same\n regression on the successor head. Synthetic fixtures prevent campaign submissions.\n+\n+## Checkpoint \u2014 2026-09-18 07:36 UTC\n+\n+#431 is deployed as2f01b20b0c2a2e2088570c3dc5deba6197266452 through the guarded\n+release lane: complete07:32:24Z, both machines healthy on the immutable artifact,\n+107migration ledger rows, no lease remaining and no rollback. Fresh snapshot\n+vs_OzXgpX4lyQnsnqNk2YZ6Vb9 completed07:25:22Z. Existing discovery/autopublish\n+settings remain true; onboarding experiment remains false. Actual legitimate demo\n+GETs return200 for persisted onboarding and paused assignment, with no assignment\n+or exposure; production assignment table remains empty. Public health/version\n+still match07:36UTC. Rollback reference is the prior compatible4b0 image captured\n+in the guarded report; no SQL rollback is needed for this contract-only release.\n+\n+#433 merged6d49c0f055b24743a13991a5fbb94e3774c07c9a after exactdabb approval,\n+all applicable checks and no unresolved threads. Cloudflare345dbb80 succeeded;\n+public assets match the immutable deployment. Ten production-bundle campaign\n+cases pass in5profiles/3engines; transport is synthetic. Final local bundle365447\n+bytes gzip remains below410KiB. The earlier Firefox axe timeout under simulator\n+pressure passed unchanged after the owned simulator was shut down.\n+\n+Mobile101 mergedebec681092ba12a9f8a58019e35ae52a6949eb6f. This increment pins\n+published source667193e15517ecb087fbbacf6041b1296814da78, preserving the349 API\n+contract and excluding unrelated provider/intake runtime changes from mobile main.\n+The actual afbd simulator artifact has identical application code; authenticated\n+return/relaunch and ES\u2192EN\u2192ES visible-tab labels passed, Spanish restored. Source\n+667 adds only the durable flow/evidence. iOS21 artifact0771998e is built and verified,\n+submissionc06c203d scheduled; Android12d16877f8 is building. These are separate\n+from Apple19 still waiting for App Review/beta review and Android10 now active in\n+Alpha. No current accessibility-fix store publication or human reader/device claim.\n+\n+Play Console now verifies Alpha10 active in177regions and the saved68-person\n+registered-user list selected alongside the prior1/11 lists. Current active-account\n+recipient set matches the prior83 after reserved-address exclusions. The authorized\n+82-recipient invitation run is in progress with per-recipient receipts; never retry\n+an ambiguous DATA result or resend an accepted message. Private audience stays off\n+Git. Real12-person/14-day testing and production access remain external gates.\n+\n+#432 successor9213b1334 also repairs UX034: actual HTTP proved web preference keys\n+were rejected by the strict decoder. Canonical/legacy schema compatibility and\n+negative/generative cases are implemented; hosted corrected HTTP gate and renewed\n+exact-head review remain required. Do not claim the earlier failed gate passed.\n+Coverage remains bounded:31-role static arrivals, targeted actual isolated journeys,\n+models and controlled browser cases are not every dynamic resource/state, physical\n+platform, human screen-reader session or representative field-performance evidence.\n+\n+Invitation batch completed07:38:54UTC:80SMTP-accepted,2recipient-address rejections,\n+0ambiguous and0unattempted among82 intended recipients. One invalid-domain and two\n+reserved addresses were excluded earlier. No accepted invitation was resent. The\n+private ledger/audience and retry safeguards are durably stored with owner-only\n+permissions; delivery, reading, enrollment and actual testing are not inferred.\n+iOS21 submissionc06c203d FINISHED (upload), not App Review/publication. Android12\n+buildd16877f8 FINISHED; artifact verification and upload are the next step.",
+      "path": "docs/ux-ui-audit/2026-09-17/README.md",
+      "commit_id": "06d5f47b488ea3b5406db62defc8b87c621bff2a",
+      "original_commit_id": "06d5f47b488ea3b5406db62defc8b87c621bff2a",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Corrected in the published successor checkpoint f2bd37f63. Android12 signed AAB hash/version verification and submissionc41e9287 are completed; Play readback is explicitly internalDRAFT. The next action is final qualified102+104 integration/build, not re-verifying or re-uploading old667. iOS21 VALID/IN_BETA_TESTING and actual publication remain separate. Current README, findings and PR body distinguish these states and preserve the versioned receipts.",
+      "created_at": "2026-09-18T09:40:09Z",
+      "updated_at": "2026-09-18T09:40:09Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/435#discussion_r4045589363",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/435",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045589363"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/435#discussion_r4045589363"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/435"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045589363/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 828,
+      "side": "RIGHT",
+      "in_reply_to_id": 4044811994,
+      "author_association": "OWNER",
+      "original_position": 55,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4046417589",
+      "pull_request_review_id": 5247409614,
+      "id": 4046417589,
+      "node_id": "PRRC_kwDOQPdUrM7xL261",
+      "diff_hunk": "@@ -13155,13 +13155,13 @@\n       \"reviewed\": true\n     },\n     {\n-      \"id\": \"faf664611d7ab0aa954d\",\n+      \"id\": \"bffc5decb0aa4633b170\",",
+      "path": "docs/catalog-persistence/catalog-list-decisions.json",
+      "commit_id": "de177c8589014dc394cd9af465e43be10ae1f744",
+      "original_commit_id": "10aff0c5a9a54c32bb06853aaa26a8eb31489669",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Refresh catalog reports for the new mobile candidate**\n\nAfter replacing this decision with `bffc5decb0aa4633b170`, the committed generated reports still expose the removed `faf664611d7ab0aa954d` candidate and its old untranslated `NEW_USER_VISIBLE_TABS` values (`static-list-inventory.json:115080` and `list-consumer-matrix.csv:1119`). Consequently, readers of the published inventory cannot associate the updated mobile catalog with this reviewed decision, and running the documented refresh rewrites those reports; regenerate both catalog reports from the updated submodule and decision file.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T11:46:58Z",
+      "updated_at": "2026-09-18T11:46:58Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/435#discussion_r4046417589",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/435",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4046417589"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/435#discussion_r4046417589"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/435"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4046417589/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 13158,
+      "original_line": 13158,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 5,
+      "position": 5,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4046509619",
+      "pull_request_review_id": 5247516701,
+      "id": 4046509619,
+      "node_id": "PRRC_kwDOQPdUrM7xMNYz",
+      "diff_hunk": "@@ -13155,13 +13155,13 @@\n       \"reviewed\": true\n     },\n     {\n-      \"id\": \"faf664611d7ab0aa954d\",\n+      \"id\": \"bffc5decb0aa4633b170\",",
+      "path": "docs/catalog-persistence/catalog-list-decisions.json",
+      "commit_id": "de177c8589014dc394cd9af465e43be10ae1f744",
+      "original_commit_id": "10aff0c5a9a54c32bb06853aaa26a8eb31489669",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Regenerated both committed reports from the published90cae070 mobile pin and the reviewed decision file in de177c858. Both strict audit commands pass:1138 candidates across1579 source files,1138 CSV rows. The replacement bffc5decb0aa4633b170 is present in JSON and CSV; removed faf664611d7ab0aa954d is absent. No generated decisions were blindly accepted or source behavior changed.",
+      "created_at": "2026-09-18T11:59:33Z",
+      "updated_at": "2026-09-18T11:59:33Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/435#discussion_r4046509619",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/435",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4046509619"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/435#discussion_r4046509619"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/435"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4046509619/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 13158,
+      "original_line": 13158,
+      "side": "RIGHT",
+      "in_reply_to_id": 4046417589,
+      "author_association": "OWNER",
+      "original_position": 5,
+      "position": 5,
+      "subject_type": "line"
+    }
+  ]
+]

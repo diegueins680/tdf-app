@@ -1,0 +1,18 @@
+- generic [active] [ref=f12e1]:
+  - link "Saltar al contenido principal" [ref=f12e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=f12e3]:
+    - status "Cargando…" [ref=f12e4]
+    - generic "Control de radio":
+      - generic [ref=f12e14]:
+        - button "Reproducir radio" [ref=f12e15] [cursor=pointer]
+        - generic "Saltar al anterior" [ref=f12e18]:
+          - button "Saltar a la estación anterior" [disabled]
+        - generic "Saltar al siguiente" [ref=f12e19]:
+          - button "Saltar a la siguiente estación" [disabled]
+        - button "Silenciar radio" [ref=f12e20] [cursor=pointer]
+        - button "Ocultar barra de radio" [ref=f12e23] [cursor=pointer]
+        - button "Expandir radio" [ref=f12e26] [cursor=pointer]
+        - generic [ref=f12e29]:
+          - generic [ref=f12e30]: "En pausa: Sin emisoras disponibles"
+          - text: Radio

@@ -1,0 +1,293 @@
+- generic [ref=f6e543]:
+  - generic [ref=f6e546]:
+    - link [ref=f6e551] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f6e556]
+    - generic [ref=f6e559]:
+      - link [ref=f6e564] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f6e569]
+      - link [ref=f6e574] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f6e579]
+      - link [ref=f6e586] [cursor=pointer]:
+        - /url: /direct/t/117853139603480
+        - generic [ref=f6e589]:
+          - img "Messages" [ref=f6e591]
+          - generic "Direct messaging - 2 new notifications link" [ref=f6e593]: "2"
+      - link [ref=f6e599] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f6e604]
+      - link [ref=f6e611] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f6e616]
+      - link [ref=f6e622] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f6e627]
+      - link [ref=f6e632] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f6e637]
+      - link [ref=f6e644] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f6e649]:
+          - img "tdf.records.label's profile picture" [ref=f6e650]
+    - generic [ref=f6e651]:
+      - link [ref=f6e654] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f6e659]
+      - link [ref=f6e662] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f6e667]
+  - main [ref=f6e671]:
+    - generic [ref=f6e676]:
+      - navigation "Thread list" [ref=f6e677]:
+        - generic [ref=f6e678]:
+          - generic [ref=f6e679]:
+            - button [ref=f6e680] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f6e682]
+              - img "Verified" [ref=f6e685]
+              - img "Down chevron icon" [ref=f6e688]
+            - generic [ref=f6e691]:
+              - button [ref=f6e692] [cursor=pointer]:
+                - img "More options" [ref=f6e694]
+              - button [ref=f6e698] [cursor=pointer]:
+                - img "New message" [ref=f6e700]
+          - tablist [ref=f6e705]:
+            - tab "Primary" [selected] [ref=f6e706] [cursor=pointer]
+            - tab "General" [ref=f6e709] [cursor=pointer]
+            - tab "From ads" [ref=f6e712] [cursor=pointer]
+            - tab "Requests" [ref=f6e716] [cursor=pointer]
+          - generic [ref=f6e722]:
+            - img "Search" [ref=f6e724]
+            - textbox "Search" [ref=f6e727]
+          - generic [ref=f6e728]:
+            - generic [ref=f6e730]:
+              - list [ref=f6e732]:
+                - listitem [ref=f6e733]
+                - listitem [ref=f6e734]:
+                  - button "Friday feeling... Your note" [ref=f6e736] [cursor=pointer]:
+                    - generic [ref=f6e737]:
+                      - generic [ref=f6e738]: Friday feeling...
+                      - generic [ref=f6e744]:
+                        - link [ref=f6e746]
+                        - generic [ref=f6e747]: Your note
+                - listitem [ref=f6e749]:
+                  - button "plena que necesito un abrazo reemus___'s profile picture REEMUS" [ref=f6e752] [cursor=pointer]:
+                    - generic [ref=f6e753]:
+                      - generic [ref=f6e754]: plena que necesito un abrazo
+                      - generic [ref=f6e761]:
+                        - link [ref=f6e763]:
+                          - img "reemus___'s profile picture" [ref=f6e764]
+                        - generic [ref=f6e765]: REEMUS
+                - listitem [ref=f6e768]:
+                  - button "Me estilé subiéndome al taxi y a penas arrancó paró la lluvia ._. anajusegovia's profile picture Ana Julia" [ref=f6e771] [cursor=pointer]:
+                    - generic [ref=f6e772]:
+                      - generic [ref=f6e773]: Me estilé subiéndome al taxi y a penas arrancó paró la lluvia ._.
+                      - generic [ref=f6e780]:
+                        - link [ref=f6e782]:
+                          - img "anajusegovia's profile picture" [ref=f6e783]
+                        - generic [ref=f6e784]: Ana Julia
+                - listitem [ref=f6e787]:
+                  - button "Venus rojelioelrojorojas's profile picture Andrés Martín Arauz" [ref=f6e790] [cursor=pointer]:
+                    - generic [ref=f6e791]:
+                      - generic [ref=f6e792]: Venus
+                      - generic [ref=f6e799]:
+                        - link [ref=f6e801]:
+                          - img "rojelioelrojorojas's profile picture" [ref=f6e802]
+                        - generic [ref=f6e803]: Andrés Martín Arauz
+                - listitem [ref=f6e806]:
+                  - button "Que la música me salve! zeretofficial's profile picture Zeret 🧑‍🩰Dj" [ref=f6e809] [cursor=pointer]:
+                    - generic [ref=f6e810]:
+                      - generic [ref=f6e811]: Que la música me salve!
+                      - generic [ref=f6e818]:
+                        - link [ref=f6e820]:
+                          - img "zeretofficial's profile picture" [ref=f6e821]
+                        - generic [ref=f6e822]: Zeret 🧑‍🩰Dj
+                - listitem [ref=f6e825]:
+                  - button "Climb or die mishamuluca's profile picture Misha Muluca | Audiovisual Creative" [ref=f6e828] [cursor=pointer]:
+                    - generic [ref=f6e829]:
+                      - generic [ref=f6e830]: Climb or die
+                      - generic [ref=f6e837]:
+                        - link [ref=f6e839]:
+                          - img "mishamuluca's profile picture" [ref=f6e840]
+                        - generic [ref=f6e841]: Misha Muluca | Audiovisual Creative
+                - listitem [ref=f6e844]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Hello Monserrat Mon Laferte santiii.mmm's profile picture Santiii" [ref=f6e847] [cursor=pointer]:
+                    - generic [ref=f6e848]:
+                      - generic [ref=f6e854]:
+                        - generic [ref=f6e855]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f6e857]
+                          - generic [ref=f6e861]: Hello Monserrat
+                        - generic [ref=f6e862]: Mon Laferte
+                      - generic [ref=f6e863]:
+                        - link [ref=f6e865]:
+                          - img "santiii.mmm's profile picture" [ref=f6e866]
+                        - generic [ref=f6e867]: Santiii
+                - listitem [ref=f6e870]:
+                  - button "Blanca Sesión en vivo Link en bio diegocarvajalmusica's profile picture Diego Carvajal" [ref=f6e873] [cursor=pointer]:
+                    - generic [ref=f6e874]:
+                      - generic [ref=f6e875]: Blanca Sesión en vivo Link en bio
+                      - generic [ref=f6e883]:
+                        - link [ref=f6e885]:
+                          - img "diegocarvajalmusica's profile picture" [ref=f6e886]
+                        - generic [ref=f6e887]: Diego Carvajal
+                - listitem [ref=f6e890]:
+                  - button "NOBOA es GIL rockingtheestate's profile picture Alex Lopez" [ref=f6e893] [cursor=pointer]:
+                    - generic [ref=f6e894]:
+                      - generic [ref=f6e895]: NOBOAes GIL
+                      - generic [ref=f6e903]:
+                        - link [ref=f6e905]:
+                          - img "rockingtheestate's profile picture" [ref=f6e906]
+                        - generic [ref=f6e907]: Alex Lopez
+              - button "Next" [ref=f6e910] [cursor=pointer]
+            - generic [ref=f6e915]:
+              - 'button "user-profile-picture Pakul You: Hola, Pakul 👋 Vimos «Canción Común» junto a La Gran Sociedad y tus fechas en Guayunga. Tu escena necesita un espacio propio, también para la música que se mueve por La Floresta. En TDF puedes empezar tu perfil de artista, compartir tus enlaces y seguir otros proyectos. Te invitamos a probar: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records a few seconds ago" [pressed] [ref=f6e1262] [cursor=pointer]':
+                - generic [ref=f6e1264]:
+                  - img "user-profile-picture" [ref=f6e1268]
+                  - generic [ref=f6e1271]:
+                    - generic [ref=f6e1272]: Pakul
+                    - generic [ref=f6e1278]:
+                      - generic [ref=f6e1279]: "You: Hola, Pakul 👋 Vimos «Canción Común» junto a La Gran Sociedad y tus fechas en Guayunga. Tu escena necesita un espacio propio, también para la música que se mueve por La Floresta. En TDF puedes empezar tu perfil de artista, compartir tus enlaces y seguir otros proyectos. Te invitamos a probar: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f6e1281]:
+                        - generic [ref=f6e1282]: ·
+                        - generic "a few seconds ago" [ref=f6e1287]: 1m
+              - button "user-profile-picture HUGO CAICEDO / EMPRESARIO Verified This account can't receive your message because they don't allow new message requests from everyone. 46 minutes ago" [ref=f6e919] [cursor=pointer]:
+                - generic [ref=f6e921]:
+                  - img "user-profile-picture" [ref=f6e925]
+                  - generic [ref=f6e928]:
+                    - generic [ref=f6e930]:
+                      - generic [ref=f6e931]: HUGO CAICEDO / EMPRESARIO
+                      - img "Verified" [ref=f6e934]
+                    - generic [ref=f6e938]:
+                      - generic [ref=f6e939]: This account can't receive your message because they don't allow new message requests from everyone.
+                      - generic [ref=f6e941]:
+                        - generic [ref=f6e942]: ·
+                        - generic "46 minutes ago" [ref=f6e947]: 46m
+              - 'button "user-profile-picture Raúl Molina You: Hola, Raúl 👋 Vimos tu EP «Guayaquil» y la publicación del encuentro en el Teatro Variedades de Quito. TDF reúne perfiles, artistas y lanzamientos para acercar proyectos y oyentes. Te invitamos a empezar tu perfil público con tus enlaces musicales y explorar la comunidad desde aquí: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records 48 minutes ago" [ref=f6e951] [cursor=pointer]':
+                - generic [ref=f6e953]:
+                  - img "user-profile-picture" [ref=f6e957]
+                  - generic [ref=f6e960]:
+                    - generic [ref=f6e961]: Raúl Molina
+                    - generic [ref=f6e967]:
+                      - generic [ref=f6e968]: "You: Hola, Raúl 👋 Vimos tu EP «Guayaquil» y la publicación del encuentro en el Teatro Variedades de Quito. TDF reúne perfiles, artistas y lanzamientos para acercar proyectos y oyentes. Te invitamos a empezar tu perfil público con tus enlaces musicales y explorar la comunidad desde aquí: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f6e970]:
+                        - generic [ref=f6e971]: ·
+                        - generic "48 minutes ago" [ref=f6e976]: 48m
+              - 'button "user-profile-picture Felipe Cornejo You: Hola, Felipe 👋 Vimos «For Carla» y tu trabajo al contrabajo. En TDF reunimos perfiles de artistas y lanzamientos para recorrer distintas propuestas musicales. Te invitamos a crear una cuenta general, explorar la comunidad y seguir un proyecto que te interese: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_b Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records 49 minutes ago" [ref=f6e980] [cursor=pointer]':
+                - generic [ref=f6e982]:
+                  - img "user-profile-picture" [ref=f6e986]
+                  - generic [ref=f6e989]:
+                    - generic [ref=f6e990]: Felipe Cornejo
+                    - generic [ref=f6e996]:
+                      - generic [ref=f6e997]: "You: Hola, Felipe 👋 Vimos «For Carla» y tu trabajo al contrabajo. En TDF reunimos perfiles de artistas y lanzamientos para recorrer distintas propuestas musicales. Te invitamos a crear una cuenta general, explorar la comunidad y seguir un proyecto que te interese: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_b Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f6e999]:
+                        - generic [ref=f6e1000]: ·
+                        - generic "49 minutes ago" [ref=f6e1005]: 49m
+              - 'button "user-profile-picture Carla Román You: ¡Qué bueno tenerte dentro! 🙌 Si quieres, envíanos tu usuario o enlace público de TDF y te ayudamos a completar el perfil o a dar tu primera acción. No necesitamos tu contraseña ni ningún código. 50 minutes ago" [ref=f6e1009] [cursor=pointer]':
+                - generic [ref=f6e1011]:
+                  - img "user-profile-picture" [ref=f6e1015]
+                  - generic [ref=f6e1018]:
+                    - generic [ref=f6e1019]: Carla Román
+                    - generic [ref=f6e1025]:
+                      - generic [ref=f6e1026]: "You: ¡Qué bueno tenerte dentro! 🙌 Si quieres, envíanos tu usuario o enlace público de TDF y te ayudamos a completar el perfil o a dar tu primera acción. No necesitamos tu contraseña ni ningún código."
+                      - generic [ref=f6e1028]:
+                        - generic [ref=f6e1029]: ·
+                        - generic "50 minutes ago" [ref=f6e1034]: 50m
+              - 'button "user-profile-picture Neil Armas 🎙️ You: ¡Hola, Neil! TDF es una plataforma para conectar artistas y personas que viven la música en Quito. Puedes crear tu perfil público de artista, añadir tu biografía y enlaces musicales, y explorar o seguir otros proyectos. Para empezar, abre el enlace que te compartimos y crea tu cuenta con correo y contraseña; después completa tu perfil de artista. Una primera acción puede ser seguir otro artista o explorar un lanzamiento. — TDF Records 51 minutes ago" [ref=f6e1038] [cursor=pointer]':
+                - generic [ref=f6e1040]:
+                  - img "user-profile-picture" [ref=f6e1044]
+                  - generic [ref=f6e1047]:
+                    - generic [ref=f6e1048]: Neil Armas 🎙️
+                    - generic [ref=f6e1054]:
+                      - generic [ref=f6e1055]: "You: ¡Hola, Neil! TDF es una plataforma para conectar artistas y personas que viven la música en Quito. Puedes crear tu perfil público de artista, añadir tu biografía y enlaces musicales, y explorar o seguir otros proyectos. Para empezar, abre el enlace que te compartimos y crea tu cuenta con correo y contraseña; después completa tu perfil de artista. Una primera acción puede ser seguir otro artista o explorar un lanzamiento. — TDF Records"
+                      - generic [ref=f6e1057]:
+                        - generic [ref=f6e1058]: ·
+                        - generic "51 minutes ago" [ref=f6e1063]: 51m
+              - button "user-profile-picture ༒ 𖦹 $ 500? Pero en la página dice $150 54 minutes ago" [ref=f6e1067] [cursor=pointer]:
+                - generic [ref=f6e1069]:
+                  - img "user-profile-picture" [ref=f6e1073]
+                  - generic [ref=f6e1076]:
+                    - generic [ref=f6e1077]: ༒ 𖦹
+                    - generic [ref=f6e1083]:
+                      - generic [ref=f6e1084]: $ 500? Pero en la página dice $150
+                      - generic [ref=f6e1086]:
+                        - generic [ref=f6e1087]: ·
+                        - generic "54 minutes ago" [ref=f6e1092]: 54m
+              - button [ref=f6e1147] [cursor=pointer]:
+                - generic [ref=f6e1149]:
+                  - status "Loading..." [ref=f6e1152]
+                  - generic [ref=f6e1155]:
+                    - status "Loading..." [ref=f6e1157]
+                    - status "Loading..." [ref=f6e1159]
+      - generic [ref=f6e1164]:
+        - generic [ref=f6e1168]:
+          - link "Open the profile page of pakul_music" [ref=f6e1169] [cursor=pointer]:
+            - /url: /pakul_music/
+            - generic [ref=f6e1170]:
+              - img "user-profile-picture" [ref=f6e1174]
+              - generic [ref=f6e1175]:
+                - heading "Pakul" [level=2] [ref=f6e1177]
+                - generic [ref=f6e1179]: pakul_music
+          - generic [ref=f6e1183]:
+            - button [ref=f6e1184] [cursor=pointer]:
+              - img "Audio call" [ref=f6e1186]
+            - button [ref=f6e1188] [cursor=pointer]:
+              - img "Video call" [ref=f6e1190]
+            - button [ref=f6e1193] [cursor=pointer]:
+              - img "Conversation information" [ref=f6e1195]
+        - generic [ref=f6e1199]:
+          - generic [ref=f6e1203]:
+            - generic [ref=f6e1204]:
+              - img "user-profile-picture" [ref=f6e1208]
+              - generic [ref=f6e1209]:
+                - heading "Pakul" [level=2] [ref=f6e1212]
+                - generic [ref=f6e1214]: pakul_music · Instagram
+                - link "View profile" [ref=f6e1217] [cursor=pointer]:
+                  - /url: /pakul_music/
+            - generic [ref=f6e1290]:
+              - generic [ref=f6e1291]: 4:55 PM
+              - group [ref=f6e1294]:
+                - generic [ref=f6e1297]:
+                  - article [ref=f6e1298]:
+                    - generic [ref=f6e1300]:
+                      - generic [ref=f6e1303]:
+                        - text: Hola, Pakul
+                        - img "👋" [ref=f6e1305]
+                        - text: "Vimos «Canción Común» junto a La Gran Sociedad y tus fechas en Guayunga. Tu escena necesita un espacio propio, también para la música que se mueve por La Floresta. En TDF puedes empezar tu perfil de artista, compartir tus enlaces y seguir otros proyectos. Te invitamos a probar:"
+                        - link "https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a" [ref=f6e1307] [cursor=pointer]:
+                          - /url: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a
+                        - text: "Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - link "TDF Records" [ref=f6e1308] [cursor=pointer]:
+                        - /url: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a
+                  - generic [ref=f6e1313]:
+                    - group "Message actions":
+                      - generic:
+                        - generic:
+                          - generic:
+                            - button "React to message from tdf.records.label":
+                              - generic:
+                                - img "React to message from tdf.records.label"
+                        - generic:
+                          - generic:
+                            - button "Reply to message from tdf.records.label":
+                              - generic:
+                                - img "Reply to message from tdf.records.label"
+                        - generic:
+                          - generic:
+                            - button "See more options for message from tdf.records.label":
+                              - generic:
+                                - img "See more options for message from tdf.records.label"
+          - generic [ref=f6e1228]:
+            - button [ref=f6e1231] [cursor=pointer]:
+              - img "Choose an emoji" [ref=f6e1233]
+            - generic [ref=f6e1235]:
+              - textbox [active] [ref=f6e1236]:
+                - paragraph [ref=f6e1314]
+              - generic: Message...
+            - generic [ref=f6e1238]:
+              - button [ref=f6e1315] [cursor=pointer]:
+                - img "Voice Clip" [ref=f6e1317]
+              - button [ref=f6e1320] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=f6e1322]
+              - button [ref=f6e1327] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=f6e1329]

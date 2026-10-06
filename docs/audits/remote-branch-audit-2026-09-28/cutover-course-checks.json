@@ -1,0 +1,17 @@
+[
+  {
+    "expected_url": "https://api.tdfrecords.net/admin/courses",
+    "exit_code": 0,
+    "output": "Published course: Curso de Bateria con Guillermo Diaz\nSlug: bateria-guillermo-diaz-abr-2026\nLanding: https://tdf-app.pages.dev/curso/bateria-guillermo-diaz-abr-2026\n"
+  },
+  {
+    "expected_url": "http://localhost:9999/admin/courses",
+    "exit_code": 0,
+    "output": "Published course: Curso de Bateria con Guillermo Diaz\nSlug: bateria-guillermo-diaz-abr-2026\nLanding: https://tdf-app.pages.dev/curso/bateria-guillermo-diaz-abr-2026\n"
+  },
+  {
+    "expected_url": "https://staging.invalid/admin/courses",
+    "exit_code": 0,
+    "output": "Published course: Curso de Bateria con Guillermo Diaz\nSlug: bateria-guillermo-diaz-abr-2026\nLanding: https://tdf-app.pages.dev/curso/bateria-guillermo-diaz-abr-2026\n"
+  }
+]

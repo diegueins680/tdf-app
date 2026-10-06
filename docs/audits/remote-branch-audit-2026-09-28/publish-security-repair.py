@@ -1,0 +1,14 @@
+import collect,subprocess,json,datetime
+P=collect.ROOT;cwd=P/'security';repo=collect.REPO;branch='audit/ip-address-security-20260930';base='de76dc7df247937144e1802c17d1842f983cbe13'
+def api(path,*args):return json.loads(subprocess.check_output(['/usr/local/bin/gh','api',path,*args],env=collect.ENV,text=True))
+def ledger(**kw):
+ with (P/'mutations.jsonl').open('a') as f:f.write(json.dumps({'time':datetime.datetime.now(datetime.timezone.utc).isoformat(),**kw})+'\n')
+assert 'Passed npm security audit.' in (P/'security-audit-ci.log').read_text();assert json.load(open(P/'security-classifier-check.json'))['result']=='PASS'
+assert api(repo+'/git/ref/heads/main')['object']['sha']==base
+r=subprocess.run(['git','ls-remote','--exit-code','--heads','origin','refs/heads/'+branch],cwd=cwd,env=collect.ENV,capture_output=True);assert r.returncode==2,'Remote branch already exists or query failed'
+sha=subprocess.check_output(['git','rev-parse','HEAD'],cwd=cwd,text=True).strip();assert not subprocess.check_output(['git','status','--porcelain'],cwd=cwd,text=True).strip()
+subprocess.run(['git','push','-u','origin','HEAD:refs/heads/'+branch],cwd=cwd,env=collect.ENV,check=True);assert api(repo+'/git/ref/heads/'+branch)['object']['sha']==sha;ledger(action='pushed_security_repair_branch',branch=branch,sha=sha,base_sha=base)
+assert api(repo+'/git/ref/heads/'+branch)['object']['sha']==sha
+body='Post-merge CI for PR469 now rejects the existing ip-address 10.3.1 lock entry for GHSA-rpw4-54j3-4h4q and GHSA-2vr4-cq9g-pvrc. Update only that compatible transitive dependency to 10.7.2; the security threshold, allowlist, dependency ranges and unrelated lock entries are unchanged.\n\nValidation: the exact repository audit-ci configuration passes. Four local address cases reproduce the vulnerable behavior on 10.3.1 and pass on 10.7.2 (IPv6 link-local and local-use NAT64); two public-address controls remain public. Only version, resolved URL and integrity differ in package-lock.json. No deployment was manually triggered. Independent approval and current-head hosted checks are required before merge.\n\nSources: https://github.com/advisories/GHSA-rpw4-54j3-4h4q and https://github.com/advisories/GHSA-2vr4-cq9g-pvrc.\n'
+x=api(repo+'/pulls','--method','POST','-f','head='+branch,'-f','base=main','-f','title=Fix ip-address classification vulnerabilities in the locked dependency','-f','body='+body)
+y=api(repo+'/pulls/'+str(x['number']));assert y['state']=='open' and y['head']['sha']==sha and y['base']['ref']=='main';(P/'security-pr-created.json').write_text(json.dumps(y,indent=2));ledger(action='created_security_repair_pr',pr=y['number'],sha=sha,url=y['html_url'],branch=branch,validation='Exact unchanged audit-ci PASS; 4 vulnerable-before/fixed-after IPv6 classification cases and 2 public controls PASS. Only 3 lock-entry fields changed.');print('Verified security repair PR',y['number'],y['html_url'])

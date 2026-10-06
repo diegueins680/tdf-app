@@ -1,0 +1,142 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016309123",
+      "pull_request_review_id": 5210820816,
+      "id": 4016309123,
+      "node_id": "PRRC_kwDOQPdUrM7vZAOD",
+      "diff_hunk": "@@ -0,0 +1,38 @@\n+import { useState } from 'react';\n+import { Avatar, Box } from '@mui/material';\n+\n+interface Props {\n+  sources: string[];\n+  title: string;\n+  artistName: string;\n+}\n+\n+export default function ReleaseArtwork(props: Props) {\n+  // Reset failed-image state when catalog data arrives or a row's cover changes.\n+  return <ArtworkImage key={JSON.stringify(props.sources)} {...props} />;",
+      "path": "tdf-hq-ui/src/features/releases/ReleaseArtwork.tsx",
+      "commit_id": "e1a04bb651cda52d3ba67aae65ab402158c23065",
+      "original_commit_id": "d0e5bc5b08aefb8e7bbb179a3190d847aac981d8",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Avoid serializing full data URLs into the React key**\n\nWhen a release uses the page's supported file-upload path, `arCoverImageUrl` is a base64 data URL for a file of up to 6 MB (`LabelReleasesPage.tsx` reads it with `readAsDataURL`). Serializing every `sources` array into a React key therefore creates and retains an additional multi-megabyte string per visible card on every list render; with the default 12 cards, typing in the search box or changing filters can allocate tens of megabytes and make the page stall. Reset the failure index without embedding the complete source contents in the key, such as by tracking source changes in state/effects or using a bounded identifier.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-15T13:48:51Z",
+      "updated_at": "2026-09-15T13:48:51Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/369#discussion_r4016309123",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/369",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016309123"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/369#discussion_r4016309123"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/369"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016309123/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 12,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 12,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016365842",
+      "pull_request_review_id": 5210898400,
+      "id": 4016365842,
+      "node_id": "PRRC_kwDOQPdUrM7vZOES",
+      "diff_hunk": "@@ -0,0 +1,42 @@\n+import type { ArtistReleaseDTO } from '../../api/types';\n+import type { RecordsReleaseDTO } from '../../api/records';\n+import { extractYoutubeVideoId, normalizeSpotifyEmbed } from '../../utils/media';\n+\n+type ArtworkRelease = ArtistReleaseDTO & {\n+  artistName: string;\n+  artistHeroImageUrl?: string | null;\n+};\n+\n+const normalizeName = (value: string) => value.normalize('NFD')\n+  .replace(/\\p{M}/gu, '').toLowerCase().replace(/[^\\p{L}\\p{N}]+/gu, ' ').trim();\n+\n+const spotifyIdentity = (value?: string | null) => {\n+  const embed = normalizeSpotifyEmbed(value);\n+  return embed ? new URL(embed).pathname : null;\n+};\n+\n+/** Presentation fallback only: never persists a guessed catalog relationship. */\n+export function getReleaseArtworkSources(release: ArtworkRelease, catalog: RecordsReleaseDTO[]): string[] {\n+  const spotify = spotifyIdentity(release.arSpotifyUrl);\n+  const youtube = extractYoutubeVideoId(release.arYoutubeUrl);\n+  const linked = catalog.filter((entry) => entry.resources.some((resource) =>\n+    (spotify !== null && resource.providerCode === 'spotify' && spotifyIdentity(resource.url) === spotify)\n+    || (youtube !== null && resource.providerCode === 'youtube' && extractYoutubeVideoId(resource.url) === youtube),\n+  ));\n+  // Legacy rows often have no platform links. Require a unique title AND credited\n+  // artist match; never substitute a different recording for an existing link.\n+  const candidates = spotify || youtube ? linked : catalog.filter((entry) =>",
+      "path": "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
+      "commit_id": "e1a04bb651cda52d3ba67aae65ab402158c23065",
+      "original_commit_id": "e1a04bb651cda52d3ba67aae65ab402158c23065",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Treat populated platform links as authoritative**\n\nWhen either stored platform field is nonempty but cannot be parsed (for example, a stale Spotify URL or an unsupported Spotify URI), both identities become null and this branch falls back to title-and-artist guessing. The create/update path stores these fields without URL validation, so such rows are possible; they can consequently receive artwork from a different same-title release despite the stated invariant that an existing link must prevent substitution. Base the fallback decision on whether the platform fields are populated, not only on whether parsing succeeds.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-15T13:54:21Z",
+      "updated_at": "2026-09-15T13:54:21Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/369#discussion_r4016365842",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/369",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016365842"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/369#discussion_r4016365842"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/369"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016365842/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 28,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 28,
+      "position": 1,
+      "subject_type": "line"
+    }
+  ]
+]

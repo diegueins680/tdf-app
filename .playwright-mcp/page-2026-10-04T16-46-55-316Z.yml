@@ -1,0 +1,310 @@
+- generic [ref=e1]:
+  - generic:
+    - generic:
+      - generic:
+        - generic [ref=e7]:
+          - generic [ref=e18]:
+            - generic [ref=e21]:
+              - link [ref=e644] [cursor=pointer]:
+                - /url: /
+              - generic [ref=e34]:
+                - link [ref=e646] [cursor=pointer]:
+                  - /url: /
+                - link [ref=e648] [cursor=pointer]:
+                  - /url: /reels/
+                - link [ref=e650] [cursor=pointer]:
+                  - /url: /direct/inbox/
+                  - generic [ref=e62]: "6"
+                - link [ref=e653] [cursor=pointer]:
+                  - /url: /explore/
+                - link [ref=e655] [cursor=pointer]:
+                  - /url: "#"
+                - link [ref=e657] [cursor=pointer]:
+                  - /url: "#"
+                - link [ref=e659] [cursor=pointer]:
+                  - /url: "#"
+                - link [ref=e661] [cursor=pointer]:
+                  - /url: /tdf.records.label/
+                  - link [ref=e662]
+              - generic [ref=e130]:
+                - link [ref=e664] [cursor=pointer]:
+                  - /url: "#"
+                - link [ref=e666] [cursor=pointer]:
+                  - /url: "#"
+            - generic [ref=e149]:
+              - main [ref=e150]:
+                - generic [ref=e152]:
+                  - generic [ref=e153]:
+                    - generic [ref=e154]:
+                      - link [ref=e668] [cursor=pointer]:
+                        - /url: /gura.a.music/
+                      - generic [ref=e162]:
+                        - generic [ref=e163]:
+                          - generic [ref=e164]:
+                            - link [ref=e670] [cursor=pointer]:
+                              - /url: "#"
+                              - heading [level=2] [ref=e671]:
+                                - generic [ref=e168]: gura.a.music
+                            - button [ref=e673] [cursor=pointer]
+                          - generic [ref=e178]: Gura
+                          - generic [ref=e180]:
+                            - generic [ref=e182]:
+                              - generic [ref=e183]: "185"
+                              - text: posts
+                            - link [ref=e675] [cursor=pointer]:
+                              - /url: "#"
+                              - generic [ref=e186]:
+                                - generic [ref=e676]: 10.1K
+                                - text: followers
+                            - link [ref=e677] [cursor=pointer]:
+                              - /url: "#"
+                              - generic [ref=e190]:
+                                - generic [ref=e191]: 3,166
+                                - text: following
+                        - generic [ref=e192]:
+                          - generic [ref=e193]:
+                            - generic [ref=e194]: Artist
+                            - button [ref=e678] [cursor=pointer]:
+                              - generic [ref=e198]:
+                                - text: 🎶 Cantante 👑 Top 10 Miss Universo Ecuador 2025
+                                - link [ref=e679]:
+                                  - /url: /cnbecuador/
+                                  - text: "@cnbecuador"
+                                - text: 🎬 MA
+                                - link [ref=e680]:
+                                  - /url: /dynastymodelsinc/
+                                  - text: "@dynastymodelsinc"
+                            - generic [ref=e201]:
+                              - link [ref=e682] [cursor=pointer]:
+                                - /url: https://l.instagram.com/?u=https%3A%2F%2Fopen.spotify.com%2Fartist%2F48SeGfczfKPXn98lFKEKu1%3Fsi%3D6_G1XitYRxaTnOk_nqBdkg%26utm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio%26fbclid%3DPAZXh0bgNhZW0CMTEAcGRvZgJzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAacu_8jmdvv_A8rst76syElCeJ7rCCmZOOCg556V_4_e2PFynlnEVa7vFjv_4g_aem_xGkrODrqVck4teckUTpntw&e=AUDUMtv80scCzrXN1brJWns6fsOslzwm_6PDcxeWzJGKnros1DvYoku-n88CqR6sKuRrhm64T7t7ho8RY0dDkW-RaU6bPktuhIY8puamwHay85qU7DC0f-02N8MGaTAfy_p57wV0nmys
+                                - generic [ref=e209]: open.spotify.com/artist/48SeGfczfKPXn98lFKEKu1?si=6_G1XitYRxaTnOk_nqBdkg
+                              - link [ref=e683] [cursor=pointer]:
+                                - /url: https://www.threads.com/@gura.a.music?xmt=AQG0AjuLFEjphv4c2blgMlRpubUQsmyKQ-29k6nsLVhrKcU
+                                - generic [ref=e215]: gura.a.music
+                          - link [ref=e685] [cursor=pointer]:
+                            - /url: /gura.a.music/followers/mutualOnly
+                            - generic [ref=e219]:
+                              - generic [ref=e221]:
+                                - button [ref=e686]:
+                                  - link [ref=e687]
+                                - button [ref=e224]:
+                                  - link [ref=e225]
+                                - button [ref=e226]:
+                                  - link [ref=e227]
+                              - generic [ref=e228]: Followed by hakanstagram_, tabatabernarda + 28 more
+                    - generic [ref=e233]:
+                      - button [ref=e688] [cursor=pointer]:
+                        - generic [ref=e236]: Follow Back
+                      - button [ref=e689] [cursor=pointer]: Message
+                      - button [ref=e690] [cursor=pointer]
+                    - menu [ref=e247]:
+                      - generic [ref=e249]:
+                        - list [ref=e251]:
+                          - listitem [ref=e252]
+                          - listitem [ref=e253]
+                          - listitem [ref=e254]:
+                            - link [ref=e692] [cursor=pointer]:
+                              - /url: /stories/highlights/17848347642205126/
+                              - button [ref=e693]:
+                                - button [ref=e694]
+                                - generic [ref=e263]: 🎙️
+                          - listitem [ref=e266]:
+                            - link [ref=e696] [cursor=pointer]:
+                              - /url: /stories/highlights/18111913270758999/
+                              - button [ref=e697]:
+                                - button [ref=e698]
+                                - generic [ref=e275]: dance
+                          - listitem [ref=e278]:
+                            - link [ref=e700] [cursor=pointer]:
+                              - /url: /stories/highlights/18184843129370773/
+                              - button [ref=e701]:
+                                - button [ref=e702]
+                                - generic [ref=e287]: Met Gala Night
+                          - listitem [ref=e290]:
+                            - link [ref=e704] [cursor=pointer]:
+                              - /url: /stories/highlights/17995646402431232/
+                              - button [ref=e705]:
+                                - button [ref=e706]
+                                - generic [ref=e299]: 📸
+                          - listitem [ref=e302]:
+                            - link [ref=e708] [cursor=pointer]:
+                              - /url: /stories/highlights/17856677853482141/
+                              - button [ref=e709]:
+                                - button [ref=e710]
+                                - generic [ref=e311]: casual 🎶
+                          - listitem [ref=e314]:
+                            - link [ref=e712] [cursor=pointer]:
+                              - /url: /stories/highlights/18014476502657230/
+                              - button [ref=e713]:
+                                - button [ref=e714]
+                                - generic [ref=e323]: 📱
+                          - listitem [ref=e326]:
+                            - link [ref=e716] [cursor=pointer]:
+                              - /url: /stories/highlights/17907520994966201/
+                              - button [ref=e717]:
+                                - button [ref=e718]
+                                - generic [ref=e335]: 🎞️
+                          - listitem [ref=e338]:
+                            - link [ref=e720] [cursor=pointer]:
+                              - /url: /stories/highlights/17900956680123474/
+                              - button [ref=e721]:
+                                - button [ref=e722]
+                                - generic [ref=e347]: ✨
+                          - listitem [ref=e350]:
+                            - link [ref=e724] [cursor=pointer]:
+                              - /url: /stories/highlights/17870932629220084/
+                              - button [ref=e725]:
+                                - button [ref=e726]
+                                - generic [ref=e359]: 👑CNB👑
+                          - listitem [ref=e362]:
+                            - link [ref=e728] [cursor=pointer]:
+                              - /url: /stories/highlights/18058676873111693/
+                              - button [ref=e729]:
+                                - button [ref=e730]
+                                - generic [ref=e371]: 🗞️
+                          - listitem [ref=e374]:
+                            - link [ref=e732] [cursor=pointer]:
+                              - /url: /stories/highlights/18102767254410153/
+                              - button [ref=e733]:
+                                - button [ref=e734]
+                                - generic [ref=e383]: 🩰
+                          - listitem [ref=e386]:
+                            - link [ref=e736] [cursor=pointer]:
+                              - /url: /stories/highlights/18084852583578022/
+                              - button [ref=e737]:
+                                - button [ref=e738]
+                                - generic [ref=e395]: HOLLYWATER
+                          - listitem [ref=e398]:
+                            - link [ref=e740] [cursor=pointer]:
+                              - /url: /stories/highlights/18108463606441427/
+                              - button [ref=e741]:
+                                - button [ref=e742]
+                                - generic [ref=e407]: 🎬
+                          - listitem [ref=e410]:
+                            - link [ref=e744] [cursor=pointer]:
+                              - /url: /stories/highlights/17860455846213799/
+                              - button [ref=e745]:
+                                - button [ref=e746]
+                                - generic [ref=e419]: MERCH
+                        - button [ref=e748] [cursor=pointer]
+                  - tablist [ref=e425]:
+                    - link [ref=e749] [cursor=pointer]:
+                      - /url: /gura.a.music/
+                    - link [ref=e751] [cursor=pointer]:
+                      - /url: /gura.a.music/reels/
+                    - link [ref=e753] [cursor=pointer]:
+                      - /url: /gura.a.music/reposts/
+                    - link [ref=e755] [cursor=pointer]:
+                      - /url: /gura.a.music/tagged/
+                  - generic [ref=e459]:
+                    - generic [ref=e460]:
+                      - link [ref=e757] [cursor=pointer]:
+                        - /url: /gura.a.music/p/DVKGa0vDfEi/
+                      - link [ref=e759] [cursor=pointer]:
+                        - /url: /gura.a.music/p/DLV8_0ANI4M/
+                      - link [ref=e761] [cursor=pointer]:
+                        - /url: /casadelamusicaq/p/DXIjODJEe-8/
+                    - generic [ref=e479]:
+                      - link [ref=e763] [cursor=pointer]:
+                        - /url: /gura.a.music/reel/DaiqvKBhd0p/
+                      - link [ref=e765] [cursor=pointer]:
+                        - /url: /gura.a.music/reel/Dabs78dt18M/
+                      - link [ref=e767] [cursor=pointer]:
+                        - /url: /gura.a.music/p/DYk8VV8DdnU/
+                    - generic [ref=e497]:
+                      - link [ref=e769] [cursor=pointer]:
+                        - /url: /gura.a.music/p/DYfxWxIkTX8/
+                      - link [ref=e771] [cursor=pointer]:
+                        - /url: /gura.a.music/reel/DYU6njHhQPK/
+                      - link [ref=e773] [cursor=pointer]:
+                        - /url: /gura.a.music/p/DYLnFxjDc6p/
+                    - generic [ref=e516]:
+                      - link [ref=e775] [cursor=pointer]:
+                        - /url: /gura.a.music/reel/DXu0Ri2Eb4K/
+                      - link [ref=e777] [cursor=pointer]:
+                        - /url: /papayadada/reel/DXrxslyjnv5/
+                      - link [ref=e779] [cursor=pointer]:
+                        - /url: /gura.a.music/p/DXcziWXkekM/
+              - contentinfo [ref=e535]:
+                - generic [ref=e536]:
+                  - generic [ref=e538]:
+                    - link [ref=e781] [cursor=pointer]:
+                      - /url: https://about.meta.com/
+                      - generic [ref=e541]: Meta
+                    - link [ref=e782] [cursor=pointer]:
+                      - /url: https://about.instagram.com/
+                      - generic [ref=e544]: About
+                    - link [ref=e783] [cursor=pointer]:
+                      - /url: https://about.instagram.com/blog/
+                      - generic [ref=e547]: Blog
+                    - link [ref=e784] [cursor=pointer]:
+                      - /url: https://about.instagram.com/about-us/careers
+                      - generic [ref=e550]: Jobs
+                    - link [ref=e785] [cursor=pointer]:
+                      - /url: https://help.instagram.com/
+                      - generic [ref=e553]: Help
+                    - link [ref=e786] [cursor=pointer]:
+                      - /url: https://developers.facebook.com/docs/instagram
+                      - generic [ref=e556]: API
+                    - link [ref=e787] [cursor=pointer]:
+                      - /url: /legal/privacy/
+                      - generic [ref=e559]: Privacy
+                    - link [ref=e788] [cursor=pointer]:
+                      - /url: /legal/terms/
+                      - generic [ref=e562]: Terms
+                    - link [ref=e789] [cursor=pointer]:
+                      - /url: /explore/locations/
+                      - generic [ref=e565]: Locations
+                    - link [ref=e790] [cursor=pointer]:
+                      - /url: /popular/
+                      - generic [ref=e568]: Popular
+                    - link [ref=e791] [cursor=pointer]:
+                      - /url: /web/lite/
+                      - generic [ref=e571]: Instagram Lite
+                    - link [ref=e792] [cursor=pointer]:
+                      - /url: https://www.meta.ai/?utm_source=foa_web_footer
+                      - generic [ref=e574]: Meta AI
+                    - link [ref=e793] [cursor=pointer]:
+                      - /url: https://muse.ai/
+                      - generic [ref=e577]: Muse
+                    - link [ref=e794] [cursor=pointer]:
+                      - /url: https://www.threads.com/
+                      - generic [ref=e580]: Threads
+                    - link [ref=e795] [cursor=pointer]:
+                      - /url: https://www.facebook.com/help/instagram/261704639352628
+                      - generic [ref=e583]: Contact Uploading & Non-Users
+                    - link [ref=e796] [cursor=pointer]:
+                      - /url: /accounts/meta_verified/?entrypoint=web_footer
+                      - generic [ref=e586]: Meta Verified
+                  - generic [ref=e587]:
+                    - generic [ref=e588] [cursor=pointer]:
+                      - generic [ref=e589]: English
+                      - combobox [ref=e798]
+                    - generic [ref=e596]: © 2026 Instagram from Meta
+          - button [ref=e799] [cursor=pointer]:
+            - tooltip [ref=e800]:
+              - generic [ref=e602]: "1"
+        - button [ref=e610] [cursor=pointer]:
+          - generic "Messages - 6 new notifications" [ref=e611]:
+            - generic [ref=e612]:
+              - generic [ref=e614]:
+                - img "Messages" [ref=e615]
+                - generic "Direct messaging - 6 new notifications link" [ref=e618]: "6"
+              - generic [ref=e621]: Messages
+            - generic [ref=e622]:
+              - button [ref=e623]:
+                - img "6 unread chats" [ref=e625]
+              - button "User avatar Jonathan Campoverde" [ref=e630]:
+                - img "User avatar" [ref=e633]
+              - button "User avatar Fundación Kunayan" [ref=e635]:
+                - img "User avatar" [ref=e638]
+              - button "User avatar Isaac" [ref=e640]:
+                - img "User avatar" [ref=e643]
+  - dialog [ref=e808]:
+    - generic [ref=e813]:
+      - generic [ref=e814]:
+        - heading "Messaging gura.a.music" [active] [level=3] [ref=e817]
+        - generic [ref=e818]: Partnership messages are more likely to get a response because they have a dedicated place in gura.a.music's inbox.
+      - generic [ref=e820]:
+        - button "Send prioritized message" [ref=e821] [cursor=pointer]
+        - button "Send message request" [ref=e822] [cursor=pointer]

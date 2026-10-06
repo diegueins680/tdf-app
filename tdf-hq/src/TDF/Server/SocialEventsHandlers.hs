@@ -50,6 +50,7 @@ module TDF.Server.SocialEventsHandlers (
     resolveExistingPartyIdText,
     resolveUniqueRsvpRow,
     validateEventArtistIds,
+    toggleMomentReactionDb,
     normalizeMomentMediaType,
     normalizeMomentCaption,
     normalizeMomentCommentBody,
@@ -203,6 +204,7 @@ import TDF.Config (AppConfig (..), EmailConfig, assetsRootDir, resolveConfigured
 import TDF.Internationalization (normalizeCurrencyCode)
 import TDF.DB (Env (..))
 import TDF.FeatureRegistry (findRegistryFeature, registryFeatureAllows)
+import qualified TDF.Models as M
 import TDF.DTO.SocialEventsDTO (
     ArtistDTO (..),
     ArtistFollowRequest (..),
@@ -3845,32 +3847,9 @@ socialEventsServer user =
         reactionTypeId <-
             liftIO (runSqlPool (loadSelectableMomentReactionTypeId emrrReactionTypeId) envPool)
                 >>= either throwError pure
-        existingSameReaction <-
-            liftIO $
-                runSqlPool
-                    ( selectFirst
-                        [ EventMomentReactionMomentId ==. momentKey
-                        , EventMomentReactionReactionTypeId ==. Just reactionTypeId
-                        , EventMomentReactionReactorPartyId ==. currentPartyId
-                        ]
-                        []
-                    )
-                    envPool
-        liftIO $
-            runSqlPool
-                ( do
-                    deleteWhere [EventMomentReactionMomentId ==. momentKey, EventMomentReactionReactorPartyId ==. currentPartyId]
-                    when (isNothing existingSameReaction) $
-                        insert_
-                            EventMomentReaction
-                                { eventMomentReactionMomentId = momentKey
-                                , eventMomentReactionReactionTypeId = Just reactionTypeId
-                                , eventMomentReactionReaction = Nothing
-                                , eventMomentReactionReactorPartyId = currentPartyId
-                                , eventMomentReactionCreatedAt = now
-                                }
-                )
-                envPool
+        _ <- liftIO $ runSqlPool
+            (toggleMomentReactionDb (auPartyId user) currentPartyId momentKey reactionTypeId emrrActive now)
+            envPool
         liftIO $ loadMomentDTO envPool momentKey
 
     commentOnMoment :: T.Text -> T.Text -> EventMomentCommentCreateDTO -> AppM EventMomentCommentDTO
@@ -7764,6 +7743,59 @@ normalizeMomentMediaType raw =
         "clip" -> Just "video"
         _ -> Nothing
 
+toggleMomentReactionDb
+    :: PartyId
+    -> T.Text
+    -> EventMomentId
+    -> UUID.UUID
+    -> Maybe Bool
+    -> UTCTime
+    -> SqlPersistT IO Bool
+toggleMomentReactionDb actorPartyId actorPartyText momentKey reactionTypeId requestedActive now = do
+    existingReaction <-
+        selectFirst
+            [ EventMomentReactionMomentId ==. momentKey
+            , EventMomentReactionReactorPartyId ==. actorPartyText
+            ]
+            [Asc EventMomentReactionCreatedAt]
+    let sameReactionIsActive =
+            maybe
+                False
+                ((== Just reactionTypeId) . eventMomentReactionReactionTypeId . entityVal)
+                existingReaction
+        shouldBeActive = fromMaybe (not sameReactionIsActive) requestedActive
+        actorFilters =
+            [ EventMomentReactionMomentId ==. momentKey
+            , EventMomentReactionReactorPartyId ==. actorPartyText
+            ]
+    if not shouldBeActive
+        then deleteWhere actorFilters >> pure False
+        else
+            if sameReactionIsActive
+                then pure True
+                else do
+                    deleteWhere actorFilters
+                    inserted <- insertUnique
+                        EventMomentReaction
+                            { eventMomentReactionMomentId = momentKey
+                            , eventMomentReactionReactionTypeId = Just reactionTypeId
+                            , eventMomentReactionReaction = Nothing
+                            , eventMomentReactionReactorPartyId = actorPartyText
+                            , eventMomentReactionCreatedAt = now
+                            }
+                    when (isJust inserted) $
+                        insert_
+                            M.EngagementEvent
+                                { M.engagementEventActorPartyId = Just actorPartyId
+                                , M.engagementEventTargetArtistId = Nothing
+                                , M.engagementEventEntityType = "event_moment"
+                                , M.engagementEventEntityId = Just (fromIntegral (fromSqlKey momentKey))
+                                , M.engagementEventEventType = "reaction_added"
+                                , M.engagementEventMetadata = Nothing
+                                , M.engagementEventCreatedAt = now
+                                }
+                    pure True
+
 loadSelectableMomentReactionTypeId :: T.Text -> SqlPersistT IO (Either ServerError UUID.UUID)
 loadSelectableMomentReactionTypeId rawId =
     case UUID.fromText (T.strip rawId) of
@@ -7920,7 +7952,7 @@ resolveLiveBroadcastStreamEndpoints streamKey = do
         either throwError pure $
             resolveRadioTransmissionEnvBase
                 "RADIO_PUBLIC_BASE"
-                "https://tdf-hq.fly.dev/live"
+                "https://api.tdfrecords.net/live"
                 mListenBaseRaw
     listenBase <- either throwError pure (validateRadioTransmissionPublicBase listenBaseRaw)
     let fallbackIngest = deriveLiveBroadcastBase listenBase "rtmp" "/live"
@@ -9222,7 +9254,7 @@ momentReactionEntityToDTO reactionTypes (Entity _ reactionRow) = do
             , emrReactionNameEs = Catalog.reactionTypeNameEs reactionType
             , emrReactionNameEn = Catalog.reactionTypeNameEn reactionType
             , emrReactionEmoji = Catalog.reactionTypeEmoji reactionType
-            , emrPartyId = eventMomentReactionReactorPartyId reactionRow
+            , emrPartyId = Just (eventMomentReactionReactorPartyId reactionRow)
             , emrCreatedAt = Just (eventMomentReactionCreatedAt reactionRow)
             }
 

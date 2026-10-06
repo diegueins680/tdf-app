@@ -1,0 +1,220 @@
+- generic [ref=f11e5]:
+  - banner [ref=f11e6]:
+    - generic [ref=f11e7]:
+      - generic [ref=f11e10]: Sandbox Live
+      - navigation [ref=f11e18]:
+        - list [ref=f11e19]:
+          - listitem [ref=f11e20]:
+            - link [ref=f11e21] [cursor=pointer]:
+              - /url: /dashboard
+              - paragraph [ref=f11e28]: Home
+          - listitem [ref=f11e29]:
+            - link [ref=f11e30] [cursor=pointer]:
+              - /url: /dashboard/applications/sandbox
+              - paragraph [ref=f11e37]: Apps & Credentials
+          - listitem [ref=f11e38]:
+            - paragraph [ref=f11e46] [cursor=pointer]: Testing Tools
+          - listitem [ref=f11e51]:
+            - paragraph [ref=f11e59] [cursor=pointer]: Event Logs
+          - listitem [ref=f11e66]:
+            - paragraph [ref=f11e74] [cursor=pointer]: Docs
+          - listitem [ref=f11e79]:
+            - paragraph [ref=f11e87] [cursor=pointer]: APIs & SDKs
+          - listitem [ref=f11e92]:
+            - paragraph [ref=f11e101] [cursor=pointer]: Tools
+          - listitem [ref=f11e106]:
+            - link [ref=f11e107] [cursor=pointer]:
+              - /url: https://developer.paypal.com/video/home
+              - paragraph [ref=f11e114]: Video Library
+          - listitem [ref=f11e115]:
+            - link [ref=f11e116] [cursor=pointer]:
+              - /url: https://developer.paypal.com/docs/support
+              - paragraph [ref=f11e123]: Help
+  - generic [ref=f11e124]:
+    - banner [ref=f11e125]:
+      - generic [ref=f11e126]:
+        - generic [ref=f11e127]:
+          - button "Open menu" [ref=f11e128] [cursor=pointer]
+          - heading [level=6] [ref=f11e133]:
+            - strong [ref=f11e134]: Diego Saa Villamar
+        - generic [ref=f11e135]: Search
+        - generic [ref=f11e140]:
+          - link [ref=f11e141] [cursor=pointer]:
+            - /url: https://www.paypal.com/mep/dashboard
+            - paragraph [ref=f11e143]:
+              - generic: Business Dashboard
+          - img "Avatar for Diego Saa Villamar" [ref=f11e148] [cursor=pointer]:
+            - generic [ref=f11e149]: DV
+      - alert [ref=f11e151]:
+        - img "info" [ref=f11e152]
+        - text: PayPal JavaScript SDK v6 is Now Available!
+        - link "Get Started" [ref=f11e155] [cursor=pointer]:
+          - /url: https://docs.paypal.ai/payments/methods/paypal/sdk/js/v6/paypal-checkout
+        - button "dismiss alert" [ref=f11e156] [cursor=pointer]:
+          - generic [ref=f11e157]: close alert
+      - generic [ref=f11e158]: You’re in sandbox mode.
+    - main [ref=f11e161]:
+      - article [ref=f11e162]:
+        - generic [ref=f11e484]:
+          - button [ref=f11e485] [cursor=pointer]
+          - button "Back" [ref=f11e487] [cursor=pointer]
+          - generic [ref=f11e488]: sb-15um247964514@business.example.com
+          - generic [ref=f11e491]:
+            - generic [ref=f11e492]: Login Info
+            - separator [ref=f11e495]
+            - generic [ref=f11e496]:
+              - generic [ref=f11e497]:
+                - generic [ref=f11e498]: Sandbox URL
+                - generic [ref=f11e500]: https://sandbox.paypal.com
+                - button [ref=f11e503] [cursor=pointer]
+              - generic [ref=f11e505]:
+                - generic [ref=f11e506]: Email
+                - generic [ref=f11e508]: sb-15um247964514@business.example.com
+                - button [ref=f11e511] [cursor=pointer]
+                - generic [ref=f11e513]: Change email
+              - generic [ref=f11e514]:
+                - generic [ref=f11e515]: Password
+                - generic [ref=f11e517]: ••••••••••••••••
+                - button [ref=f11e519] [cursor=pointer]
+                - button [ref=f11e522] [cursor=pointer]
+                - generic [ref=f11e524]: Change password
+            - separator [ref=f11e525]
+          - generic [ref=f11e527]:
+            - heading [level=6] [ref=f11e529]:
+              - strong [ref=f11e530]: REST API apps
+            - alert [ref=f11e531]:
+              - img "info" [ref=f11e532]
+              - text: "Important: Store credentials safely, and never share client IDs or secrets publicly."
+            - table "Table" [ref=f11e539]:
+              - rowgroup [ref=f11e540]:
+                - row [ref=f11e541]:
+                  - columnheader [ref=f11e542]:
+                    - generic [ref=f11e543]:
+                      - text: App name
+                      - button "App name" [ref=f11e544] [cursor=pointer]
+                  - columnheader "Client ID" [ref=f11e546]
+                  - columnheader "Secret" [ref=f11e547]
+                  - columnheader [ref=f11e548]:
+                    - generic [ref=f11e549]:
+                      - text: Date and time
+                      - button "Currently sorted by Date and time in descending order" [ref=f11e550] [cursor=pointer]
+                  - columnheader [ref=f11e552]:
+                    - button "Rest App Settings" [ref=f11e553] [cursor=pointer]
+              - rowgroup [ref=f11e555]:
+                - row [ref=f11e556]:
+                  - cell [ref=f11e557]:
+                    - link "Default Application" [ref=f11e558] [cursor=pointer]:
+                      - /url: /dashboard/applications/edit/SB:QVY3Y3pTTmNJcEtnZ05IemZWaDNXVzhvOWpGOTZ2SjVudkYtdnhMZFZ6X3RJdkxOUzZOeDJ5NU1pbWdWNWdlLVdEaHJsZUxkVG9hUS1CWGI=?appname=Default Application
+                  - cell "AV7czSNcIpKggNHzfVh3W..." [ref=f11e559]:
+                    - generic [ref=f11e560]:
+                      - generic [ref=f11e561]: AV7czSNcIpKggNHzfVh3W...
+                      - button [ref=f11e564] [cursor=pointer]
+                  - cell "••••••••••••••••" [ref=f11e566]:
+                    - generic [ref=f11e568]:
+                      - generic [ref=f11e569]: ••••••••••••••••
+                      - button [ref=f11e570] [cursor=pointer]
+                      - button [ref=f11e572] [cursor=pointer]
+                  - cell "04/12/2025, 14:21" [ref=f11e574]
+                  - cell [ref=f11e575]:
+                    - button [ref=f11e577] [cursor=pointer]
+          - generic [ref=f11e579]:
+            - generic [ref=f11e580]: NVP/SOAP Sandbox API credentials
+            - separator [ref=f11e583]
+            - generic [ref=f11e584]:
+              - generic [ref=f11e585]:
+                - generic [ref=f11e586]: Username
+                - generic [ref=f11e588]: sb-15um247964514_api1.business.example.com
+                - button [ref=f11e591] [cursor=pointer]
+              - generic [ref=f11e593]:
+                - generic [ref=f11e594]: Password
+                - generic [ref=f11e596]: U3RB6P6L9UASSDPX
+                - button [ref=f11e599] [cursor=pointer]
+              - generic [ref=f11e601]:
+                - generic [ref=f11e602]: Signature
+                - generic [ref=f11e604]: Av9qFkGY8ullHcc9kDMQc15PokqvACzc4I1tmGG4xmK7mPLxDBqC4VFy
+                - button [ref=f11e607] [cursor=pointer]
+            - separator [ref=f11e609]
+          - generic [ref=f11e610]:
+            - generic [ref=f11e611]: Sandbox account info
+            - separator [ref=f11e614]
+            - generic [ref=f11e615]:
+              - generic [ref=f11e616]:
+                - generic [ref=f11e617]:
+                  - generic [ref=f11e618]:
+                    - generic [ref=f11e619]: Name
+                    - generic [ref=f11e621]: John Doe
+                    - button [ref=f11e623] [cursor=pointer]
+                  - generic [ref=f11e625]:
+                    - generic [ref=f11e626]: Phone
+                    - generic [ref=f11e628]: "5937538914"
+                  - generic [ref=f11e630]:
+                    - generic [ref=f11e631]: Country
+                    - generic [ref=f11e633]: EC
+                - generic [ref=f11e635]:
+                  - generic [ref=f11e636]:
+                    - generic [ref=f11e637]: Account type
+                    - generic [ref=f11e639]: Business
+                  - generic [ref=f11e641]:
+                    - generic [ref=f11e643]:
+                      - text: Account ID
+                      - button "tooltip1" [ref=f11e645] [cursor=pointer]
+                    - generic [ref=f11e650]: 4KQXUNMQSR8AJ
+                  - generic [ref=f11e652]:
+                    - generic [ref=f11e653]: Status
+                    - generic [ref=f11e655]: Verified
+              - separator [ref=f11e657]
+              - generic [ref=f11e658]:
+                - generic [ref=f11e659]:
+                  - generic [ref=f11e660]:
+                    - generic [ref=f11e661]: Credit Cards
+                    - generic [ref=f11e662]: 1 added
+                    - generic [ref=f11e664]: Manage
+                  - generic [ref=f11e666]:
+                    - generic [ref=f11e667]: Banks
+                    - generic [ref=f11e668]: 1 of 4 added
+                    - generic [ref=f11e670]: Manage
+                - generic [ref=f11e673]:
+                  - generic [ref=f11e674]: PayPal balance
+                  - generic [ref=f11e676]: USD 5,000
+                  - button [ref=f11e678] [cursor=pointer]
+            - separator [ref=f11e680]
+          - generic [ref=f11e681]:
+            - generic [ref=f11e682]: Settings
+            - separator [ref=f11e685]
+            - generic [ref=f11e687]:
+              - generic [ref=f11e688]:
+                - generic [ref=f11e689]:
+                  - text: Payment Review
+                  - generic [ref=f11e690]: Review sandbox payments before they are completed.
+                - generic [ref=f11e691]:
+                  - switch "Payment Review Review sandbox payments before they are completed." [ref=f11e692]
+                  - generic [ref=f11e693] [cursor=pointer]
+              - generic [ref=f11e694]:
+                - generic [ref=f11e695]:
+                  - text: Negative Testing
+                  - generic [ref=f11e696]: Recreate error conditions to test error handling.
+                - generic [ref=f11e697]:
+                  - switch "Negative Testing Recreate error conditions to test error handling." [ref=f11e698]
+                  - generic [ref=f11e699] [cursor=pointer]
+            - separator [ref=f11e700]
+      - generic [ref=f11e247]:
+        - link "Reference" [ref=f11e248] [cursor=pointer]:
+          - /url: https://developer.paypal.com/reference
+        - link "PayPal.com" [ref=f11e249] [cursor=pointer]:
+          - /url: https://www.paypal.com
+        - link "Privacy" [ref=f11e250] [cursor=pointer]:
+          - /url: https://www.paypal.com/us/webapps/mpp/ua/privacy-full
+        - link "Support" [ref=f11e251] [cursor=pointer]:
+          - /url: https://developer.paypal.com/docs/support
+        - link "Legal" [ref=f11e252] [cursor=pointer]:
+          - /url: https://www.paypal.com/us/webapps/mpp/ua/legalhub-full
+        - link "Contact" [ref=f11e253] [cursor=pointer]:
+          - /url: https://www.paypal.com/us/smarthelp/contact-us
+  - generic [ref=f11e255]:
+    - generic [ref=f11e259]:
+      - heading [level=4] [ref=f11e261]:
+        - text: We currently use cookies to improve and customize your experience on our site. If you accept, we’ll also use marketing cookies to show you personalized ads.
+        - link "Manage your cookies and learn more." [ref=f11e262] [cursor=pointer]:
+          - /url: https://www.paypal.com/myaccount/privacy/cookiePrefs?locale=en_EC
+      - button "Yes, I accept" [ref=f11e264]
+    - button "Close" [ref=f11e265]

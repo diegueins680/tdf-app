@@ -101,6 +101,17 @@ executable tdf-hq-exe
     TDF.Merch.Reputation
     TDF.Models
     TDF.ModelsExtra
+    TDF.MusicRelease.Domain
+    TDF.MusicRelease.ContentValidation
+    TDF.MusicRelease.DDEX.ERN432
+    TDF.MusicRelease.Storage.S3
+    TDF.API.MusicRelease
+    TDF.Server.MusicRelease
+    TDF.Server.MusicReleaseAssets
+    TDF.Server.MusicReleaseCommerce
+    TDF.Server.MusicReleaseCatalog
+    TDF.Server.MusicReleaseDDEX
+    TDF.Server.MusicReleaseUpload
     TDF.Models.SocialEventsModels
     TDF.UUIDInstances
     TDF.Leads.Model
@@ -226,7 +237,7 @@ executable tdf-hq-exe
     , warp                 >=3.3
     , wai
     , wai-cors
-    , http2                >=5.0 && <5.3
+    , http2                >=5.0 && <5.4
     , entropy
     , filepath
     , directory
@@ -254,6 +265,23 @@ executable tdf-hq-exe
     , memory
     , JuicyPixels
 
+executable tdf-ddex-render
+  main-is:          MusicDdexRenderMain.hs
+  hs-source-dirs:   app, src
+  other-modules:
+    TDF.MusicRelease.Domain
+    TDF.MusicRelease.DDEX.ERN432
+  default-language: Haskell2010
+  ghc-options:      -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates -Wredundant-constraints
+  build-depends:
+      base                 >=4.14 && <5
+    , aeson
+    , bytestring
+    , postgresql-simple
+    , text
+    , time
+    , xml
+
 test-suite tdf-hq-test
   type:              exitcode-stdio-1.0
   hs-source-dirs:    test, src
@@ -262,6 +290,11 @@ test-suite tdf-hq-test
     Paths_tdf_hq
     TDF.API
     TDF.API.Admin
+    TDF.API.Catalog
+    TDF.API.DDEX
+    TDF.API.Reviews
+    TDF.API.ServiceStorefront
+    TDF.API.ServiceStorefrontTypes
     TDF.App.Boot
     TDF.API.Bands
     TDF.API.Facebook
@@ -340,6 +373,9 @@ test-suite tdf-hq-test
     TDF.DTO.SocialDiscoveryDTO
     TDF.DTO.SocialSyncDTO
     TDF.Distribution.StateMachine
+    TDF.DDEX.Detect
+    TDF.DDEX.Security
+    TDF.DDEX.Storage
     TDF.Email
     TDF.Email.Service
     TDF.Handlers.InputList
@@ -350,6 +386,21 @@ test-suite tdf-hq-test
     TDF.Merch.Reputation
     TDF.Models
     TDF.ModelsExtra
+    TDF.MusicRelease.Domain
+    TDF.MusicRelease.ContentValidation
+    TDF.MusicRelease.DDEX.ERN432
+    TDF.MusicRelease.DDEX.ERN432Spec
+    TDF.MusicRelease.ContentSpec
+    TDF.MusicRelease.Storage.S3
+    TDF.MusicRelease.Storage.S3Spec
+    TDF.API.MusicRelease
+    TDF.Server.MusicRelease
+    TDF.Server.MusicReleaseAssets
+    TDF.Server.MusicReleaseCommerce
+    TDF.Server.MusicReleaseCatalog
+    TDF.Server.MusicReleaseDDEX
+    TDF.Server.MusicReleaseUpload
+    TDF.MusicRelease.DomainSpec
     TDF.Models.SocialEventsModels
     TDF.CMS.Models
       TDF.Catalog.Models
@@ -431,9 +482,18 @@ test-suite tdf-hq-test
     TDF.DDEX.Models
     TDF.DDEX.Types
     TDF.DDEX.ERN.V432.BusinessRules
+    TDF.DDEX.ERN.V432.Convert
     TDF.DDEX.ERN.V432.Normalize
     TDF.DDEX.ERN.V432.Parse
     TDF.DDEX.ERN.V432.Types
+    TDF.FeatureRegistry
+    TDF.Operations.API
+    TDF.Operations.Model
+    TDF.Operations.ModelSpec
+    TDF.Operations.Server
+    TDF.Operations.Types
+    TDF.Operations.Worker
+    TDF.Server.Reviews
     TDF.UUIDInstances
     TDF.UserActivity
     TDF.Version
@@ -472,7 +532,7 @@ test-suite tdf-hq-test
     , wai
     , warp                 >=3.3
     , wai-cors
-    , http2                >=5.0 && <5.3
+    , http2                >=5.0 && <5.4
     , postgresql-simple
     , random
     , http-client

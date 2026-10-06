@@ -1,0 +1,44 @@
+{
+  "verified_at": "2026-09-30T01:20:55.905Z",
+  "previous": "10.3.1",
+  "patched": "10.7.2",
+  "result": "PASS",
+  "cases": [
+    {
+      "value": "fe80:1::1",
+      "method": "isLinkLocal",
+      "before": false,
+      "after": true
+    },
+    {
+      "value": "febf:ffff::1",
+      "method": "isLinkLocal",
+      "before": false,
+      "after": true
+    },
+    {
+      "value": "64:ff9b:1:7f00:0:100::",
+      "method": "isPrivate",
+      "before": false,
+      "after": true
+    },
+    {
+      "value": "64:ff9b:1::7f00:1",
+      "method": "isPrivate",
+      "before": false,
+      "after": true
+    },
+    {
+      "value": "2001:4860:4860::8888",
+      "publicControl": "pass"
+    },
+    {
+      "value": "2606:4700:4700::1111",
+      "publicControl": "pass"
+    }
+  ],
+  "sources": [
+    "https://github.com/advisories/GHSA-2vr4-cq9g-pvrc",
+    "https://github.com/advisories/GHSA-rpw4-54j3-4h4q"
+  ]
+}

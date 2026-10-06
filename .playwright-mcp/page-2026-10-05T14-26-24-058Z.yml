@@ -1,0 +1,4 @@
+- generic [active] [ref=f6e1]:
+  - link "Saltar al contenido principal" [ref=f6e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - status "Cargando…" [ref=f6e4]

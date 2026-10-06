@@ -1,0 +1,155 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 430,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "da0b02d90b57c4f78ce8f20df0bb9345edf824a1",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6joh2e",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 562,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Point migration provenance at an ancestor of this release**\n\nThe registered introduction commit `b0779951...` is not an ancestor of the reviewed release: it and `d8883a20...` are sibling commits with parent `a81e48ea...`. The guarded release path in `scripts/production-release.mjs` runs `git merge-base --is-ancestor introducedBy releaseSha` and explicitly aborts when it returns false (`git merge-base -h` confirms that this option tests whether the first commit is an ancestor of the second), so attempting to release this commit cannot render or apply the new migration. Record provenance using a commit that is actually in this release's ancestry.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/430#discussion_r4044078790",
+                      "createdAt": "2026-09-18T05:32:41Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwNTozMjo0MVrO8Qu-xg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6joh2i",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
+                "line": 1285,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Show failed account-link attempts inside the dialog**\n\nWhen the second Google request includes `linkAccount` and fails\u2014for example because the current password is wrong\u2014the catch path runs with `signupDialogOpen === false` and calls `setFormError(...)`, not `setGoogleError(...)`. This dialog only renders `googleError`, while the ordinary form error is obscured behind the open modal, so the user receives no visible failure feedback and cannot tell whether to correct the credentials or retry. Route link-attempt failures to the error state displayed here.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/430#discussion_r4044078792",
+                      "createdAt": "2026-09-18T05:32:41Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwNTozMjo0MVrO8Qu-yA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jopiR",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq-ui/src/pages/CompaniesPage.tsx",
+                "line": 141,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Reset contact keys when abandoning a creation attempt**\n\nWhen a create request succeeds on the server but its response is lost, closing this dialog leaves `contactCreation` mounted with the old key even though the closed-state effect clears every field. Reopening the dialog and submitting an identical body for a distinct company therefore replays the permanent `(actor, key)` entry and silently returns the earlier Party instead of creating the new contact. Reset the helper when the dialog is abandoned, while retaining the key only for retries within the same open attempt; `LeadCreateDialog` and the Bookings contact dialog have the same lifecycle.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/430#discussion_r4044126541",
+                      "createdAt": "2026-09-18T05:43:34Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwNTo0MzozNFrO8Qx5TQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jo5pN",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Make retried musician account creation idempotent**\n\nWhen an internal Live Session submission creates an emailed musician and then fails later\u2014for example on another musician or the final intake request\u2014the retained key makes this call return the already-created Party on retry. `createPartyAndUser` then unconditionally calls `Admin.createUser` again, while that endpoint returns 409 whenever the Party already has a credential, so the intended retry can never progress past the first previously completed musician. Treat that existing account as success or make the downstream step idempotent.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/430#discussion_r4044226745",
+                      "createdAt": "2026-09-18T06:04:32Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwNjowNDozMlrO8Q4AuQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jpKnN",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq-ui/src/pages/CompaniesPage.tsx",
+                "line": 129,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Prevent closing contact dialogs while creation is pending**\n\nWhen a user dismisses this dialog via Cancel, Escape, or the backdrop while `createCompanyMutation` is still pending, `open` becomes false and this reset discards the in-flight request's idempotency key even though the HTTP request continues. If the server commits but the response is lost, reopening and retrying sends a new key and creates a duplicate company. Keep the dialog from closing while pending or defer clearing the key until the request settles; `LeadCreateDialog` has the same unguarded close/reset sequence.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/430#discussion_r4044330223",
+                      "createdAt": "2026-09-18T06:25:47Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 18b7994a1. Company and lead creation now block Cancel/Escape/backdrop closure while a synchronous pending ref is set, and reject duplicate submit events. Success still closes normally; failed responses retain the request key. Both rendered-dialog regression tests passed, including lost-response retries; TypeScript passed. Fresh required CI is running.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/430#discussion_r4044699657",
+                      "createdAt": "2026-09-18T07:28:23Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwNzoyODoyM1rO8RU4CQ=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwNjoyNTo0N1rOo6SpzQ=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

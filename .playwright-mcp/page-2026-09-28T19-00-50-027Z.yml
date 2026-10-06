@@ -1,0 +1,508 @@
+- generic [active] [ref=f12e1]:
+  - link "Skip to main content" [ref=f12e1363] [cursor=pointer]:
+    - /url: /synthetics/details/r2d-i82-3jy#single-page-app_layout_page__main-content
+  - generic [ref=f12e4]:
+    - generic [ref=f12e5]:
+      - generic [ref=f12e6]:
+        - generic [ref=f12e7]:
+          - generic [ref=f12e8]: Welcome, Diego!
+          - generic [ref=f12e9]:
+            - button "Get Started" [ref=f12e1145] [cursor=pointer]
+            - generic [ref=f12e13]:
+              - generic [ref=f12e14]:
+                - text: You are
+                - generic [ref=f12e15]: 33%
+                - text: done setting up
+              - generic "33.3%" [ref=f12e1146]
+        - generic [ref=f12e19]:
+          - generic [ref=f12e20]: You have 1 day left in your trial.
+          - link "Upgrade" [ref=f12e1147] [cursor=pointer]:
+            - /url: /billing/plan/subscribe
+      - generic [ref=f12e23]:
+        - button "Search Datadog" [ref=f12e1148] [cursor=pointer]:
+          - text: Search Datadog
+          - generic [ref=f12e1364]:
+            - generic "⌘" [ref=f12e1365]
+            - generic "k" [ref=f12e1366]
+        - button "Toggle Bits Chat" [ref=f12e1151] [cursor=pointer]:
+          - generic [ref=f12e36]: Ask Bits
+      - navigation "Main" [ref=f12e1152]:
+        - group "Header" [ref=f12e1153]:
+          - generic [ref=f12e39]:
+            - link "Home" [ref=f12e1154] [cursor=pointer]:
+              - /url: /help/quick_start
+            - generic:
+              - button "Hide menu" [ref=f12e1155] [cursor=pointer]
+              - button "Minimize menu" [ref=f12e1156] [cursor=pointer]
+        - generic [ref=f12e51]:
+          - list "Datadog products" [ref=f12e1157]:
+            - listitem [ref=f12e54]:
+              - link "Bits AI" [ref=f12e1158] [cursor=pointer]:
+                - /url: /ask
+            - listitem [ref=f12e62]:
+              - link "Dashboards" [ref=f12e1159] [cursor=pointer]:
+                - /url: /dashboard/lists
+            - listitem [ref=f12e70]:
+              - link "Monitoring" [ref=f12e1160] [cursor=pointer]:
+                - /url: /monitors/manage
+            - listitem [ref=f12e78]:
+              - link "Developer Portal" [ref=f12e1161] [cursor=pointer]:
+                - /url: /idp/home
+            - listitem [ref=f12e86]:
+              - link "Incident Response" [ref=f12e1162] [cursor=pointer]:
+                - /url: /incidents
+            - listitem [ref=f12e94]:
+              - link "Automation" [ref=f12e1163] [cursor=pointer]:
+                - /url: /actions
+            - listitem [ref=f12e102]:
+              - link "Infrastructure" [ref=f12e1164] [cursor=pointer]:
+                - /url: /infrastructure
+            - listitem [ref=f12e110]:
+              - link "Cloud Cost" [ref=f12e1165] [cursor=pointer]:
+                - /url: /cost/onboarding
+            - listitem [ref=f12e118]:
+              - link "APM" [ref=f12e1166] [cursor=pointer]:
+                - /url: /apm/home
+            - listitem [ref=f12e126]:
+              - link "Digital Experience" [ref=f12e1167] [cursor=pointer]:
+                - /url: /synthetics/tests
+            - listitem [ref=f12e134]:
+              - link "Software Delivery" [ref=f12e1168] [cursor=pointer]:
+                - /url: /ci
+            - listitem [ref=f12e142]:
+              - link "Security" [ref=f12e1169] [cursor=pointer]:
+                - /url: /security/getting-started
+            - listitem [ref=f12e150]:
+              - link "Data Observability" [ref=f12e1170] [cursor=pointer]:
+                - /url: /data-obs
+            - listitem [ref=f12e158]:
+              - link "AI Observability" [ref=f12e1171] [cursor=pointer]:
+                - /url: /llm
+            - listitem [ref=f12e166]:
+              - link "Errors" [ref=f12e1172] [cursor=pointer]:
+                - /url: /error-tracking
+            - listitem [ref=f12e174]:
+              - link "Metrics" [ref=f12e1173] [cursor=pointer]:
+                - /url: /metric/overview
+            - listitem [ref=f12e182]:
+              - link "Logs" [ref=f12e1174] [cursor=pointer]:
+                - /url: /logs
+          - button [ref=f12e190] [cursor=pointer]
+          - generic [ref=f12e191]:
+            - list "Useful links and tools" [ref=f12e1175]:
+              - listitem [ref=f12e193]:
+                - link "Integrations" [ref=f12e1176] [cursor=pointer]:
+                  - /url: /integrations
+              - listitem [ref=f12e201]:
+                - link "Profile" [ref=f12e1177] [cursor=pointer]:
+                  - /url: /personal-settings
+                  - generic [ref=f12e209]:
+                    - generic [ref=f12e211]:
+                      - generic [ref=f12e212]: cuco.saa@gmail.com
+                      - generic [ref=f12e215]: cuco.saa@gmail.com
+                    - generic [ref=f12e217]:
+                      - text: TDF Records
+                      - generic [ref=f12e218]: TDF Records
+            - generic [ref=f12e220]:
+              - link "Invite" [disabled] [ref=f12e1178] [cursor=pointer]:
+                - /url: /organization-settings/users/invite
+              - button "Support" [disabled] [ref=f12e1179] [cursor=pointer]
+              - link "NEW Help" [ref=f12e1180] [cursor=pointer]:
+                - /url: /help
+                - generic [ref=f12e235]:
+                  - generic [ref=f12e236]: NEW
+                  - generic [ref=f12e242]: Help
+    - generic [ref=f12e1369]:
+      - generic [ref=f12e1370]:
+        - generic [ref=f12e1371]:
+          - link "Test List" [ref=f12e1373] [cursor=pointer]:
+            - /url: /synthetics/tests
+          - generic [ref=f12e1378]: /
+          - generic [ref=f12e1381]:
+            - generic [ref=f12e1382]: Paused
+            - generic [ref=f12e1389]: TDF production API health contract
+        - generic [ref=f12e1391]:
+          - button "Run Test Now" [ref=f12e1393] [cursor=pointer]
+          - button "Resume Scheduling" [ref=f12e1396] [cursor=pointer]
+          - button "More" [ref=f12e1399] [cursor=pointer]
+      - generic [ref=f12e1402]:
+        - generic [ref=f12e1403]:
+          - link "Edit Test" [ref=f12e1405] [cursor=pointer]:
+            - /url: /synthetics/edit/r2d-i82-3jy?from_details=true
+          - generic [ref=f12e1410]: View Results
+        - generic [ref=f12e1416]:
+          - button "Feedback" [ref=f12e1418] [cursor=pointer]
+          - button "Expand" [ref=f12e1424] [cursor=pointer]
+      - generic [ref=f12e1429]:
+        - list [ref=f12e1431]:
+          - listitem [ref=f12e1432]:
+            - generic [ref=f12e1433]:
+              - generic [ref=f12e1437]: HTTP Test
+              - button "Click to copy" [ref=f12e1439] [cursor=pointer]
+          - listitem [ref=f12e1441]:
+            - generic [ref=f12e1443] [cursor=pointer]:
+              - button "Synthetic Monitor"
+          - listitem [ref=f12e1444]:
+            - generic [ref=f12e1446]:
+              - generic [ref=f12e1447]: Created Sep 14, 2026
+              - generic [ref=f12e1448]: by
+              - button "Diego Saa" [ref=f12e1450] [cursor=pointer]:
+                - generic [ref=f12e1455]:
+                  - text: Diego Saa
+                  - generic [ref=f12e1456]: Diego Saa
+          - listitem [ref=f12e1458]:
+            - generic [ref=f12e1463]:
+              - generic [ref=f12e1464]: production
+              - generic [ref=f12e1465]: production
+          - listitem [ref=f12e1468]:
+            - generic [ref=f12e1471]:
+              - generic [ref=f12e1473]:
+                - button [ref=f12e1474]: e2e-tests
+                - button "e2e-tests" [ref=f12e1477]
+              - button "service:tdf-app" [ref=f12e1479]:
+                - generic [ref=f12e1480]: "service:"
+                - text: tdf-app
+              - button "component:api" [ref=f12e1482]:
+                - generic [ref=f12e1483]: "component:"
+                - text: api
+        - generic [ref=f12e1484]:
+          - generic [ref=f12e1485]:
+            - generic [ref=f12e1486]:
+              - text: GET
+              - link "https://tdf-hq.fly.dev/health" [ref=f12e1487] [cursor=pointer]:
+                - /url: https://tdf-hq.fly.dev/health
+            - text: from
+            - button "1 location" [ref=f12e1493]
+            - text: every
+            - generic [ref=f12e1494]: 1 hour
+            - text: .
+          - generic [ref=f12e1495]:
+            - text: On failure,
+            - button "block the CI/CD pipeline" [ref=f12e1499]
+        - banner [ref=f12e1500]:
+          - tablist [ref=f12e1501]:
+            - tab "Activity" [selected] [ref=f12e1503] [cursor=pointer]
+            - tab "Test Runs" [ref=f12e1508] [cursor=pointer]
+            - tab "Performance" [ref=f12e1513] [cursor=pointer]
+            - tab "Properties" [ref=f12e1518] [cursor=pointer]
+          - generic [ref=f12e1523]:
+            - combobox "Locations" [ref=f12e1526] [cursor=pointer]:
+              - generic [ref=f12e1527]: All
+              - group [ref=f12e1528]:
+                - generic [ref=f12e1529]: Locations
+                - generic [ref=f12e1533]:
+                  - textbox [ref=f12e1534]:
+                    - /placeholder: All
+                  - textbox [ref=f12e1536]:
+                    - /placeholder: All
+            - generic [ref=f12e1539]:
+              - generic [ref=f12e1540]:
+                - generic: 1d
+                - textbox "Time range picker" [ref=f12e1545]:
+                  - /placeholder: " "
+                  - text: Past 1 Day
+                - button "Pin time" [ref=f12e1546] [cursor=pointer]
+                - generic [ref=f12e1549]: UTC-05:00
+              - generic [ref=f12e1550]:
+                - group [ref=f12e1551]:
+                  - button "Step back" [ref=f12e1552] [cursor=pointer]
+                  - button "Pause" [ref=f12e1554] [cursor=pointer]
+                  - button "Step forward" [ref=f12e1556] [cursor=pointer]
+                - button "Zoom out time frame" [ref=f12e1558] [cursor=pointer]
+        - generic [ref=f12e1562]:
+          - generic [ref=f12e1566]:
+            - table [ref=f12e1573]:
+              - rowgroup [ref=f12e1574]:
+                - row [ref=f12e1575]:
+                  - cell [ref=f12e1576]:
+                    - button "Row Action" [ref=f12e1577]
+                  - cell "Global Uptime" [ref=f12e1578] [cursor=pointer]
+            - generic:
+              - generic [ref=f12e1583]:
+                - generic [ref=f12e1584]: Sep 13, 5:27 pm
+                - generic [ref=f12e1586]: Sep 14, 5:27 pm
+              - img [ref=f12e1594]:
+                - generic [ref=f12e1597]:
+                  - generic [ref=f12e1599]: 20:00
+                  - generic [ref=f12e1600]: 23:00
+                  - generic [ref=f12e1601]: 02:00
+                  - generic [ref=f12e1602]: 05:00
+                  - generic [ref=f12e1603]: 08:00
+                  - generic [ref=f12e1604]: 11:00
+                  - generic [ref=f12e1605]: 14:00
+                  - generic [ref=f12e1606]: Mon 14
+              - generic: Use ctrl (or ⌘) + scroll to zoom
+          - button "Show All locations" [ref=f12e1615] [cursor=pointer]
+        - generic [ref=f12e1618]:
+          - generic [ref=f12e1619]:
+            - generic [ref=f12e1620]:
+              - generic [ref=f12e1621]: Timeline
+              - button "Filter" [disabled] [ref=f12e1623]
+            - list [ref=f12e1627]:
+              - listitem [ref=f12e1628]:
+                - generic [ref=f12e1629]:
+                  - generic [ref=f12e1630]: Summary
+                  - generic [ref=f12e1631]:
+                    - generic [ref=f12e1632]: Live
+                    - generic [ref=f12e1634]: 29 runs
+                - img "Event marker" [ref=f12e1636]
+              - listitem [ref=f12e1639]:
+                - generic [ref=f12e1641]: No events found for the selected timeframe
+          - generic [ref=f12e1647]:
+            - generic [ref=f12e1649]:
+              - generic [ref=f12e1650]: Paused
+              - generic [ref=f12e1656]: Your test is waiting for data with no alerts in the past 1 day
+            - generic [ref=f12e1657]:
+              - text: Latest Test Runs
+              - generic [ref=f12e1658]: "29"
+            - generic [ref=f12e1662]:
+              - table [ref=f12e1669]:
+                - rowgroup [ref=f12e1670]:
+                  - row [ref=f12e1671]:
+                    - columnheader "Status" [ref=f12e1672] [cursor=pointer]:
+                      - button "Status" [ref=f12e1673]
+                      - status [ref=f12e1674]
+                    - columnheader "Date" [ref=f12e1679] [cursor=pointer]:
+                      - button "Date" [ref=f12e1680]
+                      - status [ref=f12e1681]
+                      - separator [ref=f12e1686]
+                    - columnheader "Run type" [ref=f12e1687] [cursor=pointer]:
+                      - button "Run type" [ref=f12e1688]
+                      - status [ref=f12e1689]
+                      - separator [ref=f12e1694]
+                    - columnheader "Duration" [ref=f12e1695] [cursor=pointer]:
+                      - button "Duration" [ref=f12e1696]
+                      - status [ref=f12e1697]
+                      - separator [ref=f12e1702]
+                    - columnheader "Location" [ref=f12e1703] [cursor=pointer]:
+                      - button "Location" [ref=f12e1704]
+                      - status [ref=f12e1705]
+                      - separator [ref=f12e1710]
+                    - columnheader "Test Version" [ref=f12e1711] [cursor=pointer]:
+                      - button "Test Version" [ref=f12e1712]
+                      - status [ref=f12e1713]
+                      - separator [ref=f12e1718]
+                - rowgroup [ref=f12e1719]:
+                  - row [ref=f12e1720]:
+                    - cell [ref=f12e1721]:
+                      - button "Row Action" [ref=f12e1722]
+                    - cell "Failed" [ref=f12e1723] [cursor=pointer]
+                    - cell "Just nowSep 28, 2026, 1:59 pm" [ref=f12e1727] [cursor=pointer]:
+                      - generic [ref=f12e1730]:
+                        - generic [ref=f12e1731]: Just nowSep 28, 2026, 1:59 pm
+                        - generic [ref=f12e1732]: Just nowSep 28, 2026, 1:59 pm
+                    - cell [ref=f12e1734] [cursor=pointer]:
+                      - generic [ref=f12e1737]:
+                        - generic [ref=f12e1741]: CI/CD
+                        - generic [ref=f12e1742]: CI/CD
+                    - cell "30 s" [ref=f12e1746] [cursor=pointer]
+                    - cell [ref=f12e1748] [cursor=pointer]:
+                      - generic [ref=f12e1751]:
+                        - generic [ref=f12e1754]: São Paulo (AWS)
+                        - generic [ref=f12e1755]: São Paulo (AWS)
+                    - cell [ref=f12e1758]:
+                      - button "1" [ref=f12e1759] [cursor=pointer]
+                  - row [ref=f12e1760]:
+                    - cell [ref=f12e1761]:
+                      - button "Row Action" [ref=f12e1762]
+                    - cell "Failed" [ref=f12e1763] [cursor=pointer]
+                    - cell "5 mins agoSep 28, 2026, 1:55 pm" [ref=f12e1767] [cursor=pointer]:
+                      - generic [ref=f12e1770]:
+                        - generic [ref=f12e1771]: 5 mins agoSep 28, 2026, 1:55 pm
+                        - generic [ref=f12e1772]: 5 mins agoSep 28, 2026, 1:55 pm
+                    - cell [ref=f12e1774] [cursor=pointer]:
+                      - generic [ref=f12e1777]:
+                        - generic [ref=f12e1781]: CI/CD
+                        - generic [ref=f12e1782]: CI/CD
+                    - cell "30 s" [ref=f12e1786] [cursor=pointer]
+                    - cell [ref=f12e1788] [cursor=pointer]:
+                      - generic [ref=f12e1791]:
+                        - generic [ref=f12e1794]: São Paulo (AWS)
+                        - generic [ref=f12e1795]: São Paulo (AWS)
+                    - cell [ref=f12e1798]:
+                      - button "1" [ref=f12e1799] [cursor=pointer]
+                  - row [ref=f12e1800]:
+                    - cell [ref=f12e1801]:
+                      - button "Row Action" [ref=f12e1802]
+                    - cell "Failed" [ref=f12e1803] [cursor=pointer]
+                    - cell "18 mins agoSep 28, 2026, 1:41 pm" [ref=f12e1807] [cursor=pointer]:
+                      - generic [ref=f12e1810]:
+                        - generic [ref=f12e1811]: 18 mins agoSep 28, 2026, 1:41 pm
+                        - generic [ref=f12e1812]: 18 mins agoSep 28, 2026, 1:41 pm
+                    - cell [ref=f12e1814] [cursor=pointer]:
+                      - generic [ref=f12e1817]:
+                        - generic [ref=f12e1821]: CI/CD
+                        - generic [ref=f12e1822]: CI/CD
+                    - cell "30 s" [ref=f12e1826] [cursor=pointer]
+                    - cell [ref=f12e1828] [cursor=pointer]:
+                      - generic [ref=f12e1831]:
+                        - generic [ref=f12e1834]: São Paulo (AWS)
+                        - generic [ref=f12e1835]: São Paulo (AWS)
+                    - cell [ref=f12e1838]:
+                      - button "1" [ref=f12e1839] [cursor=pointer]
+                  - row [ref=f12e1840]:
+                    - cell [ref=f12e1841]:
+                      - button "Row Action" [ref=f12e1842]
+                    - cell "Failed" [ref=f12e1843] [cursor=pointer]
+                    - cell "26 mins agoSep 28, 2026, 1:34 pm" [ref=f12e1847] [cursor=pointer]:
+                      - generic [ref=f12e1850]:
+                        - generic [ref=f12e1851]: 26 mins agoSep 28, 2026, 1:34 pm
+                        - generic [ref=f12e1852]: 26 mins agoSep 28, 2026, 1:34 pm
+                    - cell [ref=f12e1854] [cursor=pointer]:
+                      - generic [ref=f12e1857]:
+                        - generic [ref=f12e1861]: CI/CD
+                        - generic [ref=f12e1862]: CI/CD
+                    - cell "30 s" [ref=f12e1866] [cursor=pointer]
+                    - cell [ref=f12e1868] [cursor=pointer]:
+                      - generic [ref=f12e1871]:
+                        - generic [ref=f12e1874]: São Paulo (AWS)
+                        - generic [ref=f12e1875]: São Paulo (AWS)
+                    - cell [ref=f12e1878]:
+                      - button "1" [ref=f12e1879] [cursor=pointer]
+                  - row [ref=f12e1880]:
+                    - cell [ref=f12e1881]:
+                      - button "Row Action" [ref=f12e1882]
+                    - cell "Failed" [ref=f12e1883] [cursor=pointer]
+                    - cell "28 mins agoSep 28, 2026, 1:32 pm" [ref=f12e1887] [cursor=pointer]:
+                      - generic [ref=f12e1890]:
+                        - generic [ref=f12e1891]: 28 mins agoSep 28, 2026, 1:32 pm
+                        - generic [ref=f12e1892]: 28 mins agoSep 28, 2026, 1:32 pm
+                    - cell [ref=f12e1894] [cursor=pointer]:
+                      - generic [ref=f12e1897]:
+                        - generic [ref=f12e1901]: CI/CD
+                        - generic [ref=f12e1902]: CI/CD
+                    - cell "30 s" [ref=f12e1906] [cursor=pointer]
+                    - cell [ref=f12e1908] [cursor=pointer]:
+                      - generic [ref=f12e1911]:
+                        - generic [ref=f12e1914]: São Paulo (AWS)
+                        - generic [ref=f12e1915]: São Paulo (AWS)
+                    - cell [ref=f12e1918]:
+                      - button "1" [ref=f12e1919] [cursor=pointer]
+                  - row [ref=f12e1920]:
+                    - cell [ref=f12e1921]:
+                      - button "Row Action" [ref=f12e1922]
+                    - cell "Failed" [ref=f12e1923] [cursor=pointer]
+                    - cell "2 hours agoSep 28, 2026, 12:13 pm" [ref=f12e1927] [cursor=pointer]:
+                      - generic [ref=f12e1930]:
+                        - generic [ref=f12e1931]: 2 hours agoSep 28, 2026, 12:13 pm
+                        - generic [ref=f12e1935]: 2 hours agoSep 28, 2026, 12:13 pm
+                    - cell [ref=f12e1937] [cursor=pointer]:
+                      - generic [ref=f12e1940]:
+                        - generic [ref=f12e1944]: CI/CD
+                        - generic [ref=f12e1945]: CI/CD
+                    - cell "30 s" [ref=f12e1949] [cursor=pointer]
+                    - cell [ref=f12e1951] [cursor=pointer]:
+                      - generic [ref=f12e1954]:
+                        - generic [ref=f12e1957]: São Paulo (AWS)
+                        - generic [ref=f12e1958]: São Paulo (AWS)
+                    - cell [ref=f12e1961]:
+                      - button "1" [ref=f12e1962] [cursor=pointer]
+                  - row [ref=f12e1963]:
+                    - cell [ref=f12e1964]:
+                      - button "Row Action" [ref=f12e1965]
+                    - cell "Failed" [ref=f12e1966] [cursor=pointer]
+                    - cell "2 hours agoSep 28, 2026, 11:58 am" [ref=f12e1970] [cursor=pointer]:
+                      - generic [ref=f12e1973]:
+                        - generic [ref=f12e1974]: 2 hours agoSep 28, 2026, 11:58 am
+                        - generic [ref=f12e1978]: 2 hours agoSep 28, 2026, 11:58 am
+                    - cell [ref=f12e1980] [cursor=pointer]:
+                      - generic [ref=f12e1983]:
+                        - generic [ref=f12e1987]: CI/CD
+                        - generic [ref=f12e1988]: CI/CD
+                    - cell "30 s" [ref=f12e1992] [cursor=pointer]
+                    - cell [ref=f12e1994] [cursor=pointer]:
+                      - generic [ref=f12e1997]:
+                        - generic [ref=f12e2000]: São Paulo (AWS)
+                        - generic [ref=f12e2001]: São Paulo (AWS)
+                    - cell [ref=f12e2004]:
+                      - button "1" [ref=f12e2005] [cursor=pointer]
+                  - row [ref=f12e2006]:
+                    - cell [ref=f12e2007]:
+                      - button "Row Action" [ref=f12e2008]
+                    - cell "Failed" [ref=f12e2009] [cursor=pointer]
+                    - cell "2 hours agoSep 28, 2026, 11:37 am" [ref=f12e2013] [cursor=pointer]:
+                      - generic [ref=f12e2016]:
+                        - generic [ref=f12e2017]: 2 hours agoSep 28, 2026, 11:37 am
+                        - generic [ref=f12e2021]: 2 hours agoSep 28, 2026, 11:37 am
+                    - cell [ref=f12e2023] [cursor=pointer]:
+                      - generic [ref=f12e2026]:
+                        - generic [ref=f12e2030]: CI/CD
+                        - generic [ref=f12e2031]: CI/CD
+                    - cell "30 s" [ref=f12e2035] [cursor=pointer]
+                    - cell [ref=f12e2037] [cursor=pointer]:
+                      - generic [ref=f12e2040]:
+                        - generic [ref=f12e2043]: São Paulo (AWS)
+                        - generic [ref=f12e2044]: São Paulo (AWS)
+                    - cell [ref=f12e2047]:
+                      - button "1" [ref=f12e2048] [cursor=pointer]
+                  - row [ref=f12e2049]:
+                    - cell [ref=f12e2050]:
+                      - button "Row Action" [ref=f12e2051]
+                    - cell "Failed" [ref=f12e2052] [cursor=pointer]
+                    - cell "3 hours agoSep 28, 2026, 11:26 am" [ref=f12e2056] [cursor=pointer]:
+                      - generic [ref=f12e2059]:
+                        - generic [ref=f12e2060]: 3 hours agoSep 28, 2026, 11:26 am
+                        - generic [ref=f12e2064]: 3 hours agoSep 28, 2026, 11:26 am
+                    - cell [ref=f12e2066] [cursor=pointer]:
+                      - generic [ref=f12e2069]:
+                        - generic [ref=f12e2073]: CI/CD
+                        - generic [ref=f12e2074]: CI/CD
+                    - cell "30 s" [ref=f12e2078] [cursor=pointer]
+                    - cell [ref=f12e2080] [cursor=pointer]:
+                      - generic [ref=f12e2083]:
+                        - generic [ref=f12e2086]: São Paulo (AWS)
+                        - generic [ref=f12e2087]: São Paulo (AWS)
+                    - cell [ref=f12e2090]:
+                      - button "1" [ref=f12e2091] [cursor=pointer]
+                  - row [ref=f12e2092]:
+                    - cell [ref=f12e2093]:
+                      - button "Row Action" [ref=f12e2094]
+                    - cell "Failed" [ref=f12e2095] [cursor=pointer]
+                    - cell "3 hours agoSep 28, 2026, 11:19 am" [ref=f12e2099] [cursor=pointer]:
+                      - generic [ref=f12e2102]:
+                        - generic [ref=f12e2103]: 3 hours agoSep 28, 2026, 11:19 am
+                        - generic [ref=f12e2107]: 3 hours agoSep 28, 2026, 11:19 am
+                    - cell [ref=f12e2109] [cursor=pointer]:
+                      - generic [ref=f12e2112]:
+                        - generic [ref=f12e2116]: CI/CD
+                        - generic [ref=f12e2117]: CI/CD
+                    - cell "30 s" [ref=f12e2121] [cursor=pointer]
+                    - cell [ref=f12e2123] [cursor=pointer]:
+                      - generic [ref=f12e2126]:
+                        - generic [ref=f12e2129]: São Paulo (AWS)
+                        - generic [ref=f12e2130]: São Paulo (AWS)
+                    - cell [ref=f12e2133]:
+                      - button "1" [ref=f12e2134] [cursor=pointer]
+              - separator [ref=f12e2135]
+              - button "View All Test Results" [ref=f12e2136] [cursor=pointer]
+    - contentinfo "Datadog Copyright and Legal Information" [ref=f12e1358]:
+      - list [ref=f12e1105]:
+        - listitem [ref=f12e1106]: Copyright Datadog, Inc. 2026
+        - listitem [ref=f12e1107]:
+          - generic [ref=f12e1108]: "Version:"
+          - text: "35.140594615"
+        - listitem [ref=f12e1109]:
+          - link "Master Subscription Agreement" [ref=f12e1359] [cursor=pointer]:
+            - /url: https://www.datadoghq.com/legal/msa/
+        - listitem [ref=f12e1111]:
+          - link "Privacy Policy" [ref=f12e1360] [cursor=pointer]:
+            - /url: https://www.datadoghq.com/legal/privacy/
+        - listitem [ref=f12e1113]:
+          - link "Cookie Policy" [ref=f12e1361] [cursor=pointer]:
+            - /url: https://www.datadoghq.com/legal/cookies/
+        - listitem [ref=f12e1115]:
+          - generic [ref=f12e1116]:
+            - 'link "Datadog Status : All Systems Operational" [ref=f12e1362] [cursor=pointer]':
+              - /url: https://status.datadoghq.com
+              - text: Datadog Status →
+              - generic [ref=f12e1118]: ": All Systems Operational"
+            - generic [ref=f12e1121]: All Systems Operational
+  - generic:
+    - generic: Not sorted. Activate to sort ascending.
+    - generic: Not sorted. Activate to sort ascending.
+    - generic: Not sorted. Activate to sort ascending.
+    - generic: Not sorted. Activate to sort ascending.
+    - generic: Not sorted. Activate to sort ascending.
+    - generic: Not sorted. Activate to sort descending.
+  - iframe [ref=f12e1144]:
+    

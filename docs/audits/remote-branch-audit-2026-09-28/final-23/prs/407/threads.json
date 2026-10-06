@@ -1,0 +1,31 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 407,
+          "reviewDecision": null,
+          "mergeStateStatus": "UNSTABLE",
+          "mergeable": "MERGEABLE",
+          "headRefOid": "78bdd4df465d1c7d8a752f9df0ed714ecad2330d",
+          "baseRefName": "test/event-raci-accessibility-evidence",
+          "isDraft": true,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          }
+        }
+      }
+    }
+  }
+]

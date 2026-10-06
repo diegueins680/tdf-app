@@ -1,0 +1,14 @@
+{
+  "target": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+  "eventHead": "86d4b9bb4dad81771a2e3de4739814c62c206d30",
+  "mobileHead": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+  "conflictResolution": {
+    "ArtistPublicPage.tsx": "Retain publication selection/panel imports from main and useRef needed by event follow-session/race guards.",
+    "ArtistPublicPage.component.test.tsx": "Retain additive merch mock, remove the old null LazyPaginatedList mock so real paginated publication selection remains covered, preserve all assertions from both sides.",
+    "catalog-list-decisions.json": "Three-way merge by stable candidate id: no incompatible concurrent decisions; honor main retirements and both reviewed additions. 1170 candidates, zero unreviewed/stale decisions.",
+    "formal/system/inventory.json": "Regenerated from merged sources and checked.",
+    "tdf-mobile": "Select tested ede1f2a, which contains both cb742625 and main-pinned3ee82fe; both web/mobile API generation produce no further differences."
+  },
+  "localDocker": "desktop-linux socket unresponsive; audit-owned docker run90640 stopped exit143; Docker daemon/existing containers untouched. Rehearsal not run. Hosted exact-head schema check remains required.",
+  "liveBrowser": "Transport closed; Google-login/upload gate remains unperformed."
+}

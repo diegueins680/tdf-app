@@ -1,0 +1,410 @@
+- generic [ref=f129e1]:
+  - generic:
+    - generic:
+      - generic:
+        - generic [ref=f129e18]:
+          - generic [ref=f129e21]:
+            - link [ref=f129e630] [cursor=pointer]:
+              - /url: /
+            - generic [ref=f129e34]:
+              - link [ref=f129e632] [cursor=pointer]:
+                - /url: /
+              - link [ref=f129e634] [cursor=pointer]:
+                - /url: /reels/
+              - link [ref=f129e636] [cursor=pointer]:
+                - /url: /direct/inbox/
+                - generic [ref=f129e62]: "8"
+              - link [ref=f129e639] [cursor=pointer]:
+                - /url: /explore/
+              - link [ref=f129e641] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f129e643] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f129e645] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f129e647] [cursor=pointer]:
+                - /url: /tdf.records.label/
+                - link [ref=f129e648]
+            - generic [ref=f129e127]:
+              - link [ref=f129e650] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f129e652] [cursor=pointer]:
+                - /url: "#"
+          - generic [ref=f129e146]:
+            - main [ref=f129e147]:
+              - generic [ref=f129e149]:
+                - generic [ref=f129e150]:
+                  - generic [ref=f129e151]:
+                    - button [ref=f129e654] [cursor=pointer]:
+                      - link [ref=f129e655]
+                    - generic [ref=f129e160]:
+                      - generic [ref=f129e161]:
+                        - generic [ref=f129e162]:
+                          - link [ref=f129e657] [cursor=pointer]:
+                            - /url: "#"
+                            - heading [level=2] [ref=f129e658]:
+                              - generic [ref=f129e166]: raulmolina
+                          - button [ref=f129e659] [cursor=pointer]
+                        - generic [ref=f129e173]: Raúl Molina
+                        - generic [ref=f129e175]:
+                          - generic [ref=f129e177]:
+                            - generic [ref=f129e178]: "447"
+                            - text: posts
+                          - link [ref=f129e661] [cursor=pointer]:
+                            - /url: "#"
+                            - generic [ref=f129e181]:
+                              - generic [ref=f129e662]: 5,876
+                              - text: followers
+                          - link [ref=f129e663] [cursor=pointer]:
+                            - /url: "#"
+                            - generic [ref=f129e185]:
+                              - generic [ref=f129e186]: 1,757
+                              - text: following
+                      - generic [ref=f129e187]:
+                        - generic [ref=f129e188]:
+                          - generic [ref=f129e189]: Artist
+                          - button [ref=f129e664] [cursor=pointer]:
+                            - generic [ref=f129e193]: Músico 📍Ecuador
+                          - generic [ref=f129e194]:
+                            - button [ref=f129e665] [cursor=pointer]:
+                              - generic [ref=f129e196]: music.apple.com/ec/album/guayaquil-ep/6786860463 and 3 more
+                            - link [ref=f129e667] [cursor=pointer]:
+                              - /url: https://www.threads.com/@raulmolina?xmt=AQG0osUBulUcD7_5rvMLAu2KMSzDSQhK-TDlqbOeiYp-Ayk
+                              - generic [ref=f129e207]: raulmolina
+                        - link [ref=f129e669] [cursor=pointer]:
+                          - /url: /raulmolina/followers/mutualOnly
+                          - generic [ref=f129e211]:
+                            - generic [ref=f129e213]:
+                              - button [ref=f129e214]:
+                                - link [ref=f129e215]
+                              - button [ref=f129e216]:
+                                - link [ref=f129e217]
+                              - button [ref=f129e218]:
+                                - link [ref=f129e219]
+                            - generic [ref=f129e220]: Followed by victor.capuli, jekaiturralde + 95 more
+                  - generic [ref=f129e225]:
+                    - button [ref=f129e670] [cursor=pointer]:
+                      - generic [ref=f129e228]: Following
+                    - button [ref=f129e672] [cursor=pointer]: Message
+                    - button [ref=f129e673] [cursor=pointer]
+                  - menu [ref=f129e243]:
+                    - generic [ref=f129e245]:
+                      - list [ref=f129e247]:
+                        - listitem [ref=f129e248]
+                        - listitem [ref=f129e249]
+                        - listitem [ref=f129e250]:
+                          - link [ref=f129e675] [cursor=pointer]:
+                            - /url: /stories/highlights/17935502894520526/
+                            - button [ref=f129e676]:
+                              - button [ref=f129e677]
+                              - generic [ref=f129e259]: Piano
+                        - listitem [ref=f129e262]:
+                          - link [ref=f129e679] [cursor=pointer]:
+                            - /url: /stories/highlights/18063587590995426/
+                            - button [ref=f129e680]:
+                              - button [ref=f129e681]
+                              - generic [ref=f129e271]: Shows 2
+                        - listitem [ref=f129e274]:
+                          - link [ref=f129e683] [cursor=pointer]:
+                            - /url: /stories/highlights/18004122722566381/
+                            - button [ref=f129e684]:
+                              - button [ref=f129e685]
+                              - generic [ref=f129e283]: Sin querer
+                        - listitem [ref=f129e286]:
+                          - link [ref=f129e687] [cursor=pointer]:
+                            - /url: /stories/highlights/17945638510025318/
+                            - button [ref=f129e688]:
+                              - button [ref=f129e689]
+                              - generic [ref=f129e295]: Shows
+                        - listitem [ref=f129e298]:
+                          - link [ref=f129e691] [cursor=pointer]:
+                            - /url: /stories/highlights/17943969143722796/
+                            - button [ref=f129e692]:
+                              - button [ref=f129e693]
+                              - generic [ref=f129e307]: E.L.I.
+                        - listitem [ref=f129e310]:
+                          - link [ref=f129e695] [cursor=pointer]:
+                            - /url: /stories/highlights/17847354546239103/
+                            - button [ref=f129e696]:
+                              - button [ref=f129e697]
+                              - generic [ref=f129e319]: IMCCW
+                        - listitem [ref=f129e322]:
+                          - link [ref=f129e699] [cursor=pointer]:
+                            - /url: /stories/highlights/17881127410500539/
+                            - button [ref=f129e700]:
+                              - button [ref=f129e701]
+                              - generic [ref=f129e331]: Tags
+                        - listitem [ref=f129e334]:
+                          - link [ref=f129e703] [cursor=pointer]:
+                            - /url: /stories/highlights/17894714752201705/
+                            - button [ref=f129e704]:
+                              - button [ref=f129e705]
+                              - generic [ref=f129e343]: Estudio
+                        - listitem [ref=f129e346]:
+                          - link [ref=f129e707] [cursor=pointer]:
+                            - /url: /stories/highlights/18209239567221835/
+                            - button [ref=f129e708]:
+                              - button [ref=f129e709]
+                              - generic [ref=f129e355]: Recomendaciones
+                        - listitem [ref=f129e358]:
+                          - link [ref=f129e711] [cursor=pointer]:
+                            - /url: /stories/highlights/17976863086246574/
+                            - button [ref=f129e712]:
+                              - button [ref=f129e713]
+                              - generic [ref=f129e367]: Jama
+                        - listitem [ref=f129e370]:
+                          - link [ref=f129e715] [cursor=pointer]:
+                            - /url: /stories/highlights/17967045067228750/
+                            - button [ref=f129e716]:
+                              - button [ref=f129e717]
+                              - generic [ref=f129e379]: Textos
+                        - listitem [ref=f129e382]:
+                          - link [ref=f129e719] [cursor=pointer]:
+                            - /url: /stories/highlights/18043989619456931/
+                            - button [ref=f129e720]:
+                              - button [ref=f129e721]
+                              - generic [ref=f129e391]: Highlights
+                        - listitem [ref=f129e394]:
+                          - link [ref=f129e723] [cursor=pointer]:
+                            - /url: /stories/highlights/17986152466075222/
+                            - button [ref=f129e724]:
+                              - button [ref=f129e725]
+                              - generic [ref=f129e403]: Viajes
+                        - listitem [ref=f129e406]:
+                          - link [ref=f129e727] [cursor=pointer]:
+                            - /url: /stories/highlights/17946023332044999/
+                            - button [ref=f129e728]:
+                              - button [ref=f129e729]
+                              - generic [ref=f129e415]: Beats
+                      - button [ref=f129e731] [cursor=pointer]
+                - tablist [ref=f129e421]:
+                  - link [ref=f129e732] [cursor=pointer]:
+                    - /url: /raulmolina/
+                  - link [ref=f129e734] [cursor=pointer]:
+                    - /url: /raulmolina/reels/
+                  - link [ref=f129e736] [cursor=pointer]:
+                    - /url: /raulmolina/reposts/
+                  - link [ref=f129e738] [cursor=pointer]:
+                    - /url: /raulmolina/tagged/
+                - generic [ref=f129e455]:
+                  - generic [ref=f129e456]:
+                    - link [ref=f129e740] [cursor=pointer]:
+                      - /url: /ramiroolaguitarist/p/Dda_pWvCJWC/
+                    - link [ref=f129e742] [cursor=pointer]:
+                      - /url: /ramiroolaguitarist/p/Dc_ImQKCECC/
+                    - link [ref=f129e744] [cursor=pointer]:
+                      - /url: /raulmolina/reel/Dc9ztDQMB-u/
+                  - generic [ref=f129e475]:
+                    - link [ref=f129e746] [cursor=pointer]:
+                      - /url: /raulmolina/reel/Dcok6IPM5yp/
+                    - link [ref=f129e748] [cursor=pointer]:
+                      - /url: /raulmolina/reel/DckFoNhsmpf/
+                    - link [ref=f129e750] [cursor=pointer]:
+                      - /url: /raulmolina/reel/DcUO8g5sjYz/
+                  - generic [ref=f129e494]:
+                    - link [ref=f129e752] [cursor=pointer]:
+                      - /url: /raulmolina/reel/DcHywZBsJFi/
+                    - link [ref=f129e754] [cursor=pointer]:
+                      - /url: /raulmolina/reel/Dbo15-asxXk/
+                    - link [ref=f129e756] [cursor=pointer]:
+                      - /url: /raulmolina/reel/DbZXR_0MJTU/
+                  - generic [ref=f129e513]:
+                    - link [ref=f129e758] [cursor=pointer]:
+                      - /url: /juanjocritico/p/DbW0xTdjiW_/
+                    - link [ref=f129e760] [cursor=pointer]:
+                      - /url: /raulmolina/p/DbRjmAWlSSQ/
+                    - link [ref=f129e762] [cursor=pointer]:
+                      - /url: /raulmolina/p/DbHb5gXFZrF/
+            - contentinfo [ref=f129e532]:
+              - generic [ref=f129e533]:
+                - generic [ref=f129e535]:
+                  - link [ref=f129e764] [cursor=pointer]:
+                    - /url: https://about.meta.com/
+                    - generic [ref=f129e538]: Meta
+                  - link [ref=f129e765] [cursor=pointer]:
+                    - /url: https://about.instagram.com/
+                    - generic [ref=f129e541]: About
+                  - link [ref=f129e766] [cursor=pointer]:
+                    - /url: https://about.instagram.com/blog/
+                    - generic [ref=f129e544]: Blog
+                  - link [ref=f129e767] [cursor=pointer]:
+                    - /url: https://about.instagram.com/about-us/careers
+                    - generic [ref=f129e547]: Jobs
+                  - link [ref=f129e768] [cursor=pointer]:
+                    - /url: https://help.instagram.com/
+                    - generic [ref=f129e550]: Help
+                  - link [ref=f129e769] [cursor=pointer]:
+                    - /url: https://developers.facebook.com/docs/instagram
+                    - generic [ref=f129e553]: API
+                  - link [ref=f129e770] [cursor=pointer]:
+                    - /url: /legal/privacy/
+                    - generic [ref=f129e556]: Privacy
+                  - link [ref=f129e771] [cursor=pointer]:
+                    - /url: /legal/terms/
+                    - generic [ref=f129e559]: Terms
+                  - link [ref=f129e772] [cursor=pointer]:
+                    - /url: /explore/locations/
+                    - generic [ref=f129e562]: Locations
+                  - link [ref=f129e773] [cursor=pointer]:
+                    - /url: /popular/
+                    - generic [ref=f129e565]: Popular
+                  - link [ref=f129e774] [cursor=pointer]:
+                    - /url: /web/lite/
+                    - generic [ref=f129e568]: Instagram Lite
+                  - link [ref=f129e775] [cursor=pointer]:
+                    - /url: https://www.meta.ai/?utm_source=foa_web_footer
+                    - generic [ref=f129e571]: Meta AI
+                  - link [ref=f129e776] [cursor=pointer]:
+                    - /url: https://muse.ai/
+                    - generic [ref=f129e574]: Muse
+                  - link [ref=f129e777] [cursor=pointer]:
+                    - /url: https://www.threads.com/
+                    - generic [ref=f129e577]: Threads
+                  - link [ref=f129e778] [cursor=pointer]:
+                    - /url: https://www.facebook.com/help/instagram/261704639352628
+                    - generic [ref=f129e580]: Contact Uploading & Non-Users
+                  - link [ref=f129e779] [cursor=pointer]:
+                    - /url: /accounts/meta_verified/?entrypoint=web_footer
+                    - generic [ref=f129e583]: Meta Verified
+                - generic [ref=f129e584]:
+                  - generic [ref=f129e585] [cursor=pointer]:
+                    - generic [ref=f129e586]: English
+                    - combobox [ref=f129e781]
+                  - generic [ref=f129e593]: © 2026 Instagram from Meta
+        - button [ref=f129e596] [cursor=pointer]:
+          - generic "Messages - 8 new notifications" [ref=f129e597]:
+            - generic [ref=f129e598]:
+              - generic [ref=f129e600]:
+                - img "Messages" [ref=f129e601]
+                - generic "Direct messaging - 8 new notifications link" [ref=f129e604]: "8"
+              - generic [ref=f129e607]: Messages
+            - generic [ref=f129e608]:
+              - button [ref=f129e609]:
+                - img "8 unread chats" [ref=f129e611]
+              - button "User avatar ..." [ref=f129e616]:
+                - img "User avatar" [ref=f129e619]
+              - button "User avatar David Márquez" [ref=f129e621]:
+                - img "User avatar" [ref=f129e624]
+              - button "User avatar Limberg Steven Garcia Alava" [ref=f129e626]:
+                - img "User avatar" [ref=f129e629]
+  - generic [ref=f129e784]:
+    - button [ref=f129e787] [cursor=pointer]:
+      - img "Close" [ref=f129e789]
+    - generic [ref=f129e793]:
+      - generic:
+        - dialog:
+          - generic:
+            - button [ref=f129e795] [cursor=pointer]:
+              - img "Next" [ref=f129e798]
+            - generic:
+              - generic:
+                - article:
+                  - generic:
+                    - button [ref=f129e803]:
+                      - generic [ref=f129e805] [cursor=pointer]:
+                        - button [ref=f129e806]:
+                          - 'img "Photo by Miro Ola in Teatro Variedades Ernesto Albán with @raulmolina, @tobias_meinhart, and @miguelgallardokeys. May be an image of poster and text that says ''MQuito Quito Quito QUItO MCЛA3HA 4EKOPOEЛИH NEW.YOR NEW YOK O nO OC $15 VARIEDADES EN 19h00 ENTRADAS ALA 19HOLAVENTAEN TCReteatosuce.om tickets.teatrosucre.com VENTA Ramiro Olaciregui- Miguel Gallardo Raúl Molina MÚSICOS INVITADOS: Tobias Meinhart (Alemania) Matt Penman (Estados Unidos) Diners Cubs expreso GOETHE INSTITUT INCTITIR Fundacivn SucDe Varied ariedades''." [ref=f129e808]'
+                        - button [ref=f129e811]:
+                          - img "Tags" [ref=f129e813]
+                        - generic:
+                          - link "raulmolina":
+                            - /url: /raulmolina/
+                        - generic:
+                          - link "tobias_meinhart":
+                            - /url: /tobias_meinhart/
+                        - generic:
+                          - link "miguelgallardokeys":
+                            - /url: /miguelgallardokeys/
+                    - generic [ref=f129e815]:
+                      - generic [ref=f129e817]:
+                        - banner [ref=f129e818]:
+                          - generic [ref=f129e820]:
+                            - link [ref=f129e821]:
+                              - img "tobias_meinhart's profile picture" [ref=f129e822]
+                            - link [ref=f129e825]:
+                              - img "ramiroolaguitarist's profile picture" [ref=f129e826]
+                          - generic [ref=f129e827]:
+                            - generic [ref=f129e832]:
+                              - link "ramiroolaguitarist" [ref=f129e838] [cursor=pointer]:
+                                - /url: /ramiroolaguitarist/
+                              - generic [ref=f129e841]: and
+                              - link "3 others" [ref=f129e847] [cursor=pointer]:
+                                - /url: "#"
+                            - link "Teatro Variedades Ernesto Albán" [ref=f129e854] [cursor=pointer]:
+                              - /url: /explore/locations/231972460627518/teatro-variedades-ernesto-alban/
+                        - button [ref=f129e857] [cursor=pointer]:
+                          - img "More options" [ref=f129e860]
+                      - generic [ref=f129e864]:
+                        - generic [ref=f129e865]:
+                          - button [ref=f129e868] [cursor=pointer]:
+                            - img "Like" [ref=f129e871]
+                          - button [ref=f129e874] [cursor=pointer]:
+                            - img "Comment" [ref=f129e876]
+                          - button [ref=f129e878] [cursor=pointer]:
+                            - img "Repost" [ref=f129e879]
+                          - button [ref=f129e882] [cursor=pointer]:
+                            - img "Share Post" [ref=f129e884]
+                          - button [ref=f129e889] [cursor=pointer]:
+                            - button [ref=f129e890]:
+                              - img "Save" [ref=f129e892]
+                        - generic [ref=f129e895]:
+                          - link [ref=f129e897] [cursor=pointer]:
+                            - /url: /p/Dda_pWvCJWC/liked_by/
+                            - generic [ref=f129e899]:
+                              - button [ref=f129e900]:
+                                - link [ref=f129e901]
+                              - button [ref=f129e902]:
+                                - link [ref=f129e903]
+                              - button [ref=f129e904]:
+                                - link [ref=f129e905]
+                          - generic [ref=f129e907]:
+                            - text: Liked by
+                            - link "oraculovibes" [ref=f129e908] [cursor=pointer]:
+                              - /url: /oraculovibes/
+                            - text: and
+                            - link "43 others" [ref=f129e909] [cursor=pointer]:
+                              - /url: /p/Dda_pWvCJWC/liked_by/
+                        - list [ref=f129e912]:
+                          - button [ref=f129e913]:
+                            - listitem [ref=f129e914]:
+                              - generic [ref=f129e916]:
+                                - button [ref=f129e920] [cursor=pointer]:
+                                  - link [ref=f129e922]:
+                                    - img "ramiroolaguitarist's profile picture" [ref=f129e923]
+                                - generic [ref=f129e924]:
+                                  - heading [active] [level=2] [ref=f129e925]:
+                                    - link "ramiroolaguitarist" [ref=f129e930] [cursor=pointer]:
+                                      - /url: /ramiroolaguitarist/
+                                  - heading "Amigos de Ecuador!! Nos vemos el 22 de Octubre junto al \"New York - Berlin\" Connection en el Teatro Variedades de Quito! Los esperamos!" [level=1] [ref=f129e932]
+                                  - time [ref=f129e935]: 1w
+                          - list [ref=f129e940]:
+                            - button "diana.mueller.b's profile picture diana.mueller.b 👏❤️ 1w 2 likes Reply Like" [ref=f129e941]:
+                              - listitem [ref=f129e942]:
+                                - generic [ref=f129e943]:
+                                  - generic [ref=f129e944]:
+                                    - button [disabled] [ref=f129e948]:
+                                      - link [disabled] [ref=f129e950] [cursor=pointer]:
+                                        - /url: /diana.mueller.b/
+                                        - img "diana.mueller.b's profile picture" [ref=f129e951]
+                                    - generic [ref=f129e952]:
+                                      - heading [level=3] [ref=f129e953]:
+                                        - link "diana.mueller.b" [ref=f129e958] [cursor=pointer]:
+                                          - /url: /diana.mueller.b/
+                                      - generic [ref=f129e959]: 👏❤️
+                                      - generic [ref=f129e961]:
+                                        - link [ref=f129e962] [cursor=pointer]:
+                                          - /url: /p/Dda_pWvCJWC/c/18142579747596931/
+                                          - time [ref=f129e963]: 1w
+                                        - button "2 likes" [ref=f129e964] [cursor=pointer]
+                                        - button "Reply" [ref=f129e965] [cursor=pointer]
+                                  - button [ref=f129e968] [cursor=pointer]:
+                                    - img "Like" [ref=f129e971]
+                        - link [ref=f129e976] [cursor=pointer]:
+                          - /url: /ramiroolaguitarist/p/Dda_pWvCJWC/
+                          - time [ref=f129e978]: September 18
+                        - generic [ref=f129e982]:
+                          - button [ref=f129e984] [cursor=pointer]:
+                            - img "Emoji" [ref=f129e986]
+                          - textbox "Add a comment…" [ref=f129e988]
+                          - generic [ref=f129e989]:
+                            - button "Post" [disabled]

@@ -1,0 +1,6 @@
+M	docs/catalog-persistence/catalog-list-decisions.json
+A	docs/catalog-persistence/event-catalog-retirements.json
+M	docs/event-operations/README.md
+A	docs/event-operations/catalog-stale-reconciliation-contract.md
+A	docs/event-operations/pr-36-catalog-stale-reconciliation.md
+M	scripts/__tests__/catalog-list-audit.test.mjs

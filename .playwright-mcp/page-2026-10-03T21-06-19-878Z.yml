@@ -1,0 +1,460 @@
+- generic [ref=f42e4]:
+  - generic [ref=f42e9]:
+    - generic [ref=f42e12]:
+      - link [ref=f42e794] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f42e795]
+      - generic [ref=f42e25]:
+        - link [ref=f42e796] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f42e797]
+        - link [ref=f42e798] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f42e799]
+        - link [ref=f42e800] [cursor=pointer]:
+          - /url: /direct/t/105372257527797
+          - generic [ref=f42e55]:
+            - img "Messages" [ref=f42e801]
+            - generic "Direct messaging - 4 new notifications link" [ref=f42e802]: "4"
+        - link [ref=f42e803] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f42e804]
+        - link [ref=f42e805] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f42e806]
+        - link [ref=f42e807] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f42e808]
+        - link [ref=f42e809] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f42e810]
+        - link [ref=f42e811] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f42e812]:
+            - img "tdf.records.label's profile picture" [ref=f42e813]
+      - generic [ref=f42e118]:
+        - link [ref=f42e814] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f42e815]
+        - link [ref=f42e816] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f42e817]
+    - generic [ref=f42e137]:
+      - main [ref=f42e138]:
+        - generic [ref=f42e140]:
+          - generic [ref=f42e141]:
+            - generic [ref=f42e142]:
+              - button [ref=f42e818] [cursor=pointer]:
+                - link [ref=f42e819]:
+                  - img "raulmolina's profile picture" [ref=f42e820]
+              - generic [ref=f42e151]:
+                - generic [ref=f42e152]:
+                  - generic [ref=f42e153]:
+                    - link [ref=f42e821] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "raulmolina" [level=2] [ref=f42e822]
+                    - button [ref=f42e823] [cursor=pointer]:
+                      - img "Options" [ref=f42e824]
+                  - generic [ref=f42e164]: Raúl Molina
+                  - generic [ref=f42e166]:
+                    - generic [ref=f42e168]:
+                      - generic [ref=f42e169]: "447"
+                      - text: posts
+                    - link "5,877 followers" [ref=f42e825] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f42e172]:
+                        - generic "5,877" [ref=f42e826]
+                        - text: followers
+                    - link "1,760 following" [ref=f42e827] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f42e176]:
+                        - generic [ref=f42e177]: 1,760
+                        - text: following
+                - generic [ref=f42e178]:
+                  - generic [ref=f42e179]:
+                    - generic [ref=f42e180]: Artist
+                    - button [ref=f42e828] [cursor=pointer]:
+                      - generic [ref=f42e184]: Músico📍Ecuador
+                    - generic [ref=f42e185]:
+                      - button "Link icon music.apple.com/ec/album/guayaquil-ep/6786860463 and 3 more" [ref=f42e829] [cursor=pointer]:
+                        - generic [ref=f42e187]:
+                          - img "Link icon" [ref=f42e830]
+                          - generic [ref=f42e192]: music.apple.com/ec/album/guayaquil-ep/6786860463 and 3 more
+                      - link "Threads raulmolina" [ref=f42e831] [cursor=pointer]:
+                        - /url: https://www.threads.com/@raulmolina?xmt=AQG0sccRQKL7Q_9M8UCLSXfbrJa3K0DQ4mp1PlCxePA4xWg
+                        - img "Threads" [ref=f42e832]
+                        - generic [ref=f42e198]: raulmolina
+                  - link "Followed by burkina._.faso, betonoboa + 95 more" [ref=f42e833] [cursor=pointer]:
+                    - /url: /raulmolina/followers/mutualOnly
+                    - generic [ref=f42e202]:
+                      - generic [ref=f42e204]:
+                        - button [ref=f42e205]:
+                          - link [ref=f42e206]
+                        - button [ref=f42e207]:
+                          - link [ref=f42e208]
+                        - button [ref=f42e209]:
+                          - link [ref=f42e210]
+                      - generic [ref=f42e211]: Followed by burkina._.faso, betonoboa + 95 more
+            - generic [ref=f42e216]:
+              - button "Following Down chevron icon" [ref=f42e834] [cursor=pointer]:
+                - generic [ref=f42e219]:
+                  - generic [ref=f42e220]: Following
+                  - img "Down chevron icon" [ref=f42e835]
+              - button "Message" [ref=f42e836] [cursor=pointer]
+              - button [ref=f42e837] [cursor=pointer]:
+                - img "Similar accounts" [ref=f42e838]
+            - menu [ref=f42e234]:
+              - generic [ref=f42e236]:
+                - list [ref=f42e238]:
+                  - listitem [ref=f42e239]
+                  - listitem [ref=f42e240]
+                  - listitem [ref=f42e241]:
+                    - link "View Sin querer highlight" [ref=f42e839] [cursor=pointer]:
+                      - /url: /stories/highlights/18004122722566381/
+                      - button "raulmolina's highlight story picture Sin querer" [ref=f42e840]:
+                        - button [ref=f42e841]:
+                          - img "raulmolina's highlight story picture" [ref=f42e842]
+                        - generic [ref=f42e250]: Sin querer
+                  - listitem [ref=f42e253]:
+                    - link "View Shows 2 highlight" [ref=f42e843] [cursor=pointer]:
+                      - /url: /stories/highlights/18063587590995426/
+                      - button "raulmolina's highlight story picture Shows 2" [ref=f42e844]:
+                        - button [ref=f42e845]:
+                          - img "raulmolina's highlight story picture" [ref=f42e846]
+                        - generic [ref=f42e262]: Shows 2
+                  - listitem [ref=f42e265]:
+                    - link "View Piano highlight" [ref=f42e847] [cursor=pointer]:
+                      - /url: /stories/highlights/17935502894520526/
+                      - button "raulmolina's highlight story picture Piano" [ref=f42e848]:
+                        - button [ref=f42e849]:
+                          - img "raulmolina's highlight story picture" [ref=f42e850]
+                        - generic [ref=f42e274]: Piano
+                  - listitem [ref=f42e277]:
+                    - link "View Shows highlight" [ref=f42e851] [cursor=pointer]:
+                      - /url: /stories/highlights/17945638510025318/
+                      - button "raulmolina's highlight story picture Shows" [ref=f42e852]:
+                        - button [ref=f42e853]:
+                          - img "raulmolina's highlight story picture" [ref=f42e854]
+                        - generic [ref=f42e286]: Shows
+                  - listitem [ref=f42e289]:
+                    - link "View E.L.I. highlight" [ref=f42e855] [cursor=pointer]:
+                      - /url: /stories/highlights/17943969143722796/
+                      - button "raulmolina's highlight story picture E.L.I." [ref=f42e856]:
+                        - button [ref=f42e857]:
+                          - img "raulmolina's highlight story picture" [ref=f42e858]
+                        - generic [ref=f42e298]: E.L.I.
+                  - listitem [ref=f42e301]:
+                    - link "View IMCCW highlight" [ref=f42e859] [cursor=pointer]:
+                      - /url: /stories/highlights/17847354546239103/
+                      - button "raulmolina's highlight story picture IMCCW" [ref=f42e860]:
+                        - button [ref=f42e861]:
+                          - img "raulmolina's highlight story picture" [ref=f42e862]
+                        - generic [ref=f42e310]: IMCCW
+                  - listitem [ref=f42e313]:
+                    - link "View Tags highlight" [ref=f42e863] [cursor=pointer]:
+                      - /url: /stories/highlights/17881127410500539/
+                      - button "raulmolina's highlight story picture Tags" [ref=f42e864]:
+                        - button [ref=f42e865]:
+                          - img "raulmolina's highlight story picture" [ref=f42e866]
+                        - generic [ref=f42e322]: Tags
+                  - listitem [ref=f42e325]:
+                    - link "View Estudio highlight" [ref=f42e867] [cursor=pointer]:
+                      - /url: /stories/highlights/17894714752201705/
+                      - button "raulmolina's highlight story picture Estudio" [ref=f42e868]:
+                        - button [ref=f42e869]:
+                          - img "raulmolina's highlight story picture" [ref=f42e870]
+                        - generic [ref=f42e334]: Estudio
+                  - listitem [ref=f42e337]:
+                    - link "View Recomendaciones highlight" [ref=f42e871] [cursor=pointer]:
+                      - /url: /stories/highlights/18209239567221835/
+                      - button "raulmolina's highlight story picture Recomendaciones" [ref=f42e872]:
+                        - button [ref=f42e873]:
+                          - img "raulmolina's highlight story picture" [ref=f42e874]
+                        - generic [ref=f42e346]: Recomendaciones
+                  - listitem [ref=f42e349]:
+                    - link "View Jama highlight" [ref=f42e875] [cursor=pointer]:
+                      - /url: /stories/highlights/17976863086246574/
+                      - button "raulmolina's highlight story picture Jama" [ref=f42e876]:
+                        - button [ref=f42e877]:
+                          - img "raulmolina's highlight story picture" [ref=f42e878]
+                        - generic [ref=f42e358]: Jama
+                  - listitem [ref=f42e361]:
+                    - link "View Textos highlight" [ref=f42e879] [cursor=pointer]:
+                      - /url: /stories/highlights/17967045067228750/
+                      - button "raulmolina's highlight story picture Textos" [ref=f42e880]:
+                        - button [ref=f42e881]:
+                          - img "raulmolina's highlight story picture" [ref=f42e882]
+                        - generic [ref=f42e370]: Textos
+                  - listitem [ref=f42e373]:
+                    - link "View Highlights highlight" [ref=f42e883] [cursor=pointer]:
+                      - /url: /stories/highlights/18043989619456931/
+                      - button "raulmolina's highlight story picture Highlights" [ref=f42e884]:
+                        - button [ref=f42e885]:
+                          - img "raulmolina's highlight story picture" [ref=f42e886]
+                        - generic [ref=f42e382]: Highlights
+                  - listitem [ref=f42e385]:
+                    - link "View Viajes highlight" [ref=f42e887] [cursor=pointer]:
+                      - /url: /stories/highlights/17986152466075222/
+                      - button "raulmolina's highlight story picture Viajes" [ref=f42e888]:
+                        - button [ref=f42e889]:
+                          - img "raulmolina's highlight story picture" [ref=f42e890]
+                        - generic [ref=f42e394]: Viajes
+                  - listitem [ref=f42e397]:
+                    - link "View Beats highlight" [ref=f42e891] [cursor=pointer]:
+                      - /url: /stories/highlights/17946023332044999/
+                      - button "raulmolina's highlight story picture Beats" [ref=f42e892]:
+                        - button [ref=f42e893]:
+                          - img "raulmolina's highlight story picture" [ref=f42e894]
+                        - generic [ref=f42e406]: Beats
+                - button "Next" [ref=f42e895] [cursor=pointer]
+          - generic [ref=f42e411]:
+            - tablist [ref=f42e412]:
+              - link [ref=f42e896] [cursor=pointer]:
+                - /url: /raulmolina/
+                - img "Posts" [ref=f42e897]
+              - link [ref=f42e898] [cursor=pointer]:
+                - /url: /raulmolina/reels/
+                - img "Reels" [ref=f42e899]
+              - link [ref=f42e900] [cursor=pointer]:
+                - /url: /raulmolina/reposts/
+                - img "Reposts" [ref=f42e901]
+              - link [ref=f42e902] [cursor=pointer]:
+                - /url: /raulmolina/tagged/
+                - img "Tagged" [ref=f42e903]
+            - tabpanel
+          - generic [ref=f42e446]:
+            - generic [ref=f42e447]:
+              - link [ref=f42e904] [cursor=pointer]:
+                - /url: /ramiroolaguitarist/p/Dda_pWvCJWC/
+                - img "Amigos de Ecuador!! Nos vemos el 22 de Octubre junto al \"New York - Berlin\" Connection en el Teatro Variedades de Quito! Los esperamos!" [ref=f42e905]
+              - link [ref=f42e906] [cursor=pointer]:
+                - /url: /ramiroolaguitarist/p/Dc_ImQKCECC/
+                - img "¡Amigos en Ecuador! Nos vamos de gira por diferentes ciudades del país con este increíble grupo de músicos. Esperamos verlos en los conciertos y compartir nuestra música con ustedes. ¡Hasta pronto! Friends in Ecuador! We're going on tour to different cities across the country with this incredible group of musicians. We hope to see you at the concerts and share our music with you. See you soon!" [ref=f42e907]
+              - link [ref=f42e908] [cursor=pointer]:
+                - /url: /raulmolina/reel/Dc9ztDQMB-u/
+                - 'img "6 de sept, 2016 tocábamos en trio en el #pobrediablo con @ryanhaglerbass y @miguelgallardokeys" [ref=f42e909]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f42e466]:
+              - link [ref=f42e910] [cursor=pointer]:
+                - /url: /raulmolina/reel/Dcok6IPM5yp/
+                - img "Acompañando a @jazz_de_barro momento con @qinote" [ref=f42e911]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f42e912] [cursor=pointer]:
+                - /url: /raulmolina/reel/DckFoNhsmpf/
+                - 'img "Nada todavía #descansatranquilo #smalls" [ref=f42e913]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f42e914] [cursor=pointer]:
+                - /url: /raulmolina/reel/DcUO8g5sjYz/
+                - 'img "Nada todavía #descansatranquilo" [ref=f42e915]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f42e485]:
+              - link [ref=f42e916] [cursor=pointer]:
+                - /url: /raulmolina/reel/DcHywZBsJFi/
+                - 'img "¡Casi un mes! Guayaquil en plataformas. Cualquier ayuda, play, repost, story, todo suma. #guayaquil #súmale" [ref=f42e917]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f42e918] [cursor=pointer]:
+                - /url: /raulmolina/reel/Dbo15-asxXk/
+                - img "Todos los Santos y los recuerdos de pelado con mima. Todo el disco Guaaquil en plataformas. @pancho.feraud" [ref=f42e919]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f42e920] [cursor=pointer]:
+                - /url: /raulmolina/reel/DbZXR_0MJTU/
+                - 'img "“Cojudo” 4 tema del ep #súmale" [ref=f42e921]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f42e504]:
+              - link [ref=f42e922] [cursor=pointer]:
+                - /url: /juanjocritico/p/DbW0xTdjiW_/
+                - img "𝐑𝐚ú𝐥 𝐌𝐨𝐥𝐢𝐧𝐚 𝐲 𝐮𝐧 𝐬𝐞𝐧𝐭𝐢𝐝𝐨 𝐡𝐨𝐦𝐞𝐧𝐚𝐣𝐞 𝐚 𝐥𝐚 𝐜𝐢𝐮𝐝𝐚𝐝 𝐞𝐧 𝐬𝐮 𝐧𝐮𝐞𝐯𝐨 𝐄𝐏 ‘𝐆𝐮𝐚𝐲𝐚𝐪𝐮𝐢𝐥’ El músico, productor y compositor guayaquileño publicó un nuevo trabajo de estudio en homenaje a la ciudad que lo vio nacer. 👏👏👏 'Guayaquil' está disponible en todas las plataformas de distribución y navega por distintos matices del jazz con arreglos de cuerdas y demás elementos. 🎵 Lee mi opinión sobre este EP en la columna de hoy de @eluniversovidayestilo en @eluniversocom y en el link en la bio. 📰📰🗞🗞 ¡Recuerda que cada semana hay una nueva publicación! 🗞🗞📰📰" [ref=f42e923]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f42e924] [cursor=pointer]:
+                - /url: /raulmolina/p/DbRjmAWlSSQ/
+                - img [ref=f42e925]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f42e926] [cursor=pointer]:
+                - /url: /raulmolina/p/DbHb5gXFZrF/
+                - 'img "Quise hacer un disco al Guayaquil del domingo por la tarde. A esa ciudad que todos amamos pero nos cuesta regresar. A los recuerdos de días mejores y a la suerte de llevar esa bandera en mi música. En el 2021 viviendo en la yoni llega a mí la siguiente pregunta, como un empujón para vencer el reto: ¿Cómo les explico a los gringos que vengo de Guayaquil? 5 años más tarde, la respuesta. La portada tuvo colaboraciones maravillosas de @nunezdelarco y el lienzo que es la foto de @richiboq que sin saber que existía, era la imagen que viene a mi cabeza al terminar la grabación del disco. Esta va por ti Guayaquil. Disponible en todas las plataformas @creatividad_ec" [ref=f42e927]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+      - contentinfo [ref=f42e523]:
+        - generic [ref=f42e524]:
+          - generic [ref=f42e526]:
+            - link "Meta" [ref=f42e928] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f42e929] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f42e930] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f42e931] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f42e932] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f42e933] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f42e934] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f42e935] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f42e936] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f42e937] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f42e938] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f42e939] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f42e940] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f42e941] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f42e942] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f42e943] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f42e575]:
+            - generic [ref=f42e576] [cursor=pointer]:
+              - generic [ref=f42e577]:
+                - generic [ref=f42e578]: English
+                - img "Down chevron icon" [ref=f42e944]
+              - combobox "Switch Display Language" [ref=f42e945]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f42e584]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f42e587] [cursor=pointer]:
+              - generic "Messages - 4 new notifications" [ref=f42e588]:
+                - generic [ref=f42e589]:
+                  - generic [ref=f42e591]:
+                    - img "Messages" [ref=f42e592]
+                    - generic "Direct messaging - 4 new notifications link" [ref=f42e595]: "4"
+                  - generic [ref=f42e598]: Messages
+                - generic [ref=f42e599]:
+                  - button [ref=f42e600]:
+                    - img "4 unread chats" [ref=f42e602]
+                  - button "User avatar Juren" [ref=f42e607]:
+                    - img "User avatar" [ref=f42e610]
+                  - button "User avatar Eduardo ED" [ref=f42e612]:
+                    - img "User avatar" [ref=f42e615]
+                  - button "User avatar ༒ 𖦹" [ref=f42e617]:
+                    - img "User avatar" [ref=f42e620]
+            - generic [ref=f42e946]:
+              - generic [ref=f42e948]:
+                - generic [ref=f42e949]:
+                  - button [ref=f42e951] [cursor=pointer]:
+                    - img "Go back" [ref=f42e953]
+                  - link "Open the profile page of raulmolina" [ref=f42e956] [cursor=pointer]:
+                    - /url: /raulmolina/
+                    - generic [ref=f42e957]:
+                      - img "user-profile-picture" [ref=f42e960]
+                      - heading "Raúl Molina" [level=2] [ref=f42e964]
+                  - generic [ref=f42e966]:
+                    - button [ref=f42e967] [cursor=pointer]:
+                      - img "Expand" [ref=f42e969]
+                    - button [ref=f42e971] [cursor=pointer]:
+                      - img "Close" [ref=f42e973]
+                - separator [ref=f42e976]
+              - generic "Raúl Molina" [ref=f42e977]:
+                - generic [ref=f42e979]:
+                  - generic [ref=f42e984]:
+                    - img "user-profile-picture" [ref=f42e988]
+                    - generic [ref=f42e989]:
+                      - heading "Raúl Molina" [level=2] [ref=f42e992]
+                      - generic [ref=f42e994]: raulmolina · Instagram
+                      - link "View profile" [ref=f42e997] [cursor=pointer]:
+                        - /url: /raulmolina/
+                  - generic [ref=f42e1007]:
+                    - button [ref=f42e1010] [cursor=pointer]:
+                      - img "Choose an emoji" [ref=f42e1012]
+                    - generic [ref=f42e1014]:
+                      - textbox [active] [ref=f42e1015]:
+                        - paragraph [ref=f42e1016]
+                      - generic: Message...
+                    - generic [ref=f42e1017]:
+                      - button [ref=f42e1018] [cursor=pointer]:
+                        - img "Voice Clip" [ref=f42e1020]
+                      - button [ref=f42e1023] [cursor=pointer]:
+                        - img "Add Photo or Video" [ref=f42e1025]
+                      - button [ref=f42e1030] [cursor=pointer]:
+                        - img "Choose a GIF or sticker" [ref=f42e1032]

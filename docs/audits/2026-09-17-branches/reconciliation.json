@@ -1,0 +1,39 @@
+{
+  "snapshot_times": {
+    "branches": "2026-09-17T08:58:02.245920+00:00",
+    "pulls": "2026-09-17T08:58:05.454886+00:00",
+    "final-branches": "2026-09-17T20:35:19.569938+00:00",
+    "final-pulls": "2026-09-17T20:35:22.707694+00:00"
+  },
+  "initial_branches": 87,
+  "initial_open_prs": 72,
+  "final_branches": 89,
+  "final_open_prs": 66,
+  "added_branches": [
+    "audit/ux-ui-complete-20260917",
+    "fix/directory-privacy-migration-order-20260917"
+  ],
+  "removed_branches": [],
+  "changed_initial_heads": [
+    "feat/artist-self-service-20260916",
+    "main"
+  ],
+  "classification_counts": {
+    "ALREADY_MERGED": 20,
+    "BLOCKED_OR_AMBIGUOUS": 37,
+    "KEEP_UNMERGED": 28,
+    "PROTECTED_OR_OPERATIONAL": 2
+  },
+  "our_merged_prs": [
+    420
+  ],
+  "our_closed_prs": [
+    360,
+    365,
+    366,
+    367,
+    377,
+    382,
+    386
+  ]
+}

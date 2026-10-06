@@ -1,0 +1,31 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 465,
+          "reviewDecision": "REVIEW_REQUIRED",
+          "mergeStateStatus": "BLOCKED",
+          "mergeable": "MERGEABLE",
+          "headRefOid": "a28e1858341bbf87b4c6080144bf38e9aedfc4d2",
+          "baseRefName": "main",
+          "isDraft": true,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          }
+        }
+      }
+    }
+  }
+]

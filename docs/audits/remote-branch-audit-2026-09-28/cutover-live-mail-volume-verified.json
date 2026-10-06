@@ -1,0 +1,18 @@
+{
+  "result": "PASS",
+  "observedAt": "2026-10-01T02:00:48.371759+00:00",
+  "mailboxReadSucceeded": true,
+  "aggregate_report_count": 8,
+  "errors": [],
+  "no_mail_sent": true,
+  "helper": {
+    "time": "2026-10-01T01:59:54.662927+00:00",
+    "action": "installed_verified_database_volume_guard",
+    "path": "/Users/diegosaa/GitHub/tdf-app/tmp/mail-deliverability/production_access.py",
+    "before_sha256": "e4f78cafc6b6d56f590f3d6d3988510a12edb63b06b89766af469a1c42a154a4",
+    "sha256": "8a23c52aadf95f61c918900d2f5a4583e33759ee9166a5c28a51ba53ef0bf681",
+    "launchagent_unchanged": true
+  },
+  "initial_failure": "cutover-volume-mail-initial-dns-failure.json",
+  "unchanged_retry": true
+}

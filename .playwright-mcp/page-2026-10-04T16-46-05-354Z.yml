@@ -1,0 +1,102 @@
+- generic [ref=f12e1]:
+  - generic [ref=f12e3]:
+    - link "Skip to content" [ref=f12e1618] [cursor=pointer]:
+      - /url: "#_r_f7_"
+    - generic [ref=f12e6]:
+      - complementary [ref=f12e7]:
+        - generic [ref=f12e11]:
+          - navigation "App navigation" [ref=f12e1367]:
+            - generic [ref=f12e13]:
+              - button "Home" [ref=f12e1368] [cursor=pointer]
+              - button "Space" [ref=f12e1369] [cursor=pointer]
+              - button "Scheduled" [ref=f12e1370] [cursor=pointer]
+              - button "Plugins" [ref=f12e1371] [cursor=pointer]
+              - button "Explore" [ref=f12e1372] [cursor=pointer]
+            - button "Open profile menu" [ref=f12e1373] [cursor=pointer]
+          - navigation "Scheduled task folders" [ref=f12e1374]:
+            - generic [ref=f12e961]:
+              - generic [ref=f12e962]:
+                - generic [ref=f12e963]:
+                  - heading "Scheduled" [level=1] [ref=f12e1375]
+                  - generic [ref=f12e965]:
+                    - button "Search scheduled tasks" [ref=f12e1376] [cursor=pointer]
+                    - button "Toggle sidebar" [expanded] [ref=f12e1377] [cursor=pointer]
+                - button "New task" [ref=f12e1378] [cursor=pointer]
+              - generic [ref=f12e988]:
+                - generic [ref=f12e989]:
+                  - generic [ref=f12e990]: Upcoming
+                  - button "Filter tasks" [ref=f12e1379] [cursor=pointer]
+                - list [ref=f12e1005]:
+                  - listitem [ref=f12e1380]:
+                    - button "TDF — Tu escena, conectada. Inicio diario de operación a las 08:00 America/Guaya" [ref=f12e1383] [cursor=pointer]:
+                      - generic [ref=f12e1386]:
+                        - generic [ref=f12e1387]: TDF — Tu escena, conectada. Inicio diario de operación a las 08:00 America/Guaya
+                        - generic [ref=f12e1393]: Tomorrow 8 AM·Daily
+                      - button "More task actions" [ref=f12e1397]
+                  - listitem [ref=f12e1006]:
+                    - button "Quito Electronic Event Watch" [ref=f12e1403] [cursor=pointer]:
+                      - generic [ref=f12e1012]:
+                        - generic [ref=f12e1013]: Quito Electronic Event Watch
+                        - generic [ref=f12e1019]: Monitoring
+                      - button "More task actions" [ref=f12e1404]
+                  - listitem [ref=f12e1029]:
+                    - button "Show more" [ref=f12e1405] [cursor=pointer]
+        - generic:
+          - separator
+      - text: Reply about this task…
+      - generic [ref=f12e1620]:
+        - main [ref=f12e1622]:
+          - generic:
+            - generic:
+              - generic:
+                - generic [ref=f12e1624]:
+                  - button "Share" [disabled] [ref=f12e1625]
+                  - button "More" [ref=f12e1629] [cursor=pointer]
+                - button "Toggle summary" [ref=f12e1638] [cursor=pointer]
+          - generic [ref=f12e1658]:
+            - generic [ref=f12e1659]:
+              - generic [ref=f12e1673]:
+                - button "TDF — Tu escena, conectada. Inicio diario de operación a las 08:00 America/Guaya" [ref=f12e1674] [cursor=pointer]
+                - heading "ChatGPT said:" [level=4] [ref=f12e1678]
+                - generic [ref=f12e1681]:
+                  - paragraph [ref=f12e1682]:
+                    - strong [ref=f12e1683]: Ejecución detenida por bloqueo de acceso.
+                  - paragraph [ref=f12e1684]:
+                    - text: En esta ejecución no tengo acceso al
+                    - strong [ref=f12e1685]: navegador adjunto autorizado con la sesión oficial @tdf.records.label
+                    - text: ", por lo que no puedo hacer las comprobaciones obligatorias en vivo de Instagram ni ejecutar los cuatro envíos individualmente mediante su interfaz visible."
+                  - paragraph [ref=f12e1686]: "Conforme a tus instrucciones:"
+                  - list [ref=f12e1687]:
+                    - listitem [ref=f12e1688]:
+                      - strong [ref=f12e1689]: "Enviados ahora:"
+                      - text: "0."
+                    - listitem [ref=f12e1690]:
+                      - strong [ref=f12e1691]: "CRM actualizado:"
+                      - text: "0."
+                    - listitem [ref=f12e1692]:
+                      - strong [ref=f12e1693]: "Reintentos:"
+                      - text: "0."
+                    - listitem [ref=f12e1694]:
+                      - strong [ref=f12e1695]: "Nuevos destinatarios añadidos:"
+                      - text: "0."
+                    - listitem [ref=f12e1696]: "Los cuatro autorizados — gura.a.music, losargonautas.ec, elbloque_oficial y `franla"
+              - generic [ref=f12e1697]: ChatGPT can make mistakes. Check important info.
+            - generic:
+              - generic:
+                - generic:
+                  - button
+                - heading "Latest response" [level=4] [ref=f12e1700]
+                - status [ref=f12e1701]
+                - generic [ref=f12e1716]:
+                  - button "Add files and more" [ref=f12e1721] [cursor=pointer]
+                  - textbox "Ask ChatGPT" [active] [ref=f12e1727]:
+                    - paragraph: Ask ChatGPT
+                  - generic [ref=f12e1729]:
+                    - button "Select ChatGPT model" [ref=f12e1733] [cursor=pointer]:
+                      - generic [ref=f12e1734]: Medium
+                    - generic [ref=f12e1744]:
+                      - button "Dictate" [disabled] [ref=f12e1747]
+                      - button "Stop" [ref=f12e1753] [cursor=pointer]
+        - status [ref=f12e1756]
+  - status [ref=f12e950]
+  - status [ref=f12e1757]

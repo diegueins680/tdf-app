@@ -1,0 +1,124 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 461,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "989d0663cc249bcee74331604561628d3435c961",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6kOkBv",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "scripts/production-release.mjs",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Anchor the recovery floor in this commit's ancestry**\n\nFor releases containing this reviewed commit, the financial-write recovery guard is silently disabled: `33083d46\u2026` and `a12980ba\u2026` are sibling commits with the same parent, so `git merge-base --is-ancestor 33083d46\u2026 a12980ba\u2026` is false and `requiredEscrowCommit` returns `null`. Consequently, preflight and rollback compatibility can accept an older image that restores the unsafe escrow writers as long as its migrations and identity protections pass; use a marker that is actually in this commit's ancestry or otherwise detect the disablement from the target revision.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/461#discussion_r4059097303",
+                      "createdAt": "2026-09-21T03:37:44Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yMVQwMzozNzo0NFrO8fDo1w=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6kPGAz",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-release.mjs",
+                "line": 298,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Permit a compatible recovery for squashed first releases**\n\nWhen this correction is squash-merged or cherry-picked, every distinct ancestor still contains the nominal escrow writers, so this new compatibility check rejects every recovery SHA that the existing distinct-ancestor requirement permits. Meanwhile preflight classifies the currently deployed pre-disablement images as unsafe and requires such a recovery artifact, making the first production rollout of this commit impossible. Fresh evidence in this revision is that the exact-body check now rejects all eligible ancestors even though `33083d46`/`0c34b2c0` are not ancestors of `ce214df`; allow an independently reviewed compatible non-ancestor (or another safe recovery identity) rather than requiring both conditions simultaneously.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/461#discussion_r4059301892",
+                      "createdAt": "2026-09-21T04:40:29Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yMVQwNDo0MDoyOVrO8fQIBA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6kPRMo",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "scripts/lib/legacy-escrow-contract.mjs",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Verify the routed handlers in the recovery contract**\n\nA recovery candidate can retain these two exact stub definitions while changing `serviceMarketplaceServer` (currently `TDF/Server.hs:9459-9466`) to route the booking or release endpoint to another write-capable handler; `checkDisabledEscrowWrites` still returns success, so `rollbackCompatibility` can authorize an image that restores the financial writes. The Hspec route test only covers the current checkout, not each candidate blob, so the source contract also needs to verify the candidate's route composition (and ideally the relevant API ordering).\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/461#discussion_r4059370277",
+                      "createdAt": "2026-09-21T05:00:40Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yMVQwNTowMDo0MFrO8fUTJQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6kPfe8",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/__tests__/provider-rollback.test.mjs",
+                "line": 154,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Keep the regression fixture reachable from clean clones**\n\nThe hard-coded `33083d46\u2026` commit is not an ancestor of the reviewed commit (`git merge-base --is-ancestor 33083d46\u2026 9cceaffe\u2026` returns false); it is only reachable through the current PR branch. After that branch is deleted, a clean checkout of `main` cannot fetch this object even with `fetch-depth: 0`, so `disabledEscrowWritesAt(escrowFix)` fails at `git cat-file` and `quality:repo` blocks every subsequent PR. Use a fixture or a revision guaranteed to remain in the merged ancestry instead of depending on an ephemeral branch commit.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/461#discussion_r4059456754",
+                      "createdAt": "2026-09-21T05:23:15Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yMVQwNToyMzoxNVrO8fZk8g=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yMVQwNToyMzoxNVrOpD33vA=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

@@ -1,0 +1,9 @@
+ docs/adr/0119-atomic-provider-query-application.md | 152 ++++++++
+ .../ecuador-payment-platform-audit-2026-09-11.md   |   8 +
+ docs/payments/operator-runbooks.md                 |   5 +
+ .../reconciliation-atomicity-2026-09-14.md         | 143 ++++++++
+ .../fixtures/provider-retry-ledger-base.sql        |  47 +++
+ scripts/test-provider-retry-runtime.sh             |   5 +
+ tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs  |  97 ++++-
+ tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs      | 395 ++++++++++++++++++++-
+ 8 files changed, 825 insertions(+), 27 deletions(-)

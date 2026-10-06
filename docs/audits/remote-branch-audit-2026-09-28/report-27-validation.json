@@ -1,0 +1,23 @@
+{
+  "time": "2026-10-03T22:40:38.118717+00:00",
+  "snapshot": "final-27",
+  "initial_rows": 134,
+  "added_rows": 11,
+  "all_initial_accounted": true,
+  "all_live_accounted": true,
+  "current_shas_match_live": true,
+  "branches": 145,
+  "open_prs": 61,
+  "total_prs": 463,
+  "missing_local_report_links": [],
+  "mutation_ledger_exact_copy": true,
+  "classification_counts": {
+    "ALREADY_MERGED": 77,
+    "PROTECTED_OR_OPERATIONAL": 7,
+    "CONSOLIDATE": 37,
+    "BLOCKED_OR_AMBIGUOUS": 22,
+    "KEEP_UNMERGED": 2
+  },
+  "editorial_current_head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+  "result": "PASS"
+}

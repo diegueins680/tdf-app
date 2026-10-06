@@ -1,0 +1,326 @@
+- generic [ref=f9e667]:
+  - generic [ref=f9e670]:
+    - link [ref=f9e675] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f9e680]
+    - generic [ref=f9e683]:
+      - link [ref=f9e688] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f9e693]
+      - link [ref=f9e698] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f9e703]
+      - link [ref=f9e710] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - generic [ref=f9e713]:
+          - img "Messages" [ref=f9e715]
+          - generic "Direct messaging - 3 new notifications link" [ref=f9e717]: "3"
+      - link [ref=f9e723] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f9e728]
+      - link [ref=f9e736] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f9e741]
+      - link [ref=f9e749] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f9e754]
+      - link [ref=f9e759] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f9e764]
+      - link [ref=f9e771] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f9e776]:
+          - img "tdf.records.label's profile picture" [ref=f9e777]
+    - generic [ref=f9e778]:
+      - link [ref=f9e781] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f9e786]
+      - link [ref=f9e789] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f9e794]
+  - main [ref=f9e2]:
+    - generic [ref=f9e7]:
+      - navigation "Thread list" [ref=f9e8]:
+        - generic [ref=f9e9]:
+          - generic [ref=f9e10]:
+            - button [ref=f9e11] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f9e13]
+              - img "Verified" [ref=f9e16]
+              - img "Down chevron icon" [ref=f9e19]
+            - generic [ref=f9e22]:
+              - button [ref=f9e23] [cursor=pointer]:
+                - img "More options" [ref=f9e25]
+              - button [ref=f9e29] [cursor=pointer]:
+                - img "New message" [ref=f9e31]
+          - tablist [ref=f9e36]:
+            - tab "Primary" [selected] [ref=f9e37] [cursor=pointer]
+            - tab "General" [ref=f9e40] [cursor=pointer]
+            - tab "From ads" [ref=f9e43] [cursor=pointer]
+            - tab "Requests" [ref=f9e47] [cursor=pointer]
+          - generic [ref=f9e53]:
+            - img "Search" [ref=f9e55]
+            - textbox "Search" [ref=f9e58]
+          - generic [ref=f9e59]:
+            - generic [ref=f9e61]:
+              - list [ref=f9e63]:
+                - listitem [ref=f9e64]
+                - listitem [ref=f9e65]:
+                  - button "What's on your mind? Your note" [ref=f9e67] [cursor=pointer]:
+                    - generic [ref=f9e68]:
+                      - generic [ref=f9e69]: What's on your mind?
+                      - generic [ref=f9e75]:
+                        - link [ref=f9e77]
+                        - generic [ref=f9e78]: Your note
+                - listitem [ref=f9e80]:
+                  - button "Quien como Kendall. Que come Tan rico 😮‍💨 maricarmen.90's profile picture SubUrban" [ref=f9e83] [cursor=pointer]:
+                    - generic [ref=f9e84]:
+                      - generic [ref=f9e85]: Quien comoKendall. Que comeTan rico😮‍💨
+                      - generic [ref=f9e94]:
+                        - link [ref=f9e96]:
+                          - img "maricarmen.90's profile picture" [ref=f9e97]
+                        - generic [ref=f9e98]: SubUrban
+                - listitem [ref=f9e101]:
+                  - button "New Home 🩵 planblu.ec's profile picture MODA SUSTENTABLE" [ref=f9e104] [cursor=pointer]:
+                    - generic [ref=f9e105]:
+                      - generic [ref=f9e106]: New Home 🩵
+                      - generic [ref=f9e113]:
+                        - link [ref=f9e115]:
+                          - img "planblu.ec's profile picture" [ref=f9e116]
+                        - generic [ref=f9e117]: MODA SUSTENTABLE
+                - listitem [ref=f9e120]:
+                  - button "De vuelta al rancho reemus___'s profile picture REEMUS" [ref=f9e123] [cursor=pointer]:
+                    - generic [ref=f9e124]:
+                      - generic [ref=f9e125]: De vuelta al rancho
+                      - generic [ref=f9e132]:
+                        - link [ref=f9e134]:
+                          - img "reemus___'s profile picture" [ref=f9e135]
+                        - generic [ref=f9e136]: REEMUS
+                - listitem [ref=f9e139]:
+                  - button "la democracia es una mentira mijin rojelioelrojorojas's profile picture Andrés Martín Arauz" [ref=f9e142] [cursor=pointer]:
+                    - generic [ref=f9e143]:
+                      - generic [ref=f9e144]: la democracia es una mentira mijin
+                      - generic [ref=f9e151]:
+                        - link [ref=f9e153]:
+                          - img "rojelioelrojorojas's profile picture" [ref=f9e154]
+                        - generic [ref=f9e155]: Andrés Martín Arauz
+                - listitem [ref=f9e158]:
+                  - button "🫶🤤 quirola_777's profile picture QUIROLA" [ref=f9e161] [cursor=pointer]:
+                    - generic [ref=f9e162]:
+                      - generic [ref=f9e163]: 🫶🤤
+                      - generic [ref=f9e170]:
+                        - link [ref=f9e172]:
+                          - img "quirola_777's profile picture" [ref=f9e173]
+                        - generic [ref=f9e174]: QUIROLA
+                - listitem [ref=f9e177]:
+                  - button "Si tienen fotos o vídeos de nuestros sets enviennos 😝 tgthr.djs's profile picture TGTHR" [ref=f9e180] [cursor=pointer]:
+                    - generic [ref=f9e181]:
+                      - generic [ref=f9e182]: Si tienen fotos o vídeos de nuestros sets enviennos 😝
+                      - generic [ref=f9e189]:
+                        - link [ref=f9e191]:
+                          - img "tgthr.djs's profile picture" [ref=f9e192]
+                        - generic [ref=f9e193]: TGTHR
+                - listitem [ref=f9e196]:
+                  - button "Ameba va a volver luis_cdvg's profile picture misticbafu" [ref=f9e199] [cursor=pointer]:
+                    - generic [ref=f9e200]:
+                      - generic [ref=f9e201]: Ameba va a volver
+                      - generic [ref=f9e208]:
+                        - link [ref=f9e210]:
+                          - img "luis_cdvg's profile picture" [ref=f9e211]
+                        - generic [ref=f9e212]: misticbafu
+                - listitem [ref=f9e215]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Luna (feat. Perotá Chingó) Alex Serra, Julia Ortiz 🌚🥹 zeretofficial's profile picture Zeret 🧑‍🩰Dj" [ref=f9e218] [cursor=pointer]:
+                    - generic [ref=f9e219]:
+                      - generic [ref=f9e225]:
+                        - generic [ref=f9e226]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f9e228]
+                          - generic [ref=f9e232]: Luna (feat. Perotá Chingó)
+                        - generic [ref=f9e233]: Alex Serra, Julia Ortiz
+                        - generic [ref=f9e234]: 🌚🥹
+                      - generic [ref=f9e235]:
+                        - link [ref=f9e237]:
+                          - img "zeretofficial's profile picture" [ref=f9e238]
+                        - generic [ref=f9e239]: Zeret 🧑‍🩰Dj
+              - button "Next" [ref=f9e242] [cursor=pointer]
+            - generic [ref=f9e247]:
+              - 'button "user-profile-picture | QUITO SKA SOCIETY | You: Hola, equipo de Quito Ska Society 👋 Un único recordatorio de nuestra invitación, pensando en su trabajo alrededor de Ska Ba Boom. Pueden explorar los perfiles y lanzamientos de TDF y contarnos si les servirían para su labor con la escena: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a Si no les interesa, todo bien; aquí dejamos la invitación y no volvemos a escribirles. — TDF Records a few seconds ago" [pressed] [ref=f9e801] [cursor=pointer]':
+                - generic [ref=f9e803]:
+                  - img "user-profile-picture" [ref=f9e807]
+                  - generic [ref=f9e810]:
+                    - generic [ref=f9e811]: "| QUITO SKA SOCIETY |"
+                    - generic [ref=f9e817]:
+                      - generic [ref=f9e818]: "You: Hola, equipo de Quito Ska Society 👋 Un único recordatorio de nuestra invitación, pensando en su trabajo alrededor de Ska Ba Boom. Pueden explorar los perfiles y lanzamientos de TDF y contarnos si les servirían para su labor con la escena: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a Si no les interesa, todo bien; aquí dejamos la invitación y no volvemos a escribirles. — TDF Records"
+                      - generic [ref=f9e820]:
+                        - generic [ref=f9e821]: ·
+                        - generic "a few seconds ago" [ref=f9e826]: 1m
+              - 'button "user-profile-picture Joel Dueñas You: Hola, Joel 👋 Te dejamos un único recordatorio de la invitación que te enviamos por tu trabajo con Delirio. Puedes empezar explorando un proyecto y seguirlo desde tu cuenta de TDF: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=Producer&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a Si no te interesa, todo bien; aquí dejamos la invitación y no volvemos a escribirte. — TDF Records a few seconds ago" [ref=f9e251] [cursor=pointer]':
+                - generic [ref=f9e253]:
+                  - img "user-profile-picture" [ref=f9e257]
+                  - generic [ref=f9e260]:
+                    - generic [ref=f9e261]: Joel Dueñas
+                    - generic [ref=f9e267]:
+                      - generic [ref=f9e268]: "You: Hola, Joel 👋 Te dejamos un único recordatorio de la invitación que te enviamos por tu trabajo con Delirio. Puedes empezar explorando un proyecto y seguirlo desde tu cuenta de TDF: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=Producer&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a Si no te interesa, todo bien; aquí dejamos la invitación y no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f9e270]:
+                        - generic [ref=f9e271]: ·
+                        - generic "a few seconds ago" [ref=f9e276]: 1m
+              - button "user-profile-picture Quito Bohemio Cuéntame cómo le tienen pensado ustedes la viabilidad de trabajo en conjunto? about an hour ago" [ref=f9e280] [cursor=pointer]:
+                - generic [ref=f9e282]:
+                  - img "user-profile-picture" [ref=f9e286]
+                  - generic [ref=f9e289]:
+                    - generic [ref=f9e290]: Quito Bohemio
+                    - generic [ref=f9e296]:
+                      - generic [ref=f9e297]: Cuéntame cómo le tienen pensado ustedes la viabilidad de trabajo en conjunto?
+                      - generic [ref=f9e299]:
+                        - generic [ref=f9e300]: ·
+                        - generic "about an hour ago" [ref=f9e305]: 1h
+              - button "user-profile-picture Isaac Quiero saber cómo es su método de trabajo 9 hours ago" [ref=f9e309] [cursor=pointer]:
+                - generic [ref=f9e311]:
+                  - img "user-profile-picture" [ref=f9e315]
+                  - generic [ref=f9e318]:
+                    - generic [ref=f9e319]: Isaac
+                    - generic [ref=f9e325]:
+                      - generic [ref=f9e326]: Quiero saber cómo es su método de trabajo
+                      - generic [ref=f9e328]:
+                        - generic [ref=f9e329]: ·
+                        - generic "9 hours ago" [ref=f9e334]: 9h
+              - 'button "user-profile-picture Ciscú Mastó You: ¡Hola, Francisco! TDF es una plataforma para conectar proyectos musicales y gente que vive la escena de Quito. Puedes explorar perfiles de artistas y lanzamientos, seguir proyectos y crear tu perfil público de artista con biografía y enlaces a tu música. El enlace que te compartimos abre el registro general: puedes crear tu cuenta con correo y contraseña, elegir el rol que te corresponda y empezar siguiendo un proyecto. Si te animas a probarla, cuéntanos qué te resulta útil o qué te falta para tu música. — TDF Records 13 hours ago" [ref=f9e338] [cursor=pointer]':
+                - generic [ref=f9e340]:
+                  - img "user-profile-picture" [ref=f9e344]
+                  - generic [ref=f9e347]:
+                    - generic [ref=f9e348]: Ciscú Mastó
+                    - generic [ref=f9e354]:
+                      - generic [ref=f9e355]: "You: ¡Hola, Francisco! TDF es una plataforma para conectar proyectos musicales y gente que vive la escena de Quito. Puedes explorar perfiles de artistas y lanzamientos, seguir proyectos y crear tu perfil público de artista con biografía y enlaces a tu música. El enlace que te compartimos abre el registro general: puedes crear tu cuenta con correo y contraseña, elegir el rol que te corresponda y empezar siguiendo un proyecto. Si te animas a probarla, cuéntanos qué te resulta útil o qué te falta para tu música. — TDF Records"
+                      - generic [ref=f9e357]:
+                        - generic [ref=f9e358]: ·
+                        - generic "13 hours ago" [ref=f9e363]: 13h
+              - button "user-profile-picture Emanuele Pilo-Pais L. Y varios de arriba tambien 14 hours ago" [ref=f9e367] [cursor=pointer]:
+                - generic [ref=f9e369]:
+                  - img "user-profile-picture" [ref=f9e373]
+                  - generic [ref=f9e376]:
+                    - generic [ref=f9e377]: Emanuele Pilo-Pais L.
+                    - generic [ref=f9e383]:
+                      - generic [ref=f9e384]: Y varios de arriba tambien
+                      - generic [ref=f9e386]:
+                        - generic [ref=f9e387]: ·
+                        - generic "14 hours ago" [ref=f9e392]: 14h
+              - button "user-profile-picture Arkabuz | Galapagos You sent an attachment. 15 hours ago" [ref=f9e396] [cursor=pointer]:
+                - generic [ref=f9e398]:
+                  - img "user-profile-picture" [ref=f9e402]
+                  - generic [ref=f9e405]:
+                    - generic [ref=f9e406]: Arkabuz | Galapagos
+                    - generic [ref=f9e412]:
+                      - generic [ref=f9e413]: You sent an attachment.
+                      - generic [ref=f9e415]:
+                        - generic [ref=f9e416]: ·
+                        - generic "15 hours ago" [ref=f9e421]: 15h
+              - button [ref=f9e482] [cursor=pointer]:
+                - generic [ref=f9e484]:
+                  - status "Loading..." [ref=f9e487]
+                  - generic [ref=f9e490]:
+                    - status "Loading..." [ref=f9e492]
+                    - status "Loading..." [ref=f9e494]
+      - generic [ref=f9e498]:
+        - generic [ref=f9e502]:
+          - link "Open the profile page of quitoskasociety" [ref=f9e503] [cursor=pointer]:
+            - /url: /quitoskasociety/
+            - generic [ref=f9e504]:
+              - img "user-profile-picture" [ref=f9e508]
+              - generic [ref=f9e509]:
+                - heading "| QUITO SKA SOCIETY |" [level=2] [ref=f9e511]
+                - generic [ref=f9e513]: quitoskasociety
+          - generic [ref=f9e517]:
+            - button [ref=f9e646] [cursor=pointer]:
+              - img "Audio call" [ref=f9e648]
+            - button [ref=f9e650] [cursor=pointer]:
+              - img "Video call" [ref=f9e652]
+            - button [ref=f9e518] [cursor=pointer]:
+              - img "Conversation information" [ref=f9e520]
+        - generic [ref=f9e524]:
+          - generic [ref=f9e528]:
+            - generic [ref=f9e529]:
+              - img "user-profile-picture" [ref=f9e533]
+              - generic [ref=f9e534]:
+                - heading "| QUITO SKA SOCIETY |" [level=2] [ref=f9e537]
+                - generic [ref=f9e539]: quitoskasociety · Instagram
+                - link "View profile" [ref=f9e542] [cursor=pointer]:
+                  - /url: /quitoskasociety/
+            - generic [ref=f9e543]:
+              - generic [ref=f9e579]:
+                - generic [ref=f9e580]: Wed 9:40 PM
+                - group [ref=f9e583]:
+                  - generic [ref=f9e586]:
+                    - article [ref=f9e587]:
+                      - generic [ref=f9e589]:
+                        - generic [ref=f9e592]:
+                          - text: Hola, equipo de Quito Ska Society
+                          - img "👋" [ref=f9e594]
+                          - text: "Vimos su trabajo alrededor de Ska Ba Boom en Quito. Tu escena necesita un espacio propio; nos interesa escuchar a quienes ya sostienen encuentros para el ska. Les invitamos a explorar los perfiles y lanzamientos de TDF y contarnos qué les serviría para su comunidad. Es una invitación a conversar:"
+                          - link "https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a" [ref=f9e596] [cursor=pointer]:
+                            - /url: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a
+                          - text: "Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                        - link "TDF Records" [ref=f9e597] [cursor=pointer]:
+                          - /url: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a
+                    - generic [ref=f9e602]:
+                      - group "Message actions":
+                        - generic:
+                          - generic:
+                            - generic:
+                              - button "React to message from tdf.records.label":
+                                - generic:
+                                  - img "React to message from tdf.records.label"
+                          - generic:
+                            - generic:
+                              - button "Reply to message from tdf.records.label":
+                                - generic:
+                                  - img "Reply to message from tdf.records.label"
+                          - generic:
+                            - generic:
+                              - button "See more options for message from tdf.records.label":
+                                - generic:
+                                  - img "See more options for message from tdf.records.label"
+              - generic [ref=f9e829]:
+                - generic [ref=f9e830]: 9:06 AM
+                - group [ref=f9e833]:
+                  - generic [ref=f9e836]:
+                    - article [ref=f9e837]:
+                      - generic [ref=f9e839]:
+                        - generic [ref=f9e842]:
+                          - text: Hola, equipo de Quito Ska Society
+                          - img "👋" [ref=f9e844]
+                          - text: "Un único recordatorio de nuestra invitación, pensando en su trabajo alrededor de Ska Ba Boom. Pueden explorar los perfiles y lanzamientos de TDF y contarnos si les servirían para su labor con la escena:"
+                          - link "https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a" [ref=f9e846] [cursor=pointer]:
+                            - /url: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a
+                          - text: Si no les interesa, todo bien; aquí dejamos la invitación y no volvemos a escribirles. — TDF Records
+                        - link "TDF Records" [ref=f9e847] [cursor=pointer]:
+                          - /url: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a
+                    - generic [ref=f9e852]:
+                      - group "Message actions":
+                        - generic:
+                          - generic:
+                            - generic:
+                              - button "React to message from tdf.records.label":
+                                - generic:
+                                  - img "React to message from tdf.records.label"
+                          - generic:
+                            - generic:
+                              - button "Reply to message from tdf.records.label":
+                                - generic:
+                                  - img "Reply to message from tdf.records.label"
+                          - generic:
+                            - generic:
+                              - button "See more options for message from tdf.records.label":
+                                - generic:
+                                  - img "See more options for message from tdf.records.label"
+          - generic [ref=f9e614]:
+            - button [ref=f9e617] [cursor=pointer]:
+              - img "Choose an emoji" [ref=f9e619]
+            - generic [ref=f9e621]:
+              - textbox [active] [ref=f9e622]:
+                - paragraph [ref=f9e853]
+              - generic: Message...
+            - generic [ref=f9e624]:
+              - button [ref=f9e854] [cursor=pointer]:
+                - img "Voice Clip" [ref=f9e856]
+              - button [ref=f9e859] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=f9e861]
+              - button [ref=f9e866] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=f9e868]

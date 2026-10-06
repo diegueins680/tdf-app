@@ -1,0 +1,16 @@
+{
+  "time": "2026-10-03T21:36:36.055933+00:00",
+  "kind": "source inspection, not an executed runtime result",
+  "writers": {
+    "provider synchronization": "ownedEventUpdates compares each field with its prior supplied value; missing ownership never adopted",
+    "subscription and provider reconciliation": "reconciledEventUpdates retains relinquished workflow/publication/ticket fields; source unavailability can force hidden without restoring ownership",
+    "event editor": "event row lock then fresh organizer/suppression/workflow checks; metadata patch applied to current row, ownership preserved only for unchanged fields",
+    "image upload": "existing event row lock plus preserveEventOwnership; private snapshot retained for fields other than changed artwork",
+    "administrator deletion": "existing event row lock, persistent suppressed external references, inactive checkout/tier controls; subsequent import refuses suppressed refs, so no ownership adoption path"
+  },
+  "source_hashes": {
+    "tdf-hq/src/TDF/Services/EventDiscovery.hs": "2f607cc22ee3646febe4e913583969a4df00a411a616f698cc142f6c8019ed7e",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "36ab5cc7d443e66a82719b89230407a9e027ef5dafa2ae70671341a9bf529446"
+  },
+  "pending": "Full backend and actual native PostgreSQL execution before publication"
+}

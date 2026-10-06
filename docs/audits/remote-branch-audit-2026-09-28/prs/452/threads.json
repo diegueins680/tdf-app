@@ -1,0 +1,94 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 452,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "ab9bbacc9da845b6bfe70ac3fda2ace44f17c918",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6j0ge4",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "scripts/mail-deliverability-monitor.py",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Resolve a live Fly machine instead of pinning its ID**\n\nWhen Machine `0807ee9cd34668` is replaced or removed during a future rollout, the daily monitor will fail before reading the mailbox and report only `mailbox_read_failed:RuntimeError`, even if another healthy `tdf-hq` Machine is available. The inspected release flow in `scripts/production-release.mjs` discovers the current Machine set dynamically and explicitly handles targets disappearing, so this long-lived monitor should likewise let `flyctl ssh console` select a live Machine or resolve one from `flyctl machines list` rather than embedding a deployment-specific ID.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/452#discussion_r4048789818",
+                      "createdAt": "2026-09-18T16:53:00Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 1148a8657: the monitor discovers the current started, healthy app Machine through flyctl status on every run. A test covers replacement, stopped/unhealthy machines and non-app processes. The installed local monitor was updated as well.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/452#discussion_r4048843799",
+                      "createdAt": "2026-09-18T16:58:57Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxNjo1ODo1N1rO8VR0Fw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6j0sRm",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "scripts/mail-deliverability-monitor.py",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Continue after unsupported ZIP attachments**\n\nWhen any message in INBOX or Junk contains an encrypted (or otherwise unsupported) `.zip` with an XML member, `archive.open(member)` raises `RuntimeError`/`NotImplementedError`, neither of which is caught here. The exception reaches the outer mailbox handler, sets `mailboxReadSucceeded` to false, and stops scanning all subsequent messages on every daily run until that attachment leaves the 14-day window. Handle archive extraction failures at this per-message boundary so one untrusted attachment is reported as unparseable without suppressing the remaining DSN/DMARC observations.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/452#discussion_r4048869058",
+                      "createdAt": "2026-09-18T17:01:34Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in ab9bbacc9. Per-message handling now catches archive RuntimeError (including NotImplementedError), records unparseable_report and continues. A regression test constructs actual encrypted and unsupported-compression ZIPs followed by a valid XML report, executes the mailbox collection loop and verifies the later report is counted and mailboxReadSucceeded remains true. All six monitor tests pass; the installed monitor is updated.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/452#discussion_r4048934180",
+                      "createdAt": "2026-09-18T17:08:33Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxNzowODozM1rO8VXVJA=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxNzowMTozNFrOo9LEZg=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

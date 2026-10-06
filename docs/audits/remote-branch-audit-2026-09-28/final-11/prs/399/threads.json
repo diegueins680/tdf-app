@@ -1,0 +1,31 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 399,
+          "reviewDecision": null,
+          "mergeStateStatus": "UNSTABLE",
+          "mergeable": "MERGEABLE",
+          "headRefOid": "d4e7ed0505a87a03706b765fc304ffa50362b8fb",
+          "baseRefName": "test/event-rsvp-ci-contracts",
+          "isDraft": true,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          }
+        }
+      }
+    }
+  }
+]

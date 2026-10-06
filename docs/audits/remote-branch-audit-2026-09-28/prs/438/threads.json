@@ -1,0 +1,63 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 438,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "35172083af75f9c7530624173d82819252e25d1a",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6jrJ7f",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-release.mjs",
+                "line": 769,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Recover all legacy machines after a canary failure**\n\nOn the first rollout from the legacy fleet, a public canary can create a subject binding before verification fails. This fallback upgrades only the canary to the compatible recovery image; the canary is then removed from `touchedMachines`, and the outer recovery loop skips every untouched legacy machine. The release therefore exits with a mixed fleet where requests routed to the old machines can still authorize by email despite the new binding. Either move every unsafe machine to the compatible recovery artifact on this failure path or prevent provider bindings/public traffic until the entire fleet is compatible.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/438#discussion_r4045109452",
+                      "createdAt": "2026-09-18T08:31:45Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Corrected in 35172083a. The canary catch now retains the original error and delegates to the actual outer fleet recovery loop. Once any deployment was attempted, recoverReleaseMachines includes every incompatible snapshot, including untouched replicas, as well as all touched machines. It continues after individual recovery failures and records each error; pre-deployment failures cause no recovery mutation.\n\n74 release tests pass, including both canary choices/all four prior combinations and injected recovery failure. The full pinned TLA+/Alloy runner passes. New StoppedFleetSafe checks the whole recovered fleet; ProviderRollbackPartial reproduces this exact omission (25 generated / 18 distinct states) and must violate that property. Existing unsafe restoration counterexample is retained. Successful recovery commands are an explicit model assumption; temporary mixed-fleet intervals during rollout/recovery are not certified by it.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/438#discussion_r4045188084",
+                      "createdAt": "2026-09-18T08:43:49Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwODo0Mzo0OVrO8Ryr9A=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwODozMTo0NVrOo6ye3w=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

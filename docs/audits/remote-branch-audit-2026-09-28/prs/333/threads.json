@@ -1,0 +1,249 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 333,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "5bceb329f034cdfadf077f8f2889aa50bd402c7c",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6iMVIx",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+                "line": 7508,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Make reaction activation atomic**\n\nWhen two retries with `emrrActive=true` arrive concurrently for the same party, moment, and reaction type, both transactions can finish this unlocked lookup before either inserts, so both conclude that the row is absent. The unique `EventMomentReaction` constraint then makes one insert fail with a database conflict and surface as a 500 instead of providing the promised idempotent success; use an atomic upsert or lock the party/moment reaction state before checking and inserting.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/333#discussion_r4007317893",
+                      "createdAt": "2026-09-14T16:30:33Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed by acquiring the parent moment lock before the lookup/insert: PostgreSQL uses SELECT ... FOR UPDATE, covering the absent-reaction case; SQLite takes its writer lock via the parent-row update. The mutation and engagement evidence remain in one transaction. Final-SHA CI passed all 2,542 backend examples, including activation/replay/evidence coverage: https://github.com/diegueins680/tdf-app/actions/runs/34916758923. The dedicated concurrent HTTP test in that run covers booking, not reactions; the reaction race fix is the database serialization above.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/333#discussion_r4011246206",
+                      "createdAt": "2026-09-15T02:03:12Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQwMjowMzoxMlrO7xbCfg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iPJfT",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+                "line": 9295,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Redact other users' reaction identity**\n\nFor any moment containing reactions from multiple parties, this unconditional `Just` serializes every `reactorPartyId` through both `loadEventMoments` and `loadMomentDTO`, whose mapper has no viewer context. This contradicts the API contract in `tdf-hq/docs/openapi/api.yaml`, which promises anonymous counts and identity only for the caller's own reaction, and exposes other fans' party identifiers; pass the authenticated party into the projection and null `emrPartyId` and `emrCreatedAt` for non-owned rows.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/333#discussion_r4008437867",
+                      "createdAt": "2026-09-14T18:48:08Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed by passing viewer identity into both moment projections and redacting party ID/creation time for reactions belonging to other parties while retaining reaction counts and the caller's own identity. The regression `redacts other parties' moment-reaction identities without changing reaction counts` passed on b246a8fb8, together with all 2,542 backend examples: https://github.com/diegueins680/tdf-app/actions/runs/34916758923.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/333#discussion_r4011262949",
+                      "createdAt": "2026-09-15T02:06:43Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQwMjowNjo0M1rO7xcD5Q=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iQjEx",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": ".github/workflows/refresh-instagram-token.yml",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Scope the Slack webhook to the notification step**\n\nWhen `SLACK_WEBHOOK_URL` is configured, declaring it at job scope injects the webhook credential into every step, including checkout, setup-node, and the mutable `superfly/flyctl-actions/setup-flyctl@master` action. Any compromised or accidentally verbose setup action can read or exfiltrate the webhook even though only the Slack notification needs it; gate the notification with a non-secret flag or output and keep the actual secret in that action's step-level environment.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/333#discussion_r4009000446",
+                      "createdAt": "2026-09-14T19:55:13Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 64fd4c82c and retained in b246a8fb8: the Slack webhook is scoped to the configuration and notification steps; checkout, Node setup, and Fly setup do not receive it. Focused CI/token regressions passed (26), and final-SHA repo-quality passed: https://github.com/diegueins680/tdf-app/actions/runs/34916758923. The original token failure is preserved when optional Slack configuration is absent.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/333#discussion_r4011093939",
+                      "createdAt": "2026-09-15T01:28:08Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQwMToyODowOFrO7xRvsw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iQjE2",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq-ui/src/analytics/onboardingProgress.ts",
+                "line": 107,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Replay queued onboarding completion on public routes**\n\nWhen `completeOnboardingProgress` fails after a durable action succeeds on `/fans`, `/a/*`, or `/inicio`, this catch leaves the new local-storage entry queued, but `retryPendingFirstValueCompletion` is invoked only by `routes/AppShell.tsx`; those pages are registered in `routes/publicRoutes.tsx` and never mount `Shell`. Merely coming back online therefore does not retry, so onboarding stays incomplete and first-value analytics are omitted until a reload or an unrelated protected-page visit; install the recovery hook in a provider shared by public routes as well.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/333#discussion_r4009000453",
+                      "createdAt": "2026-09-14T19:55:13Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed by mounting OnboardingRecovery above public and protected routes, with reconnect retry and account-scoped recovery. Focused recovery coverage passed (18); final-SHA UI validation passed all 206 suites / 1,967 tests and the production build: https://github.com/diegueins680/tdf-app/actions/runs/34916758923.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/333#discussion_r4011094127",
+                      "createdAt": "2026-09-15T01:28:11Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQwMToyODoxMVrO7xRwbw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iTKg1",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+                "line": 7514,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Backfill evidence for already-active reactions**\n\nWhen an onboarding-eligible user already has this reaction\u2014for example, it was created during the onboarding window by the pre-deployment handler\u2014an idempotent `emrrActive=true` request takes this branch but the `isNothing existingSameReaction` guard skips both inserts. `onboardingFirstValueEvidenceAt` recognizes only a corresponding `EngagementEvent`, so these users remain unable to complete the `moment_reaction` first-value step despite having performed the action. Backfill legacy rows using their stored creation time or insert the missing evidence when an active row has none.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/333#discussion_r4010045690",
+                      "createdAt": "2026-09-14T22:08:27Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed by repairing missing engagement evidence for an already-active reaction using the stored reaction creation timestamp. Matching evidence is checked transactionally, so repeated activation does not duplicate evidence or manufacture a new action time. The regression `repairs legacy reaction evidence once without changing the original action time` passed on b246a8fb8; final CI passed all 2,542 backend examples: https://github.com/diegueins680/tdf-app/actions/runs/34916758923.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/333#discussion_r4011263640",
+                      "createdAt": "2026-09-15T02:06:52Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQwMjowNjo1MlrO7xcGmA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iUBE2",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/artist-enrichment.mjs",
+                "line": 116,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Keep provider outages distinct from empty search results**\n\nWhen MusicBrainz or Discogs exhausts retries, returning `value: null` here makes both `researchInventoryIdentity` and `researchArtist` pass that null into `publicProviderSearchSources`, which interprets it as a successful search with no exact match. In production this persists `musicbrainz_search_no_exact_match` or `discogs_search_no_exact_match` evidence whose attribution falsely claims the provider returned no candidate, even though it was unavailable; preserve an unavailable state or suppress those no-match sources for providers listed in `providerOutages`.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/333#discussion_r4010390092",
+                      "createdAt": "2026-09-14T23:09:49Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in afa49cdf1 and retained in b246a8fb8: both research paths pass providerOutages into publicProviderSearchSources, which suppresses no-exact-match attribution for unavailable providers. All 21 focused enrichment tests passed. The preceding full dry run exercised 7 actual MusicBrainz outages without false attribution; the final-SHA full dry run passed with no provider outages, 48 profiles, 8 inventory candidates, and zero errors: https://github.com/diegueins680/tdf-app/actions/runs/34916781232.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/333#discussion_r4011094289",
+                      "createdAt": "2026-09-15T01:28:14Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQwMToyODoxNFrO7xRxEQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iVsch",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Retain failed dismissal state across account switches**\n\nWhen Party A dismisses onboarding, switches to Party B before the completion request fails, and later returns to A without unmounting this page, this early return leaves `dismissedOnboardingPartyId` set to A. The server still considers A incomplete, but the banner and retry warning remain hidden for the rest of the component lifetime; preserve the failed state per party or clear A's optimistic dismissal even while another party is active.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/333#discussion_r4011081493",
+                      "createdAt": "2026-09-15T01:25:18Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 5bceb329f by storing dismissal/failure state per party. A late failure remains available when that party returns, while another party's dismissal or error is preserved independently; the active-party guard for successful query-cache updates remains intact. Regressions cover A \u2192 B \u2192 A after failure and two accounts failing out of order. Both reproduced the original defect and passed after the change; fresh CI then passed the complete onboarding file and all 206 UI suites / 1,968 tests: https://github.com/diegueins680/tdf-app/actions/runs/34922297080. Local resource-related timeout limitations remain documented separately in the PR report.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/333#discussion_r4011497505",
+                      "createdAt": "2026-09-15T02:56:23Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQwMjo1NjoyM1rO7xqYIQ=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQwMToyNToxOFrOolbHIQ=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

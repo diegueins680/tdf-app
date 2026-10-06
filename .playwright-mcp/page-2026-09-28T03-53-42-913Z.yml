@@ -1,0 +1,569 @@
+- generic [active] [ref=f15e1]:
+  - blockquote [ref=f15e2]:
+    - heading [level=2] [ref=f15e3]: Documentation Index
+    - paragraph [ref=f15e4]:
+      - text: "Fetch the complete documentation index at:"
+      - link [ref=f15e5] [cursor=pointer]:
+        - /url: /llms.txt
+        - text: /llms.txt
+    - paragraph [ref=f15e6]: Use this file to discover all available pages before exploring further.
+  - generic [ref=f15e7]:
+    - link "Skip to main content" [ref=f15e8] [cursor=pointer]:
+      - /url: "#content-area"
+    - generic [ref=f15e11]:
+      - navigation "Pages" [ref=f15e12]:
+        - generic [ref=f15e13]:
+          - generic [ref=f15e14]:
+            - link "Fly.io home page light logo" [ref=f15e15] [cursor=pointer]:
+              - /url: /
+              - generic [ref=f15e16]: Fly.io home page
+              - img "light logo" [ref=f15e17]
+            - group "Theme preference" [ref=f15e18]:
+              - button "Switch to system theme" [ref=f15e19] [cursor=pointer]
+              - button "Switch to light theme" [ref=f15e23] [cursor=pointer]
+              - button "Switch to dark theme" [ref=f15e30] [cursor=pointer]
+          - generic [ref=f15e34]:
+            - button "Open search" [ref=f15e35] [cursor=pointer]:
+              - generic [ref=f15e36]: Search...
+              - generic [ref=f15e41]: ⌘K
+            - button "Toggle assistant panel" [ref=f15e42] [cursor=pointer]
+          - generic [ref=f15e47]:
+            - heading "Fly docs" [level=3] [ref=f15e49]
+            - list [ref=f15e50]:
+              - listitem [ref=f15e51]:
+                - button "Getting Started" [ref=f15e52] [cursor=pointer]
+              - listitem [ref=f15e57]:
+                - button "Guides (Blueprints)" [ref=f15e58] [cursor=pointer]
+              - listitem [ref=f15e63]:
+                - button "Model Context Protocol (MCP)" [ref=f15e64] [cursor=pointer]
+              - listitem [ref=f15e69]:
+                - button "App Guides" [ref=f15e70] [cursor=pointer]
+              - listitem [ref=f15e75]:
+                - button "Apps on Fly.io" [ref=f15e76] [cursor=pointer]
+              - listitem [ref=f15e81]:
+                - button "Language & Framework Guides" [ref=f15e82] [cursor=pointer]
+              - listitem [ref=f15e87]:
+                - button "Fly Machines" [ref=f15e88] [cursor=pointer]
+              - listitem [ref=f15e93]:
+                - button "Managed Postgres" [ref=f15e94] [cursor=pointer]
+              - listitem [ref=f15e99]:
+                - link "Fly Postgres (Unmanaged)" [ref=f15e100] [cursor=pointer]:
+                  - /url: /unmanaged-postgres
+              - listitem [ref=f15e104]:
+                - button "Databases & Storage" [ref=f15e105] [cursor=pointer]
+              - listitem [ref=f15e110]:
+                - button "Fly Volumes" [ref=f15e111] [cursor=pointer]
+              - listitem [ref=f15e116]:
+                - button "Fly Kubernetes" [ref=f15e117] [cursor=pointer]
+              - listitem [ref=f15e122]:
+                - button "Networking" [ref=f15e123] [cursor=pointer]
+              - listitem [ref=f15e128]:
+                - button "Monitoring" [ref=f15e129] [cursor=pointer]
+              - listitem [ref=f15e134]:
+                - button "Security" [ref=f15e135] [cursor=pointer]
+              - listitem [ref=f15e140]:
+                - button "Reference" [ref=f15e141] [cursor=pointer]
+              - listitem [ref=f15e146]:
+                - button "About" [expanded] [ref=f15e147] [cursor=pointer]
+                - list [ref=f15e152]:
+                  - listitem [ref=f15e153]:
+                    - link "Discontinued Plans" [ref=f15e154] [cursor=pointer]:
+                      - /url: /about/discontinued-plans
+                  - listitem [ref=f15e158]:
+                    - link "Fly.io Resource Pricing" [ref=f15e159] [cursor=pointer]:
+                      - /url: /about/pricing
+                  - listitem [ref=f15e163]:
+                    - link "Fly.io Billing" [ref=f15e164] [cursor=pointer]:
+                      - /url: /about/billing
+                  - listitem [ref=f15e168]:
+                    - link "Cost Management on Fly.io" [ref=f15e169] [cursor=pointer]:
+                      - /url: /about/cost-management
+                  - listitem [ref=f15e173]:
+                    - link "Fly.io Free Trial" [ref=f15e174] [cursor=pointer]:
+                      - /url: /about/free-trial
+                  - listitem [ref=f15e178]:
+                    - link "Support" [ref=f15e179] [cursor=pointer]:
+                      - /url: /about/support
+                  - listitem [ref=f15e183]:
+                    - button "Engineering Jobs" [ref=f15e184] [cursor=pointer]
+                  - listitem [ref=f15e189]:
+                    - link "Healthcare apps on Fly" [ref=f15e190] [cursor=pointer]:
+                      - /url: /about/healthcare
+                  - listitem [ref=f15e194]:
+                    - link "Fly.io Extensions Program" [ref=f15e195] [cursor=pointer]:
+                      - /url: /about/extensions
+                  - listitem [ref=f15e199]:
+                    - link "Provisioning Fly.io Extensions" [ref=f15e200] [cursor=pointer]:
+                      - /url: /reference/extensions_api
+                  - listitem [ref=f15e204]:
+                    - link "Fly.io Merchandise" [ref=f15e205] [cursor=pointer]:
+                      - /url: /about/merch
+                  - listitem [ref=f15e209]:
+                    - link "Fly.io and Open Source" [ref=f15e210] [cursor=pointer]:
+                      - /url: /about/open-source
+                  - listitem [ref=f15e214]:
+                    - link "Using Our Brand" [ref=f15e215] [cursor=pointer]:
+                      - /url: /about/brand
+              - listitem [ref=f15e219]:
+                - button "LiteFS" [ref=f15e220] [cursor=pointer]
+        - list [ref=f15e225]:
+          - listitem [ref=f15e226]:
+            - link "Pricing" [ref=f15e227] [cursor=pointer]:
+              - /url: https://fly.io/pricing/
+          - listitem [ref=f15e235]:
+            - link "Support" [ref=f15e236] [cursor=pointer]:
+              - /url: https://fly.io/docs/about/support/
+          - listitem
+      - generic [ref=f15e245]:
+        - link "Fly docs" [ref=f15e246] [cursor=pointer]:
+          - /url: /getting-started
+        - link "Machines API" [ref=f15e248] [cursor=pointer]:
+          - /url: /api/machines
+        - link "Sprite docs" [ref=f15e250] [cursor=pointer]:
+          - /url: /sprites
+        - link "Sprites API" [ref=f15e252] [cursor=pointer]:
+          - /url: /sprites/api/connectors/list-connectors
+      - main [ref=f15e254]:
+        - generic [ref=f15e255]:
+          - generic [ref=f15e257]:
+            - generic [ref=f15e258]: About
+            - heading "Fly.io Resource Pricing" [level=1] [ref=f15e260]
+          - generic [ref=f15e261]:
+            - img "Illustration by Annie Ruygt of Frankie the hot air balloon demonstrating a pricing chart on a whiteboard" [ref=f15e265]
+            - button "Expand image"
+            - heading "Navigate to header How it works" [level=2] [ref=f15e266]:
+              - link "Navigate to header" [ref=f15e267] [cursor=pointer]:
+                - /url: "#how-it-works"
+              - generic [ref=f15e272] [cursor=pointer]: How it works
+            - generic [ref=f15e273]:
+              - text: Fly.io services are billed per organization, with
+              - link "Linked Organizations" [ref=f15e274] [cursor=pointer]:
+                - /url: /about/billing#unified-billing
+              - text: reporting resource usage to their parent Billing Organization. Plans get complicated, so we just charge based on usage. Pick and choose which pieces you need for your application; that’s all you’ll see on your invoice.
+            - generic [ref=f15e275]:
+              - text: Organizations are administrative entities on Fly.io that let you add members, share app development environments, and manage billing.
+              - link "Billing" [ref=f15e276] [cursor=pointer]:
+                - /url: /about/billing
+              - text: is based on the resources provisioned for your apps, pro-rated for the time they are provisioned.
+            - generic [ref=f15e277]: Organizations may be subject to automated scaling limits to prevent abuse or to help with capacity planning. Email the address in the error message if you run into such a limit and it’s getting in your way.
+            - generic [ref=f15e278]:
+              - text: All organizations (except for Linked Organizations) require a
+              - link "credit card" [ref=f15e279] [cursor=pointer]:
+                - /url: /about/billing#payment-options
+              - text: on file.
+            - heading "Navigate to header Compute" [level=2] [ref=f15e280]:
+              - link "Navigate to header" [ref=f15e281] [cursor=pointer]:
+                - /url: "#compute"
+              - generic [ref=f15e286] [cursor=pointer]: Compute
+            - generic [ref=f15e287]:
+              - text: We charge for started and stopped Machines differently. For more details about how costs are calculated, see
+              - link "Machine billing" [ref=f15e288] [cursor=pointer]:
+                - /url: /about/billing#machine-billing
+              - text: . To understand the difference between
+              - code [ref=f15e289]: performance
+              - text: and
+              - code [ref=f15e290]: shared
+              - text: CPU types in Machines, see
+              - link "CPU performance" [ref=f15e291] [cursor=pointer]:
+                - /url: /machines/cpu-performance
+              - text: .
+            - heading "Navigate to header Started Fly Machines" [level=3] [ref=f15e292]:
+              - link "Navigate to header" [ref=f15e293] [cursor=pointer]:
+                - /url: "#started-fly-machines"
+              - generic [ref=f15e298] [cursor=pointer]: Started Fly Machines
+            - heading "Navigate to header Stopped Fly Machines" [level=3] [ref=f15e299]:
+              - link "Navigate to header" [ref=f15e300] [cursor=pointer]:
+                - /url: "#stopped-fly-machines"
+              - generic [ref=f15e305] [cursor=pointer]: Stopped Fly Machines
+            - generic [ref=f15e306]:
+              - text: For stopped Machines we charge only for the root file system (rootfs) needed for each Machine. Each 1GB of rootfs for a Machine stopped for 30 days is $0.15. The amount of rootfs needed is defined by your OCI image generated on your app plus a few
+              - link "containerd" [ref=f15e307] [cursor=pointer]:
+                - /url: https://containerd.io/
+              - text: tweaks on the underlying file system.
+            - heading "Navigate to header Machine reservation blocks" [level=3] [ref=f15e308]:
+              - link "Navigate to header" [ref=f15e309] [cursor=pointer]:
+                - /url: "#machine-reservation-blocks"
+              - generic [ref=f15e314] [cursor=pointer]: Machine reservation blocks
+            - generic [ref=f15e315]:
+              - text: You’ll get a 40% discount when you reserve a block of compute time, either for
+              - code [ref=f15e316]: performance
+              - text: Machines or
+              - code [ref=f15e317]: shared
+              - text: Machines, in a specific region. Reservations apply to any number of Machines of the specified CPU class, in the specified region, in any of your organisation’s apps.
+            - generic [ref=f15e318]: "The available reservation sizes are:"
+            - strong [ref=f15e320]: Performance Machines
+            - list [ref=f15e321]:
+              - listitem [ref=f15e322]: $144/year for $20/month of usage
+              - listitem [ref=f15e323]: $1,440/year for $200/month of usage
+              - listitem [ref=f15e324]: $14,400/year for $2,000/month of usage
+            - strong [ref=f15e326]: Shared Machines
+            - list [ref=f15e327]:
+              - listitem [ref=f15e328]: $36/year for $5/month of usage
+              - listitem [ref=f15e329]: $360/year for $50/month of usage
+              - listitem [ref=f15e330]: $3,600/year for $500/month of usage
+            - generic [ref=f15e331]: You pay the “per year” amount upfront, and each month receive a credit worth the “per month” amount. The credit does not rollover; it’s only valid for the month in which it’s granted. The credit applies only to CPU and additional RAM charges.
+            - generic [ref=f15e332]: There’s no limit on the number or combinations of blocks that can be purchased. Reservations are backdated to the first day of the month in which they’re purchased.
+            - generic [ref=f15e333]:
+              - text: For example, if you purchase a $36/year
+              - code [ref=f15e334]: shared
+              - text: Machines block in
+              - code [ref=f15e335]: cdg
+              - text: ", you’ll pay $36 upfront and receive $5/month of credits applicable to"
+              - code [ref=f15e336]: shared
+              - text: Machines in
+              - code [ref=f15e337]: cdg
+              - text: for 12 months, starting with the month of the purchase. Amortised over 12 months, the $36 upfront cost is $3/month, which is a 40% discount on the $5/month of credits you receive.
+            - generic [ref=f15e338]:
+              - text: You can set up reservations via self-service in the billing section of your Fly.io
+              - link "dashboard" [ref=f15e339] [cursor=pointer]:
+                - /url: https://fly.io/dashboard
+              - text: . They apply to usage starting on the 1st, so setting up reservations any time in the month will give you the credits the entire month.
+            - heading "Navigate to header Managed Postgres" [level=2] [ref=f15e340]:
+              - link "Navigate to header" [ref=f15e341] [cursor=pointer]:
+                - /url: "#managed-postgres"
+              - generic [ref=f15e346] [cursor=pointer]: Managed Postgres
+            - generic [ref=f15e347]: The price of running Fly.io Managed Postgres depends on your selected Managed Postgres Plan and the amount of storage your databases use.
+            - generic [ref=f15e348]:
+              - text: Current pricing for Managed Postgres plans and storage is available
+              - link "here" [ref=f15e349] [cursor=pointer]:
+                - /url: /postgres#pricing
+              - text: .
+            - note "Warning" [ref=f15e350]:
+              - generic [ref=f15e355]:
+                - strong [ref=f15e356]: "Important:"
+                - text: Managed Postgres lives outside your apps. Deleting an app won’t delete its database. Have a look in your Dashboard when you’re cleaning up. A quick check can save you a surprise charge later.
+            - heading "Navigate to header Persistent Storage Volumes" [level=2] [ref=f15e357]:
+              - link "Navigate to header" [ref=f15e358] [cursor=pointer]:
+                - /url: "#persistent-storage-volumes"
+              - generic [ref=f15e363] [cursor=pointer]: Persistent Storage Volumes
+            - heading "Navigate to header Volumes" [level=3] [ref=f15e364]:
+              - link "Navigate to header" [ref=f15e365] [cursor=pointer]:
+                - /url: "#volumes"
+              - generic [ref=f15e370] [cursor=pointer]: Volumes
+            - generic [ref=f15e371]:
+              - link "Fly Volumes" [ref=f15e372] [cursor=pointer]:
+                - /url: /volumes
+              - text: are local persistent storage for Machines.
+            - list [ref=f15e373]:
+              - listitem [ref=f15e374]: $0.15/GB per month of provisioned capacity
+            - generic [ref=f15e375]:
+              - link "Volume billing" [ref=f15e376] [cursor=pointer]:
+                - /url: /about/billing#volume-billing
+              - text: is pro-rated to the hour.
+            - generic [ref=f15e377]: You’ll be charged for volumes that you create, whether they are attached to a Machine or not, including when an attached Machine is stopped.
+            - heading "Navigate to header Volume Snapshots" [level=3] [ref=f15e378]:
+              - link "Navigate to header" [ref=f15e379] [cursor=pointer]:
+                - /url: "#volume-snapshots"
+              - generic [ref=f15e384] [cursor=pointer]: Volume Snapshots
+            - note "Info" [ref=f15e385]:
+              - generic [ref=f15e389]:
+                - strong [ref=f15e391]: New charges
+                - paragraph [ref=f15e392]:
+                  - generic [ref=f15e393]:
+                    - text: Starting January 1st 2026, we’re introducing charges for
+                    - link "volume snapshot" [ref=f15e394] [cursor=pointer]:
+                      - /url: /volumes/snapshots
+                    - text: storage. You’ll see the first charges on the invoice issued at the start of February 2026.
+                - paragraph [ref=f15e395]:
+                  - generic [ref=f15e396]:
+                    - text: If you’re an existing customer, you can check your usage in the
+                    - strong [ref=f15e397]: Billing
+                    - text: section of the
+                    - link "dashboard" [ref=f15e398] [cursor=pointer]:
+                      - /url: https://fly.io/dashboard/personal/billing
+                    - text: on your Upcoming Invoice and in the Cost Explorer.
+            - list [ref=f15e399]:
+              - listitem [ref=f15e400]: $0.08/GB per month
+              - listitem [ref=f15e401]: First 10GB free each month
+            - generic [ref=f15e402]:
+              - link "Volume Snapshot billing" [ref=f15e403] [cursor=pointer]:
+                - /url: /about/billing#volume-snapshot-billing
+              - text: is pro-rated to the hour.
+            - generic [ref=f15e404]:
+              - text: Automatic daily snapshots with 5 days retention are enabled by default on new volumes. This can be
+              - link "adjusted" [ref=f15e405] [cursor=pointer]:
+                - /url: /volumes/snapshots#set-or-change-the-snapshot-retention-period
+              - text: or
+              - link "disabled" [ref=f15e406] [cursor=pointer]:
+                - /url: /volumes/snapshots#disable-automatic-daily-snapshots
+              - text: .
+            - generic [ref=f15e407]: Usage is calculated based on the total stored size of the snapshots, not the provisioned volume size. You’re only charged for the actual data stored - if you’ve written 1GB to a 10GB volume, you’ll be charged for around 1GB of snapshot storage.
+            - generic [ref=f15e408]: Snapshots for each volume are stored incrementally, so you’ll only be charged for data that has changed since the previously stored snapshot.
+            - heading "Navigate to header Network prices" [level=2] [ref=f15e409]:
+              - link "Navigate to header" [ref=f15e410] [cursor=pointer]:
+                - /url: "#network-prices"
+              - generic [ref=f15e415] [cursor=pointer]: Network prices
+            - heading "Navigate to header Anycast IP addresses" [level=3] [ref=f15e416]:
+              - link "Navigate to header" [ref=f15e417] [cursor=pointer]:
+                - /url: "#anycast-ip-addresses"
+              - generic [ref=f15e422] [cursor=pointer]: Anycast IP addresses
+            - generic [ref=f15e423]:
+              - text: Each application receives a
+              - link "shared IPv4 address" [ref=f15e424] [cursor=pointer]:
+                - /url: /networking/services#shared-ipv4
+              - text: and unlimited
+              - link "Anycast IPv6" [ref=f15e425] [cursor=pointer]:
+                - /url: /networking/services#ipv6
+              - text: addresses for global load balancing.
+            - generic [ref=f15e426]: Dedicated IPv4 addresses are $2/mo.
+            - heading "Navigate to header Managed SSL certificates" [level=3] [ref=f15e427]:
+              - link "Navigate to header" [ref=f15e428] [cursor=pointer]:
+                - /url: "#managed-ssl-certificates"
+              - generic [ref=f15e433] [cursor=pointer]: Managed SSL certificates
+            - generic [ref=f15e434]: We use Let’s Encrypt to issue certificates, and donate half of our SSL fees to them at the end of each calendar year.
+            - list [ref=f15e435]:
+              - listitem [ref=f15e436]: "Single hostname certificates: $0.10/mo"
+              - listitem [ref=f15e437]: "Wildcard certificates: $1/mo"
+            - generic [ref=f15e438]: Every organization’s first 10 single hostname certificates are free.
+            - heading "Navigate to header Data transfer pricing" [level=3] [ref=f15e439]:
+              - link "Navigate to header" [ref=f15e440] [cursor=pointer]:
+                - /url: "#data-transfer-pricing"
+              - generic [ref=f15e445] [cursor=pointer]: Data transfer pricing
+            - generic [ref=f15e446]: "We bill for data leaving your app destined for the public internet or for apps or Machines in other regions, including:"
+            - list [ref=f15e447]:
+              - listitem [ref=f15e448]: Data egress to the Internet, from Machine to edge server to Internet
+              - listitem [ref=f15e449]: Data transfer over private network between regions, from Machine to edge server and edge server to Machine
+              - listitem [ref=f15e450]: Data transfer to some extensions like Upstash Redis
+            - generic [ref=f15e451]: "The following types of traffic are free:"
+            - list [ref=f15e452]:
+              - listitem [ref=f15e453]: All inbound data transfer
+              - listitem [ref=f15e454]: Data transfer between apps or Machines in the same region (for organizations using granular data transfer rates)
+              - listitem [ref=f15e455]: Data transfer from apps without an assigned IP address (for organizations not using granular data transfer rates)
+            - generic [ref=f15e456]: Fly.io pricing is per region group for outbound data transfer. You’ll see a more detailed breakdown of cost per region and per traffic type on your monthly invoice.
+            - note "Info" [ref=f15e457]:
+              - generic [ref=f15e462]:
+                - strong [ref=f15e463]: "Important:"
+                - text: Organizations created after July 18 2024 are automatically opted-in to use the granular data transfer rates and are billed at a different rate for private network data transfer between regions, per the following table. Organizations not using granular data transfer rates are billed for all data transfer (excluding that listed as free above) at the “Egress to public internet” rate.
+            - region "Scrollable table" [ref=f15e464]:
+              - table [ref=f15e466]:
+                - rowgroup [ref=f15e467]:
+                  - row [ref=f15e468]:
+                    - columnheader "Region groups" [ref=f15e469]
+                    - columnheader "Egress to public internet cost" [ref=f15e470]
+                    - columnheader "Private network cross-region transfer cost" [ref=f15e471]
+                - rowgroup [ref=f15e472]:
+                  - row [ref=f15e473]:
+                    - cell "- North America - Europe" [ref=f15e474]: "- North America- Europe"
+                    - cell "$0.02 per GB" [ref=f15e475]
+                    - cell "$0.006 per GB" [ref=f15e476]
+                  - row [ref=f15e477]:
+                    - cell "- Asia Pacific - Oceania - South America" [ref=f15e478]: "- Asia Pacific- Oceania- South America"
+                    - cell "$0.04 per GB" [ref=f15e479]
+                    - cell "$0.015 per GB" [ref=f15e480]
+                  - row [ref=f15e481]:
+                    - cell "- Africa - India" [ref=f15e482]: "- Africa- India"
+                    - cell "$0.12 per GB" [ref=f15e483]
+                    - cell "$0.050 per GB" [ref=f15e484]
+            - generic [ref=f15e485]:
+              - text: To opt-in to granular bandwidth pricing, go to the
+              - link [ref=f15e486] [cursor=pointer]:
+                - /url: https://fly.io/organizations
+                - strong [ref=f15e487]: Organizations
+                - text: page
+              - text: in the dashboard, click the organization name to change, then click
+              - strong [ref=f15e488]: Switch to granular bandwidth pricing
+              - text: . You won’t be able to return to using the non-granular data transfer rates once you opt in.
+            - heading "Navigate to header Static Egress IPs for Machines" [level=3] [ref=f15e489]:
+              - link "Navigate to header" [ref=f15e490] [cursor=pointer]:
+                - /url: "#static-egress-ips-for-machines"
+              - generic [ref=f15e495] [cursor=pointer]: Static Egress IPs for Machines
+            - generic [ref=f15e496]: Static egress IPs for Machines provide dedicated outbound IP addresses for your Machines. When you allocate a static egress IP, you’ll get both an IPv4 and IPv6 address for this single price.
+            - list [ref=f15e497]:
+              - listitem [ref=f15e498]: $0.005 per hour (~$3.60/month)
+              - listitem [ref=f15e499]: Machines do not have a static IP by default
+            - heading "Navigate to header Support" [level=2] [ref=f15e500]:
+              - link "Navigate to header" [ref=f15e501] [cursor=pointer]:
+                - /url: "#support"
+              - generic [ref=f15e506] [cursor=pointer]: Support
+            - generic [ref=f15e507]:
+              - link "Community support" [ref=f15e508] [cursor=pointer]:
+                - /url: https://community.fly.io/
+              - text: is included for all customers, regardless of usage level. You can get access to a support plan by purchasing a Standard ($29/month), Premium ($199/month), or Enterprise (starting at $2500/month) package in the
+              - strong [ref=f15e509]: Support
+              - text: section of your dashboard. For more about Support, see
+              - link "Support at Fly.io" [ref=f15e510] [cursor=pointer]:
+                - /url: /about/support
+              - text: .
+            - heading "Navigate to header Fly Kubernetes" [level=2] [ref=f15e511]:
+              - link "Navigate to header" [ref=f15e512] [cursor=pointer]:
+                - /url: "#fly-kubernetes"
+              - generic [ref=f15e517] [cursor=pointer]: Fly Kubernetes
+            - generic [ref=f15e518]:
+              - link "Fly Kubernetes" [ref=f15e519] [cursor=pointer]:
+                - /url: /kubernetes
+              - text: (FKS) is a managed Kubernetes service that runs on Fly.io.
+            - list [ref=f15e520]:
+              - listitem [ref=f15e521]: $75/month per cluster
+              - listitem [ref=f15e522]:
+                - text: Plus the cost of
+                - link "compute" [ref=f15e523] [cursor=pointer]:
+                  - /url: "#compute"
+                - text: and
+                - link "Fly volumes" [ref=f15e524] [cursor=pointer]:
+                  - /url: "#persistent-storage-volumes"
+                - text: that you create
+            - heading "Navigate to header Extensions" [level=2] [ref=f15e525]:
+              - link "Navigate to header" [ref=f15e526] [cursor=pointer]:
+                - /url: "#extensions"
+              - generic [ref=f15e531] [cursor=pointer]: Extensions
+            - generic [ref=f15e532]:
+              - text: Fly.io offers managed services operated by third parties, such as
+              - link "Tigris Object Storage" [ref=f15e533] [cursor=pointer]:
+                - /url: /tigris
+              - text: and
+              - link "Upstash Redis" [ref=f15e534] [cursor=pointer]:
+                - /url: /upstash/redis
+              - text: .
+            - generic [ref=f15e535]: When you provision their services, you become their customer, and you pay their list prices via your monthly Fly.io bill. Charges are updated daily in your Fly.io dashboard.
+            - generic [ref=f15e536]: "You will not be billed separately for:"
+            - list [ref=f15e537]:
+              - listitem [ref=f15e538]: Machines running the services, which are hosted in the provider’s account
+              - listitem [ref=f15e539]: IP addresses associated with the service
+            - generic [ref=f15e540]:
+              - text: You
+              - strong [ref=f15e541]: will
+              - text: be billed separately for data transfer to these external third-party services, including Tigris Object Storage. See our
+              - link "data transfer pricing" [ref=f15e542] [cursor=pointer]:
+                - /url: "#data-transfer-pricing"
+              - text: for details.
+            - heading "Navigate to header Unsupported Products" [level=2] [ref=f15e543]:
+              - link "Navigate to header" [ref=f15e544] [cursor=pointer]:
+                - /url: "#unsupported-products"
+              - generic [ref=f15e549] [cursor=pointer]: Unsupported Products
+            - heading "Navigate to header Unmanaged Fly Postgres (Unsupported)" [level=3] [ref=f15e550]:
+              - link "Navigate to header" [ref=f15e551] [cursor=pointer]:
+                - /url: "#unmanaged-fly-postgres-unsupported"
+              - generic [ref=f15e556] [cursor=pointer]: Unmanaged Fly Postgres (Unsupported)
+            - generic [ref=f15e557]:
+              - link "Fly Postgres" [ref=f15e558] [cursor=pointer]:
+                - /url: /unmanaged-postgres
+              - text: is a PostgreSQL database that you create and then manage yourself. Fly Postgres clusters are Fly Apps that consist of Machines, volumes, and any configured extra memory.
+            - generic [ref=f15e559]:
+              - text: The
+              - link "Machine price" [ref=f15e560] [cursor=pointer]:
+                - /url: "#compute"
+              - text: and
+              - link "volume price" [ref=f15e561] [cursor=pointer]:
+                - /url: "#persistent-storage-volumes"
+              - text: for Fly Postgres are the same as any other Machine and volume you’d run on Fly.io. Assuming the Machines are running all the time, the cost for the preset configurations is about $2/month for a single node cluster for dev projects and from about $82 to $164/month for a three-node production cluster. You don’t need to keep the preset configurations, you can
+              - link "scale your Fly Postgres Machines" [ref=f15e562] [cursor=pointer]:
+                - /url: /unmanaged-postgres/managing/scaling
+              - text: to suit your workload at any time.
+            - heading "Navigate to header Legacy plans" [level=2] [ref=f15e563]:
+              - link "Navigate to header" [ref=f15e564] [cursor=pointer]:
+                - /url: "#legacy-plans"
+              - generic [ref=f15e569] [cursor=pointer]: Legacy plans
+            - generic [ref=f15e570]:
+              - text: On a legacy plan and wondering what that includes? Read more about
+              - link "Discontinued Plans" [ref=f15e571] [cursor=pointer]:
+                - /url: /about/discontinued-plans
+              - text: .
+            - heading [level=2] [ref=f15e572]:
+              - link "Navigate to header" [ref=f15e573] [cursor=pointer]:
+                - /url: "#related-reading"
+              - strong [ref=f15e579] [cursor=pointer]: Related reading
+            - list [ref=f15e580]:
+              - listitem [ref=f15e581]:
+                - link "Billing for Fly.io" [ref=f15e582] [cursor=pointer]:
+                  - /url: /about/billing
+                - text: How invoicing, payment methods, and usage tracking work.
+              - listitem [ref=f15e583]:
+                - link "Cost Management" [ref=f15e584] [cursor=pointer]:
+                  - /url: /about/cost-management
+                - text: Best practices for estimating, monitoring, and controlling your spend.
+              - listitem [ref=f15e585]:
+                - link "Free Trial" [ref=f15e586] [cursor=pointer]:
+                  - /url: /about/free-trial
+                - text: What the Fly.io Free trial gives you and when billing begins.
+              - listitem [ref=f15e587]:
+                - link "Organization Roles & Permissions" [ref=f15e588] [cursor=pointer]:
+                  - /url: /security/org-roles-permissions
+                - text: How org structure, permissions and billing interplay.
+              - listitem [ref=f15e589]:
+                - 'link "Optimize Compute Costs: Fine‑tune your app" [ref=f15e590] [cursor=pointer]':
+                  - /url: /apps/fine-tune-apps
+                - text: Tuning machine size, memory/CPU, and stop‑/start behavior to reduce waste.
+          - navigation "Pagination" [ref=f15e591]:
+            - 'link "Previous: Discontinued Plans" [ref=f15e592] [cursor=pointer]':
+              - /url: /about/discontinued-plans
+              - generic [ref=f15e595]: Previous
+            - link "Fly.io Billing Next" [ref=f15e596] [cursor=pointer]:
+              - /url: /about/billing
+              - generic [ref=f15e597]:
+                - generic [ref=f15e598]: Fly.io Billing
+                - generic [ref=f15e601]: Next
+          - generic [ref=f15e606]:
+            - textbox "Ask a question..." [ref=f15e607]
+            - generic: ⌘I
+            - button "Send message" [disabled] [ref=f15e608]
+        - navigation [ref=f15e616]:
+          - heading [level=2] [ref=f15e617]:
+            - button "On this page" [ref=f15e618] [cursor=pointer]
+          - list [ref=f15e622]:
+            - listitem [ref=f15e623]:
+              - link "How it works" [ref=f15e624] [cursor=pointer]:
+                - /url: "#how-it-works"
+            - listitem [ref=f15e625]:
+              - link "Compute" [ref=f15e626] [cursor=pointer]:
+                - /url: "#compute"
+              - list [ref=f15e627]:
+                - listitem [ref=f15e628]:
+                  - link "Started Fly Machines" [ref=f15e629] [cursor=pointer]:
+                    - /url: "#started-fly-machines"
+                - listitem [ref=f15e630]:
+                  - link "Stopped Fly Machines" [ref=f15e631] [cursor=pointer]:
+                    - /url: "#stopped-fly-machines"
+                - listitem [ref=f15e632]:
+                  - link "Machine reservation blocks" [ref=f15e633] [cursor=pointer]:
+                    - /url: "#machine-reservation-blocks"
+            - listitem [ref=f15e634]:
+              - link "Managed Postgres" [ref=f15e635] [cursor=pointer]:
+                - /url: "#managed-postgres"
+            - listitem [ref=f15e636]:
+              - link "Persistent Storage Volumes" [ref=f15e637] [cursor=pointer]:
+                - /url: "#persistent-storage-volumes"
+              - list [ref=f15e638]:
+                - listitem [ref=f15e639]:
+                  - link "Volumes" [ref=f15e640] [cursor=pointer]:
+                    - /url: "#volumes"
+                - listitem [ref=f15e641]:
+                  - link "Volume Snapshots" [ref=f15e642] [cursor=pointer]:
+                    - /url: "#volume-snapshots"
+            - listitem [ref=f15e643]:
+              - link "Network prices" [ref=f15e644] [cursor=pointer]:
+                - /url: "#network-prices"
+              - list [ref=f15e645]:
+                - listitem [ref=f15e646]:
+                  - link "Anycast IP addresses" [ref=f15e647] [cursor=pointer]:
+                    - /url: "#anycast-ip-addresses"
+                - listitem [ref=f15e648]:
+                  - link "Managed SSL certificates" [ref=f15e649] [cursor=pointer]:
+                    - /url: "#managed-ssl-certificates"
+                - listitem [ref=f15e650]:
+                  - link "Data transfer pricing" [ref=f15e651] [cursor=pointer]:
+                    - /url: "#data-transfer-pricing"
+                - listitem [ref=f15e652]:
+                  - link "Static Egress IPs for Machines" [ref=f15e653] [cursor=pointer]:
+                    - /url: "#static-egress-ips-for-machines"
+            - listitem [ref=f15e654]:
+              - link "Support" [ref=f15e655] [cursor=pointer]:
+                - /url: "#support"
+            - listitem [ref=f15e656]:
+              - link "Fly Kubernetes" [ref=f15e657] [cursor=pointer]:
+                - /url: "#fly-kubernetes"
+            - listitem [ref=f15e658]:
+              - link "Extensions" [ref=f15e659] [cursor=pointer]:
+                - /url: "#extensions"
+            - listitem [ref=f15e660]:
+              - link "Unsupported Products" [ref=f15e661] [cursor=pointer]:
+                - /url: "#unsupported-products"
+              - list [ref=f15e662]:
+                - listitem [ref=f15e663]:
+                  - link "Unmanaged Fly Postgres (Unsupported)" [ref=f15e664] [cursor=pointer]:
+                    - /url: "#unmanaged-fly-postgres-unsupported"
+            - listitem [ref=f15e665]:
+              - link "Legacy plans" [ref=f15e666] [cursor=pointer]:
+                - /url: "#legacy-plans"
+            - listitem [ref=f15e667]:
+              - link "Related reading" [ref=f15e668] [cursor=pointer]:
+                - /url: "#related-reading"

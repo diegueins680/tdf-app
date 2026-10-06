@@ -1,0 +1,505 @@
+- generic [ref=f12e1]:
+  - link [ref=f12e1489] [cursor=pointer]:
+    - /url: "#main-content"
+    - text: Saltar al contenido principal
+  - generic [ref=f12e3]:
+    - generic [ref=f12e1490]:
+      - link [ref=f12e1491] [cursor=pointer]:
+        - /url: "#main-content"
+        - text: Saltar al contenido principal
+      - navigation [ref=f12e1492]:
+        - generic [ref=f12e1493]:
+          - generic [ref=f12e1494]: MENÚ
+          - generic [ref=f12e1496]:
+            - textbox [ref=f12e1500]:
+              - /placeholder: Buscar sección (/)
+            - group
+        - list [ref=f12e1501]:
+          - listitem [ref=f12e1502]:
+            - generic [ref=f12e1503]:
+              - generic [ref=f12e1504]: CREAR
+              - button [ref=f12e1509] [cursor=pointer]
+          - listitem [ref=f12e1512]:
+            - generic [ref=f12e1513]:
+              - generic [ref=f12e1514]: GENTE
+              - button [ref=f12e1519] [cursor=pointer]
+          - listitem [ref=f12e1522]:
+            - generic [ref=f12e1523]:
+              - generic [ref=f12e1524]: SELLO
+              - button [expanded] [ref=f12e1529] [cursor=pointer]
+            - list [ref=f12e1535]:
+              - listitem [ref=f12e1536]:
+                - link [ref=f12e1537] [cursor=pointer]:
+                  - /url: /label/artistas
+                  - generic [ref=f12e1540]: Artistas
+              - listitem [ref=f12e1542]:
+                - link [ref=f12e1543] [cursor=pointer]:
+                  - /url: /label/proyectos
+                  - generic [ref=f12e1546]: Proyectos
+              - listitem [ref=f12e1548]:
+                - link [ref=f12e1549] [cursor=pointer]:
+                  - /url: /label/releases
+                  - generic [ref=f12e1552]: Lanzamientos
+              - listitem [ref=f12e1554]:
+                - link [ref=f12e1555] [cursor=pointer]:
+                  - /url: /label/assets
+                  - generic [ref=f12e1558]: Activos
+              - listitem [ref=f12e1560]:
+                - link [ref=f12e1561] [cursor=pointer]:
+                  - /url: /label/tracks
+                  - generic [ref=f12e1564]: Pistas
+          - listitem [ref=f12e1566]:
+            - generic [ref=f12e1567]:
+              - generic [ref=f12e1568]: OPERAR
+              - button [ref=f12e1574] [cursor=pointer]
+          - listitem [ref=f12e1577]:
+            - generic [ref=f12e1578]:
+              - generic [ref=f12e1579]: ADMIN
+              - button [ref=f12e1587] [cursor=pointer]
+          - listitem [ref=f12e1590]:
+            - generic [ref=f12e1591]:
+              - generic [ref=f12e1592]: HERRAMIENTAS
+              - button [ref=f12e1597] [cursor=pointer]
+          - listitem [ref=f12e1600]:
+            - generic [ref=f12e1601]:
+              - generic [ref=f12e1602]: AYUDA
+              - button [ref=f12e1607] [cursor=pointer]
+      - generic [ref=f12e1610]:
+        - banner [ref=f12e1611]:
+          - generic [ref=f12e1612]:
+            - button [ref=f12e1613] [cursor=pointer]
+            - link [ref=f12e1616] [cursor=pointer]:
+              - /url: /inicio
+            - button [ref=f12e1618] [cursor=pointer]:
+              - generic [ref=f12e1622]: Buscar sección
+              - generic [ref=f12e1623]: ⌘K
+            - generic [ref=f12e1624]:
+              - button [ref=f12e1625] [cursor=pointer]:
+                - generic [ref=f12e1629]: Crear
+              - button [ref=f12e1630] [cursor=pointer]
+              - button [ref=f12e1634] [cursor=pointer]:
+                - generic [ref=f12e1635]: D
+        - status [ref=f12e1636]
+        - main [ref=f12e1040]:
+          - generic [ref=f12e1041]:
+            - navigation [ref=f12e1637]:
+              - list [ref=f12e1043]:
+                - listitem [ref=f12e1044]:
+                  - link [ref=f12e1638] [cursor=pointer]:
+                    - /url: /label/artistas
+                    - text: Artistas
+                - listitem [ref=f12e1046]: /
+                - listitem [ref=f12e1047]:
+                  - link [ref=f12e1639] [cursor=pointer]:
+                    - /url: /label/releases
+                    - text: Lanzamientos
+                - listitem [ref=f12e1049]: /
+                - listitem [ref=f12e1050]:
+                  - paragraph [ref=f12e1051]: Activos
+            - generic [ref=f12e1052]:
+              - generic [ref=f12e1053]:
+                - generic [ref=f12e1054]:
+                  - text: Label / Assets
+                  - heading [level=4] [ref=f12e1640]: Catálogo de assets y equipo del label
+                  - paragraph [ref=f12e1056]: Reutiliza el inventario para que marketing, estudio y label tengan una sola lista de equipo, préstamos y QR.
+                - generic [ref=f12e1057]:
+                  - button [ref=f12e1641] [cursor=pointer]: Actualizar
+                  - link [ref=f12e1642] [cursor=pointer]:
+                    - /url: /configuracion/opciones-ux?category=asset-category
+                    - text: Gestionar categorías
+                  - button [ref=f12e1643] [cursor=pointer]: Agregar asset
+              - generic [ref=f12e1068]:
+                - generic [ref=f12e1069]:
+                  - generic [ref=f12e1070]:
+                    - generic [ref=f12e1071]: Buscar assets
+                    - generic [ref=f12e1072]:
+                      - textbox [ref=f12e1644]:
+                        - /placeholder: Buscar por nombre, categoría o modelo
+                      - group:
+                        - generic: Buscar assets
+                  - generic [ref=f12e1077]:
+                    - generic [ref=f12e1078]: Categoría
+                    - generic [ref=f12e1079]:
+                      - combobox [ref=f12e1645] [cursor=pointer]: Todas
+                      - textbox: all
+                      - group:
+                        - generic: Categoría
+                - generic [ref=f12e1081]:
+                  - generic [ref=f12e1082]: Estado disponible
+                  - paragraph [ref=f12e1083]: Activos
+                  - generic [ref=f12e1084]: "No hace falta filtrarlo: es el unico estado presente en esta vista."
+                - generic [ref=f12e1085]: Mostrando 61 de 61 assets
+              - generic [ref=f12e1090]:
+                - generic [ref=f12e1091]: Usa el boton de prestamo o devolucion cuando este disponible para registrar movimientos rapidos. QR, historial y mas concentra editar, ver QR, historial y eliminar en una sola entrada por fila.
+                - generic [ref=f12e1092]:
+                  - table [ref=f12e1093]:
+                    - rowgroup [ref=f12e1094]:
+                      - row [ref=f12e1646]:
+                        - columnheader [ref=f12e1647]: Asset
+                        - columnheader [ref=f12e1648]: Categoría
+                        - columnheader [ref=f12e1649]: Ubicación
+                        - columnheader [ref=f12e1650]: Movimiento y mas
+                    - rowgroup [ref=f12e1100]:
+                      - row [ref=f12e1651]:
+                        - cell [ref=f12e1652]:
+                          - generic [ref=f12e1105]:
+                            - paragraph [ref=f12e1106]: Aguilar ToneHammer
+                            - generic [ref=f12e1107]: Aguilar · ToneHammer
+                            - generic [ref=f12e1108]: QR activo
+                        - cell [ref=f12e1654]: di/pre
+                        - cell [ref=f12e1655]: Oficina
+                        - cell [ref=f12e1656]:
+                          - generic [ref=f12e1112]:
+                            - button [ref=f12e1657] [cursor=pointer]
+                            - button [ref=f12e1658] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1659]:
+                        - cell [ref=f12e1660]:
+                          - generic [ref=f12e1120]:
+                            - paragraph [ref=f12e1121]: AKG C414
+                            - generic [ref=f12e1122]: AKG · C414
+                        - cell [ref=f12e1661]: mic
+                        - cell [ref=f12e1662]: —
+                        - cell [ref=f12e1663]:
+                          - generic [ref=f12e1126]:
+                            - button [ref=f12e1664] [cursor=pointer]
+                            - button [ref=f12e1665] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1666]:
+                        - cell [ref=f12e1667]:
+                          - generic [ref=f12e1134]:
+                            - paragraph [ref=f12e1135]: AKG D112
+                            - generic [ref=f12e1136]: AKG · D112
+                        - cell [ref=f12e1668]: mic
+                        - cell [ref=f12e1669]: —
+                        - cell [ref=f12e1670]:
+                          - generic [ref=f12e1140]:
+                            - button [ref=f12e1671] [cursor=pointer]
+                            - button [ref=f12e1672] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1673]:
+                        - cell [ref=f12e1674]:
+                          - generic [ref=f12e1148]:
+                            - paragraph [ref=f12e1149]: API 512v
+                            - generic [ref=f12e1150]: API · 512v
+                        - cell [ref=f12e1675]: pre
+                        - cell [ref=f12e1676]: —
+                        - cell [ref=f12e1677]:
+                          - generic [ref=f12e1154]:
+                            - button [ref=f12e1678] [cursor=pointer]
+                            - button [ref=f12e1679] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1680]:
+                        - cell [ref=f12e1681]:
+                          - generic [ref=f12e1162]:
+                            - paragraph [ref=f12e1163]: Avalon 737sp
+                            - generic [ref=f12e1164]: Avalon · VT-737sp
+                        - cell [ref=f12e1682]: pre
+                        - cell [ref=f12e1683]: —
+                        - cell [ref=f12e1684]:
+                          - generic [ref=f12e1168]:
+                            - button [ref=f12e1685] [cursor=pointer]
+                            - button [ref=f12e1686] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1687]:
+                        - cell [ref=f12e1688]:
+                          - generic [ref=f12e1177]:
+                            - paragraph [ref=f12e1178]: BBE Sonic Stomp Mini
+                            - generic [ref=f12e1179]: BBE · Sonic Stomp Mini
+                        - cell [ref=f12e1690]: fx/pedal
+                        - cell [ref=f12e1691]: —
+                        - cell [ref=f12e1692]:
+                          - generic [ref=f12e1183]:
+                            - button [ref=f12e1693] [cursor=pointer]
+                            - button [ref=f12e1694] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1695]:
+                        - cell [ref=f12e1696]:
+                          - generic [ref=f12e1192]:
+                            - paragraph [ref=f12e1193]: Boss BF-3 Flanger
+                            - generic [ref=f12e1194]: Boss · BF-3
+                        - cell [ref=f12e1698]: fx/pedal
+                        - cell [ref=f12e1699]: —
+                        - cell [ref=f12e1700]:
+                          - generic [ref=f12e1198]:
+                            - button [ref=f12e1701] [cursor=pointer]
+                            - button [ref=f12e1702] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1703]:
+                        - cell [ref=f12e1704]:
+                          - generic [ref=f12e1207]:
+                            - paragraph [ref=f12e1208]: Boss CH-1 Super Chorus
+                            - generic [ref=f12e1209]: Boss · CH-1
+                        - cell [ref=f12e1706]: fx/pedal
+                        - cell [ref=f12e1707]: —
+                        - cell [ref=f12e1708]:
+                          - generic [ref=f12e1213]:
+                            - button [ref=f12e1709] [cursor=pointer]
+                            - button [ref=f12e1710] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1711]:
+                        - cell [ref=f12e1712]:
+                          - generic [ref=f12e1222]:
+                            - paragraph [ref=f12e1223]: Boss DD-7 Digital Delay
+                            - generic [ref=f12e1224]: Boss · DD-7
+                        - cell [ref=f12e1714]: fx/pedal
+                        - cell [ref=f12e1715]: —
+                        - cell [ref=f12e1716]:
+                          - generic [ref=f12e1228]:
+                            - button [ref=f12e1717] [cursor=pointer]
+                            - button [ref=f12e1718] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1719]:
+                        - cell [ref=f12e1720]:
+                          - generic [ref=f12e1237]:
+                            - paragraph [ref=f12e1238]: Boss GEB-7 Bass Equalizer
+                            - generic [ref=f12e1239]: Boss · GEB-7
+                        - cell [ref=f12e1722]: fx/pedal
+                        - cell [ref=f12e1723]: —
+                        - cell [ref=f12e1724]:
+                          - generic [ref=f12e1243]:
+                            - button [ref=f12e1725] [cursor=pointer]
+                            - button [ref=f12e1726] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1727]:
+                        - cell [ref=f12e1728]:
+                          - generic [ref=f12e1252]:
+                            - paragraph [ref=f12e1253]: Boss LMB-3 Bass Limiter Enhancer
+                            - generic [ref=f12e1254]: Boss · LMB-3
+                        - cell [ref=f12e1730]: fx/pedal
+                        - cell [ref=f12e1731]: —
+                        - cell [ref=f12e1732]:
+                          - generic [ref=f12e1258]:
+                            - button [ref=f12e1733] [cursor=pointer]
+                            - button [ref=f12e1734] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1735]:
+                        - cell [ref=f12e1736]:
+                          - generic [ref=f12e1267]:
+                            - paragraph [ref=f12e1268]: Boss OS-2 OverDrive/Distortion
+                            - generic [ref=f12e1269]: Boss · OS-2
+                        - cell [ref=f12e1738]: fx/pedal
+                        - cell [ref=f12e1739]: —
+                        - cell [ref=f12e1740]:
+                          - generic [ref=f12e1273]:
+                            - button [ref=f12e1741] [cursor=pointer]
+                            - button [ref=f12e1742] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1743]:
+                        - cell [ref=f12e1744]:
+                          - generic [ref=f12e1281]:
+                            - paragraph [ref=f12e1282]: Boss RC-20XL Loop Station
+                            - generic [ref=f12e1283]: Boss · RC-20XL
+                        - cell [ref=f12e1745]: fx/looper
+                        - cell [ref=f12e1746]: —
+                        - cell [ref=f12e1747]:
+                          - generic [ref=f12e1287]:
+                            - button [ref=f12e1748] [cursor=pointer]
+                            - button [ref=f12e1749] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1750]:
+                        - cell [ref=f12e1751]:
+                          - generic [ref=f12e1295]:
+                            - paragraph [ref=f12e1296]: Burl B4
+                            - generic [ref=f12e1297]: Burl · B4
+                        - cell [ref=f12e1752]: pre/converter
+                        - cell [ref=f12e1753]: —
+                        - cell [ref=f12e1754]:
+                          - generic [ref=f12e1301]:
+                            - button [ref=f12e1755] [cursor=pointer]
+                            - button [ref=f12e1756] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1757]:
+                        - cell [ref=f12e1758]:
+                          - generic [ref=f12e1309]:
+                            - paragraph [ref=f12e1310]: Burl BAD8
+                            - generic [ref=f12e1311]: Burl · BAD8
+                        - cell [ref=f12e1759]: converter-ad
+                        - cell [ref=f12e1760]: —
+                        - cell [ref=f12e1761]:
+                          - generic [ref=f12e1315]:
+                            - button [ref=f12e1762] [cursor=pointer]
+                            - button [ref=f12e1763] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1764]:
+                        - cell [ref=f12e1765]:
+                          - generic [ref=f12e1324]:
+                            - paragraph [ref=f12e1325]: Chandler Limited Little Devil Colored Boost
+                            - generic [ref=f12e1326]: Chandler Limited · Little Devil Boost
+                        - cell [ref=f12e1767]: fx/pedal
+                        - cell [ref=f12e1768]: —
+                        - cell [ref=f12e1769]:
+                          - generic [ref=f12e1330]:
+                            - button [ref=f12e1770] [cursor=pointer]
+                            - button [ref=f12e1771] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1772]:
+                        - cell [ref=f12e1773]:
+                          - generic [ref=f12e1338]:
+                            - paragraph [ref=f12e1339]: Chandler Limited REDD.47
+                            - generic [ref=f12e1340]: Chandler Limited · REDD.47
+                        - cell [ref=f12e1774]: pre
+                        - cell [ref=f12e1775]: —
+                        - cell [ref=f12e1776]:
+                          - generic [ref=f12e1344]:
+                            - button [ref=f12e1777] [cursor=pointer]
+                            - button [ref=f12e1778] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1779]:
+                        - cell [ref=f12e1780]:
+                          - generic [ref=f12e1353]:
+                            - paragraph [ref=f12e1354]: CMATMods Signa Drive
+                            - generic [ref=f12e1355]: CMATMods · Signa Drive
+                        - cell [ref=f12e1782]: fx/pedal
+                        - cell [ref=f12e1783]: —
+                        - cell [ref=f12e1784]:
+                          - generic [ref=f12e1359]:
+                            - button [ref=f12e1785] [cursor=pointer]
+                            - button [ref=f12e1786] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1787]:
+                        - cell [ref=f12e1788]:
+                          - generic [ref=f12e1368]:
+                            - paragraph [ref=f12e1369]: Custom Spring Reverb Filter Unit
+                            - generic [ref=f12e1370]: Custom · Spring Filter FX
+                        - cell [ref=f12e1790]: fx/outboard
+                        - cell [ref=f12e1791]: —
+                        - cell [ref=f12e1792]:
+                          - generic [ref=f12e1374]:
+                            - button [ref=f12e1793] [cursor=pointer]
+                            - button [ref=f12e1794] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1795]:
+                        - cell [ref=f12e1796]:
+                          - generic [ref=f12e1383]:
+                            - paragraph [ref=f12e1384]: Death By Audio Robot
+                            - generic [ref=f12e1385]: Death By Audio · Robot
+                        - cell [ref=f12e1798]: fx/pedal
+                        - cell [ref=f12e1799]: —
+                        - cell [ref=f12e1800]:
+                          - generic [ref=f12e1389]:
+                            - button [ref=f12e1801] [cursor=pointer]
+                            - button [ref=f12e1802] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1803]:
+                        - cell [ref=f12e1804]:
+                          - generic [ref=f12e1398]:
+                            - paragraph [ref=f12e1399]: DOD Meatbox SubSynth
+                            - generic [ref=f12e1400]: DOD · Meatbox
+                        - cell [ref=f12e1806]: fx/pedal
+                        - cell [ref=f12e1807]: Oficina
+                        - cell [ref=f12e1808]:
+                          - generic [ref=f12e1404]:
+                            - button [ref=f12e1809] [cursor=pointer]
+                            - button [ref=f12e1810] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1811]:
+                        - cell [ref=f12e1812]:
+                          - generic [ref=f12e1413]:
+                            - paragraph [ref=f12e1414]: EarthQuaker Devices Disaster Transport SR
+                            - generic [ref=f12e1415]: EarthQuaker Devices · Disaster Transport SR
+                        - cell [ref=f12e1814]: fx/pedal
+                        - cell [ref=f12e1815]: Oficina
+                        - cell [ref=f12e1816]:
+                          - generic [ref=f12e1419]:
+                            - button [ref=f12e1817] [cursor=pointer]
+                            - button [ref=f12e1818] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1819]:
+                        - cell [ref=f12e1820]:
+                          - generic [ref=f12e1428]:
+                            - paragraph [ref=f12e1429]: EarthQuaker Devices Plumes
+                            - generic [ref=f12e1430]: EarthQuaker Devices · Plumes
+                        - cell [ref=f12e1822]: fx/pedal
+                        - cell [ref=f12e1823]: —
+                        - cell [ref=f12e1824]:
+                          - generic [ref=f12e1434]:
+                            - button [ref=f12e1825] [cursor=pointer]
+                            - button [ref=f12e1826] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1827]:
+                        - cell [ref=f12e1828]:
+                          - generic [ref=f12e1443]:
+                            - paragraph [ref=f12e1444]: Electro-Harmonix Deluxe Bass Big Muff Pi
+                            - generic [ref=f12e1445]: Electro-Harmonix · Deluxe Bass Big Muff
+                        - cell [ref=f12e1830]: fx/pedal
+                        - cell [ref=f12e1831]: —
+                        - cell [ref=f12e1832]:
+                          - generic [ref=f12e1449]:
+                            - button [ref=f12e1833] [cursor=pointer]
+                            - button [ref=f12e1834] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1835]:
+                        - cell [ref=f12e1836]:
+                          - generic [ref=f12e1458]:
+                            - paragraph [ref=f12e1459]: Electro-Harmonix HOG2 Harmonic Octave Generator
+                            - generic [ref=f12e1460]: Electro-Harmonix · HOG2
+                        - cell [ref=f12e1838]: fx/pedal
+                        - cell [ref=f12e1839]: —
+                        - cell [ref=f12e1840]:
+                          - generic [ref=f12e1464]:
+                            - button [ref=f12e1841] [cursor=pointer]
+                            - button [ref=f12e1842] [cursor=pointer]: QR, historial y mas
+                  - generic [ref=f12e1471]:
+                    - paragraph [ref=f12e1472]: Por página
+                    - generic [ref=f12e1473]:
+                      - combobox [ref=f12e1843] [cursor=pointer]: "25"
+                      - textbox: "25"
+                    - paragraph [ref=f12e1475]: 1–25 de 61 assets
+                    - generic [ref=f12e1476]:
+                      - button [disabled]
+                      - button [ref=f12e1844] [cursor=pointer]
+          - generic [ref=f12e1481]:
+            - status [ref=f12e1482]:
+              - generic [ref=f12e1485]: "API: online"
+            - button [ref=f12e1845] [cursor=pointer]
+    - generic [ref=f12e1846]:
+      - button [ref=f12e1847] [cursor=pointer]
+      - button [ref=f12e1851] [cursor=pointer]
+      - button [ref=f12e1855] [cursor=pointer]
+      - button [ref=f12e1858] [cursor=pointer]
+      - button [ref=f12e1861] [cursor=pointer]
+      - button [ref=f12e1864] [cursor=pointer]
+      - generic [ref=f12e1867]:
+        - generic [ref=f12e1868]: "En pausa: stream.rcast.net"
+        - text: Live
+  - dialog [ref=f12e1871]:
+    - heading "Nuevo asset" [level=2] [ref=f12e1872]
+    - generic [ref=f12e1874]:
+      - generic [ref=f12e1875]:
+        - generic:
+          - text: Nombre
+          - generic: "*"
+        - generic [ref=f12e1876]:
+          - textbox "Nombre" [ref=f12e1877]
+          - group:
+            - generic: Nombre *
+      - generic [ref=f12e1879]:
+        - generic:
+          - text: Categoría
+          - generic: "*"
+        - generic [ref=f12e1880]:
+          - combobox "Categoría" [ref=f12e1881]
+          - group:
+            - generic: Categoría *
+        - paragraph [ref=f12e1882]: Gestiona categorías en Configuración → Opciones UX.
+      - generic [ref=f12e1883]:
+        - button [ref=f12e1885] [cursor=pointer]
+        - button [active] [ref=f12e1889] [cursor=pointer]:
+          - paragraph [ref=f12e1890]: Arrastra archivos aquí o haz clic para seleccionarlos
+        - generic [ref=f12e1908]:
+          - generic [ref=f12e1909]:
+            - img "tdf-upload-smoke-20261005.png" [ref=f12e1911]
+            - generic [ref=f12e1912]:
+              - paragraph [ref=f12e1913]: tdf-upload-smoke-20261005.png
+              - generic [ref=f12e1914]: 0.00 MB
+              - progressbar [ref=f12e1915]
+              - generic [ref=f12e1917]: https://api.tdfrecords.net/assets/serve/inventory/8236114b-bb9b-4db7-8d41-786cfd9c29d6-tdf-upload-smoke-20261005.png
+          - generic [ref=f12e1920]:
+            - img "tdf-upload-smoke-20261005.png" [ref=f12e1922]
+            - generic [ref=f12e1923]:
+              - paragraph [ref=f12e1924]: tdf-upload-smoke-20261005.png
+              - generic [ref=f12e1925]: 0.00 MB
+              - progressbar [ref=f12e1926]
+              - generic [ref=f12e1928]: https://api.tdfrecords.net/assets/serve/inventory/aa7da6e3-7208-4e20-b5e1-a7fb79b9118b-tdf-upload-smoke-20261005.png
+      - generic [ref=f12e1891]:
+        - generic: Notas
+        - generic [ref=f12e1892]:
+          - textbox "Notas" [ref=f12e1893]:
+            - /placeholder: Notas internas u observaciones
+          - group:
+            - generic: Notas
+      - generic [ref=f12e1894]:
+        - generic [ref=f12e1895]: Estado
+        - generic [ref=f12e1896]:
+          - combobox "Estado Activos" [ref=f12e1897] [cursor=pointer]: Activos
+          - textbox: Active
+          - group:
+            - generic: Estado
+      - generic [ref=f12e1898]:
+        - generic: Ubicación (sala)
+        - generic [ref=f12e1899]:
+          - combobox "Ubicación (sala)" [ref=f12e1900] [cursor=pointer]
+          - textbox
+          - group:
+            - generic: Ubicación (sala)
+        - paragraph [ref=f12e1901]: Opcional. Usa las salas del estudio para ubicar el asset.
+    - generic [ref=f12e1902]:
+      - button "Cancelar" [ref=f12e1903] [cursor=pointer]
+      - button "Guardar" [ref=f12e1904] [cursor=pointer]

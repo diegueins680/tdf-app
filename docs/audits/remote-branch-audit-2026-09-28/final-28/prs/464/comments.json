@@ -1,0 +1,142 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4118352786",
+      "pull_request_review_id": 5333730948,
+      "id": 4118352786,
+      "node_id": "PRRC_kwDOQPdUrM71eROS",
+      "diff_hunk": "@@ -2358,6 +2340,84 @@ syncUnsuppressedDiscoveredEventDb\n       , discoveryArtistsCreated = artistsCreated\n       }\n \n+-- Compare each canonical field with the last value actually supplied by ingestion.\n+-- A differing field belongs to the editor. Keep unrelated metadata, and retain the\n+-- newest source evidence even when its canonical field is protected. Legacy rows\n+-- without ownership evidence are conservative: their canonical fields are not adopted.\n+ownedEventUpdates :: Social.SocialEvent -> UTCTime -> DiscoveredEvent -> Social.VenueId\n+  -> UUID -> UUID -> Maybe Text -> [Update Social.SocialEvent]\n+ownedEventUpdates current now event@DiscoveredEvent{..} venueKey typeId stateId metadata =\n+  [ Social.SocialEventTitle =. keep \"title\" (Social.socialEventTitle current) discoveredEventTitle\n+  , Social.SocialEventDescription =. keep \"description\" (Social.socialEventDescription current) discoveredEventDescription\n+  , Social.SocialEventVenueId =. keep \"venueId\" (Social.socialEventVenueId current) (Just venueKey)\n+  , Social.SocialEventTimezone =. keep \"timezone\" (Social.socialEventTimezone current) (importedEventTimeZone discoveredEventVenue)\n+  , Social.SocialEventStartTime =. keep \"startTime\" (Social.socialEventStartTime current) discoveredEventStart\n+  , Social.SocialEventEndTime =. keep \"endTime\" (Social.socialEventEndTime current) discoveredEventEnd\n+  , Social.SocialEventPriceCents =. keep \"priceCents\" (Social.socialEventPriceCents current) discoveredEventPriceCents\n+  , Social.SocialEventEventTypeId =. keep \"eventTypeId\" (Social.socialEventEventTypeId current) (Just typeId)\n+  , Social.SocialEventWorkflowStateId =. keep \"workflowStateId\" (Social.socialEventWorkflowStateId current) (Just stateId)\n+  , Social.SocialEventMetadata =. Just (encodeMetadata mergedMetadata)\n+  , Social.SocialEventUpdatedAt =. now\n+  ]\n+  where\n+    oldMetadata = metadataObject (Social.socialEventMetadata current)\n+    previous = case AesonKeyMap.lookup \"_discoveryOwned\" oldMetadata of\n+      Just (Object snapshot) -> snapshot\n+      _ -> AesonKeyMap.empty\n+    next = ownedEventSnapshot event venueKey typeId stateId metadata\n+    -- Only previously owned keys remain owned; a missing legacy snapshot is not\n+    -- permission to claim values that may have been written by an administrator.\n+    nextOwned = AesonKeyMap.filterWithKey\n+      (\\key _ -> AesonKeyMap.member key previous\n+        && AesonKeyMap.lookup key previous == AesonKeyMap.lookup key actualSnapshot) next\n+    actualSnapshot = AesonKeyMap.fromList\n+      [ (\"title\", toJSON (Social.socialEventTitle current))\n+      , (\"description\", toJSON (Social.socialEventDescription current))\n+      , (\"venueId\", toJSON (Social.socialEventVenueId current))\n+      , (\"timezone\", toJSON (Social.socialEventTimezone current))\n+      , (\"startTime\", toJSON (Social.socialEventStartTime current))\n+      , (\"endTime\", toJSON (Social.socialEventEndTime current))\n+      , (\"priceCents\", toJSON (Social.socialEventPriceCents current))\n+      , (\"eventTypeId\", toJSON (Social.socialEventEventTypeId current))\n+      , (\"workflowStateId\", toJSON (Social.socialEventWorkflowStateId current))\n+      ] <> oldMetadata\n+    keep :: ToJSON a => Key -> a -> a -> a\n+    keep key actual incoming =\n+      if AesonKeyMap.lookup key previous == Just (toJSON actual) then incoming else actual\n+    mergeMetadata acc key =\n+      let actual = AesonKeyMap.lookup key oldMetadata\n+       in if actual == AesonKeyMap.lookup key previous && AesonKeyMap.member key previous\n+          then maybe acc (\\value -> AesonKeyMap.insert key value acc) (AesonKeyMap.lookup key next)\n+          else acc\n+    mergedMetadata = AesonKeyMap.insert \"_discoveryOwned\" (Object nextOwned)\n+      (foldl mergeMetadata oldMetadata [\"ticketUrl\", \"imageUrl\", \"currency\", \"isPublic\"])",
+      "path": "tdf-hq/src/TDF/Services/EventDiscovery.hs",
+      "commit_id": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+      "original_commit_id": "5068a0d2d5e1c4888e57cf5b56f0365cb0a718d6",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Permit the ownership marker in stored event metadata**\n\nEvery new or refreshed imported event now receives `_discoveryOwned`, but `EventMetadataDTO` still rejects every key except `ticketUrl`, `imageUrl`, `isPublic`, `currency`, and `budgetCents` (`SocialEventsHandlers.hs:1594-1623`). As soon as an event is imported or refreshed, `publicUpcomingEventRow` silently omits it because metadata decoding fails, while administrative read/update and finance paths using `decodeStoredEventMetadata` return errors. Store this evidence separately or update all metadata decoders and writers to accept and preserve the internal marker.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T03:38:45Z",
+      "updated_at": "2026-09-28T03:38:45Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/464#discussion_r4118352786",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/464",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4118352786"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/464#discussion_r4118352786"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/464"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4118352786/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 2403,
+      "original_start_line": 2392,
+      "start_side": "RIGHT",
+      "line": 2404,
+      "original_line": 2393,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 136,
+      "position": 190,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4118372645",
+      "pull_request_review_id": 5333753137,
+      "id": 4118372645,
+      "node_id": "PRRC_kwDOQPdUrM71eWEl",
+      "diff_hunk": "@@ -2358,6 +2340,84 @@ syncUnsuppressedDiscoveredEventDb\n       , discoveryArtistsCreated = artistsCreated\n       }\n \n+-- Compare each canonical field with the last value actually supplied by ingestion.\n+-- A differing field belongs to the editor. Keep unrelated metadata, and retain the\n+-- newest source evidence even when its canonical field is protected. Legacy rows\n+-- without ownership evidence are conservative: their canonical fields are not adopted.\n+ownedEventUpdates :: Social.SocialEvent -> UTCTime -> DiscoveredEvent -> Social.VenueId\n+  -> UUID -> UUID -> Maybe Text -> [Update Social.SocialEvent]\n+ownedEventUpdates current now event@DiscoveredEvent{..} venueKey typeId stateId metadata =\n+  [ Social.SocialEventTitle =. keep \"title\" (Social.socialEventTitle current) discoveredEventTitle\n+  , Social.SocialEventDescription =. keep \"description\" (Social.socialEventDescription current) discoveredEventDescription\n+  , Social.SocialEventVenueId =. keep \"venueId\" (Social.socialEventVenueId current) (Just venueKey)\n+  , Social.SocialEventTimezone =. keep \"timezone\" (Social.socialEventTimezone current) (importedEventTimeZone discoveredEventVenue)\n+  , Social.SocialEventStartTime =. keep \"startTime\" (Social.socialEventStartTime current) discoveredEventStart\n+  , Social.SocialEventEndTime =. keep \"endTime\" (Social.socialEventEndTime current) discoveredEventEnd\n+  , Social.SocialEventPriceCents =. keep \"priceCents\" (Social.socialEventPriceCents current) discoveredEventPriceCents\n+  , Social.SocialEventEventTypeId =. keep \"eventTypeId\" (Social.socialEventEventTypeId current) (Just typeId)\n+  , Social.SocialEventWorkflowStateId =. keep \"workflowStateId\" (Social.socialEventWorkflowStateId current) (Just stateId)\n+  , Social.SocialEventMetadata =. Just (encodeMetadata mergedMetadata)\n+  , Social.SocialEventUpdatedAt =. now\n+  ]\n+  where\n+    oldMetadata = metadataObject (Social.socialEventMetadata current)\n+    previous = case AesonKeyMap.lookup \"_discoveryOwned\" oldMetadata of\n+      Just (Object snapshot) -> snapshot\n+      _ -> AesonKeyMap.empty\n+    next = ownedEventSnapshot event venueKey typeId stateId metadata\n+    -- Only previously owned keys remain owned; a missing legacy snapshot is not\n+    -- permission to claim values that may have been written by an administrator.\n+    nextOwned = AesonKeyMap.filterWithKey\n+      (\\key _ -> AesonKeyMap.member key previous\n+        && AesonKeyMap.lookup key previous == AesonKeyMap.lookup key actualSnapshot) next\n+    actualSnapshot = AesonKeyMap.fromList\n+      [ (\"title\", toJSON (Social.socialEventTitle current))\n+      , (\"description\", toJSON (Social.socialEventDescription current))\n+      , (\"venueId\", toJSON (Social.socialEventVenueId current))\n+      , (\"timezone\", toJSON (Social.socialEventTimezone current))\n+      , (\"startTime\", toJSON (Social.socialEventStartTime current))\n+      , (\"endTime\", toJSON (Social.socialEventEndTime current))\n+      , (\"priceCents\", toJSON (Social.socialEventPriceCents current))\n+      , (\"eventTypeId\", toJSON (Social.socialEventEventTypeId current))\n+      , (\"workflowStateId\", toJSON (Social.socialEventWorkflowStateId current))\n+      ] <> oldMetadata\n+    keep :: ToJSON a => Key -> a -> a -> a\n+    keep key actual incoming =\n+      if AesonKeyMap.lookup key previous == Just (toJSON actual) then incoming else actual\n+    mergeMetadata acc key =\n+      let actual = AesonKeyMap.lookup key oldMetadata\n+       in if actual == AesonKeyMap.lookup key previous && AesonKeyMap.member key previous\n+          then maybe acc (\\value -> AesonKeyMap.insert key value acc) (AesonKeyMap.lookup key next)\n+          else acc\n+    mergedMetadata = AesonKeyMap.insert \"_discoveryOwned\" (Object nextOwned)\n+      (foldl mergeMetadata oldMetadata [\"ticketUrl\", \"imageUrl\", \"currency\", \"isPublic\"])",
+      "path": "tdf-hq/src/TDF/Services/EventDiscovery.hs",
+      "commit_id": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+      "original_commit_id": "96135ee09b31845bd14565f5b457e07a44606bef",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Preserve editorial metadata during source reconciliation**\n\nWhen an editor changes `ticketUrl` or sets `isPublic` to false, this ownership logic initially preserves the change, but every successful cron refresh immediately calls `reconcileProviderEvents` (`Cron.hs:617-624`), whose `refreshCanonicalVisibility` unconditionally rewrites both fields from provider references (`EventDiscovery.hs:2000-2007`). Consequently, a legacy imported event that an administrator hides can be republished on the next successful source run, and an editorial ticket URL is replaced despite being removed from `nextOwned`; make reconciliation honor/update the ownership snapshot rather than bypassing it.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T03:44:21Z",
+      "updated_at": "2026-09-28T03:44:21Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/464#discussion_r4118372645",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/464",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4118372645"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/464#discussion_r4118372645"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/464"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4118372645/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 2403,
+      "original_start_line": 2392,
+      "start_side": "RIGHT",
+      "line": 2404,
+      "original_line": 2393,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 136,
+      "position": 190,
+      "subject_type": "line"
+    }
+  ]
+]

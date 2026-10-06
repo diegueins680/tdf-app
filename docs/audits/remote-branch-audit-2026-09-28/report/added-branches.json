@@ -1,0 +1,2404 @@
+[
+  {
+    "branch": "audit/event-stack-consolidation-20260928",
+    "head_sha": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+    "pr": 465,
+    "url": "https://github.com/diegueins680/tdf-app/pull/465",
+    "base": "main",
+    "base_sha": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "protected": false,
+    "ahead": 0,
+    "behind": 1,
+    "merge_base": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+    "review_decision": "APPROVED",
+    "draft": false,
+    "state": "closed",
+    "merged": true,
+    "merge_commit": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "mergeable": null,
+    "mergeable_state": "unknown",
+    "check_evidence_snapshot": "final-33/checks/ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b.json",
+    "checks": [
+      {
+        "name": "native-android-e2e",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338528/job/111332614760"
+      },
+      {
+        "name": "quality",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338528/job/111332613979"
+      },
+      {
+        "name": "production-migrations",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338528/job/111330530952"
+      },
+      {
+        "name": "Cloudflare Pages",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/runs/111330260276"
+      },
+      {
+        "name": "api-contracts",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338528/job/111330191124"
+      },
+      {
+        "name": "Vercel Preview Comments",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/runs/111330090176"
+      },
+      {
+        "name": "mobile-quality",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338528/job/111330032995"
+      },
+      {
+        "name": "ui-quality",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338528/job/111330032968"
+      },
+      {
+        "name": "migration-tests",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338528/job/111330032941"
+      },
+      {
+        "name": "api-contract-tests",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338528/job/111330032929"
+      },
+      {
+        "name": "backend-quality",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338528/job/111330032910"
+      },
+      {
+        "name": "repo-quality",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338528/job/111330032905"
+      },
+      {
+        "name": "persona-web-e2e",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338528/job/111330032904"
+      },
+      {
+        "name": "models-and-postgres",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338638/job/111329891689"
+      },
+      {
+        "name": "native-ios-e2e",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338572/job/111329891604"
+      },
+      {
+        "name": "postgres-api",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338651/job/111329891593"
+      },
+      {
+        "name": "postgres-foundation",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338651/job/111329891589"
+      },
+      {
+        "name": "postgres-raci-reassignment",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338651/job/111329891583"
+      },
+      {
+        "name": "postgres-raci-editor-context",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338651/job/111329891582"
+      },
+      {
+        "name": "postgres-task-revision",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338651/job/111329891581"
+      },
+      {
+        "name": "postgres-complete-schema",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338651/job/111329891571"
+      },
+      {
+        "name": "postgres-task-completion",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338651/job/111329891558"
+      },
+      {
+        "name": "specification-contracts",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338651/job/111329891546"
+      },
+      {
+        "name": "postgres-task-revisioned-read",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338651/job/111329891532"
+      },
+      {
+        "name": "changes",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338528/job/111329891520"
+      },
+      {
+        "name": "postgres-task-read",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338651/job/111329891509"
+      },
+      {
+        "name": "postgres-task-commit",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338651/job/111329891481"
+      },
+      {
+        "name": "social-client",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338638/job/111329891480"
+      },
+      {
+        "name": "verify",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338651/job/111329891376"
+      },
+      {
+        "name": "real-raci-browser",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338573/job/111329891241"
+      },
+      {
+        "name": "hardcoded-list-audit",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338591/job/111329891125"
+      },
+      {
+        "name": "build",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338586/job/111329891054"
+      },
+      {
+        "name": "postgres-properties",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338572/job/111329891047"
+      },
+      {
+        "name": "build",
+        "head": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338517/job/111329890921"
+      }
+    ],
+    "unresolved_threads": [],
+    "native_stack": null,
+    "classification": "ALREADY_MERGED",
+    "confidence": "high",
+    "rationale": "Audit-owned normal merge of 35 event branches and PR339 preserves attribution and migration ancestry. Main49f1 was normally integrated at23ff8f588 with mobile ede1f2a, resolving five conflicts. Full local UI2648 tests/build, backend3576 examples and107 native PostgreSQL HTTP examples pass. Follow-up fixes late follow/unfollow cache refresh, defers the disabled logistics task CTA, and reconciles two catalog successor mappings while preserving historical decisions and all assertions. Current-head hosted checks and fresh independent approval remain mandatory. Mobile115 was concurrently merged atbca7f39 with current-head approval and passing post-merge checks. New lifecycle fixes at34ca75d validate receipt contents inside the transaction and hold the enabled feature flag lock through commit;110 actual HTTP examples and six observed SQL races pass. The task-completion expiry polling CI failure was corrected at154f968aa; the full native suite and current hosted task-completion check pass. All154f968aa checks and approval passed. Normal reconciliationee58bd13 now includes approved mainc4d479c7; only the reviewed notification document/hash were added, and generated inventory validation passes. Current ee58 checks/review govern integration. Preserve source PRs and branches until successful integration. Latest normal reconciliation08acdfa897832c42ef1582f26ffdd7c23f019b4c incorporates mainf8925e339/approved475, preserves all event decisions and exact main ownership/migration decisions, and repairs two current migration successor mappings with complete prior mappings retained. Local five catalog regressions, strict1171-candidate gate,83 release,32 CI, formal, repository and generated-inventory gates pass. That historical head passed all checks/approval; subsequent lifecycle fixes and the154f968aa expiry correction require fresh checks/review. Mobile115 integration is verified.",
+    "action": "Normal merge verified at b07f67c3ebe2022d5f70e94578944b6401616696; exact tested tree and all source/migration ancestry retained. Source closures require passing target CI; branch retained.",
+    "effective_changes": "",
+    "files": "",
+    "recovery": "Not deleted",
+    "evidence": "final-33/prs/465/info.json",
+    "remote_present": true
+  },
+  {
+    "branch": "codex/event-ingestion-editorial-20260928",
+    "head_sha": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+    "pr": 464,
+    "url": "https://github.com/diegueins680/tdf-app/pull/464",
+    "base": "codex/event-ingestion-boundaries-20260927",
+    "base_sha": "a125a347cacb8d941a515171e2a81d4c92f2c2d2",
+    "protected": false,
+    "ahead": 3,
+    "behind": 2,
+    "merge_base": "6ba185a697b3b6b6983ebb48e0ab6454f716cf23",
+    "review_decision": "REVIEW_REQUIRED",
+    "draft": false,
+    "state": "closed",
+    "merged": false,
+    "merge_commit": null,
+    "mergeable": null,
+    "mergeable_state": "unknown",
+    "check_evidence_snapshot": "final-33/checks/fdfcd7e4a78273c0e010f5515c061ee4086d26b7.json",
+    "checks": [
+      {
+        "name": "build",
+        "head": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36423990251/job/108933324442"
+      },
+      {
+        "name": "quality",
+        "head": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36375391128/job/108782694001"
+      },
+      {
+        "name": "Cloudflare Pages",
+        "head": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/runs/108780458950"
+      },
+      {
+        "name": "Vercel Preview Comments",
+        "head": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/runs/108780287961"
+      },
+      {
+        "name": "ui-quality",
+        "head": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36375391128/job/108780226158"
+      },
+      {
+        "name": "migration-tests",
+        "head": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36375391128/job/108780225994"
+      },
+      {
+        "name": "mobile-quality",
+        "head": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36375391128/job/108780225847"
+      },
+      {
+        "name": "api-contract-tests",
+        "head": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36375391128/job/108780225667"
+      },
+      {
+        "name": "production-migrations",
+        "head": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36375391128/job/108780225364"
+      },
+      {
+        "name": "api-contracts",
+        "head": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36375391128/job/108780225248"
+      },
+      {
+        "name": "persona-web-e2e",
+        "head": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36375391128/job/108780224853"
+      },
+      {
+        "name": "backend-quality",
+        "head": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36375391128/job/108780224821"
+      },
+      {
+        "name": "repo-quality",
+        "head": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36375391128/job/108780224791"
+      },
+      {
+        "name": "changes",
+        "head": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36375391128/job/108780149429"
+      },
+      {
+        "name": "specification-contracts",
+        "head": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36375391166/job/108780065966"
+      },
+      {
+        "name": "postgres-foundation",
+        "head": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36375391166/job/108780065899"
+      },
+      {
+        "name": "verify",
+        "head": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36375391166/job/108780065731"
+      },
+      {
+        "name": "social-client",
+        "head": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36375391195/job/108780065728"
+      },
+      {
+        "name": "build",
+        "head": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36375391130/job/108780065604"
+      },
+      {
+        "name": "models-and-postgres",
+        "head": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36375391195/job/108780065440"
+      },
+      {
+        "name": "hardcoded-list-audit",
+        "head": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36375391148/job/108780065383"
+      }
+    ],
+    "unresolved_threads": [
+      {
+        "id": "PRRT_kwDOQPdUrM6mhy9e",
+        "isResolved": false,
+        "isOutdated": false,
+        "path": "tdf-hq/src/TDF/Services/EventDiscovery.hs",
+        "line": 2404,
+        "comments": {
+          "nodes": [
+            {
+              "author": {
+                "login": "chatgpt-codex-connector"
+              },
+              "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Permit the ownership marker in stored event metadata**\n\nEvery new or refreshed imported event now receives `_discoveryOwned`, but `EventMetadataDTO` still rejects every key except `ticketUrl`, `imageUrl`, `isPublic`, `currency`, and `budgetCents` (`SocialEventsHandlers.hs:1594-1623`). As soon as an event is imported or refreshed, `publicUpcomingEventRow` silently omits it because metadata decoding fails, while administrative read/update and finance paths using `decodeStoredEventMetadata` return errors. Store this evidence separately or update all metadata decoders and writers to accept and preserve the internal marker.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/464#discussion_r4118352786",
+              "createdAt": "2026-09-28T03:38:45Z"
+            }
+          ],
+          "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQwMzozODo0NVrO9XkTkg=="
+          }
+        }
+      },
+      {
+        "id": "PRRT_kwDOQPdUrM6mh2J2",
+        "isResolved": false,
+        "isOutdated": false,
+        "path": "tdf-hq/src/TDF/Services/EventDiscovery.hs",
+        "line": 2404,
+        "comments": {
+          "nodes": [
+            {
+              "author": {
+                "login": "chatgpt-codex-connector"
+              },
+              "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Preserve editorial metadata during source reconciliation**\n\nWhen an editor changes `ticketUrl` or sets `isPublic` to false, this ownership logic initially preserves the change, but every successful cron refresh immediately calls `reconcileProviderEvents` (`Cron.hs:617-624`), whose `refreshCanonicalVisibility` unconditionally rewrites both fields from provider references (`EventDiscovery.hs:2000-2007`). Consequently, a legacy imported event that an administrator hides can be republished on the next successful source run, and an editorial ticket URL is replaced despite being removed from `nextOwned`; make reconciliation honor/update the ownership snapshot rather than bypassing it.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/464#discussion_r4118372645",
+              "createdAt": "2026-09-28T03:44:21Z"
+            }
+          ],
+          "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQwMzo0NDoyMVrO9XlhJQ=="
+          }
+        }
+      }
+    ],
+    "native_stack": {
+      "id": 1511588,
+      "number": 466,
+      "base": {
+        "ref": "main",
+        "sha": "648f2d6dc69080d4438ae2a25309497012ded2d1"
+      },
+      "size": 3,
+      "position": 3
+    },
+    "classification": "ALREADY_MERGED",
+    "confidence": "high",
+    "rationale": "All original fdfcd7e source history and intended editorial ownership behavior were preserved in approved, normally merged replacement475 at f8925e339447cb593f7cce5d86403d1396aaf5a5. Target tree matches fully tested4100 head. Replacement addresses source review concerns through strict stored/public boundaries, durable editorial overrides, both database filters and forward directory-function migration. Original native stack was not rewritten. Source PR closure is recorded only when its closed state is verified after passing target CI; branch remains retained.",
+    "action": "Closed after replacement475 and passing target CI; branch retained.",
+    "effective_changes": "docs/Event_Discovery_Cron.md                       |  16 +++\n .../catalog-list-decisions.json                    |  18 +++\n formal/system/inventory.json                       |   2 +-\n tdf-hq/src/TDF/Cron.hs                             |   4 +-\n tdf-hq/src/TDF/Services/EventDiscovery.hs          | 143 +++++++++++++++------\n tdf-hq/test/TDF/Services/EventDiscoverySpec.hs     |  85 +++++++++++-\n 6 files changed, 229 insertions(+), 39 deletions(-)",
+    "files": "M\tdocs/Event_Discovery_Cron.md\nM\tdocs/catalog-persistence/catalog-list-decisions.json\nM\tformal/system/inventory.json\nM\ttdf-hq/src/TDF/Cron.hs\nM\ttdf-hq/src/TDF/Services/EventDiscovery.hs\nM\ttdf-hq/test/TDF/Services/EventDiscoverySpec.hs",
+    "recovery": "Not deleted",
+    "evidence": "final-33/prs/464/info.json",
+    "remote_present": true
+  },
+  {
+    "branch": "codex/portable-backend-release-20260928",
+    "head_sha": "3e241ecd8f1631c9e0ac3964ecc0b7600caebc93",
+    "pr": 467,
+    "url": "https://github.com/diegueins680/tdf-app/pull/467",
+    "base": "main",
+    "base_sha": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "protected": false,
+    "ahead": 0,
+    "behind": 166,
+    "merge_base": "3e241ecd8f1631c9e0ac3964ecc0b7600caebc93",
+    "review_decision": "APPROVED",
+    "draft": false,
+    "state": "closed",
+    "merged": true,
+    "merge_commit": "7e7106b36e7ac427711c2f64af650527d619f9ce",
+    "mergeable": null,
+    "mergeable_state": "unknown",
+    "check_evidence_snapshot": "final-27/checks/3e241ecd8f1631c9e0ac3964ecc0b7600caebc93.json",
+    "checks": [
+      {
+        "name": "quality",
+        "head": "3e241ecd8f1631c9e0ac3964ecc0b7600caebc93",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36431715410/job/108965602155"
+      },
+      {
+        "name": "production-migrations",
+        "head": "3e241ecd8f1631c9e0ac3964ecc0b7600caebc93",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36431715410/job/108961638951"
+      },
+      {
+        "name": "Cloudflare Pages",
+        "head": "3e241ecd8f1631c9e0ac3964ecc0b7600caebc93",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/runs/108960857198"
+      },
+      {
+        "name": "Vercel Preview Comments",
+        "head": "3e241ecd8f1631c9e0ac3964ecc0b7600caebc93",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/runs/108960734327"
+      },
+      {
+        "name": "api-contract-tests",
+        "head": "3e241ecd8f1631c9e0ac3964ecc0b7600caebc93",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36431715410/job/108960311796"
+      },
+      {
+        "name": "backend-quality",
+        "head": "3e241ecd8f1631c9e0ac3964ecc0b7600caebc93",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36431715410/job/108960311055"
+      },
+      {
+        "name": "mobile-quality",
+        "head": "3e241ecd8f1631c9e0ac3964ecc0b7600caebc93",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36431715410/job/108960310514"
+      },
+      {
+        "name": "api-contracts",
+        "head": "3e241ecd8f1631c9e0ac3964ecc0b7600caebc93",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36431715410/job/108960309625"
+      },
+      {
+        "name": "migration-tests",
+        "head": "3e241ecd8f1631c9e0ac3964ecc0b7600caebc93",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36431715410/job/108960308658"
+      },
+      {
+        "name": "persona-web-e2e",
+        "head": "3e241ecd8f1631c9e0ac3964ecc0b7600caebc93",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36431715410/job/108960308537"
+      },
+      {
+        "name": "repo-quality",
+        "head": "3e241ecd8f1631c9e0ac3964ecc0b7600caebc93",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36431715410/job/108960308524"
+      },
+      {
+        "name": "ui-quality",
+        "head": "3e241ecd8f1631c9e0ac3964ecc0b7600caebc93",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36431715410/job/108960308501"
+      },
+      {
+        "name": "changes",
+        "head": "3e241ecd8f1631c9e0ac3964ecc0b7600caebc93",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36431715410/job/108960119933"
+      },
+      {
+        "name": "models-and-postgres",
+        "head": "3e241ecd8f1631c9e0ac3964ecc0b7600caebc93",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36431715519/job/108959286023"
+      },
+      {
+        "name": "verify",
+        "head": "3e241ecd8f1631c9e0ac3964ecc0b7600caebc93",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36431715339/job/108959285832"
+      },
+      {
+        "name": "specification-contracts",
+        "head": "3e241ecd8f1631c9e0ac3964ecc0b7600caebc93",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36431715339/job/108959285816"
+      },
+      {
+        "name": "social-client",
+        "head": "3e241ecd8f1631c9e0ac3964ecc0b7600caebc93",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36431715519/job/108959285594"
+      },
+      {
+        "name": "postgres-foundation",
+        "head": "3e241ecd8f1631c9e0ac3964ecc0b7600caebc93",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36431715339/job/108959285588"
+      },
+      {
+        "name": "hardcoded-list-audit",
+        "head": "3e241ecd8f1631c9e0ac3964ecc0b7600caebc93",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36431715419/job/108959285525"
+      },
+      {
+        "name": "build",
+        "head": "3e241ecd8f1631c9e0ac3964ecc0b7600caebc93",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36431715512/job/108959285457"
+      },
+      {
+        "name": "build",
+        "head": "3e241ecd8f1631c9e0ac3964ecc0b7600caebc93",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36431715451/job/108959285255"
+      }
+    ],
+    "unresolved_threads": [],
+    "native_stack": null,
+    "classification": "PROTECTED_OR_OPERATIONAL",
+    "confidence": "high",
+    "rationale": "Concurrent guarded hosting/API cutover work with explicit operational runbooks. Another actor resolved its reviews and merged it into main at 7e7106b36e7ac427711c2f64af650527d619f9ce. Current review and merge evidence is captured separately. Preserve this active operational branch; no manual deployment by the audit. Current remote absence supersedes earlier preservation instructions; no audit deletion or restoration.",
+    "action": "Remote ref concurrently deleted outside this audit; source history retained in verified local recovery bundle. Earlier audit mutations remain in the ledger.",
+    "effective_changes": "",
+    "files": "",
+    "recovery": "git push origin 3e241ecd8f1631c9e0ac3964ecc0b7600caebc93:refs/heads/codex/portable-backend-release-20260928",
+    "evidence": "final-33/prs/467/info.json",
+    "remote_present": false
+  },
+  {
+    "branch": "audit/event-discovery-integration-20260928",
+    "head_sha": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+    "pr": 469,
+    "url": "https://github.com/diegueins680/tdf-app/pull/469",
+    "base": "main",
+    "base_sha": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "protected": false,
+    "ahead": 0,
+    "behind": 158,
+    "merge_base": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+    "review_decision": "APPROVED",
+    "draft": false,
+    "state": "closed",
+    "merged": true,
+    "merge_commit": "de76dc7df247937144e1802c17d1842f983cbe13",
+    "mergeable": null,
+    "mergeable_state": "unknown",
+    "check_evidence_snapshot": "final-27/checks/cda2c5f7790126f35bd7e09bed35b52b5a0012ef.json",
+    "checks": [
+      {
+        "name": "build",
+        "head": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971358/job/109691154739"
+      },
+      {
+        "name": "models-and-postgres",
+        "head": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36442970971/job/109009962034"
+      },
+      {
+        "name": "social-client",
+        "head": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36442970971/job/109009959035"
+      },
+      {
+        "name": "quality",
+        "head": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971151/job/109003262710"
+      },
+      {
+        "name": "Vercel Preview Comments",
+        "head": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/runs/109000030561"
+      },
+      {
+        "name": "production-migrations",
+        "head": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971151/job/108999488618"
+      },
+      {
+        "name": "api-contracts",
+        "head": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971151/job/108999054087"
+      },
+      {
+        "name": "Cloudflare Pages",
+        "head": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/runs/108998973249"
+      },
+      {
+        "name": "migration-tests",
+        "head": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971151/job/108998109137"
+      },
+      {
+        "name": "backend-quality",
+        "head": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971151/job/108998109038"
+      },
+      {
+        "name": "ui-quality",
+        "head": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971151/job/108998108995"
+      },
+      {
+        "name": "persona-web-e2e",
+        "head": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971151/job/108998108943"
+      },
+      {
+        "name": "api-contract-tests",
+        "head": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971151/job/108998108930"
+      },
+      {
+        "name": "repo-quality",
+        "head": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971151/job/108998108859"
+      },
+      {
+        "name": "mobile-quality",
+        "head": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971151/job/108998108719"
+      },
+      {
+        "name": "hardcoded-list-audit",
+        "head": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971340/job/108997924920"
+      },
+      {
+        "name": "changes",
+        "head": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971151/job/108997923992"
+      },
+      {
+        "name": "postgres-foundation",
+        "head": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36442970977/job/108997923919"
+      },
+      {
+        "name": "verify",
+        "head": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36442970977/job/108997923551"
+      },
+      {
+        "name": "specification-contracts",
+        "head": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36442970977/job/108997923229"
+      },
+      {
+        "name": "build",
+        "head": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36442971002/job/108997922570"
+      }
+    ],
+    "unresolved_threads": [],
+    "native_stack": null,
+    "classification": "ALREADY_MERGED",
+    "confidence": "high",
+    "rationale": "Audit normal merge de76dc7df247937144e1802c17d1842f983cbe13 verified after all exact-head checks passed, independent approval and zero unresolved threads. Resulting tree exactly matches the tested cda2c5f candidate and retains all source ancestry. Post-merge security audit newly reports existing ip-address advisories; focused follow-up PR472 merged normally at 76c2c05c and its final main checks/workflows passed. Source PR460 automatically recognized merged; PR463 closed with evidence after final main checks/workflows passed following PR472. Both branches retained. Current remote absence supersedes earlier preservation instructions; no audit deletion or restoration.",
+    "action": "Remote ref concurrently deleted outside this audit; source history retained in verified local recovery bundle. Earlier audit mutations remain in the ledger.",
+    "effective_changes": "",
+    "files": "",
+    "recovery": "git push origin cda2c5f7790126f35bd7e09bed35b52b5a0012ef:refs/heads/audit/event-discovery-integration-20260928",
+    "evidence": "final-33/prs/469/info.json",
+    "remote_present": false
+  },
+  {
+    "branch": "codex/hetzner-cutover-evidence-20260928",
+    "head_sha": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+    "pr": 468,
+    "url": "https://github.com/diegueins680/tdf-app/pull/468",
+    "base": "main",
+    "base_sha": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "protected": false,
+    "ahead": 21,
+    "behind": 56,
+    "merge_base": "f8925e339447cb593f7cce5d86403d1396aaf5a5",
+    "review_decision": "APPROVED",
+    "draft": false,
+    "state": "open",
+    "merged": false,
+    "merge_commit": null,
+    "mergeable": false,
+    "mergeable_state": "dirty",
+    "check_evidence_snapshot": "final-33/checks/ce1a71fe241ccc05b6114088fb36dd919974dc87.json",
+    "checks": [
+      {
+        "name": "native-android-e2e",
+        "head": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37165925171/job/111330912780"
+      },
+      {
+        "name": "quality",
+        "head": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37165925171/job/111330912138"
+      },
+      {
+        "name": "production-migrations",
+        "head": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37165925171/job/111329137530"
+      },
+      {
+        "name": "Cloudflare Pages",
+        "head": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/runs/111328930147"
+      },
+      {
+        "name": "api-contracts",
+        "head": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37165925171/job/111328863508"
+      },
+      {
+        "name": "Vercel Preview Comments",
+        "head": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/runs/111328833980"
+      },
+      {
+        "name": "backend-quality",
+        "head": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37165925171/job/111328704964"
+      },
+      {
+        "name": "repo-quality",
+        "head": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37165925171/job/111328704943"
+      },
+      {
+        "name": "mobile-quality",
+        "head": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37165925171/job/111328704939"
+      },
+      {
+        "name": "ui-quality",
+        "head": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37165925171/job/111328704918"
+      },
+      {
+        "name": "api-contract-tests",
+        "head": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37165925171/job/111328704913"
+      },
+      {
+        "name": "migration-tests",
+        "head": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37165925171/job/111328704876"
+      },
+      {
+        "name": "persona-web-e2e",
+        "head": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37165925171/job/111328704872"
+      },
+      {
+        "name": "native-ios-e2e",
+        "head": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37165925090/job/111328662463"
+      },
+      {
+        "name": "changes",
+        "head": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37165925171/job/111328662085"
+      },
+      {
+        "name": "specification-contracts",
+        "head": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37165925116/job/111328661927"
+      },
+      {
+        "name": "verify",
+        "head": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37165925116/job/111328661816"
+      },
+      {
+        "name": "build",
+        "head": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37165925122/job/111328661710"
+      },
+      {
+        "name": "postgres-foundation",
+        "head": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37165925116/job/111328661698"
+      },
+      {
+        "name": "build",
+        "head": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37165925113/job/111328661687"
+      },
+      {
+        "name": "models-and-postgres",
+        "head": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37165925093/job/111328661566"
+      },
+      {
+        "name": "postgres-properties",
+        "head": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37165925090/job/111328661531"
+      },
+      {
+        "name": "social-client",
+        "head": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37165925093/job/111328661501"
+      },
+      {
+        "name": "hardcoded-list-audit",
+        "head": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37165925112/job/111328661483"
+      }
+    ],
+    "unresolved_threads": [
+      {
+        "id": "PRRT_kwDOQPdUrM6mvT6B",
+        "isResolved": false,
+        "isOutdated": false,
+        "path": "ops/hetzner/validation-2026-09-28.md",
+        "line": 49,
+        "comments": {
+          "nodes": [
+            {
+              "author": {
+                "login": "chatgpt-codex-connector"
+              },
+              "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Complete the authentication and upload gates before declaring success**\n\nIn this deployed state, writes have already been enabled even though these end-to-end checks remain unperformed, while the cutover procedure in `ops/hetzner/README.md:143-145` explicitly requires Google authentication and uploads to be verified before reopening writes. This leaves two user-facing write paths unvalidated after the hostname, database, and asset-storage migration despite the record calling the cutover complete; either perform those gates or record an explicit waiver and keep the cutover status incomplete.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4123803395",
+              "createdAt": "2026-09-28T15:10:14Z"
+            },
+            {
+              "author": {
+                "login": "diegueins680"
+              },
+              "body": "Follow-up 7def35976f62dd153127d25217e22d3f0d19f3aa: Corrected both documents to label cutover validation incomplete and distinguish the observed traffic/writer transition from the unperformed Google interactive-login and authenticated-upload gates. No gate waiver is claimed. This thread remains open until an authorized operator performs and records those end-to-end checks; the audit has not deployed or performed production writes.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4124524755",
+              "createdAt": "2026-09-28T16:20:23Z"
+            }
+          ],
+          "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQxNjoyMDoyM1rO9ddA0w=="
+          }
+        }
+      }
+    ],
+    "native_stack": null,
+    "classification": "PROTECTED_OR_OPERATIONAL",
+    "confidence": "high",
+    "rationale": "Operational cutover evidence preserved. Audit follow-up 7def35976f62dd153127d25217e22d3f0d19f3aa retargets enrichment/course publishing to the canonical API and makes messaging checks read-only, retaining invalid/expiry failures and notifications. 111 targeted tests, 25 CI tests and three mocked course requests pass. Twenty-six concrete review concerns resolved; final normal merge 9bbd7d88fdad3751d8e56ffe6fa09e44889d8a8f incorporates passing main/security fix, and fresh head CI/review is required, including manual API/diagnostic/operator-guide follow-up; actual login/upload gates remain open and explicitly incomplete, as do current-head independent review/CI with the externally corrected Datadog check already verified by unchanged reruns. Automatic Hetzner credential rotation requires a reviewed secret-store integration. Generated course-document hash corrected in 68558f5409f9a976c0a4a9bd742e627f75f089cf after the exact specification gate passed (3 Python and 9 Node tests). Final operator-path follow-up 5486b49144f9b0d5576cef5f2e59d927c66e334f adds 113 passing tests and regenerated guide hashes, fixes manual defaults and webhook callback commands without exposing supplied secrets. Webhook-health correction e762f67b2720b3337c8409b6c3b652224f090083 requires active canonical callbacks and uses the backend-supported Facebook token/alias/fallback; 115 tests pass. Final remaining-helper follow-up 36aff567c1d6daeb63088a765dc5e48e69fe2d09 retargets the bundled importer/payment guidance and honors credential aliases; 121 helper tests, 34 CI/evidence tests and 3 inventory tests pass. Managed-image follow-up 7f1d2d74877c5e603097e44cc643834e1932a69e recognizes the canonical API host with lookalike rejection; 122 helper tests pass. Catalog and installed mail tools repaired at 102662f13e690394ba87267e34dc513a5496ed40 using the existing dedicated SSH key/host discovered in local deployment records. Strict host identity, current container/image/database binding, protected in-memory credentials and read-only behavior verified; live catalog and scheduled mailbox command pass. Both review threads resolved; login/upload validation remains open. Deployment guide retired as a production procedure and its frontend examples corrected in 4031ed4a2; exact inventory gate passes (3 Python/9 Node tests). Remaining standalone Fly token refresher and two historical payment guides retired at 4d40ae58c; two fail-closed/no-secret-output regressions and specification gates pass. Final hardening f528eee8c compares registry references independently of local image IDs, restricts queries to the reviewed SQL digest and a SELECT-only role, and retires the other legacy diagnostic. Latest origin-binding repair requires all public DNS answers and the actual TLS socket peer to match authenticated SSH server metadata; five catalog, ten access, six mail and four retired-helper tests pass. Actual inventory passes with 777 records/652 tables after explicitly reviewed SELECT grants on 29 new tables from concurrent main645f56f; zero writable tables or schema CREATE. Both retired command suggestions now include --check; both printed webhook repair commands fail before curl when verify credentials are absent/empty (95 token-workflow tests pass). The latest cd915b8 also requires the exact authoritative named PostgreSQL volume and rejects shadowing child mounts. Live volume-qualified inventory and installed daily monitor both pass; an initial transient DNS failure and unchanged successful retry are retained. Earlier write-denial evidence remains retained. Latest fresh GitHub recheck confirms tdfrecords approval of cd915b8 and all checks passing; the actual authentication/upload acceptance remains unresolved. A dedicated database role and ambient PUBLIC schema-CREATE hardening preserve existing named-role capabilities; no application data, credential values or deployment changed. Concurrent762e1ff updates preserve current main and change CI triggers. Prior approval is historical; fresh review/checks are required. Two new provenance findings are fixed and published atce1a71fe2; both addressed threads resolved after23 focused tests and strict1162 catalog gate passed. The new helper is now authenticated/live-verified, including777 catalog records/652 tables and the installed monitor command with8 aggregate reports/zero errors. Initial SSH timeouts are retained as historical failures; the browser profile remains occupied and manual login/upload acceptance is still required.",
+    "action": "Published tested repair; current-head review/checks required.",
+    "effective_changes": ".github/workflows/artist-enrichment-daily.yml      |   2 +-\n .github/workflows/check-messaging-token.yml        |  21 +-\n .github/workflows/ci.yml                           |  18 --\n DEPLOYMENT_GUIDE.md                                |  32 ++-\n PAYMENT_AUDIT.md                                   |   9 +-\n README.md                                          |  36 ++-\n SERVICE_STOREFRONT_DEPLOYMENT.md                   |  17 +-\n STRIPE_DEPLOYMENT_GUIDE.md                         |  64 ++---\n STRIPE_TICKETING_CHECKLIST.md                      |  27 +-\n STRIPE_TICKETING_DEPLOYMENT_SUMMARY.md             |  11 +\n VERIFICATION.md                                    |  11 +\n docs/INSTAGRAM_TOKEN_SETUP.md                      |  41 ++-\n docs/artist-enrichment-runbook.md                  |  54 ++--\n docs/catalog-persistence/README.md                 |   5 +-\n docs/courses/README.md                             |   2 +-\n docs/notifications/navigation-2026-09-17.md        |  16 ++\n docs/operations/mail-deliverability-2026-09-18.md  |   5 +-\n formal/system/inventory.json                       | 287 +++++++++++----------\n ops/hetzner/README.md                              |  99 ++++++-\n ops/hetzner/catalog-readonly-role.sql              |  45 ++++\n ops/hetzner/validation-2026-09-28.md               |  92 ++++++-\n scripts/__tests__/artist-enrichment.test.mjs       |  48 ++++\n .../__tests__/artist-import-idempotency.test.mjs   |  12 +-\n .../__tests__/instagram-token-workflows.test.mjs   | 146 ++++++++++-\n .../__tests__/payment-readiness-helper.test.mjs    |  24 ++\n .../production-catalog-inventory.test.mjs          | 109 ++++++++\n .../__tests__/retired-messaging-refresher.test.mjs |  46 ++++\n scripts/artist-enrichment.mjs                      |   5 +-\n scripts/diagnose-instagram.mjs                     | 153 +----------\n scripts/diagnose-social.mjs                        |  30 ++-\n scripts/get-admin-token.sh                         |   2 +-\n scripts/get-instagram-token.mjs                    | 117 +--------\n scripts/mail-deliverability-monitor.py             |  32 +--\n scripts/production-catalog-inventory.mjs           | 156 +++++++----\n scripts/production_access.py                       | 162 ++++++++++++\n scripts/quality-repo.sh                            |   7 +\n scripts/refresh-messaging-token.mjs                | 154 +----------\n scripts/test-stripe-integration.sh                 |  25 +-\n scripts/test_mail_deliverability_monitor.py        |  27 +-\n scripts/test_production_access.py                  | 150 +++++++++++\n scripts/upsert-course.mjs                          |   2 +-\n specs.yaml                                         |   4 +\n tdf-hq/AGENTS.md                                   |  24 +-\n tdf-hq/scripts/create_artists_from_list.sh         |   2 +-\n 44 files changed, 1489 insertions(+), 842 deletions(-)",
+    "files": "M\t.github/workflows/artist-enrichment-daily.yml\nM\t.github/workflows/check-messaging-token.yml\nM\t.github/workflows/ci.yml\nM\tDEPLOYMENT_GUIDE.md\nM\tPAYMENT_AUDIT.md\nM\tREADME.md\nM\tSERVICE_STOREFRONT_DEPLOYMENT.md\nM\tSTRIPE_DEPLOYMENT_GUIDE.md\nM\tSTRIPE_TICKETING_CHECKLIST.md\nM\tSTRIPE_TICKETING_DEPLOYMENT_SUMMARY.md\nM\tVERIFICATION.md\nM\tdocs/INSTAGRAM_TOKEN_SETUP.md\nM\tdocs/artist-enrichment-runbook.md\nM\tdocs/catalog-persistence/README.md\nM\tdocs/courses/README.md\nM\tdocs/notifications/navigation-2026-09-17.md\nM\tdocs/operations/mail-deliverability-2026-09-18.md\nM\tformal/system/inventory.json\nM\tops/hetzner/README.md\nA\tops/hetzner/catalog-readonly-role.sql\nM\tops/hetzner/validation-2026-09-28.md\nM\tscripts/__tests__/artist-enrichment.test.mjs\nM\tscripts/__tests__/artist-import-idempotency.test.mjs\nM\tscripts/__tests__/instagram-token-workflows.test.mjs\nA\tscripts/__tests__/payment-readiness-helper.test.mjs\nA\tscripts/__tests__/production-catalog-inventory.test.mjs\nA\tscripts/__tests__/retired-messaging-refresher.test.mjs\nM\tscripts/artist-enrichment.mjs\nM\tscripts/diagnose-instagram.mjs\nM\tscripts/diagnose-social.mjs\nM\tscripts/get-admin-token.sh\nM\tscripts/get-instagram-token.mjs\nM\tscripts/mail-deliverability-monitor.py\nM\tscripts/production-catalog-inventory.mjs\nA\tscripts/production_access.py\nM\tscripts/quality-repo.sh\nM\tscripts/refresh-messaging-token.mjs\nM\tscripts/test-stripe-integration.sh\nM\tscripts/test_mail_deliverability_monitor.py\nA\tscripts/test_production_access.py\nM\tscripts/upsert-course.mjs\nM\tspecs.yaml\nM\ttdf-hq/AGENTS.md\nM\ttdf-hq/scripts/create_artists_from_list.sh",
+    "recovery": "Not deleted",
+    "evidence": "final-33/prs/468/info.json",
+    "remote_present": true
+  },
+  {
+    "branch": "feat/universal-interactions-20260928",
+    "head_sha": "fd87416e99af3176d107178832f238ef00003be5",
+    "pr": 470,
+    "url": "https://github.com/diegueins680/tdf-app/pull/470",
+    "base": "main",
+    "base_sha": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "protected": false,
+    "ahead": 0,
+    "behind": 69,
+    "merge_base": "fd87416e99af3176d107178832f238ef00003be5",
+    "review_decision": "APPROVED",
+    "draft": false,
+    "state": "closed",
+    "merged": true,
+    "merge_commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a",
+    "mergeable": null,
+    "mergeable_state": "unknown",
+    "check_evidence_snapshot": "final-27/checks/fd87416e99af3176d107178832f238ef00003be5.json",
+    "checks": [
+      {
+        "name": "native-android-e2e",
+        "head": "fd87416e99af3176d107178832f238ef00003be5",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36701303422/job/109847582372"
+      },
+      {
+        "name": "quality",
+        "head": "fd87416e99af3176d107178832f238ef00003be5",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36701303422/job/109847579951"
+      },
+      {
+        "name": "production-migrations",
+        "head": "fd87416e99af3176d107178832f238ef00003be5",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36701303422/job/109843200484"
+      },
+      {
+        "name": "api-contracts",
+        "head": "fd87416e99af3176d107178832f238ef00003be5",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36701303422/job/109842342823"
+      },
+      {
+        "name": "migration-tests",
+        "head": "fd87416e99af3176d107178832f238ef00003be5",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36701303422/job/109841973361"
+      },
+      {
+        "name": "repo-quality",
+        "head": "fd87416e99af3176d107178832f238ef00003be5",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36701303422/job/109841973175"
+      },
+      {
+        "name": "mobile-quality",
+        "head": "fd87416e99af3176d107178832f238ef00003be5",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36701303422/job/109841973146"
+      },
+      {
+        "name": "ui-quality",
+        "head": "fd87416e99af3176d107178832f238ef00003be5",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36701303422/job/109841973133"
+      },
+      {
+        "name": "backend-quality",
+        "head": "fd87416e99af3176d107178832f238ef00003be5",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36701303422/job/109841973069"
+      },
+      {
+        "name": "api-contract-tests",
+        "head": "fd87416e99af3176d107178832f238ef00003be5",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36701303422/job/109841973045"
+      },
+      {
+        "name": "persona-web-e2e",
+        "head": "fd87416e99af3176d107178832f238ef00003be5",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36701303422/job/109841973031"
+      },
+      {
+        "name": "Cloudflare Pages",
+        "head": "fd87416e99af3176d107178832f238ef00003be5",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/runs/109841759914"
+      },
+      {
+        "name": "changes",
+        "head": "fd87416e99af3176d107178832f238ef00003be5",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36701303422/job/109841684447"
+      },
+      {
+        "name": "Vercel Preview Comments",
+        "head": "fd87416e99af3176d107178832f238ef00003be5",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/runs/109841339972"
+      },
+      {
+        "name": "native-ios-e2e",
+        "head": "fd87416e99af3176d107178832f238ef00003be5",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36701303288/job/109841121477"
+      },
+      {
+        "name": "verify",
+        "head": "fd87416e99af3176d107178832f238ef00003be5",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36701303516/job/109841120110"
+      },
+      {
+        "name": "specification-contracts",
+        "head": "fd87416e99af3176d107178832f238ef00003be5",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36701303516/job/109841120085"
+      },
+      {
+        "name": "postgres-foundation",
+        "head": "fd87416e99af3176d107178832f238ef00003be5",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36701303516/job/109841119832"
+      },
+      {
+        "name": "build",
+        "head": "fd87416e99af3176d107178832f238ef00003be5",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36701303558/job/109841119595"
+      },
+      {
+        "name": "postgres-properties",
+        "head": "fd87416e99af3176d107178832f238ef00003be5",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36701303288/job/109841119496"
+      },
+      {
+        "name": "build",
+        "head": "fd87416e99af3176d107178832f238ef00003be5",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36701303485/job/109841119324"
+      },
+      {
+        "name": "hardcoded-list-audit",
+        "head": "fd87416e99af3176d107178832f238ef00003be5",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36701303406/job/109841119194"
+      },
+      {
+        "name": "models-and-postgres",
+        "head": "fd87416e99af3176d107178832f238ef00003be5",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36701303464/job/109841119154"
+      },
+      {
+        "name": "social-client",
+        "head": "fd87416e99af3176d107178832f238ef00003be5",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36701303464/job/109841118680"
+      }
+    ],
+    "unresolved_threads": [],
+    "native_stack": null,
+    "classification": "ALREADY_MERGED",
+    "confidence": "high",
+    "rationale": "Concurrent universal publishable-content interactions implementation. Another actor merged it normally at 645f56fcc44f81609fbfd0e03d683b40376ce77a; main ancestry and GitHub merged state are verified, and live API reports this build. Release/qualification evidence remains attributed to that actor, not audit execution. Preserve its source branch and operational history. Current remote absence supersedes earlier preservation instructions; no audit deletion or restoration.",
+    "action": "Remote ref concurrently deleted outside this audit; source history retained in verified local recovery bundle. Earlier audit mutations remain in the ledger.",
+    "effective_changes": "",
+    "files": "",
+    "recovery": "git push origin fd87416e99af3176d107178832f238ef00003be5:refs/heads/feat/universal-interactions-20260928",
+    "evidence": "final-33/prs/470/info.json",
+    "remote_present": false
+  },
+  {
+    "branch": "audit/ip-address-security-20260930",
+    "head_sha": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+    "pr": 472,
+    "url": "https://github.com/diegueins680/tdf-app/pull/472",
+    "base": "main",
+    "base_sha": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "protected": false,
+    "ahead": 0,
+    "behind": 156,
+    "merge_base": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+    "review_decision": "APPROVED",
+    "draft": false,
+    "state": "closed",
+    "merged": true,
+    "merge_commit": "76c2c05c536586fd814f7a68d2052f0fd9d900ed",
+    "mergeable": null,
+    "mergeable_state": "unknown",
+    "check_evidence_snapshot": "final-27/checks/d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92.json",
+    "checks": [
+      {
+        "name": "quality",
+        "head": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36654849183/job/109699863158"
+      },
+      {
+        "name": "Cloudflare Pages",
+        "head": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/runs/109697447212"
+      },
+      {
+        "name": "api-contracts",
+        "head": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36654849183/job/109697243280"
+      },
+      {
+        "name": "Vercel Preview Comments",
+        "head": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/runs/109697049976"
+      },
+      {
+        "name": "backend-quality",
+        "head": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36654849183/job/109696950628"
+      },
+      {
+        "name": "migration-tests",
+        "head": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36654849183/job/109696950411"
+      },
+      {
+        "name": "production-migrations",
+        "head": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36654849183/job/109696950277"
+      },
+      {
+        "name": "mobile-quality",
+        "head": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36654849183/job/109696949296"
+      },
+      {
+        "name": "ui-quality",
+        "head": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36654849183/job/109696949293"
+      },
+      {
+        "name": "persona-web-e2e",
+        "head": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36654849183/job/109696949262"
+      },
+      {
+        "name": "repo-quality",
+        "head": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36654849183/job/109696949165"
+      },
+      {
+        "name": "api-contract-tests",
+        "head": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36654849183/job/109696949146"
+      },
+      {
+        "name": "postgres-foundation",
+        "head": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36654849217/job/109696854584"
+      },
+      {
+        "name": "specification-contracts",
+        "head": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36654849217/job/109696854579"
+      },
+      {
+        "name": "verify",
+        "head": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36654849217/job/109696854474"
+      },
+      {
+        "name": "models-and-postgres",
+        "head": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36654849133/job/109696854149"
+      },
+      {
+        "name": "changes",
+        "head": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36654849183/job/109696854117"
+      },
+      {
+        "name": "hardcoded-list-audit",
+        "head": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36654849164/job/109696854116"
+      },
+      {
+        "name": "build",
+        "head": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36654849181/job/109696853983"
+      },
+      {
+        "name": "social-client",
+        "head": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36654849133/job/109696853929"
+      },
+      {
+        "name": "build",
+        "head": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36654849147/job/109696853836"
+      }
+    ],
+    "unresolved_threads": [],
+    "native_stack": null,
+    "classification": "ALREADY_MERGED",
+    "confidence": "high",
+    "rationale": "Audit security follow-up changes only the existing compatible ip-address lock entry from 10.3.1 to 10.7.2 for GHSA-rpw4-54j3-4h4q and GHSA-2vr4-cq9g-pvrc. Exact unchanged audit-ci passes; four vulnerable-before/fixed-after address cases and two public controls pass. Normal merge 76c2c05c536586fd814f7a68d2052f0fd9d900ed verified after exact-head independent approval and all checks passed; target verification and normal CI govern completion. No security allowlist or threshold changes. Current remote absence supersedes earlier preservation instructions; no audit deletion or restoration.",
+    "action": "Remote ref concurrently deleted outside this audit; source history retained in verified local recovery bundle. Earlier audit mutations remain in the ledger.",
+    "effective_changes": "",
+    "files": "",
+    "recovery": "git push origin d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92:refs/heads/audit/ip-address-security-20260930",
+    "evidence": "final-33/prs/472/info.json",
+    "remote_present": false
+  },
+  {
+    "branch": "docs/interaction-qualification-20260930",
+    "head_sha": "09893a13471d023e255059e74d5a734ed4a43bad",
+    "pr": 471,
+    "url": "https://github.com/diegueins680/tdf-app/pull/471",
+    "base": "feat/universal-interactions-20260928",
+    "base_sha": "fd87416e99af3176d107178832f238ef00003be5",
+    "protected": false,
+    "ahead": 0,
+    "behind": 13,
+    "merge_base": "09893a13471d023e255059e74d5a734ed4a43bad",
+    "review_decision": null,
+    "draft": true,
+    "state": "closed",
+    "merged": true,
+    "merge_commit": "09893a13471d023e255059e74d5a734ed4a43bad",
+    "mergeable": false,
+    "mergeable_state": "dirty",
+    "check_evidence_snapshot": "final-27/checks/09893a13471d023e255059e74d5a734ed4a43bad.json",
+    "checks": [
+      {
+        "name": "quality",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36657481596/job/109707780319"
+      },
+      {
+        "name": "postgres-properties",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36657712401/job/109705528555"
+      },
+      {
+        "name": "native-ios-e2e",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36657712401/job/109705527942"
+      },
+      {
+        "name": "Cloudflare Pages",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/runs/109705340630"
+      },
+      {
+        "name": "Vercel Preview Comments",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/runs/109704994215"
+      },
+      {
+        "name": "native-android-e2e",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36657481596/job/109704919481"
+      },
+      {
+        "name": "api-contract-tests",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36657481596/job/109704919330"
+      },
+      {
+        "name": "mobile-quality",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36657481596/job/109704919012"
+      },
+      {
+        "name": "backend-quality",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36657481596/job/109704918930"
+      },
+      {
+        "name": "migration-tests",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36657481596/job/109704918756"
+      },
+      {
+        "name": "ui-quality",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36657481596/job/109704918514"
+      },
+      {
+        "name": "production-migrations",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36657481596/job/109704918338"
+      },
+      {
+        "name": "api-contracts",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36657481596/job/109704918303"
+      },
+      {
+        "name": "persona-web-e2e",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36657481596/job/109704917817"
+      },
+      {
+        "name": "repo-quality",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36657481596/job/109704917709"
+      },
+      {
+        "name": "models-and-postgres",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36657481776/job/109704833105"
+      },
+      {
+        "name": "social-client",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36657481776/job/109704832919"
+      },
+      {
+        "name": "specification-contracts",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36657481675/job/109704832837"
+      },
+      {
+        "name": "verify",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36657481675/job/109704832763"
+      },
+      {
+        "name": "postgres-foundation",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36657481675/job/109704832683"
+      },
+      {
+        "name": "native-ios-e2e",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36657481498/job/109704832634"
+      },
+      {
+        "name": "changes",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36657481596/job/109704832242"
+      },
+      {
+        "name": "build",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36657481513/job/109704831736"
+      },
+      {
+        "name": "hardcoded-list-audit",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36657481507/job/109704831724"
+      },
+      {
+        "name": "postgres-properties",
+        "head": "09893a13471d023e255059e74d5a734ed4a43bad",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36657481498/job/109704831628"
+      }
+    ],
+    "unresolved_threads": [],
+    "native_stack": null,
+    "classification": "ALREADY_MERGED",
+    "confidence": "high",
+    "rationale": "Concurrent hosted iOS qualification tooling is explicitly stacked on PR470 to preserve its independent approval. Requires qualification of the exact immutable application/native tree on disposable PostgreSQL 17 and the original signed simulator artifact. No application/schema changes. Another actor subsequently merged the qualification PR into its intended interaction branch; preserve that source history and branch. PR470 remains subject to its own release/qualification gates. Author-reported workflow tests are not audit-executed results. Current remote absence supersedes earlier preservation instructions; no audit deletion or restoration.",
+    "action": "Remote ref concurrently deleted outside this audit; source history retained in verified local recovery bundle. Earlier audit mutations remain in the ledger.",
+    "effective_changes": "",
+    "files": "",
+    "recovery": "git push origin 09893a13471d023e255059e74d5a734ed4a43bad:refs/heads/docs/interaction-qualification-20260930",
+    "evidence": "final-33/prs/471/info.json",
+    "remote_present": false
+  },
+  {
+    "branch": "fix/interaction-deletion-focus-20260930",
+    "head_sha": "4731a35742b4939236bc08f43c5ea2780820caee",
+    "pr": 473,
+    "url": "https://github.com/diegueins680/tdf-app/pull/473",
+    "base": "main",
+    "base_sha": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "protected": false,
+    "ahead": 0,
+    "behind": 66,
+    "merge_base": "4731a35742b4939236bc08f43c5ea2780820caee",
+    "review_decision": "APPROVED",
+    "draft": false,
+    "state": "closed",
+    "merged": true,
+    "merge_commit": "adafd0c3795462c5b094622302658e24837fd277",
+    "mergeable": null,
+    "mergeable_state": "unknown",
+    "check_evidence_snapshot": "final-27/checks/4731a35742b4939236bc08f43c5ea2780820caee.json",
+    "checks": [
+      {
+        "name": "quality",
+        "head": "4731a35742b4939236bc08f43c5ea2780820caee",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36710064995/job/109873312700"
+      },
+      {
+        "name": "Cloudflare Pages",
+        "head": "4731a35742b4939236bc08f43c5ea2780820caee",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/runs/109870916938"
+      },
+      {
+        "name": "native-android-e2e",
+        "head": "4731a35742b4939236bc08f43c5ea2780820caee",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36710064995/job/109869862055"
+      },
+      {
+        "name": "api-contract-tests",
+        "head": "4731a35742b4939236bc08f43c5ea2780820caee",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36710064995/job/109869861793"
+      },
+      {
+        "name": "backend-quality",
+        "head": "4731a35742b4939236bc08f43c5ea2780820caee",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36710064995/job/109869861705"
+      },
+      {
+        "name": "migration-tests",
+        "head": "4731a35742b4939236bc08f43c5ea2780820caee",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36710064995/job/109869861357"
+      },
+      {
+        "name": "mobile-quality",
+        "head": "4731a35742b4939236bc08f43c5ea2780820caee",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36710064995/job/109869860953"
+      },
+      {
+        "name": "api-contracts",
+        "head": "4731a35742b4939236bc08f43c5ea2780820caee",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36710064995/job/109869860234"
+      },
+      {
+        "name": "production-migrations",
+        "head": "4731a35742b4939236bc08f43c5ea2780820caee",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36710064995/job/109869860203"
+      },
+      {
+        "name": "repo-quality",
+        "head": "4731a35742b4939236bc08f43c5ea2780820caee",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36710064995/job/109869859543"
+      },
+      {
+        "name": "Vercel Preview Comments",
+        "head": "4731a35742b4939236bc08f43c5ea2780820caee",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/runs/109869859447"
+      },
+      {
+        "name": "persona-web-e2e",
+        "head": "4731a35742b4939236bc08f43c5ea2780820caee",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36710064995/job/109869859392"
+      },
+      {
+        "name": "ui-quality",
+        "head": "4731a35742b4939236bc08f43c5ea2780820caee",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36710064995/job/109869859375"
+      },
+      {
+        "name": "changes",
+        "head": "4731a35742b4939236bc08f43c5ea2780820caee",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36710064995/job/109869712937"
+      },
+      {
+        "name": "postgres-foundation",
+        "head": "4731a35742b4939236bc08f43c5ea2780820caee",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36710064978/job/109869584963"
+      },
+      {
+        "name": "verify",
+        "head": "4731a35742b4939236bc08f43c5ea2780820caee",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36710064978/job/109869584893"
+      },
+      {
+        "name": "specification-contracts",
+        "head": "4731a35742b4939236bc08f43c5ea2780820caee",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36710064978/job/109869584608"
+      },
+      {
+        "name": "native-ios-e2e",
+        "head": "4731a35742b4939236bc08f43c5ea2780820caee",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36710065076/job/109869457146"
+      },
+      {
+        "name": "postgres-properties",
+        "head": "4731a35742b4939236bc08f43c5ea2780820caee",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36710065076/job/109869455528"
+      },
+      {
+        "name": "build",
+        "head": "4731a35742b4939236bc08f43c5ea2780820caee",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36710065136/job/109869455351"
+      },
+      {
+        "name": "hardcoded-list-audit",
+        "head": "4731a35742b4939236bc08f43c5ea2780820caee",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36710065009/job/109869455076"
+      },
+      {
+        "name": "social-client",
+        "head": "4731a35742b4939236bc08f43c5ea2780820caee",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36710064965/job/109869454880"
+      },
+      {
+        "name": "build",
+        "head": "4731a35742b4939236bc08f43c5ea2780820caee",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36710064927/job/109869454644"
+      },
+      {
+        "name": "models-and-postgres",
+        "head": "4731a35742b4939236bc08f43c5ea2780820caee",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36710064965/job/109869454642"
+      }
+    ],
+    "unresolved_threads": [],
+    "native_stack": null,
+    "classification": "ALREADY_MERGED",
+    "confidence": "high",
+    "rationale": "Concurrent focused deletion/focus correction for interaction comments. GitHub reports successful integration into main; the refreshed target includes its head ancestry. Preserve the branch. Tests and deployment claims from its author are not audit-executed validations. Current remote absence supersedes earlier preservation instructions; no audit deletion or restoration.",
+    "action": "Remote ref concurrently deleted outside this audit; source history retained in verified local recovery bundle. Earlier audit mutations remain in the ledger.",
+    "effective_changes": "",
+    "files": "",
+    "recovery": "git push origin 4731a35742b4939236bc08f43c5ea2780820caee:refs/heads/fix/interaction-deletion-focus-20260930",
+    "evidence": "final-33/prs/473/info.json",
+    "remote_present": false
+  },
+  {
+    "branch": "fix/interaction-release-dompurify-20261001",
+    "head_sha": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+    "pr": 474,
+    "url": "https://github.com/diegueins680/tdf-app/pull/474",
+    "base": "main",
+    "base_sha": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "protected": false,
+    "ahead": 0,
+    "behind": 64,
+    "merge_base": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+    "review_decision": "APPROVED",
+    "draft": false,
+    "state": "closed",
+    "merged": true,
+    "merge_commit": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "mergeable": null,
+    "mergeable_state": "unknown",
+    "check_evidence_snapshot": "final-27/checks/6a830cf74b1c9ff81fdce9814d73435ce05d0b27.json",
+    "checks": [
+      {
+        "name": "quality",
+        "head": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36800184425/job/110175060835"
+      },
+      {
+        "name": "Cloudflare Pages",
+        "head": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/runs/110173265405"
+      },
+      {
+        "name": "Vercel Preview Comments",
+        "head": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/runs/110172989891"
+      },
+      {
+        "name": "api-contracts",
+        "head": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36800184425/job/110172901968"
+      },
+      {
+        "name": "native-android-e2e",
+        "head": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36800184425/job/110172619859"
+      },
+      {
+        "name": "backend-quality",
+        "head": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36800184425/job/110172619482"
+      },
+      {
+        "name": "migration-tests",
+        "head": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36800184425/job/110172619187"
+      },
+      {
+        "name": "production-migrations",
+        "head": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36800184425/job/110172618754"
+      },
+      {
+        "name": "repo-quality",
+        "head": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36800184425/job/110172618147"
+      },
+      {
+        "name": "mobile-quality",
+        "head": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36800184425/job/110172618112"
+      },
+      {
+        "name": "persona-web-e2e",
+        "head": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36800184425/job/110172618098"
+      },
+      {
+        "name": "api-contract-tests",
+        "head": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36800184425/job/110172618071"
+      },
+      {
+        "name": "ui-quality",
+        "head": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36800184425/job/110172618047"
+      },
+      {
+        "name": "native-ios-e2e",
+        "head": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36800184348/job/110172538343"
+      },
+      {
+        "name": "postgres-foundation",
+        "head": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36800184448/job/110172537964"
+      },
+      {
+        "name": "changes",
+        "head": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36800184425/job/110172537916"
+      },
+      {
+        "name": "verify",
+        "head": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36800184448/job/110172537871"
+      },
+      {
+        "name": "specification-contracts",
+        "head": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36800184448/job/110172537709"
+      },
+      {
+        "name": "build",
+        "head": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36800184507/job/110172537658"
+      },
+      {
+        "name": "hardcoded-list-audit",
+        "head": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36800184415/job/110172537362"
+      },
+      {
+        "name": "models-and-postgres",
+        "head": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36800184347/job/110172537344"
+      },
+      {
+        "name": "build",
+        "head": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36800184386/job/110172537192"
+      },
+      {
+        "name": "postgres-properties",
+        "head": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36800184348/job/110172537151"
+      },
+      {
+        "name": "social-client",
+        "head": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/36800184347/job/110172537076"
+      }
+    ],
+    "unresolved_threads": [],
+    "native_stack": null,
+    "classification": "ALREADY_MERGED",
+    "confidence": "high",
+    "rationale": "Concurrent focused DOMPurify lockfile security update. GitHub reports protected merge 49f1f0ec087067d17f62d91df1b616eb053eb894 with independent approval; main ancestry is verified. Preserve the branch. Its author reports unchanged security policy and successful post-merge tests/deployment; those are not audit-executed actions. Current remote absence supersedes earlier preservation instructions; no audit deletion or restoration.",
+    "action": "Remote ref concurrently deleted outside this audit; source history retained in verified local recovery bundle. Earlier audit mutations remain in the ledger.",
+    "effective_changes": "",
+    "files": "",
+    "recovery": "git push origin 6a830cf74b1c9ff81fdce9814d73435ce05d0b27:refs/heads/fix/interaction-release-dompurify-20261001",
+    "evidence": "final-33/prs/474/info.json",
+    "remote_present": false
+  },
+  {
+    "branch": "audit/editorial-ownership-repair-20261003",
+    "head_sha": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+    "pr": 475,
+    "url": "https://github.com/diegueins680/tdf-app/pull/475",
+    "base": "main",
+    "base_sha": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "protected": false,
+    "ahead": 0,
+    "behind": 57,
+    "merge_base": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+    "review_decision": "APPROVED",
+    "draft": false,
+    "state": "closed",
+    "merged": true,
+    "merge_commit": "f8925e339447cb593f7cce5d86403d1396aaf5a5",
+    "mergeable": null,
+    "mergeable_state": "unknown",
+    "check_evidence_snapshot": "final-33/checks/4100a04c0de9496e7bf9cd6d656602dee1d8e277.json",
+    "checks": [
+      {
+        "name": "native-android-e2e",
+        "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37157250949/job/111305957073"
+      },
+      {
+        "name": "quality",
+        "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37157250949/job/111305956433"
+      },
+      {
+        "name": "production-migrations",
+        "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37157250949/job/111303615845"
+      },
+      {
+        "name": "Cloudflare Pages",
+        "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/runs/111303380225"
+      },
+      {
+        "name": "Vercel Preview Comments",
+        "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/runs/111303306845"
+      },
+      {
+        "name": "api-contract-tests",
+        "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37157250949/job/111303134994"
+      },
+      {
+        "name": "mobile-quality",
+        "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37157250949/job/111303134837"
+      },
+      {
+        "name": "ui-quality",
+        "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37157250949/job/111303134625"
+      },
+      {
+        "name": "api-contracts",
+        "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37157250949/job/111303134322"
+      },
+      {
+        "name": "persona-web-e2e",
+        "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37157250949/job/111303133872"
+      },
+      {
+        "name": "migration-tests",
+        "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37157250949/job/111303133846"
+      },
+      {
+        "name": "backend-quality",
+        "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37157250949/job/111303133841"
+      },
+      {
+        "name": "repo-quality",
+        "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37157250949/job/111303133794"
+      },
+      {
+        "name": "native-ios-e2e",
+        "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37157250919/job/111303070379"
+      },
+      {
+        "name": "hardcoded-list-audit",
+        "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37157251120/job/111303070030"
+      },
+      {
+        "name": "postgres-foundation",
+        "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37157250955/job/111303069992"
+      },
+      {
+        "name": "specification-contracts",
+        "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37157250955/job/111303069976"
+      },
+      {
+        "name": "changes",
+        "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37157250949/job/111303069946"
+      },
+      {
+        "name": "verify",
+        "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37157250955/job/111303069832"
+      },
+      {
+        "name": "social-client",
+        "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37157250941/job/111303069770"
+      },
+      {
+        "name": "build",
+        "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37157250969/job/111303069708"
+      },
+      {
+        "name": "models-and-postgres",
+        "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37157250941/job/111303069655"
+      },
+      {
+        "name": "build",
+        "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37157250937/job/111303069506"
+      },
+      {
+        "name": "postgres-properties",
+        "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37157250919/job/111303069471"
+      }
+    ],
+    "unresolved_threads": [],
+    "native_stack": null,
+    "classification": "ALREADY_MERGED",
+    "confidence": "high",
+    "rationale": "Standalone history-preserving replacement for PR464 at4100a04c. Fixes stored/public ownership metadata boundaries, SQLite/PostgreSQL visibility, recurring provider/subscription reconciliation and locked editorial writers. Current-head hosted3553-example backend, compiled PostgreSQL/runtime/schema stages, local3553 examples,160-migration native schema rehearsal and repository/formal/catalog gates passed. Independent tdfrecords approval applies to exact4100 head. After fresh protections/rules/checks/status/reviews/threads/base and branch-retention checks, normally merged at f8925e339447cb593f7cce5d86403d1396aaf5a5; verified target tree exactly equals tested head, both parents and migration ancestry retained. No branch deletion. Post-merge CI evidence and source464 closure status are recorded separately.",
+    "action": "Normal merge f8925e339 verified with exact tested tree and preserved ancestry; branch retained; see post-merge CI evidence.",
+    "effective_changes": "",
+    "files": "",
+    "recovery": "Not deleted",
+    "evidence": "final-33/prs/475/info.json",
+    "remote_present": true
+  },
+  {
+    "branch": "audit/notification-history-rescue-20261003",
+    "head_sha": "6d00fa1463603bacecbb3210279b09ed88bbba0c",
+    "pr": 476,
+    "url": "https://github.com/diegueins680/tdf-app/pull/476",
+    "base": "main",
+    "base_sha": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "protected": false,
+    "ahead": 0,
+    "behind": 54,
+    "merge_base": "6d00fa1463603bacecbb3210279b09ed88bbba0c",
+    "review_decision": "APPROVED",
+    "draft": false,
+    "state": "closed",
+    "merged": true,
+    "merge_commit": "c4d479c7f3da659368e5bc60464a1a43c99d9b7a",
+    "mergeable": null,
+    "mergeable_state": "unknown",
+    "check_evidence_snapshot": "final-33/checks/6d00fa1463603bacecbb3210279b09ed88bbba0c.json",
+    "checks": [
+      {
+        "name": "Cloudflare Pages",
+        "head": "6d00fa1463603bacecbb3210279b09ed88bbba0c",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/runs/111323534130"
+      },
+      {
+        "name": "Vercel Preview Comments",
+        "head": "6d00fa1463603bacecbb3210279b09ed88bbba0c",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/runs/111323404231"
+      },
+      {
+        "name": "native-ios-e2e",
+        "head": "6d00fa1463603bacecbb3210279b09ed88bbba0c",
+        "status": "completed",
+        "conclusion": "skipped",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37164037272/job/111323190543"
+      },
+      {
+        "name": "verify",
+        "head": "6d00fa1463603bacecbb3210279b09ed88bbba0c",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37164037263/job/111323190156"
+      },
+      {
+        "name": "postgres-foundation",
+        "head": "6d00fa1463603bacecbb3210279b09ed88bbba0c",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37164037263/job/111323190151"
+      },
+      {
+        "name": "models-and-postgres",
+        "head": "6d00fa1463603bacecbb3210279b09ed88bbba0c",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37164037297/job/111323190115"
+      },
+      {
+        "name": "specification-contracts",
+        "head": "6d00fa1463603bacecbb3210279b09ed88bbba0c",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37164037263/job/111323190078"
+      },
+      {
+        "name": "social-client",
+        "head": "6d00fa1463603bacecbb3210279b09ed88bbba0c",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37164037297/job/111323189987"
+      },
+      {
+        "name": "hardcoded-list-audit",
+        "head": "6d00fa1463603bacecbb3210279b09ed88bbba0c",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37164037291/job/111323189782"
+      },
+      {
+        "name": "postgres-properties",
+        "head": "6d00fa1463603bacecbb3210279b09ed88bbba0c",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37164037272/job/111323189776"
+      },
+      {
+        "name": "build",
+        "head": "6d00fa1463603bacecbb3210279b09ed88bbba0c",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/diegueins680/tdf-app/actions/runs/37164037274/job/111323189741"
+      }
+    ],
+    "unresolved_threads": [],
+    "native_stack": null,
+    "classification": "ALREADY_MERGED",
+    "confidence": "high",
+    "rationale": "Rescues the only remaining unique source441 material: September18 notification delivery/recovery notes in the existing notification document. The exact source addition is retained with source attribution and explicit historical scope, without claiming new device qualification. Its original mobile pin0c1ee7 is already an ancestor of the reviewed/integrated companion. Only the document and generated provenance hash change; exact text, no mobile-pin change, whitespace and specification-inventory checks pass. Original441 and branch preserved. Current-head CI and independent approval govern integration.",
+    "action": "Created documentation-rescue PR476 at6d00fa146, then normally merged atc4d479c7 after current-head approval/checks; exact tested target tree and retained branch verified.",
+    "effective_changes": "",
+    "files": "",
+    "recovery": "Not deleted",
+    "evidence": "final-33/prs/476/info.json",
+    "remote_present": true
+  }
+]

@@ -1,0 +1,211 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048733480",
+      "pull_request_review_id": 5250268479,
+      "id": 4048733480,
+      "node_id": "PRRC_kwDOQPdUrM7xUsUo",
+      "diff_hunk": "@@ -570,6 +570,11 @@\n       \"id\": \"2026-09-18_calendar_runtime_schema\",\n       \"path\": \"tdf-hq/sql/2026-09-18_calendar_runtime_schema.sql\",\n       \"introducedBy\": \"49ff02de5ade1b8923f099c22af0bbf57350a078\"\n+    },\n+    {\n+      \"id\": \"2026-09-18_records_resource_availability\",\n+      \"path\": \"tdf-hq/sql/2026-09-18_records_resource_availability.sql\",\n+      \"introducedBy\": \"bec94317473fa8f2016ba165b5813a391c81b9ac\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "697a5c748332a7179d3a3e7f7bbfd7d5323579b9",
+      "original_commit_id": "7f061fa408c124417fdc96eaf88ac9f827af85bc",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Restore the pinned migration commit to the release ancestry**\n\nThe pinned `bec943174...` commit is not an ancestor of this release commit: both it and `acfd503...` have `e1a825bd...` as their parent. Consequently, planning this exact release with `npm run release:backend:plan -- --sha acfd50335a35c29eba7b9994b56969263f3068da` is rejected by the ancestry check in `scripts/production-release.mjs` with \u201crefusing to omit a registered migration,\u201d so this backend cannot be deployed through the guarded release path. Preserve the introducing commit in this branch's ancestry or register the migration against its actual introducing ancestor.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T16:44:52Z",
+      "updated_at": "2026-09-18T16:44:52Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/451#discussion_r4048733480",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/451",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048733480"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/451#discussion_r4048733480"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/451"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048733480/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 592,
+      "original_line": 577,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 8,
+      "position": 8,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048970933",
+      "pull_request_review_id": 5250543962,
+      "id": 4048970933,
+      "node_id": "PRRC_kwDOQPdUrM7xVmS1",
+      "diff_hunk": "@@ -101,15 +102,13 @@ interface CatalogRecoveryCard {\n   eyebrow: string;\n   title: string;\n   description: string;\n-  image: string;\n+  resource: RecordsResourceDTO | undefined;\n   to: string;\n   action: string;\n }\n \n-const primaryRecordsImage = (resources: RecordsResourceDTO[]): string =>\n-  resources.find((resource) => resource.primary && resource.thumbnailUrl)?.thumbnailUrl ??\n-  resources.find((resource) => resource.thumbnailUrl)?.thumbnailUrl ??\n-  '';\n+const primaryRecordsResource = (resources: RecordsResourceDTO[]) =>\n+  resources.find((resource) => resource.primary) ?? resources[0];",
+      "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
+      "commit_id": "a2a826e7b160fd6cb9ec9fb6af363fd4d7520b16",
+      "original_commit_id": "a2a826e7b160fd6cb9ec9fb6af363fd4d7520b16",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Prefer a renderable resource for FanHub thumbnails**\n\nWhen an item has a primary resource without a usable thumbnail\u2014such as an unavailable resource, a non-YouTube resource with no `thumbnailUrl`, or a primary resource alongside an illustrated secondary resource\u2014this now selects that primary resource and renders an unavailable placeholder. The previous helper explicitly fell back from a primary resource with no thumbnail to any resource with a thumbnail, so multi-resource FanHub recovery cards lose valid artwork; preserve that fallback while also excluding resources marked unavailable.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T17:12:28Z",
+      "updated_at": "2026-09-18T17:12:28Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/451#discussion_r4048970933",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/451",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048970933"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/451#discussion_r4048970933"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/451"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048970933/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 110,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 111,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 20,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049775499",
+      "pull_request_review_id": 5251474329,
+      "id": 4049775499,
+      "node_id": "PRRC_kwDOQPdUrM7xYquL",
+      "diff_hunk": "@@ -0,0 +1,52 @@\n+import type { RecordsResourceDTO } from '../../api/records';\n+\n+export type ThumbnailResource = Pick<RecordsResourceDTO,\n+  'providerCode' | 'externalCode' | 'thumbnailUrl' | 'availability'>;\n+\n+const youtubeImageHosts = new Set(['i.ytimg.com', 'img.youtube.com']);\n+\n+/** Choose artwork only among resources belonging to this same catalog item. */\n+export function primaryRecordsResource(resources: RecordsResourceDTO[]): RecordsResourceDTO | undefined {\n+  const renderable = resources.filter(resource => recordThumbnailCandidates(resource).length > 0);\n+  return renderable.find(resource => resource.primary) ?? renderable[0]\n+    ?? resources.find(resource => resource.primary) ?? resources[0];",
+      "path": "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
+      "commit_id": "697a5c748332a7179d3a3e7f7bbfd7d5323579b9",
+      "original_commit_id": "adb00fbc452af02b95fe62e70d69863bafec5e2b",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Fall back after generated YouTube candidates fail**\n\nFor a multi-resource FanHub item whose primary YouTube video is removed but not yet marked `unavailable`, this treats its synthesized thumbnail URLs as renderable and selects it ahead of a secondary resource with valid artwork. When both generated URLs fail, `RecordThumbnail` only exhausts that selected resource's source list and never advances to the secondary resource, so the card still loses usable artwork during the exact unverified-failure interval this change handles. Fresh evidence in this revision is the new runtime failure path, which increments only a per-resource candidate index; fallback therefore needs to span resources rather than relying solely on candidates being syntactically constructible.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T18:56:37Z",
+      "updated_at": "2026-09-18T18:56:37Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/451#discussion_r4049775499",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/451",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049775499"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/451#discussion_r4049775499"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/451"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049775499/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 10,
+      "original_start_line": 10,
+      "start_side": "RIGHT",
+      "line": 12,
+      "original_line": 12,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 12,
+      "position": 12,
+      "subject_type": "line"
+    }
+  ]
+]

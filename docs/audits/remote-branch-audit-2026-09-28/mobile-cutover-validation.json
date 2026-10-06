@@ -1,0 +1,33 @@
+[
+  {
+    "command": [
+      "npm",
+      "run",
+      "release:check"
+    ],
+    "log": "mobile-cutover-release.log",
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "npm",
+      "test",
+      "--",
+      "--watchman=false"
+    ],
+    "log": "mobile-cutover-tests.log",
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "scripts/tests"
+    ],
+    "log": "mobile-cutover-python.log",
+    "exit_code": 0
+  }
+]

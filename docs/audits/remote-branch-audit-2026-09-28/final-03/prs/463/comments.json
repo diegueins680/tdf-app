@@ -1,0 +1,351 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4118319007",
+      "pull_request_review_id": 5333688040,
+      "id": 4118319007,
+      "node_id": "PRRC_kwDOQPdUrM71eI-f",
+      "diff_hunk": "@@ -590,6 +590,11 @@\n       \"id\": \"2026-09-18_records_resource_availability\",\n       \"path\": \"tdf-hq/sql/2026-09-18_records_resource_availability.sql\",\n       \"introducedBy\": \"bec94317473fa8f2016ba165b5813a391c81b9ac\"\n+    },\n+    {\n+      \"id\": \"2026-09-27_event_ingestion_boundaries\",\n+      \"path\": \"tdf-hq/sql/2026-09-27_event_ingestion_boundaries.sql\",\n+      \"introducedBy\": \"441dfcc968559f829e84c89751f008657566138c\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "697bd58b5ea1c8134be490cce588b65e9a08dad8",
+      "original_commit_id": "6ba185a697b3b6b6983ebb48e0ab6454f716cf23",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Anchor the migration to an ancestor of this release**\n\nFor release SHA `7e78303ac3ea0c9ce025d7ea4edab5d03d81b8fa`, `441dfcc968559f829e84c89751f008657566138c` is not an ancestor (`git merge-base --is-ancestor` returns false). The guarded release path in `scripts/production-release.mjs` checks every `introducedBy` commit and explicitly refuses such a release, so planning or deploying this exact commit will fail before applying the migration. Record an introduction commit that is actually in this release's ancestry.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T03:29:34Z",
+      "updated_at": "2026-09-28T03:29:34Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/463#discussion_r4118319007",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/463",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4118319007"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/463#discussion_r4118319007"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/463"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4118319007/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 595,
+      "original_start_line": 595,
+      "start_side": "RIGHT",
+      "line": 597,
+      "original_line": 597,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 8,
+      "position": 8,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4118319013",
+      "pull_request_review_id": 5333688040,
+      "id": 4118319013,
+      "node_id": "PRRC_kwDOQPdUrM71eI-l",
+      "diff_hunk": "@@ -0,0 +1,130 @@\n+-- One cumulative pilot for research candidates and structured discovery.\n+-- No research approval grants automatic publication authority.\n+BEGIN;\n+SET LOCAL lock_timeout='5s';\n+\n+CREATE TABLE IF NOT EXISTS event_discovery_publication_approval (\n+  id bigserial PRIMARY KEY,\n+  source_id bigint NOT NULL REFERENCES event_discovery_source(id),\n+  approval_reference text NOT NULL CHECK(length(trim(approval_reference)) BETWEEN 1 AND 500),\n+  approved_by_party_id bigint NOT NULL REFERENCES party(id),\n+  approved_at timestamptz NOT NULL DEFAULT now(),\n+  revoked_at timestamptz,\n+  CHECK(revoked_at IS NULL OR revoked_at>=approved_at)\n+);\n+CREATE UNIQUE INDEX IF NOT EXISTS event_discovery_publication_approval_active\n+  ON event_discovery_publication_approval(source_id) WHERE revoked_at IS NULL;\n+\n+CREATE OR REPLACE FUNCTION tdf_lock_event_publication_approval()\n+RETURNS trigger LANGUAGE plpgsql AS $$\n+BEGIN\n+  PERFORM 1 FROM event_research_pilot_control WHERE control_key='default' FOR UPDATE;\n+  IF TG_OP='DELETE' THEN RAISE EXCEPTION 'publication approvals must be retained; revoke instead'; END IF;\n+  IF TG_OP='INSERT' AND NOT EXISTS(SELECT 1 FROM event_discovery_source\n+    WHERE id=NEW.source_id AND source_type IN ('ticketmaster','buenplan','ical','json')) THEN\n+    RAISE EXCEPTION 'manual research sources cannot receive automatic publication approval';\n+  END IF;\n+  IF TG_OP='UPDATE' AND (NEW.source_id IS DISTINCT FROM OLD.source_id\n+    OR NEW.approval_reference IS DISTINCT FROM OLD.approval_reference\n+    OR NEW.approved_by_party_id IS DISTINCT FROM OLD.approved_by_party_id\n+    OR NEW.approved_at IS DISTINCT FROM OLD.approved_at\n+    OR (OLD.revoked_at IS NOT NULL AND NEW.revoked_at IS DISTINCT FROM OLD.revoked_at)) THEN\n+    RAISE EXCEPTION 'publication approval evidence is immutable';\n+  END IF;\n+  RETURN NEW;\n+END $$;\n+DROP TRIGGER IF EXISTS event_publication_approval_lock ON event_discovery_publication_approval;\n+CREATE TRIGGER event_publication_approval_lock BEFORE INSERT OR UPDATE OR DELETE\n+  ON event_discovery_publication_approval FOR EACH ROW EXECUTE FUNCTION tdf_lock_event_publication_approval();\n+\n+-- Approval is scoped to the source that was reviewed, not a future replacement\n+-- URL or identity stored under the same numeric key.\n+CREATE OR REPLACE FUNCTION tdf_revoke_changed_event_source_approval()\n+RETURNS trigger LANGUAGE plpgsql AS $$\n+BEGIN\n+  IF NEW.source_key IS DISTINCT FROM OLD.source_key OR NEW.source_type IS DISTINCT FROM OLD.source_type\n+    OR NEW.feed_url IS DISTINCT FROM OLD.feed_url OR NEW.city_id IS DISTINCT FROM OLD.city_id\n+    OR (OLD.enabled AND NOT NEW.enabled) THEN\n+    UPDATE event_discovery_publication_approval SET revoked_at=now()\n+      WHERE source_id=OLD.id AND revoked_at IS NULL;\n+  END IF;\n+  RETURN NEW;\n+END $$;\n+DROP TRIGGER IF EXISTS event_source_publication_scope ON event_discovery_source;\n+CREATE TRIGGER event_source_publication_scope BEFORE UPDATE ON event_discovery_source\n+  FOR EACH ROW EXECUTE FUNCTION tdf_revoke_changed_event_source_approval();\n+\n+CREATE OR REPLACE FUNCTION tdf_event_pilot_keys(excluded_candidate bigint DEFAULT -1,\n+  excluded_reference bigint DEFAULT -1)\n+RETURNS TABLE(identity text) LANGUAGE sql STABLE AS $$\n+  SELECT 'event:'||r.event_id::text FROM external_event_ref r\n+    WHERE r.id<>excluded_reference AND lower(trim(r.source_status))<>'suppressed'\n+  UNION\n+  SELECT CASE WHEN coalesce(c.event_id,r.event_id) IS NOT NULL\n+    THEN 'event:'||coalesce(c.event_id,r.event_id)::text ELSE 'candidate:'||c.id::text END\n+    FROM event_research_candidate c LEFT JOIN external_event_ref r\n+      ON r.provider=c.provider AND r.external_id=c.external_id\n+      AND lower(trim(r.source_status))<>'suppressed'\n+    WHERE c.id<>excluded_candidate AND c.is_pilot AND c.review_state<>'discarded'",
+      "path": "tdf-hq/sql/2026-09-27_event_ingestion_boundaries.sql",
+      "commit_id": "697bd58b5ea1c8134be490cce588b65e9a08dad8",
+      "original_commit_id": "6ba185a697b3b6b6983ebb48e0ab6454f716cf23",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Include discovery events in the pilot status count**\n\nThis function makes structured imports consume the same 20-item allowance as research candidates, but `loadPilotDTO` in `TDF.Server.EventResearch` still computes `erPilotActiveCandidates` solely from `event_research_candidate`. For example, with 19 candidates and one imported event, `GET /social-events/event-research/pilot` reports 19 of 20 while the next candidate is rejected by this trigger. Clients following the documented preflight therefore receive a misleading capacity value; derive the status count from the shared identities (or expose a separate shared count).\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T03:29:34Z",
+      "updated_at": "2026-09-28T03:29:35Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/463#discussion_r4118319013",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/463",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4118319013"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/463#discussion_r4118319013"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/463"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4118319013/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 60,
+      "original_start_line": 60,
+      "start_side": "RIGHT",
+      "line": 68,
+      "original_line": 68,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 68,
+      "position": 68,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4122956570",
+      "pull_request_review_id": 5339650022,
+      "id": 4122956570,
+      "node_id": "PRRC_kwDOQPdUrM71v1Ma",
+      "diff_hunk": "@@ -590,6 +590,11 @@\n       \"id\": \"2026-09-18_records_resource_availability\",\n       \"path\": \"tdf-hq/sql/2026-09-18_records_resource_availability.sql\",\n       \"introducedBy\": \"bec94317473fa8f2016ba165b5813a391c81b9ac\"\n+    },\n+    {\n+      \"id\": \"2026-09-27_event_ingestion_boundaries\",\n+      \"path\": \"tdf-hq/sql/2026-09-27_event_ingestion_boundaries.sql\",\n+      \"introducedBy\": \"441dfcc968559f829e84c89751f008657566138c\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "697bd58b5ea1c8134be490cce588b65e9a08dad8",
+      "original_commit_id": "6ba185a697b3b6b6983ebb48e0ab6454f716cf23",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Verified on 697bd58b5ea1c8134be490cce588b65e9a08dad8: introduction commit 441dfcc968559f829e84c89751f008657566138c is in the current release ancestry. All 115 registered introduction commits pass git merge-base --is-ancestor, and all 82 production-release tests pass. The earlier review snapshot is superseded by the existing normal commits; no ancestry guard or manifest entry was weakened. Native-stack automatic rebasing has not been invoked.",
+      "created_at": "2026-09-28T13:53:31Z",
+      "updated_at": "2026-09-28T13:53:31Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/463#discussion_r4122956570",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/463",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4122956570"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/463#discussion_r4122956570"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/463"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4122956570/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 595,
+      "original_start_line": 595,
+      "start_side": "RIGHT",
+      "line": 597,
+      "original_line": 597,
+      "side": "RIGHT",
+      "in_reply_to_id": 4118319007,
+      "author_association": "OWNER",
+      "original_position": 8,
+      "position": 8,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4122957722",
+      "pull_request_review_id": 5339651339,
+      "id": 4122957722,
+      "node_id": "PRRC_kwDOQPdUrM71v1ea",
+      "diff_hunk": "@@ -0,0 +1,130 @@\n+-- One cumulative pilot for research candidates and structured discovery.\n+-- No research approval grants automatic publication authority.\n+BEGIN;\n+SET LOCAL lock_timeout='5s';\n+\n+CREATE TABLE IF NOT EXISTS event_discovery_publication_approval (\n+  id bigserial PRIMARY KEY,\n+  source_id bigint NOT NULL REFERENCES event_discovery_source(id),\n+  approval_reference text NOT NULL CHECK(length(trim(approval_reference)) BETWEEN 1 AND 500),\n+  approved_by_party_id bigint NOT NULL REFERENCES party(id),\n+  approved_at timestamptz NOT NULL DEFAULT now(),\n+  revoked_at timestamptz,\n+  CHECK(revoked_at IS NULL OR revoked_at>=approved_at)\n+);\n+CREATE UNIQUE INDEX IF NOT EXISTS event_discovery_publication_approval_active\n+  ON event_discovery_publication_approval(source_id) WHERE revoked_at IS NULL;\n+\n+CREATE OR REPLACE FUNCTION tdf_lock_event_publication_approval()\n+RETURNS trigger LANGUAGE plpgsql AS $$\n+BEGIN\n+  PERFORM 1 FROM event_research_pilot_control WHERE control_key='default' FOR UPDATE;\n+  IF TG_OP='DELETE' THEN RAISE EXCEPTION 'publication approvals must be retained; revoke instead'; END IF;\n+  IF TG_OP='INSERT' AND NOT EXISTS(SELECT 1 FROM event_discovery_source\n+    WHERE id=NEW.source_id AND source_type IN ('ticketmaster','buenplan','ical','json')) THEN\n+    RAISE EXCEPTION 'manual research sources cannot receive automatic publication approval';\n+  END IF;\n+  IF TG_OP='UPDATE' AND (NEW.source_id IS DISTINCT FROM OLD.source_id\n+    OR NEW.approval_reference IS DISTINCT FROM OLD.approval_reference\n+    OR NEW.approved_by_party_id IS DISTINCT FROM OLD.approved_by_party_id\n+    OR NEW.approved_at IS DISTINCT FROM OLD.approved_at\n+    OR (OLD.revoked_at IS NOT NULL AND NEW.revoked_at IS DISTINCT FROM OLD.revoked_at)) THEN\n+    RAISE EXCEPTION 'publication approval evidence is immutable';\n+  END IF;\n+  RETURN NEW;\n+END $$;\n+DROP TRIGGER IF EXISTS event_publication_approval_lock ON event_discovery_publication_approval;\n+CREATE TRIGGER event_publication_approval_lock BEFORE INSERT OR UPDATE OR DELETE\n+  ON event_discovery_publication_approval FOR EACH ROW EXECUTE FUNCTION tdf_lock_event_publication_approval();\n+\n+-- Approval is scoped to the source that was reviewed, not a future replacement\n+-- URL or identity stored under the same numeric key.\n+CREATE OR REPLACE FUNCTION tdf_revoke_changed_event_source_approval()\n+RETURNS trigger LANGUAGE plpgsql AS $$\n+BEGIN\n+  IF NEW.source_key IS DISTINCT FROM OLD.source_key OR NEW.source_type IS DISTINCT FROM OLD.source_type\n+    OR NEW.feed_url IS DISTINCT FROM OLD.feed_url OR NEW.city_id IS DISTINCT FROM OLD.city_id\n+    OR (OLD.enabled AND NOT NEW.enabled) THEN\n+    UPDATE event_discovery_publication_approval SET revoked_at=now()\n+      WHERE source_id=OLD.id AND revoked_at IS NULL;\n+  END IF;\n+  RETURN NEW;\n+END $$;\n+DROP TRIGGER IF EXISTS event_source_publication_scope ON event_discovery_source;\n+CREATE TRIGGER event_source_publication_scope BEFORE UPDATE ON event_discovery_source\n+  FOR EACH ROW EXECUTE FUNCTION tdf_revoke_changed_event_source_approval();\n+\n+CREATE OR REPLACE FUNCTION tdf_event_pilot_keys(excluded_candidate bigint DEFAULT -1,\n+  excluded_reference bigint DEFAULT -1)\n+RETURNS TABLE(identity text) LANGUAGE sql STABLE AS $$\n+  SELECT 'event:'||r.event_id::text FROM external_event_ref r\n+    WHERE r.id<>excluded_reference AND lower(trim(r.source_status))<>'suppressed'\n+  UNION\n+  SELECT CASE WHEN coalesce(c.event_id,r.event_id) IS NOT NULL\n+    THEN 'event:'||coalesce(c.event_id,r.event_id)::text ELSE 'candidate:'||c.id::text END\n+    FROM event_research_candidate c LEFT JOIN external_event_ref r\n+      ON r.provider=c.provider AND r.external_id=c.external_id\n+      AND lower(trim(r.source_status))<>'suppressed'\n+    WHERE c.id<>excluded_candidate AND c.is_pilot AND c.review_state<>'discarded'",
+      "path": "tdf-hq/sql/2026-09-27_event_ingestion_boundaries.sql",
+      "commit_id": "697bd58b5ea1c8134be490cce588b65e9a08dad8",
+      "original_commit_id": "6ba185a697b3b6b6983ebb48e0ab6454f716cf23",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 697bd58b5ea1c8134be490cce588b65e9a08dad8. The pilot-status endpoint and PostgreSQL import preflight now call the same canonical-identity count used by the database capacity guard. The real PostgreSQL regression exercises mixed candidates/imports, linked-event deduplication, duplicate source references and suppression (20 \u2192 20 \u2192 19 \u2192 20), with fixture changes rolled back. Mixed-writer races, authority/revocation and rollback/reapplication still pass; all 28 focused examples and the actual handler/dependency compilation pass. The existing response field is retained for compatibility.",
+      "created_at": "2026-09-28T13:53:37Z",
+      "updated_at": "2026-09-28T13:53:37Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/463#discussion_r4122957722",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/463",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4122957722"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/463#discussion_r4122957722"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/463"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4122957722/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 60,
+      "original_start_line": 60,
+      "start_side": "RIGHT",
+      "line": 68,
+      "original_line": 68,
+      "side": "RIGHT",
+      "in_reply_to_id": 4118319013,
+      "author_association": "OWNER",
+      "original_position": 68,
+      "position": 68,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4122983604",
+      "pull_request_review_id": 5339684230,
+      "id": 4122983604,
+      "node_id": "PRRC_kwDOQPdUrM71v7y0",
+      "diff_hunk": "@@ -2028,7 +2070,25 @@ resolveAllowedImportedUpdateStateId currentStateId desiredStateId =\n       pure (if allowed then desiredStateId else currentState)\n \n syncDiscoveredEventDb :: Bool -> UTCTime -> DiscoveredEvent -> SqlPersistT IO DiscoverySyncStats\n-syncDiscoveredEventDb autoPublish now event@DiscoveredEvent{..} = do\n+syncDiscoveredEventDb requestedPublication now event@DiscoveredEvent{..} = do\n+  -- Every automated entry point locks its enabled source and the existing\n+  -- pilot before event/entity locks. Database triggers enforce the shared cap in the same transaction.\n+  backend <- T.toCaseFold <$> getRDBMS\n+  autoPublish <- if \"postgres\" `T.isInfixOf` backend then do\n+    sources <- rawSql\n+      \"SELECT id FROM event_discovery_source WHERE source_key=? AND enabled AND source_type IN ('ticketmaster','buenplan','ical','json') FOR SHARE\"\n+      [toPersistValue discoveredEventProvider] :: SqlPersistT IO [Single Int64]\n+    unless (length sources == 1) (liftIO (fail \"Event source disabled or unavailable\"))",
+      "path": "tdf-hq/src/TDF/Services/EventDiscovery.hs",
+      "commit_id": "697bd58b5ea1c8134be490cce588b65e9a08dad8",
+      "original_commit_id": "697bd58b5ea1c8134be490cce588b65e9a08dad8",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Abort reconciliation when the source is disabled**\n\nWhen an administrator disables a source after its fetch begins, this new check makes each per-event sync fail, but `syncOne` catches those failures and `runDiscoverySource` still reaches the success branch in `Cron.hs:617-626`, where it calls `reconcileProviderEvents` and `markSourceSuccess`. The stale response can therefore increment `missing_runs`, potentially hide an event that had already missed one run, and record the disabled source as successful; propagate this failure or recheck/lock source enablement around reconciliation and the success update.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T13:55:58Z",
+      "updated_at": "2026-09-28T13:55:58Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/463#discussion_r4122983604",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/463",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4122983604"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/463#discussion_r4122983604"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/463"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4122983604/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 2078,
+      "original_start_line": 2078,
+      "start_side": "RIGHT",
+      "line": 2081,
+      "original_line": 2081,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 100,
+      "position": 100,
+      "subject_type": "line"
+    }
+  ]
+]

@@ -18,7 +18,7 @@
 ### Step 2: Configure Webhook (5 mins)
 - [ ] Go to https://dashboard.stripe.com/test/webhooks
 - [ ] Click **+ Add endpoint**
-- [ ] Enter URL: `https://tdf-hq.fly.dev/social-events/stripe/webhook`
+- [ ] Enter URL: `https://api.tdfrecords.net/social-events/stripe/webhook`
 - [ ] Select events:
   - [ ] `payment_intent.succeeded`
   - [ ] `payment_intent.payment_failed`

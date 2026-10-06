@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-04T01:19:02.906903+00:00",
+  "exit_code": 0,
+  "mailboxReadSucceeded": true,
+  "aggregate_report_count": 8,
+  "errors": [],
+  "no_mail_sent": true,
+  "helper_sha256": "9d417aac9b3e37f164da5097bbdb1341c96a994f357da0a51ef96e3e88e3d467",
+  "launchagent_unchanged": true
+}

@@ -1,0 +1,31 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 396,
+          "reviewDecision": null,
+          "mergeStateStatus": "CLEAN",
+          "mergeable": "MERGEABLE",
+          "headRefOid": "20566eab9e99685983beac359f2462386e59f8f7",
+          "baseRefName": "codex/payment-worker-log-safety-20260915",
+          "isDraft": true,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          }
+        }
+      }
+    }
+  }
+]

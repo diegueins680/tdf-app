@@ -1,0 +1,341 @@
+- generic [ref=f15e4]:
+  - generic [ref=f15e9]:
+    - generic [ref=f15e12]:
+      - link [ref=f15e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f15e22]
+      - generic [ref=f15e25]:
+        - link [ref=f15e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f15e35]
+        - link [ref=f15e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f15e45]
+        - link [ref=f15e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - generic [ref=f15e55]:
+            - img "Messages" [ref=f15e57]
+            - generic "Direct messaging - 8 new notifications link" [ref=f15e60]: "8"
+        - link [ref=f15e66] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f15e71]
+        - link [ref=f15e79] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f15e84]
+        - link [ref=f15e92] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f15e97]
+        - link [ref=f15e102] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f15e107]
+        - link [ref=f15e114] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f15e119]:
+            - img "tdf.records.label's profile picture" [ref=f15e120]
+      - generic [ref=f15e121]:
+        - link [ref=f15e124] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f15e129]
+        - link [ref=f15e132] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f15e137]
+    - generic [ref=f15e140]:
+      - main [ref=f15e141]:
+        - generic [ref=f15e143]:
+          - generic [ref=f15e144]:
+            - generic [ref=f15e145]:
+              - button [ref=f15e150] [cursor=pointer]:
+                - link [ref=f15e152]:
+                  - img "alejandrosoria_music's profile picture" [ref=f15e153]
+              - generic [ref=f15e154]:
+                - generic [ref=f15e155]:
+                  - generic [ref=f15e156]:
+                    - link [ref=f15e158] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "alejandrosoria_music" [level=2] [ref=f15e159]
+                    - button [ref=f15e161] [cursor=pointer]:
+                      - img "Options" [ref=f15e163]
+                  - generic [ref=f15e167]: Alejandro Soria
+                  - generic [ref=f15e169]:
+                    - generic [ref=f15e171]:
+                      - generic [ref=f15e172]: "331"
+                      - text: posts
+                    - link "6,666 followers" [ref=f15e174] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f15e175]:
+                        - generic "6,666" [ref=f15e176]
+                        - text: followers
+                    - link "4,291 following" [ref=f15e178] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f15e179]:
+                        - generic [ref=f15e180]: 4,291
+                        - text: following
+                - generic [ref=f15e181]:
+                  - generic [ref=f15e182]:
+                    - generic [ref=f15e183]: Artist
+                    - generic [ref=f15e185]:
+                      - button [ref=f15e186] [cursor=pointer]:
+                        - generic [ref=f15e187]:
+                          - text: "𝟲𝟲𝟲 𝙇𝙤𝙫𝙚𝙧.►𝘾𝙀𝙊:"
+                          - link "@modular_academy_" [ref=f15e188]:
+                            - /url: /modular_academy_/
+                          - text: /
+                          - link "@azimute_musique" [ref=f15e189]:
+                            - /url: /azimute_musique/
+                          - text: /
+                          - link "@x.club.uio" [ref=f15e190]:
+                            - /url: /x.club.uio/
+                          - text: "►𝙍𝙚𝙨𝙞𝙙𝙚𝙣𝙩 𝘿𝙟:"
+                          - link "@kankariclub" [ref=f15e191]:
+                            - /url: /kankariclub/
+                          - text: ►𝗠𝗮𝗻𝗮𝗴𝗲𝗿
+                          - link "@pexsm" [ref=f15e192]:
+                            - /url: /pexsm/
+                          - text: "&"
+                      - generic [ref=f15e193]:
+                        - text: ...
+                        - button "more" [ref=f15e194] [cursor=pointer]
+                    - generic [ref=f15e196]:
+                      - button "Link icon linktr.ee/AlejandroSoria_Music and 1 more" [ref=f15e197] [cursor=pointer]:
+                        - generic [ref=f15e198]:
+                          - img "Link icon" [ref=f15e200]
+                          - generic [ref=f15e203]: linktr.ee/AlejandroSoria_Music and 1 more
+                      - link "Threads alejandrosoria_music" [ref=f15e205] [cursor=pointer]:
+                        - /url: https://www.threads.com/@alejandrosoria_music?xmt=AQG0nTTKwgnUe-iyV0iMWLj07e1PgoCvZbztThTwl8UHwD4
+                        - img "Threads" [ref=f15e207]
+                        - generic [ref=f15e209]: alejandrosoria_music
+                  - link "Followed by samc.og99, doubleog593 + 83 more" [ref=f15e211] [cursor=pointer]:
+                    - /url: /alejandrosoria_music/followers/mutualOnly
+                    - generic [ref=f15e213]:
+                      - generic [ref=f15e215]:
+                        - button [ref=f15e216]:
+                          - link [ref=f15e217]
+                        - button [ref=f15e218]:
+                          - link [ref=f15e219]
+                        - button [ref=f15e220]:
+                          - link [ref=f15e221]
+                      - generic [ref=f15e222]: Followed by samc.og99, doubleog593 + 83 more
+            - generic [ref=f15e227]:
+              - button "Following Down chevron icon" [ref=f15e229] [cursor=pointer]:
+                - generic [ref=f15e230]:
+                  - generic [ref=f15e231]: Following
+                  - img "Down chevron icon" [ref=f15e234]
+              - button "Message" [ref=f15e237] [cursor=pointer]
+              - button [ref=f15e239] [cursor=pointer]:
+                - img "Similar accounts" [ref=f15e241]
+            - menu [ref=f15e245]:
+              - generic [ref=f15e247]:
+                - list [ref=f15e249]:
+                  - listitem [ref=f15e250]
+                  - listitem [ref=f15e251]
+                  - listitem [ref=f15e252]:
+                    - link "View Yo highlight" [ref=f15e255] [cursor=pointer]:
+                      - /url: /stories/highlights/17884158279408432/
+                      - button "alejandrosoria_music's highlight story picture Yo" [ref=f15e256]:
+                        - button [ref=f15e257]:
+                          - img "alejandrosoria_music's highlight story picture" [ref=f15e260]
+                        - generic [ref=f15e261]: Yo
+                  - listitem [ref=f15e264]:
+                    - link "View TOUR COL 2025 highlight" [ref=f15e267] [cursor=pointer]:
+                      - /url: /stories/highlights/17990182826835556/
+                      - button "alejandrosoria_music's highlight story picture TOUR COL 2025" [ref=f15e268]:
+                        - button [ref=f15e269]:
+                          - img "alejandrosoria_music's highlight story picture" [ref=f15e272]
+                        - generic [ref=f15e273]: TOUR COL 2025
+                  - listitem [ref=f15e276]:
+                    - link "View Peru 2025 🇵🇪 highlight" [ref=f15e279] [cursor=pointer]:
+                      - /url: /stories/highlights/18052774616222236/
+                      - button "alejandrosoria_music's highlight story picture Peru 2025 🇵🇪" [ref=f15e280]:
+                        - button [ref=f15e281]:
+                          - img "alejandrosoria_music's highlight story picture" [ref=f15e284]
+                        - generic [ref=f15e285]: Peru 2025 🇵🇪
+                  - listitem [ref=f15e288]:
+                    - link "View Colombia 2025 🇨🇴 highlight" [ref=f15e291] [cursor=pointer]:
+                      - /url: /stories/highlights/18044915438415872/
+                      - button "alejandrosoria_music's highlight story picture Colombia 2025 🇨🇴" [ref=f15e292]:
+                        - button [ref=f15e293]:
+                          - img "alejandrosoria_music's highlight story picture" [ref=f15e296]
+                        - generic [ref=f15e297]: Colombia 2025 🇨🇴
+                  - listitem [ref=f15e300]:
+                    - link "View Gigs 2024🇪🇨🇨🇴🇨🇱 highlight" [ref=f15e303] [cursor=pointer]:
+                      - /url: /stories/highlights/18252428830257097/
+                      - button "alejandrosoria_music's highlight story picture Gigs 2024🇪🇨🇨🇴🇨🇱" [ref=f15e304]:
+                        - button [ref=f15e305]:
+                          - img "alejandrosoria_music's highlight story picture" [ref=f15e308]
+                        - generic [ref=f15e309]: Gigs 2024🇪🇨🇨🇴🇨🇱
+                  - listitem [ref=f15e312]:
+                    - link "View CHILE TOUR 2024 highlight" [ref=f15e315] [cursor=pointer]:
+                      - /url: /stories/highlights/18018393902222887/
+                      - button "alejandrosoria_music's highlight story picture CHILE TOUR 2024" [ref=f15e316]:
+                        - button [ref=f15e317]:
+                          - img "alejandrosoria_music's highlight story picture" [ref=f15e320]
+                        - generic [ref=f15e321]: CHILE TOUR 2024
+                  - listitem [ref=f15e324]:
+                    - link "View Gig's 2022 highlight" [ref=f15e327] [cursor=pointer]:
+                      - /url: /stories/highlights/18004904009253198/
+                      - button "alejandrosoria_music's highlight story picture Gig's 2022" [ref=f15e328]:
+                        - button [ref=f15e329]:
+                          - img "alejandrosoria_music's highlight story picture" [ref=f15e332]
+                        - generic [ref=f15e333]: Gig's 2022
+                  - listitem [ref=f15e336]:
+                    - link "View 🇨🇴Tour 2023 highlight" [ref=f15e339] [cursor=pointer]:
+                      - /url: /stories/highlights/18050914933508017/
+                      - button "alejandrosoria_music's highlight story picture 🇨🇴Tour 2023" [ref=f15e340]:
+                        - button [ref=f15e341]:
+                          - img "alejandrosoria_music's highlight story picture" [ref=f15e344]
+                        - generic [ref=f15e345]: 🇨🇴Tour 2023
+                  - listitem [ref=f15e348]:
+                    - link "View Gig’s 2023 highlight" [ref=f15e351] [cursor=pointer]:
+                      - /url: /stories/highlights/17988063284564246/
+                      - button "alejandrosoria_music's highlight story picture Gig’s 2023" [ref=f15e352]:
+                        - button [ref=f15e353]:
+                          - img "alejandrosoria_music's highlight story picture" [ref=f15e356]
+                        - generic [ref=f15e357]: Gig’s 2023
+                  - listitem [ref=f15e360]:
+                    - link "View 🇵🇪 Tour 2022 highlight" [ref=f15e363] [cursor=pointer]:
+                      - /url: /stories/highlights/18105199933303454/
+                      - button "alejandrosoria_music's highlight story picture 🇵🇪 Tour 2022" [ref=f15e364]:
+                        - button [ref=f15e365]:
+                          - img "alejandrosoria_music's highlight story picture" [ref=f15e368]
+                        - generic [ref=f15e369]: 🇵🇪 Tour 2022
+                  - listitem [ref=f15e372]:
+                    - link "View Gig’s 2021✨ highlight" [ref=f15e375] [cursor=pointer]:
+                      - /url: /stories/highlights/17889835988441464/
+                      - button "alejandrosoria_music's highlight story picture Gig’s 2021✨" [ref=f15e376]:
+                        - button [ref=f15e377]:
+                          - img "alejandrosoria_music's highlight story picture" [ref=f15e380]
+                        - generic [ref=f15e381]: Gig’s 2021✨
+                  - listitem [ref=f15e384]:
+                    - link "View Gig's 2020 highlight" [ref=f15e387] [cursor=pointer]:
+                      - /url: /stories/highlights/17911824712500896/
+                      - button "alejandrosoria_music's highlight story picture Gig's 2020" [ref=f15e388]:
+                        - button [ref=f15e389]:
+                          - img "alejandrosoria_music's highlight story picture" [ref=f15e392]
+                        - generic [ref=f15e393]: Gig's 2020
+                  - listitem [ref=f15e396]:
+                    - link "View Gigs 2019⬅️ highlight" [ref=f15e399] [cursor=pointer]:
+                      - /url: /stories/highlights/17875477450471403/
+                      - button "alejandrosoria_music's highlight story picture Gigs 2019⬅️" [ref=f15e400]:
+                        - button [ref=f15e401]:
+                          - img "alejandrosoria_music's highlight story picture" [ref=f15e404]
+                        - generic [ref=f15e405]: Gigs 2019⬅️
+                - button "Next" [ref=f15e408] [cursor=pointer]
+          - generic [ref=f15e410]:
+            - tablist [ref=f15e411]:
+              - link [ref=f15e413] [cursor=pointer]:
+                - /url: /alejandrosoria_music/
+                - img "Posts" [ref=f15e415]
+              - link [ref=f15e426] [cursor=pointer]:
+                - /url: /alejandrosoria_music/reels/
+                - img "Reels" [ref=f15e428]
+              - link [ref=f15e431] [cursor=pointer]:
+                - /url: /alejandrosoria_music/reposts/
+                - img "Reposts" [ref=f15e433]
+              - link [ref=f15e436] [cursor=pointer]:
+                - /url: /alejandrosoria_music/tagged/
+                - img "Tagged" [ref=f15e438]
+            - tabpanel
+          - progressbar [ref=f15e442]:
+            - img "Loading..." [ref=f15e443]
+      - contentinfo [ref=f15e456]:
+        - generic [ref=f15e457]:
+          - generic [ref=f15e459]:
+            - link "Meta" [ref=f15e461] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f15e464] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f15e467] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f15e470] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f15e473] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f15e476] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f15e479] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f15e482] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f15e485] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f15e488] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f15e491] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f15e494] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f15e497] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f15e500] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f15e503] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f15e506] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f15e508]:
+            - generic [ref=f15e509] [cursor=pointer]:
+              - generic [ref=f15e510]:
+                - generic [ref=f15e511]: English
+                - img "Down chevron icon" [ref=f15e514]
+              - combobox "Switch Display Language" [ref=f15e516]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f15e517]: © 2026 Instagram from Meta
+  - button [ref=f15e520] [cursor=pointer]:
+    - generic "Messages - 8 new notifications" [ref=f15e521]:
+      - generic [ref=f15e522]:
+        - generic [ref=f15e524]:
+          - img "Messages" [ref=f15e525]
+          - generic "Direct messaging - 8 new notifications link" [ref=f15e528]: "8"
+        - generic [ref=f15e531]: Messages

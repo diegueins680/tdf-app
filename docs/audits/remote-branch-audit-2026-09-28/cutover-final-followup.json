@@ -1,0 +1,53 @@
+{
+  "verified_at": "2026-10-01T02:10:50.335092+00:00",
+  "pr": 468,
+  "head": "cd915b8c456d32517fdecb898de6505e4ca06ce8",
+  "commits": [
+    "7def35976f62dd153127d25217e22d3f0d19f3aa",
+    "68558f5409f9a976c0a4a9bd742e627f75f089cf",
+    "5486b49144f9b0d5576cef5f2e59d927c66e334f",
+    "e762f67b2720b3337c8409b6c3b652224f090083",
+    "36aff567c1d6daeb63088a765dc5e48e69fe2d09",
+    "7f1d2d74877c5e603097e44cc643834e1932a69e",
+    "4031ed4a2c8f6c84df5e2a03b920f2643c16bd18",
+    "102662f13e690394ba87267e34dc513a5496ed40",
+    "4d40ae58c07a0be8c4394aecfbda2249b0a1c462",
+    "f528eee8c74d78444c2cda05160cb101e737d4de",
+    "9bbd7d88fdad3751d8e56ffe6fa09e44889d8a8f",
+    "9a8357065fb45d4565e1bd4a764d5f9fe739a40d",
+    "82c4c448a77ca88d53dc634f1f392d57c84b17b2",
+    "60c7c42e7cc211eb8ea4c96dba3281603e67a752",
+    "385cdb307961c03f3d014e5720e09fed97cfc639",
+    "cd915b8c456d32517fdecb898de6505e4ca06ce8"
+  ],
+  "normal_push_verified": true,
+  "resolved_review_concerns": 26,
+  "remaining_gates": [
+    "Google interactive login",
+    "authenticated upload",
+    "current-head independent approval and checks"
+  ],
+  "tests": {
+    "helper_token_enrichment_import": 122,
+    "ci_evidence_escrow": 34,
+    "inventory_regressions": 3,
+    "production_access": 10,
+    "mail_monitor": 6,
+    "catalog_provenance": 5,
+    "retired_refresher": 4,
+    "latest_token_workflow": 95
+  },
+  "latest_validation": "cutover-volume-access-tests.log",
+  "live_validation": [
+    "cutover-live-catalog-hardened.json",
+    "cutover-live-mail-hardened.json",
+    "catalog-reader-provisioned.json",
+    "cutover-live-catalog-origin-verified.json",
+    "catalog-reviewed-tables-grant-result.json",
+    "cutover-live-volume-verified.json",
+    "cutover-live-mail-volume-verified.json"
+  ],
+  "operational_security_change": "Dedicated SELECT-only role provisioned; ambient PUBLIC schema CREATE removed while preserving existing named-role capabilities; no application data change. Reviewed 29 tables from concurrent merged main645f56f and explicitly extended SELECT only; 652 readable tables/zero writable, no schema CREATE.",
+  "current_main_integration": "Normal merge of 76c2c05c; operational files unchanged from live tests; 8 access/6 mail/3 catalog/3 retired-helper tests pass. Fresh current-head CI/review required.",
+  "no_application_data_mutations": true
+}

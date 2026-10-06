@@ -208,6 +208,10 @@ import qualified TDF.DDEX.ERN.V432.BusinessRulesSpec as DDEXBusinessRulesSpec
 import qualified TDF.DDEX.ERN.V432.Convert as DDEXConvert
 import qualified TDF.DDEX.ERN.V432.ParseSpec as DDEXParseSpec
 import qualified TDF.DDEX.Types as DDEXTypes
+import qualified TDF.MusicRelease.DomainSpec as MusicReleaseDomainSpec
+import qualified TDF.MusicRelease.DDEX.ERN432Spec as MusicReleaseErn432Spec
+import qualified TDF.MusicRelease.ContentSpec as MusicReleaseContentSpec
+import qualified TDF.MusicRelease.Storage.S3Spec as MusicReleaseS3Spec
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import qualified TDF.ServerProposalsSpec as ServerProposalsSpec
 import TDF.ServerRadio
@@ -12615,12 +12619,12 @@ main = hspec $ do
         it "uses fallback bases only when transmission env vars are absent" $ do
             resolveRadioTransmissionEnvBase
                 "RADIO_PUBLIC_BASE"
-                "https://tdf-hq.fly.dev/live"
+                "https://api.tdfrecords.net/live"
                 Nothing
-                `shouldBe` Right "https://tdf-hq.fly.dev/live"
+                `shouldBe` Right "https://api.tdfrecords.net/live"
             resolveRadioTransmissionEnvBase
                 "RADIO_PUBLIC_BASE"
-                "https://tdf-hq.fly.dev/live"
+                "https://api.tdfrecords.net/live"
                 (Just "  https://radio.example.com/live  ")
                 `shouldBe` Right "https://radio.example.com/live"
 
@@ -16903,6 +16907,10 @@ main = hspec $ do
     CatalogPipelineSpec.spec
     DDEXParseSpec.spec
     DDEXBusinessRulesSpec.spec
+    MusicReleaseDomainSpec.spec
+    MusicReleaseContentSpec.spec
+    MusicReleaseErn432Spec.spec
+    MusicReleaseS3Spec.spec
     DirectoryPolicySpec.spec
     EventDiscoverySpec.spec
     EventResearchSpec.spec

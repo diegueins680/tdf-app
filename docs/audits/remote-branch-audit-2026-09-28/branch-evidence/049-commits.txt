@@ -1,0 +1,20 @@
+4ccaaa190c4ae6b1d041d8eabd7eed8fd5327c5e 2026-09-15T09:16:23-05:00 continuous-improvement-loop[bot] docs(payments): record cancellation replay verification and rollout gates
+a902ca23a4fa4e16fa2e7f9c7c766cf173ea9ffa 2026-09-15T01:54:47-05:00 continuous-improvement-loop[bot] test(payments): guard no-charge replay against posted ledger evidence
+9ca3c9086d121743f57fc154ac70f878c83f4d0b 2026-09-15T01:50:10-05:00 continuous-improvement-loop[bot] test(payments): cover neutral PayPhone cancellation recovery
+e0714bbbe5d4ac6ff77a5fa86471bd05778b88c9 2026-09-15T01:46:52-05:00 continuous-improvement-loop[bot] fix(payments): preserve no-charge history and classify cancellations
+1d4acf7420ff532922a2c9623d1b854e3a76dbe6 2026-09-15T01:27:36-05:00 continuous-improvement-loop[bot] chore(payments): integrate latest reviewed baseline with recovery stack
+e39abf5a4ce2151e03dbd91051ba508295081efb 2026-09-15T00:22:56-05:00 diegueins680 fix(payments): reconcile verified baseline and migration manifest
+73edd77a36c8dcc73e5217303c62376ae684853b 2026-09-14T23:11:04-05:00 Diego Saa Merge pull request #333 from diegueins680/fix/ci-green-baseline-20260912
+5bceb329f034cdfadf077f8f2889aa50bd402c7c 2026-09-14T21:43:09-05:00 continuous-improvement-loop[bot] fix(onboarding): preserve failed dismissals across account switches
+b246a8fb8762177c502a981a30f80af6a391996b 2026-09-14T20:18:31-05:00 continuous-improvement-loop[bot] fix(test): import persistence query for legacy reaction coverage
+b60dbfae15a413100bbc74a72308d6efb4f4ae36 2026-09-14T20:04:25-05:00 continuous-improvement-loop[bot] test(ui): isolate provider title matrix cases
+64fd4c82ce8f822da51f70ec38ca7e754f58493d 2026-09-14T19:32:09-05:00 continuous-improvement-loop[bot] fix(ci): separate Meta inspector credentials and scope secrets
+afa49cdf1351a97e27f79d26ffccaac98901e460 2026-09-14T19:10:58-05:00 continuous-improvement-loop[bot] fix: preserve outage attribution and legacy reaction evidence
+aa1c0c9b2f163a3f803a3e390a0c0164d92d150f 2026-09-14T18:03:08-05:00 continuous-improvement-loop[bot] fix(ci): close review gaps and document Datadog integration
+76275ab0edf5ad5911f6f3dd7f04d04185b5aef7 2026-09-14T17:02:34-05:00 continuous-improvement-loop[bot] fix(ci): distinguish token failures and require synthetic results
+f33b6356bb0747505b5e020e4a3344f7e889e33c 2026-09-14T14:45:54-05:00 continuous-improvement-loop[bot] fix(ci): require matching Meta app configuration
+10a2d50b5473d5e481cfd4f11926c39beb3b37b9 2026-09-14T14:01:32-05:00 continuous-improvement-loop[bot] fix(ci): classify Meta auth failures
+1c8e35b5d268e49e569e7660611f56b68654d0b7 2026-09-14T13:43:47-05:00 continuous-improvement-loop[bot] fix(ci): retry Meta system errors
+123414c9a79749f440d809fcfcfe978034e3c81d 2026-09-14T13:40:56-05:00 continuous-improvement-loop[bot] fix(ci): fail closed on token validation
+67991c5c7baf390547a6f11de27b3992e6626e33 2026-09-14T12:49:02-05:00 continuous-improvement-loop[bot] test(ui): scope long interaction timeout
+963fa6ede91016cba24308e118cf3effcfd6e0ff 2026-09-14T11:20:24-05:00 continuous-improvement-loop[bot] fix(ci): restore green workflow baseline

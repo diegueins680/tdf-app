@@ -1,0 +1,24 @@
+{
+  "scope": "local alternative on 8b1801241, not published; superseded by concurrent e95681145 repair",
+  "focusedTests": {
+    "suites": 4,
+    "tests": 54,
+    "result": "passed"
+  },
+  "lint": "passed",
+  "typecheck": "passed",
+  "productionBuild": "passed",
+  "bundleGzipBytes": 318499,
+  "formal": {
+    "critical": 0,
+    "errors": 0,
+    "warnings": 418
+  },
+  "browser": {
+    "tests": 20,
+    "result": "passed",
+    "scope": "local mocked APIs only"
+  },
+  "catalog": "PASS after initializing exact pinned Mobile; original missing-submodule failure retained",
+  "remoteMutations": false
+}

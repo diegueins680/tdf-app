@@ -1,0 +1,21 @@
+ .github/workflows/social-verification.yml          |   2 +
+ .../reports/list-consumer-matrix.csv               | 104 ++++++------
+ .../reports/static-list-inventory.json             | 176 ++++++++++++++-------
+ docs/social/database.md                            |   4 +-
+ docs/social/evidence/backend-refreshed-result.txt  |  16 ++
+ docs/social/evidence/ci-schema-b689f88.json        |   1 +
+ docs/social/evidence/current-pr-355.json           |   1 +
+ docs/social/evidence/current-pr-356.json           |   1 +
+ docs/social/evidence/current-pr-360.json           |   1 +
+ docs/social/evidence/current-pr-365.json           |   1 +
+ docs/social/evidence/current-pr-366.json           |   1 +
+ docs/social/evidence/current-pr-367.json           |   1 +
+ .../social/evidence/schema-compatibility-final.txt | 144 +++++++++++++++++
+ docs/social/evidence/schema-workflow-tests.txt     |  20 +++
+ docs/social/handoff.md                             |  64 +++++++-
+ docs/social/operations.md                          |   7 +
+ docs/social/schema-compatibility.md                |  40 +++++
+ docs/social/verification.md                        |  19 +++
+ scripts/social/schema-compatibility.sql            |  36 +++++
+ scripts/social/test-schema-compatibility.sh        |  51 ++++++
+ 20 files changed, 569 insertions(+), 121 deletions(-)

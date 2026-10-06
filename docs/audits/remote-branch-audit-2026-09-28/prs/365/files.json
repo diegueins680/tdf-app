@@ -1,0 +1,88 @@
+[
+  [
+    {
+      "sha": "2074deabd468b4cd5dd4158ce711bffa5707381a",
+      "filename": "docs/social/evidence/backend-runtime-result.txt",
+      "status": "added",
+      "additions": 13,
+      "deletions": 0,
+      "changes": 13,
+      "blob_url": "https://github.com/diegueins680/tdf-app/blob/24590a40787d81a1681cd14a46f2f0ab7cac5632/docs%2Fsocial%2Fevidence%2Fbackend-runtime-result.txt",
+      "raw_url": "https://github.com/diegueins680/tdf-app/raw/24590a40787d81a1681cd14a46f2f0ab7cac5632/docs%2Fsocial%2Fevidence%2Fbackend-runtime-result.txt",
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/docs%2Fsocial%2Fevidence%2Fbackend-runtime-result.txt?ref=24590a40787d81a1681cd14a46f2f0ab7cac5632",
+      "patch": "@@ -0,0 +1,13 @@\n+Executed 2026-09-15, isolated worktree, Stack GHC 9.10.3 --fast test binary.\n+Command (cwd tdf-hq):\n+./.stack-work/dist/x86_64-osx/ghc-9.10.3/build/tdf-hq-test/tdf-hq-test\n+\n+\n+Finished in 20.6455 seconds\n+2540 examples, 0 failures\n+\n+Raw stdout SHA256: b62633d4e7e7d26b806e275365412148c44fc8b74701bdb637b646318b744dc0\n+Raw stdout retained locally at docs/social/evidence/backend-runtime-tests.txt.\n+Stack command failed AFTER linking, during copy of the absent tdf-hq-exe.\n+This is runtime test evidence, not a successful full application build.\n+Reaction source SHA256: ff6010bf608f7dcc849b9557c6ca68455b7a7c28871d820999708216323613c8"
+    },
+    {
+      "sha": "56c5c972c022bae1d81371597f0e7a45022d0cb1",
+      "filename": "docs/social/evidence/ci-workflow-regression.txt",
+      "status": "added",
+      "additions": 18,
+      "deletions": 0,
+      "changes": 18,
+      "blob_url": "https://github.com/diegueins680/tdf-app/blob/24590a40787d81a1681cd14a46f2f0ab7cac5632/docs%2Fsocial%2Fevidence%2Fci-workflow-regression.txt",
+      "raw_url": "https://github.com/diegueins680/tdf-app/raw/24590a40787d81a1681cd14a46f2f0ab7cac5632/docs%2Fsocial%2Fevidence%2Fci-workflow-regression.txt",
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/docs%2Fsocial%2Fevidence%2Fci-workflow-regression.txt?ref=24590a40787d81a1681cd14a46f2f0ab7cac5632",
+      "patch": "@@ -0,0 +1,18 @@\n+\u2714 CI splits component checks and preserves Stack build caches (192.852865ms)\n+\u2714 persona browser journeys are artifacted and gate aggregate quality (32.063422ms)\n+\u2714 backend quality compiles, tests and exports the binary in one Stack pass (29.149357ms)\n+\u2714 backend quality exercises public booking concurrency with its tested binary (9.254381ms)\n+\u2714 change detection includes deleted paths (10.772086ms)\n+\u2714 backend image packages the tested artifact instead of recompiling Haskell (13.752482ms)\n+\u2714 automatic migration integration matches the persisted production locale (13.096975ms)\n+\u2714 backend image receives deterministic, non-empty release metadata (6.389965ms)\n+\u2714 source Dockerfile introduces changing release metadata after compilation (5.654876ms)\n+\u2714 affected active workflow actions use Node 24 majors (149.378078ms)\n+\u2139 tests 10\n+\u2139 suites 0\n+\u2139 pass 10\n+\u2139 fail 0\n+\u2139 cancelled 0\n+\u2139 skipped 0\n+\u2139 todo 0\n+\u2139 duration_ms 1575.574616"
+    },
+    {
+      "sha": "09f7e693cedd482be3e43da1e4cc2dc5d4fd8dc4",
+      "filename": "docs/social/evidence/reaction-model.txt",
+      "status": "added",
+      "additions": 19,
+      "deletions": 0,
+      "changes": 19,
+      "blob_url": "https://github.com/diegueins680/tdf-app/blob/24590a40787d81a1681cd14a46f2f0ab7cac5632/docs%2Fsocial%2Fevidence%2Freaction-model.txt",
+      "raw_url": "https://github.com/diegueins680/tdf-app/raw/24590a40787d81a1681cd14a46f2f0ab7cac5632/docs%2Fsocial%2Fevidence%2Freaction-model.txt",
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/docs%2Fsocial%2Fevidence%2Freaction-model.txt?ref=24590a40787d81a1681cd14a46f2f0ab7cac5632",
+      "patch": "@@ -0,0 +1,19 @@\n+TLC2 Version 2.17 of 02 February 2022 (rev: 3c7caa5)\n+Warning: Please run the Java VM which executes TLC with a throughput optimized garbage collector by passing the \"-XX:+UseParallelGC\" property.\n+(Use the -nowarning option to disable this warning.)\n+Running breadth-first search Model-Checking with fp 18 and seed 1727673649648075405 with 1 worker on 16 cores with 4096MB heap and 64MB offheap memory [pid: 38941] (Mac OS X 14.7.7 x86_64, Eclipse Adoptium 17.0.12 x86_64, MSBDiskFPSet, DiskStateQueue).\n+Parsing file /Users/diegosaa/GitHub/tdf-app-social-20260914/formal/social/Reaction.tla\n+Parsing file /private/var/folders/0s/0tg301f95s51dvsjf74ksxjm0000gn/T/Naturals.tla\n+Semantic processing of module Naturals\n+Semantic processing of module Reaction\n+Starting... (2026-09-14 23:51:30)\n+Computing initial states...\n+Finished computing initial states: 1 distinct state generated at 2026-09-14 23:51:30.\n+Model checking completed. No error has been found.\n+  Estimates of the probability that TLC did not check all reachable states\n+  because two distinct states had the same fingerprint:\n+  calculated (optimistic):  val = 8.9E-18\n+26 states generated, 15 distinct states found, 0 states left on queue.\n+The depth of the complete state graph search is 5.\n+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 2 and the 95th percentile is 2).\n+Finished in 02s at (2026-09-14 23:51:30)"
+    },
+    {
+      "sha": "759865d09dea68ef6d02d623fe3de6c1ded167f4",
+      "filename": "docs/social/reaction-repair.md",
+      "status": "added",
+      "additions": 17,
+      "deletions": 0,
+      "changes": 17,
+      "blob_url": "https://github.com/diegueins680/tdf-app/blob/24590a40787d81a1681cd14a46f2f0ab7cac5632/docs%2Fsocial%2Freaction-repair.md",
+      "raw_url": "https://github.com/diegueins680/tdf-app/raw/24590a40787d81a1681cd14a46f2f0ab7cac5632/docs%2Fsocial%2Freaction-repair.md",
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/docs%2Fsocial%2Freaction-repair.md?ref=24590a40787d81a1681cd14a46f2f0ab7cac5632",
+      "patch": "@@ -0,0 +1,17 @@\n+# Explicit reaction retry model\n+\n+`formal/social/Reaction.tla` explores four explicit active/inactive writes from an\n+empty reaction state. Its 15 bounded states check that a repeated active write does\n+not add evidence twice and removal does not erase prior addition evidence.\n+\n+The updated audit dependency includes the upstream reaction helper, row locking,\n+explicit-state handling, original-time evidence repair and reaction identity\n+redaction. Those changes are preserved. This PR now adds the small executable model\n+and its runner integration; it does not replace that upstream implementation.\n+\n+`evidence/backend-runtime-result.txt` records the historical 2,540-example test run\n+against the earlier candidate repair, before the dependency refresh. It is retained\n+as historical evidence, not qualification of the updated upstream implementation.\n+Current Stack/CI results must be recorded separately. The model does not cover\n+legacy evidence repair, timestamp collisions, all reaction-type transitions or\n+revocation-safe event authorization. These limits remain explicit."
+    },
+    {
+      "sha": "de03c29c771629ec5b76fd24511df923d596e844",
+      "filename": "formal/social/Reaction.cfg",
+      "status": "added",
+      "additions": 2,
+      "deletions": 0,
+      "changes": 2,
+      "blob_url": "https://github.com/diegueins680/tdf-app/blob/24590a40787d81a1681cd14a46f2f0ab7cac5632/formal%2Fsocial%2FReaction.cfg",
+      "raw_url": "https://github.com/diegueins680/tdf-app/raw/24590a40787d81a1681cd14a46f2f0ab7cac5632/formal%2Fsocial%2FReaction.cfg",
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/formal%2Fsocial%2FReaction.cfg?ref=24590a40787d81a1681cd14a46f2f0ab7cac5632",
+      "patch": "@@ -0,0 +1,2 @@\n+SPECIFICATION Spec\n+INVARIANT RetrySafe"
+    },
+    {
+      "sha": "5cdb4465b1e75ee72428b3c04f26bf0f2f9fe3a8",
+      "filename": "formal/social/Reaction.tla",
+      "status": "added",
+      "additions": 15,
+      "deletions": 0,
+      "changes": 15,
+      "blob_url": "https://github.com/diegueins680/tdf-app/blob/24590a40787d81a1681cd14a46f2f0ab7cac5632/formal%2Fsocial%2FReaction.tla",
+      "raw_url": "https://github.com/diegueins680/tdf-app/raw/24590a40787d81a1681cd14a46f2f0ab7cac5632/formal%2Fsocial%2FReaction.tla",
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/formal%2Fsocial%2FReaction.tla?ref=24590a40787d81a1681cd14a46f2f0ab7cac5632",
+      "patch": "@@ -0,0 +1,15 @@\n+---------------------------- MODULE Reaction ----------------------------\n+EXTENDS Naturals\n+VARIABLES active, additions, writes, lostEvidence, duplicateEvidence\n+vars == <<active, additions, writes, lostEvidence, duplicateEvidence>>\n+Init == /\\ active = FALSE /\\ additions = 0 /\\ writes = 0\n+        /\\ lostEvidence = FALSE /\\ duplicateEvidence = FALSE\n+SetActive(want) == /\\ writes < 4\n+  /\\ active' = want /\\ writes' = writes + 1\n+  /\\ additions' = (IF want /\\ ~active THEN additions + 1 ELSE additions)\n+  /\\ lostEvidence' = (lostEvidence \\/ additions' < additions)\n+  /\\ duplicateEvidence' = (duplicateEvidence \\/ (want /\\ active /\\ additions' # additions))\n+Next == (\\E want \\in BOOLEAN: SetActive(want)) \\/ (writes = 4 /\\ UNCHANGED vars)\n+Spec == Init /\\ [][Next]_vars\n+RetrySafe == ~lostEvidence /\\ ~duplicateEvidence /\\ additions <= writes\n+============================================================================="
+    },
+    {
+      "sha": "fc7a314adbc577ff9361a3b80f8da881adb54ae5",
+      "filename": "scripts/social/check-models.sh",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "blob_url": "https://github.com/diegueins680/tdf-app/blob/24590a40787d81a1681cd14a46f2f0ab7cac5632/scripts%2Fsocial%2Fcheck-models.sh",
+      "raw_url": "https://github.com/diegueins680/tdf-app/raw/24590a40787d81a1681cd14a46f2f0ab7cac5632/scripts%2Fsocial%2Fcheck-models.sh",
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/scripts%2Fsocial%2Fcheck-models.sh?ref=24590a40787d81a1681cd14a46f2f0ab7cac5632",
+      "patch": "@@ -5,7 +5,7 @@ TDF_SOCIAL_JAVA=${TDF_SOCIAL_JAVA:-java}\n TDF_SOCIAL_ROOT=$(cd \"$(dirname \"$0\")/../..\" && pwd)\n TDF_SOCIAL_RESULTS=${TDF_SOCIAL_RESULTS:-$(mktemp -d)}\n mkdir -p \"$TDF_SOCIAL_RESULTS\"\n-for model in Relationships Feed RequestReplay; do\n+for model in Relationships Feed RequestReplay Reaction; do\n   \"$TDF_SOCIAL_JAVA\" -XX:+UseParallelGC -cp \"$TLA_JAR\" tlc2.TLC \\\n     -workers 1 -metadir \"$TDF_SOCIAL_RESULTS/states-$model\" \\\n     -config \"$TDF_SOCIAL_ROOT/formal/social/$model.cfg\" \\"
+    }
+  ]
+]

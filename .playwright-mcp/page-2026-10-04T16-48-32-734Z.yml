@@ -1,0 +1,263 @@
+- generic [ref=f3e517]:
+  - generic [ref=f3e520]:
+    - link [ref=f3e525] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f3e530]
+    - generic [ref=f3e533]:
+      - link [ref=f3e538] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f3e543]
+      - link [ref=f3e548] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f3e553]
+      - link [ref=f3e560] [cursor=pointer]:
+        - /url: /direct/t/17846261700449368
+        - generic [ref=f3e563]:
+          - img "Messages" [ref=f3e565]
+          - generic "Direct messaging - 6 new notifications link" [ref=f3e567]: "6"
+      - link [ref=f3e573] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f3e578]
+      - link [ref=f3e585] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f3e590]
+      - link [ref=f3e596] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f3e601]
+      - link [ref=f3e606] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f3e611]
+      - link [ref=f3e618] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f3e623]:
+          - img "tdf.records.label's profile picture" [ref=f3e624]
+    - generic [ref=f3e625]:
+      - link [ref=f3e628] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f3e633]
+      - link [ref=f3e636] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f3e641]
+  - main [ref=f3e645]:
+    - generic [ref=f3e650]:
+      - navigation "Thread list" [ref=f3e651]:
+        - generic [ref=f3e652]:
+          - generic [ref=f3e653]:
+            - button [ref=f3e654] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f3e656]
+              - img "Verified" [ref=f3e659]
+              - img "Down chevron icon" [ref=f3e662]
+            - generic [ref=f3e665]:
+              - button [ref=f3e666] [cursor=pointer]:
+                - img "More options" [ref=f3e668]
+              - button [ref=f3e672] [cursor=pointer]:
+                - img "New message" [ref=f3e674]
+          - tablist [ref=f3e679]:
+            - tab "Primary" [selected] [ref=f3e680] [cursor=pointer]
+            - tab "General" [ref=f3e683] [cursor=pointer]
+            - tab "From ads" [ref=f3e686] [cursor=pointer]
+            - tab "Requests" [ref=f3e690] [cursor=pointer]
+          - generic [ref=f3e696]:
+            - img "Search" [ref=f3e698]
+            - textbox "Search" [ref=f3e701]
+          - generic [ref=f3e702]:
+            - generic [ref=f3e704]:
+              - list [ref=f3e706]:
+                - listitem [ref=f3e707]
+                - listitem [ref=f3e708]:
+                  - button "Friday feeling... Your note" [ref=f3e710] [cursor=pointer]:
+                    - generic [ref=f3e711]:
+                      - generic [ref=f3e712]: Friday feeling...
+                      - generic [ref=f3e718]:
+                        - link [ref=f3e720]
+                        - generic [ref=f3e721]: Your note
+                - listitem [ref=f3e723]:
+                  - button "NO TOMAR cuando estás triste 🤦🏽‍♀️✍️ saraking30's profile picture Sara King" [ref=f3e726] [cursor=pointer]:
+                    - generic [ref=f3e727]:
+                      - generic [ref=f3e728]: NO TOMAR cuando estás triste 🤦🏽‍♀️✍️
+                      - generic [ref=f3e735]:
+                        - link [ref=f3e737]:
+                          - img "saraking30's profile picture" [ref=f3e738]
+                        - generic [ref=f3e739]: Sara King
+                - listitem [ref=f3e742]:
+                  - button "I ❤️ drugs ferchcho's profile picture Fernando" [ref=f3e745] [cursor=pointer]:
+                    - generic [ref=f3e746]:
+                      - generic [ref=f3e747]: I ❤️ drugs
+                      - generic [ref=f3e754]:
+                        - link [ref=f3e756]:
+                          - img "ferchcho's profile picture" [ref=f3e757]
+                        - generic [ref=f3e758]: Fernando
+                - listitem [ref=f3e761]:
+                  - button "Felizzzzzzzzzzzzzzzz🥰 naoenpatines's profile picture nao✨" [ref=f3e764] [cursor=pointer]:
+                    - generic [ref=f3e765]:
+                      - generic [ref=f3e766]: Felizzzzzzzzzzzzzzzz🥰
+                      - generic [ref=f3e773]:
+                        - link [ref=f3e775]:
+                          - img "naoenpatines's profile picture" [ref=f3e776]
+                        - generic [ref=f3e777]: nao✨
+                - listitem [ref=f3e780]:
+                  - button "Que la música me salve! zeretofficial's profile picture Zeret 🧑‍🩰Dj" [ref=f3e783] [cursor=pointer]:
+                    - generic [ref=f3e784]:
+                      - generic [ref=f3e785]: Que la música me salve!
+                      - generic [ref=f3e792]:
+                        - link [ref=f3e794]:
+                          - img "zeretofficial's profile picture" [ref=f3e795]
+                        - generic [ref=f3e796]: Zeret 🧑‍🩰Dj
+                - listitem [ref=f3e799]:
+                  - button "La noche quirola_777's profile picture QUIROLA" [ref=f3e802] [cursor=pointer]:
+                    - generic [ref=f3e803]:
+                      - generic [ref=f3e804]: La noche
+                      - generic [ref=f3e811]:
+                        - link [ref=f3e813]:
+                          - img "quirola_777's profile picture" [ref=f3e814]
+                        - generic [ref=f3e815]: QUIROLA
+                - listitem [ref=f3e818]:
+                  - button "Guayaquil📍🔥🪘 dayane_music's profile picture Dayané" [ref=f3e821] [cursor=pointer]:
+                    - generic [ref=f3e822]:
+                      - generic [ref=f3e823]: Guayaquil📍🔥🪘
+                      - generic [ref=f3e830]:
+                        - link [ref=f3e832]:
+                          - img "dayane_music's profile picture" [ref=f3e833]
+                        - generic [ref=f3e834]: Dayané
+                - listitem [ref=f3e837]:
+                  - button "I ching nunca me dejas de sorprender solcordovamusic's profile picture Sol Córdova 🌞" [ref=f3e840] [cursor=pointer]:
+                    - generic [ref=f3e841]:
+                      - generic [ref=f3e842]: I ching nunca me dejas de sorprender
+                      - generic [ref=f3e849]:
+                        - link [ref=f3e851]:
+                          - img "solcordovamusic's profile picture" [ref=f3e852]
+                        - generic [ref=f3e853]: Sol Córdova 🌞
+                - listitem [ref=f3e856]:
+                  - button "Yo usando el celu de mi ma ☠️ maialuaespinosa's profile picture Luna de primavera" [ref=f3e859] [cursor=pointer]:
+                    - generic [ref=f3e860]:
+                      - generic [ref=f3e861]: Yo usando el celu de mi ma ☠️
+                      - generic [ref=f3e868]:
+                        - link [ref=f3e870]:
+                          - img "maialuaespinosa's profile picture" [ref=f3e871]
+                        - generic [ref=f3e872]: Luna de primavera
+              - button "Next" [ref=f3e875] [cursor=pointer]
+            - generic [ref=f3e880]:
+              - 'button "user-profile-picture Gura Verified You: Hola, Gura 👋 Vimos tu presentación en Excéntrico UIO junto a Ricardo Subía. Tu escena necesita un espacio propio para que las canciones sigan circulando después del concierto. En TDF puedes empezar tu perfil de artista con tus enlaces y explorar otros proyectos. Te invitamos a sumarte: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records a few seconds ago" [ref=f3e884] [cursor=pointer]':
+                - generic [ref=f3e886]:
+                  - img "user-profile-picture" [ref=f3e890]
+                  - generic [ref=f3e893]:
+                    - generic [ref=f3e895]:
+                      - generic [ref=f3e896]: Gura
+                      - img "Verified" [ref=f3e899]
+                    - generic [ref=f3e903]:
+                      - generic [ref=f3e904]: "You: Hola, Gura 👋 Vimos tu presentación en Excéntrico UIO junto a Ricardo Subía. Tu escena necesita un espacio propio para que las canciones sigan circulando después del concierto. En TDF puedes empezar tu perfil de artista con tus enlaces y explorar otros proyectos. Te invitamos a sumarte: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f3e906]:
+                        - generic [ref=f3e907]: ·
+                        - generic "a few seconds ago" [ref=f3e912]: 1m
+              - 'button "user-profile-picture Isaac You: Hola Isaac, ¡gracias por escribirnos y por tu interés en las clases de DJ! 🎧 Nuestro paquete completo de clases es de 16 horas y tiene un costo de $500. Además, puedes tomar una clase de prueba para conocer nuestra forma de trabajar y resolver todas tus dudas. La puedes solicitar aquí: https://www.tdfrecords.net/trials Si quieres, cuéntame también qué experiencia tienes como DJ y qué horarios te acomodan, así te recomiendo la opción ideal para ti. 😉 about an hour ago Unread" [ref=f3e916] [cursor=pointer]':
+                - generic [ref=f3e918]:
+                  - img "user-profile-picture" [ref=f3e922]
+                  - generic [ref=f3e925]:
+                    - generic [ref=f3e926]: Isaac
+                    - generic [ref=f3e932]:
+                      - generic [ref=f3e933]: "You: Hola Isaac, ¡gracias por escribirnos y por tu interés en las clases de DJ! 🎧 Nuestro paquete completo de clases es de 16 horas y tiene un costo de $500. Además, puedes tomar una clase de prueba para conocer nuestra forma de trabajar y resolver todas tus dudas. La puedes solicitar aquí: https://www.tdfrecords.net/trials Si quieres, cuéntame también qué experiencia tienes como DJ y qué horarios te acomodan, así te recomiendo la opción ideal para ti. 😉"
+                      - generic [ref=f3e935]:
+                        - generic [ref=f3e936]: ·
+                        - generic "about an hour ago" [ref=f3e941]: 1h
+                  - generic [ref=f3e942]: Unread
+              - button "user-profile-picture Fundación Kunayan Verified Fundación sent an attachment. 2 hours ago Unread" [ref=f3e949] [cursor=pointer]:
+                - generic [ref=f3e951]:
+                  - img "user-profile-picture" [ref=f3e955]
+                  - generic [ref=f3e958]:
+                    - generic [ref=f3e960]:
+                      - generic [ref=f3e961]: Fundación Kunayan
+                      - img "Verified" [ref=f3e964]
+                    - generic [ref=f3e968]:
+                      - generic [ref=f3e969]: Fundación sent an attachment.
+                      - generic [ref=f3e971]:
+                        - generic [ref=f3e972]: ·
+                        - generic "2 hours ago" [ref=f3e977]: 2h
+                  - generic [ref=f3e978]: Unread
+              - button "user-profile-picture Jonathan Campoverde Jonathan Campoverde replied to an ad. View ad(https://www.instagram.com/p/DL58rbRgiys/) 3 hours ago Unread" [ref=f3e985] [cursor=pointer]:
+                - generic [ref=f3e987]:
+                  - img "user-profile-picture" [ref=f3e991]
+                  - generic [ref=f3e994]:
+                    - generic [ref=f3e995]: Jonathan Campoverde
+                    - generic [ref=f3e1001]:
+                      - generic [ref=f3e1002]: Jonathan Campoverde replied to an ad. View ad(https://www.instagram.com/p/DL58rbRgiys/)
+                      - generic [ref=f3e1004]:
+                        - generic [ref=f3e1005]: ·
+                        - generic "3 hours ago" [ref=f3e1010]: 3h
+                  - generic [ref=f3e1011]: Unread
+              - button "user-profile-picture Carla Román Super !! Gracias 3 hours ago Unread" [ref=f3e1018] [cursor=pointer]:
+                - generic [ref=f3e1020]:
+                  - img "user-profile-picture" [ref=f3e1024]
+                  - generic [ref=f3e1027]:
+                    - generic [ref=f3e1028]: Carla Román
+                    - generic [ref=f3e1034]:
+                      - generic [ref=f3e1035]: Super !! Gracias
+                      - generic [ref=f3e1037]:
+                        - generic [ref=f3e1038]: ·
+                        - generic "3 hours ago" [ref=f3e1043]: 3h
+                  - generic [ref=f3e1044]: Unread
+              - button "user-profile-picture Arkabuz | Galapagos Liked a message 3 hours ago Unread" [ref=f3e1051] [cursor=pointer]:
+                - generic [ref=f3e1053]:
+                  - img "user-profile-picture" [ref=f3e1057]
+                  - generic [ref=f3e1060]:
+                    - generic [ref=f3e1061]: Arkabuz | Galapagos
+                    - generic [ref=f3e1067]:
+                      - generic [ref=f3e1068]: Liked a message
+                      - generic [ref=f3e1070]:
+                        - generic [ref=f3e1071]: ·
+                        - generic "3 hours ago" [ref=f3e1076]: 3h
+                  - generic [ref=f3e1077]: Unread
+              - 'button "user-profile-picture Águeda 𓂀𓋹 You: ¡Hola Águeda! 😊 Gracias por escribirnos. Soy Diego de TDF Records. El anuncio es de nuestro curso de Producción Musical (presencial en Quito) donde aprendes a producir desde cero y también vemos mezcla y mastering 🎧 📌 Opciones: ✅ 1) Curso intensivo grupal * Duración: 4 sábados * Horario: 8h30 a 12h30 * Lugar: Quito, sector El Bosque * Costo: $150 Info e inscripción: https://www.tdfrecords.net/curso/produccion-musical ✅ 2) Clases 1 a 1 (personalizadas) * Módulo de 16 horas: $500 * Horarios flexibles (tarde o fines de semana) Si quieres, también puedes agendar una clase de prueba aquí: https://www.tdfrecords.net/trials ¿Tú ya has producido algo o estarías empezando desde cero? 13 hours ago Unread" [ref=f3e1084] [cursor=pointer]':
+                - generic [ref=f3e1086]:
+                  - img "user-profile-picture" [ref=f3e1090]
+                  - generic [ref=f3e1093]:
+                    - generic [ref=f3e1094]: Águeda 𓂀𓋹
+                    - generic [ref=f3e1100]:
+                      - generic [ref=f3e1101]: "You: ¡Hola Águeda! 😊 Gracias por escribirnos. Soy Diego de TDF Records. El anuncio es de nuestro curso de Producción Musical (presencial en Quito) donde aprendes a producir desde cero y también vemos mezcla y mastering 🎧 📌 Opciones: ✅ 1) Curso intensivo grupal * Duración: 4 sábados * Horario: 8h30 a 12h30 * Lugar: Quito, sector El Bosque * Costo: $150 Info e inscripción: https://www.tdfrecords.net/curso/produccion-musical ✅ 2) Clases 1 a 1 (personalizadas) * Módulo de 16 horas: $500 * Horarios flexibles (tarde o fines de semana) Si quieres, también puedes agendar una clase de prueba aquí: https://www.tdfrecords.net/trials ¿Tú ya has producido algo o estarías empezando desde cero?"
+                      - generic [ref=f3e1103]:
+                        - generic [ref=f3e1104]: ·
+                        - generic "13 hours ago" [ref=f3e1109]: 13h
+                  - generic [ref=f3e1110]: Unread
+              - button [ref=f3e1142] [cursor=pointer]:
+                - generic [ref=f3e1144]:
+                  - status "Loading..." [ref=f3e1147]
+                  - generic [ref=f3e1150]:
+                    - status "Loading..." [ref=f3e1152]
+                    - status "Loading..." [ref=f3e1154]
+      - generic [ref=f3e1159]:
+        - generic [ref=f3e1163]:
+          - link "Open the profile page of losargonautas.ec" [ref=f3e1164] [cursor=pointer]:
+            - /url: /losargonautas.ec/
+            - generic [ref=f3e1165]:
+              - img "user-profile-picture" [ref=f3e1169]
+              - generic [ref=f3e1170]:
+                - heading "Los Argonautas" [level=2] [ref=f3e1172]
+                - generic [ref=f3e1174]: losargonautas.ec
+          - generic [ref=f3e1178]:
+            - button [ref=f3e1179] [cursor=pointer]:
+              - img "Audio call" [ref=f3e1181]
+            - button [ref=f3e1183] [cursor=pointer]:
+              - img "Video call" [ref=f3e1185]
+            - button [ref=f3e1188] [cursor=pointer]:
+              - img "Conversation information" [ref=f3e1190]
+        - generic [ref=f3e1194]:
+          - generic [ref=f3e1199]:
+            - img "user-profile-picture" [ref=f3e1203]
+            - generic [ref=f3e1204]:
+              - heading "Los Argonautas" [level=2] [ref=f3e1207]
+              - generic [ref=f3e1209]: losargonautas.ec · Instagram
+              - link "View profile" [ref=f3e1212] [cursor=pointer]:
+                - /url: /losargonautas.ec/
+          - generic [ref=f3e1223]:
+            - button [ref=f3e1226] [cursor=pointer]:
+              - img "Choose an emoji" [ref=f3e1228]
+            - generic [ref=f3e1230]:
+              - textbox [active] [ref=f3e1231]:
+                - paragraph [ref=f3e1232]
+              - generic: Message...
+            - generic [ref=f3e1233]:
+              - button [ref=f3e1234] [cursor=pointer]:
+                - img "Voice Clip" [ref=f3e1236]
+              - button [ref=f3e1239] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=f3e1241]
+              - button [ref=f3e1246] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=f3e1248]

@@ -1,0 +1,19 @@
+{
+  "verified_at": "2026-09-28T16:28:55.666084+00:00",
+  "environment_credential_names": [],
+  "connected_datadog_tool_available": false,
+  "plugin_discovery": "Datadog integration found, not installed/connected; offered to user. Connection unconfirmed.",
+  "monitor_id": "r2d-i82-3jy",
+  "observed_failed_url": "https://tdf-hq.fly.dev/health",
+  "canonical_url": "https://api.tdfrecords.net/health",
+  "canonical_probe": {
+    "command": "curl --fail --silent --show-error --max-time 30 https://api.tdfrecords.net/health",
+    "exit_code": 0,
+    "body": {
+      "db": "ok",
+      "status": "ok"
+    }
+  },
+  "required_change": "Authenticated monitor owner updates only the target URL, preserves assertions/locations/timeouts/failure policy, and verifies a successful current-head CI run.",
+  "action_taken": "Read-only probe and repository runbook update; no monitor write, check disabling, credential extraction or deployment."
+}

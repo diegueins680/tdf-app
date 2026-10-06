@@ -1,0 +1,41 @@
+- generic [ref=e1]:
+  - main [ref=e2]:
+    - iframe [active] [ref=e4]:
+      - main [ref=f1e2]:
+        - generic [ref=f1e4]:
+          - generic: 
+          - generic [ref=f1e13]:
+            - heading "Sign in to Apple Developer" [level=1] [ref=f1e15]
+            - generic [ref=f1e19]:
+              - generic [ref=f1e20]:
+                - generic [ref=f1e23]:
+                  - textbox "Email or Phone Number" [active] [ref=f1e24]
+                  - generic: Email or Phone Number
+                - textbox [ref=f1e25]
+                - generic: Password
+                - link "Create Your Apple Account  Opens in a new window." [ref=f1e31] [cursor=pointer]:
+                  - /url: https://account.apple.com/account?appId=632&returnUrl=https%3A%2F%2Fdeveloper.apple.com%2Faccount%2Fresources%2Fidentifiers%2Flist
+                  - text: Create Your Apple Account 
+                  - generic [ref=f1e32]: Opens in a new window.
+                - paragraph [ref=f1e37]:
+                  - text: Your Apple Account information is used to allow you to sign in securely and access your data. Apple records certain data for security, support, and reporting purposes. If you agree, Apple may also use your Apple Account information to send you marketing emails and communications, including based on your use of Apple services.
+                  - link "See how your data is managed... Opens in a new window." [ref=f1e38] [cursor=pointer]:
+                    - /url: https://www.apple.com/legal/privacy/data/en/apple-id/
+                    - text: See how your data is managed...
+                    - generic [ref=f1e39]: Opens in a new window.
+              - generic [ref=f1e40]:
+                - generic [ref=f1e42]:
+                  - button "Continue" [disabled]
+                - generic [ref=f1e43]:
+                  - button "Sign in with Passkey" [ref=f1e45] [cursor=pointer]
+                  - paragraph [ref=f1e49]: Requires a device with iOS 17 or later.
+  - contentinfo [ref=e5]:
+    - generic [ref=e7]:
+      - heading "Apple Footer" [level=2] [ref=e8]
+      - generic [ref=e9]:
+        - generic [ref=e10]: Copyright © 2026 Apple Inc. All rights reserved.
+        - generic [ref=e11]:
+          - link "Privacy Policy" [ref=e12] [cursor=pointer]:
+            - /url: "https://www.apple.com/privacy/privacy-policy/ "
+          - link "Terms of Use" [ref=e13] [cursor=pointer]:
+            - /url: https://www.apple.com/legal/internet-services/terms/site.html

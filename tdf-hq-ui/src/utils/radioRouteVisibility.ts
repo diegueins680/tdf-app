@@ -17,7 +17,9 @@ const RADIO_ON_DEMAND_PATH_PREFIXES = [
 ];
 
 export const shouldHideRadioForRoute = (pathname: string, hash = '') => (
-  HIDDEN_RADIO_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+  pathname === '/musica'
+  || pathname.startsWith('/musica/')
+  || HIDDEN_RADIO_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix))
   || (
     RADIO_ON_DEMAND_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix))
     && hash !== '#radio'

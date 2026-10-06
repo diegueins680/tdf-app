@@ -1,0 +1,16 @@
+[
+  [
+    {
+      "sha": "4aa54b349f997ea3301114dc7c60c7e5f7808e55",
+      "filename": "package-lock.json",
+      "status": "modified",
+      "additions": 3,
+      "deletions": 3,
+      "changes": 6,
+      "blob_url": "https://github.com/diegueins680/tdf-app/blob/6a830cf74b1c9ff81fdce9814d73435ce05d0b27/package-lock.json",
+      "raw_url": "https://github.com/diegueins680/tdf-app/raw/6a830cf74b1c9ff81fdce9814d73435ce05d0b27/package-lock.json",
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/package-lock.json?ref=6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+      "patch": "@@ -9803,9 +9803,9 @@\n       }\n     },\n     \"node_modules/dompurify\": {\n-      \"version\": \"3.4.13\",\n-      \"resolved\": \"https://registry.npmjs.org/dompurify/-/dompurify-3.4.13.tgz\",\n-      \"integrity\": \"sha512-2vmYIoqjze2d+kakP8S/nS5shfsl587kzwEjcGlTdiksUVgFHnFCsLYDVj/JNqJVOQZGSYBTmuycv0PodwmnMQ==\",\n+      \"version\": \"3.4.16\",\n+      \"resolved\": \"https://registry.npmjs.org/dompurify/-/dompurify-3.4.16.tgz\",\n+      \"integrity\": \"sha512-sqo+pNp3qRhCIpbgRi1y8Tgk27Bo2Ry7w0dC1NBeNTdZChWjz9Xb/KOoZbRP/R6pQZ80Qw8YhXw13hWWBbMRnQ==\",\n       \"license\": \"(MPL-2.0 OR Apache-2.0)\",\n       \"optionalDependencies\": {\n         \"@types/trusted-types\": \"^2.0.7\""
+    }
+  ]
+]

@@ -1,0 +1,101 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 451,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "697a5c748332a7179d3a3e7f7bbfd7d5323579b9",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6j0XaU",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 592,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Restore the pinned migration commit to the release ancestry**\n\nThe pinned `bec943174...` commit is not an ancestor of this release commit: both it and `acfd503...` have `e1a825bd...` as their parent. Consequently, planning this exact release with `npm run release:backend:plan -- --sha acfd50335a35c29eba7b9994b56969263f3068da` is rejected by the ancestry check in `scripts/production-release.mjs` with \u201crefusing to omit a registered migration,\u201d so this backend cannot be deployed through the guarded release path. Preserve the introducing commit in this branch's ancestry or register the migration against its actual introducing ancestor.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/451#discussion_r4048733480",
+                      "createdAt": "2026-09-18T16:44:52Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxNjo0NDo1MlrO8VLFKA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6j08PG",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Prefer a renderable resource for FanHub thumbnails**\n\nWhen an item has a primary resource without a usable thumbnail\u2014such as an unavailable resource, a non-YouTube resource with no `thumbnailUrl`, or a primary resource alongside an illustrated secondary resource\u2014this now selects that primary resource and renders an unavailable placeholder. The previous helper explicitly fell back from a primary resource with no thumbnail to any resource with a thumbnail, so multi-resource FanHub recovery cards lose valid artwork; preserve that fallback while also excluding resources marked unavailable.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/451#discussion_r4048970933",
+                      "createdAt": "2026-09-18T17:12:28Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxNzoxMjoyOFrO8VZktQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6j2_Os",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
+                "line": 12,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Fall back after generated YouTube candidates fail**\n\nFor a multi-resource FanHub item whose primary YouTube video is removed but not yet marked `unavailable`, this treats its synthesized thumbnail URLs as renderable and selects it ahead of a secondary resource with valid artwork. When both generated URLs fail, `RecordThumbnail` only exhausts that selected resource's source list and never advances to the secondary resource, so the card still loses usable artwork during the exact unverified-failure interval this change handles. Fresh evidence in this revision is the new runtime failure path, which increments only a per-resource candidate index; fallback therefore needs to span resources rather than relying solely on candidates being syntactically constructible.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/451#discussion_r4049775499",
+                      "createdAt": "2026-09-18T18:56:37Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxODo1NjozN1rO8WKriw=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxODo1NjozN1rOo9vzrA=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

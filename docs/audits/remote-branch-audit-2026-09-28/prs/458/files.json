@@ -1,0 +1,16 @@
+[
+  [
+    {
+      "sha": "9e400b7edbea88e1720e400aa056a2d800b8e3e9",
+      "filename": "tdf-hq/src/TDF/Email.hs",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 2,
+      "changes": 4,
+      "blob_url": "https://github.com/diegueins680/tdf-app/blob/592916f2a7fbcd740409acda42e69d1a6bfb128a/tdf-hq%2Fsrc%2FTDF%2FEmail.hs",
+      "raw_url": "https://github.com/diegueins680/tdf-app/raw/592916f2a7fbcd740409acda42e69d1a6bfb128a/tdf-hq%2Fsrc%2FTDF%2FEmail.hs",
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/tdf-hq%2Fsrc%2FTDF%2FEmail.hs?ref=592916f2a7fbcd740409acda42e69d1a6bfb128a",
+      "patch": "@@ -365,7 +365,7 @@ sendMailWithLogging cfg toAddr _subject mail = do\n         , T.pack modeLabel\n         , \")\"\n         ]\n-  BS.putStrLn (TE.encodeUtf8 logLine)\n+  BS.hPutStrLn stderr (TE.encodeUtf8 logLine)\n   result <- try (sendAction :: IO ())\n   case result of\n     Left err -> do\n@@ -377,7 +377,7 @@ sendMailWithLogging cfg toAddr _subject mail = do\n       throwIO (err :: SomeException)\n     Right () ->\n       -- SMTP acceptance is not evidence of delivery or inbox placement.\n-      BS.putStrLn (TE.encodeUtf8 (\"[Email] smtp_accepted message_id=\" <> messageId))\n+      BS.hPutStrLn stderr (TE.encodeUtf8 (\"[Email] smtp_accepted message_id=\" <> messageId))\n \n buildMail :: EmailConfig -> Address -> Text -> Text -> Text -> [Text] -> Maybe Text -> Mime.Mail\n buildMail = buildMailLocalized \"es\" \"Ver detalles\""
+    }
+  ]
+]

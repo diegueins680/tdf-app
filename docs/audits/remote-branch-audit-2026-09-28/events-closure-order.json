@@ -1,0 +1,247 @@
+[
+  {
+    "branch": "chore/event-catalog-stale-reconciliation",
+    "depth": 35,
+    "prs": [
+      417
+    ]
+  },
+  {
+    "branch": "chore/event-operations-catalog-review",
+    "depth": 34,
+    "prs": [
+      416
+    ]
+  },
+  {
+    "branch": "fix/event-raci-review-contrast",
+    "depth": 33,
+    "prs": [
+      413
+    ]
+  },
+  {
+    "branch": "feat/event-task-completion-client",
+    "depth": 32,
+    "prs": [
+      411
+    ]
+  },
+  {
+    "branch": "feat/event-task-completion-api",
+    "depth": 31,
+    "prs": [
+      410
+    ]
+  },
+  {
+    "branch": "feat/event-task-completion-command",
+    "depth": 30,
+    "prs": [
+      407
+    ]
+  },
+  {
+    "branch": "test/event-raci-accessibility-evidence",
+    "depth": 29,
+    "prs": [
+      403
+    ]
+  },
+  {
+    "branch": "fix/event-ui-lazy-validation",
+    "depth": 28,
+    "prs": [
+      399
+    ]
+  },
+  {
+    "branch": "test/event-rsvp-ci-contracts",
+    "depth": 27,
+    "prs": [
+      398
+    ]
+  },
+  {
+    "branch": "test/event-raci-full-stack",
+    "depth": 26,
+    "prs": [
+      395
+    ]
+  },
+  {
+    "branch": "feat/event-raci-web-editor",
+    "depth": 25,
+    "prs": [
+      388
+    ]
+  },
+  {
+    "branch": "feat/event-raci-editor-context",
+    "depth": 24,
+    "prs": [
+      387
+    ]
+  },
+  {
+    "branch": "feat/event-raci-reassignment-api",
+    "depth": 23,
+    "prs": [
+      384
+    ]
+  },
+  {
+    "branch": "feat/event-raci-reassignment-command",
+    "depth": 22,
+    "prs": [
+      383
+    ]
+  },
+  {
+    "branch": "feat/event-task-revisioned-read",
+    "depth": 21,
+    "prs": [
+      381
+    ]
+  },
+  {
+    "branch": "feat/event-task-aggregate-revision",
+    "depth": 20,
+    "prs": [
+      379
+    ]
+  },
+  {
+    "branch": "test/event-task-browser-startup",
+    "depth": 19,
+    "prs": [
+      375
+    ]
+  },
+  {
+    "branch": "feat/event-task-raci-view",
+    "depth": 18,
+    "prs": [
+      373
+    ]
+  },
+  {
+    "branch": "fix/reservation-pluscal-integrity",
+    "depth": 17,
+    "prs": [
+      372
+    ]
+  },
+  {
+    "branch": "fix/fanhub-authoritative-onboarding",
+    "depth": 16,
+    "prs": [
+      368
+    ]
+  },
+  {
+    "branch": "fix/artist-follow-onboarding-continuity",
+    "depth": 15,
+    "prs": [
+      364
+    ]
+  },
+  {
+    "branch": "fix/web-onboarding-reconciliation-integration",
+    "depth": 14,
+    "prs": [
+      359
+    ]
+  },
+  {
+    "branch": "feat/event-task-read-api",
+    "depth": 13,
+    "prs": [
+      357
+    ]
+  },
+  {
+    "branch": "feat/event-task-read-projection",
+    "depth": 12,
+    "prs": [
+      354
+    ]
+  },
+  {
+    "branch": "test/merch-expiry-checkout-contract",
+    "depth": 11,
+    "prs": [
+      352
+    ]
+  },
+  {
+    "branch": "fix/event-schema-migration-dependencies",
+    "depth": 10,
+    "prs": [
+      351
+    ]
+  },
+  {
+    "branch": "test/event-operations-schema-rehearsal",
+    "depth": 9,
+    "prs": [
+      349
+    ]
+  },
+  {
+    "branch": "fix/event-session-transaction-fence",
+    "depth": 8,
+    "prs": [
+      348
+    ]
+  },
+  {
+    "branch": "fix/event-command-existence-privacy",
+    "depth": 7,
+    "prs": [
+      346
+    ]
+  },
+  {
+    "branch": "test/event-operations-http-boundary",
+    "depth": 6,
+    "prs": [
+      345
+    ]
+  },
+  {
+    "branch": "fix/event-snapshot-privacy-boundary",
+    "depth": 5,
+    "prs": [
+      342
+    ]
+  },
+  {
+    "branch": "fix/event-command-replay-authorization",
+    "depth": 4,
+    "prs": [
+      341
+    ]
+  },
+  {
+    "branch": "feat/event-task-commit-invariants",
+    "depth": 3,
+    "prs": [
+      339
+    ]
+  },
+  {
+    "branch": "feat/event-logistics-transaction-hardening",
+    "depth": 2,
+    "prs": [
+      338
+    ]
+  },
+  {
+    "branch": "feat/event-operations-api-foundation",
+    "depth": 1,
+    "prs": [
+      337
+    ]
+  }
+]

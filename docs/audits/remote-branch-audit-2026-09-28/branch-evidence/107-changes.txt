@@ -1,0 +1,25 @@
+ .github/workflows/event-operations-formal.yml      |  4 +
+ docs/event-operations/README.md                    |  2 +
+ docs/event-operations/delivery-plan.md             |  7 ++
+ .../implementation-report-2026-09-14.md            | 13 +++
+ docs/event-operations/pr-06-snapshot-privacy.md    | 94 ++++++++++++++++++++++
+ docs/event-operations/snapshot-privacy-contract.md | 35 ++++++++
+ docs/event-operations/traceability-matrix.md       | 10 +++
+ formal/event-operations/README.md                  | 11 +++
+ formal/event-operations/SnapshotRead.cfg           |  4 +
+ formal/event-operations/SnapshotRead.tla           | 52 ++++++++++++
+ formal/event-operations/SnapshotReadEarlyAuth.cfg  |  4 +
+ formal/event-operations/SnapshotReadMixedClock.cfg |  4 +
+ formal/event-operations/SnapshotReadRawLog.cfg     |  4 +
+ scripts/test-event-operations-api-migration.sh     | 59 +++++++++++++-
+ scripts/verify-event-operations-formal.sh          |  4 +
+ tdf-hq/sql/2026-09-14_event_operations_api.sql     | 61 ++++++++++++++
+ .../2026-09-14_event_operations_api_rollback.sql   |  1 +
+ tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs | 69 ++++++++++++++++
+ tdf-hq/src/TDF/EventOperations/Server.hs           | 65 ++-------------
+ tdf-hq/tdf-hq.cabal                                |  4 +
+ tdf-hq/test/EventOperationsBoundaryMain.hs         | 38 +++++++++
+ tdf-hq/test/Spec.hs                                |  2 +
+ .../TDF/EventOperations/DatabaseBoundarySpec.hs    | 66 +++++++++++++++
+ .../event_operations_snapshot_assertions.sql       | 58 +++++++++++++
+ 24 files changed, 608 insertions(+), 63 deletions(-)

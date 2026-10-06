@@ -1,0 +1,254 @@
+- generic:
+  - generic:
+    - generic:
+      - generic:
+        - link:
+          - /url: "#_R_3ndjqctdbntccged79l75_"
+          - text: Skip to content
+      - generic:
+        - complementary [ref=f16e5]:
+          - generic [ref=f16e9]:
+            - navigation [ref=f16e410]:
+              - generic [ref=f16e11]:
+                - button [ref=f16e411] [cursor=pointer]:
+                  - generic [ref=f16e14]: Home
+                - button [ref=f16e412] [cursor=pointer]:
+                  - generic [ref=f16e211]: Space
+                - button [ref=f16e413] [cursor=pointer]:
+                  - generic [ref=f16e24]: Scheduled
+                - button [ref=f16e414] [cursor=pointer]:
+                  - generic [ref=f16e29]: Plugins
+                - button [ref=f16e415] [cursor=pointer]:
+                  - generic [ref=f16e34]: Explore
+              - button [ref=f16e416] [cursor=pointer]
+            - navigation [ref=f16e417]:
+              - generic [ref=f16e113]:
+                - generic [ref=f16e114]:
+                  - generic [ref=f16e115]:
+                    - heading [level=1] [ref=f16e418]: Scheduled
+                    - generic [ref=f16e117]:
+                      - button [ref=f16e419] [cursor=pointer]
+                      - button [expanded] [ref=f16e420] [cursor=pointer]
+                  - button [ref=f16e421] [cursor=pointer]:
+                    - generic [ref=f16e132]: New task
+                - generic [ref=f16e140]:
+                  - generic [ref=f16e141]:
+                    - generic [ref=f16e142]: Upcoming
+                    - button [ref=f16e422] [cursor=pointer]
+                  - list [ref=f16e157]:
+                    - listitem [ref=f16e158]:
+                      - button [ref=f16e423] [cursor=pointer]:
+                        - generic [ref=f16e164]:
+                          - generic [ref=f16e165]: Quito Electronic Event Watch
+                          - generic [ref=f16e171]: Monitoring
+                        - button [ref=f16e424]
+                    - listitem [ref=f16e181]:
+                      - button [ref=f16e425] [cursor=pointer]:
+                        - generic [ref=f16e187]:
+                          - generic [ref=f16e188]: TDF — Tu escena, conectada. Inicio diario de operación a las 08:00 America/Guaya
+                          - generic [ref=f16e194]: Tomorrow 8 AM·Daily
+                        - button [ref=f16e426]
+                    - listitem [ref=f16e204]:
+                      - button [ref=f16e427] [cursor=pointer]:
+                        - generic [ref=f16e206]: Show more
+          - generic:
+            - separator
+        - generic:
+          - generic:
+            - generic:
+              - main:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - separator:
+                                      - time: Today 11:46 AM
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic:
+                                                - generic:
+                                                  - generic:
+                                                    - generic:
+                                                      - generic:
+                                                        - paragraph: TDF — Tu escena, conectada. Inicio diario de operación a las 08:00 America/Guayaquil, todos los días sin fecha de fin, conforme autorización expresa de Diego. Reporta en español. Esta tarea continúa el piloto TDF-TEC-20261001-01 aprobado; no concede autorización ilimitada a nuevos destinatarios.
+                                                        - paragraph:
+                                                          - text: En cada ejecución, antes de actuar comprueba que puedes usar EXCLUSIVAMENTE el navegador adjunto autorizado con la sesión oficial @tdf.records.label y el CRM TDF
+                                                          - link:
+                                                            - /url: https://www.tdfrecords.net/crm/contactos
+                                                            - generic: https://www.tdfrecords.net/crm/contactos
+                                                          - text: . Una tarea cloud no debe asumir que tiene acceso al navegador local ni al repo. Si faltan acceso, sesión o historial completo suficiente, detente y reporta el bloqueo, sin enviar, sin pedir credenciales ni códigos, sin crear una base paralela ni buscar un navegador alternativo. No uses scraping, bots externos, extensiones, macros, APIs de Instagram o scripts ejecutados en Instagram. Cada revisión y envío se hace individualmente por la interfaz visible.
+                                                        - paragraph: Si existe acceso al proyecto /Users/diegosaa/GitHub/tdf-app, lee las instrucciones vigentes y docs/campaigns/tu-escena-conectada-revision-2026-09-30.md y memoria reciente. Aun sin archivos, estas instrucciones son autosuficientes para el alcance autorizado; verifica SIEMPRE CRM/historial en vivo porque este estado puede haber cambiado. Evita ejecuciones simultáneas y mensajes duplicados. No reasumas que todos los pendientes siguen sin contactar.
+                                                        - paragraph: "Horario permitido 08:00–22:00 America/Guayaquil; máximo 10 invitaciones/día y 5 mensajes/bloque. Cuenta acciones ya realizadas ese día antes de operar; no elevar volumen. No automatizar pausas para evadir controles. Revisa antes de cada envío: información pública suficiente, adulto sin duda razonable de edad, identidad y pertinencia Quito/música; historial sin invitación previa, rechazo o solicitud de no contacto. Excluye privados con datos insuficientes, falsos, abandonados, menores o edad incierta. Normaliza Instagram quitando @, espacios y mayúsculas; busca coincidencia EXACTA en CRM Contactos, campo instagram y hasUserAccount. Si tiene cuenta, excluye como ya registrado; si existe sin cuenta, conserva registro. No excluir por semejanza de nombre."
+                                                        - paragraph:
+                                                          - text: "Estado comprobado al 3/oct/2026: 15 contactos con envío confirmado sin fallo observado, 1 intento fallido excluido, 4 aprobados pendientes. Ya invitados (NO reenviar): neilarmasmusic, carlaromanmusica, pakul_music, alejandrosoria_music, emmanu__music, lysergicman_music, solcordovamusic, quitoskasociety, quitobohemio, vdjjac, rommel_unda, joelduenasc, felipe.cornejo.bermeo, flautatraviesa, raulmolina. hugocaicedop: intento fallido por privacidad; excluido SIN reintento/canal alternativo. dannnaa.__: conversación escalada por edad no comprobable; NO contactar. Reel ya publicado una vez:"
+                                                          - link:
+                                                            - /url: https://www.instagram.com/tdf.records.label/reel/Dd71zzlt8TD/
+                                                            - generic: https://www.instagram.com/tdf.records.label/reel/Dd71zzlt8TD/
+                                                          - text: — NO republicar ni adjuntar video.
+                                                        - paragraph: Los ÚNICOS cuatro envíos nuevos autorizados son los mensajes exactos abajo, sujetos a revalidación. Gura/artista A; Los Argonautas/artista A; El Bloque/artista B (CRM2 existente, último hasUserAccount=false); Francisco/musico B. No reemplazar excluidos ni modificar textos. El resto no tenía coincidencia exacta al 3/oct; revalida. Tras agotarse este lote, reporta resultados y prepara propuesta del siguiente para aprobación; NO enviar nuevos lotes sin aprobación exacta. No enviar seguimiento sin texto aprobado; máximo uno entre 4 y 7 días y nunca tras rechazo. Esta recurrencia no autoriza repetir las invitaciones diariamente.
+                                                        - paragraph: "Solo después de confirmar envío crea/actualiza CRM, añade notas fechadas sin sobrescribir: usuario, nombre público, segmento, fecha/hora Ecuador, campaña tu_escena_conectada_piloto, variante, mensaje exacto, estado, respuesta, registro/perfil completo/activación verificados y notas públicas necesarias. No asumir entrega por sola aparición de burbuja; comprobar ausencia de fallo. Nunca reintentar envío incierto. No marcar conversiones por inferencia."
+                                                        - paragraph:
+                                                          - text: "Puedes responder preguntas básicas sobre TDF con información verificada y orientar registro/perfil/primera acción. Si dicen ya registrado: “¡Qué bueno tenerte dentro! 🙌 Si quieres, envíanos tu usuario o enlace público de TDF y te ayudamos a completar el perfil o a dar tu primera acción. No necesitamos tu contraseña ni ningún código.” Escala reclamos, amenazas, temas legales/privacidad/eliminación, seguridad/acceso, pagos/reembolsos/disputas, negociación/descuentos/condiciones, sello/booking/prensa/inversión/alianzas, menores/edad incierta y situaciones sensibles o ambiguas. No pedir datos privados. Rechazo: confirmar brevemente, exclusión permanente, no volver a contactar. No prometer STC, matching, empleo, ingresos, visibilidad garantizada ni funciones futuras. Promueve solo producto observado/verificado y dominio"
+                                                          - link:
+                                                            - /url: https://www.tdfrecords.net
+                                                            - generic: https://www.tdfrecords.net
+                                                          - text: ; mantén UTM sin datos personales, sin referidos.
+                                                        - paragraph: "DETENCIÓN INMEDIATA sin eludir ni reintentar: advertencia/CAPTCHA/verificación/restricción, solicitud de credenciales, acceso desordenado a interacciones, navegador inesperado, envío incierto, duplicación accidental, dos solicitudes de no contacto dentro del piloto o indicio de incumplimiento Instagram. El fallo histórico de Hugo ya fue excluido; no reintentar."
+                                                        - paragraph: "Informe diario: evaluados/seleccionados/excluidos/contactados, mensajes por segmento y A/B, positivas/neutrales/negativas, clics/registro/perfil/activación, seguimientos pendientes, objeciones, riesgos y recomendación. Distingue comprobado/no disponible/inferencia. Base previa: cuatro positivas escritas (Carla,Alejandro,Sol,Rommel breve), Neil neutral; Carla reportó registro con captura pero identidad de cuenta/perfil completo/activación no confirmados. PostHog/clics no verificados. No declarar ganador estadístico ni ampliación autorizada. Para proponer ampliación: cero advertencias/duplicados/menores/denuncias spam; ≥4positivas, ≥2registros, ≥1activación, <2rechazos por pertinencia. A/B solo ventaja provisional si duplica respuestas positivas o registros."
+                                                        - paragraph: "MENSAJES EXACTOS YA APROBADOS:"
+                                                        - heading [level=3]: 16. @gura.a.music — Gura
+                                                        - paragraph:
+                                                          - text: "Hola, Gura 👋 Vimos tu presentación en Excéntrico UIO junto a Ricardo Subía. Tu escena necesita un espacio propio para que las canciones sigan circulando después del concierto. En TDF puedes empezar tu perfil de artista con tus enlaces y explorar otros proyectos. Te invitamos a sumarte:"
+                                                          - link:
+                                                            - /url: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a
+                                                            - generic: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a
+                                                          - text: "Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                                                        - heading [level=3]: 18. @losargonautas.ec — Los Argonautas
+                                                        - paragraph:
+                                                          - text: "Hola, Los Argonautas 👋 Vimos «Audionáutica» y su mezcla de ska, dub y soul desde Quito. Tu escena necesita un espacio propio para que las bandas y su gente puedan encontrarse. En TDF pueden empezar el perfil del proyecto con sus enlaces y explorar a otros artistas. Les invitamos a probar:"
+                                                          - link:
+                                                            - /url: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a
+                                                            - generic: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a
+                                                          - text: "Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                                                        - heading [level=3]: 19. @elbloque_oficial — El Bloque
+                                                        - paragraph:
+                                                          - text: "Hola, El Bloque 👋 Vimos su rap en el Star Fest de Quito. En TDF reunimos perfiles, artistas y lanzamientos para que cada proyecto tenga un punto de encuentro con quienes escuchan. Pueden empezar el perfil de la banda con sus enlaces musicales y recorrer la comunidad. Les invitamos a probar:"
+                                                          - link:
+                                                            - /url: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b
+                                                            - generic: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b
+                                                          - text: "Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                                                        - heading [level=3]: 20. @franlaurito — Francisco Laurito / Ciscú Mastó
+                                                        - paragraph:
+                                                          - text: "Hola, Francisco 👋 Vimos «Memorias del Cerro» y tu dúo en Go Quito Hotel. En TDF reunimos perfiles de artistas y lanzamientos para recorrer propuestas y seguirles la pista. Te invitamos a explorar la comunidad vinculada a Quito y seguir un primer proyecto desde una cuenta general:"
+                                                          - link:
+                                                            - /url: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_b
+                                                            - generic: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_b
+                                                          - text: "Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                                                - generic: …
+                                              - button:
+                                                - generic: Show more
+                                          - generic:
+                                            - generic:
+                                              - generic: 11:46 AM
+                                              - generic:
+                                                - generic:
+                                                  - button
+                                      - generic:
+                                        - generic:
+                                          - generic:
+                                            - paragraph: Your task is scheduled. Its next run is Oct 5, 8:00 AM GMT-5.
+                                        - generic:
+                                          - generic:
+                                            - generic:
+                                              - generic:
+                                                - button:
+                                                  - generic:
+                                                    - generic:
+                                                      - generic: TDF — Tu escena, conectada. Inicio diario de operación a las 08:00 America/Guaya
+                                                      - generic: Daily at 8:00 AM
+                                                    - generic [ref=f16e310] [cursor=pointer]: Open
+                                          - generic:
+                                            - generic:
+                                              - button
+                                            - generic: 11:46 AM
+                              - generic [ref=f16e327]:
+                                - button [ref=f16e428] [cursor=pointer]
+                                - textbox [ref=f16e429]:
+                                  - paragraph: Reply about this task…
+                                - generic [ref=f16e340]:
+                                  - button [ref=f16e430] [cursor=pointer]:
+                                    - generic [ref=f16e345]: Medium
+                                  - generic [ref=f16e355]:
+                                    - button [ref=f16e431] [cursor=pointer]
+                                    - button [disabled] [ref=f16e432] [cursor=pointer]
+            - status
+  - status
+  - dialog [ref=f16e434]:
+    - generic [ref=f16e435]:
+      - heading "Edit task" [level=2] [ref=f16e437]
+      - group [ref=f16e440]:
+        - generic [ref=f16e441]:
+          - textbox "Name" [active] [ref=f16e442]:
+            - /placeholder: Task name
+            - text: TDF — Tu escena, conectada. Inicio diario de operación a las 08:00 America/Guaya
+          - textbox "Instructions…" [ref=f16e444]:
+            - paragraph [ref=f16e445]: TDF — Tu escena, conectada. Inicio diario de operación a las 08:00 America/Guayaquil, todos los días sin fecha de fin, conforme autorización expresa de Diego. Reporta en español. Esta tarea continúa el piloto TDF-TEC-20261001-01 aprobado; no concede autorización ilimitada a nuevos destinatarios.
+            - paragraph [ref=f16e446]
+            - paragraph [ref=f16e447]: En cada ejecución, antes de actuar comprueba que puedes usar EXCLUSIVAMENTE el navegador adjunto autorizado con la sesión oficial @tdf.records.label y el CRM TDF https://www.tdfrecords.net/crm/contactos. Una tarea cloud no debe asumir que tiene acceso al navegador local ni al repo. Si faltan acceso, sesión o historial completo suficiente, detente y reporta el bloqueo, sin enviar, sin pedir credenciales ni códigos, sin crear una base paralela ni buscar un navegador alternativo. No uses scraping, bots externos, extensiones, macros, APIs de Instagram o scripts ejecutados en Instagram. Cada revisión y envío se hace individualmente por la interfaz visible.
+            - paragraph [ref=f16e448]
+            - paragraph [ref=f16e449]: Si existe acceso al proyecto /Users/diegosaa/GitHub/tdf-app, lee las instrucciones vigentes y docs/campaigns/tu-escena-conectada-revision-2026-09-30.md y memoria reciente. Aun sin archivos, estas instrucciones son autosuficientes para el alcance autorizado; verifica SIEMPRE CRM/historial en vivo porque este estado puede haber cambiado. Evita ejecuciones simultáneas y mensajes duplicados. No reasumas que todos los pendientes siguen sin contactar.
+            - paragraph [ref=f16e450]
+            - paragraph [ref=f16e451]: "Horario permitido 08:00–22:00 America/Guayaquil; máximo 10 invitaciones/día y 5 mensajes/bloque. Cuenta acciones ya realizadas ese día antes de operar; no elevar volumen. No automatizar pausas para evadir controles. Revisa antes de cada envío: información pública suficiente, adulto sin duda razonable de edad, identidad y pertinencia Quito/música; historial sin invitación previa, rechazo o solicitud de no contacto. Excluye privados con datos insuficientes, falsos, abandonados, menores o edad incierta. Normaliza Instagram quitando @, espacios y mayúsculas; busca coincidencia EXACTA en CRM Contactos, campo instagram y hasUserAccount. Si tiene cuenta, excluye como ya registrado; si existe sin cuenta, conserva registro. No excluir por semejanza de nombre."
+            - paragraph [ref=f16e452]
+            - paragraph [ref=f16e453]: "Estado comprobado al 3/oct/2026: 15 contactos con envío confirmado sin fallo observado, 1 intento fallido excluido, 4 aprobados pendientes. Ya invitados (NO reenviar): neilarmasmusic, carlaromanmusica, pakul_music, alejandrosoria_music, emmanu__music, lysergicman_music, solcordovamusic, quitoskasociety, quitobohemio, vdjjac, rommel_unda, joelduenasc, felipe.cornejo.bermeo, flautatraviesa, raulmolina. hugocaicedop: intento fallido por privacidad; excluido SIN reintento/canal alternativo. dannnaa.__: conversación escalada por edad no comprobable; NO contactar. Reel ya publicado una vez: https://www.instagram.com/tdf.records.label/reel/Dd71zzlt8TD/ — NO republicar ni adjuntar video."
+            - paragraph [ref=f16e454]
+            - paragraph [ref=f16e455]: Los ÚNICOS cuatro envíos nuevos autorizados son los mensajes exactos abajo, sujetos a revalidación. Gura/artista A; Los Argonautas/artista A; El Bloque/artista B (CRM2 existente, último hasUserAccount=false); Francisco/musico B. No reemplazar excluidos ni modificar textos. El resto no tenía coincidencia exacta al 3/oct; revalida. Tras agotarse este lote, reporta resultados y prepara propuesta del siguiente para aprobación; NO enviar nuevos lotes sin aprobación exacta. No enviar seguimiento sin texto aprobado; máximo uno entre 4 y 7 días y nunca tras rechazo. Esta recurrencia no autoriza repetir las invitaciones diariamente.
+            - paragraph [ref=f16e456]
+            - paragraph [ref=f16e457]: "Solo después de confirmar envío crea/actualiza CRM, añade notas fechadas sin sobrescribir: usuario, nombre público, segmento, fecha/hora Ecuador, campaña tu_escena_conectada_piloto, variante, mensaje exacto, estado, respuesta, registro/perfil completo/activación verificados y notas públicas necesarias. No asumir entrega por sola aparición de burbuja; comprobar ausencia de fallo. Nunca reintentar envío incierto. No marcar conversiones por inferencia."
+            - paragraph [ref=f16e458]
+            - paragraph [ref=f16e459]: "Puedes responder preguntas básicas sobre TDF con información verificada y orientar registro/perfil/primera acción. Si dicen ya registrado: “¡Qué bueno tenerte dentro! 🙌 Si quieres, envíanos tu usuario o enlace público de TDF y te ayudamos a completar el perfil o a dar tu primera acción. No necesitamos tu contraseña ni ningún código.” Escala reclamos, amenazas, temas legales/privacidad/eliminación, seguridad/acceso, pagos/reembolsos/disputas, negociación/descuentos/condiciones, sello/booking/prensa/inversión/alianzas, menores/edad incierta y situaciones sensibles o ambiguas. No pedir datos privados. Rechazo: confirmar brevemente, exclusión permanente, no volver a contactar. No prometer STC, matching, empleo, ingresos, visibilidad garantizada ni funciones futuras. Promueve solo producto observado/verificado y dominio https://www.tdfrecords.net; mantén UTM sin datos personales, sin referidos."
+            - paragraph [ref=f16e460]
+            - paragraph [ref=f16e461]: "DETENCIÓN INMEDIATA sin eludir ni reintentar: advertencia/CAPTCHA/verificación/restricción, solicitud de credenciales, acceso desordenado a interacciones, navegador inesperado, envío incierto, duplicación accidental, dos solicitudes de no contacto dentro del piloto o indicio de incumplimiento Instagram. El fallo histórico de Hugo ya fue excluido; no reintentar."
+            - paragraph [ref=f16e462]
+            - paragraph [ref=f16e463]: "Informe diario: evaluados/seleccionados/excluidos/contactados, mensajes por segmento y A/B, positivas/neutrales/negativas, clics/registro/perfil/activación, seguimientos pendientes, objeciones, riesgos y recomendación. Distingue comprobado/no disponible/inferencia. Base previa: cuatro positivas escritas (Carla,Alejandro,Sol,Rommel breve), Neil neutral; Carla reportó registro con captura pero identidad de cuenta/perfil completo/activación no confirmados. PostHog/clics no verificados. No declarar ganador estadístico ni ampliación autorizada. Para proponer ampliación: cero advertencias/duplicados/menores/denuncias spam; ≥4positivas, ≥2registros, ≥1activación, <2rechazos por pertinencia. A/B solo ventaja provisional si duplica respuestas positivas o registros."
+            - paragraph [ref=f16e464]
+            - paragraph [ref=f16e465]: "MENSAJES EXACTOS YA APROBADOS:"
+            - paragraph [ref=f16e466]: "### 16. @gura.a.music — Gura"
+            - paragraph [ref=f16e467]: Hola, Gura 👋 Vimos tu presentación en Excéntrico UIO junto a Ricardo Subía.
+            - paragraph [ref=f16e468]: Tu escena necesita un espacio propio para que las canciones sigan circulando después del concierto.
+            - paragraph [ref=f16e469]: "En TDF puedes empezar tu perfil de artista con tus enlaces y explorar otros proyectos. Te invitamos a sumarte:"
+            - paragraph [ref=f16e470]: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a
+            - paragraph [ref=f16e471]: "Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+            - paragraph [ref=f16e472]
+            - paragraph [ref=f16e473]: "### 18. @losargonautas.ec — Los Argonautas"
+            - paragraph [ref=f16e474]: Hola, Los Argonautas 👋 Vimos «Audionáutica» y su mezcla de ska, dub y soul desde Quito.
+            - paragraph [ref=f16e475]: Tu escena necesita un espacio propio para que las bandas y su gente puedan encontrarse.
+            - paragraph [ref=f16e476]: "En TDF pueden empezar el perfil del proyecto con sus enlaces y explorar a otros artistas. Les invitamos a probar:"
+            - paragraph [ref=f16e477]: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a
+            - paragraph [ref=f16e478]: "Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+            - paragraph [ref=f16e479]
+            - paragraph [ref=f16e480]: "### 19. @elbloque_oficial — El Bloque"
+            - paragraph [ref=f16e481]: Hola, El Bloque 👋 Vimos su rap en el Star Fest de Quito.
+            - paragraph [ref=f16e482]: En TDF reunimos perfiles, artistas y lanzamientos para que cada proyecto tenga un punto de encuentro con quienes escuchan.
+            - paragraph [ref=f16e483]: "Pueden empezar el perfil de la banda con sus enlaces musicales y recorrer la comunidad. Les invitamos a probar:"
+            - paragraph [ref=f16e484]: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b
+            - paragraph [ref=f16e485]: "Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+            - paragraph [ref=f16e486]
+            - paragraph [ref=f16e487]: "### 20. @franlaurito — Francisco Laurito / Ciscú Mastó"
+            - paragraph [ref=f16e488]: Hola, Francisco 👋 Vimos «Memorias del Cerro» y tu dúo en Go Quito Hotel.
+            - paragraph [ref=f16e489]: En TDF reunimos perfiles de artistas y lanzamientos para recorrer propuestas y seguirles la pista.
+            - paragraph [ref=f16e490]: "Te invitamos a explorar la comunidad vinculada a Quito y seguir un primer proyecto desde una cuenta general:"
+            - paragraph [ref=f16e491]: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_b
+            - paragraph [ref=f16e492]: "Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+          - generic [ref=f16e495]:
+            - generic [ref=f16e496]:
+              - generic [ref=f16e497]: Repeat task
+              - switch "Repeat task" [checked] [ref=f16e501] [cursor=pointer]
+            - generic [ref=f16e504]:
+              - generic [ref=f16e505]: Repeat
+              - button "Repeat schedule" [ref=f16e509] [cursor=pointer]:
+                - generic [ref=f16e510]: Daily
+            - generic [ref=f16e513]:
+              - generic [ref=f16e514]: Time
+              - generic [ref=f16e518]:
+                - combobox "Time" [ref=f16e519] [cursor=pointer]: 8:00 AM Ecuador Time
+                - button "Time" [ref=f16e520] [cursor=pointer]
+            - generic [ref=f16e523]:
+              - generic [ref=f16e524]: End repeat
+              - button "End repeat" [ref=f16e528] [cursor=pointer]:
+                - generic [ref=f16e529]: Never
+          - button [ref=f16e533] [cursor=pointer]
+      - generic [ref=f16e538]:
+        - group [ref=f16e539]:
+          - button "Pause" [ref=f16e540] [cursor=pointer]
+        - button "Save" [disabled] [ref=f16e541]
+    - button "Close dialog" [ref=f16e542] [cursor=pointer]

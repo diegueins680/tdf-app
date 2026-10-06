@@ -1,0 +1,280 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 429,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "2fb19e8635e5a46e0d31093ed2e9b40dc9bf7b91",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6jnQ4u",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Block checkout when the Stripe key is absent**\n\nWhen the frontend publishable key is absent but the backend Stripe secrets are configured, this resolved-null promise is still passed to `Elements` after `createPaymentIntent` has created a pending order and reserved ticket inventory. `CheckoutForm` then permanently disables its Pay button because `useStripe()` returns null, while the ticket-purchase button remains available in `SocialEventsPage`, so customers can consume availability without any way to complete payment or see a configuration error. Gate the checkout before creating the payment intent or render an actionable unavailable state instead of entering the payment step.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043575905",
+                      "createdAt": "2026-09-18T03:31:16Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 60d754aab977f2d1967937214a0435c6617df3ac. Readiness now resolves before createPaymentIntent. Missing/failed SDK retains buyer input and creates no intent; single-flight and generation fences cover cancellation, unmount, event/tier changes and session changes. 17 component/logic tests pass, TLC221distinct states plus3named negative controls pass. 10 ES/EN browser cases in5profiles/3engines pass with0intents; ordinary retry/cancel clicks also cover the radio layer correction.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043959762",
+                      "createdAt": "2026-09-18T05:04:27Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwNTowNDoyN1rO8Qnt0g=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jnQ4y",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq-ui/src/pages/UserActivityPage.tsx",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Give the activity regions distinct accessible names**\n\nWhen activity exists, this summary container and the recent-activity container at line 232 are both exposed as regions named \u201cActividad de usuarios.\u201d Screen-reader region navigation therefore presents two indistinguishable destinations even though the enclosed tables are separately named; label this region as the per-user summary and the other as recent activity.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043575910",
+                      "createdAt": "2026-09-18T03:31:16Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 60d754aab977f2d1967937214a0435c6617df3ac. Summary and recent activity now have distinct localized region names. Six ES/EN browser checks across calendar/board/activity pass; evidence/operational-labels-es-en.json.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043959957",
+                      "createdAt": "2026-09-18T05:04:30Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwNTowNDozMFrO8QnulQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jnZfO",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq-ui/src/pages/SocialPage.tsx",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Label each concurrent loading operation distinctly**\n\nOn the initial social-page render, QR generation and the suggestions/network queries can all be pending simultaneously, but the three progress bars at lines 451, 565, and 624 are all named \u201cCargando conexiones.\u201d The indicator here is actually generating the contact QR, and reusing the same name makes the concurrent statuses indistinguishable to screen-reader users; give each operation a specific label.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043629015",
+                      "createdAt": "2026-09-18T03:44:59Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 60d754aab977f2d1967937214a0435c6617df3ac. QR generation, suggested connections and social-network loading each now have a distinct ES/EN purpose-specific name. Build/typecheck/lint pass; operational arrival checks remain documented separately from all-state manual screen-reader coverage.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043960130",
+                      "createdAt": "2026-09-18T05:04:33Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwNTowNDozM1rO8QnvQg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jnZfU",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq-ui/src/pages/KanbanPage.tsx",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Give the board region a distinct accessible name**\n\nWhen the Kanban stages are loaded, this scrollable board and the workflow selector at line 174 both use `pipelines.workflowTabs` as their accessible name. Assistive-technology users therefore hear \u201cAvailable project workflows\u201d for both the tab list and the separate board region, obscuring which target contains the draggable columns; use a board-specific localized label here.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043629021",
+                      "createdAt": "2026-09-18T03:44:59Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 60d754aab977f2d1967937214a0435c6617df3ac. The board region now uses its own Project board / Tablero de proyectos label; workflow tabs retain their existing name. Actual isolated browser check passes in ES/EN.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043960275",
+                      "createdAt": "2026-09-18T05:04:36Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwNTowNDozNlrO8Qnv0w=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jnhuW",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq-ui/src/pages/BookingsPage.tsx",
+                "line": 918,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Register FullCalendar locales before showing text controls**\n\nFor the default Spanish locale\u2014and likewise the supported French, German, and Portuguese locales\u2014no FullCalendar locale bundle is registered anywhere in the UI, so `locale={locale}` falls back to English. Setting `buttonIcons={false}` therefore replaces the language-neutral navigation arrows with visible English labels such as \u201cprev\u201d, \u201cnext\u201d, \u201ctoday\u201d, \u201cmonth\u201d, \u201cweek\u201d, and \u201cday\u201d on this otherwise Spanish page. Register the relevant FullCalendar locales or provide localized `buttonText` values before disabling the icons.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043680608",
+                      "createdAt": "2026-09-18T03:58:34Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 60d754aab977f2d1967937214a0435c6617df3ac. FullCalendar now receives imported es/fr/de/pt locale definitions. Compiled-bundle browser checks show Spanish Ant/Sig/Hoy/Mes/Semana/D\u00eda and English prev/next/today/month/week/day.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043960406",
+                      "createdAt": "2026-09-18T05:04:38Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwNTowNDozOFrO8QnwVg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jnxkh",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq-ui/src/pages/UserActivityPage.tsx",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Distinguish the two activity loading statuses**\n\nDuring the initial `activityQuery.isLoading` state, this progress bar and the one at line 186 are rendered simultaneously with the same accessible name, so screen-reader progress-bar navigation exposes two indistinguishable statuses for different tables. Give each indicator a table-specific name (summary versus recent activity), or expose only one loading status.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043779486",
+                      "createdAt": "2026-09-18T04:22:11Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 60d754aab977f2d1967937214a0435c6617df3ac. Both concurrent activity progress indicators now use distinct localized labels: summary by user versus recent activity. Four delayed-response ES/EN checks pass, including directory profile loading; evidence/operational-loading-es-en.json.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043960566",
+                      "createdAt": "2026-09-18T05:04:41Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwNTowNDo0MVrO8Qnw9g=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6joQEq",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+                "line": 531,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Prevent cancellation after the reservation request starts**\n\nWhen Stripe readiness has completed but `createPaymentIntent` is still pending, the newly enabled Cancel button calls `handleClose`, unmounting this component and invalidating the attempt without aborting or compensating for the API request. If the server completes the request, `SocialEventsHandlers.hs` creates a pending order and increments `EventTicketTierQuantitySold`, while the response is discarded and the buyer never receives the payment form; repeated slow-request cancellations can therefore consume ticket availability. Keep cancellation limited to the pre-request readiness phase, or cancel/release any reservation that completes after closure.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043967244",
+                      "createdAt": "2026-09-18T05:06:23Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Addressed in a8b40ef4f. Confirmed the slow-reservation regression against60d754aab; the new test failed before the fix. Cancellation remains allowed during SDK readiness, but a synchronous reservationPending ref now prevents button, Escape and backdrop closure once createPaymentIntent is dispatched. Visible Cancel is disabled for that phase; success reaches payment and failure restores cancellation/input.19 component/logic tests and10 production-bundle ES/EN browser cases pass. TLC CheckoutCancellation splits request dispatch/response:5distinct states, safety and conditional liveness pass; removing the guard yields the named abandoned-reservation counterexample. Full pinned TLC/Alloy runner passes. Bounds explicitly exclude external unmount/navigation, account changes after dispatch and ambiguous transport failure; no claim of general server inventory recovery.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4044051593",
+                      "createdAt": "2026-09-18T05:26:42Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwNToyNjo0MlrO8QtUiQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jofR3",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+                "line": 385,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Preserve successful payments after dialog dismissal**\n\nIf the buyer presses Escape or clicks the backdrop while `stripe.confirmPayment()` is pending, the dialog remains dismissible because `reservationPending` only covers the earlier intent request; `handleClose` then increments `buyerAttempt`, so this check discards a later successful payment. The page's `onSuccess` callback consequently never invalidates ticket/order queries or displays confirmation, leaving a charged buyer likely to retry. Either prevent dismissal while payment confirmation is pending or continue delivering the successful completion callback.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4044062576",
+                      "createdAt": "2026-09-18T05:28:56Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Addressed in bdab8530a, integrated with current main4b0bc6ed7 as2fb19e863. The dialog now guards elements.submit and confirmPayment with paymentPending; the child also synchronously rejects duplicate submits before processing state renders. The delayed-success regression failed on a8b40ef4f and passes after the fix: Escape/backdrop cannot close, the order callback is delivered exactly once, and provider rejection restores dismissal without success.21 component/logic tests pass. CheckoutCancellation now models payment confirmation with NoLostPayment and conditional PaymentSettles; the unsafe-payment configuration yields its named counterexample. Complete pinned TLC/Alloy runner passes. Integrated TypeScript/production build365216gzip bytes passes; no real charge or blanket background-recovery claim.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4044169699",
+                      "createdAt": "2026-09-18T05:52:29Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwNTo1MjoyOVrO8Q0h4w=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwNToyODo1NlrOo6H0dw=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

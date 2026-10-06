@@ -1,0 +1,13 @@
+ .github/workflows/ci.yml                           |   3 +
+ docs/event-operations/README.md                    |   2 +
+ docs/event-operations/delivery-plan.md             |   6 ++
+ .../event-operations/merch-expiry-test-contract.md |  57 ++++++++++++
+ docs/event-operations/pr-11-schema-dependencies.md |   3 +
+ .../pr-12-merch-expiry-contract.md                 |  92 +++++++++++++++++++
+ docs/event-operations/traceability-matrix.md       |   3 +-
+ scripts/__tests__/ci-change-scope.test.mjs         |   9 ++
+ scripts/__tests__/ci-pipeline.test.mjs             |   9 ++
+ scripts/ci-change-scope.mjs                        |   2 +
+ scripts/test-artist-merch-storefronts-migration.sh |   3 +-
+ .../merch_checkout_expiry_assertions.sql           | 100 +++++++++++++++++++++
+ 12 files changed, 286 insertions(+), 3 deletions(-)

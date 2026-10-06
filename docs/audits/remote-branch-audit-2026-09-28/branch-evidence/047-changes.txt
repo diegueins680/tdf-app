@@ -1,0 +1,18 @@
+ docs/payments/operator-runbooks.md                 |  11 ++
+ docs/payments/terminal-recovery-2026-09-14.md      | 147 ++++++++++++++
+ tdf-hq-ui/src/api/generated/types.ts               |   4 +-
+ .../payments/HostedProviderCheckout.test.tsx       | 109 ++++++++++
+ .../components/payments/HostedProviderCheckout.tsx |  78 ++++++--
+ .../src/pages/CourseProductionLandingPage.tsx      |  18 +-
+ tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx      |  12 +-
+ .../src/pages/PublicBookingOrderTrackingPage.tsx   |   6 +-
+ tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx     |  18 +-
+ tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx   |   6 +-
+ tdf-hq-ui/src/utils/providerPaymentResume.test.ts  |   8 +
+ tdf-hq-ui/src/utils/providerPaymentResume.ts       |  17 +-
+ tdf-hq/docs/openapi/api.yaml                       |  14 +-
+ tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs  |  71 ++++++-
+ tdf-hq/src/TDF/Server/ProviderExecution.hs         |  45 ++---
+ tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs      | 219 ++++++++++++++++++++-
+ tdf-mobile                                         |   2 +-
+ 17 files changed, 701 insertions(+), 84 deletions(-)

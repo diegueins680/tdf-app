@@ -1,0 +1,24 @@
+- generic "Reproductor de video de YouTube" [ref=f21e5]:
+  - button "Reproducir" [ref=f21e9] [cursor=pointer]
+  - generic [ref=f21e10]:
+    - generic [ref=f21e11] [cursor=pointer]:
+      - slider "Control deslizante de búsqueda" [ref=f21e12]
+      - generic:
+        - generic:
+          - generic:
+            - slider "Haz clic en el panel o desplázate por él para usar la búsqueda precisa."
+    - generic [ref=f21e21]:
+      - generic [ref=f21e22]:
+        - button "Pausa (k)" [ref=f21e23] [cursor=pointer]
+        - generic [ref=f21e24]:
+          - button "Silenciar (m)" [ref=f21e26] [cursor=pointer]
+          - slider "Volumen":
+            - generic [ref=f21e27] [cursor=pointer]
+        - button "0 minutos 0 segundos de 44 minutos 14 segundos" [ref=f21e30] [cursor=pointer]: 0:00 / 44:14
+      - generic [ref=f21e31]:
+        - generic [ref=f21e32]:
+          - button "Subtítulos no disponibles" [ref=f21e33] [cursor=pointer]
+          - button "Configuración" [ref=f21e35] [cursor=pointer]
+        - generic [ref=f21e36]:
+          - button "Modo cine (t)" [ref=f21e37] [cursor=pointer]
+          - button "Pantalla completa (f)" [ref=f21e38] [cursor=pointer]

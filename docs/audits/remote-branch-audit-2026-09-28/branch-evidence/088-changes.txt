@@ -1,0 +1,8 @@
+ docs/social/evidence/backend-runtime-result.txt | 13 +++++++++++++
+ docs/social/evidence/ci-workflow-regression.txt | 18 ++++++++++++++++++
+ docs/social/evidence/reaction-model.txt         | 19 +++++++++++++++++++
+ docs/social/reaction-repair.md                  | 17 +++++++++++++++++
+ formal/social/Reaction.cfg                      |  2 ++
+ formal/social/Reaction.tla                      | 15 +++++++++++++++
+ scripts/social/check-models.sh                  |  2 +-
+ 7 files changed, 85 insertions(+), 1 deletion(-)

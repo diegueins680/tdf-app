@@ -1,0 +1,44 @@
+{
+  "asOf": "2026-10-06T04:54:15.676640+00:00",
+  "status": "IN PROGRESS: current-head repairs and external prerequisites remain",
+  "repositories": {
+    "tdf-app": {
+      "initialMain": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+      "main": "24d8ba45d246c6e7431deb9b510e352265821a56",
+      "initialBranches": 145,
+      "branches": 7,
+      "initialOpenPRs": 61,
+      "openPRs": 6
+    },
+    "tdf-mobile": {
+      "initialMain": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+      "main": "d5e217a7a877e2bdf5c5cf7c84be96e7ce7d77ff",
+      "initialBranches": 48,
+      "branches": 3,
+      "initialOpenPRs": 16,
+      "openPRs": 1
+    }
+  },
+  "actions": {
+    "deleted fully-main-contained ref": 162,
+    "merged with normal merge after exact-head tdfrecords approval": 3,
+    "deleted fully patch-equivalent ref": 5,
+    "deleted semantically superseded ref": 4,
+    "deleted generated-contract superseded ref": 5,
+    "observed automatic source integration": 6,
+    "merged after independent approval and all current-head gates": 1,
+    "closed as superseded": 20,
+    "merged normal merge after current-head independent approval and all gates": 1,
+    "deleted fully-main-contained ref after successful postmerge gates": 2,
+    "merged normal merge into coupled shipped release branch after exact-head approval and all gates": 1,
+    "deleted fully-main-contained ref after verified merge tree and postmerge gates": 25,
+    "merged reviewed Datadog integrity fix into shipped release after all current-head gates": 1,
+    "merged reviewed session isolation and generated contract consolidation into shipped release after all current-head gates": 1,
+    "merged reviewed onboarding, analytics and shipped conformance consolidation into main after all current-head and native gates": 1,
+    "enforced existing always-triggered formal and PostgreSQL verification jobs in main required checks": 1,
+    "merged complete generated Operations contract preserving consolidated Mobile main after exact-head review and all gates": 1,
+    "deleted fully-main-contained obsolete protected integration base after postmerge gates; retired only that branch protection": 1,
+    "added serial main integration admission context; existing strict CI/review policy unchanged": 1,
+    "merged normal merge after exact-head approval and all gates": 2
+  }
+}

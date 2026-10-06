@@ -1,0 +1,327 @@
+- generic [ref=f36e9]:
+  - generic [ref=f36e12]:
+    - link [ref=f36e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f36e22]
+    - generic [ref=f36e25]:
+      - link [ref=f36e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f36e35]
+      - link [ref=f36e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f36e45]
+      - link [ref=f36e216] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - generic [ref=f36e55]:
+          - img "Messages" [ref=f36e57]
+          - generic "Direct messaging - 5 new notifications link" [ref=f36e217]: "5"
+      - link [ref=f36e62] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f36e67]
+      - link [ref=f36e221] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f36e226]
+      - link [ref=f36e85] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f36e90]
+      - link [ref=f36e95] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f36e100]
+      - link [ref=f36e107] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f36e112]:
+          - img "tdf.records.label's profile picture" [ref=f36e113]
+    - generic [ref=f36e114]:
+      - link [ref=f36e117] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f36e122]
+      - link [ref=f36e125] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f36e130]
+  - main [ref=f36e134]:
+    - generic [ref=f36e232]:
+      - navigation "Thread list" [ref=f36e233]:
+        - generic [ref=f36e234]:
+          - generic [ref=f36e235]:
+            - button [ref=f36e236] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f36e238]
+              - img "Verified" [ref=f36e241]
+              - img "Down chevron icon" [ref=f36e244]
+            - generic [ref=f36e247]:
+              - button [ref=f36e963] [cursor=pointer]:
+                - img "More options" [ref=f36e965]
+              - button [ref=f36e254] [cursor=pointer]:
+                - img "New message" [ref=f36e256]
+          - tablist [ref=f36e261]:
+            - tab "Primary" [selected] [ref=f36e262] [cursor=pointer]
+            - tab "General" [ref=f36e265] [cursor=pointer]
+            - tab "From ads" [ref=f36e268] [cursor=pointer]
+            - tab "Requests" [ref=f36e272] [cursor=pointer]
+          - generic [ref=f36e941]:
+            - img "Search" [ref=f36e970]
+            - textbox "Search" [ref=f36e973]
+          - generic [ref=f36e974]:
+            - generic [ref=f36e976]:
+              - list [ref=f36e978]:
+                - listitem [ref=f36e979]
+                - listitem [ref=f36e980]:
+                  - button "Weekend plans? Your note" [ref=f36e982] [cursor=pointer]:
+                    - generic [ref=f36e983]:
+                      - generic [ref=f36e984]: Weekend plans?
+                      - generic [ref=f36e990]:
+                        - link [ref=f36e992]
+                        - generic [ref=f36e993]: Your note
+                - listitem [ref=f36e995]:
+                  - button "plena que necesito un abrazo reemus___'s profile picture REEMUS" [ref=f36e998] [cursor=pointer]:
+                    - generic [ref=f36e999]:
+                      - generic [ref=f36e1000]: plena que necesito un abrazo
+                      - generic [ref=f36e1007]:
+                        - link [ref=f36e1009]:
+                          - img "reemus___'s profile picture" [ref=f36e1010]
+                        - generic [ref=f36e1011]: REEMUS
+                - listitem [ref=f36e1014]:
+                  - button "Venus rojelioelrojorojas's profile picture Andrés Martín Arauz" [ref=f36e1017] [cursor=pointer]:
+                    - generic [ref=f36e1018]:
+                      - generic [ref=f36e1019]: Venus
+                      - generic [ref=f36e1026]:
+                        - link [ref=f36e1028]:
+                          - img "rojelioelrojorojas's profile picture" [ref=f36e1029]
+                        - generic [ref=f36e1030]: Andrés Martín Arauz
+                - listitem [ref=f36e1033]:
+                  - button "Primer viernes q una tiene de descanso y deciden abrir el nuevo soundgarden anajusegovia's profile picture Ana Julia" [ref=f36e1036] [cursor=pointer]:
+                    - generic [ref=f36e1037]:
+                      - generic [ref=f36e1038]: Primer viernes q una tiene de descanso y deciden abrir el nuevo soundgarden
+                      - generic [ref=f36e1045]:
+                        - link [ref=f36e1047]:
+                          - img "anajusegovia's profile picture" [ref=f36e1048]
+                        - generic [ref=f36e1049]: Ana Julia
+                - listitem [ref=f36e1052]:
+                  - button "NOBOA es GIL rockingtheestate's profile picture Alex Lopez" [ref=f36e1055] [cursor=pointer]:
+                    - generic [ref=f36e1056]:
+                      - generic [ref=f36e1057]: NOBOAes GIL
+                      - generic [ref=f36e1065]:
+                        - link [ref=f36e1067]:
+                          - img "rockingtheestate's profile picture" [ref=f36e1068]
+                        - generic [ref=f36e1069]: Alex Lopez
+                - listitem [ref=f36e1072]:
+                  - button "Blanca Sesión en vivo Link en bio diegocarvajalmusica's profile picture Diego Carvajal" [ref=f36e1075] [cursor=pointer]:
+                    - generic [ref=f36e1076]:
+                      - generic [ref=f36e1077]: Blanca Sesión en vivo Link en bio
+                      - generic [ref=f36e1085]:
+                        - link [ref=f36e1087]:
+                          - img "diegocarvajalmusica's profile picture" [ref=f36e1088]
+                        - generic [ref=f36e1089]: Diego Carvajal
+                - listitem [ref=f36e1092]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Hello Monserrat Mon Laferte santiii.mmm's profile picture Santiii" [ref=f36e1095] [cursor=pointer]:
+                    - generic [ref=f36e1096]:
+                      - generic [ref=f36e1102]:
+                        - generic [ref=f36e1103]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f36e1105]
+                          - generic [ref=f36e1109]: Hello Monserrat
+                        - generic [ref=f36e1110]: Mon Laferte
+                      - generic [ref=f36e1111]:
+                        - link [ref=f36e1113]:
+                          - img "santiii.mmm's profile picture" [ref=f36e1114]
+                        - generic [ref=f36e1115]: Santiii
+                - listitem [ref=f36e1118]:
+                  - button "Literalmente, siendo el ave fénix 🐦‍🔥 🙏🏽 0johanvallejo4's profile picture Johan Vallejo" [ref=f36e1121] [cursor=pointer]:
+                    - generic [ref=f36e1122]:
+                      - generic [ref=f36e1123]: Literalmente, siendo el ave fénix 🐦‍🔥 🙏🏽
+                      - generic [ref=f36e1130]:
+                        - link [ref=f36e1132]:
+                          - img "0johanvallejo4's profile picture" [ref=f36e1133]
+                        - generic [ref=f36e1134]: Johan Vallejo
+                - listitem [ref=f36e1137]:
+                  - button "Si llueve, no salen 🤭 jofiel.arch.music's profile picture Jofiel.arch.music" [ref=f36e1140] [cursor=pointer]:
+                    - generic [ref=f36e1141]:
+                      - generic [ref=f36e1142]: Si llueve, no salen 🤭
+                      - generic [ref=f36e1149]:
+                        - link [ref=f36e1151]:
+                          - img "jofiel.arch.music's profile picture" [ref=f36e1152]
+                        - generic [ref=f36e1153]: Jofiel.arch.music
+              - button "Next" [ref=f36e1156] [cursor=pointer]
+            - generic [ref=f36e1161]:
+              - 'button "user-profile-picture Carla Román You: ¡Qué bueno tenerte dentro! 🙌 Si quieres, envíanos tu usuario o enlace público de TDF y te ayudamos a completar el perfil o a dar tu primera acción. No necesitamos tu contraseña ni ningún código. a few seconds ago" [pressed] [ref=f36e1557] [cursor=pointer]':
+                - generic [ref=f36e1559]:
+                  - img "user-profile-picture" [ref=f36e1563]
+                  - generic [ref=f36e1566]:
+                    - generic [ref=f36e1567]: Carla Román
+                    - generic [ref=f36e1573]:
+                      - generic [ref=f36e1574]: "You: ¡Qué bueno tenerte dentro! 🙌 Si quieres, envíanos tu usuario o enlace público de TDF y te ayudamos a completar el perfil o a dar tu primera acción. No necesitamos tu contraseña ni ningún código."
+                      - generic [ref=f36e1576]:
+                        - generic [ref=f36e1577]: ·
+                        - generic "a few seconds ago" [ref=f36e1582]: 1m
+              - 'button "user-profile-picture Neil Armas 🎙️ You: ¡Hola, Neil! TDF es una plataforma para conectar artistas y personas que viven la música en Quito. Puedes crear tu perfil público de artista, añadir tu biografía y enlaces musicales, y explorar o seguir otros proyectos. Para empezar, abre el enlace que te compartimos y crea tu cuenta con correo y contraseña; después completa tu perfil de artista. Una primera acción puede ser seguir otro artista o explorar un lanzamiento. — TDF Records about a minute ago" [ref=f36e1583] [cursor=pointer]':
+                - generic [ref=f36e1167]:
+                  - img "user-profile-picture" [ref=f36e1171]
+                  - generic [ref=f36e1174]:
+                    - generic [ref=f36e1175]: Neil Armas 🎙️
+                    - generic [ref=f36e1181]:
+                      - generic [ref=f36e1182]: "You: ¡Hola, Neil! TDF es una plataforma para conectar artistas y personas que viven la música en Quito. Puedes crear tu perfil público de artista, añadir tu biografía y enlaces musicales, y explorar o seguir otros proyectos. Para empezar, abre el enlace que te compartimos y crea tu cuenta con correo y contraseña; después completa tu perfil de artista. Una primera acción puede ser seguir otro artista o explorar un lanzamiento. — TDF Records"
+                      - generic [ref=f36e1184]:
+                        - generic [ref=f36e1185]: ·
+                        - generic "about a minute ago" [ref=f36e1584]: 1m
+              - button "user-profile-picture ༒ 𖦹 $ 500? Pero en la página dice $150 4 minutes ago Unread" [ref=f36e1585] [cursor=pointer]:
+                - generic [ref=f36e1196]:
+                  - img "user-profile-picture" [ref=f36e1200]
+                  - generic [ref=f36e1203]:
+                    - generic [ref=f36e1204]: ༒ 𖦹
+                    - generic [ref=f36e1210]:
+                      - generic [ref=f36e1211]: $ 500? Pero en la página dice $150
+                      - generic [ref=f36e1213]:
+                        - generic [ref=f36e1214]: ·
+                        - generic "4 minutes ago" [ref=f36e1586]: 4m
+                  - generic [ref=f36e1220]: Unread
+              - 'button "user-profile-picture Susy Remache You: Con mucho gusto, a las órdenes! 😊 about an hour ago" [ref=f36e1227] [cursor=pointer]':
+                - generic [ref=f36e1229]:
+                  - img "user-profile-picture" [ref=f36e1233]
+                  - generic [ref=f36e1236]:
+                    - generic [ref=f36e1237]: Susy Remache
+                    - generic [ref=f36e1243]:
+                      - generic [ref=f36e1244]: "You: Con mucho gusto, a las órdenes! 😊"
+                      - generic [ref=f36e1246]:
+                        - generic [ref=f36e1247]: ·
+                        - generic "about an hour ago" [ref=f36e1252]: 1h
+              - 'button "user-profile-picture 𝕷𝖎𝖑𝖈𝖗𝖎𝖟𝖟𝖝 You: ¡Hola! 😊 Gracias por escribirnos. Soy Diego de TDF Records. El anuncio es de nuestro curso de Producción Musical (presencial en Quito) donde aprendes a producir desde cero y también vemos mezcla y mastering 🎧 📌 Opciones: ✅ 1) Curso intensivo grupal * Duración: 4 sábados * Horario: 8h30 a 12h30 * Lugar: Quito, sector El Bosque * Costo: $150 Info e inscripción: https://www.tdfrecords.net/curso/produccion-musical ✅ 2) Clases 1 a 1 (personalizadas) * Módulo de 16 horas: $500 * Horarios flexibles (tarde o fines de semana) Si quieres, también puedes agendar una clase de prueba aquí: https://www.tdfrecords.net/trials ¿Tú ya has producido algo o estarías empezando desde cero? about an hour ago" [ref=f36e1256] [cursor=pointer]':
+                - generic [ref=f36e1258]:
+                  - img "user-profile-picture" [ref=f36e1262]
+                  - generic [ref=f36e1265]:
+                    - generic [ref=f36e1266]: 𝕷𝖎𝖑𝖈𝖗𝖎𝖟𝖟𝖝
+                    - generic [ref=f36e1272]:
+                      - generic [ref=f36e1273]: "You: ¡Hola! 😊 Gracias por escribirnos. Soy Diego de TDF Records. El anuncio es de nuestro curso de Producción Musical (presencial en Quito) donde aprendes a producir desde cero y también vemos mezcla y mastering 🎧 📌 Opciones: ✅ 1) Curso intensivo grupal * Duración: 4 sábados * Horario: 8h30 a 12h30 * Lugar: Quito, sector El Bosque * Costo: $150 Info e inscripción: https://www.tdfrecords.net/curso/produccion-musical ✅ 2) Clases 1 a 1 (personalizadas) * Módulo de 16 horas: $500 * Horarios flexibles (tarde o fines de semana) Si quieres, también puedes agendar una clase de prueba aquí: https://www.tdfrecords.net/trials ¿Tú ya has producido algo o estarías empezando desde cero?"
+                      - generic [ref=f36e1275]:
+                        - generic [ref=f36e1276]: ·
+                        - generic "about an hour ago" [ref=f36e1281]: 1h
+              - 'button "user-profile-picture Eduardo ED You: Hola Eduardo, ¡gracias por escribirnos y por tu interés en las clases de DJ! 🎧 Nuestro paquete completo de clases es de 16 horas y tiene un costo de $500. Además, puedes tomar una clase de prueba para conocer nuestra forma de trabajar y resolver todas tus dudas. La puedes solicitar aquí: https://www.tdfrecords.net/trials Si quieres, cuéntame también qué experiencia tienes como DJ y qué horarios te acomodan, así te recomiendo la opción ideal para ti. 😉 about an hour ago Unread" [ref=f36e1285] [cursor=pointer]':
+                - generic [ref=f36e1287]:
+                  - img "user-profile-picture" [ref=f36e1291]
+                  - generic [ref=f36e1294]:
+                    - generic [ref=f36e1295]: Eduardo ED
+                    - generic [ref=f36e1301]:
+                      - generic [ref=f36e1302]: "You: Hola Eduardo, ¡gracias por escribirnos y por tu interés en las clases de DJ! 🎧 Nuestro paquete completo de clases es de 16 horas y tiene un costo de $500. Además, puedes tomar una clase de prueba para conocer nuestra forma de trabajar y resolver todas tus dudas. La puedes solicitar aquí: https://www.tdfrecords.net/trials Si quieres, cuéntame también qué experiencia tienes como DJ y qué horarios te acomodan, así te recomiendo la opción ideal para ti. 😉"
+                      - generic [ref=f36e1304]:
+                        - generic [ref=f36e1305]: ·
+                        - generic "about an hour ago" [ref=f36e1310]: 1h
+                  - generic [ref=f36e1311]: Unread
+              - button [ref=f36e1375] [cursor=pointer]:
+                - generic [ref=f36e1377]:
+                  - status "Loading..." [ref=f36e1380]
+                  - generic [ref=f36e1383]:
+                    - status "Loading..." [ref=f36e1385]
+                    - status "Loading..." [ref=f36e1387]
+      - generic [ref=f36e1390]:
+        - generic [ref=f36e1394]:
+          - link "Open the profile page of carlaromanmusica" [ref=f36e1395] [cursor=pointer]:
+            - /url: /carlaromanmusica/
+            - generic [ref=f36e1396]:
+              - img "user-profile-picture" [ref=f36e1400]
+              - generic [ref=f36e1401]:
+                - heading "Carla Román" [level=2] [ref=f36e1403]
+                - generic [ref=f36e1405]: carlaromanmusica
+          - generic [ref=f36e1409]:
+            - button [ref=f36e1410] [cursor=pointer]:
+              - img "Audio call" [ref=f36e1412]
+            - button [ref=f36e1414] [cursor=pointer]:
+              - img "Video call" [ref=f36e1416]
+            - button [ref=f36e1419] [cursor=pointer]:
+              - img "Conversation information" [ref=f36e1421]
+        - generic [ref=f36e1425]:
+          - generic [ref=f36e1429]:
+            - generic [ref=f36e1430]:
+              - img "user-profile-picture" [ref=f36e1434]
+              - generic [ref=f36e1435]:
+                - heading "Carla Román" [level=2] [ref=f36e1438]
+                - generic [ref=f36e1440]: carlaromanmusica · Instagram
+                - link "View profile" [ref=f36e1443] [cursor=pointer]:
+                  - /url: /carlaromanmusica/
+            - generic [ref=f36e1444]:
+              - generic [ref=f36e1478]:
+                - generic [ref=f36e1479]: Wed 9:42 PM
+                - group [ref=f36e1482]:
+                  - generic [ref=f36e1486]:
+                    - article "Ya estoy aquí" [ref=f36e1487]
+                    - generic [ref=f36e1491]:
+                      - group "Message actions":
+                        - generic:
+                          - generic:
+                            - generic:
+                              - button "React to message from carlaromanmusica":
+                                - generic:
+                                  - img "React to message from carlaromanmusica"
+                          - generic:
+                            - generic:
+                              - button "Reply to message from carlaromanmusica":
+                                - generic:
+                                  - img "Reply to message from carlaromanmusica"
+                          - generic:
+                            - generic:
+                              - button "See more options for message from carlaromanmusica":
+                                - generic:
+                                  - img "See more options for message from carlaromanmusica"
+              - group [ref=f36e1495]:
+                - generic [ref=f36e1497]:
+                  - link "Open the profile page of carlaromanmusica" [ref=f36e1500] [cursor=pointer]:
+                    - /url: /carlaromanmusica
+                    - img "user-profile-picture" [ref=f36e1503]
+                  - generic [ref=f36e1505]:
+                    - article [ref=f36e1506]:
+                      - button [ref=f36e1507] [cursor=pointer]
+                    - generic [ref=f36e1513]:
+                      - group "Message actions":
+                        - generic:
+                          - generic:
+                            - generic:
+                              - button "React to message from carlaromanmusica":
+                                - generic:
+                                  - img "React to message from carlaromanmusica"
+                          - generic:
+                            - generic:
+                              - button "Reply to message from carlaromanmusica":
+                                - generic:
+                                  - img "Reply to message from carlaromanmusica"
+                          - generic:
+                            - generic:
+                              - button "See more options for message from carlaromanmusica":
+                                - generic:
+                                  - img "See more options for message from carlaromanmusica"
+              - generic [ref=f36e1589]:
+                - generic [ref=f36e1590]: 4:04 PM
+                - group [ref=f36e1593]:
+                  - generic [ref=f36e1596]:
+                    - article [ref=f36e1597]:
+                      - generic [ref=f36e1600]:
+                        - text: ¡Qué bueno tenerte dentro!
+                        - img "🙌" [ref=f36e1602]
+                        - text: Si quieres, envíanos tu usuario o enlace público de TDF y te ayudamos a completar el perfil o a dar tu primera acción. No necesitamos tu contraseña ni ningún código.
+                    - generic [ref=f36e1603]:
+                      - group "Message actions":
+                        - generic:
+                          - generic:
+                            - generic:
+                              - button "React to message from tdf.records.label":
+                                - generic:
+                                  - img "React to message from tdf.records.label"
+                          - generic:
+                            - generic:
+                              - button "Reply to message from tdf.records.label":
+                                - generic:
+                                  - img "Reply to message from tdf.records.label"
+                          - generic:
+                            - generic:
+                              - button "See more options for message from tdf.records.label":
+                                - generic:
+                                  - img "See more options for message from tdf.records.label"
+          - generic [ref=f36e1523]:
+            - button [ref=f36e1526] [cursor=pointer]:
+              - img "Choose an emoji" [ref=f36e1528]
+            - generic [ref=f36e1530]:
+              - textbox [active] [ref=f36e1531]:
+                - paragraph [ref=f36e1604]
+              - generic: Message...
+            - generic [ref=f36e1533]:
+              - button [ref=f36e1605] [cursor=pointer]:
+                - img "Voice Clip" [ref=f36e1607]
+              - button [ref=f36e1610] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=f36e1612]
+              - button [ref=f36e1617] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=f36e1619]

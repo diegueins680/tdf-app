@@ -1,0 +1,63 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 447,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "c7124f906ad88e2237dad6cb89ba62a2616501d5",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6jvQGi",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Clear the mutation error after refreshing favorites**\n\nWhen an add/remove request fails but the subsequent authoritative favorites request succeeds, `onRefreshFavorites` only refetches the separate query; the mutation remains in `isError` until it is reset or another mutation starts. The card therefore continues showing this error and its \u201cConsultar guardados\u201d action even after the refreshed favorite state is displayed, leaving the recovery flow in a contradictory error state. Reset the mutation after a successful refresh, or derive this alert from refresh completion.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/447#discussion_r4046711715",
+                      "createdAt": "2026-09-18T12:28:50Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in c7124f906. The refresh callback now returns a successful authoritative receipt only while the initiating session occurrence is still current. The card resets the mutation error after that receipt; a failed refresh keeps the alert and retry action. Both outcomes are covered by the 19 passing component/helper tests. Five production-bundle recovery scenarios passed in three engines, including ambiguous write -> refreshed saved state -> dismissed error. TypeScript, lint and rebuilt bundle also pass.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/447#discussion_r4046761846",
+                      "createdAt": "2026-09-18T12:36:01Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxMjozNjowMVrO8TSvdg=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxMjoyODo1MFrOo70Bog=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

@@ -68,7 +68,7 @@ function normalizeAssets(payload: AssetsPayload): AssetDTO[] {
 
 const API_BASE = (import.meta.env?.VITE_API_BASE && import.meta.env.VITE_API_BASE.trim() !== ''
   ? import.meta.env.VITE_API_BASE
-  : 'https://tdf-hq.fly.dev');
+  : 'https://api.tdfrecords.net');
 const ASSET_CATEGORY_KEY = 'asset-category';
 
 const normalizeGoogleDriveUrl = (url: string): string | null => {
@@ -182,8 +182,17 @@ export default function LabelAssetsPage() {
   );
   const canManageCategories = modules.has('admin');
   const assetsQuery = useQuery({
-    queryKey: ['assets'],
-    queryFn: () => Inventory.list({ pageSize: 200 }).then(normalizeAssets),
+    queryKey: ['assets', 'all'],
+    queryFn: async () => {
+      const assets: AssetDTO[] = [];
+      for (let page = 1; ; page += 1) {
+        const response = await Inventory.list({ page, pageSize: 100 });
+        const items = normalizeAssets(response);
+        assets.push(...items);
+        if (Array.isArray(response) || !('total' in response)
+            || assets.length >= response.total || items.length === 0) return assets;
+      }
+    },
   });
   const roomsQuery = useQuery({
     queryKey: ['rooms'],
@@ -915,7 +924,7 @@ export default function LabelAssetsPage() {
             <Typography variant="body2" color="text.secondary">
               Cargando inventario…
             </Typography>
-          ) : assets.length === 0 ? (
+          ) : assetsQuery.isError && assets.length === 0 ? null : assets.length === 0 ? (
             <Alert severity="info" variant="outlined">
               Todavía no hay assets. Agrégalos desde Agregar asset; el buscador y los filtros aparecerán cuando exista al menos uno.
             </Alert>

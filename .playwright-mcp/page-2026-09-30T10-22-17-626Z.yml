@@ -1,0 +1,450 @@
+- generic [ref=f63e4]:
+  - generic [ref=f63e18]:
+    - generic [ref=f63e21]:
+      - link [ref=f63e796] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f63e797]
+      - generic [ref=f63e34]:
+        - link [ref=f63e798] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f63e799]
+        - link [ref=f63e800] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f63e801]
+        - link [ref=f63e802] [cursor=pointer]:
+          - /url: /direct/t/119363226123367
+          - generic [ref=f63e64]:
+            - img "Messages" [ref=f63e803]
+            - generic "Direct messaging - 8 new notifications link" [ref=f63e804]: "8"
+        - link [ref=f63e805] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f63e806]
+        - link [ref=f63e807] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f63e808]
+        - link [ref=f63e809] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f63e810]
+        - link [ref=f63e811] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f63e812]
+        - link [ref=f63e813] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f63e814]:
+            - img "tdf.records.label's profile picture" [ref=f63e815]
+      - generic [ref=f63e127]:
+        - link [ref=f63e816] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f63e817]
+        - link [ref=f63e818] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f63e819]
+    - generic [ref=f63e146]:
+      - main [ref=f63e147]:
+        - generic [ref=f63e149]:
+          - generic [ref=f63e150]:
+            - generic [ref=f63e151]:
+              - link [ref=f63e820] [cursor=pointer]:
+                - /url: /emmanu__music/
+                - img "emmanu__music's profile picture" [ref=f63e821]
+              - generic [ref=f63e159]:
+                - generic [ref=f63e160]:
+                  - generic [ref=f63e161]:
+                    - link [ref=f63e822] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "emmanu__music" [level=2] [ref=f63e823]
+                    - button [ref=f63e824] [cursor=pointer]:
+                      - img "Options" [ref=f63e825]
+                  - generic [ref=f63e172]: 𝔼𝕄𝗠𝔸ℕ𝕌
+                  - generic [ref=f63e174]:
+                    - generic [ref=f63e176]:
+                      - generic [ref=f63e177]: "77"
+                      - text: posts
+                    - link "2,730 followers" [ref=f63e826] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f63e180]:
+                        - generic "2,730" [ref=f63e827]
+                        - text: followers
+                    - link "2,101 following" [ref=f63e828] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f63e184]:
+                        - generic [ref=f63e185]: 2,101
+                        - text: following
+                - generic [ref=f63e186]:
+                  - generic [ref=f63e187]:
+                    - generic [ref=f63e188]: Artist
+                    - button "🎧 Psychoacoustics ❤️ 🇪🇨 /🇻🇪 🕺💃" [ref=f63e829] [cursor=pointer]
+                    - generic [ref=f63e193]:
+                      - button "Link icon youtu.be/P0jnWtfxQJQ?si=LXSHrktLZKjx2Zbz and 1 more" [ref=f63e830] [cursor=pointer]:
+                        - generic [ref=f63e195]:
+                          - img "Link icon" [ref=f63e831]
+                          - generic [ref=f63e200]: youtu.be/P0jnWtfxQJQ?si=LXSHrktLZKjx2Zbz and 1 more
+                      - link "Threads emmanu__music" [ref=f63e832] [cursor=pointer]:
+                        - /url: https://www.threads.com/@emmanu__music?xmt=AQG0U5IX94BZO7XKUwtNbCE0VugiBIcxCOuFzuVIdb3iOjM
+                        - img "Threads" [ref=f63e833]
+                        - generic [ref=f63e206]: emmanu__music
+                  - link "Followed by zeretofficial, muytranquilo + 36 more" [ref=f63e834] [cursor=pointer]:
+                    - /url: /emmanu__music/followers/mutualOnly
+                    - generic [ref=f63e210]:
+                      - generic [ref=f63e212]:
+                        - button [ref=f63e213]:
+                          - link [ref=f63e214]
+                        - button [ref=f63e215]:
+                          - link [ref=f63e216]
+                        - button [ref=f63e217]:
+                          - link [ref=f63e218]
+                      - generic [ref=f63e219]: Followed by zeretofficial, muytranquilo + 36 more
+            - generic [ref=f63e224]:
+              - button "Follow Back" [ref=f63e835] [cursor=pointer]
+              - button "Message" [ref=f63e836] [cursor=pointer]
+              - button [ref=f63e837] [cursor=pointer]:
+                - img "Similar accounts" [ref=f63e838]
+            - menu [ref=f63e238]:
+              - generic [ref=f63e240]:
+                - list [ref=f63e242]:
+                  - listitem [ref=f63e243]
+                  - listitem [ref=f63e244]
+                  - listitem [ref=f63e245]:
+                    - link "View Radio Leila 🇮🇹 highlight" [ref=f63e839] [cursor=pointer]:
+                      - /url: /stories/highlights/18151945837454641/
+                      - button "emmanu__music's highlight story picture Radio Leila 🇮🇹" [ref=f63e840]:
+                        - button [ref=f63e841]:
+                          - img "emmanu__music's highlight story picture" [ref=f63e842]
+                        - generic [ref=f63e254]: Radio Leila 🇮🇹
+                  - listitem [ref=f63e257]:
+                    - link "View 2026 🎶 highlight" [ref=f63e843] [cursor=pointer]:
+                      - /url: /stories/highlights/18075160901551700/
+                      - button "emmanu__music's highlight story picture 2026 🎶" [ref=f63e844]:
+                        - button [ref=f63e845]:
+                          - img "emmanu__music's highlight story picture" [ref=f63e846]
+                        - generic [ref=f63e266]: 2026 🎶
+                  - listitem [ref=f63e269]:
+                    - link "View 25 🎊 highlight" [ref=f63e847] [cursor=pointer]:
+                      - /url: /stories/highlights/17953944566830877/
+                      - button "emmanu__music's highlight story picture 25 🎊" [ref=f63e848]:
+                        - button [ref=f63e849]:
+                          - img "emmanu__music's highlight story picture" [ref=f63e850]
+                        - generic [ref=f63e278]: 25 🎊
+                  - listitem [ref=f63e281]:
+                    - link "View 👾 gigs highlight" [ref=f63e851] [cursor=pointer]:
+                      - /url: /stories/highlights/18056815256622644/
+                      - button "emmanu__music's highlight story picture 👾 gigs" [ref=f63e852]:
+                        - button [ref=f63e853]:
+                          - img "emmanu__music's highlight story picture" [ref=f63e854]
+                        - generic [ref=f63e290]: 👾 gigs
+                  - listitem [ref=f63e293]:
+                    - link "View 🏕️ highlight" [ref=f63e855] [cursor=pointer]:
+                      - /url: /stories/highlights/17894337252321270/
+                      - button "emmanu__music's highlight story picture 🏕️" [ref=f63e856]:
+                        - button [ref=f63e857]:
+                          - img "emmanu__music's highlight story picture" [ref=f63e858]
+                        - generic [ref=f63e302]: 🏕️
+                  - listitem [ref=f63e305]:
+                    - link "View 🇮🇹 🍾 highlight" [ref=f63e859] [cursor=pointer]:
+                      - /url: /stories/highlights/17856143064478796/
+                      - button "emmanu__music's highlight story picture 🇮🇹 🍾" [ref=f63e860]:
+                        - button [ref=f63e861]:
+                          - img "emmanu__music's highlight story picture" [ref=f63e862]
+                        - generic [ref=f63e314]: 🇮🇹 🍾
+                  - listitem [ref=f63e317]:
+                    - link "View Lost city ☮️ 🕺 highlight" [ref=f63e863] [cursor=pointer]:
+                      - /url: /stories/highlights/17992088261601441/
+                      - button "emmanu__music's highlight story picture Lost city ☮️ 🕺" [ref=f63e864]:
+                        - button [ref=f63e865]:
+                          - img "emmanu__music's highlight story picture" [ref=f63e866]
+                        - generic [ref=f63e326]: Lost city ☮️ 🕺
+                  - listitem [ref=f63e329]:
+                    - link "View Bassick highlight" [ref=f63e867] [cursor=pointer]:
+                      - /url: /stories/highlights/17990245427609018/
+                      - button "emmanu__music's highlight story picture Bassick" [ref=f63e868]:
+                        - button [ref=f63e869]:
+                          - img "emmanu__music's highlight story picture" [ref=f63e870]
+                        - generic [ref=f63e338]: Bassick
+                  - listitem [ref=f63e341]:
+                    - link "View 🎵 sanadora highlight" [ref=f63e871] [cursor=pointer]:
+                      - /url: /stories/highlights/18116223973476639/
+                      - button "emmanu__music's highlight story picture 🎵 sanadora" [ref=f63e872]:
+                        - button [ref=f63e873]:
+                          - img "emmanu__music's highlight story picture" [ref=f63e874]
+                        - generic [ref=f63e350]: 🎵 sanadora
+                  - listitem [ref=f63e353]:
+                    - link "View Spin it yoow 🎧 highlight" [ref=f63e875] [cursor=pointer]:
+                      - /url: /stories/highlights/18083215309213242/
+                      - button "emmanu__music's highlight story picture Spin it yoow 🎧" [ref=f63e876]:
+                        - button [ref=f63e877]:
+                          - img "emmanu__music's highlight story picture" [ref=f63e878]
+                        - generic [ref=f63e362]: Spin it yoow 🎧
+                  - listitem [ref=f63e365]:
+                    - link "View 😮‍💨 highlight" [ref=f63e879] [cursor=pointer]:
+                      - /url: /stories/highlights/18207440440303160/
+                      - button "emmanu__music's highlight story picture 😮‍💨" [ref=f63e880]:
+                        - button [ref=f63e881]:
+                          - img "emmanu__music's highlight story picture" [ref=f63e882]
+                        - generic [ref=f63e374]: 😮‍💨
+                  - listitem [ref=f63e377]:
+                    - link "View 👾🕺💃 highlight" [ref=f63e883] [cursor=pointer]:
+                      - /url: /stories/highlights/17914718999963676/
+                      - button "emmanu__music's highlight story picture 👾🕺💃" [ref=f63e884]:
+                        - button [ref=f63e885]:
+                          - img "emmanu__music's highlight story picture" [ref=f63e886]
+                        - generic [ref=f63e386]: 👾🕺💃
+                  - listitem [ref=f63e389]:
+                    - link "View Mo highlight" [ref=f63e887] [cursor=pointer]:
+                      - /url: /stories/highlights/17911304796062924/
+                      - button "emmanu__music's highlight story picture Mo" [ref=f63e888]:
+                        - button [ref=f63e889]:
+                          - img "emmanu__music's highlight story picture" [ref=f63e890]
+                        - generic [ref=f63e398]: Mo
+                  - listitem [ref=f63e401]:
+                    - link "View mentos highlight" [ref=f63e891] [cursor=pointer]:
+                      - /url: /stories/highlights/17895070926109638/
+                      - button "emmanu__music's highlight story picture mentos" [ref=f63e892]:
+                        - button [ref=f63e893]:
+                          - img "emmanu__music's highlight story picture" [ref=f63e894]
+                        - generic [ref=f63e410]: mentos
+                - button "Next" [ref=f63e895] [cursor=pointer]
+          - generic [ref=f63e415]:
+            - tablist [ref=f63e416]:
+              - link [ref=f63e896] [cursor=pointer]:
+                - /url: /emmanu__music/
+                - img "Posts" [ref=f63e897]
+              - link [ref=f63e898] [cursor=pointer]:
+                - /url: /emmanu__music/reels/
+                - img "Reels" [ref=f63e899]
+              - link [ref=f63e900] [cursor=pointer]:
+                - /url: /emmanu__music/reposts/
+                - img "Reposts" [ref=f63e901]
+              - link [ref=f63e902] [cursor=pointer]:
+                - /url: /emmanu__music/tagged/
+                - img "Tagged" [ref=f63e903]
+            - tabpanel
+          - generic [ref=f63e450]:
+            - generic [ref=f63e451]:
+              - link [ref=f63e904] [cursor=pointer]:
+                - /url: /emmanu__music/p/C-pvztDxukS/
+                - img "🎶 Parte 2! Es siempre un gusto tocar en Lost city. En el Slide dos, muestro un gran apoyo para la canción “Fav lane” de @bryz.esente . Excelente música, bro! Hope having you soon in 🇪🇨@esente.records que realmente hizo temblar la pista. Disponible en Bandcamp 💯 •Euphoric moments con el duo @rakelovsky •Ly @zukilandia @mattsribb y @martinsalazzar 🙌👏 Y la primera foto con el mentor que nos ha hecho bailar a muchos @funktiononeoficial @lostcityquito 🔊🤍" [ref=f63e905]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f63e906] [cursor=pointer]:
+                - /url: /emmanu__music/p/DVKFvGujlDw/
+                - img "👾 Opening warm up duties for @arapu__ x @momotrosman @bassick_uio 🙏 👕 @tapinados_project tee 1/2 ✅ Gracias a todos los que estuvieron ahí y a los colegas @didiaguinaga @julianalvarezc para mí es un honor compartir calidad de música con ustedes y con todos todos los asistentes🕺💃" [ref=f63e907]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f63e908] [cursor=pointer]:
+                - /url: /emmanu__music/p/DStdDdojsKI/
+                - 'img "Ho-Ho 🎄 por navidad les quiero compartir un live dj set grabado en un lugar histórico, una experiencia única y un viaje sonoro fuera de lo común 🎧⛰️ Desde el Majestuoso Panecillo, accedimos a un spot exclusivo para grabar un dj set , donde EMMANU presenta una selección envolvente de música experimental, house, minimal y deep house. Con la producción visual de @tapinados_project el sonido y el paisaje de Quito se fusionan en una experiencia sensorial que honra la historia y la creatividad del lugar. 👉 El set ya está disponible, revisa el link y déjate llevar por este viaje sonoro y acompañe sus fiestas para cerrar el año recargado .🎶✨. YouTube link en la bio 🙌 O poner en buscador: Tapiñados project channel: Emmanu panecillo session 002" [ref=f63e909]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+            - generic [ref=f63e470]:
+              - link [ref=f63e910] [cursor=pointer]:
+                - /url: /emmanu__music/p/Dd41QQxn4me/
+                - 'img "All about fun and expression 🎭 Así lo vivimos el jueves pasado @dvoidec 🕺💃 📸: por los ojos de @mito.pixels 🔥" [ref=f63e911]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f63e912] [cursor=pointer]:
+                - /url: /emmanu__music/p/DcrvWxgjmcU/
+                - 'img "Fotos en @lostbeachclub 💫 Este lugar tiene un espacio muy especial en mi 🩶 y en el de muchos. Aquí, cuando abren las puertas y la música empieza a sonar, bailas y te sientes parte de un todo 🪢 🪐 Gracias por las tomas, @guille_elmito 📸 #musica #Ecuador #funktionone #dj #travel" [ref=f63e913]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f63e914] [cursor=pointer]:
+                - /url: /emmanu__music/p/DcZm59fjvU5/
+                - img "🇪🇨 X 🇮🇹 🤝 agradecimiento especial a @ismael.condoii que disfrutes tu regalo especial de parte de toda la familia @tapinados_project @tapinados_project rep Yendin 🏃 @leila.radio 🫶 El mejor support 🎶" [ref=f63e915]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f63e489]:
+              - link [ref=f63e916] [cursor=pointer]:
+                - /url: /leila.radio/p/DbYWM6BCpZ8/
+                - img "Emmanu - 16.07.26" [ref=f63e917]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f63e918] [cursor=pointer]:
+                - /url: /emmanu__music/reel/DZqe_VeO8L2/
+                - 'img "La energía de la cueva siempre es especial @lostbeachclub ⚡️🔥 #flashbackmondays #funktionone #afterhours #montañita" [ref=f63e919]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f63e920] [cursor=pointer]:
+                - /url: /emmanu__music/p/DZnIlJ7jlhT/
+                - 'img "#FlashbackMondays 🕺💃⚡️ Mi día favorito y el de muchos. Nos vemos hoy en the one and only @lostbeachclub 🔥✨ Compartiendo con la familia local: @tommi.uk @jasson.music" [ref=f63e921]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f63e508]:
+              - link [ref=f63e922] [cursor=pointer]:
+                - /url: /emmanu__music/p/DZYJv9Nn7rB/
+                - img [ref=f63e923]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f63e924] [cursor=pointer]:
+                - /url: /andesbrewing.gye/reel/DZVLvgDRaLj/
+                - 'img "El Chancho Presenta 🐽 From Wave To Wax 💽 Emmanu | Cesar Sepúlveda B2B Tomás el Tercero Una velada de alto nivel, donde el escenario se inunda con sonidos profundos desde mandos digitales hasta análogos. Todo para una experiencia íntima y envolvente. 📍 Andes Brew Pub Puerto Santa Ana 📅 Viernes 12 de junio ⏰ 9:00 PM 🎟 Entrada libre. Consumo obligatorio Desde Quito llega DJ Emmanu, artista con larga trayectoria en la música electrónica del país, para encontrarse en cabina con un nombres emblemático de la escena guayaquileña: César Sepúlveda junto a Tomás El Tercero. La propuesta de este evento es construir un recorrido sonoro con vinilos y música digital, manteniendo la vibra prendida de inicio a fin con un set curado donde cada tema tenga sentido dentro de la historia de la noche." [ref=f63e925]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f63e926] [cursor=pointer]:
+                - /url: /emmanu__music/reel/DZIi9v_sz47/
+                - img "Verano empezo ☀️ y…. Lets get lost in music 🎵 🕺💃Tb Halloween x @usfqcampuslife 🎃" [ref=f63e927]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+      - contentinfo [ref=f63e527]:
+        - generic [ref=f63e528]:
+          - generic [ref=f63e530]:
+            - link "Meta" [ref=f63e928] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f63e929] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f63e930] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f63e931] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f63e932] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f63e933] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f63e934] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f63e935] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f63e936] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f63e937] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f63e938] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f63e939] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f63e940] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f63e941] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f63e942] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f63e943] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f63e579]:
+            - generic [ref=f63e580] [cursor=pointer]:
+              - generic [ref=f63e581]:
+                - generic [ref=f63e582]: English
+                - img "Down chevron icon" [ref=f63e944]
+              - combobox "Switch Display Language" [ref=f63e945]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f63e588]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f63e591] [cursor=pointer]:
+              - generic "Messages - 8 new notifications" [ref=f63e592]:
+                - generic [ref=f63e593]:
+                  - generic [ref=f63e595]:
+                    - img "Messages" [ref=f63e596]
+                    - generic "Direct messaging - 8 new notifications link" [ref=f63e599]: "8"
+                  - generic [ref=f63e602]: Messages
+                - generic [ref=f63e603]:
+                  - button [ref=f63e604]:
+                    - img "8 unread chats" [ref=f63e606]
+                  - button "User avatar ..." [ref=f63e611]:
+                    - img "User avatar" [ref=f63e614]
+                  - button "User avatar David Márquez" [ref=f63e616]:
+                    - img "User avatar" [ref=f63e619]
+                  - button "User avatar Limberg Steven Garcia Alava" [ref=f63e621]:
+                    - img "User avatar" [ref=f63e624]
+            - generic [ref=f63e946]:
+              - generic [ref=f63e947]:
+                - generic [ref=f63e948]:
+                  - generic [ref=f63e950]:
+                    - status "Loading..." [ref=f63e952]
+                    - status "Loading..." [ref=f63e954]
+                  - button [active] [ref=f63e956] [cursor=pointer]:
+                    - img "Close" [ref=f63e958]
+                - separator [ref=f63e961]
+              - generic [ref=f63e962]:
+                - generic [ref=f63e963]:
+                  - status "Loading..." [ref=f63e965]
+                  - status "Loading..." [ref=f63e967]
+                - status "Loading..." [ref=f63e970]
+                - generic [ref=f63e971]:
+                  - status "Loading..." [ref=f63e973]
+                  - status "Loading..." [ref=f63e975]
+                - generic [ref=f63e976]:
+                  - status "Loading..." [ref=f63e978]
+                  - status "Loading..." [ref=f63e980]
+                - status "Loading..." [ref=f63e983]
+                - generic [ref=f63e984]:
+                  - status "Loading..." [ref=f63e986]
+                  - status "Loading..." [ref=f63e988]
+                - status "Loading..." [ref=f63e990]

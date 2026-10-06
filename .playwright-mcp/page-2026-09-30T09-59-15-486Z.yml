@@ -1,0 +1,245 @@
+- generic [ref=f3e1]:
+  - generic:
+    - generic:
+      - generic:
+        - generic [ref=f3e9]:
+          - generic [ref=f3e12]:
+            - link [ref=f3e592] [cursor=pointer]:
+              - /url: /
+            - generic [ref=f3e25]:
+              - link [ref=f3e594] [cursor=pointer]:
+                - /url: /
+              - link [ref=f3e596] [cursor=pointer]:
+                - /url: /reels/
+              - link [ref=f3e598] [cursor=pointer]:
+                - /url: /direct/inbox/
+                - generic [ref=f3e53]: 9+
+              - link [ref=f3e601] [cursor=pointer]:
+                - /url: /explore/
+              - link [ref=f3e603] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f3e605] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f3e607] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f3e609] [cursor=pointer]:
+                - /url: /tdf.records.label/
+                - link [ref=f3e610]
+            - generic [ref=f3e118]:
+              - link [ref=f3e612] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f3e614] [cursor=pointer]:
+                - /url: "#"
+          - generic [ref=f3e137]:
+            - main [ref=f3e138]:
+              - generic [ref=f3e140]:
+                - generic [ref=f3e141]:
+                  - generic [ref=f3e142]:
+                    - generic [ref=f3e146]:
+                      - button [ref=f3e616] [cursor=pointer]:
+                        - generic [ref=f3e157]:
+                          - text: Mañana Live con
+                          - link [ref=f3e617]:
+                            - /url: /elblogdemicha/
+                            - text: "@elblogdemicha"
+                          - text: hagan sus preguntas 💛🎶
+                      - button [ref=f3e618] [cursor=pointer]:
+                        - link [ref=f3e619]
+                    - generic [ref=f3e166]:
+                      - generic [ref=f3e167]:
+                        - generic [ref=f3e168]:
+                          - link [ref=f3e621] [cursor=pointer]:
+                            - /url: "#"
+                            - heading [level=2] [ref=f3e622]:
+                              - generic [ref=f3e172]: solcordovamusic
+                          - button [ref=f3e623] [cursor=pointer]
+                        - generic [ref=f3e179]: Sol Córdova 🌞
+                        - generic [ref=f3e181]:
+                          - generic [ref=f3e183]:
+                            - generic [ref=f3e184]: "601"
+                            - text: posts
+                          - link [ref=f3e625] [cursor=pointer]:
+                            - /url: "#"
+                            - generic [ref=f3e187]:
+                              - generic [ref=f3e626]: 6,078
+                              - text: followers
+                          - link [ref=f3e627] [cursor=pointer]:
+                            - /url: "#"
+                            - generic [ref=f3e191]:
+                              - generic [ref=f3e192]: 4,407
+                              - text: following
+                      - generic [ref=f3e193]:
+                        - generic [ref=f3e194]:
+                          - generic [ref=f3e195]: Musician/band
+                          - button [ref=f3e628] [cursor=pointer]:
+                            - generic [ref=f3e199]: Voz, raíz y modernidad 🇪🇨 🇨🇱 Meditación Sonora
+                          - button [ref=f3e629] [cursor=pointer]:
+                            - generic [ref=f3e202]: linktr.ee/solcordovamusic and 1 more
+                        - link [ref=f3e631] [cursor=pointer]:
+                          - /url: /solcordovamusic/followers/mutualOnly
+                          - generic [ref=f3e210]:
+                            - generic [ref=f3e212]:
+                              - button [ref=f3e213]:
+                                - link [ref=f3e214]
+                              - button [ref=f3e215]:
+                                - link [ref=f3e216]
+                              - button [ref=f3e217]:
+                                - link [ref=f3e218]
+                            - generic [ref=f3e219]: Followed by ekekochangobass, midiendocalles.ec + 90 more
+                  - generic [ref=f3e406]:
+                    - button [ref=f3e632] [cursor=pointer]:
+                      - generic [ref=f3e409]: Following
+                    - button [ref=f3e634] [cursor=pointer]: Message
+                    - button [ref=f3e635] [cursor=pointer]
+                  - menu [ref=f3e230]:
+                    - list [ref=f3e426]:
+                      - listitem [ref=f3e427]
+                      - listitem [ref=f3e428]
+                      - listitem [ref=f3e429]:
+                        - link [ref=f3e637] [cursor=pointer]:
+                          - /url: /stories/highlights/18128148292662594/
+                          - button [ref=f3e638]:
+                            - button [ref=f3e639]
+                            - generic [ref=f3e438]: Meditación
+                      - listitem [ref=f3e441]:
+                        - link [ref=f3e641] [cursor=pointer]:
+                          - /url: /stories/highlights/17882857788265003/
+                          - button [ref=f3e642]:
+                            - button [ref=f3e643]
+                            - generic [ref=f3e450]: Shows
+                      - listitem [ref=f3e453]:
+                        - link [ref=f3e645] [cursor=pointer]:
+                          - /url: /stories/highlights/18054706085642277/
+                          - button [ref=f3e646]:
+                            - button [ref=f3e647]
+                            - generic [ref=f3e462]: PutumayoWorldMu
+                      - listitem [ref=f3e465]:
+                        - link [ref=f3e649] [cursor=pointer]:
+                          - /url: /stories/highlights/18424664104109884/
+                          - button [ref=f3e650]:
+                            - button [ref=f3e651]
+                            - generic [ref=f3e474]: Surupa EP
+                      - listitem [ref=f3e477]:
+                        - link [ref=f3e653] [cursor=pointer]:
+                          - /url: /stories/highlights/17981497583877333/
+                          - button [ref=f3e654]:
+                            - button [ref=f3e655]
+                            - generic [ref=f3e486]: Singles
+                - tablist [ref=f3e276]:
+                  - link [ref=f3e657] [cursor=pointer]:
+                    - /url: /solcordovamusic/
+                  - link [ref=f3e659] [cursor=pointer]:
+                    - /url: /solcordovamusic/reels/
+                  - link [ref=f3e661] [cursor=pointer]:
+                    - /url: /solcordovamusic/reposts/
+                  - link [ref=f3e663] [cursor=pointer]:
+                    - /url: /solcordovamusic/tagged/
+                - generic [ref=f3e493]:
+                  - generic [ref=f3e494]:
+                    - link [ref=f3e665] [cursor=pointer]:
+                      - /url: /solcordovamusic/reel/DdJ56t7xTid/
+                    - link [ref=f3e667] [cursor=pointer]:
+                      - /url: /axha.musica/reel/DaDmp10Ri51/
+                    - link [ref=f3e669] [cursor=pointer]:
+                      - /url: /solcordovamusic/reel/DXha88mkQWp/
+                  - generic [ref=f3e513]:
+                    - link [ref=f3e671] [cursor=pointer]:
+                      - /url: /ananau_botanique/p/Dd20ghxkSHR/
+                    - link [ref=f3e673] [cursor=pointer]:
+                      - /url: /solcordovamusic/reel/Dd2eR7PR6-_/
+                    - link [ref=f3e675] [cursor=pointer]:
+                      - /url: /pifrecuency/reel/Ddt8IIgRuhx/
+                  - generic [ref=f3e532]:
+                    - link [ref=f3e677] [cursor=pointer]:
+                      - /url: /solcordovamusic/reel/DdozlJrxGMW/
+                    - link [ref=f3e679] [cursor=pointer]:
+                      - /url: /solcordovamusic/p/Ddh6OhwEXkK/
+                    - link [ref=f3e681] [cursor=pointer]:
+                      - /url: /pifrecuency/p/DdcUr4Fn9jm/
+                  - generic [ref=f3e551]:
+                    - link [ref=f3e683] [cursor=pointer]:
+                      - /url: /solcordovamusic/p/DdSb6CQka6_/
+                    - link [ref=f3e685] [cursor=pointer]:
+                      - /url: /solcordovamusic/reel/Dc33oivRyxF/
+                    - link [ref=f3e687] [cursor=pointer]:
+                      - /url: /solcordovamusic/reel/DcyvIRARUyc/
+            - contentinfo [ref=f3e321]:
+              - generic [ref=f3e322]:
+                - generic [ref=f3e324]:
+                  - link [ref=f3e689] [cursor=pointer]:
+                    - /url: https://about.meta.com/
+                    - generic [ref=f3e327]: Meta
+                  - link [ref=f3e690] [cursor=pointer]:
+                    - /url: https://about.instagram.com/
+                    - generic [ref=f3e330]: About
+                  - link [ref=f3e691] [cursor=pointer]:
+                    - /url: https://about.instagram.com/blog/
+                    - generic [ref=f3e333]: Blog
+                  - link [ref=f3e692] [cursor=pointer]:
+                    - /url: https://about.instagram.com/about-us/careers
+                    - generic [ref=f3e336]: Jobs
+                  - link [ref=f3e693] [cursor=pointer]:
+                    - /url: https://help.instagram.com/
+                    - generic [ref=f3e339]: Help
+                  - link [ref=f3e694] [cursor=pointer]:
+                    - /url: https://developers.facebook.com/docs/instagram
+                    - generic [ref=f3e342]: API
+                  - link [ref=f3e695] [cursor=pointer]:
+                    - /url: /legal/privacy/
+                    - generic [ref=f3e345]: Privacy
+                  - link [ref=f3e696] [cursor=pointer]:
+                    - /url: /legal/terms/
+                    - generic [ref=f3e348]: Terms
+                  - link [ref=f3e697] [cursor=pointer]:
+                    - /url: /explore/locations/
+                    - generic [ref=f3e351]: Locations
+                  - link [ref=f3e698] [cursor=pointer]:
+                    - /url: /popular/
+                    - generic [ref=f3e354]: Popular
+                  - link [ref=f3e699] [cursor=pointer]:
+                    - /url: /web/lite/
+                    - generic [ref=f3e357]: Instagram Lite
+                  - link [ref=f3e700] [cursor=pointer]:
+                    - /url: https://www.meta.ai/?utm_source=foa_web_footer
+                    - generic [ref=f3e360]: Meta AI
+                  - link [ref=f3e701] [cursor=pointer]:
+                    - /url: https://muse.ai/
+                    - generic [ref=f3e363]: Muse
+                  - link [ref=f3e702] [cursor=pointer]:
+                    - /url: https://www.threads.com/
+                    - generic [ref=f3e366]: Threads
+                  - link [ref=f3e703] [cursor=pointer]:
+                    - /url: https://www.facebook.com/help/instagram/261704639352628
+                    - generic [ref=f3e369]: Contact Uploading & Non-Users
+                  - link [ref=f3e704] [cursor=pointer]:
+                    - /url: /accounts/meta_verified/?entrypoint=web_footer
+                    - generic [ref=f3e372]: Meta Verified
+                - generic [ref=f3e373]:
+                  - generic [ref=f3e374] [cursor=pointer]:
+                    - generic [ref=f3e375]: English
+                    - combobox [ref=f3e706]
+                  - generic [ref=f3e382]: © 2026 Instagram from Meta
+        - button [ref=f3e385] [cursor=pointer]:
+          - generic "Messages - 10 new notifications" [ref=f3e386]:
+            - generic [ref=f3e387]:
+              - generic [ref=f3e389]:
+                - img "Messages" [ref=f3e390]
+                - generic "Direct messaging - 10 new notifications link" [ref=f3e393]: 9+
+              - generic [ref=f3e396]: Messages
+            - generic [ref=f3e570]:
+              - button [ref=f3e571]:
+                - img "10 unread chats" [ref=f3e573]
+              - button "User avatar David Márquez" [ref=f3e578]:
+                - img "User avatar" [ref=f3e581]
+              - button "User avatar Andrés Martín Arauz" [ref=f3e583]:
+                - img "User avatar" [ref=f3e586]
+              - button "User avatar Limberg Steven Garcia Alava" [ref=f3e588]:
+                - img "User avatar" [ref=f3e591]
+  - dialog [ref=f3e713]:
+    - generic [ref=f3e718]:
+      - generic [ref=f3e719]:
+        - heading "Messaging solcordovamusic" [active] [level=3] [ref=f3e722]
+        - generic [ref=f3e723]: Partnership messages are more likely to get a response because they have a dedicated place in solcordovamusic's inbox.
+      - generic [ref=f3e725]:
+        - button "Send prioritized message" [ref=f3e726] [cursor=pointer]
+        - button "Send message request" [ref=f3e727] [cursor=pointer]

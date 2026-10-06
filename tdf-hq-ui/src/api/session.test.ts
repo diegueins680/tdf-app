@@ -14,6 +14,7 @@ const {
   loadSessionSnapshot,
   persistOnboardingIntent,
   reconcileOnboardingProgress,
+  redeemArtistInvitation,
 } = await import('./session');
 
 const progressPayload = {
@@ -169,6 +170,39 @@ describe('session api', () => {
         },
         body: JSON.stringify({ onboardingIntent: 'follow_artists' }),
       }),
+    );
+  });
+
+  it('redeems the allowlisted artist invitation against the authenticated session', async () => {
+    const refreshedSession = {
+      username: 'alice',
+      displayName: 'Alice',
+      roles: ['Customer', 'Artist'],
+      modules: ['Packages', 'Scheduling'],
+      partyId: 42,
+      featureFlags: [],
+      preferences: {},
+    };
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: jest.fn<() => Promise<unknown>>().mockResolvedValue(refreshedSession),
+    } as unknown as Response);
+
+    await expect(
+      redeemArtistInvitation('tu_escena_conectada_piloto', 'session-token'),
+    ).resolves.toEqual(refreshedSession);
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/session/artist-invitation'),
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          Authorization: 'Bearer session-token',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ artistInvitation: 'tu_escena_conectada_piloto' }),
+      },
     );
   });
 

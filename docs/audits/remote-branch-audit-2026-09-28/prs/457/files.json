@@ -1,0 +1,16 @@
+[
+  [
+    {
+      "sha": "ca35eaefca9efdb32057d6ae7ff1c6c3a1278ec7",
+      "filename": "tdf-hq-ui/src/pages/LoginPage.tsx",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 0,
+      "changes": 1,
+      "blob_url": "https://github.com/diegueins680/tdf-app/blob/65cc350a68bf293720bed21afb771d75ab8fbea7/tdf-hq-ui%2Fsrc%2Fpages%2FLoginPage.tsx",
+      "raw_url": "https://github.com/diegueins680/tdf-app/raw/65cc350a68bf293720bed21afb771d75ab8fbea7/tdf-hq-ui%2Fsrc%2Fpages%2FLoginPage.tsx",
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/tdf-hq-ui%2Fsrc%2Fpages%2FLoginPage.tsx?ref=65cc350a68bf293720bed21afb771d75ab8fbea7",
+      "patch": "@@ -635,6 +635,7 @@ export default function LoginPage() {\n       setResetDialogOpen(true);\n       return;\n     }\n+    setResetDialogOpen(false);\n     const wantsSignup = params.get('signup');\n     const shouldOpenSignup = wantsSignup && wantsSignup.toLowerCase() !== 'false' && wantsSignup !== '0';\n     if (shouldOpenSignup) {"
+    }
+  ]
+]

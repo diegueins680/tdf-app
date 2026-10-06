@@ -1,0 +1,16 @@
+[
+  [
+    {
+      "sha": "c45035a3482ff49be4892923d999e238e8ffe665",
+      "filename": "STRIPE_WEBHOOK_SETUP.md",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "blob_url": "https://github.com/diegueins680/tdf-app/blob/2455951713967642de9b429c5a790ceec6cb1fa2/STRIPE_WEBHOOK_SETUP.md",
+      "raw_url": "https://github.com/diegueins680/tdf-app/raw/2455951713967642de9b429c5a790ceec6cb1fa2/STRIPE_WEBHOOK_SETUP.md",
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/STRIPE_WEBHOOK_SETUP.md?ref=2455951713967642de9b429c5a790ceec6cb1fa2",
+      "patch": "@@ -64,7 +64,7 @@ TDF Ticketing System - Production Webhooks\n \n Example:\n ```\n-whsec_1234567890abcdefghijklmnopqrstuvwxyz\n+whsec_REPLACE_WITH_YOUR_ENDPOINT_SIGNING_SECRET\n ```\n \n ## Step 5: Configure Environment Variables"
+    }
+  ]
+]

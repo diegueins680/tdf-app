@@ -1,0 +1,143 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4038175981",
+      "pull_request_review_id": 5237353802,
+      "id": 4038175981,
+      "node_id": "PRRC_kwDOQPdUrM7wsazt",
+      "diff_hunk": "@@ -520,6 +520,11 @@\n       \"id\": \"2026-09-10_payment_attempt_intent_binding\",\n       \"path\": \"tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql\",\n       \"introducedBy\": \"709036630fcad32102b67a34996c4da73bc4d128\"\n+    },\n+    {\n+      \"id\": \"2026-09-17_directory_event_privacy_composition\",\n+      \"path\": \"tdf-hq/sql/2026-09-17_directory_event_privacy_composition.sql\",\n+      \"introducedBy\": \"9ddd014b9d6a897d15608d9d23f4445c4c7118eb\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "c7643f0ba07f330995415c4848194938536d51ae",
+      "original_commit_id": "c7643f0ba07f330995415c4848194938536d51ae",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Anchor migration provenance in this commit's ancestry**\n\nReleasing this exact revision is blocked because `9ddd014b...` and `e95e066a...` are sibling commits with the same parent, not an ancestor/descendant pair. The production release loader explicitly runs `git merge-base --is-ancestor introducedBy <release SHA>` for every manifest entry and refuses the release when it fails, so this critical privacy migration cannot be deployed from the reviewed commit. Preserve `9ddd014b...` through an actual merge or anchor this entry to a commit that is in the release ancestry.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-17T14:45:22Z",
+      "updated_at": "2026-09-17T14:45:22Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/419#discussion_r4038175981",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/419",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4038175981"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/419#discussion_r4038175981"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/419"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4038175981/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 527,
+      "original_line": 527,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 8,
+      "position": 8,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4038429877",
+      "pull_request_review_id": 5237679285,
+      "id": 4038429877,
+      "node_id": "PRRC_kwDOQPdUrM7wtYy1",
+      "diff_hunk": "@@ -520,6 +520,11 @@\n       \"id\": \"2026-09-10_payment_attempt_intent_binding\",\n       \"path\": \"tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql\",\n       \"introducedBy\": \"709036630fcad32102b67a34996c4da73bc4d128\"\n+    },\n+    {\n+      \"id\": \"2026-09-17_directory_event_privacy_composition\",\n+      \"path\": \"tdf-hq/sql/2026-09-17_directory_event_privacy_composition.sql\",\n+      \"introducedBy\": \"9ddd014b9d6a897d15608d9d23f4445c4c7118eb\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "c7643f0ba07f330995415c4848194938536d51ae",
+      "original_commit_id": "c7643f0ba07f330995415c4848194938536d51ae",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Verified the actual reviewed revision locally and through the GitHub commit API: c7643f0ba07f330995415c4848194938536d51ae -> 8b22aad2b36042b35944ed6a6327da4d7113f965 -> 9ddd014b9d6a897d15608d9d23f4445c4c7118eb -> 6f77a7eec93d96de36840a13235adff9ad13c917. git merge-base --is-ancestor 9ddd014b9d6a897d15608d9d23f4445c4c7118eb c7643f0ba07f330995415c4848194938536d51ae exits 0, and the real production-release.mjs plan succeeds for this exact head with all 103 migration ancestry checks. The cited e95e066a is not present in the PR history (GitHub commit lookup returns 422). This PR will use a merge commit, as its description already requires, preserving the introduction commit. Resolving this finding based on verified ancestry; the required new approval remains outstanding and will not be bypassed.",
+      "created_at": "2026-09-17T15:10:00Z",
+      "updated_at": "2026-09-17T15:10:00Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/419#discussion_r4038429877",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/419",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4038429877"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/419#discussion_r4038429877"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/419"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4038429877/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 527,
+      "original_line": 527,
+      "side": "RIGHT",
+      "in_reply_to_id": 4038175981,
+      "author_association": "OWNER",
+      "original_position": 8,
+      "position": 8,
+      "subject_type": "line"
+    }
+  ]
+]

@@ -1,0 +1,4 @@
+c19c4f5d87abdb5a9b3e935e79af2238fdb99c43 2026-09-15T10:08:01-05:00 continuous-improvement-loop[bot] docs(payments): record query report security and verification evidence
+0ffe9d666debb12bc5492fb978e951b9dd5988a0 2026-09-15T09:53:59-05:00 continuous-improvement-loop[bot] test(payments): await query report client requests
+9fddf58037c1780402fe5393d1d4694e005d765e 2026-09-15T09:49:52-05:00 continuous-improvement-loop[bot] feat(payments): add a guarded query recovery operations panel
+a1a6350f852a01eb6134ccb8ae742e5a9b12ac9f 2026-09-15T09:41:17-05:00 continuous-improvement-loop[bot] feat(payments): expose a read-only query recovery report

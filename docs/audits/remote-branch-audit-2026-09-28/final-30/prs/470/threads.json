@@ -1,0 +1,1427 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 470,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "fd87416e99af3176d107178832f238ef00003be5",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6m4j5G",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 647,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Point migration provenance at an ancestor**\n\nReleasing this commit through the guarded production lane will fail because all 14 new interaction migrations name `74f8ae89...`, which is not an ancestor of `d86224ec...` (`git merge-base --is-ancestor` exits 1). `scripts/production-release.mjs` checks every `introducedBy` value this way and explicitly refuses the release on failure, so the migrations cannot be deployed from this commit until their provenance is reachable from the release history.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4127630034",
+                      "createdAt": "2026-09-28T22:28:03Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Verified on current head 3ecbf3a12: 74f8ae89e563af1a637488fcf5f1c2a3cb19fc3f is an ancestor (git merge-base exits 0), and the real release planner succeeds with all 138 entries. The new forward repair records its actual introduction commit 5eb0ac922; no ancestry guard or historical SQL checksum was relaxed. We will retain merge ancestry through the protected merge workflow.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128161661",
+                      "createdAt": "2026-09-28T23:47:38Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQyMzo0NzozOFrO9g6_fQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m4j5N",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Preserve all event moments in the legacy response**\n\nAfter interaction activation, an event with more than 50 moments silently loses every older moment from `GET /events/:eventId/moments`. The API still returns a plain array with no cursor or page parameter, and the pre-activation branch below still returns every row, so clients have no way to retrieve the omitted moments; bound each moment's comments/reactions without truncating the event's moment list, or add real pagination.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4127630043",
+                      "createdAt": "2026-09-28T22:28:03Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 3ecbf3a12: preserve every accessible legacy moment and batch previews into one database query, bounding per-moment comments/reactions. The real HTTP regression seeds 60 moments and requires all 60 distinct IDs. Hosted backend job 109187113814 passed the full build and HTTP suite with this regression.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128224458",
+                      "createdAt": "2026-09-28T23:58:40Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQyMzo1ODo0MFrO9g-0yg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m4j5R",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-28_interaction_blocks.sql",
+                "line": 37,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Remove legacy follow edges when blocking accounts**\n\nWhen two accounts already have a `fan_follow` or `party_follow` row, blocking and later unblocking them restores the old relationship automatically: this update clears only `social_v2_pair.follow_a/follow_b`, while `interaction_follows` and `interaction_club_access` continue treating the untouched legacy rows as follower access. That contradicts the account-control promise that unblocking does not restore previous connections and can immediately re-enable follower-only commenting and fan-club writes without a new follow action.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4127630047",
+                      "createdAt": "2026-09-28T22:28:03Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in forward migration 2026-09-29_interaction_review_repairs (5eb0ac922). Blocking removes both directions from fan_follow and party_follow and clears canonical follow/consent state under account locks. Unblock never recreates these edges. PostgreSQL 16/17 properties cover both stores, unblock, and denied club discussion writes afterward.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128161929",
+                      "createdAt": "2026-09-28T23:47:40Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQyMzo0Nzo0MFrO9g7AiQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m4vXb",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-28_interaction_notifications.sql",
+                "line": 106,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Re-notify recipients when an edit adds a mention**\n\nWhen an edited comment newly mentions someone who already received a comment/reply notification for that comment\u2014for example, the publication owner\u2014the cross-kind lookup reuses the existing notification. If that notification was already read, this path neither marks it unread nor updates its type or timestamp, so the newly added mention is silently missed even though edit events explicitly include current mention recipients. Create or refresh an unread mention notification for this case instead of only attaching the actor to the old row.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4127703693",
+                      "createdAt": "2026-09-28T22:39:30Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 5eb0ac922: edits snapshot newly added stable mention IDs in the command transaction. Delivery upgrades the existing recipient/comment notification to mention, refreshes timestamp and unread state once per event, and leaves unchanged mentions quiet. PostgreSQL 16/17 tests cover already-read owner notifications, retained notification identity and a second edit with the same mention.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128162117",
+                      "createdAt": "2026-09-28T23:47:42Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQyMzo0Nzo0MlrO9g7BRQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m4vXf",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-28_interaction_account_controls.sql",
+                "line": 39,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Expose report reasons to moderators**\n\nFor reported comments, this inbox returns only the comment body and the number of open reports; the stored `interaction_report.reason` values are never included here or in `interaction_moderation_page`, and the web moderation UI has no other endpoint from which to retrieve them. Moderators therefore must dismiss or remove reports without knowing what users reported, so include the open report reasons in the protected moderation response.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4127703698",
+                      "createdAt": "2026-09-28T22:39:30Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 5eb0ac922 / 3ecbf3a12 and native PR120. Both moderator queues return up to the latest 20 open report reasons (total shown), without reporter identities; non-moderator owners receive none. Web and native show the reasons before decisions. SQL permission tests pass on PostgreSQL 16/17; rendered moderator-decision flows pass on both clients (native full suite: 532 tests).",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128162308",
+                      "createdAt": "2026-09-28T23:47:45Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQyMzo0Nzo0NVrO9g7CBA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m5Bs6",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-28_interaction_legacy.sql",
+                "line": 68,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Preserve legacy comments with no author party**\n\nWhen activation encounters an `event_moment_comment` whose nullable `author_party_id` is `NULL`, this inserts it with `interaction_comment.author_id = NULL`, but canonical readers only return visible comments whose author passes `interaction_actor_live`/`interaction_author_batch`. The legacy endpoint previously returned these rows using `author_name`, so such comments silently disappear after cutover even though the migration counts them as successfully migrated; either retain a readable legacy-author representation or fail activation until these rows are reconciled.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4127821178",
+                      "createdAt": "2026-09-28T22:58:01Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed with the fail-safe option in 5eb0ac922. First activation now rejects NULL or unresolved legacy author identities before any canonical conversion. A regression inserts an anonymous historical comment, proves the whole activation rolls back with source/mapping/activation state preserved, then runs the nonempty valid migration. The runbook requires trusted identity reconciliation, never invented attribution. Both PG16 and restored-production PG17 checks pass; the restored live source has no such comments.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128162460",
+                      "createdAt": "2026-09-28T23:47:46Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQyMzo0Nzo0NlrO9g7CnA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m5Bs9",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-28_interaction_notifications.sql",
+                "line": 89,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Honor reply preferences when the reply also mentions its recipient**\n\nWhen a reply mentions its parent author, that recipient appears with both reply priority 2 and mention priority 3, and `max(priority)` collapses the reasons to `mention`. `interaction_notification_allowed` then checks only the mention preference, so a user with replies enabled but mentions disabled receives no notification for the reply they explicitly opted into. Preserve all applicable reasons or allow delivery when any enabled notification category matches.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4127821181",
+                      "createdAt": "2026-09-28T22:58:01Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 5eb0ac922: candidate reasons are retained per recipient and delivery picks the strongest enabled applicable reason after current privacy/visibility checks. A generated eight-combination preference truth table proves disabled mentions retain enabled reply/comment delivery and all-disabled sends nothing. PG16 and restored-production PG17 pass.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128162609",
+                      "createdAt": "2026-09-28T23:47:49Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQyMzo0Nzo0OVrO9g7DMQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m5LWk",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-28_interaction_commands.sql",
+                "line": 119,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Allow authors to edit after commenting is disabled**\n\nWhen an owner changes a target to `off`, removes a user from `mentioned`, or the user stops qualifying as a follower, this shared check rejects `comment.edit` even for the existing comment's author. Readers still return `canEdit: true`, so the UI offers editing but every save fails with `comments_not_allowed`; apply `interaction_can_comment` only to creation/replies while retaining the edit-specific author/state checks.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4127883430",
+                      "createdAt": "2026-09-28T23:07:37Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 5eb0ac922. The creation policy applies only to comment.create; edits still require the live author, accessible target, visible comment, no block and expected version. SQL regressions cover edit after off and mentioned-policy changes while rejecting new comments. Both PG16/17 pass.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128162781",
+                      "createdAt": "2026-09-28T23:47:51Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQyMzo0Nzo1MVrO9g7D3Q=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m5ZC8",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-28_interaction_commands.sql",
+                "line": 239,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Enqueue reaction events only when state changes**\n\nWhen `reaction.set` repeats the actor's current non-null reaction, the preceding `ON CONFLICT ... WHERE` updates no row, but this unconditional result metadata still assigns `eventKind: reaction`; inserting the request then enqueues a notification event. This is particularly reachable through the legacy `active: true` adapter, which creates a fresh request UUID for every call, so a retry can notify the publication owner even though no reaction changed. Only attach the event kind when the insert/update actually affected a row.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4127973842",
+                      "createdAt": "2026-09-28T23:20:17Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 5eb0ac922: capture FOUND immediately after the reaction upsert and enqueue reaction activity only on a real state change. The legacy engagement projection uses the same flag. A fresh-request-key desired-state retry is tested to produce no event, no unread refresh and unchanged counters; concurrent reaction properties remain green on the canonical command.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128162965",
+                      "createdAt": "2026-09-28T23:47:53Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQyMzo0Nzo1M1rO9g7ElQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m5ZDD",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-28_interaction_notifications.sql",
+                "line": 107,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Refresh aggregated reaction notifications on new activity**\n\nWhen a recipient reads the aggregated reaction notification and another actor reacts to the same target within the ten-minute dedupe bucket, this lookup reuses the existing row, but the found branch never marks the underlying `notification` unread or refreshes its timestamp. The new actor is merely attached later, so the unread count remains zero and the owner receives no visible indication of the new reaction; refresh the aggregate when adding new activity.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4127973849",
+                      "createdAt": "2026-09-28T23:20:17Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 5eb0ac922: an event watermark on the aggregate refreshes unread state and timestamp for genuinely new activity, while replayed/older events cannot resurrect read state. Tests mark the aggregate read, add a second actor in the bucket, require unread+new timestamp, then mark read and replay dispatch without changes. PG16/17 pass.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128163142",
+                      "createdAt": "2026-09-28T23:47:55Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQyMzo0Nzo1NVrO9g7FRg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m5fq_",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-28_interaction_account_controls.sql",
+                "line": 11,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Surface directory blocks in account controls**\n\nWhen an existing directory workflow has created a `directory_profile_block` between these parties, `interaction_blocked` denies their interactions, but this list scans only `social_v2_pair`. The account controls therefore show no blocked account\u2014and the block-state/unblock path also operates only on the pair\u2014so the user cannot discover or remove the block that is still preventing interaction. Include actor-owned directory blocks in the projection and define matching unblock behavior, or avoid treating them as account-level interaction blocks.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128017844",
+                      "createdAt": "2026-09-28T23:27:21Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 5eb0ac922. Account list/state include actor-owned directory blocks. Unblock removes only that actor subject-profile direction and retains peer-owned blocks. After activation, directory writes share party locks, advance the canonical revision and sever legacy/canonical follows. PG16/17 regressions cover list privacy, stale revisions, both blocking directions, effective unblock and no restored follow.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128163349",
+                      "createdAt": "2026-09-28T23:47:58Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQyMzo0Nzo1OFrO9g7GFQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m5frE",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-28_interaction_commands.sql",
+                "line": 129,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Reject reaction types outside the selectable set**\n\nAn authenticated caller can submit any active published `content_reaction_type`, even if it has no row in `interaction_reaction_choice` and is returned to clients as `selectable: false`. As soon as another catalog option is published, a crafted request can create new reactions that the UI deliberately does not offer; they then appear as historical-looking, nonselectable counts. Validate new reaction values against `interaction_reaction_choice` while continuing to preserve already-migrated historical types.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128017849",
+                      "createdAt": "2026-09-28T23:27:21Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 5eb0ac922: new reaction choices require interaction_reaction_choice in addition to active/published catalog state. Migration and readers continue preserving historical nonselectable types, and removal remains available. SQL tests reject an active catalog type absent from selectable choices; nonempty historical migration tests still pass on PG16/17.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128163525",
+                      "createdAt": "2026-09-28T23:48:00Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQyMzo0ODowMFrO9g7GxQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m533h",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-28_interaction_policy.sql",
+                "line": 132,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Require publication authority for artist updates**\n\nFor any `social_sync_post` associated with an artist profile, this branch unconditionally marks the target public, so an anonymous caller can enumerate `/public/interactions/targets/artist_update/<id>` and retrieve the stored caption preview, artist association, and route. The existing post-list endpoint is protected by `ensureSocialSyncAccess` in `TDF.Server.SocialSync`, and there is no public renderer or publication state for these rows, so ingestion alone should not grant public visibility or allow interaction threads; require an explicit public/reviewed authority or keep this target kind unavailable.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128181236",
+                      "createdAt": "2026-09-28T23:51:18Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in d6c52fad1 / 472dfa670 (published in current head090b5a132). Forward migration139 disables artist_update and its resolver always returns unavailable, even if the capability flag is re-enabled. Ingestion is never publication authority. SQL tests cover anonymous and owner denial, capability-toggle resistance and preserved imported caption; PostgreSQL16 and restored-production PostgreSQL17.8 pass, including repeat migration. Anonymous/authenticated HTTP denial checks are included in current hosted qualification. Existing published artist-release and club-post paths are unchanged.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128224753",
+                      "createdAt": "2026-09-28T23:58:43Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQyMzo1ODo0M1rO9g-18Q=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m6C6k",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-29_interaction_review_repairs.sql",
+                "line": 109,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Allow users to withdraw reactions after losing write access**\n\nWhen an actor already has a reaction and later loses club follow/officer eligibility, `interaction_domain_write(target,actor)` becomes false, so this condition rejects even `reaction.set` with `reactionTypeId: null`. The summary also exposes `canReact: false`, disabling the selected reaction button, leaving the reaction counted and causing it to reappear if access is restored. Apply the domain-write/selectability requirement only when setting a non-null reaction, while allowing the current actor to delete their existing reaction from an otherwise accessible target.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128253439",
+                      "createdAt": "2026-09-29T00:04:14Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 7d8de4c5d and registered by c2fe7babf. The forward migration applies domain-write/selectability requirements only to non-null selection; withdrawal retains current visibility, blocking, live-account/session and actor-slot guards. Summary canReact permits an existing slot while every new choice becomes nonselectable after eligibility loss, so both current clients expose only removal. SQL properties and real HTTP verify revocation, own-slot isolation, rejected selection, idempotent withdrawal, counters and no resurrection after following again; the rendered web regression verifies selected removal and disabled alternatives. All seven local database suites/concurrency, the PostgreSQL17 production-restore rehearsal, eight rendered tests and82 release tests pass. Hosted final CI is running.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128458964",
+                      "createdAt": "2026-09-29T00:43:18Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOVQwMDo0MzoxOFrO9hNI1A=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m6lTK",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-29_interaction_reaction_withdrawal.sql",
+                "line": 78,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Keep blocked authors within moderation reach**\n\nWhen a comment author blocks the publication owner or a platform moderator after posting, this shared guard rejects `comment.hide`, `comment.remove`, `comment.restore`, and `comment.report.resolve`. The same blocked-author predicate in `interaction_moderation_page` and `interaction_report_inbox` also removes the comment from their queues, while other users can still see it. An abusive commenter can therefore evade moderation by blocking the people responsible for moderation; privileged moderation operations and queues should not be suppressed by the moderator's bilateral block state.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128474662",
+                      "createdAt": "2026-09-29T00:46:37Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in e2dc17a51 and registered by 0f99959fa. Scoped owner hide/restore and moderator removal/report resolution no longer fail due to an author block; current target access, live account/session, role, expected version and audit requirements remain. Authorized queues retain evidence and actual moderation state, while ordinary lists still filter blocks. Exact report links resolve to redacted context so the authorized queue remains reachable. Owners gain no administrator powers. Web and native queues now expose owner hide for blocked visible comments (mobile PR121). Actual SQL properties and real local HTTP exercise blocking both owner/moderator, normal-read privacy, queue evidence, redacted links, owner hide/restore, moderator resolution/removal, denied owner admin removal and erasure/audit. Nine rendered flows per client, local database/concurrency, release checks and PostgreSQL17 restored-production moderation properties pass; final hosted/artifact qualification is running.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128526889",
+                      "createdAt": "2026-09-29T00:56:30Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOVQwMDo1NjozMFrO9hRSKQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m6xYR",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-29_interaction_moderation_block_boundary.sql",
+                "line": 32,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Preserve moderator access when the publication owner blocks them**\n\nIf a publication owner blocks a platform moderator, `interaction_target_context` returns NULL because the resolver applies the owner's bilateral block, so this early return prevents `comment.remove` and `comment.report.resolve`; the same context requirement also removes every comment on that target from the global report inbox and moderation page. The fresh evidence after the earlier blocked-author repair is that its bypass is evaluated only after this target-level check succeeds, allowing an owner to evade platform enforcement by blocking the moderator account.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128551517",
+                      "createdAt": "2026-09-29T01:01:40Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 3f6a1b752 with a shared scoped source adapter and a separate current-moderator context. Platform enforcement ignores source-owner/organizer social blocks, while publication/lifecycle and private-event logistics grants remain mandatory. Ordinary reads and social commands retain the original block-aware wrapper. Commands choose scoped authority only for moderator remove/restore/report resolution and recheck under existing locks. Queues, reasons and exact report navigation use the scoped context; a moderation-only summary admits existing clients without reaction/comment permissions or counters. SQL and real HTTP block both commenter and publication owner against the moderator and verify queue/link/enforcement success plus denied social writes. Further properties prove non-moderator rejection and private-grant revocation. The142-entry PostgreSQL17 restore, all local SQL/concurrency and82 release tests pass; final hosted checks are restarting.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128614556",
+                      "createdAt": "2026-09-29T01:13:19Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOVQwMToxMzoxOVrO9hWonA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m6xYV",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-29_interaction_reaction_withdrawal.sql",
+                "line": 246,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Exclude inactive catalogs from selectable reactions**\n\nWhen the `content-reaction-types` catalog is deactivated, this projection still marks its choice rows selectable because it checks only the item and workflow state. `interaction_command` additionally requires an active catalog, so web and native clients render enabled reaction buttons whose writes consistently return `invalid_reaction`; join and validate the active catalog here using the same predicate as the command path.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128551520",
+                      "createdAt": "2026-09-29T01:01:40Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 3f6a1b752. Summary selection now joins the catalog and checks active=true, the content-reaction-types code and matching workflow identity, alongside the existing selectable choice/item/state predicates. Existing counted reactions remain visible and removable after catalog deactivation. SQL regression deactivates the catalog, asserts no selectable summary choices and rejected non-null writes, removes the historical reaction, and restores the catalog; PostgreSQL16 and restored-production PostgreSQL17 both pass.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128614710",
+                      "createdAt": "2026-09-29T01:13:21Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOVQwMToxMzoyMVrO9hWpNg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m6-xM",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-28_interaction_compatibility.sql",
+                "line": 60,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Preserve the immediate parent ID for nested legacy replies**\n\nWhen an old client replies to a canonical reply alias, the adapter replaces `entity` with the root post's key before reaching this return, so `fcpParentId` identifies the root rather than the reply that was actually passed as `parentId` to `interaction_command`. The persisted thread is correct, but the returned `FanClubPostDTO` attaches the new reply to the wrong parent until another canonical read; retain the original requested alias for this response field.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128637444",
+                      "createdAt": "2026-09-29T01:17:43Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in e415244248058c13043bd1bbd3f40d12241e209f, registered in the unchanged-checksum forward migration 2026-09-29_interaction_legacy_reply_aliases. The adapter retains requested_entity separately from the root used for authorization and returns that immediate alias as fcpParentId. SQL regressions verify nested DTO/persisted-parent agreement; all seven local suites and hosted interaction verification36508499450 pass. The real HTTP nested-reply regression is in the final backend run.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128787979",
+                      "createdAt": "2026-09-29T01:45:50Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOVQwMTo0NTo1MFrO9hhOCw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m6-xO",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq/src/TDF/ServerFanClub.hs",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Resolve canonical reply aliases before validating reactions**\n\nAfter activation, `legacy.comment` returns a numeric alias without inserting a `fan_club_post` row, but a subsequent old-client reaction to that returned ID still reaches the source-table-only `lookupFanClubPostMutationTarget` before this canonical branch and therefore returns 404. Even bypassing that check would not help because `interaction_legacy_command` resolves aliases only for comment/hide/restore operations, not `legacy.reaction`; resolve the alias to its canonical target before applying the legacy reaction.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128637447",
+                      "createdAt": "2026-09-29T01:17:43Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in e415244248058c13043bd1bbd3f40d12241e209f and additive migration2026-09-29_interaction_legacy_reply_aliases. After activation, Haskell delegates before the source-row-only legacy checks; SQL validates the artist path using the containing publication and resolves new numeric aliases without inserting duplicate fan_club_post rows. Reactions remain on independent reply targets, never the root. Erasure serializes with reaction writes and retires reply reaction state/counters. Full hosted backend job109217578642 passed on b0b780eeb, including the actual HTTP alias reaction/toggle, nested-parent DTO, root-count isolation and forged-artist-path regressions. It also passed3539 backend examples (0 failures,6 existing pending),1141 social examples and the complete interaction HTTP suite. Fresh PostgreSQL17 all seven properties and local alias/delete concurrency tests pass. Later head ad519a56e changes only documentation/evidence index.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128849149",
+                      "createdAt": "2026-09-29T01:57:26Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOVQwMTo1NzoyNlrO9hk8_Q=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m7QQe",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-29_interaction_review_repairs.sql",
+                "line": 361,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Use scoped context when dispatching moderation events**\n\nWhen a publication owner blocks a platform moderator, `comment.remove` now succeeds through the scoped moderation context, but its queued event is evaluated here with the ordinary `interaction_target_context`. The owner block makes that context `NULL`, so the next line marks the event complete and the comment author never receives the moderation notification. Use `interaction_moderation_context` for `e.kind = 'moderation'` while retaining the ordinary context for social events.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128751006",
+                      "createdAt": "2026-09-29T01:38:24Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Reproduced with a failing SQL regression, then fixed in96a2fc934a978dd10df235f9ac15567d4d4294c2 / additive migration2026-09-29_interaction_moderation_delivery. Dispatch falls back to the strict moderation context only for moderation events when ordinary actor context is absent. Nonmoderator owner hiding retains its normal path; recipient access/block/preferences and social-event filtering are unchanged. PostgreSQL16 and restored-production PostgreSQL17 tests now pass: owner hiding, owner-blocked moderator removal, eligible-author delivery, exact removed-comment destination, replay read state and recipient-block revocation. All seven SQL/concurrency suites pass.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128788179",
+                      "createdAt": "2026-09-29T01:45:53Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOVQwMTo0NTo1M1rO9hhO0w=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m7gKv",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-29_interaction_legacy_reply_aliases.sql",
+                "line": 52,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Route private events to an accessible publication page**\n\nWhen an organizer or logistics member opens a discussion for a non-public event, `interaction_event_access_scoped` authorizes the conversation but this destination still points to `/eventos/<id>`. That page loads `/directory/events/<id>`, whose backend reads only `directory_public_rsvp_event`, so \u201cVer publicaci\u00f3n\u201d leads to a 404 for the private events these users are explicitly allowed to access; return the protected `/social/eventos/<id>` route when `public_value` is false, and apply the same distinction to event-moment destinations.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128854805",
+                      "createdAt": "2026-09-29T01:58:23Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in1a884dff86b51ccb7905a58a280bd9fbe7fa8d75 / registered forward migration2026-09-29_interaction_event_destinations. Events and moments absent from directory_public_rsvp_event now return /social/eventos/<id> (retaining moment identity). Route choice uses public-view membership rather than public_share_eligible: cancelled public events remain readable on /eventos/<id> even though sharing is disabled. SQL and actual HTTP regressions verify organizer/member routes, the protected event API destination, denied anonymous/foreign context, public transitions and cancelled public routes. The full145-migration bundle and all seven properties also passed in a fresh PostgreSQL17 database; the restored-production clone passed the new entity properties and remains paused. No publication grant changes.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128898698",
+                      "createdAt": "2026-09-29T02:08:05Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOVQwMjowODowNVrO9hn-ig=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m7p6N",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-28_interaction_commands.sql",
+                "line": 26,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Enforce mention privacy when accepting commands**\n\nA crafted `comment.create` or `comment.edit` can attach any live party ID that can read the target, even when that party is neither discoverable nor connected to the author; the scoped selector enforces that privacy condition, but this authoritative write validator does not. The caller can therefore bypass the selector, label the span with arbitrary `@text`, persist a misleading identity link, and enqueue a mention notification to a user who intentionally opted out of discovery. Apply the same discoverable-or-mutually-connected eligibility used by `interaction_mention_candidates` when validating each submitted mention.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4128918496",
+                      "createdAt": "2026-09-29T02:12:11Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in6334d897c573ae7b2e03c917ad26177e1c0b1958 and registered migration2026-09-29_interaction_mention_privacy. One interaction_mention_eligible predicate now governs autocomplete, raw create/edit writes, active owner allowlists and current notification delivery/visibility. It requires live accessible non-organization peers, no self/block, and explicit discovery consent or a mutual connection. Missing preferences fail closed. Submitted recipient accounts are locked so existing privacy/relationship mutations serialize with writes. SQL enumerates all ten valid preference/consent/block combinations and proves rejected writes preserve bodies/counts; actual HTTP rejects forged private mentions and allowlists, admits mutual private contacts and suppresses queued mentions after revocation. A real concurrent owner-allowlist/opt-out test passes. Follow-up8e6a2a80b clears unused picker IDs when switching to off/followers/everyone, so privacy changes cannot prevent an owner disabling comments. The full147-migration PostgreSQL17 fresh-schema suites, local concurrency tests and hosted interaction verification36513062819 pass. No historical bodies are rewritten.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129061149",
+                      "createdAt": "2026-09-29T02:35:08Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOVQwMjozNTowOFrO9hx5HQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m77oP",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/ServerFanClub.hs",
+                "line": 1092,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Delegate legacy memory withdrawals before access checks**\n\nFresh evidence beyond the earlier SQL withdrawal repair is the activated legacy club-memory path: canonical dispatch is selected only here, after `requireFanClubPostAccess` and `loadSelectableContentReactionTypeId` have already run. An older client therefore cannot toggle off an existing memory reaction after the user loses follow/officer access\u2014or after that reaction type becomes nonselectable\u2014because the handler returns 403/422 before `interaction_command` can perform the permitted removal. Move the activated branch ahead of those legacy write checks, as the post adapter does.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129037778",
+                      "createdAt": "2026-09-29T02:30:25Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in bf455eac2: the activated memory branch runs before legacy write/selectability checks while retaining artist/club/memory path validation. Real hosted HTTP in CI36515717073 confirms successful own-reaction withdrawal after unfollow and after catalog deactivation, with zero authoritative counts and rejection of new reactions. The run then failed because the new fixture expected400 rather than the existing documented422 invalid_reaction status for the rejected addition; f910d6f23 corrects that exact assertion, without changing server behavior or loosening acceptance. Remaining full-suite qualification is running on the latest revision.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129307293",
+                      "createdAt": "2026-09-29T03:24:25Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOVQwMzoyNDoyNVrO9iA6nQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m8B4q",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 647,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Point migration provenance at the squashed release**\n\nFresh evidence after the earlier rebuttal is that the reviewed squash `bd51887a` has parent `7e7106b3`, so none of the interaction `introducedBy` commits are ancestors of it: `git merge-base --is-ancestor 74f8ae89... bd51887a...` exits 1, and the actual `production-release.mjs plan --sha bd51887a...` aborts with \u201crefusing to omit a registered migration.\u201d The guarded production lane therefore cannot release this commit until the manifest provenance is made reachable from the squashed history.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129078436",
+                      "createdAt": "2026-09-29T02:38:37Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "The release runbook now explicitly requires the normal protected merge-commit method (available in this repository), never squash/rebase, so the registered migration source history is preserved. No registered SQL bytes or provenance were rewritten. The actual production-release.mjs planner passes on current source bf455eac21e14e6ef53c137d98abd2a6f7e1e505 and on a local, unreferenced two-parent merge rehearsal fb8edd1af2fd70510cb1798033a5e06a6c4c6259 (parents current main 7e7106b3 and current PR head; identical source tree), including all 147 migration ancestry/checksum checks. bd51887a is not the proposed deployment revision. Squashed history correctly remains rejected by the existing guard. No protected branch was updated and no deployment occurred.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129103020",
+                      "createdAt": "2026-09-29T02:43:24Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOVQwMjo0MzoyNFrO9h0crA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m8B4u",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+                "line": 3919,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Delegate event-reaction withdrawals before catalog validation**\n\nWhen interactions are activated and an old client sends `emrrActive: false` after the legacy reaction catalog or workflow has been deactivated, this canonical branch is reached only after `loadSelectableMomentReactionTypeId` has already rejected the request with 422. The caller\u2019s existing reaction remains counted even though `interaction_command` deliberately permits null removal of historical nonselectable reactions; select the activated adapter before the legacy selectability check, as required for the equivalent club paths.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129078441",
+                      "createdAt": "2026-09-29T02:38:37Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in bf455eac21e14e6ef53c137d98abd2a6f7e1e505: the activated moment adapter delegates before legacy catalog selection, retaining event/moment path validation. The forward alias repair preserves every legacy reaction mapping. Hosted backend job 109241336977 in run 36516947177 passed the full real-HTTP interaction suite, including removal after catalog deactivation, zero authoritative counts, and rejection of new inactive reactions with 422. SQL tests cover all legacy choices and withdrawal invariants.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129387149",
+                      "createdAt": "2026-09-29T03:40:45Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOVQwMzo0MDo0NVrO9iFyjQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m8KX5",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq-ui/src/api/interactions.ts",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Validate interaction pages before caching them**\n\nWhen a nested interaction route returns a 200 HTML fallback or another malformed payload, this stores it as an `InteractionPage`; rendering then evaluates `page.items` and eventually dereferences `comment.id`, crashing the expanded discussion instead of showing the recoverable error used for malformed summaries. Apply runtime validation to comments, contexts, reactors, and the other interaction reads before React Query caches them.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129133651",
+                      "createdAt": "2026-09-29T02:49:12Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 70f9d3031 and shared mobile 2b4fe6d (native PR122 merged normally). Every discussion read now validates nested data before returning to the query cache: pages, context/destinations, reactors, blocked accounts, preferences and moderation/report pages. Both clients have malformed-response/valid-retry/tombstone tests and a rendered error/retry flow. Web34 focused checks and native34 focused checks pass; all87 native suites/550 tests and both client type/lint checks pass. Fresh artifact/signing builds are running; no candidate has been distributed.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129226769",
+                      "createdAt": "2026-09-29T03:08:02Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOVQwMzowODowMlrO9h8AEQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m8KYA",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-29_interaction_event_destinations.sql",
+                "line": 69,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Derive record moderation from current authority**\n\nWhen the staff member recorded in `created_by` later loses catalog-administration privileges, this still makes that historical audit actor the interaction `ownerId`; the common `actor=owner_id` check below therefore continues returning `canManage: true`, allowing the former administrator to change comment policy and hide or restore comments on label recordings. Use a durable publication owner or a current authorization check rather than the record's creator provenance; the same issue affects the adjacent session and release branches.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129133658",
+                      "createdAt": "2026-09-29T02:49:12Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed by forward migration 2026-09-29_interaction_catalog_authority (source70f9d3031, registered in d19e2a454). Institutional recordings/sessions/releases no longer infer human ownership or notification recipients from created_by. Management requires current catalog module access plus catalog.update with all active grant/role/permission/action/module checks. Relevant rows are locked during commands. All three entity adapters pass grant/capability-revocation, unauthorized policy/hide and replacement-manager properties on PostgreSQL16 and17. Actual HTTP confirms revocation returns403 and leaves the comment unchanged. The real concurrent policy test proves global capability revocation waits, then denies subsequent writes. Previously registered migration bytes are unchanged.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129226909",
+                      "createdAt": "2026-09-29T03:08:04Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOVQwMzowODowNFrO9h8AnQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m8P2L",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-29_interaction_inactive_allowlists.sql",
+                "line": 175,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Reopen resolved reports when the same user reports again**\n\nAfter a moderator dismisses or reviews a user's report, the author can edit the still-visible comment into new abusive content, but the same reporter's next `comment.report` conflicts with the lifetime `(comment_id, reporter_id)` row and is silently ignored here. Because the command still returns `reported: true`, the user believes the new content was reported while no open report reaches either moderation queue; update the resolved row back to `open` with the new reason/timestamp, or scope report uniqueness to the comment version.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129170080",
+                      "createdAt": "2026-09-29T02:56:41Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in forward migration 2026-09-29_interaction_report_reopen (source712687c97, registered0dcd35c22). A fresh report reopens a dismissed/reviewed reporter slot with current reason/time; prior reason/state is preserved in protected audit. Existing open evidence is not overwritten. Replaying the old request key remains inert. The regression failed before repair and now passes on PostgreSQL16/17, including edit-after-dismissal, both resolved states, idempotent retry, queue/reason visibility and concurrent fresh requests yielding one row plus one reopen audit. Actual HTTP also verifies dismissed replay stays closed and a fresh report on edited content re-enters the queue with the new reason. No live production report data was changed.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129241954",
+                      "createdAt": "2026-09-29T03:10:58Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOVQwMzoxMDo1OFrO9h87Yg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m8dPb",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq-ui/src/features/interactions/DiscussionControls.tsx",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Reject follower policies for ownerless catalog targets**\n\nFor recordings, recording sessions, and record releases, the final resolver deliberately returns `ownerId: null`; however, this menu still offers \u201cSeguidores,\u201d and `settings.update` accepts it. `interaction_can_comment` implements that policy exclusively as `interaction_follows(actor, ownerId)`, so with a null owner every user fails the check and the supposedly follower-only policy silently behaves like \u201coff.\u201d Hide or reject this option for ownerless institutional targets, or define a real institutional follower authority.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129258150",
+                      "createdAt": "2026-09-29T03:14:19Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 3624766ea (forward151, registeredc9b72eeb8) and mobile7e38bdd (PR123 merged normally). The canonical command rejects followers when current ownerId is null; both clients share a policy predicate and omit that option, preserving follower policies for owned publications. Stale ownerless selections become off. Historical institutional follower settings already denied all comments, so migration reconciles them to explicit off with a revision/audit rather than broadening access. The SQL regression failed before repair. All7 properties/concurrency pass; the actual migration is applied twice to seeded historical state on PostgreSQL16 and17, checking equivalent denied access and no second revision/audit. Actual HTTP returns400 with the existing everyone policy unchanged. Rendered web/native owner-present/absent/stale-selection cases pass, as do type/lint. Replacement native artifacts are building and none is distributed.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129314638",
+                      "createdAt": "2026-09-29T03:25:51Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOVQwMzoyNTo1MVrO9iBXTg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m8p7F",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-29_interaction_catalog_authority.sql",
+                "line": 68,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Route public moments to a page that renders them**\n\nThe fresh evidence beyond the earlier private-event routing fix is that, for a moment belonging to a public directory event, this returns `/eventos/<event>?moment=<id>`, but `DirectoryPublicDetailPage` neither reads the `moment` parameter nor renders event moments at all. Consequently, \u201cVer publicaci\u00f3n\u201d from a public moment discussion opens only the containing event and gives the user no way to view the referenced moment's media; route these destinations to a moment-capable page or teach the public event page to load and focus the requested moment.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129339781",
+                      "createdAt": "2026-09-29T03:31:13Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 6671fcba1. Existing public event URLs with a moment identifier now continue to the existing protected media page after the public event resolves, preserving the standard login return path and copied URLs. The media page waits for both event and moment data, scrolls to and keyboard-focuses the requested moment with a visible focus outline, or reports an unavailable moment. Four regression cases cover public-link routing, unavailable events, delayed event data with exact media/focus, and missing moments; all 16 page tests and web type/lint checks pass. No publication grants or database history change.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129395473",
+                      "createdAt": "2026-09-29T03:42:34Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOVQwMzo0MjozNFrO9iGTEQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m836s",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq-ui/src/features/interactions/model.ts",
+                "line": 17,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Keep mention offsets in code-point space**\n\nWhen text before an existing mention contains multiple non-BMP characters, this comparison mixes the mention's code-point offset with JavaScript's UTF-16 `String.length`. For example, inserting text before `@Ana` in `\ud83d\ude00\ud83d\ude00 @Ana` incorrectly drops the mention binding instead of shifting it, leaving visible `@Ana` text without a profile link or mention notification. Compare against `before.length` from the spread array so all offsets use code points.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129429851",
+                      "createdAt": "2026-09-29T03:48:41Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "The current implementation and the quoted diff already compare against before.length, where before is the spread code-point array. The generated native copy has the same comparison. I reproduced the exact two-emoji example and added it as a regression, plus strengthened the 200 generated prefix-edit cases to require one retained binding (preventing vacuous success). All four model tests pass without changing application source or offsets.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129466640",
+                      "createdAt": "2026-09-29T03:55:54Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOVQwMzo1NTo1NFrO9iKpEA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m836w",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-29_interaction_moderation_delivery.sql",
+                "line": 54,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Deliver moderation notices across social blocks**\n\nWhen a comment author has blocked the owner or moderator before their comment is hidden or removed, the scoped command now succeeds, but this remaining generic notification check calls `interaction_notification_allowed`, which rejects every bilaterally blocked actor pair. The recipient cursor then advances and the event completes without notifying the author; the same predicate also hides an existing moderation notification. Moderation events need a block-independent delivery and visibility policy while ordinary social notifications retain the block check.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129429856",
+                      "createdAt": "2026-09-29T03:48:41Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed by immutable forward migration 2026-09-29_interaction_author_moderation_notices (source d1ecc182f8041e0f5341514fc2c67e2b27269b4a, registered in 8d355bae1). Delivery and visibility now share a separate audited-author predicate: exact comment/target/actor hide/remove evidence, affected author only, live accounts, nonretired target, and discussion mute. Generic system notices contain no actor/body/private target metadata; ordinary social filtering and destination authorization remain unchanged. The new regression failed before the fix and now passes; real HTTP proves owner hiding and moderator removal notify a blocked author. All seven SQL suites/concurrency and fresh PostgreSQL17 migration/property checks pass.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129491652",
+                      "createdAt": "2026-09-29T04:00:50Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOVQwNDowMDo1MFrO9iMKxA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m9CAJ",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq/src/TDF/Interactions/Server.hs",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Keep canonical reads available during emergency pause**\n\nWhen an activated deployment enters the documented recovery state by setting `interaction_runtime.enabled=false`, this unconditional gate returns 404 for `ReadSession` as well as writes, so summaries, comments, deep links, moderation queues, and account-control reads all disappear. The recovery contract in `docs/interactions/rollout.md` says the pause stops new writes and delivery while canonical reads continue enforcing privacy; distinguish an unactivated installation from a post-activation pause and permit reads when `activated_once` is true.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129495342",
+                      "createdAt": "2026-09-29T04:01:32Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 21c94e7007c50c105bc3fa89398baa21ae4d7e73. The shared API gate distinguishes ReadSession from WriteSession: converted paused installations keep canonical reads, while unactivated installations stay dark and all mutations still require enabled. Reproduced the old paused preference read returning 404. Hosted backend job 109251403581 in run 36520200444 now passes full HTTP coverage for preactivation, paused summaries/comments/context/deep links/reactors/public and private projections/account controls/moderation, revoked bearers, rejected command/preference/block/legacy writes, stopped delivery and resume.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129590362",
+                      "createdAt": "2026-09-29T04:20:49Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOVQwNDoyMDo0OVrO9iSMWg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m9LG2",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-29_interaction_catalog_authority.sql",
+                "line": 76,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Make publication routes select the referenced item**\n\nFresh evidence beyond the moment-routing repair is that these record destinations emit `?recording=`, `?session=`, and `?release=` identifiers, but `RecordsPublicPage` never reads the query string and renders each collection through `LazyPaginatedList` with only six initial items. Consequently, \u201cVer publicaci\u00f3n\u201d can open the generic records page without rendering or focusing the referenced publication whenever it falls outside the first page; the adjacent artist-release and club post/memory routes have the same ignored-parameter behavior. Either route to an item-capable destination or make each receiving page select and focus the requested item.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129555036",
+                      "createdAt": "2026-09-29T04:13:46Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 610773877. Reusable publication selection now opens the authorized catalog page and focuses the exact recording/session/release, artist release, club post or memory. Club links select the correct tab and preserve login return; unavailable items produce an explicit state. Manual pagination/tab choices remain usable after selection. Nineteen focused tests pass, including late-page artist/club selections; real browser coverage passes in all five desktop/mobile configurations. Type/lint, specification inventory and catalog-authority checks pass.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129649837",
+                      "createdAt": "2026-09-29T04:33:10Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOVQwNDozMzoxMFrO9iV0rQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m9ekd",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-29_interaction_ownerless_policy.sql",
+                "line": 98,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Reject whitespace-only comment bodies**\n\nWhen a caller bypasses the web composer and submits a body containing only tabs or newlines, `btrim(text)` does not remove those characters and the control-character regex deliberately excludes `\\x09`, `\\x0A`, and `\\x0D`, so this validation accepts the body. The command then persists a visible but empty-looking comment, increments discussion counts, and can notify subscribers; treat all-whitespace bodies as empty while continuing to allow line breaks in otherwise nonblank comments.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129679563",
+                      "createdAt": "2026-09-29T04:39:10Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in immutable forward migration de95fbd6a, registered by 890c1c5a7. Canonical create/edit now reject Unicode whitespace-only bodies independently of database locale while preserving valid multiline content and stable mention offsets. The regression fails against the previous function and passes after the repair; generated SQL cases verify no comment/revision/count/idempotency/event changes, and actual HTTP rejects both ASCII and Unicode blank create/edit. All seven PostgreSQL17 suites and the restored production rehearsal pass at manifest153; the restored copy stays paused with 30 notifications intact. Final hosted verification is running.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129745948",
+                      "createdAt": "2026-09-29T04:51:38Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOVQwNDo1MTozOFrO9ibsHA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m9sZi",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-28_interaction_policy.sql",
+                "line": 208,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Keep paused reads from registering new targets**\n\nWhen a previously activated installation is paused with `interaction_runtime.enabled=false`, the API deliberately continues serving `ReadSession` requests, but summary, comment, context, and reactor reads still call `interaction_register`; for any authorized publication without an existing target, this `INSERT` mutates canonical state during the emergency freeze. This contradicts the recovery guarantee that new writes stop while paused, so registration should return only an existing target unless the runtime is enabled.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129768392",
+                      "createdAt": "2026-09-29T04:56:16Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed by forward migration 5ab4b9d09, registered in 0a5653dc3. Registration returns an existing authorized target without writing; absent targets are created only while enabled. Shared runtime admission locks make pause wait for registration, commands, preferences, blocking and notification dispatch; the HTTP write gate uses the same boundary. Regression reproduced target creation during pause before the fix. Exact155 PostgreSQL17 properties and concurrency now pass, including observed pg_stat_activity lock waits for all five writer classes and no new targets from paused reads. HTTP regressions cover summary/comments/context/reactors on an unregistered paused publication; final hosted qualification is running.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129881239",
+                      "createdAt": "2026-09-29T05:17:53Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOVQwNToxNzo1M1rO9ij8lw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6m9sZm",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-29_interaction_nonblank_comments.sql",
+                "line": 178,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Reject whitespace-only moderation reasons**\n\nA raw client can submit a report reason containing only tabs or newlines because PostgreSQL's one-argument `btrim` removes ordinary spaces but not those characters. The report is accepted and appears in moderation queues with an empty-looking explanation; the same validation is reused for hide, remove, restore, and report-resolution reasons. Apply the all-whitespace test already introduced for comment bodies to these required reason fields as well.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129768400",
+                      "createdAt": "2026-09-29T04:56:16Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed by immutable forward migration 5ab4b9d09, registered in 0a5653dc3. All five moderation actions require a JSON string reason, at most1000 characters, with non-whitespace Unicode text. The regression fails before repair and passes for ASCII/Unicode blank values, oversized strings, numeric/boolean/object/array values; rejected attempts preserve reports, comment state/revision, audit, idempotency and events. Actual HTTP rejects blank reasons on all five actions and still accepts meaningful multiline reporting. Fresh PostgreSQL17 suites/concurrency and restored-clone155 rehearsal pass; historical reasons are preserved.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4129881424",
+                      "createdAt": "2026-09-29T05:17:55Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOVQwNToxNzo1NVrO9ij9UA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6nWujD",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-29_interaction_nonblank_reasons.sql",
+                "line": 179,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Require new comment content before reopening reports**\n\nAfter a moderator dismisses or reviews a report, the same reporter can immediately submit `comment.report` again against the unchanged comment because this conflict handler reopens every non-open row without checking whether `c.version` advanced since the previous report. Repeating that request after each resolution can keep an unchanged comment permanently in the moderation queue; associate reports with the reported comment version and reopen only after a later edit.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4140010872",
+                      "createdAt": "2026-09-30T01:40:01Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed by source commit 0b63d746a and registration 71fb78889. The additive migration records content versions without retaining body hashes; report resolution snapshots the current content version. A reporter can reopen only after an actual text or stable-mention change. New request keys, no-op edits, and owner hide/restore leave resolved reports closed, while a legitimate reopen preserves the previous evidence in the audit.\n\nThe unchanged-content regression fails on schema 156 and passes with the repair. All seven SQL property suites and nine real concurrency checks pass on fresh PostgreSQL 17/schema 157. A nonempty historical-report upgrade/reapplication test preserves existing evidence and does not consume a later unreported edit. Focused real HTTP checks also pass for fresh keys, unchanged content and an edited-content reopen. Registered SQL remains unchanged; fresh hosted checks are running on 71fb78889.\n",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4140067494",
+                      "createdAt": "2026-09-30T01:52:34Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0zMFQwMTo1MjozNFrO9sRqpg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6nW69K",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq-ui/src/pages/FanClubPage.tsx",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Preserve reactions before first activation**\n\nWhen the migrations are installed but first activation remains disabled\u2014the documented staging and repair-forward state\u2014this panel calls the canonical summary endpoint, which returns 404 while `interaction_runtime.enabled` and `activated_once` are false, and the panel renders nothing. Because this change also removes the working `ReactionBar` and legacy mutation from the fan-club feed even though the backend deliberately keeps those legacy paths operational before activation, users lose existing reaction counts and controls throughout staging or any activation failure; retain the legacy UI as a fallback until canonical activation succeeds.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4140092543",
+                      "createdAt": "2026-09-30T01:57:24Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 7cd3b61536dec58aa54b2bfc17493514e7045ab4. The server emits a non-cacheable interaction_not_activated marker only for never-activated canonical reads. The club feed preserves its existing ReactionBar and authorized post/memory adapters only for that explicit response, then refreshes canonical availability after settlement. Ordinary authorization/not-found errors and converted pauses never fall back. All 22 focused rendered tests, type/lint and complete hosted CI passed, including real HTTP assertions for pre-activation and paused unregistered targets: https://github.com/diegueins680/tdf-app/actions/runs/36659715321 .",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4140319325",
+                      "createdAt": "2026-09-30T02:42:25Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0zMFQwMjo0MjoyNVrO9shCXQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6nXTEZ",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-29_interaction_catalog_authority.sql",
+                "line": 78,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Restrict record interactions to the public feed**\n\nFor a recording that is active and in the published workflow state but is not a member of an active, published editorial collection, this resolver still marks it public. The actual `/records` feed includes recordings, sessions, and releases only through collection membership (`TDF.Server.Catalog.loadRecordsFeed`, lines 377-403), so a caller who knows such an item's UUID can retrieve its title through `/public/interactions`, register a discussion, and create reactions/comments even though the publication page does not expose or render the item. Require the same public-feed collection membership here and in the adjacent session/release branches.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4140250088",
+                      "createdAt": "2026-09-30T02:29:19Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed by immutable additive migration 2026-09-30_interaction_records_publication (source 9dd2cefc7, registered in 7ab568f7d). All three record kinds now require membership in an active/published editorial collection of the correct type and catalog-publication workflow. Normal and moderator resolution, registration, summary, commands and deep links share that boundary; withdrawn engagement remains intact. Source locks serialize comments against membership deletion and collection withdrawal; reverse membership indexes support lookups. The regression failed before the repair. All eight SQL property suites and ten concurrency groups passed on fresh PostgreSQL 17, including six withdrawal interleavings; focused actual HTTP checks passed for all three kinds. The encrypted production restore accepted and reapplied manifest 158 with all 77 notifications retained. Fresh hosted checks are running on 7ab568f7d; production remains unchanged.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4140326760",
+                      "createdAt": "2026-09-30T02:43:47Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0zMFQwMjo0Mzo0N1rO9shfaA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6nXk2f",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-30_interaction_records_publication.sql",
+                "line": 75,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Match interaction eligibility to renderable record media**\n\nFresh evidence beyond the earlier collection-membership repair is that this predicate still accepts recordings without a primary video resource, while `RecordsPublicPage.tsx:703-705` drops those items entirely; the adjacent session branch likewise accepts sessions that `RecordsPublicPage.tsx:722-724` drops unless they have a YouTube resource. For such a published member, a caller who knows the UUID can register and use a public discussion, but its `/records?...` destination reports that the publication is unavailable and never mounts the interaction panel. Require the same renderable-resource condition or provide a destination that can display these items.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4140366009",
+                      "createdAt": "2026-09-30T02:51:46Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Provided an authorized destination in 0fcad7e00 instead of making media-preview availability a publication grant. A selected recording/session without a preview now resolves through the existing canonical summary and mounts its title and discussion with accessible focus. Ordinary browsing still excludes unavailable-media cards. Cached success is removed on 401/403/404; transient failures can retry. Twelve rendered regressions and real-API browser journeys passed on Chromium desktop/phone/tablet, Firefox and WebKit, including keyboard disclosure and axe checks.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4140469879",
+                      "createdAt": "2026-09-30T03:13:37Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0zMFQwMzoxMzozN1rO9sqOdw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6nXk2h",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-30_interaction_records_publication.sql",
+                "line": 91,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Restrict interactions to records selected by the feed cap**\n\nFresh evidence beyond the earlier membership repair is that `loadRecordsFeed` selects only the first 200 memberships for each record type (`TDF/Server/Catalog.hs:377-385`), whereas these `EXISTS` checks admit every matching collection member. Once a type has more than 200 memberships, an item outside that bounded selection can expose its title and accept interactions by UUID even though `/records` never receives or renders it, so the generated destination cannot reach the publication. Mirror the feed's bounded selection or remove that cap from the publication source of truth.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4140366014",
+                      "createdAt": "2026-09-30T02:51:46Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed the unreachable destination in 0fcad7e00 without making the first-200 presentation window a publication authority. The regular feed remains bounded; an explicitly requested member outside that window performs one permission-enforcing canonical detail lookup and renders its discussion. Collection publication/current access remain server-enforced, so moving within the feed cannot invalidate existing engagement. Real-API tests simulate 200 other memberships for all three record kinds and assert exact title, focus, mounted discussion and bounded requests across five browser/device projects. No schema or backend changes were needed.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4140470097",
+                      "createdAt": "2026-09-30T03:13:40Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0zMFQwMzoxMzo0MFrO9sqPUQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6nX5Xw",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq-ui/src/components/LazyPaginatedList.tsx",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Recompute the selected page after a feed refresh**\n\nWhen the selected item moves to a different page during a query refresh, this guard returns early whenever `resetKey` is defined, regardless of the changed `selectedIndex`. For example, adding a newer release can move the requested item from index 5 to 6 while the URL parameter remains unchanged; the list stays on page 0, so the referenced publication is no longer rendered or focused. Include the index in the equality check before skipping the page update.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4140499853",
+                      "createdAt": "2026-09-30T03:19:54Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in a2f5b046a (current integrated head 2ae112562). Applied selection now compares index, page size and navigation key before skipping an update. Five rendered source-kind regressions reproduce movement across a boundary in both directions; unchanged index still preserves manual pagination. Real-API browser tests advance past cache freshness, refresh the feed, wait for the new page contents and assert exact-card focus and viewport in Chromium desktop/phone/tablet, Firefox and WebKit. All five pass, with outstanding route handlers drained before browser cleanup.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4143432112",
+                      "createdAt": "2026-09-30T10:10:22Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0zMFQxMDoxMDoyMlrO9vfBsA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6nX5Xy",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-30_interaction_records_publication.sql",
+                "line": 114,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Match classified interactions to public-detail expiry rules**\n\nFor a published classified with `expires_at IS NULL`, the schema permits the row and this resolver exposes its title and enables reactions/comments, but `publicClassified` in `TDF/Server/Directory.hs` requires `classified.expires_at > now()`. The generated `/clasificados/<slug>` destination therefore returns 404 for a discussion that the interaction API treats as public; use the same expiry predicate as the receiving public-detail endpoint.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4140499857",
+                      "createdAt": "2026-09-30T03:19:54Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed by additive migration159, 2026-09-30_interaction_classified_expiry.sql (source5966161d8; registered in a2f5b046a, current head2ae112562). The resolver now requires expires_at > now(), matching publicClassified; null fails closed through the existing IS DISTINCT FROM true guard. The regression fails before the fix. SQL and actual HTTP cover null/current/past expiry, anonymous/owner/moderator access, registration, reactions/comments, exact links and identity/count preservation after renewal. Nine PG17 property suites and ten concurrency groups pass. Exact159 manifest applied/reapplied on the encrypted isolated restore, paused with all77 notifications retained. No production rows changed.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4143432527",
+                      "createdAt": "2026-09-30T10:10:25Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0zMFQxMDoxMDoyNVrO9vfDTw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6nfZzM",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-28_interaction_discussions.sql",
+                "line": 69,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Preserve placeholders for hidden roots with visible replies**\n\nWhen an owner hides a root comment that already has visible replies, this predicate removes the root from the root page while the visible descendants remain counted by `interaction_comment_total`. The discussion therefore reports comments but renders no thread, leaving the surviving replies reachable only through existing deep links and violating the structural-placeholder behavior documented in `formal/interactions/README.md:16`; return a redacted hidden-root placeholder whenever readable descendants remain, as is already done for deleted roots.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4143595931",
+                      "createdAt": "2026-09-30T10:30:38Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Verified against the current migration chain and actual HTTP API: this predicate is superseded for canonical discussion reads. `interaction_read_optimization.sql:75-105` replaces `interaction_comments_page` and includes any root with readable descendants, then `interaction_comments_json` redacts its body/author/mentions. `TDF/Interactions/Server.hs:118` calls that replacement. The remaining compatibility use of `interaction_comment_readable` additionally filters `c.state=visible` for a flat legacy moment preview, so it does not control modern thread roots.\n\nI ran an isolated real-session HTTP regression on schema 159: owner hides a root with a reply and nested reply; anonymous, owner, author and ordinary viewers retain a hidden placeholder with empty body, null author, empty mentions and replyCount=2. Newest/Oldest/Relevant, one-item cursor reply pagination, exact grandchild context and destination all pass. Deleting both surviving replies removes the now-empty placeholder and leaves commentCount=0. Evidence: `/private/tmp/tdf-interaction-hidden-root-proof.log`. No application or migration change is necessary for this finding.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/470#discussion_r4143621132",
+                      "createdAt": "2026-09-30T10:33:59Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0zMFQxMDozMzo1OVrO9vqkDA=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0zMFQxMDozMDozOFrOp32czA=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

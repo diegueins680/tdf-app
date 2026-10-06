@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-10-04T00:41:42.670230+00:00",
+  "addresses": [
+    "178.105.93.101"
+  ],
+  "health_status": 200,
+  "health": {
+    "db": "ok",
+    "status": "ok"
+  }
+}

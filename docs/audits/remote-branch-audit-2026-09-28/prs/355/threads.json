@@ -1,0 +1,404 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 355,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "0cb8d2e15ac024682933485ed122c34826f2ba6f",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6iYWr6",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "formal/social/Relationships.tla",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Preserve the other principal's consent on withdrawal**\n\nWhen both principals have consented and either one withdraws, this transition clears the entire `consent` set, including the other principal's independently owned intent. That contradicts the policy's two independently owned intents and the S-CONSENT requirement in `docs/social/verification.md`; it also prevents the model from detecting implementations where one user improperly mutates another user's consent. Parameterize `Withdraw` by actor and remove only that actor's intent.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012155638",
+                      "createdAt": "2026-09-15T05:12:29Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 59def2b71ada073f4e784ed14af3bc3aa0b2a1a0. Withdraw(a) removes only the authenticated actor intent; OwnConsentOnly monitors preservation of the other principal. The corrected model passed 14,987 states and liveness; the new WithdrawalOwnership negative control restores whole-set clearing and specifically violates OwnConsentOnly. Block/deletion retain their separately documented invalidation behavior. scripts/social/check-models.sh passed both positive models and all three expected negative controls. SQL/HTTP refinement remains explicitly outside this foundation.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012641764",
+                      "createdAt": "2026-09-15T06:29:09Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQwNjoyOTowOVrO7ywN5A=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iYWsB",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "formal/social/Relationships.tla",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Separate delivery request IDs from relationship revisions**\n\nWhen two distinct messages or notifications are queued without an intervening relationship change, both use the same `version`; after the first finishes, `version \\notin terminal` permanently rejects the second, while retries before completion merely collapse into the same set member. This models one delivery per authorization revision rather than the documented request-identity deduplication, so the S-RETRY result cannot validate that unique commands progress while duplicate commands are suppressed. Track command identity separately and retain `version` only as the authorization revision.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012155649",
+                      "createdAt": "2026-09-15T05:12:29Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 59def2b71ada073f4e784ed14af3bc3aa0b2a1a0. Queue/Finish now use independent bounded request IDs and retain the immutable authorization revision per request. Distinct requests are admissible at one revision; pending/terminal IDs suppress duplicate delivery. AtMostOnce and per-request Progress pass. RequestAdmission checks that unique authorized IDs remain queueable; the RequestIdentity mutation reinstates revision-based rejection and produces the expected RequestAdmission violation. Positive Relationships: 55,530 generated / 14,987 distinct states, depth 10. Downstream SQL assertion regeneration is documented as pending.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012642355",
+                      "createdAt": "2026-09-15T06:29:13Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQwNjoyOToxM1rO7ywQMw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iZjrh",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "docs/social/verification.md",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Correct the recorded pre-repair TLC result**\n\nThe committed `evidence/models/Relationships.txt` reports 19,377 generated and **5,060** distinct states, not 14,987, so this verification register does not match the evidence it directs reviewers to. The 14,987 figure belongs to the later repaired run described below; record 5,060 here or commit a matching pre-repair log so the model-checking evidence remains auditable.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012642527",
+                      "createdAt": "2026-09-15T06:29:14Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Corrected in 3434d0fd529eb6c2a6ae1ced3244a732ce73e114. The historical pre-repair section again records 19,377 generated / 5,060 distinct states. The later review-repair section separately records 55,530 / 14,987. Committed the five exact positive/negative TLC logs under docs/social/model-evidence-2026-09-15/ so reviewers can inspect the repaired results directly. No model or test changed for this documentation correction.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012703564",
+                      "createdAt": "2026-09-15T06:37:43Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQwNjozNzo0M1rO7yz_TA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iZuwL",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "formal/social/Feed.tla",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Track publications that arrive above the active cursor**\n\nIf a page returns post 1 and `Publish` then adds post 2, the cursor remains 1 and `Candidates` permanently excludes post 2; `gap` also stays false because it only examines already-filtered candidates. Thus TLC accepts a traversal that skips an eligible item above the returned cursor, contrary to the guarantee in `docs/social/verification.md`; capture a traversal high-water mark or explicitly model and check concurrent publications.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012710913",
+                      "createdAt": "2026-09-15T06:38:42Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in dabe03ca145ab97d253b61f3c5d8e9ce44fab056. Start now captures a traversal high-water mark, including an empty traversal; later publications are explicitly deferred to refresh. StablePagination checks every eligible position within that boundary independently of Candidates, and CompleteAtEnd checks full coverage on exhaustion. Feed passed 1,674 distinct states; FeedSkipped specifically violates StablePagination. Committed logs and clarified the future API refinement contract in docs/social/verification.md.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016643636",
+                      "createdAt": "2026-09-15T14:21:36Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQxNDoyMTozNlrO72keNA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iZuwU",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "formal/social/Relationships.tla",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Exercise authoritative authorization in the safe read path**\n\nWith the positive configuration's `UnsafeCache = FALSE`, `Read` can only assign `leaked' = leaked`, so `AuthoritativeDenial` passes regardless of the current consent, block, membership, or privacy state. The reported positive S-AUTH result therefore cannot detect a missing or incorrect authoritative read check; model an observable read/grant decision based on live authority rather than making the safe branch false by construction.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012710924",
+                      "createdAt": "2026-09-15T06:38:42Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in dabe03ca145ab97d253b61f3c5d8e9ce44fab056. Read records an observable grant/denial together with its live authority snapshot. AuthoritativeDenial independently checks consent, blocks, actor liveness, membership and privacy in that snapshot; AuthorizedReadAvailable also catches an always-deny implementation. Relationships passed 102,833 distinct states and Progress; StaleCache specifically fails AuthoritativeDenial. Logs are committed under docs/social/model-evidence-second-review-2026-09-15/.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016644304",
+                      "createdAt": "2026-09-15T14:21:40Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQxNDoyMTo0MFrO72kg0A=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iZuwa",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "formal/social/Relationships.tla",
+                "line": 88,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Model request parameters before claiming retry safety**\n\nFor a client that reuses a request ID with a different recipient or payload, `Queue` sees only `r` and disables every reuse once that ID is pending or terminal, making the changed command indistinguishable from a valid retry. This leaves the documented stable-ID-plus-parameter-equality requirement unverified and would not catch an implementation that silently deduplicates conflicting commands; record immutable request parameters and require equality on replay.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012710934",
+                      "createdAt": "2026-09-15T06:38:42Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in dabe03ca145ab97d253b61f3c5d8e9ce44fab056. The complementary RequestReplay model binds immutable recipient and payload parameters per ID, accepts equal retries, rejects conflicting reuse while pending or terminal, and verifies one effect per ID. ReplayEquality and BindingImmutable passed over 272 distinct states with two IDs, recipients and payloads; RequestConflict specifically violates ReplayEquality. Documentation distinguishes this protocol model from Relationships and makes SQL/HTTP composition a remaining refinement requirement.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016645181",
+                      "createdAt": "2026-09-15T14:21:45Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQxNDoyMTo0NVrO72kkPQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iju-o",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "formal/social/Relationships.tla",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Require a live actor before unblocking**\n\nWhen `a` blocks, is deleted, and the version bound leaves another transition available, `Unblock(a)` remains enabled because it checks only `a \\in blocked`; `Delete(a)` neither clears that entry nor prevents the deleted principal from acting. This contradicts the documented active-owner/authenticated-actor requirement and lets the positive model accept implementations that process unblock commands from deleted principals. Require `a \\in alive` here (and on `Block(a)`, which has the same omission).\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016642403",
+                      "createdAt": "2026-09-15T14:21:29Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 3151106f2fb183b05e761ee803b2060e5d916ee6. Both Block(a) and Unblock(a) now require a live actor. InactiveActorCannotMutate checks that neither action is enabled for a deleted principal. The DeletedActor mutant removes the guard and fails exactly that invariant. All three positive configurations and six specific negative controls pass; Relationships explores 101,245 distinct states. Exact logs are committed under docs/social/model-evidence-active-actor-2026-09-15/.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016738298",
+                      "createdAt": "2026-09-15T14:30:53Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQxNDozMDo1M1rO72qP-g=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6ikDMu",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "formal/social/Relationships.tla",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Reject mutations against a deleted relationship target**\n\nThe new live-actor guard checks only `a`, so after `Delete(b)` the surviving principal can still execute `Block(a)` and mutate the tombstoned pair; because the command carries no expected revision, this also represents a delayed pre-deletion command being accepted. This means the model does not validate the stale-command rejection claimed for S-DELETE in `docs/social/verification.md`, or the valid-target rule in `docs/social/policy.md`; require both principals to be live and/or compare the command's expected revision before applying the mutation.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016765688",
+                      "createdAt": "2026-09-15T14:33:40Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in dd18f37c22321a5849e65f3e09f5e3b8e7bd1c37 (model commit 125df16b7). Block/Unblock require both principals to remain live. Request, Withdraw, Block and Unblock also carry an expected revision and reject every earlier revision. DeletedTargetCannotMutate and StaleRelationshipCommandsDenied independently check these boundaries; the two new mutants fail exactly those invariants. Three positive models and eight negative controls pass; Relationships explores 100,031 distinct states. Exact logs are committed under docs/social/model-evidence-tombstone-2026-09-15/. Concurrent preview configuration 45aa887ff was preserved unchanged via normal merge.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016934067",
+                      "createdAt": "2026-09-15T14:48:57Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQxNDo0ODo1N1rO722Msw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6ikTAj",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "formal/social/Relationships.tla",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Assert delivery authority independently of Finish**\n\nIf a pending request is revoked, blocked, or deleted before `Finish`, replacing this `authorized` expression with `TRUE` would still pass every configured invariant: `delivered` records no authority snapshot, while `AuthoritativeDenial` examines only `lastRead`. Consequently the S-AUTH result cannot detect an implementation that delivers stale work despite claiming to verify authorization at the delivery boundary; record the delivery-time snapshot and assert independently that every delivered request was authorized.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016864173",
+                      "createdAt": "2026-09-15T14:42:47Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 6d5c25c20927f45c7ce80e90d0d5d58b33b206a6. Finish records immutable delivery-time authority and revision evidence per delivered request. DeliveryAuthority independently checks consent, blocks, live principals, membership/privacy and the queued revision. StaleDelivery bypasses the guard and fails exactly DeliveryAuthority. All three positive models and twelve specific negative controls passed. Exact logs are committed under docs/social/model-evidence-independent-guarantees-2026-09-15/.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4017232299",
+                      "createdAt": "2026-09-15T15:18:27Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQxNToxODoyN1rO73IZqw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6ikTAp",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "formal/social/Relationships.tla",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Check that Unblock cannot restore cleared consent**\n\nAfter both actors consent, `Block(a)` can clear consent and `Unblock(a)` can run at version 4, but no checked property independently verifies that the latter leaves consent empty. A mutant or implementation that restores `Actors` during unblock would satisfy `ConsentIntegrity` because `blocked` is empty afterward, and `OwnConsentOnly` observes only withdrawals, so all positive checks could pass despite violating the documented no-resurrection rule. Preserve pre-unblock consent in observable state or add an action invariant and negative control for this transition.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016864180",
+                      "createdAt": "2026-09-15T14:42:47Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 6d5c25c20927f45c7ce80e90d0d5d58b33b206a6. NoConsentResurrection is an action property requiring every Unblock transition to preserve the pre-command consent set. UnblockResurrection restores Actors and fails exactly this property. All three positive models and twelve specific negative controls passed. Exact logs are committed under docs/social/model-evidence-independent-guarantees-2026-09-15/.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4017233241",
+                      "createdAt": "2026-09-15T15:18:32Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQxNToxODozMlrO73IdWQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iklsL",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "formal/social/Relationships.tla",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Verify Request cannot synthesize the peer's consent**\n\nA unilateral first request that incorrectly sets `consent' = Actors` would still pass every configured invariant: `ConsentIntegrity` only constrains blocked/deleted states, while `consentOwnerSafe` is updated only by `Withdraw`. The positive S-CONSENT result therefore cannot detect the legacy auto-connection behavior this model is intended to exclude. Record that `Request(a)` preserves every intent except `a`'s and add a negative control that attempts to create the peer's consent.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016977040",
+                      "createdAt": "2026-09-15T14:53:00Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 6d5c25c20927f45c7ce80e90d0d5d58b33b206a6. Request now records in consentOwnerSafe that every intent except the authenticated actor is preserved, extending OwnConsentOnly beyond Withdraw. RequestOwnership attempts to synthesize peer consent and fails exactly OwnConsentOnly. All three positive models and twelve specific negative controls passed. Exact logs are committed under docs/social/model-evidence-independent-guarantees-2026-09-15/.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4017233992",
+                      "createdAt": "2026-09-15T15:18:36Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQxNToxODozNlrO73IgSA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iklsS",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "formal/social/Relationships.tla",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Preserve the other principal's block on Unblock**\n\nWhen both principals have blocked, an implementation of `Unblock(a)` that clears the entire `blocked` set would satisfy all current invariants because none tracks block ownership. This removes `b`'s independently owned denial and permits subsequent consent requests without `b` ever unblocking, contrary to the directed, owner-controlled block policy in `docs/social/policy.md`. Add an ownership invariant and negative control that ensure unblocking one actor preserves every other block.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016977050",
+                      "createdAt": "2026-09-15T14:53:00Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 6d5c25c20927f45c7ce80e90d0d5d58b33b206a6. BlockOwnership is an action property requiring Unblock(a) to preserve blocked minus a. UnblockOwnership clears the entire set and fails exactly BlockOwnership when the other principal independently blocked. All three positive models and twelve specific negative controls passed. Exact logs are committed under docs/social/model-evidence-independent-guarantees-2026-09-15/.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4017234730",
+                      "createdAt": "2026-09-15T15:18:40Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQxNToxODo0MFrO73IjKg=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQxNDo1MzowMFrOopJbEg=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

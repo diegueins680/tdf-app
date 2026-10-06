@@ -1,0 +1,19 @@
+{
+  "merged": "29c6fba0d36ef81242e5ce15f5252136004e5de9",
+  "runs": [
+    {
+      "conclusion": "success",
+      "databaseId": 37268877144,
+      "headSha": "29c6fba0d36ef81242e5ce15f5252136004e5de9",
+      "status": "completed",
+      "url": "https://github.com/diegueins680/TDF-mobile/actions/runs/37268877144"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 37268879588,
+      "headSha": "29c6fba0d36ef81242e5ce15f5252136004e5de9",
+      "status": "completed",
+      "url": "https://github.com/diegueins680/TDF-mobile/actions/runs/37268879588"
+    }
+  ]
+}

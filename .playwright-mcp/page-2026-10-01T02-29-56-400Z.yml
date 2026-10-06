@@ -1,0 +1,335 @@
+- generic [ref=f15e1]:
+  - generic [ref=f15e1202]:
+    - generic [ref=f15e1205]:
+      - link [ref=f15e2248] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f15e1218]:
+        - link [ref=f15e2250] [cursor=pointer]:
+          - /url: /
+        - link [ref=f15e2252] [cursor=pointer]:
+          - /url: /reels/
+        - link [ref=f15e2254] [cursor=pointer]:
+          - /url: /direct/t/110609003672279
+          - generic [ref=f15e1246]: "8"
+        - link [ref=f15e2257] [cursor=pointer]:
+          - /url: /explore/
+        - link [ref=f15e2261] [cursor=pointer]:
+          - /url: "#"
+        - link [ref=f15e2270] [cursor=pointer]:
+          - /url: "#"
+        - link [ref=f15e2272] [cursor=pointer]:
+          - /url: "#"
+        - link [ref=f15e2274] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f15e2275]
+      - generic [ref=f15e1313]:
+        - link [ref=f15e2277] [cursor=pointer]:
+          - /url: "#"
+        - link [ref=f15e2279] [cursor=pointer]:
+          - /url: "#"
+    - main [ref=f15e1333]:
+      - generic [ref=f15e1338]:
+        - navigation [ref=f15e2281]:
+          - generic [ref=f15e1340]:
+            - generic [ref=f15e1341]:
+              - button [ref=f15e2282] [cursor=pointer]:
+                - heading [level=2] [ref=f15e2283]:
+                  - generic [ref=f15e1345]: tdf.records.label
+              - generic [ref=f15e1353]:
+                - button [ref=f15e2286] [cursor=pointer]
+                - button [ref=f15e2288] [cursor=pointer]
+            - tablist [ref=f15e1367]:
+              - tab [selected] [ref=f15e2290] [cursor=pointer]:
+                - generic [ref=f15e1369]: Primary
+              - tab [ref=f15e2291] [cursor=pointer]:
+                - generic [ref=f15e1372]: General
+              - tab [ref=f15e2292] [cursor=pointer]:
+                - generic [ref=f15e1375]: From ads
+              - tab [ref=f15e2293] [cursor=pointer]:
+                - generic [ref=f15e1379]: Requests
+            - textbox [ref=f15e2295]:
+              - /placeholder: Search
+            - generic [ref=f15e1390]:
+              - generic [ref=f15e1392]:
+                - list [ref=f15e1394]:
+                  - listitem [ref=f15e1395]
+                  - listitem [ref=f15e1396]:
+                    - button [ref=f15e2296] [cursor=pointer]:
+                      - generic [ref=f15e1399]:
+                        - generic [ref=f15e1400]: Current obsession...
+                        - generic [ref=f15e1406]:
+                          - link [ref=f15e1408]
+                          - generic [ref=f15e1409]: Your note
+                  - listitem [ref=f15e1411]:
+                    - button [ref=f15e2297] [cursor=pointer]:
+                      - generic [ref=f15e1415]:
+                        - generic [ref=f15e1416]: 01-10-26 FULGOR 🎬
+                        - generic [ref=f15e1423]:
+                          - link [ref=f15e2298]
+                          - generic [ref=f15e1427]: Verde 70
+                  - listitem [ref=f15e1430]:
+                    - button [ref=f15e2300] [cursor=pointer]:
+                      - generic [ref=f15e1434]:
+                        - generic [ref=f15e1440]:
+                          - generic [ref=f15e1441]: Something (Live)
+                          - generic [ref=f15e1448]: George Harrison
+                        - generic [ref=f15e1449]:
+                          - link [ref=f15e2302]
+                          - generic [ref=f15e1453]: Gian
+                  - listitem [ref=f15e1456]:
+                    - button [ref=f15e2304] [cursor=pointer]:
+                      - generic [ref=f15e1460]:
+                        - generic [ref=f15e1461]: Sì tu novio habla más de fútbol que de conciencia social, para mi estas soltera
+                        - generic [ref=f15e1468]:
+                          - link [ref=f15e2305]
+                          - generic [ref=f15e1472]: Gary Galáctico
+                  - listitem [ref=f15e1475]:
+                    - button [ref=f15e2307] [cursor=pointer]:
+                      - generic [ref=f15e1479]:
+                        - generic [ref=f15e1480]: "Bogotá: mañana Casa Kilele"
+                        - generic [ref=f15e1487]:
+                          - link [ref=f15e2308]
+                          - generic [ref=f15e1491]: GRECIAALBÁN
+                  - listitem [ref=f15e1494]:
+                    - button [ref=f15e2310] [cursor=pointer]:
+                      - generic [ref=f15e1498]:
+                        - generic [ref=f15e1504]:
+                          - generic [ref=f15e1505]: Silence & Secrets (Black Coffee Remix)
+                          - generic [ref=f15e1512]: WhoMadeWho
+                        - generic [ref=f15e1513]:
+                          - link [ref=f15e2312]
+                          - generic [ref=f15e1517]: Zeret 🧑‍🩰Dj
+                  - listitem [ref=f15e1520]:
+                    - button [ref=f15e2314] [cursor=pointer]:
+                      - generic [ref=f15e1524]:
+                        - generic [ref=f15e1525]: Oficialmente segundo año senza colada morada 💔🥺
+                        - generic [ref=f15e1532]:
+                          - link [ref=f15e2315]
+                          - generic [ref=f15e1536]: Li.lith
+                  - listitem [ref=f15e1539]:
+                    - button [ref=f15e2317] [cursor=pointer]:
+                      - generic [ref=f15e1543]:
+                        - generic [ref=f15e1544]: Q panico
+                        - generic [ref=f15e1551]:
+                          - link [ref=f15e2318]
+                          - generic [ref=f15e1555]: misticbafu
+                  - listitem [ref=f15e1558]:
+                    - button [ref=f15e2320] [cursor=pointer]:
+                      - generic [ref=f15e1562]:
+                        - generic [ref=f15e1563]: extrañaba el canto de las ranas 🌧️
+                        - generic [ref=f15e1570]:
+                          - link [ref=f15e2321]
+                          - generic [ref=f15e1574]: María Daniela
+                - button [ref=f15e2323] [cursor=pointer]
+              - generic [ref=f15e1582]:
+                - button [pressed] [ref=f15e2324] [cursor=pointer]:
+                  - generic [ref=f15e2088]:
+                    - generic [ref=f15e2089]: Alejandro Soria
+                    - generic [ref=f15e2095]:
+                      - generic [ref=f15e2096]: "You: Hola, Alejandro 👋 Vimos tu trabajo en Modular Academy y tus sets en Quito. Tu escena necesita un espacio propio: queremos que las conexiones de la pista también tengan continuidad fuera de ella. En TDF puedes explorar perfiles y seguir artistas para volver a su música; este enlace abre el registro con intención profesional: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f15e2098]:
+                        - generic [ref=f15e2099]: ·
+                        - generic [ref=f15e2102]: 3m
+                - button [ref=f15e2327] [cursor=pointer]:
+                  - generic [ref=f15e1595]:
+                    - generic [ref=f15e1596]: Carla Román
+                    - generic [ref=f15e1602]:
+                      - generic [ref=f15e1603]: "You: Hola, Carla 👋 Vimos tu versión de «Escríbeme» y el repertorio ecuatoriano que compartes. En TDF reunimos perfiles, artistas y lanzamientos para que la música tenga un lugar al que volver. Te invitamos a empezar tu perfil de artista con tus enlaces y explorar la comunidad desde aquí: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f15e1605]:
+                        - generic [ref=f15e1606]: ·
+                        - generic [ref=f15e1609]: 6m
+                - button [ref=f15e2330] [cursor=pointer]:
+                  - generic [ref=f15e1624]:
+                    - generic [ref=f15e1625]: Neil Armas 🎙️
+                    - generic [ref=f15e1631]:
+                      - generic [ref=f15e1632]: "You: Hola, Neil 👋 Vimos tu lanzamiento «Siento» y tu consulta en el reel de TDF. Tu escena necesita un espacio propio: estamos invitando a quienes hacen música en Quito a encontrarse en TDF. Puedes empezar tu perfil de artista, reunir los enlaces de tu música y explorar a otros proyectos de la escena. https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f15e1634]:
+                        - generic [ref=f15e1635]: ·
+                        - generic [ref=f15e1638]: 7m
+                - button [ref=f15e2333] [cursor=pointer]:
+                  - generic [ref=f15e1646]:
+                    - generic [ref=f15e1653]:
+                      - generic [ref=f15e1655]:
+                        - generic [ref=f15e1656]: Crackero🦇
+                        - button [ref=f15e2335]:
+                          - generic [ref=f15e1660]: • AI-generated profile
+                      - generic [ref=f15e1663]:
+                        - generic [ref=f15e1664]: ¿Puedo obtener más información sobre tu empresa?
+                        - generic [ref=f15e1666]:
+                          - generic [ref=f15e1667]: ·
+                          - generic [ref=f15e1670]: 2h
+                    - generic [ref=f15e1673]: Unread
+                - button [ref=f15e2337] [cursor=pointer]:
+                  - generic [ref=f15e1682]:
+                    - generic [ref=f15e1689]:
+                      - generic [ref=f15e1690]: Maribel Tipán
+                      - generic [ref=f15e1696]:
+                        - generic [ref=f15e1697]: Maribel Tipán replied to an ad. View ad(https://www.instagram.com/p/DL57XEtgmwh/)
+                        - generic [ref=f15e1699]:
+                          - generic [ref=f15e1700]: ·
+                          - generic [ref=f15e1703]: 10h
+                    - generic [ref=f15e1706]: Unread
+                - button [ref=f15e2340] [cursor=pointer]:
+                  - generic [ref=f15e1715]:
+                    - generic [ref=f15e1722]:
+                      - generic [ref=f15e1723]: Blue Records
+                      - generic [ref=f15e1729]:
+                        - generic [ref=f15e1730]: Blue sent an attachment.
+                        - generic [ref=f15e1732]:
+                          - generic [ref=f15e1733]: ·
+                          - generic [ref=f15e1736]: 10h
+                    - generic [ref=f15e1739]: Unread
+                - button [ref=f15e2343] [cursor=pointer]:
+                  - generic [ref=f15e1802]:
+                    - status [ref=f15e2344]
+                    - generic [ref=f15e1808]:
+                      - status [ref=f15e2345]
+                      - status [ref=f15e2346]
+        - generic [ref=f15e1817]:
+          - generic [ref=f15e1821]:
+            - link [ref=f15e2347] [cursor=pointer]:
+              - /url: /alejandrosoria_music/
+              - generic [ref=f15e1828]:
+                - heading [level=2] [ref=f15e2349]:
+                  - generic [ref=f15e1831]: Alejandro Soria
+                - generic [ref=f15e1832]: alejandrosoria_music
+            - generic [ref=f15e1836]:
+              - button [ref=f15e2350] [cursor=pointer]
+              - button [ref=f15e2352] [cursor=pointer]
+              - button [ref=f15e2354] [cursor=pointer]
+          - generic [ref=f15e1852]:
+            - generic [ref=f15e1857]:
+              - progressbar [ref=f15e1860]
+              - generic [ref=f15e1958]:
+                - generic [ref=f15e1959]: 10/19/25, 3:48 AM
+                - group [ref=f15e1962]:
+                  - generic [ref=f15e1963]:
+                    - generic [ref=f15e1964]: Mentioned you in their story
+                    - generic [ref=f15e1968]:
+                      - article [ref=f15e1969]:
+                        - link [ref=f15e1974] [cursor=pointer]:
+                          - /url: /stories/tdf.records.label/3746507177822316376?reel_id=archiveDay%3A18321023242240477&reel_owner_id=45696040941
+                      - generic [ref=f15e1977]:
+                        - group:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - button
+                            - generic:
+                              - generic:
+                                - button
+                            - generic:
+                              - generic:
+                                - button
+              - generic [ref=f15e2031]:
+                - generic [ref=f15e2032]: 4:25 AM
+                - group [ref=f15e2035]:
+                  - generic [ref=f15e2038]:
+                    - article [ref=f15e2357]:
+                      - generic [ref=f15e2041]:
+                        - generic [ref=f15e2044]:
+                          - text: "Hola, Alejandro Vimos tu trabajo en Modular Academy y tus sets en Quito. Tu escena necesita un espacio propio: queremos que las conexiones de la pista también tengan continuidad fuera de ella. En TDF puedes explorar perfiles y seguir artistas para volver a su música; este enlace abre el registro con intención profesional:"
+                          - link [ref=f15e2359] [cursor=pointer]:
+                            - /url: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a
+                            - text: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a
+                          - text: "Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                        - link [ref=f15e2360] [cursor=pointer]:
+                          - /url: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a
+                          - generic [ref=f15e2050]: TDF Records
+                    - generic [ref=f15e2054]:
+                      - group:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - button
+                          - generic:
+                            - generic:
+                              - button
+                          - generic:
+                            - generic:
+                              - button
+            - generic [ref=f15e1987]:
+              - button [ref=f15e2361] [cursor=pointer]
+              - generic [ref=f15e1994]:
+                - textbox [ref=f15e1995]:
+                  - paragraph [ref=f15e2055]
+                - generic: Message...
+              - generic [ref=f15e1997]:
+                - button [ref=f15e2363] [cursor=pointer]
+                - button [ref=f15e2365] [cursor=pointer]
+                - button [ref=f15e2367] [cursor=pointer]
+  - generic [ref=f15e2382]:
+    - button [ref=f15e2805] [cursor=pointer]
+    - dialog [ref=f15e2807]:
+      - generic [ref=f15e2653]:
+        - generic [ref=f15e2657]:
+          - heading [level=1] [ref=f15e2808]: New reel
+          - button [ref=f15e2809] [cursor=pointer]
+          - button [ref=f15e2811] [cursor=pointer]: Share
+        - generic [ref=f15e2671]:
+          - generic [ref=f15e2675]:
+            - generic [ref=f15e2676]:
+              - button [ref=f15e2812]
+              - button [ref=f15e2813] [cursor=pointer]
+            - button [ref=f15e2814] [cursor=pointer]:
+              - button [ref=f15e2815]:
+                - generic [ref=f15e2688]: Tag people
+          - generic [ref=f15e2696]:
+            - generic [ref=f15e2697]:
+              - generic [ref=f15e2703]:
+                - link [ref=f15e2817]
+                - generic [ref=f15e2708]: tdf.records.label
+              - generic [ref=f15e2714]:
+                - generic [ref=f15e2715]:
+                  - textbox [ref=f15e2819]:
+                    - paragraph [ref=f15e2717]
+                  - generic: Add a caption...
+                - generic [ref=f15e2718]:
+                  - button [ref=f15e2820] [cursor=pointer]
+                  - button [ref=f15e2822] [cursor=pointer]:
+                    - generic [ref=f15e2727]: 0/2,200
+              - separator [ref=f15e2728]
+              - textbox [ref=f15e2823]:
+                - /placeholder: Add location
+              - textbox [ref=f15e2825]:
+                - /placeholder: Add collaborators
+              - generic [ref=f15e2746]:
+                - generic [ref=f15e2747]:
+                  - generic [ref=f15e2748]: Add AI label
+                  - switch [ref=f15e2752] [cursor=pointer]
+                - generic [ref=f15e2754]:
+                  - text: This label is required for realistic photos and videos made with AI. People will see it on your content.
+                  - link [ref=f15e2827] [cursor=pointer]:
+                    - /url: https://help.instagram.com/761121959519495
+                    - text: Learn more
+              - generic [ref=f15e2758]:
+                - generic [ref=f15e2759]: Schedule content
+                - switch [ref=f15e2763] [cursor=pointer]
+              - separator [ref=f15e2764]
+              - generic [ref=f15e2765]:
+                - button [ref=f15e2828] [cursor=pointer]:
+                  - generic [ref=f15e2767]: Share to
+                - generic [ref=f15e2773]:
+                  - generic [ref=f15e2779]:
+                    - generic [ref=f15e2780]: Diego Saa
+                    - generic [ref=f15e2781]:
+                      - generic [ref=f15e2782]: Facebook
+                      - generic [ref=f15e2783]: ·
+                      - generic [ref=f15e2784]: Public
+                  - switch [ref=f15e2787] [cursor=pointer]
+              - separator [ref=f15e2788]
+              - button [ref=f15e2831] [cursor=pointer]:
+                - generic [ref=f15e2791]: Accessibility
+              - separator [ref=f15e2795]
+              - button [ref=f15e2833] [cursor=pointer]:
+                - generic [ref=f15e2798]: Advanced settings
+              - separator [ref=f15e2802]
+            - generic [ref=f15e2803]: Your reel will be shared with your followers in their feeds and can be seen on your profile. It may also appear in places like Reels, where anyone can see it.
+  - dialog [ref=f15e2841]:
+    - generic [ref=f15e2844]:
+      - heading [active] [level=1] [ref=f15e2845]:
+        - heading "Stop sharing to Facebook?" [level=1] [ref=f15e2846]
+      - generic [ref=f15e2847]:
+        - button "Don't share this reel" [ref=f15e2848] [cursor=pointer]
+        - button "Stop sharing all reels" [ref=f15e2849] [cursor=pointer]
+        - button "Cancel" [ref=f15e2850] [cursor=pointer]

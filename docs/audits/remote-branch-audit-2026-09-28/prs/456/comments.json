@@ -1,0 +1,73 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4058822235",
+      "pull_request_review_id": 5262548784,
+      "id": 4058822235,
+      "node_id": "PRRC_kwDOQPdUrM7x7LZb",
+      "diff_hunk": "@@ -321,22 +325,10 @@ eventDiscoveryLoop env = do\n         LogBuf.addLog LogBuf.LogError message\n       Right () -> pure ()\n     now <- getCurrentTime\n-    waitUntil (addUTCTime discoverySlotSeconds (eventDiscoverySlot now))\n+    waitUntil (addUTCTime discoverySlotSeconds (eventDiscoveryDailySlot (eventDiscoveryHourLocal envConfig) now))\n \n discoverySlotSeconds :: NominalDiffTime\n-discoverySlotSeconds = 6 * 60 * 60\n-\n-eventDiscoverySlot :: UTCTime -> UTCTime\n-eventDiscoverySlot now =\n-  UTCTime\n-    (utctDay now)\n-    ( secondsToDiffTime\n-        ( (floor (toRational (utctDayTime now)) `div` slotSeconds)\n-            * slotSeconds\n-        )\n-    )\n-  where\n-    slotSeconds = 6 * 60 * 60\n+discoverySlotSeconds = 24 * 60 * 60",
+      "path": "tdf-hq/src/TDF/Cron.hs",
+      "commit_id": "f4223a98d82bebfd5b15147795379a6c8cf58fb6",
+      "original_commit_id": "f4223a98d82bebfd5b15147795379a6c8cf58fb6",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Retry open circuits before the following daily slot**\n\nWhen a source reaches three consecutive failures, `markSourceFailure` timestamps it at the end of the failed run and `sourceCircuitOpen` suppresses attempts for 24 hours. Because this change schedules the next attempt exactly 24 hours after the previous slot began, that attempt normally occurs slightly less than 24 hours after the failure timestamp and is skipped; the source is then not retried until the following daily slot, nearly 48 hours after failure. A provider that recovers during the intended 24-hour cooldown therefore remains stale for an extra day; schedule the retry relative to the failure time or otherwise account for the daily cadence.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-21T01:58:43Z",
+      "updated_at": "2026-09-21T01:58:43Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/456#discussion_r4058822235",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/456",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4058822235"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/456#discussion_r4058822235"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/456"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4058822235/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 330,
+      "original_start_line": 330,
+      "start_side": "RIGHT",
+      "line": 331,
+      "original_line": 331,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 61,
+      "position": 61,
+      "subject_type": "line"
+    }
+  ]
+]

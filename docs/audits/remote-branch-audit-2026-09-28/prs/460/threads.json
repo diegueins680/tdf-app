@@ -1,0 +1,31 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 460,
+          "reviewDecision": null,
+          "mergeStateStatus": "CLEAN",
+          "mergeable": "MERGEABLE",
+          "headRefOid": "648f2d6dc69080d4438ae2a25309497012ded2d1",
+          "baseRefName": "fix/event-discovery-schedule-20260918",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          }
+        }
+      }
+    }
+  }
+]

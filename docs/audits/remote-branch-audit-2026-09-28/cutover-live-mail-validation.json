@@ -1,0 +1,20 @@
+{
+  "verified_at": "2026-09-30T00:51:17.654091+00:00",
+  "scheduled_command_result": "PASS",
+  "mailboxReadSucceeded": true,
+  "errors": [],
+  "aggregate_report_count": 8,
+  "observedAt": "2026-09-30T00:50:28.870814+00:00",
+  "installed_hashes_verified": [
+    {
+      "path": "/Users/diegosaa/GitHub/tdf-app/tmp/mail-deliverability/production_access.py",
+      "sha256": "63ac7637eac3b2eb8619e5dfffd4e9a6500f9d99910b2e7986ceb46abd30d2b2"
+    },
+    {
+      "path": "/Users/diegosaa/GitHub/tdf-app/tmp/mail-deliverability/monitor.py",
+      "sha256": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a"
+    }
+  ],
+  "no_messages_sent": true,
+  "read_only_imap": true
+}

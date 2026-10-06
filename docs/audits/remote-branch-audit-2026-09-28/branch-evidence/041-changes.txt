@@ -1,0 +1,20 @@
+ .../0122-read-only-payment-query-observability.md  |  92 +++++++++
+ .../catalog-list-decisions.json                    |  20 ++
+ .../ecuador-payment-platform-audit-2026-09-11.md   |   6 +
+ docs/payments/operator-runbooks.md                 |   9 +
+ docs/payments/query-observability-2026-09-15.md    | 222 +++++++++++++++++++++
+ .../payment-query-report-contract.test.mjs         |  46 +++++
+ scripts/quality-repo.sh                            |   1 +
+ tdf-hq-ui/src/api/commerceOperations.test.ts       |  20 ++
+ tdf-hq-ui/src/api/commerceOperations.ts            |  18 ++
+ tdf-hq-ui/src/api/generated/types.ts               | 127 ++++++++++++
+ .../payments/ProviderQueryRecoveryPanel.test.tsx   | 103 ++++++++++
+ .../payments/ProviderQueryRecoveryPanel.tsx        | 148 ++++++++++++++
+ .../src/pages/CommerceProviderEventsPage.test.tsx  |   5 +
+ tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx |   5 +-
+ tdf-hq/docs/openapi/api.yaml                       |  93 +++++++++
+ tdf-hq/src/TDF/API/CommerceOperations.hs           |  54 +++++
+ tdf-hq/src/TDF/Server/CommerceOperations.hs        | 116 ++++++++++-
+ tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs      | 152 +++++++++++++-
+ tdf-mobile                                         |   2 +-
+ 19 files changed, 1234 insertions(+), 5 deletions(-)

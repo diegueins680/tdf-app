@@ -1,0 +1,79 @@
+[
+  {
+    "kind": "mobile-gitlink",
+    "sourceRepository": "TDF-mobile",
+    "sourceRevision": "4cf82e2d3dd290553e71f5a3b516b4e517676bc3",
+    "targetPR": null,
+    "targetRef": "main",
+    "targetRevision": "24d8ba45d246c6e7431deb9b510e352265821a56",
+    "pinInMobileMain": true
+  },
+  {
+    "kind": "mobile-gitlink",
+    "sourceRepository": "TDF-mobile",
+    "sourceRevision": "4cf82e2d3dd290553e71f5a3b516b4e517676bc3",
+    "targetPR": 499,
+    "targetRevision": "ecc42d39a40455862c5bfd65ecf96df269e274db",
+    "pinInMobileMain": true,
+    "pinInShippedRelease": false,
+    "containingReleaseBranches": []
+  },
+  {
+    "kind": "mobile-gitlink",
+    "sourceRepository": "TDF-mobile",
+    "sourceRevision": "6f63aa4e825d261b3fdff2e7b9d2432e0176dddd",
+    "targetPR": 498,
+    "targetRevision": "97f9f744aa72a17c4aa688eb07ac40fd325f5556",
+    "pinInMobileMain": false,
+    "pinInShippedRelease": true,
+    "containingReleaseBranches": [
+      "release/ticket-inclusive-main-compat-20261005"
+    ]
+  },
+  {
+    "kind": "mobile-gitlink",
+    "sourceRepository": "TDF-mobile",
+    "sourceRevision": "6f63aa4e825d261b3fdff2e7b9d2432e0176dddd",
+    "targetPR": 497,
+    "targetRevision": "5241d97906f283594597f21a8b99ccc5176be08a",
+    "pinInMobileMain": false,
+    "pinInShippedRelease": true,
+    "containingReleaseBranches": [
+      "release/ticket-inclusive-main-compat-20261005"
+    ]
+  },
+  {
+    "kind": "mobile-gitlink",
+    "sourceRepository": "TDF-mobile",
+    "sourceRevision": "6f63aa4e825d261b3fdff2e7b9d2432e0176dddd",
+    "targetPR": 496,
+    "targetRevision": "4d99974dd65a16daa6c6bd39eac077ecffa5b53e",
+    "pinInMobileMain": false,
+    "pinInShippedRelease": true,
+    "containingReleaseBranches": [
+      "release/ticket-inclusive-main-compat-20261005"
+    ]
+  },
+  {
+    "kind": "mobile-gitlink",
+    "sourceRepository": "TDF-mobile",
+    "sourceRevision": "4cf82e2d3dd290553e71f5a3b516b4e517676bc3",
+    "targetPR": 495,
+    "targetRevision": "f3973387706663ced1e192eb2ec474bdb3b2d6c4",
+    "pinInMobileMain": true,
+    "pinInShippedRelease": false,
+    "containingReleaseBranches": []
+  },
+  {
+    "kind": "mobile-gitlink",
+    "sourceRepository": "TDF-mobile",
+    "sourceRevision": "6f63aa4e825d261b3fdff2e7b9d2432e0176dddd",
+    "targetPR": 493,
+    "targetRevision": "a849d9b85168de1fcc1f5d64c95863fa41f5c312",
+    "pinInMobileMain": false,
+    "pinInShippedRelease": true,
+    "containingReleaseBranches": [
+      "release/ticket-inclusive-main-compat-20261005"
+    ]
+  }
+]

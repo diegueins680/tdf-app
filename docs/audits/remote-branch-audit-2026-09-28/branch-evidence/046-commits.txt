@@ -1,0 +1,11 @@
+0081b6b03bd58716090c57d936f31a364e944522 2026-09-14T19:50:50-05:00 continuous-improvement-loop[bot] docs(payments): track redacted access report beside the runbook
+30202d53c3ccdbf420f6a715746d697d59fedcb9 2026-09-14T19:49:59-05:00 continuous-improvement-loop[bot] docs(payments): preserve catalog repair and fresh staging access evidence
+79f8366fd9cae469494bd7bbecebc2e3c788477b 2026-09-14T19:39:43-05:00 continuous-improvement-loop[bot] fix(ci): review fixed staging security lists without weakening audit
+8412df4bd4f0583d35de6b20758d44107aab7069 2026-09-14T19:11:38-05:00 continuous-improvement-loop[bot] docs(payments): distinguish automatic previews from staging deployment
+b1e91d0c10a3e1dab2a5d7505b79e0973aa1a051 2026-09-14T19:08:37-05:00 continuous-improvement-loop[bot] docs(payments): record staging qualification and exact access blockers
+f9f60df22b35b607ca95f87f75139b041ffdf2c8 2026-09-14T19:04:11-05:00 continuous-improvement-loop[bot] Merge branch 'codex/payment-terminal-recovery-20260914' into codex/payment-staging-qualification-20260914
+1bd8d9b79ad9de3c8c7837c50b516e3e38d57071 2026-09-14T19:04:10-05:00 continuous-improvement-loop[bot] fix(payments): isolate staging app credentials from production tokens
+2aee92f1bb809d8d0a569a0e535bb10012b7c45a 2026-09-14T18:05:34-05:00 continuous-improvement-loop[bot] chore(payments): check configured alternative staging access
+3d136d34004e2bd214a1283a7026e9a94ff55aae 2026-09-14T18:00:56-05:00 continuous-improvement-loop[bot] fix(payments): classify staging access failures without raw errors
+f900daa769f63579b489fd4e3b96f284402dcf28 2026-09-14T17:54:10-05:00 continuous-improvement-loop[bot] Merge branch 'codex/payment-terminal-recovery-20260914' into codex/payment-staging-qualification-20260914
+1784518f106a97482291de25c331495e6a891dd1 2026-09-14T17:52:43-05:00 continuous-improvement-loop[bot] chore(payments): add secret-safe staging access inspection

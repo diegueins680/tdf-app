@@ -1,0 +1,421 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043408645",
+      "pull_request_review_id": 5243794150,
+      "id": 4043408645,
+      "node_id": "PRRC_kwDOQPdUrM7xAYUF",
+      "diff_hunk": "@@ -540,6 +540,11 @@\n       \"id\": \"2026-09-16_artist_self_service\",\n       \"path\": \"tdf-hq/sql/2026-09-16_artist_self_service.sql\",\n       \"introducedBy\": \"d8fd169c1bfec56c4f24bab7a49a0d56bbadeb37\"\n+    },\n+    {\n+      \"id\": \"2026-09-17_identity_reconciliation\",\n+      \"path\": \"tdf-hq/sql/2026-09-17_identity_reconciliation.sql\",\n+      \"introducedBy\": \"ab0a7cc211c0ad1be72fcc60ed3ad324d8227501\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "72d33c57d5723f1cda413bf8b7858cc361b5a2fb",
+      "original_commit_id": "f905f8a870dc74fb03fff08d080d5b814d68f993",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Point the migration at an ancestor of the release**\n\nFor this commit, `git merge-base --is-ancestor ab0a7cc211c0ad1be72fcc60ed3ad324d8227501 a6a6d8ab11beee8b7df23b00d9fcb62cfba489d2` exits 1 because the recorded introduction commit is on an unmerged side history. The guarded release path in `scripts/production-release.mjs` performs this exact ancestry check for every manifest entry and refuses the release when it fails, so this commit and its ordinary descendants cannot be deployed. Register the migration from a commit that is actually in the release ancestry.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T02:52:16Z",
+      "updated_at": "2026-09-18T02:52:16Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/426#discussion_r4043408645",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/426",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043408645"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/426#discussion_r4043408645"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/426"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043408645/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 547,
+      "original_line": 547,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 8,
+      "position": 8,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043449679",
+      "pull_request_review_id": 5243839771,
+      "id": 4043449679,
+      "node_id": "PRRC_kwDOQPdUrM7xAiVP",
+      "diff_hunk": "@@ -1,3 +1,5 @@\n [submodule \"tdf-mobile\"]\n \tpath = tdf-mobile\n \turl = https://github.com/diegueins680/tdf-mobile.git\n+\t# Web deployments do not need access to the mobile repository.\n+\tupdate = none",
+      "path": ".gitmodules",
+      "commit_id": "72d33c57d5723f1cda413bf8b7858cc361b5a2fb",
+      "original_commit_id": "caec2a6b2af3986df9f82c635a553287ca992c85",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Update every mobile bootstrap command before disabling checkout**\n\nWith `update = none`, Git does not populate this submodule unless `--checkout` explicitly overrides the configured procedure, as documented under [`submodule.<name>.update`](https://git-scm.com/docs/gitmodules#Documentation/gitmodules.txt-submoduleltnamegtupdate). Several active onboarding paths still prescribe the now-ineffective command, including `QUICKSTART.md`, `QUICK_START_REFERENCE.md`, `MOBILE_APP.md`, `DOCUMENTATION.md`, `TROUBLESHOOTING.md`, `BEST_PRACTICES.md`, and `tdf-hq/AGENTS.md:41`; users following them after a fresh clone will leave `tdf-mobile` unpopulated. Update those commands to include `--checkout` as part of this behavior change.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T03:02:14Z",
+      "updated_at": "2026-09-18T03:02:14Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/426#discussion_r4043449679",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/426",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043449679"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/426#discussion_r4043449679"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/426"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043449679/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 5,
+      "original_line": 5,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 5,
+      "position": 5,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043514048",
+      "pull_request_review_id": 5243913428,
+      "id": 4043514048,
+      "node_id": "PRRC_kwDOQPdUrM7xAyDA",
+      "diff_hunk": "@@ -540,6 +540,11 @@\n       \"id\": \"2026-09-16_artist_self_service\",\n       \"path\": \"tdf-hq/sql/2026-09-16_artist_self_service.sql\",\n       \"introducedBy\": \"d8fd169c1bfec56c4f24bab7a49a0d56bbadeb37\"\n+    },\n+    {\n+      \"id\": \"2026-09-17_identity_reconciliation\",\n+      \"path\": \"tdf-hq/sql/2026-09-17_identity_reconciliation.sql\",\n+      \"introducedBy\": \"ab0a7cc211c0ad1be72fcc60ed3ad324d8227501\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "72d33c57d5723f1cda413bf8b7858cc361b5a2fb",
+      "original_commit_id": "f905f8a870dc74fb03fff08d080d5b814d68f993",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Verified on the published head caec2a6b2af3986df9f82c635a553287ca992c85: git merge-base --is-ancestor ab0a7cc211c0ad1be72fcc60ed3ad324d8227501 caec2a6b2af3986df9f82c635a553287ca992c85 exits 0. This branch preserves the original introduction commit through merges. The cited a6a6d8ab revision is not the published PR head. The manifest correctly retains ab0a7cc as the migration introduction; the release plan also renders for caec2a6b.",
+      "created_at": "2026-09-18T03:19:29Z",
+      "updated_at": "2026-09-18T03:19:29Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/426#discussion_r4043514048",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/426",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043514048"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/426#discussion_r4043514048"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/426"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043514048/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 547,
+      "original_line": 547,
+      "side": "RIGHT",
+      "in_reply_to_id": 4043408645,
+      "author_association": "OWNER",
+      "original_position": 8,
+      "position": 8,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043521161",
+      "pull_request_review_id": 5243921773,
+      "id": 4043521161,
+      "node_id": "PRRC_kwDOQPdUrM7xAzyJ",
+      "diff_hunk": "@@ -1,3 +1,5 @@\n [submodule \"tdf-mobile\"]\n \tpath = tdf-mobile\n \turl = https://github.com/diegueins680/tdf-mobile.git\n+\t# Web deployments do not need access to the mobile repository.\n+\tupdate = none",
+      "path": ".gitmodules",
+      "commit_id": "72d33c57d5723f1cda413bf8b7858cc361b5a2fb",
+      "original_commit_id": "caec2a6b2af3986df9f82c635a553287ca992c85",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in fa723c68b: all seven active onboarding documents now use --checkout explicitly, including fresh-clone paths and remote-update troubleshooting. Removed obsolete claims that web deployments require the mobile checkout. Historical session artifacts remain unchanged.",
+      "created_at": "2026-09-18T03:21:18Z",
+      "updated_at": "2026-09-18T03:21:18Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/426#discussion_r4043521161",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/426",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043521161"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/426#discussion_r4043521161"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/426"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043521161/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 5,
+      "original_line": 5,
+      "side": "RIGHT",
+      "in_reply_to_id": 4043449679,
+      "author_association": "OWNER",
+      "original_position": 5,
+      "position": 5,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043628943",
+      "pull_request_review_id": 5244043987,
+      "id": 4043628943,
+      "node_id": "PRRC_kwDOQPdUrM7xBOGP",
+      "diff_hunk": "@@ -0,0 +1,363 @@\n+-- Operator-only identity decisions. Contact attributes are hints, never identity proof.\n+-- No legacy rows are merged or constrained by email/phone by this migration.\n+BEGIN;\n+CREATE TABLE IF NOT EXISTS identity_contact_request (\n+  actor_party_id bigint NOT NULL REFERENCES party(id),\n+  request_key text NOT NULL CHECK(length(request_key) BETWEEN 16 AND 128),\n+  request_body jsonb NOT NULL,\n+  party_id bigint NOT NULL REFERENCES party(id),\n+  created_at timestamptz NOT NULL DEFAULT now(),\n+  PRIMARY KEY(actor_party_id,request_key)\n+);\n+CREATE TABLE IF NOT EXISTS identity_reconciliation_case (\n+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n+  member_ids bigint[] NOT NULL,\n+  status text NOT NULL DEFAULT 'review' CHECK(status IN ('review','separate','confirmed','applied','reverted')),\n+  evidence jsonb NOT NULL,\n+  before_parties jsonb NOT NULL,\n+  reason text NOT NULL CHECK(length(trim(reason)) BETWEEN 10 AND 4000),\n+  reviewed_by bigint REFERENCES party(id),\n+  reviewed_at timestamptz,\n+  created_at timestamptz NOT NULL DEFAULT now(),\n+  CHECK(cardinality(member_ids)>=2),\n+  CHECK(jsonb_typeof(evidence)='object'),\n+  CHECK(jsonb_typeof(before_parties)='array')\n+);\n+CREATE TABLE IF NOT EXISTS identity_merge_history (\n+  operation_id uuid PRIMARY KEY,\n+  case_id uuid NOT NULL REFERENCES identity_reconciliation_case(id),\n+  canonical_party_id bigint NOT NULL REFERENCES party(id),\n+  retired_party_ids bigint[] NOT NULL,\n+  before_parties jsonb NOT NULL,\n+  after_parties jsonb NOT NULL,\n+  applied_at timestamptz NOT NULL DEFAULT now(),\n+  reverted_at timestamptz,\n+  actor text NOT NULL DEFAULT session_user\n+);\n+CREATE TABLE IF NOT EXISTS identity_party_archive (\n+  party_id bigint PRIMARY KEY REFERENCES party(id),\n+  canonical_party_id bigint NOT NULL REFERENCES party(id),\n+  operation_id uuid NOT NULL REFERENCES identity_merge_history(operation_id),\n+  archived_at timestamptz NOT NULL DEFAULT now(),\n+  CHECK(party_id<>canonical_party_id)\n+);\n+CREATE TABLE IF NOT EXISTS identity_complementary_link (\n+  operation_id uuid PRIMARY KEY,\n+  case_id uuid NOT NULL REFERENCES identity_reconciliation_case(id),\n+  first_party_id bigint NOT NULL REFERENCES party(id),\n+  second_party_id bigint NOT NULL REFERENCES party(id),\n+  evidence jsonb NOT NULL,\n+  before_parties jsonb NOT NULL,\n+  created_at timestamptz NOT NULL DEFAULT now(),\n+  revoked_at timestamptz,\n+  actor text NOT NULL DEFAULT session_user,\n+  CHECK(first_party_id<second_party_id)\n+);\n+CREATE UNIQUE INDEX IF NOT EXISTS identity_complementary_link_active_pair\n+  ON identity_complementary_link(first_party_id,second_party_id) WHERE revoked_at IS NULL;\n+REVOKE ALL ON identity_reconciliation_case,identity_merge_history,identity_party_archive,identity_contact_request,identity_complementary_link FROM PUBLIC;\n+\n+-- This function is called only after the existing CRM authorization check.\n+-- A key is scoped to the authenticated actor, and a changed payload is rejected.\n+CREATE OR REPLACE FUNCTION identity_create_contact(actor_id bigint, request_id text, body jsonb)\n+RETURNS bigint LANGUAGE plpgsql AS $$\n+DECLARE prior identity_contact_request%ROWTYPE; result_id bigint;\n+BEGIN\n+  IF actor_id IS NULL OR request_id IS NULL OR length(request_id) NOT BETWEEN 16 AND 128\n+    OR request_id !~ '^[A-Za-z0-9_-]+$' OR jsonb_typeof(body)<>'object'\n+    OR coalesce(length(trim(body->>'display_name')),0)=0 THEN\n+    RAISE EXCEPTION 'invalid contact request' USING ERRCODE='22023';\n+  END IF;\n+  PERFORM pg_advisory_xact_lock(hashtextextended('identity-contact:'||actor_id||':'||request_id,0));\n+  SELECT * INTO prior FROM identity_contact_request WHERE actor_party_id=actor_id AND request_key=request_id;\n+  IF FOUND THEN\n+    IF prior.request_body IS DISTINCT FROM body THEN\n+      RAISE EXCEPTION 'contact request key already used with another payload' USING ERRCODE='22023';\n+    END IF;\n+    -- Do not silently reuse an archived identity, or grant access via its alias.\n+    IF EXISTS(SELECT 1 FROM identity_party_archive WHERE party_id=prior.party_id) THEN\n+      RAISE EXCEPTION 'contact request was archived; resolve through administrative review' USING ERRCODE='55000';\n+    END IF;\n+    RETURN prior.party_id;\n+  END IF;\n+  INSERT INTO party(display_name,legal_name,is_org,tax_id,primary_email,primary_phone,\n+    whatsapp,instagram,emergency_contact,notes,created_at)\n+  VALUES(body->>'display_name',body->>'legal_name',(body->>'is_org')::boolean,\n+    body->>'tax_id',body->>'primary_email',body->>'primary_phone',body->>'whatsapp',\n+    body->>'instagram',body->>'emergency_contact',body->>'notes',now()) RETURNING id INTO result_id;\n+  INSERT INTO identity_contact_request(actor_party_id,request_key,request_body,party_id)\n+  VALUES(actor_id,request_id,body,result_id);\n+  RETURN result_id;\n+END $$;\n+REVOKE ALL ON FUNCTION identity_create_contact(bigint,text,jsonb) FROM PUBLIC;\n+\n+-- Every declared FK plus likely legacy scalar identity references is examined.\n+-- Unknown dependencies block a merge; financial/audit/permission rows are never rewritten.\n+CREATE OR REPLACE FUNCTION identity_party_dependencies(candidate bigint)\n+RETURNS jsonb LANGUAGE plpgsql AS $$\n+DECLARE item record; n bigint; result jsonb:='[]'::jsonb;\n+BEGIN\n+  FOR item IN\n+    SELECT DISTINCT ns.nspname AS schema_name,cl.relname AS table_name,a.attname AS column_name\n+    FROM pg_attribute a JOIN pg_class cl ON cl.oid=a.attrelid\n+    JOIN pg_namespace ns ON ns.oid=cl.relnamespace\n+    WHERE ns.nspname='public' AND cl.relkind IN ('r','p') AND a.attnum>0 AND NOT a.attisdropped\n+      AND cl.relname NOT IN ('identity_contact_request','identity_reconciliation_case','identity_merge_history','identity_party_archive')\n+      AND (EXISTS(SELECT 1 FROM pg_constraint fk WHERE fk.contype='f'\n+           AND fk.confrelid='party'::regclass AND fk.conrelid=cl.oid AND a.attnum=ANY(fk.conkey))\n+        OR a.attname ~ '(^|_)(party_id|party_ref)$'\n+        OR (a.attname IN ('user_id','owner_user_id','claimant_user_id','actor_id','created_by','updated_by')\n+            AND cl.relname<>'party'))",
+      "path": "tdf-hq/sql/2026-09-17_identity_reconciliation.sql",
+      "commit_id": "72d33c57d5723f1cda413bf8b7858cc361b5a2fb",
+      "original_commit_id": "eb664c90b90e5adf5879d89fc55ec9336845a83e",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Treat reviewer and approver columns as identity dependencies**\n\nWhen a candidate appears only as a reviewer or approver, this predicate misses the dependency: for example, `catalog_revision.reviewed_by`/`approved_by` and `catalog_audit_event.reviewer_id`/`approver_id` are Party identifiers in `TDF.Catalog.Models`, while the canonical SQL creates them without Party foreign keys. Such a contact can therefore receive `can_execute=true` and be archived despite retaining audit or approval relationships, contrary to the migration's dependency-safety invariant. Include these reviewer/approver field names (and the corresponding archive-reference guards) in the soft-reference scan.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T03:44:58Z",
+      "updated_at": "2026-09-18T03:44:58Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/426#discussion_r4043628943",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/426",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043628943"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/426#discussion_r4043628943"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/426"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043628943/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 108,
+      "original_start_line": 108,
+      "start_side": "RIGHT",
+      "line": 110,
+      "original_line": 110,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 110,
+      "position": 110,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043741411",
+      "pull_request_review_id": 5244181572,
+      "id": 4043741411,
+      "node_id": "PRRC_kwDOQPdUrM7xBpjj",
+      "diff_hunk": "@@ -0,0 +1,363 @@\n+-- Operator-only identity decisions. Contact attributes are hints, never identity proof.\n+-- No legacy rows are merged or constrained by email/phone by this migration.\n+BEGIN;\n+CREATE TABLE IF NOT EXISTS identity_contact_request (\n+  actor_party_id bigint NOT NULL REFERENCES party(id),\n+  request_key text NOT NULL CHECK(length(request_key) BETWEEN 16 AND 128),\n+  request_body jsonb NOT NULL,\n+  party_id bigint NOT NULL REFERENCES party(id),\n+  created_at timestamptz NOT NULL DEFAULT now(),\n+  PRIMARY KEY(actor_party_id,request_key)\n+);\n+CREATE TABLE IF NOT EXISTS identity_reconciliation_case (\n+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n+  member_ids bigint[] NOT NULL,\n+  status text NOT NULL DEFAULT 'review' CHECK(status IN ('review','separate','confirmed','applied','reverted')),\n+  evidence jsonb NOT NULL,\n+  before_parties jsonb NOT NULL,\n+  reason text NOT NULL CHECK(length(trim(reason)) BETWEEN 10 AND 4000),\n+  reviewed_by bigint REFERENCES party(id),\n+  reviewed_at timestamptz,\n+  created_at timestamptz NOT NULL DEFAULT now(),\n+  CHECK(cardinality(member_ids)>=2),\n+  CHECK(jsonb_typeof(evidence)='object'),\n+  CHECK(jsonb_typeof(before_parties)='array')\n+);\n+CREATE TABLE IF NOT EXISTS identity_merge_history (\n+  operation_id uuid PRIMARY KEY,\n+  case_id uuid NOT NULL REFERENCES identity_reconciliation_case(id),\n+  canonical_party_id bigint NOT NULL REFERENCES party(id),\n+  retired_party_ids bigint[] NOT NULL,\n+  before_parties jsonb NOT NULL,\n+  after_parties jsonb NOT NULL,\n+  applied_at timestamptz NOT NULL DEFAULT now(),\n+  reverted_at timestamptz,\n+  actor text NOT NULL DEFAULT session_user\n+);\n+CREATE TABLE IF NOT EXISTS identity_party_archive (\n+  party_id bigint PRIMARY KEY REFERENCES party(id),\n+  canonical_party_id bigint NOT NULL REFERENCES party(id),\n+  operation_id uuid NOT NULL REFERENCES identity_merge_history(operation_id),\n+  archived_at timestamptz NOT NULL DEFAULT now(),\n+  CHECK(party_id<>canonical_party_id)\n+);\n+CREATE TABLE IF NOT EXISTS identity_complementary_link (\n+  operation_id uuid PRIMARY KEY,\n+  case_id uuid NOT NULL REFERENCES identity_reconciliation_case(id),\n+  first_party_id bigint NOT NULL REFERENCES party(id),\n+  second_party_id bigint NOT NULL REFERENCES party(id),\n+  evidence jsonb NOT NULL,\n+  before_parties jsonb NOT NULL,\n+  created_at timestamptz NOT NULL DEFAULT now(),\n+  revoked_at timestamptz,\n+  actor text NOT NULL DEFAULT session_user,\n+  CHECK(first_party_id<second_party_id)\n+);\n+CREATE UNIQUE INDEX IF NOT EXISTS identity_complementary_link_active_pair\n+  ON identity_complementary_link(first_party_id,second_party_id) WHERE revoked_at IS NULL;\n+REVOKE ALL ON identity_reconciliation_case,identity_merge_history,identity_party_archive,identity_contact_request,identity_complementary_link FROM PUBLIC;\n+\n+-- This function is called only after the existing CRM authorization check.\n+-- A key is scoped to the authenticated actor, and a changed payload is rejected.\n+CREATE OR REPLACE FUNCTION identity_create_contact(actor_id bigint, request_id text, body jsonb)\n+RETURNS bigint LANGUAGE plpgsql AS $$\n+DECLARE prior identity_contact_request%ROWTYPE; result_id bigint;\n+BEGIN\n+  IF actor_id IS NULL OR request_id IS NULL OR length(request_id) NOT BETWEEN 16 AND 128\n+    OR request_id !~ '^[A-Za-z0-9_-]+$' OR jsonb_typeof(body)<>'object'\n+    OR coalesce(length(trim(body->>'display_name')),0)=0 THEN\n+    RAISE EXCEPTION 'invalid contact request' USING ERRCODE='22023';\n+  END IF;\n+  PERFORM pg_advisory_xact_lock(hashtextextended('identity-contact:'||actor_id||':'||request_id,0));\n+  SELECT * INTO prior FROM identity_contact_request WHERE actor_party_id=actor_id AND request_key=request_id;\n+  IF FOUND THEN\n+    IF prior.request_body IS DISTINCT FROM body THEN\n+      RAISE EXCEPTION 'contact request key already used with another payload' USING ERRCODE='22023';\n+    END IF;\n+    -- Do not silently reuse an archived identity, or grant access via its alias.\n+    IF EXISTS(SELECT 1 FROM identity_party_archive WHERE party_id=prior.party_id) THEN\n+      RAISE EXCEPTION 'contact request was archived; resolve through administrative review' USING ERRCODE='55000';\n+    END IF;\n+    RETURN prior.party_id;\n+  END IF;\n+  INSERT INTO party(display_name,legal_name,is_org,tax_id,primary_email,primary_phone,\n+    whatsapp,instagram,emergency_contact,notes,created_at)\n+  VALUES(body->>'display_name',body->>'legal_name',(body->>'is_org')::boolean,\n+    body->>'tax_id',body->>'primary_email',body->>'primary_phone',body->>'whatsapp',\n+    body->>'instagram',body->>'emergency_contact',body->>'notes',now()) RETURNING id INTO result_id;\n+  INSERT INTO identity_contact_request(actor_party_id,request_key,request_body,party_id)\n+  VALUES(actor_id,request_id,body,result_id);\n+  RETURN result_id;\n+END $$;\n+REVOKE ALL ON FUNCTION identity_create_contact(bigint,text,jsonb) FROM PUBLIC;\n+\n+-- Every declared FK plus likely legacy scalar identity references is examined.\n+-- Unknown dependencies block a merge; financial/audit/permission rows are never rewritten.\n+CREATE OR REPLACE FUNCTION identity_party_dependencies(candidate bigint)\n+RETURNS jsonb LANGUAGE plpgsql AS $$\n+DECLARE item record; n bigint; result jsonb:='[]'::jsonb;\n+BEGIN\n+  FOR item IN\n+    SELECT DISTINCT ns.nspname AS schema_name,cl.relname AS table_name,a.attname AS column_name\n+    FROM pg_attribute a JOIN pg_class cl ON cl.oid=a.attrelid\n+    JOIN pg_namespace ns ON ns.oid=cl.relnamespace\n+    WHERE ns.nspname='public' AND cl.relkind IN ('r','p') AND a.attnum>0 AND NOT a.attisdropped\n+      AND cl.relname NOT IN ('identity_contact_request','identity_reconciliation_case','identity_merge_history','identity_party_archive')\n+      AND (EXISTS(SELECT 1 FROM pg_constraint fk WHERE fk.contype='f'\n+           AND fk.confrelid='party'::regclass AND fk.conrelid=cl.oid AND a.attnum=ANY(fk.conkey))\n+        OR a.attname ~ '(^|_)(party_id|party_ref)$'\n+        OR (a.attname IN ('user_id','owner_user_id','claimant_user_id','actor_id','created_by','updated_by')\n+            AND cl.relname<>'party'))",
+      "path": "tdf-hq/sql/2026-09-17_identity_reconciliation.sql",
+      "commit_id": "72d33c57d5723f1cda413bf8b7858cc361b5a2fb",
+      "original_commit_id": "eb664c90b90e5adf5879d89fc55ec9336845a83e",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed with a forward migration (021e74750; registered introduction d442013ce), preserving the already-staged original migration checksum. The dependency inventory now covers all 222 model-declared Party references, including the reviewer/approver fields and nonstandard requested_by references; archive guards use the proven model columns. Focused SQL tests passed for all four catalog review/approval fields, insert/update rejection after archival, and avoiding guards on an unrelated external reviewer identifier. The 106-migration batch and two merge/one link rehearsal passed on a network-isolated production restore; selective rollback left all 605 original table hashes unchanged.",
+      "created_at": "2026-09-18T04:12:36Z",
+      "updated_at": "2026-09-18T04:12:36Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/426#discussion_r4043741411",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/426",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043741411"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/426#discussion_r4043741411"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/426"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043741411/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 108,
+      "original_start_line": 108,
+      "start_side": "RIGHT",
+      "line": 110,
+      "original_line": 110,
+      "side": "RIGHT",
+      "in_reply_to_id": 4043628943,
+      "author_association": "OWNER",
+      "original_position": 110,
+      "position": 110,
+      "subject_type": "line"
+    }
+  ]
+]

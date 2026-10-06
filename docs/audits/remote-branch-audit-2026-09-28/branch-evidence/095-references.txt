@@ -1,0 +1,1 @@
+origin/main:docs/ux-ui-audit/2026-09-17/README.md:864:- Segundo incremento en `/private/tmp/tdf-ux-locale-20260917`, rama `fix/auth-locale-20260917`: traducciones de acceso/registro/recuperación y navegación pública, todavía en implementación y sin evidencia de cierre.

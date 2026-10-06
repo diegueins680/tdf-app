@@ -1,0 +1,301 @@
+- generic [ref=f21e1]:
+  - generic:
+    - generic:
+      - generic:
+        - generic [ref=f21e7]:
+          - generic [ref=f21e9]:
+            - generic [ref=f21e12]:
+              - link [ref=f21e654] [cursor=pointer]:
+                - /url: /
+              - generic [ref=f21e25]:
+                - link [ref=f21e656] [cursor=pointer]:
+                  - /url: /
+                - link [ref=f21e658] [cursor=pointer]:
+                  - /url: /reels/
+                - link [ref=f21e660] [cursor=pointer]:
+                  - /url: /direct/inbox/
+                  - generic [ref=f21e53]: "8"
+                - link [ref=f21e665] [cursor=pointer]:
+                  - /url: /explore/
+                - link [ref=f21e669] [cursor=pointer]:
+                  - /url: "#"
+                - link [ref=f21e678] [cursor=pointer]:
+                  - /url: "#"
+                - link [ref=f21e680] [cursor=pointer]:
+                  - /url: "#"
+                - link [ref=f21e682] [cursor=pointer]:
+                  - /url: /tdf.records.label/
+                  - link [ref=f21e683]
+              - generic [ref=f21e115]:
+                - link [ref=f21e685] [cursor=pointer]:
+                  - /url: "#"
+                - link [ref=f21e687] [cursor=pointer]:
+                  - /url: "#"
+            - generic [ref=f21e134]:
+              - main [ref=f21e135]:
+                - generic [ref=f21e137]:
+                  - generic [ref=f21e138]:
+                    - generic [ref=f21e139]:
+                      - link [ref=f21e689] [cursor=pointer]:
+                        - /url: /emmanu__music/
+                      - generic [ref=f21e147]:
+                        - generic [ref=f21e148]:
+                          - generic [ref=f21e149]:
+                            - link [ref=f21e691] [cursor=pointer]:
+                              - /url: "#"
+                              - heading [level=2] [ref=f21e692]:
+                                - generic [ref=f21e153]: emmanu__music
+                            - button [ref=f21e693] [cursor=pointer]
+                          - generic [ref=f21e160]: 𝔼𝕄𝗠𝔸ℕ𝕌
+                          - generic [ref=f21e162]:
+                            - generic [ref=f21e164]:
+                              - generic [ref=f21e165]: "77"
+                              - text: posts
+                            - link [ref=f21e695] [cursor=pointer]:
+                              - /url: "#"
+                              - generic [ref=f21e168]:
+                                - generic [ref=f21e696]: 2,729
+                                - text: followers
+                            - link [ref=f21e697] [cursor=pointer]:
+                              - /url: "#"
+                              - generic [ref=f21e172]:
+                                - generic [ref=f21e173]: 2,101
+                                - text: following
+                        - generic [ref=f21e174]:
+                          - generic [ref=f21e175]:
+                            - generic [ref=f21e176]: Artist
+                            - button [ref=f21e698] [cursor=pointer]:
+                              - generic [ref=f21e180]: 🎧 Psychoacoustics ❤️ 🇪🇨 /🇻🇪 🕺💃
+                            - generic [ref=f21e181]:
+                              - button [ref=f21e699] [cursor=pointer]:
+                                - generic [ref=f21e183]: youtu.be/P0jnWtfxQJQ?si=LXSHrktLZKjx2Zbz and 1 more
+                              - link [ref=f21e701] [cursor=pointer]:
+                                - /url: https://www.threads.com/@emmanu__music?xmt=AQG0BDqE0cb8Xg3CR-QvsEXzT_5NWjwAbHrwWg0QEaq2Ym8
+                                - generic [ref=f21e194]: emmanu__music
+                          - link [ref=f21e703] [cursor=pointer]:
+                            - /url: /emmanu__music/followers/mutualOnly
+                            - generic [ref=f21e198]:
+                              - generic [ref=f21e200]:
+                                - button [ref=f21e201]:
+                                  - link [ref=f21e202]
+                                - button [ref=f21e203]:
+                                  - link [ref=f21e204]
+                                - button [ref=f21e381]:
+                                  - link [ref=f21e382]
+                              - generic [ref=f21e207]: Followed by backroom_session, elbloque_oficial + 36 more
+                    - generic [ref=f21e384]:
+                      - button [ref=f21e704] [cursor=pointer]:
+                        - generic [ref=f21e387]: Follow Back
+                      - button [ref=f21e705] [cursor=pointer]: Message
+                      - button [ref=f21e706] [cursor=pointer]
+                    - menu [ref=f21e218]:
+                      - generic [ref=f21e398]:
+                        - list [ref=f21e400]:
+                          - listitem [ref=f21e401]
+                          - listitem [ref=f21e402]
+                          - listitem [ref=f21e403]:
+                            - link [ref=f21e708] [cursor=pointer]:
+                              - /url: /stories/highlights/18151945837454641/
+                              - button [ref=f21e709]:
+                                - button [ref=f21e710]
+                                - generic [ref=f21e412]: Radio Leila 🇮🇹
+                          - listitem [ref=f21e415]:
+                            - link [ref=f21e712] [cursor=pointer]:
+                              - /url: /stories/highlights/18075160901551700/
+                              - button [ref=f21e713]:
+                                - button [ref=f21e714]
+                                - generic [ref=f21e424]: 2026 🎶
+                          - listitem [ref=f21e427]:
+                            - link [ref=f21e716] [cursor=pointer]:
+                              - /url: /stories/highlights/17953944566830877/
+                              - button [ref=f21e717]:
+                                - button [ref=f21e718]
+                                - generic [ref=f21e436]: 25 🎊
+                          - listitem [ref=f21e439]:
+                            - link [ref=f21e720] [cursor=pointer]:
+                              - /url: /stories/highlights/18056815256622644/
+                              - button [ref=f21e721]:
+                                - button [ref=f21e722]
+                                - generic [ref=f21e448]: 👾 gigs
+                          - listitem [ref=f21e451]:
+                            - link [ref=f21e724] [cursor=pointer]:
+                              - /url: /stories/highlights/17894337252321270/
+                              - button [ref=f21e725]:
+                                - button [ref=f21e726]
+                                - generic [ref=f21e460]: 🏕️
+                          - listitem [ref=f21e463]:
+                            - link [ref=f21e728] [cursor=pointer]:
+                              - /url: /stories/highlights/17856143064478796/
+                              - button [ref=f21e729]:
+                                - button [ref=f21e730]
+                                - generic [ref=f21e472]: 🇮🇹 🍾
+                          - listitem [ref=f21e475]:
+                            - link [ref=f21e732] [cursor=pointer]:
+                              - /url: /stories/highlights/17992088261601441/
+                              - button [ref=f21e733]:
+                                - button [ref=f21e734]
+                                - generic [ref=f21e484]: Lost city ☮️ 🕺
+                          - listitem [ref=f21e487]:
+                            - link [ref=f21e736] [cursor=pointer]:
+                              - /url: /stories/highlights/17990245427609018/
+                              - button [ref=f21e737]:
+                                - button [ref=f21e738]
+                                - generic [ref=f21e496]: Bassick
+                          - listitem [ref=f21e499]:
+                            - link [ref=f21e740] [cursor=pointer]:
+                              - /url: /stories/highlights/18116223973476639/
+                              - button [ref=f21e741]:
+                                - button [ref=f21e742]
+                                - generic [ref=f21e508]: 🎵 sanadora
+                          - listitem [ref=f21e511]:
+                            - link [ref=f21e744] [cursor=pointer]:
+                              - /url: /stories/highlights/18083215309213242/
+                              - button [ref=f21e745]:
+                                - button [ref=f21e746]
+                                - generic [ref=f21e520]: Spin it yoow 🎧
+                          - listitem [ref=f21e523]:
+                            - link [ref=f21e748] [cursor=pointer]:
+                              - /url: /stories/highlights/18207440440303160/
+                              - button [ref=f21e749]:
+                                - button [ref=f21e750]
+                                - generic [ref=f21e532]: 😮‍💨
+                          - listitem [ref=f21e535]:
+                            - link [ref=f21e752] [cursor=pointer]:
+                              - /url: /stories/highlights/17914718999963676/
+                              - button [ref=f21e753]:
+                                - button [ref=f21e754]
+                                - generic [ref=f21e544]: 👾🕺💃
+                          - listitem [ref=f21e547]:
+                            - link [ref=f21e756] [cursor=pointer]:
+                              - /url: /stories/highlights/17911304796062924/
+                              - button [ref=f21e757]:
+                                - button [ref=f21e758]
+                                - generic [ref=f21e556]: Mo
+                          - listitem [ref=f21e559]:
+                            - link [ref=f21e760] [cursor=pointer]:
+                              - /url: /stories/highlights/17895070926109638/
+                              - button [ref=f21e761]:
+                                - button [ref=f21e762]
+                                - generic [ref=f21e568]: mentos
+                        - button [ref=f21e764] [cursor=pointer]
+                  - tablist [ref=f21e264]:
+                    - link [ref=f21e765] [cursor=pointer]:
+                      - /url: /emmanu__music/
+                    - link [ref=f21e767] [cursor=pointer]:
+                      - /url: /emmanu__music/reels/
+                    - link [ref=f21e769] [cursor=pointer]:
+                      - /url: /emmanu__music/reposts/
+                    - link [ref=f21e771] [cursor=pointer]:
+                      - /url: /emmanu__music/tagged/
+                  - generic [ref=f21e577]:
+                    - generic [ref=f21e578]:
+                      - link [ref=f21e773] [cursor=pointer]:
+                        - /url: /emmanu__music/p/C-pvztDxukS/
+                      - link [ref=f21e775] [cursor=pointer]:
+                        - /url: /emmanu__music/p/DVKFvGujlDw/
+                      - link [ref=f21e777] [cursor=pointer]:
+                        - /url: /emmanu__music/p/DStdDdojsKI/
+                    - generic [ref=f21e597]:
+                      - link [ref=f21e779] [cursor=pointer]:
+                        - /url: /emmanu__music/p/Dd41QQxn4me/
+                      - link [ref=f21e781] [cursor=pointer]:
+                        - /url: /emmanu__music/p/DcrvWxgjmcU/
+                      - link [ref=f21e783] [cursor=pointer]:
+                        - /url: /emmanu__music/p/DcZm59fjvU5/
+                    - generic [ref=f21e616]:
+                      - link [ref=f21e785] [cursor=pointer]:
+                        - /url: /leila.radio/p/DbYWM6BCpZ8/
+                      - link [ref=f21e787] [cursor=pointer]:
+                        - /url: /emmanu__music/reel/DZqe_VeO8L2/
+                      - link [ref=f21e789] [cursor=pointer]:
+                        - /url: /emmanu__music/p/DZnIlJ7jlhT/
+                    - generic [ref=f21e635]:
+                      - link [ref=f21e791] [cursor=pointer]:
+                        - /url: /emmanu__music/p/DZYJv9Nn7rB/
+                      - link [ref=f21e793] [cursor=pointer]:
+                        - /url: /andesbrewing.gye/reel/DZVLvgDRaLj/
+                      - link [ref=f21e795] [cursor=pointer]:
+                        - /url: /emmanu__music/reel/DZIi9v_sz47/
+              - contentinfo [ref=f21e309]:
+                - generic [ref=f21e310]:
+                  - generic [ref=f21e312]:
+                    - link [ref=f21e797] [cursor=pointer]:
+                      - /url: https://about.meta.com/
+                      - generic [ref=f21e315]: Meta
+                    - link [ref=f21e798] [cursor=pointer]:
+                      - /url: https://about.instagram.com/
+                      - generic [ref=f21e318]: About
+                    - link [ref=f21e799] [cursor=pointer]:
+                      - /url: https://about.instagram.com/blog/
+                      - generic [ref=f21e321]: Blog
+                    - link [ref=f21e800] [cursor=pointer]:
+                      - /url: https://about.instagram.com/about-us/careers
+                      - generic [ref=f21e324]: Jobs
+                    - link [ref=f21e801] [cursor=pointer]:
+                      - /url: https://help.instagram.com/
+                      - generic [ref=f21e327]: Help
+                    - link [ref=f21e802] [cursor=pointer]:
+                      - /url: https://developers.facebook.com/docs/instagram
+                      - generic [ref=f21e330]: API
+                    - link [ref=f21e803] [cursor=pointer]:
+                      - /url: /legal/privacy/
+                      - generic [ref=f21e333]: Privacy
+                    - link [ref=f21e804] [cursor=pointer]:
+                      - /url: /legal/terms/
+                      - generic [ref=f21e336]: Terms
+                    - link [ref=f21e805] [cursor=pointer]:
+                      - /url: /explore/locations/
+                      - generic [ref=f21e339]: Locations
+                    - link [ref=f21e806] [cursor=pointer]:
+                      - /url: /popular/
+                      - generic [ref=f21e342]: Popular
+                    - link [ref=f21e807] [cursor=pointer]:
+                      - /url: /web/lite/
+                      - generic [ref=f21e345]: Instagram Lite
+                    - link [ref=f21e808] [cursor=pointer]:
+                      - /url: https://www.meta.ai/?utm_source=foa_web_footer
+                      - generic [ref=f21e348]: Meta AI
+                    - link [ref=f21e809] [cursor=pointer]:
+                      - /url: https://muse.ai/
+                      - generic [ref=f21e351]: Muse
+                    - link [ref=f21e810] [cursor=pointer]:
+                      - /url: https://www.threads.com/
+                      - generic [ref=f21e354]: Threads
+                    - link [ref=f21e811] [cursor=pointer]:
+                      - /url: https://www.facebook.com/help/instagram/261704639352628
+                      - generic [ref=f21e357]: Contact Uploading & Non-Users
+                    - link [ref=f21e812] [cursor=pointer]:
+                      - /url: /accounts/meta_verified/?entrypoint=web_footer
+                      - generic [ref=f21e360]: Meta Verified
+                  - generic [ref=f21e361]:
+                    - generic [ref=f21e362] [cursor=pointer]:
+                      - generic [ref=f21e363]: English
+                      - combobox [ref=f21e814]
+                    - generic [ref=f21e370]: © 2026 Instagram from Meta
+          - button [ref=f21e816] [cursor=pointer]:
+            - tooltip [ref=f21e818]:
+              - generic [ref=f21e819]: "3"
+        - button [ref=f21e827] [cursor=pointer]:
+          - generic "Messages - 8 new notifications" [ref=f21e828]:
+            - generic [ref=f21e829]:
+              - generic [ref=f21e831]:
+                - img "Messages" [ref=f21e832]
+                - generic "Direct messaging - 8 new notifications link" [ref=f21e835]: "8"
+              - generic [ref=f21e838]: Messages
+            - generic [ref=f21e839]:
+              - button [ref=f21e840]:
+                - img "8 unread chats" [ref=f21e842]
+              - button "User avatar Blue Records" [ref=f21e847]:
+                - img "User avatar" [ref=f21e850]
+              - button "User avatar Maribel Tipán" [ref=f21e852]:
+                - img "User avatar" [ref=f21e855]
+              - button "User avatar Crackero🦇" [ref=f21e857]:
+                - img "User avatar" [ref=f21e860]
+  - dialog [ref=f21e867]:
+    - generic [ref=f21e872]:
+      - generic [ref=f21e873]:
+        - heading "Messaging emmanu__music" [active] [level=3] [ref=f21e876]
+        - generic [ref=f21e877]: Partnership messages are more likely to get a response because they have a dedicated place in emmanu__music's inbox.
+      - generic [ref=f21e879]:
+        - button "Send prioritized message" [ref=f21e880] [cursor=pointer]
+        - button "Send message request" [ref=f21e881] [cursor=pointer]

@@ -1,0 +1,48 @@
+[
+  {
+    "command": [
+      "python3",
+      "scripts/test_production_access.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/test_mail_deliverability_monitor.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "node",
+      "--test",
+      "scripts/__tests__/production-catalog-inventory.test.mjs"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/specification-inventory.py",
+      "--check"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/test-specification-inventory.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "node",
+      "--test",
+      "scripts/__tests__/verification-evidence.test.mjs",
+      "scripts/__tests__/legacy-escrow-contract.test.mjs"
+    ],
+    "exit_code": 0
+  }
+]

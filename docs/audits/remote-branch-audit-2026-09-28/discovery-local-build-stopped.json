@@ -1,0 +1,11 @@
+{
+  "time": "2026-09-28T15:41:22.848197+00:00",
+  "exit_code": 130,
+  "reason": "Stopped only the duplicate local compiler after verifying exact-head hosted backend build/full suite/all runtime checks/production schema rehearsal passed. No local full-build pass claimed.",
+  "head": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+  "hosted_evidence": "discovery-hosted-main-jobs.json",
+  "verified_stopped_pids": [
+    32438,
+    32656
+  ]
+}

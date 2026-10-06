@@ -1,0 +1,6 @@
+{
+  "function_sha256": "0fe86cbf22f1feb97929e148c2cca292851e259288321f3bf474c81e9b18d684",
+  "source": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+  "method": "Exact unchanged function and helpers extracted from current worktree; supplementary test, full compiled handler regression still required",
+  "cases": 10
+}

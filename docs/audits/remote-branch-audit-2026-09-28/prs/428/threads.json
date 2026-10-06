@@ -1,0 +1,156 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 428,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "a5a391954ec4152a19e1502c08347edd34624060",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6jm5ux",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 557,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Anchor the migration to a release ancestor**\n\nWhen releasing this commit, the guarded release loader will reject the manifest before applying any migrations: `3cf19c64bd60610059af6c26ec40104093be21c5` is not an ancestor of `00d6a401c6d2cd43571d795050f8bf5843507163` (`git merge-base --is-ancestor` exits 1), while `scripts/production-release.mjs` explicitly refuses every `introducedBy` value outside the release ancestry. Since the new backend model requires `target_key`, this blocks deployment rather than merely omitting optional history; preserve the introduction commit in this branch's ancestry or register an actual ancestor commit.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/428#discussion_r4043429865",
+                      "createdAt": "2026-09-18T02:57:11Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Verified against the actual PR branch: git merge-base --is-ancestor 3cf19c64bd60610059af6c26ec40104093be21c5 6df4f24b0ab5282ccd93f4838dc3c5957b7d2ab2 exits 0. The guarded production release plan also passes on this exact head (and passed on previously reviewed 875f5a9). The cited 00d6a401 is not this PR head. The original migration introduction commit is preserved by normal merge ancestry; the PR explicitly requires a normal merge for release. No migration registration change is necessary.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/428#discussion_r4043572238",
+                      "createdAt": "2026-09-18T03:30:30Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwMzozMDozMFrO8QQEDg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jm5u0",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": ".github/workflows/ci.yml",
+                "line": 169,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Run the generator check for source-file changes**\n\nA future PR that changes only `tdf-hq-ui/src/components/notificationTarget.ts` will set the UI scope but not the mobile scope in `scripts/ci-change-scope.mjs`, so this check inside `mobile-quality` is skipped even though that UI file is the generator's declared source of truth. The committed mobile copy can therefore drift unnoticed; run this check in an always/repo/UI job or classify changes to the source and generator script as mobile changes.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/428#discussion_r4043429870",
+                      "createdAt": "2026-09-18T02:57:11Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 6df4f24b0ab5282ccd93f4838dc3c5957b7d2ab2. Changes to either the canonical web notification resolver or its generator now select mobile-quality, which checks generated destination parity. Two regression cases verify each source-only diff selects that gate without unnecessary backend compilation. All 25 CI pipeline tests pass, and the current generator --check passes.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/428#discussion_r4043572395",
+                      "createdAt": "2026-09-18T03:30:31Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwMzozMDozMVrO8QQEqw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jnS_Y",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq/src/TDF/Server/Directory.hs",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Filter alert lookups only on projected columns**\n\nWhen any `directory_alert` notification resolves, this query references `doc.source_status`, `doc.visibility`, and `doc.moderation_status`, but `directory_public_search_document` does not project those columns; it already applies those predicates internally in `tdf-hq/sql/2026-09-09_music_directory_suppressed_event_privacy.sql:52-90`. PostgreSQL therefore raises `undefined_column`, causing every saved-search alert destination to return a server error instead of the intended result. Remove these redundant predicates or join the base search-document table explicitly.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/428#discussion_r4043588978",
+                      "createdAt": "2026-09-18T03:34:52Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 876d879c7. The alert lookup now relies on the public view for publication/visibility/moderation filtering and uses only projected columns. PostgreSQL runs the exact handler SQL and verifies owned exact results, foreign owners, missing targets, canonical profiles, private/draft/blocked/expired/deleted results and live event suppression. Against the complete isolated production-shaped schema, the old query reproduces undefined_column and the corrected query prepares successfully in a read-only transaction. The migration regression and new lookup cases all pass.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/428#discussion_r4043660135",
+                      "createdAt": "2026-09-18T03:53:01Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwMzo1MzowMVrO8QVbZw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6joEC7",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 557,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Anchor the migration to this commit's ancestry**\n\nFor the exact reviewed commit, fresh evidence makes the earlier concern applicable: `git merge-base --is-ancestor 3cf19c64bd60610059af6c26ec40104093be21c5 42b12cddcdd3d39cb65eaa0303ddb08ab5813c2b` exits 1. The release loader in `scripts/production-release.mjs` checks every `introducedBy` value this way and rejects non-ancestors, so this squashed commit cannot enter the guarded deployment lane and the required `target_key` migration will not run; register an ancestor of this release commit (normally this commit itself) before releasing.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/428#discussion_r4043892922",
+                      "createdAt": "2026-09-18T04:48:32Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Verified against the actual PR head a5a391954ec4152a19e1502c08347edd34624060: git merge-base --is-ancestor 3cf19c64bd60610059af6c26ec40104093be21c5 a5a391954ec4152a19e1502c08347edd34624060 exits 0. The guarded production-release plan for that full SHA also exits 0 and includes all 107 migrations. This branch retained normal merge ancestry through authentication and identity integration; no squash was performed. The cited 42b12cdd commit is not this PR head. We will use a normal merge and repeat the exact merged-SHA plan before deployment, preserving the introduction ancestor. No ancestry check is disabled or bypassed.\n",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/428#discussion_r4043929568",
+                      "createdAt": "2026-09-18T04:57:27Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwNDo1NzoyN1rO8Ql34A=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwNDo0ODozMlrOo6BAuw=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

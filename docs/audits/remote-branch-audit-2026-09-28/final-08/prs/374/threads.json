@@ -1,0 +1,31 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 374,
+          "reviewDecision": null,
+          "mergeStateStatus": "CLEAN",
+          "mergeable": "MERGEABLE",
+          "headRefOid": "c19c4f5d87abdb5a9b3e935e79af2238fdb99c43",
+          "baseRefName": "codex/payphone-cancellation-compatibility-20260915",
+          "isDraft": true,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          }
+        }
+      }
+    }
+  }
+]

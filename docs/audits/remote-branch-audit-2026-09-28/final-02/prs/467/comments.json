@@ -1,0 +1,280 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4122574670",
+      "pull_request_review_id": 5339165854,
+      "id": 4122574670,
+      "node_id": "PRRC_kwDOQPdUrM71uX9O",
+      "diff_hunk": "@@ -0,0 +1,84 @@\n+# Production requires the final fenced-source restore and reviewed cutover.\n+name: tdf-production\n+services:\n+  db:\n+    image: ${POSTGRES_IMAGE:?Set the verified PG17 image digest}\n+    restart: unless-stopped\n+    environment:\n+      POSTGRES_DB: tdf_hq\n+      POSTGRES_USER: postgres\n+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password\n+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256\n+    secrets: [postgres_password]\n+    command: [postgres, -c, shared_buffers=128MB, -c, max_connections=60, -c, work_mem=4MB]\n+    shm_size: 160mb\n+    mem_limit: 896m\n+    volumes:\n+      - postgres_data:/var/lib/postgresql/data\n+    networks: [database]\n+    healthcheck:\n+      test: [CMD-SHELL, 'pg_isready -U postgres -d tdf_hq']\n+      interval: 5s\n+      timeout: 3s\n+      retries: 20\n+  api:\n+    profiles: [serve]\n+    image: ${TDF_IMAGE:?Set the verified TDF image digest}\n+    restart: unless-stopped\n+    depends_on:\n+      db:\n+        condition: service_healthy\n+    env_file:\n+      - path: ./api.env\n+        format: raw\n+    environment:\n+      APP_PORT: '8080'\n+      PORT: '8080'\n+      RUN_MIGRATIONS: 'false'\n+      AUTO_APPLY_PRODUCTION_MIGRATIONS: 'true'\n+      RESET_DB: 'false'\n+      SEED_DB: 'false'\n+      EVENT_DISCOVERY_ENABLED: 'false'\n+      EVENT_DISCOVERY_AUTO_PUBLISH: 'false'\n+      REPUTATION_AGGREGATION_WORKER_ENABLED: 'false'",
+      "path": "ops/hetzner/compose.production.yaml",
+      "commit_id": "a8168e200e79761c8831adf4b568e4fa1ceb7789",
+      "original_commit_id": "a8168e200e79761c8831adf4b568e4fa1ceb7789",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Keep background jobs stopped during the canary**\n\nWhen the documented production `serve` profile is started with provider credentials for the canary, these overrides stop only discovery and reputation jobs. API boot unconditionally starts the records, Instagram, social-auto-reply, campaign, operations, provider-event, and reservation workers (`tdf-hq/src/TDF/App/Boot.hs` lines 162-172), and the social loop processes work immediately rather than waiting for a daily slot. This can mutate the restored database or send provider messages before validation and before writes are reopened; add a global canary/worker-disable gate or run the canary with credentials and permissions that prevent every background worker.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T13:16:40Z",
+      "updated_at": "2026-09-28T13:16:40Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/467#discussion_r4122574670",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/467",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4122574670"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/467#discussion_r4122574670"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/467"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4122574670/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 41,
+      "original_start_line": 41,
+      "start_side": "RIGHT",
+      "line": 43,
+      "original_line": 43,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 43,
+      "position": 43,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4122574679",
+      "pull_request_review_id": 5339165854,
+      "id": 4122574679,
+      "node_id": "PRRC_kwDOQPdUrM71uX9X",
+      "diff_hunk": "@@ -0,0 +1,147 @@\n+# TDF portable restore rehearsal\n+\n+This configuration deploys a quarantined copy of TDF on a dedicated Hetzner\n+host. It does **not** switch production writers, frontend traffic, payment\n+callbacks, or mobile clients. Never promote the rehearsal database: take a\n+fresh consistent export after quiescing every production writer.\n+\n+## Host selection and cost\n+\n+On 2026-09-28 the authenticated Hetzner project reported CX23/CX33/CAX11/CAX21\n+unavailable. CPX12 was available in Nuremberg: one shared x86 CPU, 2 GB RAM,\n+40 GB local storage, USD 13.49/month. Daily server backups add 20% and IPv4\n+adds USD 0.60, giving USD 16.788/month before usage beyond included traffic.\n+No yearly commitment is required. These are account-specific prices; check\n+the pricing API and capacity again before provisioning.\n+\n+The observed Fly production baseline is approximately USD 23.56/month:\n+two shared-CPU 256 MB APIs in ORD/LAX, one 2 GB database in GRU, 5 GB database\n+storage, and 11 GB of API asset volumes. Staging adds at least USD 8.45.\n+These estimates exclude additional traffic, snapshots, taxes, and other\n+account charges. Savings occur only after the corresponding Fly resources\n+are retired; stopping a VM does not remove all storage charges. Outstanding\n+Fly invoices are unaffected by migration.\n+\n+A single host loses the existing API's regional redundancy. Server backups\n+do not provide database failover or replace a tested logical backup. An\n+initial read workload demonstrated memory headroom, not peak-load capacity\n+or equivalent availability. A temporary 256 MB ORD forwarder for clients\n+using `tdf-hq.fly.dev` would add approximately USD 1.94/month.\n+\n+Pricing references: [Hetzner billing](https://docs.hetzner.com/cloud/billing/faq/),\n+[Hetzner API](https://docs.hetzner.cloud/reference/cloud),\n+[Fly pricing](https://docs.fly.io/about/pricing/).\n+\n+## Prepare and isolate\n+\n+1. Provision a dedicated server with `cloud-init.yaml`, daily backups,\n+   deletion/rebuild protection, a dedicated SSH key, and a firewall allowing\n+   SSH only from the operator's address. Never reuse unrelated servers or\n+   keys. Keep PostgreSQL private. Apply firewall updates sequentially and\n+   re-read the resulting rules.\n+2. Prepare artifacts from the reviewed full commit and its reviewed recovery\n+   ancestor:\n+\n+   ```sh\n+   node scripts/prepare-portable-restore.mjs FULL_RELEASE_SHA FULL_RECOVERY_SHA /private/tmp/new-restore-bundle\n+   ```\n+\n+   The command reuses the existing release source, migration ancestry,\n+   checksum, image metadata, identity, and disabled financial-write checks.\n+   It requires identical migration manifests for release and recovery. It\n+   emits SQL and an immutable-image report into a new private directory;\n+   it neither contacts a database nor authorizes production cutover.\n+3. Export a custom-format `pg_dump` over authenticated SSH and preserve both\n+   API asset volumes. Keep dumps, archives, role metadata, and credentials in\n+   mode-0700 directories outside the repository. Hash every transferred file.\n+   Detect conflicting asset paths by content hash before combining them.\n+   Preserve the source archives. Seed the generated `feature-registry.json`\n+   from the exact release image instead of either stale regional copy.\n+4. Production uses PostgreSQL **17**, with `vector` **0.8.1**, `btree_gist`,\n+   `pg_trgm`, `pgcrypto`, and `unaccent`. Do not restore into PostgreSQL 16\n+   or an image lacking those extensions. Use a compatible patched PG17 image\n+   and pin its digest; verify extension versions after restore.\n+5. In `/opt/tdf/restore`, install `compose.restore.yaml` as `compose.yaml` and\n+   `Caddyfile.restore` as `Caddyfile`. Set `POSTGRES_IMAGE`, `TDF_IMAGE`, and\n+   `CADDY_IMAGE` to verified immutable digests in `.env`. Store a newly\n+   generated database password in mode-0600 `postgres_password`. Do not copy\n+   production provider, SMTP, OAuth, payment, or encryption secrets.\n+6. Start only `db`, confirm it is empty, and restore with\n+   `pg_restore --exit-on-error --no-owner --no-privileges`. Run the prepared\n+   `preflight.sql`, then `migrations.sql`, then `verify.sql`, each with\n+   `psql -X -v ON_ERROR_STOP=1`. Record the ledger and extension versions.\n+7. Create a dedicated rehearsal login with `SELECT` on public tables and\n+   sequences, plus `UPDATE (usage_count)` on `content_reaction_type` and\n+   `creator_badge_type`. Startup refreshes those two counters, so a wholly\n+   read-only transaction setting prevents boot. Other worker writes remain\n+   denied; their permission-error logs are expected in this rehearsal.\n+   Populate `api.restore.env` with this login, the private `db` hostname,\n+   and regional settings read from the restored deployment-reference tables.\n+   Make the asset directory writable by container UID 1000.\n+8. Start the `smoke` profile. Confirm API and database attach only to the\n+   `internal: true` quarantine network. Prove external egress fails from the\n+   API's network namespace. Probe health, exact version, canonical-origin\n+   CORS, and public feed responses from the host over SSH.\n+9. Add an unused API hostname only after backing up DNS and comparing every\n+   existing record. Preserve the website and mail records. Allow TCP 80/443\n+   and start the `edge` profile. During rehearsal the edge serves only\n+   `/health` and `/version`; all other routes return 503. Verify trusted TLS\n+   without disabling certificate validation.\n+10. Rehearse recovery to the compatible immutable image, verify its health\n+    and version, then restore and verify the target image. Preserve the\n+    reports outside the secret bundle.\n+\n+## Cutover gates\n+\n+The operator explicitly chose a web-first cutover on 2026-09-28 and accepted\n+downtime for older installed mobile clients until updated. Preserve this\n+decision: no temporary Fly forwarding service is required. Keep production\n+traffic on Fly until the following implementation and verification steps are\n+ready and the repository's required review/checks pass.\n+\n+- Preserve the existing release lease and security-emergency readiness\n+  checks. Capture old machine configurations, runtime gates, immutable\n+  images, database roles, ownership, grants, and all asset volumes.\n+- Fly's overdue-invoice block rejected release creation and a supported\n+  staging Machine update on 2026-09-28. The rejected update left staging\n+  unchanged. Fence the old backend from further writes; installed clients\n+  using the old hostname must not keep writing to a divergent database.\n+- Prepare a separate production database and assets directory, private\n+  credentials, application grants, HTTPS configuration, and logical backup\n+  schedule. Retain tested recovery images. Do not give the production app\n+  the rehearsal role or expose the database publicly.\n+- Quiesce all old writers and scheduled jobs, acquire the release lease,\n+  take the final consistent export and asset copy, and verify restore counts,\n+  financial/audit invariants, schema checksums, and security readiness. Keep",
+      "path": "ops/hetzner/README.md",
+      "commit_id": "a8168e200e79761c8831adf4b568e4fa1ceb7789",
+      "original_commit_id": "a8168e200e79761c8831adf4b568e4fa1ceb7789",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Run the owned-URL rewrite during final restore**\n\nThe final cutover sequence never invokes the newly added `migrate-owned-urls.sql`\u2014a repository-wide search finds it mentioned only in the rehearsal evidence, and it is intentionally absent from the production migration manifest. Following this runbook therefore leaves stored asset, event-image, and radio URLs on `tdf-hq.fly.dev`; once the superseded Fly service is retired as instructed, those existing images and streams break. Add the script and its idempotence/projection checks to the fenced final-restore steps.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T13:16:40Z",
+      "updated_at": "2026-09-28T13:16:40Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/467#discussion_r4122574679",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/467",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4122574679"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/467#discussion_r4122574679"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/467"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4122574679/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 113,
+      "original_start_line": 113,
+      "start_side": "RIGHT",
+      "line": 115,
+      "original_line": 115,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 115,
+      "position": 115,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4122574689",
+      "pull_request_review_id": 5339165854,
+      "id": 4122574689,
+      "node_id": "PRRC_kwDOQPdUrM71uX9h",
+      "diff_hunk": "@@ -0,0 +1,40 @@\n+#!/usr/bin/env node\n+// Prepare an isolated restore rehearsal using the same source/artifact policy\n+// as the production release lane. This command never contacts a database.\n+import fs from 'node:fs/promises';\n+import path from 'node:path';\n+import { createHash } from 'node:crypto';\n+import { resolveReleaseContext, verifyImageExists } from './production-release.mjs';\n+import { buildMigrationBatchSql, buildSchemaPreflightSql, buildSchemaVerificationSql } from './lib/production-release.mjs';\n+\n+const [sha, recoverySha, directory] = process.argv.slice(2);\n+if (!sha || !recoverySha || !directory || process.argv.length !== 5) {\n+  throw new Error('Usage: node scripts/prepare-portable-restore.mjs <full-sha> <recovery-sha> <new-output-directory>');\n+}\n+const context = await resolveReleaseContext({\n+  mode: 'plan', sha, recoverySha, app: 'tdf-hq', dbApp: 'tdf-hq-db', database: 'tdf_hq',\n+});\n+const image = await verifyImageExists(context.image, context.sha);\n+const recovery = await verifyImageExists(`diegueins680/tdf-hq:${context.recoverySha}`, context.recoverySha);\n+const files = {\n+  'preflight.sql': buildSchemaPreflightSql(),\n+  'migrations.sql': buildMigrationBatchSql(context.migrations, { sourceCommit: context.sha }),\n+  'verify.sql': buildSchemaVerificationSql(),",
+      "path": "scripts/prepare-portable-restore.mjs",
+      "commit_id": "a8168e200e79761c8831adf4b568e4fa1ceb7789",
+      "original_commit_id": "a8168e200e79761c8831adf4b568e4fa1ceb7789",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Build verification SQL from the requested revision**\n\nWhen this command is run from a checkout whose HEAD differs from the supplied release SHA, the migrations and emergency preflight come from that SHA, but `preflight.sql` and `verify.sql` are generated by the currently checked-out `scripts/lib/production-release.mjs`. The resulting bundle can therefore validate a different schema contract than the reviewed image while `release.json` still labels it with the requested SHA. Require the tooling checkout to match the target revision or load/version these builders from that revision before emitting the artifact.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T13:16:40Z",
+      "updated_at": "2026-09-28T13:16:40Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/467#discussion_r4122574689",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/467",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4122574689"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/467#discussion_r4122574689"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/467"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4122574689/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 20,
+      "original_start_line": 20,
+      "start_side": "RIGHT",
+      "line": 22,
+      "original_line": 22,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 22,
+      "position": 22,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4122574699",
+      "pull_request_review_id": 5339165854,
+      "id": 4122574699,
+      "node_id": "PRRC_kwDOQPdUrM71uX9r",
+      "diff_hunk": "@@ -68,7 +68,7 @@ function normalizeAssets(payload: AssetsPayload): AssetDTO[] {\n \n const API_BASE = (import.meta.env?.VITE_API_BASE && import.meta.env.VITE_API_BASE.trim() !== ''\n   ? import.meta.env.VITE_API_BASE\n-  : 'https://tdf-hq.fly.dev');\n+  : 'https://api.tdfrecords.net');",
+      "path": "tdf-hq-ui/src/pages/LabelAssetsPage.tsx",
+      "commit_id": "a8168e200e79761c8831adf4b568e4fa1ceb7789",
+      "original_commit_id": "a8168e200e79761c8831adf4b568e4fa1ceb7789",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Honor the runtime API-base override for asset URLs**\n\nIn deployments that supply `VITE_API_BASE` through the supported `window.__ENV__` runtime configuration rather than baking it with Vite, normal API calls honor that value through `resolveApiBase()`, but this constant ignores it and now falls back to `api.tdfrecords.net`. Relative inventory photos are consequently fetched from a different backend; the duplicated constant in `MarketplacePage.tsx` has the same problem. Use the shared resolver so runtime-configured deployments keep API and asset hosts aligned.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T13:16:40Z",
+      "updated_at": "2026-09-28T13:16:40Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/467#discussion_r4122574699",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/467",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4122574699"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/467#discussion_r4122574699"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/467"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4122574699/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 69,
+      "original_start_line": 69,
+      "start_side": "RIGHT",
+      "line": 71,
+      "original_line": 71,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 5,
+      "position": 5,
+      "subject_type": "line"
+    }
+  ]
+]

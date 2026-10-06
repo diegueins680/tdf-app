@@ -1,0 +1,23 @@
+[
+  [
+    {
+      "id": 9478019,
+      "name": "Rulz",
+      "target": "branch",
+      "source_type": "Repository",
+      "source": "diegueins680/tdf-app",
+      "enforcement": "active",
+      "node_id": "RRS_lACqUmVwb3NpdG9yec5A91SszgCQn4M",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/rulesets/9478019"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/rules/9478019"
+        }
+      },
+      "created_at": "2025-11-05T07:29:12.648+01:00",
+      "updated_at": "2026-08-13T22:48:06.474+02:00"
+    }
+  ]
+]

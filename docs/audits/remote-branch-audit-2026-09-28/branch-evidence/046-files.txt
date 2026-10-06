@@ -1,0 +1,7 @@
+M	.github/workflows/ci.yml
+M	docs/catalog-persistence/catalog-list-decisions.json
+M	docs/payments/operator-runbooks.md
+A	docs/payments/staging-access-2026-09-14.md
+A	docs/payments/staging-access-report-2026-09-15T004740Z.json
+A	scripts/__tests__/payment-staging-inspection.test.mjs
+A	scripts/inspect-payment-staging.mjs

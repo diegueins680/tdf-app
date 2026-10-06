@@ -1,0 +1,31 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 347,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "CLEAN",
+          "mergeable": "MERGEABLE",
+          "headRefOid": "6bd0c9316f1816ccfc1873363787a99f33ff72e0",
+          "baseRefName": "codex/payment-terminal-recovery-20260914",
+          "isDraft": true,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          }
+        }
+      }
+    }
+  }
+]

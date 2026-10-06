@@ -1,0 +1,15 @@
+{
+  "head": "154f968aa99780723e1d365c827010d8d85220a3",
+  "local_full_postgres_suite": "PASS",
+  "baseline_local_full_suite": "PASS; CI failure not reproduced on this slower client",
+  "assertions_retained": true,
+  "polling_minimum_budget_seconds_before": 10,
+  "polling_minimum_budget_seconds_after": 20,
+  "fixture_expiry_seconds": 15,
+  "syntax": "PASS",
+  "inventory_check": "PASS",
+  "inventory_tests": 3,
+  "initial_incorrect_npm_script": "Missing script: specification:inventory:check; subsequently ran prescribed Python check successfully",
+  "hosted_result": "pending current head",
+  "review": "pending current head"
+}

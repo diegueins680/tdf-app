@@ -1,0 +1,5 @@
+M	docs/automatic-production-migrations.md
+M	scripts/lib/production-release.mjs
+M	scripts/test-automatic-migrations-production-schema.sh
+M	tdf-hq/src/TDF/DTO.hs
+M	tdf-hq/src/TDF/Server.hs

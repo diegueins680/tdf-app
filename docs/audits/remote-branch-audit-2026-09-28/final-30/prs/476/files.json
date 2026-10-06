@@ -1,0 +1,28 @@
+[
+  [
+    {
+      "sha": "dcb9d654004e47eae4403b5f76ff97b270e1613d",
+      "filename": "docs/notifications/navigation-2026-09-17.md",
+      "status": "modified",
+      "additions": 12,
+      "deletions": 0,
+      "changes": 12,
+      "blob_url": "https://github.com/diegueins680/tdf-app/blob/6d00fa1463603bacecbb3210279b09ed88bbba0c/docs%2Fnotifications%2Fnavigation-2026-09-17.md",
+      "raw_url": "https://github.com/diegueins680/tdf-app/raw/6d00fa1463603bacecbb3210279b09ed88bbba0c/docs%2Fnotifications%2Fnavigation-2026-09-17.md",
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/docs%2Fnotifications%2Fnavigation-2026-09-17.md?ref=6d00fa1463603bacecbb3210279b09ed88bbba0c",
+      "patch": "@@ -52,3 +52,15 @@ Review follow-ups: resolver-only and generator-only changes now select the mobil\n Use a normal merge commit to retain migration introduction commit `3cf19c64bd60610059af6c26ec40104093be21c5` in production ancestry. If the established release instead squash-merges, register the resulting squash SHA in the required follow-up before invoking the guarded deployment lane. Never bypass the migration ancestry or review gates.\n \n Read-only production preflight confirmed the reported new-fan notification has exactly one matching stored follow engagement event. Its payload currently points at the recipient; the journaled migration can recover the actual follower without interpreting the display name. No production data was changed during this audit.\n+\n+## Historical native first-launch follow-up (2026-09-18)\n+\n+This record is preserved from [PR441](https://github.com/diegueins680/tdf-app/pull/441), source commit [`6449b75`](https://github.com/diegueins680/tdf-app/commit/6449b75fe5387fcb1b80e55f4a71602a3fed2403). The observations and store constraints below describe the September 18 checkpoint; they are not current release instructions or a claim that the branch audit repeated those device tests. The source mobile merge is already an ancestor of the current reviewed mobile integration. This documentation rescue does not change the mobile pin.\n+\n+Mobile PR [#102](https://github.com/diegueins680/TDF-mobile/pull/102) merged normally as `0c1ee7f3387875496afadf930cb71b29c9edde99`, after exact-head Mobile Validate and Datadog checks passed. This pin preserves the current main authentication and API contracts while adding the notification fix; it does not include the separate draft onboarding PR #104.\n+\n+The root navigator stays mounted while session restoration and current permissions guard its screens. The notification alias still resolves through native-intent handling. Android build 11's actual first-launch Expo Router loop was reproduced twice; the fixed runtime passes three signed-out device cases (fresh notification, cold request, warm notification) on both the final iOS simulator artifact and a physical Samsung SM-S928B / Android 16. Router tests separately verify exact return destinations during session restoration. No credentials or business actions were submitted by these tests.\n+\n+The Samsung's existing Play installation was preserved. Physical QA used a separately signed `com.tdf.records.notificationqa` APK with identical application code; package-specific Google OAuth and FCM are not qualified by this result. The user's Google-sign-in attempt in that temporary app returned the expected configuration error because its package/signing identity is not registered. That result must not be reported as a successful authentication test or as evidence about the Play app. See the [mobile verification record](https://github.com/diegueins680/TDF-mobile/blob/870020b/docs/notification-cold-start-2026-09-18.md) for artifact IDs, checksums, and limitations.\n+\n+Store release remains a separate step: do not promote known failing Android build 11 or older build 12 without this fix. Preserve Alpha 10 and Apple build 19's separate review. Google Play internal testing has only the user-selected **TDF Registered Users Sep 2026 (68 people)** list, saved and verified after reload. Final store artifacts and availability require their own verification; this source pin alone does not establish delivery."
+    },
+    {
+      "sha": "6c0ec5395350757cc8997ef6014a64f028f5a61d",
+      "filename": "formal/system/inventory.json",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "blob_url": "https://github.com/diegueins680/tdf-app/blob/6d00fa1463603bacecbb3210279b09ed88bbba0c/formal%2Fsystem%2Finventory.json",
+      "raw_url": "https://github.com/diegueins680/tdf-app/raw/6d00fa1463603bacecbb3210279b09ed88bbba0c/formal%2Fsystem%2Finventory.json",
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/formal%2Fsystem%2Finventory.json?ref=6d00fa1463603bacecbb3210279b09ed88bbba0c",
+      "patch": "@@ -3095,7 +3095,7 @@\n     },\n     {\n       \"path\": \"docs/notifications/navigation-2026-09-17.md\",\n-      \"sha256\": \"be5ed91c12aa5116e7c86ccde57eb28a3c6b1e62e08e0036e8b80cffde696229\",\n+      \"sha256\": \"89028c8592f0399128b7921161326af22d466758a25405a2cfaedda64617fe75\",\n       \"authority\": \"inferred\",\n       \"authorityBasis\": \"No explicit approval declaration extracted; retain source provenance for review\",\n       \"kind\": \"requirement-candidate\""
+    }
+  ]
+]

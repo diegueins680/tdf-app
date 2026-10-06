@@ -1,0 +1,95 @@
+569da5036aad2cbdcdf5879d67719b53bfbad21d
+100644 cc66f7056fd0596338c09e8be2106454b1596973 1	.github/workflows/ci.yml
+100644 ea539110f32e58b2fbbd4531fe61d10ec9ae3fed 2	.github/workflows/ci.yml
+100644 27f1723c3603a7dc7c143c6b6537fec93e75db03 3	.github/workflows/ci.yml
+100644 c2092140e12bf77db52eb3154392f9e1484ac366 1	docs/catalog-persistence/catalog-list-decisions.json
+100644 bb31f26f03ef0e7123e1daac544ddf536c1066b4 2	docs/catalog-persistence/catalog-list-decisions.json
+100644 6932d9ae36ce650e327489bf2134c058c2e92290 3	docs/catalog-persistence/catalog-list-decisions.json
+100644 a8cd8888c41833f354b84c0aa4c54387eab0c5c6 1	docs/catalog-persistence/reports/list-consumer-matrix.csv
+100644 f914192054fcd35f217b17ab16e3ee9230c80227 2	docs/catalog-persistence/reports/list-consumer-matrix.csv
+100644 0a290d374cf9247107bec476053be510ae4c887f 3	docs/catalog-persistence/reports/list-consumer-matrix.csv
+100644 6a40e04a07510c0d70950f01753a36a262f5a460 1	docs/catalog-persistence/reports/static-list-inventory.json
+100644 f7558d3f0295e269ce1e548875205f3298793dc2 2	docs/catalog-persistence/reports/static-list-inventory.json
+100644 526f38e066fbce8cf0e60fa00534b034d092d0a8 3	docs/catalog-persistence/reports/static-list-inventory.json
+100644 0c56c5095e0761111deea9fec4dec8e2f3550cb6 1	scripts/__tests__/ci-pipeline.test.mjs
+100644 bd03c94cf43ce93924a8b14229e817abf5673399 2	scripts/__tests__/ci-pipeline.test.mjs
+100644 3fbd5055842fb028859d7594ab81fe68b44718b2 3	scripts/__tests__/ci-pipeline.test.mjs
+100644 90978d2aa0ea531694a0dfd0288e1941810540de 1	scripts/production-migrations.json
+100644 d5ddedc43bece5eebba2313a8637eabc26ef914a 2	scripts/production-migrations.json
+100644 51df9a6c0f793fa7e0a2e4e1809f1685a321ba85 3	scripts/production-migrations.json
+100644 b88624d486e79cf86a5af92d28ffaf24ae1218f0 1	scripts/quality-backend.sh
+100644 d32bebc6204caa7b19f381a74890f60d87232e93 2	scripts/quality-backend.sh
+100644 aef018e50a003529fbe8e0c02bf45c6f1becdd0b 3	scripts/quality-backend.sh
+100644 51947933debfcf2b40d8944b02970c94940854d8 1	tdf-hq-ui/src/api/generated/types.ts
+100644 563253816814cb93ae7b66f4160bcd02530e8ef1 2	tdf-hq-ui/src/api/generated/types.ts
+100644 c9047054fb43448de0d28145320808b743d59de4 3	tdf-hq-ui/src/api/generated/types.ts
+100644 955fcff32af8f17eff0dfbae9b3f506e17a208d5 1	tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx
+100644 5566112276c00081f6dabe9fb47c921f6fc2f7b3 2	tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx
+100644 2a68bc56f3685c31d547a3afda2ecb67e68ccba5 3	tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx
+100644 c8f7c1b49b126936c6dbcca088c87d5a1a365d20 1	tdf-hq/docs/openapi/api.yaml
+100644 e6bbeea61366ccb3a195ad89dbfc21dfee4bbae2 2	tdf-hq/docs/openapi/api.yaml
+100644 52129c9df9ea648f1c9d0424b384c47c1a67a497 3	tdf-hq/docs/openapi/api.yaml
+100644 5d4527306f9421001a5334b0676de8ce773e601e 1	tdf-hq/src/TDF/Commerce/StateMachine.hs
+100644 8aff11a77b236e32ebd46070283f93d899d52a17 2	tdf-hq/src/TDF/Commerce/StateMachine.hs
+100644 c8126c46925964f11f0e8c7d4b41b9c90c8e9332 3	tdf-hq/src/TDF/Commerce/StateMachine.hs
+100644 30f3a7aa5eadde9941a3e8a61883fa9d768b4aa6 1	tdf-hq/tdf-hq.cabal
+100644 f2116d62cd55a19fb596a1abff41e5fa18ca6860 2	tdf-hq/tdf-hq.cabal
+100644 d489ab54d7117c6196c48d8af13b59d227914a2d 3	tdf-hq/tdf-hq.cabal
+100644 6ed7a1ecd19d57e2e84683d52cc05b9e0b7c00f2 1	tdf-hq/test/Spec.hs
+100644 868842b2affe903c954d931450f19ac5e809b99e 2	tdf-hq/test/Spec.hs
+100644 c3e8d444bd38ce60ab84f3abfd44f7f51d5f441c 3	tdf-hq/test/Spec.hs
+100644 4fbfe2c567fcda5192e90cd7e1ee0f3ec58fe679 2	tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs
+100644 21881a7c3f29c18de5d6c4137bf6f75f83a8fe4a 3	tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs
+160000 bd918826fae055b51f96870fcf297920b78a2376 1	tdf-mobile
+160000 2a0e5a99535d9ef199a3e3464a660192f882f72b 2	tdf-mobile
+160000 ff77c2060034762f69aed81473c8f94a25684d7e 3	tdf-mobile
+
+Auto-merging .github/workflows/ci.yml
+CONFLICT (content): Merge conflict in .github/workflows/ci.yml
+Auto-merging docs/catalog-persistence/catalog-list-decisions.json
+CONFLICT (content): Merge conflict in docs/catalog-persistence/catalog-list-decisions.json
+Auto-merging docs/catalog-persistence/reports/list-consumer-matrix.csv
+CONFLICT (content): Merge conflict in docs/catalog-persistence/reports/list-consumer-matrix.csv
+Auto-merging docs/catalog-persistence/reports/static-list-inventory.json
+CONFLICT (content): Merge conflict in docs/catalog-persistence/reports/static-list-inventory.json
+Auto-merging package.json
+Auto-merging scripts/__tests__/ci-pipeline.test.mjs
+CONFLICT (content): Merge conflict in scripts/__tests__/ci-pipeline.test.mjs
+Auto-merging scripts/__tests__/production-release.test.mjs
+Auto-merging scripts/lib/production-release.mjs
+Auto-merging scripts/production-migrations.json
+CONFLICT (content): Merge conflict in scripts/production-migrations.json
+Auto-merging scripts/quality-backend.sh
+CONFLICT (content): Merge conflict in scripts/quality-backend.sh
+Auto-merging scripts/quality-repo.sh
+Auto-merging scripts/test-public-booking-http-concurrency.sh
+Auto-merging tdf-hq-ui/src/api/courses.ts
+Auto-merging tdf-hq-ui/src/api/generated/types.ts
+CONFLICT (content): Merge conflict in tdf-hq-ui/src/api/generated/types.ts
+Auto-merging tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx
+Auto-merging tdf-hq-ui/src/pages/LoginPage.test.tsx
+Auto-merging tdf-hq-ui/src/pages/MarketplacePage.tsx
+Auto-merging tdf-hq-ui/src/pages/MixingMasteringPage.tsx
+Auto-merging tdf-hq-ui/src/pages/PublicBookingPage.tsx
+Auto-merging tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx
+CONFLICT (content): Merge conflict in tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx
+Auto-merging tdf-hq-ui/src/session/SessionContext.tsx
+Auto-merging tdf-hq/assets/feature-registry.json
+Auto-merging tdf-hq/config/default.env.example
+Auto-merging tdf-hq/docs/openapi/api.yaml
+CONFLICT (content): Merge conflict in tdf-hq/docs/openapi/api.yaml
+Auto-merging tdf-hq/src/TDF/API.hs
+Auto-merging tdf-hq/src/TDF/App/Boot.hs
+Auto-merging tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs
+Auto-merging tdf-hq/src/TDF/Commerce/StateMachine.hs
+CONFLICT (content): Merge conflict in tdf-hq/src/TDF/Commerce/StateMachine.hs
+Auto-merging tdf-hq/src/TDF/Server.hs
+Auto-merging tdf-hq/src/TDF/Server/CourseCheckout.hs
+Auto-merging tdf-hq/tdf-hq.cabal
+CONFLICT (content): Merge conflict in tdf-hq/tdf-hq.cabal
+Auto-merging tdf-hq/test/Spec.hs
+CONFLICT (content): Merge conflict in tdf-hq/test/Spec.hs
+Auto-merging tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs
+CONFLICT (add/add): Merge conflict in tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs
+Failed to merge submodule tdf-mobile (not checked out)
+CONFLICT (submodule): Merge conflict in tdf-mobile

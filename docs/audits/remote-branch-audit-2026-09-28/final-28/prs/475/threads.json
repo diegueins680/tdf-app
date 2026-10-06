@@ -1,0 +1,63 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 475,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6oscMr",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 822,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Preserve the migration introduction commit in release ancestry**\n\nA production release of this commit will be rejected before applying migrations because `6e7b87d8...` is not an ancestor of `a76ecf96...` (`git merge-base --is-ancestor` returns 1). The release loader explicitly performs that ancestry check for every `introducedBy` entry in `scripts/production-release.mjs:248-257`, so merging this standalone commit onto `main` still will not include the referenced introduction commit and will fail with \u201crefusing to omit a registered migration.\u201d Preserve the original migration commit in the merged history rather than landing this squashed lineage.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/475#discussion_r4175169209",
+                      "createdAt": "2026-10-03T22:29:03Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Verified against the actual remote head `4100a04c0de9496e7bf9cd6d656602dee1d8e277`: its direct parent is migration introduction commit `6e7b87d8ad3a4c56b033484fe7174dceacec5961`. All 160 registered `introducedBy` commits pass `git merge-base --is-ancestor <introducedBy> 4100a04c0de9496e7bf9cd6d656602dee1d8e277`. GitHub also confirms this introduction commit is an ancestor of its current proposed merge `eaeb5af7359e2b580c2cd78bbf7861697c75a497` (comparison: behind_by=0). The `a76ecf96` commit cited here is not this PR head. The PR already preserves the original history, and its description explicitly requires a normal merge; squash/rebase must not be used. The ancestry requirement is satisfied by the current branch and proposed normal merge, without changing the release guard or manifest.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/475#discussion_r4175199097",
+                      "createdAt": "2026-10-03T22:36:38Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0xMC0wM1QyMjozNjozOFrO-Nx7eQ=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0xMC0wM1QyMjoyOTowM1rOqLHDKw=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

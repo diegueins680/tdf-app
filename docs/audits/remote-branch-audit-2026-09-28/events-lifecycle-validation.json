@@ -1,0 +1,10 @@
+{
+  "production_migrations_unchanged": 160,
+  "adapter_registered": false,
+  "http_examples": 110,
+  "http_failures": 0,
+  "sql_negative_control": "reproduced old race",
+  "sql_fixed": "all existing migration assertions and both orders at all three isolation levels pass",
+  "local_java_limitation": "Audit-local Java/JAR files no longer present; bounded TLC/Alloy to be verified by prescribed hosted CI",
+  "prior_catalog_failure": "One changed DatabaseFailure fingerprint explicitly reviewed; previous decision retained. Final strict1171 gate passed."
+}

@@ -1,0 +1,108 @@
+{
+  "id": 111303133872,
+  "run_id": 37157250949,
+  "workflow_name": "CI",
+  "head_branch": "audit/editorial-ownership-repair-20261003",
+  "run_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/runs/37157250949",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOQPdUrM8AAAAZ6i8KsA",
+  "head_sha": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+  "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/jobs/111303133872",
+  "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/37157250949/job/111303133872",
+  "status": "completed",
+  "conclusion": "success",
+  "created_at": "2026-10-03T22:05:53Z",
+  "started_at": "2026-10-03T22:05:56Z",
+  "completed_at": "2026-10-03T22:17:48Z",
+  "name": "persona-web-e2e",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-10-03T22:05:57Z",
+      "completed_at": "2026-10-03T22:05:58Z"
+    },
+    {
+      "name": "Checkout",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-10-03T22:05:58Z",
+      "completed_at": "2026-10-03T22:06:03Z"
+    },
+    {
+      "name": "Setup Node",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-10-03T22:06:03Z",
+      "completed_at": "2026-10-03T22:06:05Z"
+    },
+    {
+      "name": "Install dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-10-03T22:06:05Z",
+      "completed_at": "2026-10-03T22:06:34Z"
+    },
+    {
+      "name": "Install Playwright browsers",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5,
+      "started_at": "2026-10-03T22:06:34Z",
+      "completed_at": "2026-10-03T22:07:20Z"
+    },
+    {
+      "name": "Run isolated persona web journeys",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6,
+      "started_at": "2026-10-03T22:07:20Z",
+      "completed_at": "2026-10-03T22:17:43Z"
+    },
+    {
+      "name": "Upload sanitized browser evidence",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7,
+      "started_at": "2026-10-03T22:17:43Z",
+      "completed_at": "2026-10-03T22:17:46Z"
+    },
+    {
+      "name": "Post Setup Node",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 13,
+      "started_at": "2026-10-03T22:17:46Z",
+      "completed_at": "2026-10-03T22:17:46Z"
+    },
+    {
+      "name": "Post Checkout",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 14,
+      "started_at": "2026-10-03T22:17:46Z",
+      "completed_at": "2026-10-03T22:17:46Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 15,
+      "started_at": "2026-10-03T22:17:46Z",
+      "completed_at": "2026-10-03T22:17:46Z"
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/111303133872",
+  "labels": [
+    "ubuntu-latest"
+  ],
+  "runner_id": 1000047166,
+  "runner_name": "GitHub Actions 1000047166",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}

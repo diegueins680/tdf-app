@@ -1,0 +1,88 @@
+- generic [ref=f12e1]:
+  - generic [ref=f12e3]:
+    - link "Skip to content" [ref=f12e955] [cursor=pointer]:
+      - /url: "#_r_81_"
+    - generic [ref=f12e6]:
+      - complementary [ref=f12e7]:
+        - generic [ref=f12e11]:
+          - navigation "App navigation" [ref=f12e12]:
+            - generic [ref=f12e13]:
+              - button "Home" [ref=f12e15] [cursor=pointer]
+              - button "Space" [ref=f12e20] [cursor=pointer]
+              - button "Scheduled" [active] [ref=f12e25] [cursor=pointer]
+              - button "Plugins" [ref=f12e31] [cursor=pointer]
+              - button "Explore" [ref=f12e36] [cursor=pointer]
+            - button "Open profile menu" [ref=f12e48] [cursor=pointer]
+          - navigation "Scheduled task folders" [ref=f12e960]:
+            - generic [ref=f12e961]:
+              - generic [ref=f12e962]:
+                - generic [ref=f12e963]:
+                  - heading "Scheduled" [level=1] [ref=f12e964]
+                  - generic [ref=f12e965]:
+                    - button "Search scheduled tasks" [ref=f12e967] [cursor=pointer]
+                    - button "Toggle sidebar" [expanded] [ref=f12e973] [cursor=pointer]
+                - button "New task" [ref=f12e979] [cursor=pointer]
+              - generic [ref=f12e988]:
+                - generic [ref=f12e989]:
+                  - generic [ref=f12e990]: Upcoming
+                  - button "Filter tasks" [ref=f12e993] [cursor=pointer]
+                - list [ref=f12e1005]:
+                  - listitem [ref=f12e1006]:
+                    - button "Quito Electronic Event Watch" [ref=f12e1009] [cursor=pointer]:
+                      - generic [ref=f12e1012]:
+                        - generic [ref=f12e1013]: Quito Electronic Event Watch
+                        - generic [ref=f12e1019]: Monitoring
+                      - button "More task actions" [ref=f12e1023]
+                  - listitem [ref=f12e1029]:
+                    - button "Show more" [ref=f12e1030] [cursor=pointer]
+        - generic:
+          - separator
+      - text: Ask ChatGPT
+      - generic [ref=f12e1034]:
+        - main [ref=f12e1036]:
+          - generic [ref=f12e1044]:
+            - generic [ref=f12e1047]:
+              - img "🕗" [ref=f12e1048]
+              - generic [ref=f12e1049]:
+                - heading "Schedule a task" [level=1] [ref=f12e1050]
+                - paragraph [ref=f12e1051]: ChatGPT can take care of ongoing tasks so you don’t have to.
+            - list [ref=f12e1053]:
+              - listitem [ref=f12e1054]:
+                - button "News updates Send me a daily roundup of news on topics I care about." [ref=f12e1055] [cursor=pointer]:
+                  - generic [ref=f12e1058]:
+                    - generic [ref=f12e1059]: News updates
+                    - generic [ref=f12e1060]: Send me a daily roundup of news on topics I care about.
+              - listitem [ref=f12e1061]:
+                - button "Email monitor Scan my emails and let me know anything that needs my attention" [ref=f12e1062] [cursor=pointer]:
+                  - generic [ref=f12e1065]:
+                    - generic [ref=f12e1066]: Email monitor
+                    - generic [ref=f12e1067]: Scan my emails and let me know anything that needs my attention
+              - listitem [ref=f12e1068]:
+                - button "Quito electronic event alerts Let me know when a strong house, minimal, or techno event is announced in Quito" [ref=f12e1069] [cursor=pointer]:
+                  - generic [ref=f12e1072]:
+                    - generic [ref=f12e1073]: Quito electronic event alerts
+                    - generic [ref=f12e1074]: Let me know when a strong house, minimal, or techno event is announced in Quito
+              - listitem [ref=f12e1075]:
+                - button "Sleep coaching Track my sleep quality and help me improve my habits." [ref=f12e1076] [cursor=pointer]:
+                  - generic [ref=f12e1077]: 😴
+                  - generic [ref=f12e1079]:
+                    - generic [ref=f12e1080]: Sleep coaching
+                    - generic [ref=f12e1081]: Track my sleep quality and help me improve my habits.
+              - listitem [ref=f12e1082]:
+                - button "Find flights for a trip Find the best deal on flights for an upcoming trip." [ref=f12e1083] [cursor=pointer]:
+                  - generic [ref=f12e1084]: 🛩
+                  - generic [ref=f12e1086]:
+                    - generic [ref=f12e1087]: Find flights for a trip
+                    - generic [ref=f12e1088]: Find the best deal on flights for an upcoming trip.
+              - listitem [ref=f12e1089]:
+                - button "Weekly meal plan Plan meals for the week and make a grocery list." [ref=f12e1090] [cursor=pointer]:
+                  - generic [ref=f12e1091]: 🥗
+                  - generic [ref=f12e1093]:
+                    - generic [ref=f12e1094]: Weekly meal plan
+                    - generic [ref=f12e1095]: Plan meals for the week and make a grocery list.
+        - status [ref=f12e1096]
+  - status [ref=f12e950]
+  - status [ref=f12e952]
+  - status [ref=f12e953]
+  - generic [ref=f12e1097]:
+    - tooltip "Scheduled"

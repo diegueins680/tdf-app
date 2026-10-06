@@ -1,0 +1,45 @@
+{
+  "verified_at": "2026-09-28T19:18:10.063612+00:00",
+  "result": "PASS",
+  "source": {
+    "app": "tdf-hq",
+    "provider": "hetzner",
+    "composeProject": "tdf-production",
+    "database": "tdf_hq",
+    "querySha256": "f4c536d1d4554386817b1f44e6a7281ff7c0eb2a435234a8bd6a8ef9c06d394d",
+    "readOnly": true
+  },
+  "deployment": {
+    "provider": "hetzner",
+    "project": "tdf-production",
+    "apiContainer": "f741f27c41085d73bab34571928a6f3a6fe250468fd9ac60592c563502483ad1",
+    "databaseContainer": "6d0014d3523119a2efa66d578391e9d0c2557fd81b4e035765f0efe0a9dc1bff",
+    "apiImage": "sha256:01bc0553e541cb6ab94550efd9e95b27642ca0624a0243870d0cfe646a4c1420",
+    "configuredImage": "diegueins680/tdf-hq@sha256:01bc0553e541cb6ab94550efd9e95b27642ca0624a0243870d0cfe646a4c1420",
+    "databaseImage": "sha256:3e8b3adfd27b5707128f60956f62a793c3c9326ea8cfaf0eab7adccb5d700b21",
+    "database": "tdf_hq",
+    "health": {
+      "db": "ok",
+      "status": "ok"
+    },
+    "version": {
+      "buildTime": "2026-09-28T03:26:58Z",
+      "commit": "cc244b1f86603055997b51379b297baebfd3e7ce",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    }
+  },
+  "metadata": {
+    "kind": "metadata",
+    "database": "tdf_hq",
+    "serverVersion": "17.8 (Debian 17.8-1.pgdg12+1)",
+    "transactionReadOnly": "on",
+    "tableCount": 623,
+    "capturedAt": "2026-09-28T19:16:13.744649+00:00"
+  },
+  "record_count": 766,
+  "private_output": "/private/tmp/tdf-current-catalog-inventory-20260928.json",
+  "private_output_sha256": "cfe7897574bcf8a4219f1b7be15f8b2822f882d379e149d3338fccf05a4e2664",
+  "mode": "0o600",
+  "note": "Only provenance/aggregate counts retained in audit; raw existing catalog output remains private outside audit archive."
+}

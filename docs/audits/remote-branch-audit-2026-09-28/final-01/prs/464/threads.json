@@ -1,0 +1,78 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 464,
+          "reviewDecision": "REVIEW_REQUIRED",
+          "mergeStateStatus": "BLOCKED",
+          "mergeable": "MERGEABLE",
+          "headRefOid": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+          "baseRefName": "codex/event-ingestion-boundaries-20260927",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6mhy9e",
+                "isResolved": false,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/Services/EventDiscovery.hs",
+                "line": 2404,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Permit the ownership marker in stored event metadata**\n\nEvery new or refreshed imported event now receives `_discoveryOwned`, but `EventMetadataDTO` still rejects every key except `ticketUrl`, `imageUrl`, `isPublic`, `currency`, and `budgetCents` (`SocialEventsHandlers.hs:1594-1623`). As soon as an event is imported or refreshed, `publicUpcomingEventRow` silently omits it because metadata decoding fails, while administrative read/update and finance paths using `decodeStoredEventMetadata` return errors. Store this evidence separately or update all metadata decoders and writers to accept and preserve the internal marker.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/464#discussion_r4118352786",
+                      "createdAt": "2026-09-28T03:38:45Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQwMzozODo0NVrO9XkTkg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6mh2J2",
+                "isResolved": false,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/Services/EventDiscovery.hs",
+                "line": 2404,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Preserve editorial metadata during source reconciliation**\n\nWhen an editor changes `ticketUrl` or sets `isPublic` to false, this ownership logic initially preserves the change, but every successful cron refresh immediately calls `reconcileProviderEvents` (`Cron.hs:617-624`), whose `refreshCanonicalVisibility` unconditionally rewrites both fields from provider references (`EventDiscovery.hs:2000-2007`). Consequently, a legacy imported event that an administrator hides can be republished on the next successful source run, and an editorial ticket URL is replaced despite being removed from `nextOwned`; make reconciliation honor/update the ownership snapshot rather than bypassing it.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/464#discussion_r4118372645",
+                      "createdAt": "2026-09-28T03:44:21Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQwMzo0NDoyMVrO9XlhJQ=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQwMzo0NDoyMVrOpodidg=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

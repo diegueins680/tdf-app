@@ -1,0 +1,460 @@
+- generic [ref=e4]:
+  - generic [ref=e18]:
+    - generic [ref=e21]:
+      - link [ref=e823] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=e824]
+      - generic [ref=e34]:
+        - link [ref=e825] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=e826]
+        - link [ref=e827] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=e828]
+        - link [ref=e829] [cursor=pointer]:
+          - /url: /direct/t/119803386073023
+          - generic [ref=e64]:
+            - img "Messages" [ref=e830]
+            - generic "Direct messaging - 6 new notifications link" [ref=e831]: "6"
+        - link [ref=e832] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=e833]
+        - link [ref=e834] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=e835]
+        - link [ref=e836] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=e837]
+        - link [ref=e838] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=e839]
+        - link [ref=e840] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=e841]:
+            - img "tdf.records.label's profile picture" [ref=e842]
+      - generic [ref=e130]:
+        - link [ref=e843] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=e844]
+        - link [ref=e845] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=e846]
+    - generic [ref=e149]:
+      - main [ref=e150]:
+        - generic [ref=e152]:
+          - generic [ref=e153]:
+            - generic [ref=e154]:
+              - link [ref=e847] [cursor=pointer]:
+                - /url: /gura.a.music/
+                - img "gura.a.music's profile picture" [ref=e848]
+              - generic [ref=e162]:
+                - generic [ref=e163]:
+                  - generic [ref=e164]:
+                    - generic [ref=e165]:
+                      - link [ref=e849] [cursor=pointer]:
+                        - /url: "#"
+                        - heading "gura.a.music" [level=2] [ref=e850]
+                      - img "Verified" [ref=e851]
+                    - button [ref=e852] [cursor=pointer]:
+                      - img "Options" [ref=e853]
+                  - generic [ref=e178]: Gura
+                  - generic [ref=e180]:
+                    - generic [ref=e182]:
+                      - generic [ref=e183]: "185"
+                      - text: posts
+                    - link "10.1K followers" [ref=e854] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=e186]:
+                        - generic "10,194" [ref=e855]: 10.1K
+                        - text: followers
+                    - link "3,166 following" [ref=e856] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=e190]:
+                        - generic [ref=e191]: 3,166
+                        - text: following
+                - generic [ref=e192]:
+                  - generic [ref=e193]:
+                    - generic [ref=e194]: Artist
+                    - button [ref=e857] [cursor=pointer]:
+                      - generic [ref=e198]:
+                        - text: 🎶 Cantante👑 Top 10 Miss Universo Ecuador 2025
+                        - link "@cnbecuador" [ref=e858]:
+                          - /url: /cnbecuador/
+                        - text: 🎬 MA
+                        - link "@dynastymodelsinc" [ref=e859]:
+                          - /url: /dynastymodelsinc/
+                    - heading [level=1]
+                    - generic [ref=e201]:
+                      - generic [ref=e202]:
+                        - img "Link icon" [ref=e860]
+                        - link "open.spotify.com/artist/48SeGfczfKPXn98lFKEKu1?si=6_G1XitYRxaTnOk_nqBdkg" [ref=e861] [cursor=pointer]:
+                          - /url: https://l.instagram.com/?u=https%3A%2F%2Fopen.spotify.com%2Fartist%2F48SeGfczfKPXn98lFKEKu1%3Fsi%3D6_G1XitYRxaTnOk_nqBdkg%26utm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio%26fbclid%3DPAZXh0bgNhZW0CMTEAcGRvZgJzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAacu_8jmdvv_A8rst76syElCeJ7rCCmZOOCg556V_4_e2PFynlnEVa7vFjv_4g_aem_xGkrODrqVck4teckUTpntw&e=AUDUMtv80scCzrXN1brJWns6fsOslzwm_6PDcxeWzJGKnros1DvYoku-n88CqR6sKuRrhm64T7t7ho8RY0dDkW-RaU6bPktuhIY8puamwHay85qU7DC0f-02N8MGaTAfy_p57wV0nmys
+                      - link "Threads gura.a.music" [ref=e862] [cursor=pointer]:
+                        - /url: https://www.threads.com/@gura.a.music?xmt=AQG0AjuLFEjphv4c2blgMlRpubUQsmyKQ-29k6nsLVhrKcU
+                        - img "Threads" [ref=e863]
+                        - generic [ref=e215]: gura.a.music
+                  - link "Followed by hakanstagram_, tabatabernarda + 28 more" [ref=e864] [cursor=pointer]:
+                    - /url: /gura.a.music/followers/mutualOnly
+                    - generic [ref=e219]:
+                      - generic [ref=e221]:
+                        - button [ref=e686]:
+                          - link [ref=e687]
+                        - button [ref=e224]:
+                          - link [ref=e225]
+                        - button [ref=e226]:
+                          - link [ref=e227]
+                      - generic [ref=e228]: Followed by hakanstagram_, tabatabernarda + 28 more
+            - generic [ref=e233]:
+              - button "Follow Back" [ref=e865] [cursor=pointer]
+              - button "Message" [ref=e866] [cursor=pointer]
+              - button [ref=e867] [cursor=pointer]:
+                - img "Similar accounts" [ref=e868]
+            - menu [ref=e247]:
+              - generic [ref=e249]:
+                - list [ref=e251]:
+                  - listitem [ref=e252]
+                  - listitem [ref=e253]
+                  - listitem [ref=e254]:
+                    - link "View 🎙️ highlight" [ref=e869] [cursor=pointer]:
+                      - /url: /stories/highlights/17848347642205126/
+                      - button "gura.a.music's highlight story picture 🎙️" [ref=e870]:
+                        - button [ref=e871]:
+                          - img "gura.a.music's highlight story picture" [ref=e872]
+                        - generic [ref=e263]: 🎙️
+                  - listitem [ref=e266]:
+                    - link "View dance highlight" [ref=e873] [cursor=pointer]:
+                      - /url: /stories/highlights/18111913270758999/
+                      - button "gura.a.music's highlight story picture dance" [ref=e874]:
+                        - button [ref=e875]:
+                          - img "gura.a.music's highlight story picture" [ref=e876]
+                        - generic [ref=e275]: dance
+                  - listitem [ref=e278]:
+                    - link "View Met Gala Night highlight" [ref=e877] [cursor=pointer]:
+                      - /url: /stories/highlights/18184843129370773/
+                      - button "gura.a.music's highlight story picture Met Gala Night" [ref=e878]:
+                        - button [ref=e879]:
+                          - img "gura.a.music's highlight story picture" [ref=e880]
+                        - generic [ref=e287]: Met Gala Night
+                  - listitem [ref=e290]:
+                    - link "View 📸 highlight" [ref=e881] [cursor=pointer]:
+                      - /url: /stories/highlights/17995646402431232/
+                      - button "gura.a.music's highlight story picture 📸" [ref=e882]:
+                        - button [ref=e883]:
+                          - img "gura.a.music's highlight story picture" [ref=e884]
+                        - generic [ref=e299]: 📸
+                  - listitem [ref=e302]:
+                    - link "View casual 🎶 highlight" [ref=e885] [cursor=pointer]:
+                      - /url: /stories/highlights/17856677853482141/
+                      - button "gura.a.music's highlight story picture casual 🎶" [ref=e886]:
+                        - button [ref=e887]:
+                          - img "gura.a.music's highlight story picture" [ref=e888]
+                        - generic [ref=e311]: casual 🎶
+                  - listitem [ref=e314]:
+                    - link "View 📱 highlight" [ref=e889] [cursor=pointer]:
+                      - /url: /stories/highlights/18014476502657230/
+                      - button "gura.a.music's highlight story picture 📱" [ref=e890]:
+                        - button [ref=e891]:
+                          - img "gura.a.music's highlight story picture" [ref=e892]
+                        - generic [ref=e323]: 📱
+                  - listitem [ref=e326]:
+                    - link "View 🎞️ highlight" [ref=e893] [cursor=pointer]:
+                      - /url: /stories/highlights/17907520994966201/
+                      - button "gura.a.music's highlight story picture 🎞️" [ref=e894]:
+                        - button [ref=e895]:
+                          - img "gura.a.music's highlight story picture" [ref=e896]
+                        - generic [ref=e335]: 🎞️
+                  - listitem [ref=e338]:
+                    - link "View ✨ highlight" [ref=e897] [cursor=pointer]:
+                      - /url: /stories/highlights/17900956680123474/
+                      - button "gura.a.music's highlight story picture ✨" [ref=e898]:
+                        - button [ref=e899]:
+                          - img "gura.a.music's highlight story picture" [ref=e900]
+                        - generic [ref=e347]: ✨
+                  - listitem [ref=e350]:
+                    - link "View 👑CNB👑 highlight" [ref=e901] [cursor=pointer]:
+                      - /url: /stories/highlights/17870932629220084/
+                      - button "gura.a.music's highlight story picture 👑CNB👑" [ref=e902]:
+                        - button [ref=e903]:
+                          - img "gura.a.music's highlight story picture" [ref=e904]
+                        - generic [ref=e359]: 👑CNB👑
+                  - listitem [ref=e362]:
+                    - link "View 🗞️ highlight" [ref=e905] [cursor=pointer]:
+                      - /url: /stories/highlights/18058676873111693/
+                      - button "gura.a.music's highlight story picture 🗞️" [ref=e906]:
+                        - button [ref=e907]:
+                          - img "gura.a.music's highlight story picture" [ref=e908]
+                        - generic [ref=e371]: 🗞️
+                  - listitem [ref=e374]:
+                    - link "View 🩰 highlight" [ref=e909] [cursor=pointer]:
+                      - /url: /stories/highlights/18102767254410153/
+                      - button "gura.a.music's highlight story picture 🩰" [ref=e910]:
+                        - button [ref=e911]:
+                          - img "gura.a.music's highlight story picture" [ref=e912]
+                        - generic [ref=e383]: 🩰
+                  - listitem [ref=e386]:
+                    - link "View HOLLYWATER highlight" [ref=e913] [cursor=pointer]:
+                      - /url: /stories/highlights/18084852583578022/
+                      - button "gura.a.music's highlight story picture HOLLYWATER" [ref=e914]:
+                        - button [ref=e915]:
+                          - img "gura.a.music's highlight story picture" [ref=e916]
+                        - generic [ref=e395]: HOLLYWATER
+                  - listitem [ref=e398]:
+                    - link "View 🎬 highlight" [ref=e917] [cursor=pointer]:
+                      - /url: /stories/highlights/18108463606441427/
+                      - button "gura.a.music's highlight story picture 🎬" [ref=e918]:
+                        - button [ref=e919]:
+                          - img "gura.a.music's highlight story picture" [ref=e920]
+                        - generic [ref=e407]: 🎬
+                  - listitem [ref=e410]:
+                    - link "View MERCH highlight" [ref=e921] [cursor=pointer]:
+                      - /url: /stories/highlights/17860455846213799/
+                      - button "gura.a.music's highlight story picture MERCH" [ref=e922]:
+                        - button [ref=e923]:
+                          - img "gura.a.music's highlight story picture" [ref=e924]
+                        - generic [ref=e419]: MERCH
+                - button "Next" [ref=e925] [cursor=pointer]
+          - generic [ref=e424]:
+            - tablist [ref=e425]:
+              - link [ref=e926] [cursor=pointer]:
+                - /url: /gura.a.music/
+                - img "Posts" [ref=e927]
+              - link [ref=e928] [cursor=pointer]:
+                - /url: /gura.a.music/reels/
+                - img "Reels" [ref=e929]
+              - link [ref=e930] [cursor=pointer]:
+                - /url: /gura.a.music/reposts/
+                - img "Reposts" [ref=e931]
+              - link [ref=e932] [cursor=pointer]:
+                - /url: /gura.a.music/tagged/
+                - img "Tagged" [ref=e933]
+            - tabpanel
+          - generic [ref=e459]:
+            - generic [ref=e460]:
+              - link [ref=e934] [cursor=pointer]:
+                - /url: /gura.a.music/p/DVKGa0vDfEi/
+                - 'img "Ese día en @excentrico_uio 🤎💫 piano @ricardosubia #singer #cantante #ecuador #livemusic" [ref=e935]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=e936] [cursor=pointer]:
+                - /url: /gura.a.music/p/DLV8_0ANI4M/
+                - 'img "Cada día más lista para representar a este hermoso país 👑 🇪🇨 ✨ Señorita Región Central 2025 @cnbecuador Producción: @cesaraasesor Ph: @cesaraasesor . . . . #candidata #missuniverse #ecuador #cnb #SenoritaRegionCentral" [ref=e937]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=e938] [cursor=pointer]:
+                - /url: /casadelamusicaq/p/DXIjODJEe-8/
+                - img [ref=e939]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+            - generic [ref=e479]:
+              - link [ref=e940] [cursor=pointer]:
+                - /url: /gura.a.music/reel/DaiqvKBhd0p/
+                - 'img "again, and again, and again, and again ✨#singer #ecuador #songwriting #inspiration #musician" [ref=e941]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=e942] [cursor=pointer]:
+                - /url: /gura.a.music/reel/Dabs78dt18M/
+                - 'img "nada más que decir #cantante #ecuador #inspiration #musicaenvivo" [ref=e943]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=e944] [cursor=pointer]:
+                - /url: /gura.a.music/p/DYk8VV8DdnU/
+                - 'img "Y la número 10 es que editar este contenido se demora mucho más de lo que pensé 👌🏼✨ @telemundo @operaciontriunfousa @telemundorealities #cantante #audition #tips #OperacionTriunfoUSA #TelemundoRealities" [ref=e945]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=e497]:
+              - link [ref=e946] [cursor=pointer]:
+                - /url: /gura.a.music/p/DYfxWxIkTX8/
+                - 'img "Mientras tanto a lucir @oritorepublik.ec 💛💛💛🍌 amando esta experiencia, sigan pendientes de las cuentas @operaciontriunfousa y @telemundorealities #cantante #ecuador #OperacionTriunfoUSA #TelemundoRealities #telemundo" [ref=e947]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=e948] [cursor=pointer]:
+                - /url: /gura.a.music/reel/DYU6njHhQPK/
+                - 'img "A un paso de @telemundo @operaciontriunfousa @telemundorealities 💛💙♥️ Let’s give it a shot 🎶 Sin estas personas no hubiera llegado ni al primer filtro, special thanks @ana.passeri @marthitalvarez @forzavuec @maryorisdeverahairstylist @chanel.16beautystudio @phisiquewellnessclub @frevodancestudio #operaciontriunfo #cantante #casting #telemundo" [ref=e949]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=e950] [cursor=pointer]:
+                - /url: /gura.a.music/p/DYLnFxjDc6p/
+                - 'img "estaba esperando a que salgan estas 🧡✨ capturado por el lente de @fiacardenas Cliente: @chatoyantofficialec Agencia: @almaconsultingec Casa productora: @suprastudio.ec Producción general: @buscapleitoss Dirección: @supra.director Producción ejecutiva: @marthitalvarez @pamesantana11 Producción de campo: @nicola_alicia Coordinación de producción: @mikaelaq92 Asistencia de producción: @calbuja05 AD: @handsafesonset Asistencia general: @dariomolinafit @stefygmez_98 DOP: @kevinalexander.ph 1AC: @emily.abril_ Gaffer: @ricardodavidsalcedo Grips: @teo_bilvao @teodavid.raw Vestuario: @urbe.__ Maquillaje: @jhonsalaberry @gabyzapatabeauty Asist vestuario: @dlaconstelacion Arte: @pao.lapantera @kia.gaona BTS Video: @anitaespinn BTS Foto: @fiacardenas Talentos: @gura.a.music @dannaacarrion julialzamora @guerrerotita05 Locación: @nemoclublife #photography #music #piano #quito" [ref=e951]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=e516]:
+              - link [ref=e952] [cursor=pointer]:
+                - /url: /gura.a.music/reel/DXu0Ri2Eb4K/
+                - 'img "Donen!!!! Ese vestido escondido en tu clóset puede ayudar a un niñ@ a recibir la terapia que necesita ❤️💙 Para donar contacten a @fundacionreinadequito @mariaemiliasanchez 👑 Para hacer shopping, SAYA mercado de segunda mano estará en @cclaesquinacumbaya del 14 - 16 de mayo #quito #donate #cumbayá #serviciocomunitario" [ref=e953]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=e954] [cursor=pointer]:
+                - /url: /papayadada/reel/DXrxslyjnv5/
+                - 'img "@gura.a.music es la tercera participante. La mas viral se sube al ft con nosotros de este tema: UNA DE NORTEÑO (disponible el 7 de mayo )" [ref=e955]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=e956] [cursor=pointer]:
+                - /url: /gura.a.music/p/DXcziWXkekM/
+                - 'img "captured by @negative_roll 🖤🎶 . . . . . . #singer #ecuador #live #concert #music" [ref=e957]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+      - contentinfo [ref=e535]:
+        - generic [ref=e536]:
+          - generic [ref=e538]:
+            - link "Meta" [ref=e958] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=e959] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=e960] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=e961] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=e962] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=e963] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=e964] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=e965] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=e966] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=e967] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=e968] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=e969] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=e970] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=e971] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=e972] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=e973] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=e587]:
+            - generic [ref=e588] [cursor=pointer]:
+              - generic [ref=e589]:
+                - generic [ref=e590]: English
+                - img "Down chevron icon" [ref=e974]
+              - combobox "Switch Display Language" [ref=e975]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=e596]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=e610] [cursor=pointer]:
+              - generic "Messages - 6 new notifications" [ref=e611]:
+                - generic [ref=e612]:
+                  - generic [ref=e614]:
+                    - img "Messages" [ref=e615]
+                    - generic "Direct messaging - 6 new notifications link" [ref=e618]: "6"
+                  - generic [ref=e621]: Messages
+                - generic [ref=e622]:
+                  - button [ref=e623]:
+                    - img "6 unread chats" [ref=e625]
+                  - button "User avatar Jonathan Campoverde" [ref=e630]:
+                    - img "User avatar" [ref=e633]
+                  - button "User avatar Fundación Kunayan" [ref=e635]:
+                    - img "User avatar" [ref=e638]
+                  - button "User avatar Isaac" [ref=e640]:
+                    - img "User avatar" [ref=e643]
+            - generic [ref=e976]:
+              - generic [ref=e977]:
+                - generic [ref=e978]:
+                  - generic [ref=e980]:
+                    - status "Loading..." [ref=e982]
+                    - status "Loading..." [ref=e984]
+                  - button [active] [ref=e986] [cursor=pointer]:
+                    - img "Close" [ref=e988]
+                - separator [ref=e991]
+              - generic [ref=e992]:
+                - generic [ref=e993]:
+                  - status "Loading..." [ref=e995]
+                  - status "Loading..." [ref=e997]
+                - status "Loading..." [ref=e1000]
+                - generic [ref=e1001]:
+                  - status "Loading..." [ref=e1003]
+                  - status "Loading..." [ref=e1005]
+                - generic [ref=e1006]:
+                  - status "Loading..." [ref=e1008]
+                  - status "Loading..." [ref=e1010]
+                - status "Loading..." [ref=e1013]
+                - generic [ref=e1014]:
+                  - status "Loading..." [ref=e1016]
+                  - status "Loading..." [ref=e1018]
+                - status "Loading..." [ref=e1020]

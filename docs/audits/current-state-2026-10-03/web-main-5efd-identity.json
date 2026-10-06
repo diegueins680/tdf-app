@@ -1,0 +1,27 @@
+{
+  "observedAt": "2026-10-05T03:51:47.902621+00:00",
+  "expectedCommit": "5efd7ff31d55c1eb5b66b2f7710ea4ef87328727",
+  "cloudflareDeployment": "7da620c3-7c39-4d24-a32a-48bfe4460dd3",
+  "canonicalEntryMatchesRecordedDeployment": true,
+  "results": [
+    {
+      "origin": "https://www.tdfrecords.net",
+      "route": "/app",
+      "status": 200,
+      "entry": "/assets/index-CwXTd25G.js",
+      "assetStatus": 200,
+      "entrySHA256": "9863a18f61e4480f7cacc7e1f1890191743e6f029dce524da93c952b554e2d75",
+      "entryBytes": 124120
+    },
+    {
+      "origin": "https://7da620c3.tdf-app.pages.dev",
+      "route": "/app",
+      "status": 200,
+      "entry": "/assets/index-CwXTd25G.js",
+      "assetStatus": 200,
+      "entrySHA256": "9863a18f61e4480f7cacc7e1f1890191743e6f029dce524da93c952b554e2d75",
+      "entryBytes": 124120
+    }
+  ],
+  "limits": "Public build fingerprint only; Google authentication, upload and analytics receipt unverified. Automatic deployment following another writer merge; not manually triggered here. Initial default-Python requests returned403; retained errors, no auth bypass."
+}

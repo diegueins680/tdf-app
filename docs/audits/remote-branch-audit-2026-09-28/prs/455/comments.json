@@ -1,0 +1,73 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049861934",
+      "pull_request_review_id": 5251576624,
+      "id": 4049861934,
+      "node_id": "PRRC_kwDOQPdUrM7xY_0u",
+      "diff_hunk": "@@ -0,0 +1,40 @@\n+{-# LANGUAGE OverloadedStrings #-}\n+module Main (main) where",
+      "path": "tdf-hq/test/PaymentArithmeticProbe.hs",
+      "commit_id": "6fbae058e23c989599116c629a80fe216505c1e4",
+      "original_commit_id": "b966595e267c6365830fa5e60abd3e707838ad59",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Integrate the arithmetic oracle into the Hspec suite**\n\nWhen developers or validation lanes run the documented `stack test` command, this standalone `Main` module is skipped because it is only invoked by the bespoke command in `ci.yml`; consequently, its 400 transition and 512 ledger boundary checks can silently stop running outside that workflow. Convert the probe to an Hspec `*.Spec.hs` module and register it with the existing test suite so the standard backend test command includes this regression coverage.\n\nAGENTS.md reference: [tdf-hq/AGENTS.md:L24-L28](https://github.com/diegueins680/tdf-app/blob/b966595e267c6365830fa5e60abd3e707838ad59/tdf-hq/AGENTS.md#L24-L28)\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T19:07:01Z",
+      "updated_at": "2026-09-18T19:07:01Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/455#discussion_r4049861934",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/455",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049861934"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/455#discussion_r4049861934"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/455"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049861934/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 2,
+      "original_line": 2,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 2,
+      "position": 2,
+      "subject_type": "line"
+    }
+  ]
+]

@@ -1,0 +1,26 @@
+ .gitignore                                         |   1 +
+ docs/event-operations/README.md                    |   2 +
+ docs/event-operations/delivery-plan.md             |   7 +
+ .../event-operations/fanhub-onboarding-contract.md |  66 ++++++++
+ docs/event-operations/gap-matrix.md                |   6 +
+ docs/event-operations/pr-17-fanhub-onboarding.md   | 137 ++++++++++++++++
+ docs/event-operations/threat-model.md              |  13 ++
+ docs/event-operations/traceability-matrix.md       |   1 +
+ e2e/web/fanhub-onboarding.spec.mjs                 | 115 +++++++++++++
+ formal/event-operations/FanHubOnboarding.cfg       |   4 +
+ formal/event-operations/FanHubOnboarding.tla       |  50 ++++++
+ .../event-operations/FanHubOnboardingConsent.cfg   |   4 +
+ .../event-operations/FanHubOnboardingContext.cfg   |   4 +
+ formal/event-operations/FanHubOnboardingFlight.cfg |   4 +
+ .../event-operations/FanHubOnboardingTerminal.cfg  |   4 +
+ formal/event-operations/README.md                  |   8 +
+ playwright.fanhub.config.mjs                       |  10 ++
+ scripts/verify-event-operations-formal.sh          |   6 +
+ tdf-hq-ui/src/api/session.test.ts                  |  13 ++
+ tdf-hq-ui/src/api/session.ts                       |   6 +-
+ tdf-hq-ui/src/features/fans/useFanHubOnboarding.ts | 104 ++++++++++++
+ tdf-hq-ui/src/i18n/locales/en.ts                   |  12 ++
+ tdf-hq-ui/src/i18n/locales/es.ts                   |  12 ++
+ tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx | 181 ++++++++++++++++++---
+ tdf-hq-ui/src/pages/FanHubPage.tsx                 |  42 +++--
+ 25 files changed, 772 insertions(+), 40 deletions(-)

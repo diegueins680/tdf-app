@@ -1,0 +1,13 @@
+- generic:
+  - alert [ref=e1]
+  - region "Cookie banner" [ref=e9]:
+    - dialog "Our site uses cookies" [ref=e10]:
+      - generic [ref=e12]:
+        - generic [ref=e14]:
+          - heading "Our site uses cookies" [level=2] [ref=e15]
+          - generic [ref=e16]: Like most websites, we use cookies to make our site work the way you expect it to, improve your experience on our site, analyze site usage, and assist in our marketing efforts. By choosing "Accept All Cookies", you agree to the storing of all categories of cookies on your device. If you wish to accept or reject some categories of cookies, please click “Cookie Preferences.”
+        - generic [ref=e18]:
+          - button "Cookie Preferences" [active] [ref=e19] [cursor=pointer]
+          - button "Reject All" [ref=e20] [cursor=pointer]
+          - button "Accept All Cookies" [ref=e21] [cursor=pointer]
+      - button "Close" [ref=e23] [cursor=pointer]

@@ -1,0 +1,2167 @@
+[
+  {
+    "name": "audit/critical-completion-20260916",
+    "sha": "d24e025b8bf8c90ce373fab277ebe869eaf0fce5",
+    "target": "main",
+    "behind": 351,
+    "ahead": 1,
+    "main_behind": 351,
+    "main_ahead": 1,
+    "merge_base": "d6244296925e20ccb6b2261290204415201843f3",
+    "prs": [
+      418
+    ],
+    "last_commit": "2026-09-16T16:34:17-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(commerce): protect live worker diagnostics and liveness"
+  },
+  {
+    "name": "audit/formal-system-20260918",
+    "sha": "6fbae058e23c989599116c629a80fe216505c1e4",
+    "target": "main",
+    "behind": 19,
+    "ahead": 0,
+    "main_behind": 19,
+    "main_ahead": 0,
+    "merge_base": "6fbae058e23c989599116c629a80fe216505c1e4",
+    "prs": [
+      455
+    ],
+    "last_commit": "2026-09-20T21:13:53-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(formal): keep conflict summary aligned with expanded inventory"
+  },
+  {
+    "name": "audit/provider-recovery-artifact-20260918",
+    "sha": "f1ff05e6f591cb87ef71a9b66c5abeefa4c40095",
+    "target": "main",
+    "behind": 182,
+    "ahead": 0,
+    "main_behind": 182,
+    "main_ahead": 0,
+    "merge_base": "f1ff05e6f591cb87ef71a9b66c5abeefa4c40095",
+    "prs": [],
+    "last_commit": "2026-09-18T02:45:15-05:00",
+    "author": "Diego Saa",
+    "subject": "Merge pull request #430 from diegueins680/feat/identity-source-prevention-20260918"
+  },
+  {
+    "name": "audit/provider-reviewed-release-tooling-20260918",
+    "sha": "fcc03784895f08761483e1e7a844d6e6e95b443e",
+    "target": "main",
+    "behind": 176,
+    "ahead": 1,
+    "main_behind": 176,
+    "main_ahead": 1,
+    "merge_base": "5c11577a5d31f079b3e070a7810a6b04a48d99f4",
+    "prs": [],
+    "last_commit": "2026-09-18T03:49:38-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "chore(release): use exact reviewed recovery runner from PR 438"
+  },
+  {
+    "name": "audit/social-boundaries-integration-20260917",
+    "sha": "c55932de5c2c27dcd526e4f306fefda8c3671877",
+    "target": "main",
+    "behind": 321,
+    "ahead": 0,
+    "main_behind": 321,
+    "main_ahead": 0,
+    "merge_base": "c55932de5c2c27dcd526e4f306fefda8c3671877",
+    "prs": [
+      424
+    ],
+    "last_commit": "2026-09-17T16:06:19-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "Document combined social boundary scope and validation"
+  },
+  {
+    "name": "audit/ux-calendar-authoritative-state-20260918",
+    "sha": "563dafa4240933ed7d615ad61cb3d38f000ada22",
+    "target": "main",
+    "behind": 152,
+    "ahead": 0,
+    "main_behind": 152,
+    "main_ahead": 0,
+    "merge_base": "563dafa4240933ed7d615ad61cb3d38f000ada22",
+    "prs": [
+      445
+    ],
+    "last_commit": "2026-09-18T06:38:34-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(audit): retain calendar return browser counterexamples"
+  },
+  {
+    "name": "audit/ux-calendar-runtime-schema-20260918",
+    "sha": "9497be8f4da96159a492c7f290f6b6229095cff2",
+    "target": "main",
+    "behind": 154,
+    "ahead": 0,
+    "main_behind": 154,
+    "main_ahead": 0,
+    "merge_base": "9497be8f4da96159a492c7f290f6b6229095cff2",
+    "prs": [
+      444
+    ],
+    "last_commit": "2026-09-18T06:14:59-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "chore(catalog): review appended calendar migration descriptor"
+  },
+  {
+    "name": "audit/ux-directory-entry-20260918",
+    "sha": "c7124f906ad88e2237dad6cb89ba62a2616501d5",
+    "target": "main",
+    "behind": 155,
+    "ahead": 0,
+    "main_behind": 155,
+    "main_ahead": 0,
+    "merge_base": "c7124f906ad88e2237dad6cb89ba62a2616501d5",
+    "prs": [
+      447
+    ],
+    "last_commit": "2026-09-18T07:35:36-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(directory): clear recovered favorite mutation errors"
+  },
+  {
+    "name": "audit/ux-directory-language-20260918",
+    "sha": "d073042dfef08a9a97c21d18dc5dafe9726e522d",
+    "target": "main",
+    "behind": 152,
+    "ahead": 0,
+    "main_behind": 152,
+    "main_ahead": 0,
+    "merge_base": "d073042dfef08a9a97c21d18dc5dafe9726e522d",
+    "prs": [
+      448
+    ],
+    "last_commit": "2026-09-18T07:45:18-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(ux): persist current approvals release limits and directory evidence"
+  },
+  {
+    "name": "audit/ux-experiment-contract-20260918",
+    "sha": "2ae5e779b1b92e746a45590bd0171b7099458776",
+    "target": "main",
+    "behind": 200,
+    "ahead": 0,
+    "main_behind": 200,
+    "main_ahead": 0,
+    "merge_base": "2ae5e779b1b92e746a45590bd0171b7099458776",
+    "prs": [
+      431
+    ],
+    "last_commit": "2026-09-18T01:09:04-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "Merge remote-tracking branch 'origin/main' into audit/ux-experiment-contract-20260918"
+  },
+  {
+    "name": "audit/ux-marketplace-storage-20260918",
+    "sha": "585003b6e7d011ea8c00ce0f56980ef7faa0ff8e",
+    "target": "main",
+    "behind": 116,
+    "ahead": 0,
+    "main_behind": 116,
+    "main_ahead": 0,
+    "merge_base": "585003b6e7d011ea8c00ce0f56980ef7faa0ff8e",
+    "prs": [
+      450
+    ],
+    "last_commit": "2026-09-18T11:34:50-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(marketplace): tolerate optional browser storage denial"
+  },
+  {
+    "name": "audit/ux-native-release-20260918",
+    "sha": "33efe613f45a0a14208795591d5972a9e538e9a4",
+    "target": "main",
+    "behind": 60,
+    "ahead": 0,
+    "main_behind": 60,
+    "main_ahead": 0,
+    "merge_base": "33efe613f45a0a14208795591d5972a9e538e9a4",
+    "prs": [
+      454
+    ],
+    "last_commit": "2026-09-18T14:03:34-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(ux): reconcile current release and privacy verification"
+  },
+  {
+    "name": "audit/ux-native-tab-release-20260918",
+    "sha": "de177c8589014dc394cd9af465e43be10ae1f744",
+    "target": "main",
+    "behind": 143,
+    "ahead": 0,
+    "main_behind": 143,
+    "main_ahead": 0,
+    "merge_base": "de177c8589014dc394cd9af465e43be10ae1f744",
+    "prs": [
+      435
+    ],
+    "last_commit": "2026-09-18T06:58:41-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(catalog): regenerate reports for the current mobile pin"
+  },
+  {
+    "name": "audit/ux-navigation-concurrency-20260918",
+    "sha": "9213b1334aca9b34f377790ed992b869185483c8",
+    "target": "main",
+    "behind": 187,
+    "ahead": 0,
+    "main_behind": 187,
+    "main_ahead": 0,
+    "merge_base": "9213b1334aca9b34f377790ed992b869185483c8",
+    "prs": [
+      432
+    ],
+    "last_commit": "2026-09-18T02:25:43-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(navigation): accept the published preference update contract"
+  },
+  {
+    "name": "audit/ux-operational-20260918",
+    "sha": "2fb19e8635e5a46e0d31093ed2e9b40dc9bf7b91",
+    "target": "main",
+    "behind": 207,
+    "ahead": 0,
+    "main_behind": 207,
+    "main_ahead": 0,
+    "merge_base": "2fb19e8635e5a46e0d31093ed2e9b40dc9bf7b91",
+    "prs": [
+      429
+    ],
+    "last_commit": "2026-09-18T00:46:20-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "Merge remote-tracking branch 'origin/main' into audit/ux-operational-20260918"
+  },
+  {
+    "name": "audit/ux-provider-rollback-guard-20260918",
+    "sha": "35172083af75f9c7530624173d82819252e25d1a",
+    "target": "main",
+    "behind": 174,
+    "ahead": 0,
+    "main_behind": 174,
+    "main_ahead": 0,
+    "merge_base": "35172083af75f9c7530624173d82819252e25d1a",
+    "prs": [
+      438
+    ],
+    "last_commit": "2026-09-18T03:43:27-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(release): recover untouched legacy replicas after canary failure"
+  },
+  {
+    "name": "audit/ux-public-data-latency-20260918",
+    "sha": "1d4143f7809f416317d858ad4161580c1dd125e1",
+    "target": "main",
+    "behind": 155,
+    "ahead": 0,
+    "main_behind": 155,
+    "main_ahead": 0,
+    "merge_base": "1d4143f7809f416317d858ad4161580c1dd125e1",
+    "prs": [
+      443
+    ],
+    "last_commit": "2026-09-18T07:08:24-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(marketplace): retain selected rental terms across deactivation"
+  },
+  {
+    "name": "audit/ux-public-loading-labels-20260918",
+    "sha": "1aa708a00e870b17e0d32576b2247fb9a1156719",
+    "target": "main",
+    "behind": 156,
+    "ahead": 0,
+    "main_behind": 156,
+    "main_ahead": 0,
+    "merge_base": "1aa708a00e870b17e0d32576b2247fb9a1156719",
+    "prs": [
+      442
+    ],
+    "last_commit": "2026-09-18T04:47:22-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(a11y): name public loading indicators in Spanish and English"
+  },
+  {
+    "name": "audit/ux-public-text-reflow-20260918",
+    "sha": "f92b9947d12a3701aff9f38c9abcc77656e01413",
+    "target": "main",
+    "behind": 155,
+    "ahead": 0,
+    "main_behind": 155,
+    "main_ahead": 0,
+    "merge_base": "f92b9947d12a3701aff9f38c9abcc77656e01413",
+    "prs": [
+      446
+    ],
+    "last_commit": "2026-09-18T07:03:55-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "test(a11y): record public text reflow verification and coverage"
+  },
+  {
+    "name": "audit/ux-release-integration-20260918",
+    "sha": "23d5388320583f0c756f6426516649c69b6b118e",
+    "target": "main",
+    "behind": 118,
+    "ahead": 0,
+    "main_behind": 118,
+    "main_ahead": 0,
+    "merge_base": "23d5388320583f0c756f6426516649c69b6b118e",
+    "prs": [
+      449
+    ],
+    "last_commit": "2026-09-18T08:33:10-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "Record combined UX audit verification and release checkpoint"
+  },
+  {
+    "name": "audit/ux-remaining-coverage-20260918",
+    "sha": "dabb773a25d56b567c95ee14a06216b40588fe04",
+    "target": "main",
+    "behind": 193,
+    "ahead": 0,
+    "main_behind": 193,
+    "main_ahead": 0,
+    "merge_base": "dabb773a25d56b567c95ee14a06216b40588fe04",
+    "prs": [
+      433
+    ],
+    "last_commit": "2026-09-18T02:09:12-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(a11y): reveal focused campaign inputs in WebKit tables"
+  },
+  {
+    "name": "audit/ux-remaining-storage-boundaries-20260918",
+    "sha": "dd9633c1de19568b0f4096d85b9f452f06c1ef1b",
+    "target": "main",
+    "behind": 156,
+    "ahead": 0,
+    "main_behind": 156,
+    "main_ahead": 0,
+    "merge_base": "dd9633c1de19568b0f4096d85b9f452f06c1ef1b",
+    "prs": [],
+    "last_commit": "2026-09-18T08:08:12-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(ux): keep authenticated views and private recovery usable without storage"
+  },
+  {
+    "name": "audit/ux-static-policy-accessibility-20260918",
+    "sha": "8f19726548c57df47ad2666def486a13d66fdf38",
+    "target": "main",
+    "behind": 171,
+    "ahead": 0,
+    "main_behind": 171,
+    "main_ahead": 0,
+    "merge_base": "8f19726548c57df47ad2666def486a13d66fdf38",
+    "prs": [
+      440
+    ],
+    "last_commit": "2026-09-18T04:08:14-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(audit): retain coverage CSV newline convention"
+  },
+  {
+    "name": "audit/ux-ui-complete-20260917",
+    "sha": "19d8dc830b65b58ccbeb274a41710c6cc95a0d51",
+    "target": "main",
+    "behind": 338,
+    "ahead": 0,
+    "main_behind": 338,
+    "main_ahead": 0,
+    "merge_base": "19d8dc830b65b58ccbeb274a41710c6cc95a0d51",
+    "prs": [
+      421
+    ],
+    "last_commit": "2026-09-17T15:40:07-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(preferences): tolerate denied cache after catalogs load"
+  },
+  {
+    "name": "chore/event-catalog-stale-reconciliation",
+    "sha": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+    "target": "chore/event-operations-catalog-review",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 37,
+    "merge_base": "d5505e2731d395cc2a5859d215e36ffda9e88138",
+    "prs": [
+      417
+    ],
+    "last_commit": "2026-09-16T15:26:44-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(events): reconcile stale catalog reviews with source history"
+  },
+  {
+    "name": "chore/event-operations-catalog-review",
+    "sha": "d5505e2731d395cc2a5859d215e36ffda9e88138",
+    "target": "fix/event-raci-review-contrast",
+    "behind": 0,
+    "ahead": 2,
+    "main_behind": 448,
+    "main_ahead": 36,
+    "merge_base": "cbbb3da9f20c2314c73a5114b8c0aa943647054e",
+    "prs": [
+      416
+    ],
+    "last_commit": "2026-09-16T15:08:31-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(events): record hosted WebKit paint evidence"
+  },
+  {
+    "name": "codex/event-ingestion-boundaries-20260927",
+    "sha": "6ba185a697b3b6b6983ebb48e0ab6454f716cf23",
+    "target": "fix/event-confirmed-end-20260920",
+    "behind": 0,
+    "ahead": 2,
+    "main_behind": 0,
+    "main_ahead": 4,
+    "merge_base": "648f2d6dc69080d4438ae2a25309497012ded2d1",
+    "prs": [
+      463
+    ],
+    "last_commit": "2026-09-28T05:17:46+02:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "Register shared event controls and validate source scope in CI"
+  },
+  {
+    "name": "codex/payment-capture-replay-integrity-20260915",
+    "sha": "c8ef56f404dc12f5311635214549221a7090ea70",
+    "target": "codex/payment-recovery-observability-20260915",
+    "behind": 0,
+    "ahead": 4,
+    "main_behind": 435,
+    "main_ahead": 79,
+    "merge_base": "c19c4f5d87abdb5a9b3e935e79af2238fdb99c43",
+    "prs": [
+      378
+    ],
+    "last_commit": "2026-09-15T10:54:40-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(payments): record capture replay verification and rollout limits"
+  },
+  {
+    "name": "codex/payment-checkout-surfaces-20260914",
+    "sha": "70823741bd33ed713cb2e703f812a884ad8ba1e7",
+    "target": "codex/payment-provider-execution-20260913",
+    "behind": 0,
+    "ahead": 8,
+    "main_behind": 435,
+    "main_ahead": 43,
+    "merge_base": "536964de601c5e031835781b3af07ff797cd249e",
+    "prs": [
+      334
+    ],
+    "last_commit": "2026-09-15T09:48:27-05:00",
+    "author": "diegueins680",
+    "subject": "docs: refresh checkout catalog evidence after dependency merge"
+  },
+  {
+    "name": "codex/payment-closed-checkout-evidence-20260915",
+    "sha": "9d0d84dbb4e5afafbfda7f0074421246926fd98d",
+    "target": "codex/payment-capture-replay-integrity-20260915",
+    "behind": 0,
+    "ahead": 5,
+    "main_behind": 435,
+    "main_ahead": 84,
+    "merge_base": "c8ef56f404dc12f5311635214549221a7090ea70",
+    "prs": [
+      380
+    ],
+    "last_commit": "2026-09-15T11:45:01-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(payments): document closed-approval holds and verification limits"
+  },
+  {
+    "name": "codex/payment-held-refund-query-20260916",
+    "sha": "365561aecff57e76d38cb0e98217a34f1d642ff4",
+    "target": "codex/payment-refund-reconciliation-20260916",
+    "behind": 0,
+    "ahead": 10,
+    "main_behind": 409,
+    "main_ahead": 133,
+    "merge_base": "66fa88e90c80866e0090761addfabd9f1e817cc2",
+    "prs": [
+      408
+    ],
+    "last_commit": "2026-09-16T12:46:25-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(payments): record final suites and approved CI assertion repair"
+  },
+  {
+    "name": "codex/payment-http-boundary-20260914",
+    "sha": "aac15a69e9bc2e6de01652282d9da4012a0af067",
+    "target": "codex/payment-notification-minimization-20260914",
+    "behind": 0,
+    "ahead": 3,
+    "main_behind": 449,
+    "main_ahead": 53,
+    "merge_base": "6bd0c9316f1816ccfc1873363787a99f33ff72e0",
+    "prs": [
+      350
+    ],
+    "last_commit": "2026-09-14T20:59:51-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(payments): record HTTP boundary risks and verified regressions"
+  },
+  {
+    "name": "codex/payment-notification-identity-20260914",
+    "sha": "86a8ce38cd131bfcb1b3e3035fd9a3e3aea1d503",
+    "target": "codex/payment-http-boundary-20260914",
+    "behind": 0,
+    "ahead": 4,
+    "main_behind": 449,
+    "main_ahead": 57,
+    "merge_base": "aac15a69e9bc2e6de01652282d9da4012a0af067",
+    "prs": [
+      353
+    ],
+    "last_commit": "2026-09-14T22:04:13-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(payments): record signed identity rollout limits and test evidence"
+  },
+  {
+    "name": "codex/payment-notification-minimization-20260914",
+    "sha": "6bd0c9316f1816ccfc1873363787a99f33ff72e0",
+    "target": "codex/payment-terminal-recovery-20260914",
+    "behind": 0,
+    "ahead": 2,
+    "main_behind": 449,
+    "main_ahead": 50,
+    "merge_base": "c263a499cc760ce7f97fe7833211f4d7de7494ea",
+    "prs": [
+      347
+    ],
+    "last_commit": "2026-09-14T19:50:01-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(payments): record notification retention boundary and verified regressions"
+  },
+  {
+    "name": "codex/payment-platform-20260911",
+    "sha": "e9c81a2a3977ab1f69c92e82805bdeff6550ea03",
+    "target": "main",
+    "behind": 406,
+    "ahead": 50,
+    "main_behind": 406,
+    "main_ahead": 50,
+    "merge_base": "d4bd497df6979f639dcd112e4f60b57f3526b9e0",
+    "prs": [
+      331
+    ],
+    "last_commit": "2026-09-16T14:56:19-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(payments): bind advertised routes to approved merchant"
+  },
+  {
+    "name": "codex/payment-provider-execution-20260913",
+    "sha": "536964de601c5e031835781b3af07ff797cd249e",
+    "target": "codex/payment-platform-20260911",
+    "behind": 50,
+    "ahead": 6,
+    "main_behind": 435,
+    "main_ahead": 35,
+    "merge_base": "25416b43eb8a24b2a57a180fbb846d9db8addcb1",
+    "prs": [
+      332
+    ],
+    "last_commit": "2026-09-15T09:29:30-05:00",
+    "author": "diegueins680",
+    "subject": "merge: integrate validated payment foundation into provider execution"
+  },
+  {
+    "name": "codex/payment-reconciliation-atomicity-20260914",
+    "sha": "a5ba14f0be4e4f6da1df666b31dd6ae343afedab",
+    "target": "codex/payment-notification-identity-20260914",
+    "behind": 0,
+    "ahead": 4,
+    "main_behind": 449,
+    "main_ahead": 61,
+    "merge_base": "86a8ce38cd131bfcb1b3e3035fd9a3e3aea1d503",
+    "prs": [
+      358
+    ],
+    "last_commit": "2026-09-14T23:03:20-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(payments): record atomic reconciliation evidence and recovery gates"
+  },
+  {
+    "name": "codex/payment-reconciliation-evidence-view-20260915",
+    "sha": "a64ea1b580faab59e547e3b307f74b0313d58866",
+    "target": "codex/payment-closed-checkout-evidence-20260915",
+    "behind": 0,
+    "ahead": 7,
+    "main_behind": 435,
+    "main_ahead": 91,
+    "merge_base": "9d0d84dbb4e5afafbfda7f0074421246926fd98d",
+    "prs": [
+      385
+    ],
+    "last_commit": "2026-09-15T14:09:52-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(payments): record verified reconciliation draft delivery"
+  },
+  {
+    "name": "codex/payment-reconciliation-safety-20260914",
+    "sha": "b8c0e38cdd365e7f977d5cf15f93c164ebfc2149",
+    "target": "codex/payment-checkout-surfaces-20260914",
+    "behind": 19,
+    "ahead": 3,
+    "main_behind": 449,
+    "main_ahead": 41,
+    "merge_base": "3b81b687753520c6b56a6128d6c110846f1a8995",
+    "prs": [
+      340
+    ],
+    "last_commit": "2026-09-14T16:38:49-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(payments): record retry safety evidence and rollout limits"
+  },
+  {
+    "name": "codex/payment-reconciliation-worker-20260915",
+    "sha": "139a45102c4b715cc8762b5653d0a2db061b167c",
+    "target": "codex/payment-reconciliation-atomicity-20260914",
+    "behind": 0,
+    "ahead": 4,
+    "main_behind": 449,
+    "main_ahead": 65,
+    "merge_base": "a5ba14f0be4e4f6da1df666b31dd6ae343afedab",
+    "prs": [
+      363
+    ],
+    "last_commit": "2026-09-15T00:16:56-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(payments): document fenced recovery evidence and activation gates"
+  },
+  {
+    "name": "codex/payment-recovery-observability-20260915",
+    "sha": "c19c4f5d87abdb5a9b3e935e79af2238fdb99c43",
+    "target": "codex/payphone-cancellation-compatibility-20260915",
+    "behind": 0,
+    "ahead": 4,
+    "main_behind": 435,
+    "main_ahead": 75,
+    "merge_base": "4ccaaa190c4ae6b1d041d8eabd7eed8fd5327c5e",
+    "prs": [
+      374
+    ],
+    "last_commit": "2026-09-15T10:08:01-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(payments): record query report security and verification evidence"
+  },
+  {
+    "name": "codex/payment-refund-execution-safety-20260916",
+    "sha": "20566eab9e99685983beac359f2462386e59f8f7",
+    "target": "codex/payment-worker-log-safety-20260915",
+    "behind": 0,
+    "ahead": 6,
+    "main_behind": 410,
+    "main_ahead": 117,
+    "merge_base": "ed064a7549f93bdd9239c5781706400c6fad5aa7",
+    "prs": [
+      396
+    ],
+    "last_commit": "2026-09-15T23:56:07-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(payments): record CI proof and local verification limits"
+  },
+  {
+    "name": "codex/payment-refund-reconciliation-20260916",
+    "sha": "66fa88e90c80866e0090761addfabd9f1e817cc2",
+    "target": "codex/payment-refund-execution-safety-20260916",
+    "behind": 0,
+    "ahead": 7,
+    "main_behind": 409,
+    "main_ahead": 123,
+    "merge_base": "20566eab9e99685983beac359f2462386e59f8f7",
+    "prs": [
+      401
+    ],
+    "last_commit": "2026-09-16T11:26:49-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(payments): record atomic refund accounting evidence and rollout gates"
+  },
+  {
+    "name": "codex/payment-stack-integration-20260915",
+    "sha": "824e1e9aeaa99d399c31bc5755c4967c03cb17fc",
+    "target": "codex/payment-reconciliation-evidence-view-20260915",
+    "behind": 0,
+    "ahead": 22,
+    "main_behind": 425,
+    "main_ahead": 103,
+    "merge_base": "a64ea1b580faab59e547e3b307f74b0313d58866",
+    "prs": [
+      389
+    ],
+    "last_commit": "2026-09-15T21:52:41-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(payments): link verified draft integration delivery"
+  },
+  {
+    "name": "codex/payment-stack-integration-20260916",
+    "sha": "4ff7109a378d640a179601fd0ad88b38f3074526",
+    "target": "codex/payment-held-refund-query-20260916",
+    "behind": 0,
+    "ahead": 22,
+    "main_behind": 406,
+    "main_ahead": 152,
+    "merge_base": "365561aecff57e76d38cb0e98217a34f1d642ff4",
+    "prs": [
+      414
+    ],
+    "last_commit": "2026-09-16T15:20:30-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(payments): record integration PRs and verified hosted web results"
+  },
+  {
+    "name": "codex/payment-staging-qualification-20260914",
+    "sha": "0081b6b03bd58716090c57d936f31a364e944522",
+    "target": "codex/payment-terminal-recovery-20260914",
+    "behind": 0,
+    "ahead": 11,
+    "main_behind": 449,
+    "main_ahead": 59,
+    "merge_base": "c263a499cc760ce7f97fe7833211f4d7de7494ea",
+    "prs": [
+      344
+    ],
+    "last_commit": "2026-09-14T19:50:50-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(payments): track redacted access report beside the runbook"
+  },
+  {
+    "name": "codex/payment-terminal-recovery-20260914",
+    "sha": "c263a499cc760ce7f97fe7833211f4d7de7494ea",
+    "target": "codex/payment-reconciliation-safety-20260914",
+    "behind": 0,
+    "ahead": 7,
+    "main_behind": 449,
+    "main_ahead": 48,
+    "merge_base": "b8c0e38cdd365e7f977d5cf15f93c164ebfc2149",
+    "prs": [
+      343
+    ],
+    "last_commit": "2026-09-14T18:17:44-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(payments): record terminal recovery tests and staging access limits"
+  },
+  {
+    "name": "codex/payment-worker-log-safety-20260915",
+    "sha": "ed064a7549f93bdd9239c5781706400c6fad5aa7",
+    "target": "codex/payment-stack-integration-20260915",
+    "behind": 0,
+    "ahead": 23,
+    "main_behind": 410,
+    "main_ahead": 111,
+    "merge_base": "824e1e9aeaa99d399c31bc5755c4967c03cb17fc",
+    "prs": [
+      393
+    ],
+    "last_commit": "2026-09-15T22:52:59-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(payments): link verified worker safety draft delivery"
+  },
+  {
+    "name": "codex/payphone-cancellation-compatibility-20260915",
+    "sha": "4ccaaa190c4ae6b1d041d8eabd7eed8fd5327c5e",
+    "target": "codex/payment-reconciliation-worker-20260915",
+    "behind": 0,
+    "ahead": 20,
+    "main_behind": 435,
+    "main_ahead": 71,
+    "merge_base": "139a45102c4b715cc8762b5653d0a2db061b167c",
+    "prs": [
+      371
+    ],
+    "last_commit": "2026-09-15T09:16:23-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(payments): record cancellation replay verification and rollout gates"
+  },
+  {
+    "name": "codex/video-event-ingestion-20260925",
+    "sha": "b0713647b2232a77eb021e4428ed541a196de62b",
+    "target": "main",
+    "behind": 0,
+    "ahead": 5,
+    "main_behind": 0,
+    "main_ahead": 5,
+    "merge_base": "66dae5b8ec22f3f0fe819dfcd9bae5ed727c6b48",
+    "prs": [
+      462
+    ],
+    "last_commit": "2026-09-28T05:13:34+02:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "Align YouTube quota dates and retain browser evidence"
+  },
+  {
+    "name": "docs/critical-completion-closeout-20260917",
+    "sha": "9523a4816b4668581eb7232212cc53398bd844ac",
+    "target": "main",
+    "behind": 345,
+    "ahead": 1,
+    "main_behind": 345,
+    "main_ahead": 1,
+    "merge_base": "5c84736ff5727502a77413b24f6a4ccc55a89274",
+    "prs": [
+      423
+    ],
+    "last_commit": "2026-09-17T16:02:25-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs: record verified critical completion and production acceptance"
+  },
+  {
+    "name": "feat/artist-self-service-20260916",
+    "sha": "912f8326ba7a13611cfbad592f6680fe50bdbefc",
+    "target": "main",
+    "behind": 286,
+    "ahead": 0,
+    "main_behind": 286,
+    "main_ahead": 0,
+    "merge_base": "912f8326ba7a13611cfbad592f6680fe50bdbefc",
+    "prs": [
+      406
+    ],
+    "last_commit": "2026-09-17T20:26:01-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(onboarding): fence artist activation across route changes"
+  },
+  {
+    "name": "feat/event-logistics-transaction-hardening",
+    "sha": "f500b62c453e7da8981bc66138418fa59a586565",
+    "target": "feat/event-operations-api-foundation",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 2,
+    "merge_base": "b6ba963623861d1e2804b18adb46e6e4f5f5be80",
+    "prs": [
+      338
+    ],
+    "last_commit": "2026-09-14T15:59:54-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(events): make logistics relation writes atomic"
+  },
+  {
+    "name": "feat/event-operations-api-foundation",
+    "sha": "b6ba963623861d1e2804b18adb46e6e4f5f5be80",
+    "target": "main",
+    "behind": 448,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 1,
+    "merge_base": "cde0e806b6a5365e1e9f5b4052b74e38ea1aa232",
+    "prs": [
+      337
+    ],
+    "last_commit": "2026-09-14T14:48:30-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "feat(events): add guarded lifecycle API foundation"
+  },
+  {
+    "name": "feat/event-operations-formal-foundation",
+    "sha": "00f796e74da9e9ec9417ead93980b8a8e71d5fcc",
+    "target": "main",
+    "behind": 352,
+    "ahead": 0,
+    "main_behind": 352,
+    "main_ahead": 0,
+    "merge_base": "00f796e74da9e9ec9417ead93980b8a8e71d5fcc",
+    "prs": [
+      336
+    ],
+    "last_commit": "2026-09-16T15:05:01-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "merge: reconcile event repairs with reviewed social integration"
+  },
+  {
+    "name": "feat/event-raci-editor-context",
+    "sha": "13abde1cba82b7b79c21b6f35e87c91de676366e",
+    "target": "feat/event-raci-reassignment-api",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 25,
+    "merge_base": "bfd5f17b92d629f578bc02f4aee338ed15843806",
+    "prs": [
+      387
+    ],
+    "last_commit": "2026-09-15T14:50:34-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "feat(events): expose authorized RACI editor context"
+  },
+  {
+    "name": "feat/event-raci-reassignment-api",
+    "sha": "bfd5f17b92d629f578bc02f4aee338ed15843806",
+    "target": "feat/event-raci-reassignment-command",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 24,
+    "merge_base": "f6ffb2a27b87ed42d4d49289024d5b8a612b94cf",
+    "prs": [
+      384
+    ],
+    "last_commit": "2026-09-15T12:53:42-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "feat(events): expose session-fenced RACI reassignment API"
+  },
+  {
+    "name": "feat/event-raci-reassignment-command",
+    "sha": "f6ffb2a27b87ed42d4d49289024d5b8a612b94cf",
+    "target": "feat/event-task-revisioned-read",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 23,
+    "merge_base": "503fd7b651843e9f7cadf4fd15931256bb847ece",
+    "prs": [
+      383
+    ],
+    "last_commit": "2026-09-15T12:28:23-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "feat(events): add formally checked atomic RACI reassignment"
+  },
+  {
+    "name": "feat/event-raci-web-editor",
+    "sha": "061553d085d3106a9c8877ca08ccb3e2420cdd09",
+    "target": "feat/event-raci-editor-context",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 26,
+    "merge_base": "13abde1cba82b7b79c21b6f35e87c91de676366e",
+    "prs": [
+      388
+    ],
+    "last_commit": "2026-09-15T21:47:46-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "feat(events): add confirmed scoped RACI web editor"
+  },
+  {
+    "name": "feat/event-task-aggregate-revision",
+    "sha": "3b1ce4d9dbd0efb6d1e354ffd9f58e92a6916320",
+    "target": "test/event-task-browser-startup",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 21,
+    "merge_base": "221d1205c9cc2e992f8f36f73d441a3f9c6fda21",
+    "prs": [
+      379
+    ],
+    "last_commit": "2026-09-15T10:59:10-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "feat(events): track aggregate task revisions under canonical write fence"
+  },
+  {
+    "name": "feat/event-task-commit-invariants",
+    "sha": "259becd7b3763e084b54da8749b1e6fde8d9d862",
+    "target": "feat/event-logistics-transaction-hardening",
+    "behind": 0,
+    "ahead": 4,
+    "main_behind": 448,
+    "main_ahead": 6,
+    "merge_base": "f500b62c453e7da8981bc66138418fa59a586565",
+    "prs": [
+      339
+    ],
+    "last_commit": "2026-09-15T14:38:06-05:00",
+    "author": "diegueins680",
+    "subject": "Retain fence deletion and dependency exception guards in successor"
+  },
+  {
+    "name": "feat/event-task-completion-api",
+    "sha": "823da0fa801abe3bdb3b7679550f1315ad0946ed",
+    "target": "feat/event-task-completion-command",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 32,
+    "merge_base": "78bdd4df465d1c7d8a752f9df0ed714ecad2330d",
+    "prs": [
+      410
+    ],
+    "last_commit": "2026-09-16T13:00:32-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "feat(events): expose session-fenced task completion API"
+  },
+  {
+    "name": "feat/event-task-completion-client",
+    "sha": "f2f01194090a241777c451d06cb0848af7aa759a",
+    "target": "feat/event-task-completion-api",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 33,
+    "merge_base": "823da0fa801abe3bdb3b7679550f1315ad0946ed",
+    "prs": [
+      411
+    ],
+    "last_commit": "2026-09-16T13:29:33-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "feat(events): validate captured task completion client"
+  },
+  {
+    "name": "feat/event-task-completion-command",
+    "sha": "78bdd4df465d1c7d8a752f9df0ed714ecad2330d",
+    "target": "test/event-raci-accessibility-evidence",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 31,
+    "merge_base": "6047377348e901c919d7691b849faab30980b952",
+    "prs": [
+      407
+    ],
+    "last_commit": "2026-09-16T12:15:16-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "feat(events): add guarded preparation task completion"
+  },
+  {
+    "name": "feat/event-task-raci-view",
+    "sha": "f03f366de44c8ad09248e9d399caa5994af06d5a",
+    "target": "fix/reservation-pluscal-integrity",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 19,
+    "merge_base": "ec24b70b1b2319a875099cc118db0e68b62a5ed0",
+    "prs": [
+      373
+    ],
+    "last_commit": "2026-09-15T10:02:27-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "feat(events): add scoped task RACI read view"
+  },
+  {
+    "name": "feat/event-task-read-api",
+    "sha": "881882e15cd1b2400cc2e0452ea50683dea675de",
+    "target": "feat/event-task-read-projection",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 14,
+    "merge_base": "a1b92c220691b694e5f53e7deaf4d455ce46bc44",
+    "prs": [
+      357
+    ],
+    "last_commit": "2026-09-14T23:02:43-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "feat: expose authenticated task RACI read API"
+  },
+  {
+    "name": "feat/event-task-read-projection",
+    "sha": "a1b92c220691b694e5f53e7deaf4d455ce46bc44",
+    "target": "test/merch-expiry-checkout-contract",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 13,
+    "merge_base": "a1895105c6e15e1f95b4b72fd6218b34a311f6e6",
+    "prs": [
+      354
+    ],
+    "last_commit": "2026-09-14T22:30:29-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "feat: add scoped canonical task read projection"
+  },
+  {
+    "name": "feat/event-task-revisioned-read",
+    "sha": "503fd7b651843e9f7cadf4fd15931256bb847ece",
+    "target": "feat/event-task-aggregate-revision",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 22,
+    "merge_base": "3b1ce4d9dbd0efb6d1e354ffd9f58e92a6916320",
+    "prs": [
+      381
+    ],
+    "last_commit": "2026-09-15T11:54:07-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "feat(events): expose coherent task revision reads"
+  },
+  {
+    "name": "feat/identity-commerce-prevention-20260918",
+    "sha": "23311f29279b691cf2e80c445fb345f9cbfc57f5",
+    "target": "main",
+    "behind": 148,
+    "ahead": 0,
+    "main_behind": 148,
+    "main_ahead": 0,
+    "merge_base": "23311f29279b691cf2e80c445fb345f9cbfc57f5",
+    "prs": [
+      436
+    ],
+    "last_commit": "2026-09-18T04:37:20-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "Merge remote-tracking branch 'origin/main' into feat/identity-commerce-prevention-20260918"
+  },
+  {
+    "name": "feat/identity-consolidation-20260917",
+    "sha": "72d33c57d5723f1cda413bf8b7858cc361b5a2fb",
+    "target": "main",
+    "behind": 239,
+    "ahead": 0,
+    "main_behind": 239,
+    "main_ahead": 0,
+    "merge_base": "72d33c57d5723f1cda413bf8b7858cc361b5a2fb",
+    "prs": [
+      426
+    ],
+    "last_commit": "2026-09-17T23:12:13-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(identity): register forward guard repair and repeated recovery evidence"
+  },
+  {
+    "name": "feat/identity-intake-prevention-20260918",
+    "sha": "02115f7d1b0786f3cdd4287a9466dd22682f603b",
+    "target": "main",
+    "behind": 177,
+    "ahead": 0,
+    "main_behind": 177,
+    "main_ahead": 0,
+    "merge_base": "02115f7d1b0786f3cdd4287a9466dd22682f603b",
+    "prs": [
+      434
+    ],
+    "last_commit": "2026-09-18T04:35:11-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(identity): add explicit guarded intake draft abandonment"
+  },
+  {
+    "name": "feat/identity-registration-prevention-20260918",
+    "sha": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+    "target": "main",
+    "behind": 92,
+    "ahead": 0,
+    "main_behind": 92,
+    "main_ahead": 0,
+    "merge_base": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+    "prs": [
+      437
+    ],
+    "last_commit": "2026-09-18T11:42:06-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "Merge commit '2d7b7c7aeef810c81944f0f9417d561dc7df016b' into feat/identity-registration-prevention-20260918"
+  },
+  {
+    "name": "feat/identity-source-prevention-20260918",
+    "sha": "da0b02d90b57c4f78ce8f20df0bb9345edf824a1",
+    "target": "main",
+    "behind": 190,
+    "ahead": 0,
+    "main_behind": 190,
+    "main_ahead": 0,
+    "merge_base": "da0b02d90b57c4f78ce8f20df0bb9345edf824a1",
+    "prs": [
+      430
+    ],
+    "last_commit": "2026-09-18T02:29:24-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "test(identity): use typed dialog query without redundant assertion"
+  },
+  {
+    "name": "feat/identity-trials-prevention-20260918",
+    "sha": "d7ebacbff0f0e35dbd57238a8afa6f11e86cdb0e",
+    "target": "main",
+    "behind": 72,
+    "ahead": 0,
+    "main_behind": 72,
+    "main_ahead": 0,
+    "merge_base": "d7ebacbff0f0e35dbd57238a8afa6f11e86cdb0e",
+    "prs": [
+      439
+    ],
+    "last_commit": "2026-09-18T12:09:09-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "Merge commit '2dfd964664ec0aed7c0a9bd6d752bfc76c1d92fb' into feat/identity-trials-prevention-20260918"
+  },
+  {
+    "name": "feat/records-youtube-provider-20260918",
+    "sha": "c79041b10e86872c0a4ea3c7d16e6eab53e7a877",
+    "target": "main",
+    "behind": 43,
+    "ahead": 0,
+    "main_behind": 43,
+    "main_ahead": 0,
+    "merge_base": "c79041b10e86872c0a4ea3c7d16e6eab53e7a877",
+    "prs": [
+      459
+    ],
+    "last_commit": "2026-09-20T20:48:32-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "Merge remote-tracking branch 'origin/main' into records/provider-continuation-20260920"
+  },
+  {
+    "name": "feat/social-api-client-20260915",
+    "sha": "0bac512baed505f7f035f44c022fc0b64405b9e7",
+    "target": "feat/social-feed-filtering-20260915",
+    "behind": 0,
+    "ahead": 11,
+    "main_behind": 395,
+    "main_ahead": 0,
+    "merge_base": "6a6d9e02c22eee213cf56787d9de9e4252721fed",
+    "prs": [
+      367
+    ],
+    "last_commit": "2026-09-15T22:55:11-05:00",
+    "author": "diegueins680",
+    "subject": "[CF-Pages-Skip] merge: reconcile social client with current parent"
+  },
+  {
+    "name": "feat/social-authority-20260914",
+    "sha": "c671a5acbe1403ba89d1d70db165b2b327b6cdec",
+    "target": "main",
+    "behind": 409,
+    "ahead": 0,
+    "main_behind": 409,
+    "main_ahead": 0,
+    "merge_base": "c671a5acbe1403ba89d1d70db165b2b327b6cdec",
+    "prs": [
+      356
+    ],
+    "last_commit": "2026-09-15T21:48:39-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "[CF-Pages-Skip] fix(social): preserve the other actor consent on withdrawal"
+  },
+  {
+    "name": "feat/social-chat-cache-isolation-20260915",
+    "sha": "fd94ed7163fe8afe80f559a664a55576e781aa51",
+    "target": "feat/social-dm-api-boundary-20260915",
+    "behind": 0,
+    "ahead": 4,
+    "main_behind": 401,
+    "main_ahead": 0,
+    "merge_base": "44a1c7bededf0ba4b54068d482667ac24299f8e4",
+    "prs": [
+      391
+    ],
+    "last_commit": "2026-09-15T22:53:40-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "[CF-Pages-Skip] docs(chat): use the reported build check name"
+  },
+  {
+    "name": "feat/social-chat-verification-20260915",
+    "sha": "547490105d12e0581b6ca5fddc135f127abedf07",
+    "target": "feat/social-dm-api-boundary-20260915",
+    "behind": 0,
+    "ahead": 9,
+    "main_behind": 396,
+    "main_ahead": 0,
+    "merge_base": "44a1c7bededf0ba4b54068d482667ac24299f8e4",
+    "prs": [
+      394
+    ],
+    "last_commit": "2026-09-16T15:16:23-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "[CF-Pages-Skip] Record completed fan subscription client and migration CI"
+  },
+  {
+    "name": "feat/social-dm-api-boundary-20260915",
+    "sha": "44a1c7bededf0ba4b54068d482667ac24299f8e4",
+    "target": "feat/social-dm-write-boundary-20260915",
+    "behind": 22,
+    "ahead": 2,
+    "main_behind": 405,
+    "main_ahead": 0,
+    "merge_base": "50131ef4489e980846a7d524f27475828aeef7cd",
+    "prs": [
+      390
+    ],
+    "last_commit": "2026-09-15T22:42:29-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "[CF-Pages-Skip] fix(test): wait for final PostgreSQL server before schema checks"
+  },
+  {
+    "name": "feat/social-dm-write-boundary-20260915",
+    "sha": "e03ce193c2e9c6788fad5f1360aef1088006616f",
+    "target": "feat/social-token-boundary-20260915",
+    "behind": 0,
+    "ahead": 3,
+    "main_behind": 385,
+    "main_ahead": 0,
+    "merge_base": "2be39150f626dcd5181951532a8ebe25a3ce3fa4",
+    "prs": [
+      386
+    ],
+    "last_commit": "2026-09-16T10:05:38-05:00",
+    "author": "diegueins680",
+    "subject": "fix(social): reconcile DM safeguards with current session parent"
+  },
+  {
+    "name": "feat/social-fanclub-effects-20260916",
+    "sha": "daf6c5a680b81928c2e2c66df98063328e6d5e9c",
+    "target": "feat/social-legacy-write-boundary-20260916",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 400,
+    "main_ahead": 0,
+    "merge_base": "7e601607f60b2987e502c4a14db821bbf37df296",
+    "prs": [
+      415
+    ],
+    "last_commit": "2026-09-16T15:05:43-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "[CF-Pages-Skip] Retire implicit fan-club effects and serialize subscriptions"
+  },
+  {
+    "name": "feat/social-feed-filtering-20260915",
+    "sha": "6a6d9e02c22eee213cf56787d9de9e4252721fed",
+    "target": "feat/social-reaction-repair-20260915",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 406,
+    "main_ahead": 0,
+    "merge_base": "24590a40787d81a1681cd14a46f2f0ab7cac5632",
+    "prs": [
+      366
+    ],
+    "last_commit": "2026-09-15T21:48:41-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "[CF-Pages-Skip] perf(social): scope Following queries to authorized clubs"
+  },
+  {
+    "name": "feat/social-formal-audit-20260914",
+    "sha": "0cb8d2e15ac024682933485ed122c34826f2ba6f",
+    "target": "main",
+    "behind": 417,
+    "ahead": 0,
+    "main_behind": 417,
+    "main_ahead": 0,
+    "merge_base": "0cb8d2e15ac024682933485ed122c34826f2ba6f",
+    "prs": [
+      355
+    ],
+    "last_commit": "2026-09-15T12:23:33-05:00",
+    "author": "diegueins680",
+    "subject": "Refresh social catalog evidence after main integration"
+  },
+  {
+    "name": "feat/social-legacy-write-boundary-20260916",
+    "sha": "7e601607f60b2987e502c4a14db821bbf37df296",
+    "target": "feat/social-relationship-read-boundary-20260915",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 401,
+    "main_ahead": 0,
+    "merge_base": "8b2d1557a5e72e0346af1fd43dc7cf36033da067",
+    "prs": [
+      409
+    ],
+    "last_commit": "2026-09-16T12:37:06-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "[CF-Pages-Skip] Retire governed legacy relationship writes atomically"
+  },
+  {
+    "name": "feat/social-profile-read-boundary-20260915",
+    "sha": "7c452efcbc7b45e797b7ebd590dfffccf0fc9751",
+    "target": "feat/social-dm-api-boundary-20260915",
+    "behind": 0,
+    "ahead": 2,
+    "main_behind": 403,
+    "main_ahead": 0,
+    "merge_base": "44a1c7bededf0ba4b54068d482667ac24299f8e4",
+    "prs": [
+      397
+    ],
+    "last_commit": "2026-09-15T23:38:27-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "[CF-Pages-Skip] Isolate the profile pause-memory counterexample"
+  },
+  {
+    "name": "feat/social-query-budget-20260914",
+    "sha": "f52b1f8b906d5bf61774dfaf6b6173233b0d2172",
+    "target": "feat/social-authority-20260914",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 408,
+    "main_ahead": 0,
+    "merge_base": "c671a5acbe1403ba89d1d70db165b2b327b6cdec",
+    "prs": [
+      360
+    ],
+    "last_commit": "2026-09-15T21:48:40-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "[CF-Pages-Skip] perf(social): bound and batch discovery policy evaluation"
+  },
+  {
+    "name": "feat/social-reaction-repair-20260915",
+    "sha": "24590a40787d81a1681cd14a46f2f0ab7cac5632",
+    "target": "feat/social-query-budget-20260914",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 407,
+    "main_ahead": 0,
+    "merge_base": "f52b1f8b906d5bf61774dfaf6b6173233b0d2172",
+    "prs": [
+      365
+    ],
+    "last_commit": "2026-09-15T21:48:40-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "[CF-Pages-Skip] fix: preserve explicit reaction state and retry evidence"
+  },
+  {
+    "name": "feat/social-relationship-read-boundary-20260915",
+    "sha": "8b2d1557a5e72e0346af1fd43dc7cf36033da067",
+    "target": "feat/social-profile-read-boundary-20260915",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 402,
+    "main_ahead": 0,
+    "merge_base": "7c452efcbc7b45e797b7ebd590dfffccf0fc9751",
+    "prs": [
+      402
+    ],
+    "last_commit": "2026-09-16T11:29:11-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "[CF-Pages-Skip] Enforce modeled privacy on legacy relationship reads"
+  },
+  {
+    "name": "feat/social-schema-compatibility-20260915",
+    "sha": "3606fb5c2215e00b1f3661abdf9e969231ac3b36",
+    "target": "feat/social-api-client-20260915",
+    "behind": 0,
+    "ahead": 3,
+    "main_behind": 392,
+    "main_ahead": 0,
+    "merge_base": "0bac512baed505f7f035f44c022fc0b64405b9e7",
+    "prs": [
+      377
+    ],
+    "last_commit": "2026-09-15T23:42:17-05:00",
+    "author": "diegueins680",
+    "subject": "fix(social): reconcile schema qualification with reviewed parent"
+  },
+  {
+    "name": "feat/social-token-boundary-20260915",
+    "sha": "2be39150f626dcd5181951532a8ebe25a3ce3fa4",
+    "target": "feat/social-schema-compatibility-20260915",
+    "behind": 0,
+    "ahead": 4,
+    "main_behind": 388,
+    "main_ahead": 0,
+    "merge_base": "3606fb5c2215e00b1f3661abdf9e969231ac3b36",
+    "prs": [
+      382
+    ],
+    "last_commit": "2026-09-15T23:50:14-05:00",
+    "author": "diegueins680",
+    "subject": "fix(social): preserve session catalog policy during parent reconciliation"
+  },
+  {
+    "name": "fix/access-request-name-production-20260916",
+    "sha": "954e995f1cd08f363afe2b0e34ccf02dcd80ea8c",
+    "target": "main",
+    "behind": 747,
+    "ahead": 2,
+    "main_behind": 747,
+    "main_ahead": 2,
+    "merge_base": "1157258b6a6551d49708fa9eb21ab893b6a051f1",
+    "prs": [],
+    "last_commit": "2026-09-16T14:14:14-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(release): preserve approved PayPal webhook intake on restart"
+  },
+  {
+    "name": "fix/access-request-requester-name-20260916",
+    "sha": "efb09219be25941af574eaac4ec5d2e7e3a421b2",
+    "target": "main",
+    "behind": 409,
+    "ahead": 1,
+    "main_behind": 409,
+    "main_ahead": 1,
+    "merge_base": "7eafd3f479817f267ba0de6592c3e16ea920f4ae",
+    "prs": [
+      405
+    ],
+    "last_commit": "2026-09-16T11:52:08-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(access): show requester names in access requests"
+  },
+  {
+    "name": "fix/artist-follow-onboarding-continuity",
+    "sha": "1299f9c63a325e17dff0bfe1f048ff52f7bb8b15",
+    "target": "fix/web-onboarding-reconciliation-integration",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 16,
+    "merge_base": "827d745629f8cdbaee4429ded3689d3bf520a09d",
+    "prs": [
+      364
+    ],
+    "last_commit": "2026-09-15T00:37:55-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(discovery): restore consent-bound artist follow continuity"
+  },
+  {
+    "name": "fix/auth-locale-20260917",
+    "sha": "209b21b07f304d21ab397353653b531646ae72be",
+    "target": "main",
+    "behind": 266,
+    "ahead": 0,
+    "main_behind": 266,
+    "main_ahead": 0,
+    "merge_base": "209b21b07f304d21ab397353653b531646ae72be",
+    "prs": [
+      422
+    ],
+    "last_commit": "2026-09-17T22:58:04-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(auth): localize reset confirmation transport failures"
+  },
+  {
+    "name": "fix/ci-green-baseline-20260912",
+    "sha": "5bceb329f034cdfadf077f8f2889aa50bd402c7c",
+    "target": "main",
+    "behind": 436,
+    "ahead": 0,
+    "main_behind": 436,
+    "main_ahead": 0,
+    "merge_base": "5bceb329f034cdfadf077f8f2889aa50bd402c7c",
+    "prs": [
+      333
+    ],
+    "last_commit": "2026-09-14T21:43:09-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(onboarding): preserve failed dismissals across account switches"
+  },
+  {
+    "name": "fix/ci-messaging-readonly-20260915",
+    "sha": "75c096bea71dbf58f92852fca3ab140116e6697f",
+    "target": "main",
+    "behind": 431,
+    "ahead": 0,
+    "main_behind": 431,
+    "main_ahead": 0,
+    "merge_base": "75c096bea71dbf58f92852fca3ab140116e6697f",
+    "prs": [
+      370
+    ],
+    "last_commit": "2026-09-15T09:43:07-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(ci): record confirmed Instagram introspection limitation"
+  },
+  {
+    "name": "fix/directory-privacy-migration-order-20260917",
+    "sha": "c7643f0ba07f330995415c4848194938536d51ae",
+    "target": "main",
+    "behind": 347,
+    "ahead": 0,
+    "main_behind": 347,
+    "main_ahead": 0,
+    "merge_base": "c7643f0ba07f330995415c4848194938536d51ae",
+    "prs": [
+      419
+    ],
+    "last_commit": "2026-09-17T09:43:09-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(release): record verified rollback compatibility and migration registry"
+  },
+  {
+    "name": "fix/disable-unverified-service-escrow-20260920",
+    "sha": "989d0663cc249bcee74331604561628d3435c961",
+    "target": "main",
+    "behind": 1,
+    "ahead": 0,
+    "main_behind": 1,
+    "main_ahead": 0,
+    "merge_base": "989d0663cc249bcee74331604561628d3435c961",
+    "prs": [
+      461
+    ],
+    "last_commit": "2026-09-21T00:20:00-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(release): verify financial route bindings before recovery"
+  },
+  {
+    "name": "fix/event-command-existence-privacy",
+    "sha": "892038c7d7ec64082b39917127f67748e6d1dca7",
+    "target": "test/event-operations-http-boundary",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 8,
+    "merge_base": "dbe975d3143446c5e7cd9b132b6f994067065e7b",
+    "prs": [
+      346
+    ],
+    "last_commit": "2026-09-14T19:35:41-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(events): hide unreadable transition target existence"
+  },
+  {
+    "name": "fix/event-command-replay-authorization",
+    "sha": "6b0913bab2b065b327149a6d3a042efecd9e75d7",
+    "target": "feat/event-task-commit-invariants",
+    "behind": 2,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 5,
+    "merge_base": "35f261097d9e295794f4db7404ae7d9556a8e9d4",
+    "prs": [
+      341
+    ],
+    "last_commit": "2026-09-14T17:02:01-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(events): reauthorize command replay against current scopes"
+  },
+  {
+    "name": "fix/event-confirmed-end-20260920",
+    "sha": "648f2d6dc69080d4438ae2a25309497012ded2d1",
+    "target": "fix/event-discovery-schedule-20260918",
+    "behind": 0,
+    "ahead": 45,
+    "main_behind": 0,
+    "main_ahead": 2,
+    "merge_base": "f4223a98d82bebfd5b15147795379a6c8cf58fb6",
+    "prs": [
+      460
+    ],
+    "last_commit": "2026-09-21T01:55:40-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "Merge remote-tracking branch 'origin/main' into fix/event-confirmed-end-20260920"
+  },
+  {
+    "name": "fix/event-discovery-schedule-20260918",
+    "sha": "f4223a98d82bebfd5b15147795379a6c8cf58fb6",
+    "target": "main",
+    "behind": 43,
+    "ahead": 0,
+    "main_behind": 43,
+    "main_ahead": 0,
+    "merge_base": "f4223a98d82bebfd5b15147795379a6c8cf58fb6",
+    "prs": [
+      456
+    ],
+    "last_commit": "2026-09-20T20:54:40-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "Merge remote-tracking branch 'origin/main' into records/events-continuation-20260920"
+  },
+  {
+    "name": "fix/event-raci-review-contrast",
+    "sha": "cbbb3da9f20c2314c73a5114b8c0aa943647054e",
+    "target": "feat/event-task-completion-client",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 34,
+    "merge_base": "f2f01194090a241777c451d06cb0848af7aa759a",
+    "prs": [
+      413
+    ],
+    "last_commit": "2026-09-16T14:54:54-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "test(events): require settled paint before RACI contrast scan"
+  },
+  {
+    "name": "fix/event-schema-migration-dependencies",
+    "sha": "192f9578665109e52d28a96c772e3307bdc684e5",
+    "target": "test/event-operations-schema-rehearsal",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 11,
+    "merge_base": "cf591e1faa975b8023c6c06892fb50a51ba06dff",
+    "prs": [
+      351
+    ],
+    "last_commit": "2026-09-14T21:38:09-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(migrations): restore canonical event schema dependencies"
+  },
+  {
+    "name": "fix/event-session-transaction-fence",
+    "sha": "3cd978045aa406c55512a6673c2ba5f2983ebc7c",
+    "target": "fix/event-command-existence-privacy",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 9,
+    "merge_base": "892038c7d7ec64082b39917127f67748e6d1dca7",
+    "prs": [
+      348
+    ],
+    "last_commit": "2026-09-14T20:14:57-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(events): fence event transactions with authenticated sessions"
+  },
+  {
+    "name": "fix/event-snapshot-privacy-boundary",
+    "sha": "db81fdbe71d9b8e83d40d279b98c69df3749b316",
+    "target": "fix/event-command-replay-authorization",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 6,
+    "merge_base": "6b0913bab2b065b327149a6d3a042efecd9e75d7",
+    "prs": [
+      342
+    ],
+    "last_commit": "2026-09-14T17:34:31-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix: authorize coherent event snapshots and redact database errors"
+  },
+  {
+    "name": "fix/event-ui-lazy-validation",
+    "sha": "d4e7ed0505a87a03706b765fc304ffa50362b8fb",
+    "target": "test/event-rsvp-ci-contracts",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 29,
+    "merge_base": "5ad2333c2a6ce379579a1cffa2708d56cbb21f5f",
+    "prs": [
+      399
+    ],
+    "last_commit": "2026-09-16T10:18:15-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(ui): preserve lazy validation and initial bundle budget"
+  },
+  {
+    "name": "fix/fanhub-audit-20260917",
+    "sha": "36f254d14b62efc10268df5545a15bfe157cb0a3",
+    "target": "main",
+    "behind": 336,
+    "ahead": 0,
+    "main_behind": 336,
+    "main_ahead": 0,
+    "merge_base": "36f254d14b62efc10268df5545a15bfe157cb0a3",
+    "prs": [
+      425
+    ],
+    "last_commit": "2026-09-17T17:49:50-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "chore: classify FanHub session contract fixture"
+  },
+  {
+    "name": "fix/fanhub-authoritative-onboarding",
+    "sha": "ff3cd1676a6db7b6ceef56d44407b0846a4f2071",
+    "target": "fix/artist-follow-onboarding-continuity",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 17,
+    "merge_base": "1299f9c63a325e17dff0bfe1f048ff52f7bb8b15",
+    "prs": [
+      368
+    ],
+    "last_commit": "2026-09-15T08:43:08-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(onboarding): restore account-bound FanHub exit recovery"
+  },
+  {
+    "name": "fix/identity-request-recovery-20260918",
+    "sha": "261bfdfbbdab0520b35725a72b776f160b608dd3",
+    "target": "main",
+    "behind": 56,
+    "ahead": 0,
+    "main_behind": 56,
+    "main_ahead": 0,
+    "merge_base": "261bfdfbbdab0520b35725a72b776f160b608dd3",
+    "prs": [
+      453
+    ],
+    "last_commit": "2026-09-18T13:54:41-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "docs(identity): require the final tested application checkout"
+  },
+  {
+    "name": "fix/instagram-checkpoint-metadata-20260916",
+    "sha": "40034a31e32ca7d1dbbf6dae67efda8eef982586",
+    "target": "main",
+    "behind": 376,
+    "ahead": 1,
+    "main_behind": 376,
+    "main_ahead": 1,
+    "merge_base": "16a4eef7477eb160feb20210406f70adb58be814",
+    "prs": [
+      420
+    ],
+    "last_commit": "2026-09-16T15:30:42-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix: bound Instagram checkpoint metadata before subprocess capture"
+  },
+  {
+    "name": "fix/mail-delivery-observability-20260918",
+    "sha": "ab9bbacc9da845b6bfe70ac3fda2ace44f17c918",
+    "target": "main",
+    "behind": 114,
+    "ahead": 0,
+    "main_behind": 114,
+    "main_ahead": 0,
+    "merge_base": "ab9bbacc9da845b6bfe70ac3fda2ace44f17c918",
+    "prs": [
+      452
+    ],
+    "last_commit": "2026-09-18T12:08:13-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(mail): continue monitoring after unreadable report archives"
+  },
+  {
+    "name": "fix/mail-smtp-log-flush-20260918",
+    "sha": "592916f2a7fbcd740409acda42e69d1a6bfb128a",
+    "target": "main",
+    "behind": 113,
+    "ahead": 0,
+    "main_behind": 113,
+    "main_ahead": 0,
+    "merge_base": "592916f2a7fbcd740409acda42e69d1a6bfb128a",
+    "prs": [
+      458
+    ],
+    "last_commit": "2026-09-18T13:53:50-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(mail): emit SMTP success events without stdout buffering"
+  },
+  {
+    "name": "fix/migration-introduction-ancestry-audit-20260916",
+    "sha": "e24922210d09226bec610a8fe0f1b6f05867e8d7",
+    "target": "main",
+    "behind": 408,
+    "ahead": 0,
+    "main_behind": 408,
+    "main_ahead": 0,
+    "merge_base": "e24922210d09226bec610a8fe0f1b6f05867e8d7",
+    "prs": [
+      404
+    ],
+    "last_commit": "2026-09-16T11:48:07-05:00",
+    "author": "diegueins680",
+    "subject": "fix(release): identify ancestors containing migration files"
+  },
+  {
+    "name": "fix/notification-mobile-release-pin-20260918",
+    "sha": "6449b75fe5387fcb1b80e55f4a71602a3fed2403",
+    "target": "main",
+    "behind": 170,
+    "ahead": 1,
+    "main_behind": 170,
+    "main_ahead": 1,
+    "merge_base": "5d49f61fa68000abb188bf6d9bb19a3bce035aec",
+    "prs": [
+      441
+    ],
+    "last_commit": "2026-09-18T04:31:09-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(notifications): pin verified native cold-start navigation"
+  },
+  {
+    "name": "fix/notification-navigation-20260917",
+    "sha": "a5a391954ec4152a19e1502c08347edd34624060",
+    "target": "main",
+    "behind": 226,
+    "ahead": 0,
+    "main_behind": 226,
+    "main_ahead": 0,
+    "merge_base": "a5a391954ec4152a19e1502c08347edd34624060",
+    "prs": [
+      428
+    ],
+    "last_commit": "2026-09-17T23:53:13-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "chore(notifications): record combined migration manifest review"
+  },
+  {
+    "name": "fix/preserve-enabled-paypal-webhooks-20260916",
+    "sha": "a28b94d74a49ebdf71481694bc910ab95298e027",
+    "target": "main",
+    "behind": 408,
+    "ahead": 1,
+    "main_behind": 408,
+    "main_ahead": 1,
+    "merge_base": "43466ad532d83b3bfdb3730f07567d1c45214462",
+    "prs": [
+      412
+    ],
+    "last_commit": "2026-09-16T14:13:49-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(release): preserve approved PayPal webhook intake on restart"
+  },
+  {
+    "name": "fix/records-thumbnails-ingestion-20260918",
+    "sha": "697a5c748332a7179d3a3e7f7bbfd7d5323579b9",
+    "target": "main",
+    "behind": 60,
+    "ahead": 0,
+    "main_behind": 60,
+    "main_ahead": 0,
+    "merge_base": "697a5c748332a7179d3a3e7f7bbfd7d5323579b9",
+    "prs": [
+      451
+    ],
+    "last_commit": "2026-09-18T14:17:18-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(records): recover overview artwork after actual image failure"
+  },
+  {
+    "name": "fix/recovery-dialog-navigation-20260918",
+    "sha": "65cc350a68bf293720bed21afb771d75ab8fbea7",
+    "target": "main",
+    "behind": 66,
+    "ahead": 0,
+    "main_behind": 66,
+    "main_ahead": 0,
+    "merge_base": "65cc350a68bf293720bed21afb771d75ab8fbea7",
+    "prs": [
+      457
+    ],
+    "last_commit": "2026-09-18T13:48:16-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(auth): close recovery dialog when its route flag is removed"
+  },
+  {
+    "name": "fix/redact-stripe-webhook-example-20260916",
+    "sha": "2455951713967642de9b429c5a790ceec6cb1fa2",
+    "target": "main",
+    "behind": 410,
+    "ahead": 0,
+    "main_behind": 410,
+    "main_ahead": 0,
+    "merge_base": "2455951713967642de9b429c5a790ceec6cb1fa2",
+    "prs": [
+      392
+    ],
+    "last_commit": "2026-09-15T22:40:50-05:00",
+    "author": "diegueins680",
+    "subject": "docs: replace exposed webhook signing secret with placeholder"
+  },
+  {
+    "name": "fix/release-artwork-20260915",
+    "sha": "760763642ae9641b19ef0adfb317f4243ff30a25",
+    "target": "main",
+    "behind": 435,
+    "ahead": 3,
+    "main_behind": 435,
+    "main_ahead": 3,
+    "merge_base": "73edd77a36c8dcc73e5217303c62376ae684853b",
+    "prs": [
+      369
+    ],
+    "last_commit": "2026-09-15T09:12:24-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(releases): bound artwork state and respect stored platform links"
+  },
+  {
+    "name": "fix/reservation-pluscal-integrity",
+    "sha": "ec24b70b1b2319a875099cc118db0e68b62a5ed0",
+    "target": "fix/fanhub-authoritative-onboarding",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 18,
+    "merge_base": "ff3cd1676a6db7b6ceef56d44407b0846a4f2071",
+    "prs": [
+      372
+    ],
+    "last_commit": "2026-09-15T09:27:09-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(formal): verify exact PlusCal reservation regeneration"
+  },
+  {
+    "name": "fix/social-stack-integration-20260916",
+    "sha": "5fcd17c926a70073c8ef3eda33904e1b207859ee",
+    "target": "main",
+    "behind": 378,
+    "ahead": 0,
+    "main_behind": 378,
+    "main_ahead": 0,
+    "merge_base": "5fcd17c926a70073c8ef3eda33904e1b207859ee",
+    "prs": [
+      400
+    ],
+    "last_commit": "2026-09-16T13:19:45-05:00",
+    "author": "diegueins680",
+    "subject": "fix(social): reconcile current main and both mobile contracts"
+  },
+  {
+    "name": "fix/web-onboarding-reconciliation-integration",
+    "sha": "827d745629f8cdbaee4429ded3689d3bf520a09d",
+    "target": "feat/event-task-read-api",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 15,
+    "merge_base": "881882e15cd1b2400cc2e0452ea50683dea675de",
+    "prs": [
+      359
+    ],
+    "last_commit": "2026-09-14T23:33:49-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(web): restore canonical onboarding reconciliation integration"
+  },
+  {
+    "name": "main",
+    "sha": "66dae5b8ec22f3f0fe819dfcd9bae5ed727c6b48",
+    "target": "main",
+    "behind": 0,
+    "ahead": 0,
+    "main_behind": 0,
+    "main_ahead": 0,
+    "merge_base": "66dae5b8ec22f3f0fe819dfcd9bae5ed727c6b48",
+    "prs": [
+      194,
+      189,
+      183,
+      179,
+      162,
+      103,
+      102,
+      99,
+      97,
+      95,
+      93,
+      89,
+      86,
+      80,
+      78,
+      76,
+      67,
+      55,
+      45,
+      43,
+      41,
+      29,
+      24,
+      22,
+      20,
+      18,
+      16,
+      13,
+      10,
+      8,
+      5,
+      2
+    ],
+    "last_commit": "2026-09-21T01:55:03-05:00",
+    "author": "Diego Saa",
+    "subject": "Merge pull request #461 from diegueins680/fix/disable-unverified-service-escrow-20260920"
+  },
+  {
+    "name": "release/identity-compatible-recovery-20260918",
+    "sha": "bdd9e24bddaaa96e2da72d75041b1e1b20236e04",
+    "target": "main",
+    "behind": 85,
+    "ahead": 0,
+    "main_behind": 85,
+    "main_ahead": 0,
+    "merge_base": "bdd9e24bddaaa96e2da72d75041b1e1b20236e04",
+    "prs": [],
+    "last_commit": "2026-09-18T11:21:22-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "Merge commit 'e1a825bda26dbb16b1c732e551cc4880d5626943' into feat/identity-trials-prevention-20260918"
+  },
+  {
+    "name": "test/event-operations-http-boundary",
+    "sha": "dbe975d3143446c5e7cd9b132b6f994067065e7b",
+    "target": "fix/event-snapshot-privacy-boundary",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 7,
+    "merge_base": "db81fdbe71d9b8e83d40d279b98c69df3749b316",
+    "prs": [
+      345
+    ],
+    "last_commit": "2026-09-14T19:09:47-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "test: cover event operations authenticated HTTP boundary"
+  },
+  {
+    "name": "test/event-operations-schema-rehearsal",
+    "sha": "cf591e1faa975b8023c6c06892fb50a51ba06dff",
+    "target": "fix/event-session-transaction-fence",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 10,
+    "merge_base": "3cd978045aa406c55512a6673c2ba5f2983ebc7c",
+    "prs": [
+      349
+    ],
+    "last_commit": "2026-09-14T20:50:18-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "test(events): expose full-schema migration blockers"
+  },
+  {
+    "name": "test/event-raci-accessibility-evidence",
+    "sha": "6047377348e901c919d7691b849faab30980b952",
+    "target": "fix/event-ui-lazy-validation",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 30,
+    "merge_base": "d4e7ed0505a87a03706b765fc304ffa50362b8fb",
+    "prs": [
+      403
+    ],
+    "last_commit": "2026-09-16T11:31:18-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "test(events): retain actionable RACI accessibility evidence"
+  },
+  {
+    "name": "test/event-raci-full-stack",
+    "sha": "7cdd712568311975407cf0b7cb2ee2081a0c0414",
+    "target": "feat/event-raci-web-editor",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 27,
+    "merge_base": "061553d085d3106a9c8877ca08ccb3e2420cdd09",
+    "prs": [
+      395
+    ],
+    "last_commit": "2026-09-15T23:23:28-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "test(events): verify RACI editor through real auth and PostgreSQL"
+  },
+  {
+    "name": "test/event-rsvp-ci-contracts",
+    "sha": "5ad2333c2a6ce379579a1cffa2708d56cbb21f5f",
+    "target": "test/event-raci-full-stack",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 28,
+    "merge_base": "7cdd712568311975407cf0b7cb2ee2081a0c0414",
+    "prs": [
+      398
+    ],
+    "last_commit": "2026-09-15T23:53:04-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "fix(events): restore directory contact continuity and RSVP test contracts"
+  },
+  {
+    "name": "test/event-task-browser-startup",
+    "sha": "221d1205c9cc2e992f8f36f73d441a3f9c6fda21",
+    "target": "feat/event-task-raci-view",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 20,
+    "merge_base": "f03f366de44c8ad09248e9d399caa5994af06d5a",
+    "prs": [
+      375
+    ],
+    "last_commit": "2026-09-15T10:18:25-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "test(events): reduce task browser fixture startup overhead"
+  },
+  {
+    "name": "test/merch-expiry-checkout-contract",
+    "sha": "a1895105c6e15e1f95b4b72fd6218b34a311f6e6",
+    "target": "fix/event-schema-migration-dependencies",
+    "behind": 0,
+    "ahead": 1,
+    "main_behind": 448,
+    "main_ahead": 12,
+    "merge_base": "192f9578665109e52d28a96c772e3307bdc684e5",
+    "prs": [
+      352
+    ],
+    "last_commit": "2026-09-14T22:03:03-05:00",
+    "author": "continuous-improvement-loop[bot]",
+    "subject": "test(merch): verify canonical checkout expiry and CI coverage"
+  }
+]

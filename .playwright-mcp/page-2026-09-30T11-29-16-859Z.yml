@@ -1,0 +1,355 @@
+- generic [ref=f162e4]:
+  - generic [ref=f162e9]:
+    - generic [ref=f162e12]:
+      - link [ref=f162e608] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f162e609]
+      - generic [ref=f162e25]:
+        - link [ref=f162e610] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f162e611]
+        - link [ref=f162e612] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f162e613]
+        - link [ref=f162e614] [cursor=pointer]:
+          - /url: /direct/t/103987857667022
+          - generic [ref=f162e55]:
+            - img "Messages" [ref=f162e615]
+            - generic "Direct messaging - 8 new notifications link" [ref=f162e616]: "8"
+        - link [ref=f162e617] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f162e618]
+        - link [ref=f162e619] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f162e620]
+        - link [ref=f162e621] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f162e622]
+        - link [ref=f162e623] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f162e624]
+        - link [ref=f162e625] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f162e626]:
+            - img "tdf.records.label's profile picture" [ref=f162e627]
+      - generic [ref=f162e117]:
+        - link [ref=f162e628] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f162e629]
+        - link [ref=f162e630] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f162e631]
+    - generic [ref=f162e136]:
+      - main [ref=f162e137]:
+        - generic [ref=f162e139]:
+          - generic [ref=f162e140]:
+            - generic [ref=f162e141]:
+              - button [ref=f162e632] [cursor=pointer]:
+                - link [ref=f162e633]:
+                  - img "franlaurito's profile picture" [ref=f162e634]
+              - generic [ref=f162e150]:
+                - generic [ref=f162e151]:
+                  - generic [ref=f162e152]:
+                    - link [ref=f162e635] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "franlaurito" [level=2] [ref=f162e636]
+                    - button [ref=f162e637] [cursor=pointer]:
+                      - img "Options" [ref=f162e638]
+                  - generic [ref=f162e163]: Ciscú Mastó
+                  - generic [ref=f162e165]:
+                    - generic [ref=f162e167]:
+                      - generic [ref=f162e168]: "42"
+                      - text: posts
+                    - link "2,105 followers" [ref=f162e639] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f162e171]:
+                        - generic "2,105" [ref=f162e640]
+                        - text: followers
+                    - link "1,908 following" [ref=f162e641] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f162e175]:
+                        - generic [ref=f162e176]: 1,908
+                        - text: following
+                - generic [ref=f162e177]:
+                  - generic [ref=f162e178]:
+                    - generic [ref=f162e179]: Guitarist
+                    - generic [ref=f162e181]:
+                      - button "Link icon open.spotify.com/playlist/4taXYkcMYajCF3nuhP02TT?si=3zAz4Tm9QnGwm3yoT13AEQ&pi=A7SpJGCnTxi6Y and 1 more" [ref=f162e642] [cursor=pointer]:
+                        - generic [ref=f162e183]:
+                          - img "Link icon" [ref=f162e643]
+                          - generic [ref=f162e188]: open.spotify.com/playlist/4taXYkcMYajCF3nuhP02TT?si=3zAz4Tm9QnGwm3yoT13AEQ&pi=A7SpJGCnTxi6Y and 1 more
+                      - link "Threads franlaurito" [ref=f162e644] [cursor=pointer]:
+                        - /url: https://www.threads.com/@franlaurito?xmt=AQG0KLMG2mmL9frvZ9Xogb7syUJgfzXJlzZR976wn7-1jQo
+                        - img "Threads" [ref=f162e645]
+                        - generic [ref=f162e194]: franlaurito
+                  - link "Followed by paulsancheztrumpet, benawidinson + 37 more" [ref=f162e646] [cursor=pointer]:
+                    - /url: /franlaurito/followers/mutualOnly
+                    - generic [ref=f162e198]:
+                      - generic [ref=f162e200]:
+                        - button [ref=f162e371]:
+                          - link [ref=f162e372]
+                        - button [ref=f162e203]:
+                          - link [ref=f162e204]
+                        - button [ref=f162e205]:
+                          - link [ref=f162e206]
+                      - generic [ref=f162e207]: Followed by paulsancheztrumpet, benawidinson + 37 more
+            - generic [ref=f162e212]:
+              - button "Following Down chevron icon" [ref=f162e647] [cursor=pointer]:
+                - generic [ref=f162e215]:
+                  - generic [ref=f162e216]: Following
+                  - img "Down chevron icon" [ref=f162e648]
+              - button "Message" [ref=f162e649] [cursor=pointer]
+              - button [ref=f162e650] [cursor=pointer]:
+                - img "Similar accounts" [ref=f162e651]
+            - menu [ref=f162e230]:
+              - list [ref=f162e234]:
+                - listitem [ref=f162e235]
+                - listitem [ref=f162e236]
+                - listitem [ref=f162e237]:
+                  - link "View Music Stuff highlight" [ref=f162e652] [cursor=pointer]:
+                    - /url: /stories/highlights/17985627694458520/
+                    - button "franlaurito's highlight story picture Music Stuff" [ref=f162e653]:
+                      - button [ref=f162e654]:
+                        - img "franlaurito's highlight story picture" [ref=f162e655]
+                      - generic [ref=f162e246]: Music Stuff
+          - generic [ref=f162e249]:
+            - tablist [ref=f162e250]:
+              - link [ref=f162e656] [cursor=pointer]:
+                - /url: /franlaurito/
+                - img "Posts" [ref=f162e657]
+              - link [ref=f162e658] [cursor=pointer]:
+                - /url: /franlaurito/reels/
+                - img "Reels" [ref=f162e659]
+              - link [ref=f162e660] [cursor=pointer]:
+                - /url: /franlaurito/reposts/
+                - img "Reposts" [ref=f162e661]
+              - link [ref=f162e662] [cursor=pointer]:
+                - /url: /franlaurito/tagged/
+                - img "Tagged" [ref=f162e663]
+            - tabpanel
+          - generic [ref=f162e377]:
+            - generic [ref=f162e378]:
+              - link [ref=f162e664] [cursor=pointer]:
+                - /url: /franlaurito/p/DO6H6GyjT0j/
+                - img "MEMORIAS DEL CERRO (A. Iype/ F. Laurito) is out! Lo encuentran en su plataforma favorita 1. Untethered (Abhin Iype) 2. Guías (Francisco Laurito) 3. Memorias Del Cerro (filmado en vivo en Bruselas por @iallende89) Check it out! (We will soon put it out on Bandcamp as well and you can support us through buying a better quality sounding digital copy of our EP) Share and enjoy 🙏🏼 Gracias" [ref=f162e665]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f162e666] [cursor=pointer]:
+                - /url: /franlaurito/reel/Dc7ISxfC6Ru/
+                - 'img "Estrenando las sesiones en casa conmigo mismo de invitado. Probando ideas sobre Windows! // Quien se apunta para la sesión n2? EDICIÓN: @disolutio" [ref=f162e667]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f162e668] [cursor=pointer]:
+                - /url: /franlaurito/reel/Dcm5_Ats0SX/
+                - img "Un solilocuo 🌊" [ref=f162e669]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+            - generic [ref=f162e397]:
+              - link [ref=f162e670] [cursor=pointer]:
+                - /url: /franlaurito/p/DdPEjv_FvUK/
+                - img "Un recuerdo con los jefes" [ref=f162e671]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f162e672] [cursor=pointer]:
+                - /url: /franlaurito/p/Dcyi-lTFkQr/
+                - img "Quédense para el 🫂 Con mi super amigo / super ser 🎸 Julián Franji En @rosetiespacio . Buenos Aires 2026" [ref=f162e673]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f162e674] [cursor=pointer]:
+                - /url: /franlaurito/reel/DcthFSfCYaj/
+                - img "⚡ Alerta de video +30 segundos Este jueves a duo en el @goquitohotel // Lawns (Carla Bley)" [ref=f162e675]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f162e416]:
+              - link [ref=f162e676] [cursor=pointer]:
+                - /url: /franlaurito/reel/DUiwhRbDEM-/
+                - 'img "// Los Trenes Que Esperás // The opening track of \"Memorias Del Cerro\", our EP released on September 2025 and available on all platforms. Guitar/composition: @franlaurito Piano, Mix and Master: @abhiniype Videodanza imaginado y producido por: Maya Ponce (@disolutio) y Francisco Laurito" [ref=f162e677]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f162e678] [cursor=pointer]:
+                - /url: /franlaurito/reel/DZNxNO-C5KJ/
+                - img "Tocando “Minor Stuff”, un tema que compuse pensando no se bien en que, pero seguro en invierno." [ref=f162e679]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f162e680] [cursor=pointer]:
+                - /url: /franlaurito/reel/DbTZKn3i4jw/
+                - img "Ah re que se hacían los tangueros 🍷 Adiós Nonino - Astor Piazzolla" [ref=f162e681]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f162e435]:
+              - link [ref=f162e682] [cursor=pointer]:
+                - /url: /sounds.brussels/p/DSc2VUPDdRX/
+                - 'img "JEUDI 08 JANVIER FTL 4TET + JAM THE QUARTET IS A BRUSSELS BASED PROJECT LED BY ARGENTINIAN GUITAR PLAYER FRANCISCO LAURITO. IN THIS CLASSIC MINIMALISTIC FORMAT, THE GROUP EXPLORES MAINLY SHORT FORM COMPOSITIONS WITH CIRCULAR THEMES, AS VEHICLES FOR IMPROVISATION. THE MUSIC DRAWS INSPIRATION FROM THE JAZZ TRADITION, FOLK - ORIENTED MELODIES AND A TEXTURAL APPROACH TO SOUND. + JAM AFTER THE SHOW ⏰ TIMETABLE * Open door - 19:00 * Concert - 20:00 * Jam - 22:00 * End - 01:30 🎤 LINE-UP Francisco Laurito: Guitar Nathan Peron: Piano Lantian Xiao: Upright Bass Thomas Brivet: Drums 🍹 Happy Hour from 19h to 20h 🎷 Free entrance for playing musicians ❤️ 🎟️ Tickets: €8,00 💵 Pay what you want after the show" [ref=f162e683]'
+              - link [ref=f162e684] [cursor=pointer]:
+                - /url: /franlaurito/reel/DVjCX_FDlJX/
+                - img "Cuando la guitarra es tan chota que suena bien El tema es Say It Over (and over again) versión John Coltrane (más o menos). Del disco \"Ballads\", el cuál me descargue por accidente en la vorágine de torrents hace mucho y bueno, termino siendo uno de los primeros discos de jazz que escuché. Archivo de una vez tocando en un sillón en una casa en Bruselas" [ref=f162e685]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f162e686] [cursor=pointer]:
+                - /url: /franlaurito/reel/DTYWls3jGsD/
+                - img "Tocando Strange Meeting en Sounds (Bruselas)" [ref=f162e687]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+      - contentinfo [ref=f162e295]:
+        - generic [ref=f162e296]:
+          - generic [ref=f162e298]:
+            - link "Meta" [ref=f162e688] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f162e689] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f162e690] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f162e691] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f162e692] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f162e693] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f162e694] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f162e695] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f162e696] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f162e697] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f162e698] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f162e699] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f162e700] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f162e701] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f162e702] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f162e703] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f162e347]:
+            - generic [ref=f162e348] [cursor=pointer]:
+              - generic [ref=f162e349]:
+                - generic [ref=f162e350]: English
+                - img "Down chevron icon" [ref=f162e704]
+              - combobox "Switch Display Language" [ref=f162e705]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f162e356]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f162e455] [cursor=pointer]:
+              - generic "Messages - 8 new notifications" [ref=f162e456]:
+                - generic [ref=f162e457]:
+                  - generic [ref=f162e459]:
+                    - img "Messages" [ref=f162e460]
+                    - generic "Direct messaging - 8 new notifications link" [ref=f162e463]: "8"
+                  - generic [ref=f162e466]: Messages
+                - generic [ref=f162e467]:
+                  - button [ref=f162e468]:
+                    - img "8 unread chats" [ref=f162e470]
+                  - button "User avatar ..." [ref=f162e475]:
+                    - img "User avatar" [ref=f162e478]
+                  - button "User avatar David Márquez" [ref=f162e480]:
+                    - img "User avatar" [ref=f162e483]
+                  - button "User avatar Limberg Steven Garcia Alava" [ref=f162e485]:
+                    - img "User avatar" [ref=f162e488]
+            - generic [ref=f162e706]:
+              - generic [ref=f162e707]:
+                - generic [ref=f162e708]:
+                  - generic [ref=f162e710]:
+                    - status "Loading..." [ref=f162e712]
+                    - status "Loading..." [ref=f162e714]
+                  - button [active] [ref=f162e716] [cursor=pointer]:
+                    - img "Close" [ref=f162e718]
+                - separator [ref=f162e721]
+              - generic [ref=f162e722]:
+                - generic [ref=f162e723]:
+                  - status "Loading..." [ref=f162e725]
+                  - status "Loading..." [ref=f162e727]
+                - status "Loading..." [ref=f162e730]
+                - generic [ref=f162e731]:
+                  - status "Loading..." [ref=f162e733]
+                  - status "Loading..." [ref=f162e735]
+                - generic [ref=f162e736]:
+                  - status "Loading..." [ref=f162e738]
+                  - status "Loading..." [ref=f162e740]
+                - status "Loading..." [ref=f162e743]
+                - generic [ref=f162e744]:
+                  - status "Loading..." [ref=f162e746]
+                  - status "Loading..." [ref=f162e748]
+                - status "Loading..." [ref=f162e750]

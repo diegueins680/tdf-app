@@ -1,0 +1,92 @@
+{
+  "commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a",
+  "tables": {
+    "event_discovery_publication_approval": [
+      "tdf-hq/sql/2026-09-27_event_ingestion_boundaries.sql"
+    ],
+    "interaction_audit": [
+      "tdf-hq/sql/2026-09-28_universal_interactions.sql"
+    ],
+    "interaction_comment": [
+      "tdf-hq/sql/2026-09-28_universal_interactions.sql"
+    ],
+    "interaction_comment_attachment": [
+      "tdf-hq/sql/2026-09-28_universal_interactions.sql"
+    ],
+    "interaction_comment_mention": [
+      "tdf-hq/sql/2026-09-28_universal_interactions.sql"
+    ],
+    "interaction_comment_total": [
+      "tdf-hq/sql/2026-09-28_interaction_discussions.sql"
+    ],
+    "interaction_entity_kind": [
+      "tdf-hq/sql/2026-09-28_universal_interactions.sql"
+    ],
+    "interaction_event": [
+      "tdf-hq/sql/2026-09-28_interaction_notifications.sql"
+    ],
+    "interaction_legacy_cutover": [
+      "tdf-hq/sql/2026-09-28_interaction_legacy.sql"
+    ],
+    "interaction_legacy_mapping": [
+      "tdf-hq/sql/2026-09-28_universal_interactions.sql"
+    ],
+    "interaction_migration_state": [
+      "tdf-hq/sql/2026-09-28_interaction_notifications.sql"
+    ],
+    "interaction_notification": [
+      "tdf-hq/sql/2026-09-28_universal_interactions.sql"
+    ],
+    "interaction_notification_actor": [
+      "tdf-hq/sql/2026-09-28_universal_interactions.sql"
+    ],
+    "interaction_notification_preference": [
+      "tdf-hq/sql/2026-09-28_universal_interactions.sql"
+    ],
+    "interaction_reaction": [
+      "tdf-hq/sql/2026-09-28_universal_interactions.sql"
+    ],
+    "interaction_reaction_choice": [
+      "tdf-hq/sql/2026-09-28_universal_interactions.sql"
+    ],
+    "interaction_reaction_total": [
+      "tdf-hq/sql/2026-09-28_universal_interactions.sql"
+    ],
+    "interaction_report": [
+      "tdf-hq/sql/2026-09-28_universal_interactions.sql"
+    ],
+    "interaction_request": [
+      "tdf-hq/sql/2026-09-28_universal_interactions.sql"
+    ],
+    "interaction_runtime": [
+      "tdf-hq/sql/2026-09-28_universal_interactions.sql"
+    ],
+    "interaction_subscription": [
+      "tdf-hq/sql/2026-09-28_universal_interactions.sql"
+    ],
+    "interaction_target": [
+      "tdf-hq/sql/2026-09-28_universal_interactions.sql"
+    ],
+    "interaction_target_comment_total": [
+      "tdf-hq/sql/2026-09-28_interaction_read_optimization.sql"
+    ],
+    "interaction_target_mention": [
+      "tdf-hq/sql/2026-09-28_universal_interactions.sql"
+    ],
+    "social_v2_command": [
+      "tdf-hq/sql/2026-09-14_social_v2_foundation.sql"
+    ],
+    "social_v2_pair": [
+      "tdf-hq/sql/2026-09-14_social_v2_foundation.sql"
+    ],
+    "social_v2_preference": [
+      "tdf-hq/sql/2026-09-14_social_v2_foundation.sql"
+    ],
+    "social_v2_publication": [
+      "tdf-hq/sql/2026-09-14_social_v2_read_models.sql"
+    ],
+    "social_v2_runtime": [
+      "tdf-hq/sql/2026-09-14_social_v2_foundation.sql"
+    ]
+  }
+}

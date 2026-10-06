@@ -1,0 +1,25 @@
+ docs/adr/0130-known-id-refund-query-recovery.md    |  105 ++
+ .../catalog-list-decisions.json                    |   27 +-
+ .../reports/list-consumer-matrix.csv               |  573 ++++----
+ .../reports/static-list-inventory.json             | 1551 ++++++++++++--------
+ .../ecuador-payment-platform-audit-2026-09-11.md   |    6 +
+ docs/payments/held-refund-query-2026-09-16.md      |  279 ++++
+ .../payment-query-report-contract.test.mjs         |   26 +
+ tdf-hq-ui/src/api/generated/types.ts               |  190 +++
+ tdf-hq-ui/src/api/serviceStorefront.test.ts        |   24 +
+ tdf-hq-ui/src/api/serviceStorefront.ts             |    9 +
+ .../payments/HeldRefundRecoveryPanel.test.tsx      |  138 ++
+ .../payments/HeldRefundRecoveryPanel.tsx           |  110 ++
+ tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx |    2 +
+ tdf-hq/.env.example                                |    5 +
+ tdf-hq/docs/openapi/api.yaml                       |   64 +
+ tdf-hq/src/TDF/API/ServiceStorefront.hs            |    6 +
+ tdf-hq/src/TDF/API/ServiceStorefrontTypes.hs       |   15 +
+ .../TDF/Commerce/ProviderAdapter/PayPalRefund.hs   |  119 ++
+ tdf-hq/src/TDF/Commerce/RefundReconciliation.hs    |  240 +++
+ tdf-hq/src/TDF/Server/ServiceStorefront.hs         |   74 +-
+ tdf-hq/tdf-hq.cabal                                |    5 +
+ tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs      |   17 +-
+ tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs     |  368 +++++
+ tdf-mobile                                         |    2 +-
+ 24 files changed, 3057 insertions(+), 898 deletions(-)

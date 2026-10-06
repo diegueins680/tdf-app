@@ -1,0 +1,14 @@
+M	.github/workflows/ci.yml
+M	docs/Event_Discovery_Cron.md
+M	docs/catalog-persistence/catalog-list-decisions.json
+M	formal/system/inventory.json
+M	scripts/lib/production-release.mjs
+M	scripts/production-migrations.json
+A	scripts/test-event-ingestion-boundaries.sh
+M	tdf-hq/docs/Event_Research_Ingestion.md
+A	tdf-hq/sql/2026-09-27_event_ingestion_boundaries.sql
+A	tdf-hq/sql/2026-09-27_event_ingestion_boundaries_rollback.sql
+M	tdf-hq/src/TDF/Cron.hs
+M	tdf-hq/src/TDF/Services/EventDiscovery.hs
+M	tdf-hq/test/TDF/Services/EventDiscoverySpec.hs
+A	tdf-hq/test/sql/event_ingestion_boundaries.sql

@@ -1,0 +1,31 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 402,
+          "reviewDecision": null,
+          "mergeStateStatus": "DIRTY",
+          "mergeable": "CONFLICTING",
+          "headRefOid": "8b2d1557a5e72e0346af1fd43dc7cf36033da067",
+          "baseRefName": "feat/social-profile-read-boundary-20260915",
+          "isDraft": true,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          }
+        }
+      }
+    }
+  }
+]

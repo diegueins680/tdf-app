@@ -1,0 +1,1 @@
+b6ba963623861d1e2804b18adb46e6e4f5f5be80 2026-09-14T14:48:30-05:00 continuous-improvement-loop[bot] feat(events): add guarded lifecycle API foundation

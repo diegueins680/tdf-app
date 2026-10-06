@@ -1,0 +1,10 @@
+{
+  "observedAt": "2026-10-01T01:59:55.184972+00:00",
+  "mailboxReadSucceeded": true,
+  "aggregate_report_count": 8,
+  "errors": [
+    "dns_query_failed:1.1.1.1/_dmarc.tdfrecords.net"
+  ],
+  "exit_code": 1,
+  "no_mail_sent": true
+}

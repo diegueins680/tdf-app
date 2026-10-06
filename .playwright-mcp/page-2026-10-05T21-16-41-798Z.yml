@@ -1,0 +1,168 @@
+- generic [ref=f12e5]:
+  - banner [ref=f12e6]:
+    - generic [ref=f12e7]:
+      - generic [ref=f12e10]: Sandbox Live
+      - navigation [ref=f12e18]:
+        - list [ref=f12e19]:
+          - listitem [ref=f12e20]:
+            - link [ref=f12e21] [cursor=pointer]:
+              - /url: /dashboard
+              - paragraph [ref=f12e24]: Home
+          - listitem [ref=f12e25]:
+            - link [ref=f12e26] [cursor=pointer]:
+              - /url: /dashboard/applications/sandbox
+              - paragraph [ref=f12e29]: Apps & Credentials
+          - listitem [ref=f12e30]:
+            - paragraph [ref=f12e34] [cursor=pointer]: Testing Tools
+            - list [ref=f12e35]:
+              - listitem [ref=f12e36]:
+                - link [ref=f12e37] [cursor=pointer]:
+                  - /url: /dashboard/accounts
+                  - paragraph [ref=f12e38]: Sandbox Accounts
+              - listitem [ref=f12e39]:
+                - link [ref=f12e40] [cursor=pointer]:
+                  - /url: /dashboard/notifications
+                  - paragraph [ref=f12e41]: Sandbox Notifications
+              - listitem [ref=f12e42]:
+                - link [ref=f12e43] [cursor=pointer]:
+                  - /url: /dashboard/webhooksSimulator
+                  - paragraph [ref=f12e44]: Webhook Simulator
+          - listitem [ref=f12e45]:
+            - paragraph [ref=f12e49] [cursor=pointer]: Event Logs
+          - listitem [ref=f12e50]:
+            - paragraph [ref=f12e54] [cursor=pointer]: Docs
+          - listitem [ref=f12e55]:
+            - paragraph [ref=f12e59] [cursor=pointer]: APIs & SDKs
+          - listitem [ref=f12e60]:
+            - paragraph [ref=f12e64] [cursor=pointer]: Tools
+          - listitem [ref=f12e65]:
+            - link [ref=f12e66] [cursor=pointer]:
+              - /url: https://developer.paypal.com/video/home
+              - paragraph [ref=f12e69]: Video Library
+          - listitem [ref=f12e70]:
+            - link [ref=f12e71] [cursor=pointer]:
+              - /url: https://developer.paypal.com/docs/support
+              - paragraph [ref=f12e74]: Help
+  - generic [ref=f12e75]:
+    - banner [ref=f12e76]:
+      - generic [ref=f12e77]:
+        - generic [ref=f12e190]:
+          - button "Open menu" [ref=f12e191] [cursor=pointer]
+          - heading [level=6] [ref=f12e196]:
+            - strong [ref=f12e197]: Diego Saa Villamar
+        - generic [ref=f12e78]: Search
+        - generic [ref=f12e86]:
+          - link [ref=f12e199] [cursor=pointer]:
+            - /url: https://www.paypal.com/mep/dashboard
+            - paragraph [ref=f12e201]:
+              - generic: Business Dashboard
+          - img "Avatar for Diego Saa Villamar" [ref=f12e205] [cursor=pointer]:
+            - generic [ref=f12e206]: DV
+      - alert [ref=f12e89]:
+        - img "info" [ref=f12e90]
+        - text: PayPal JavaScript SDK v6 is Now Available!
+        - link "Get Started" [ref=f12e93] [cursor=pointer]:
+          - /url: https://docs.paypal.ai/payments/methods/paypal/sdk/js/v6/paypal-checkout
+        - button "dismiss alert" [ref=f12e94] [cursor=pointer]:
+          - generic [ref=f12e95]: close alert
+      - generic [ref=f12e96]: You’re in sandbox mode.
+    - main [ref=f12e99]:
+      - article [ref=f12e100]:
+        - generic [ref=f12e207]:
+          - button [ref=f12e208] [cursor=pointer]
+          - button "Back" [ref=f12e210] [cursor=pointer]
+          - generic [ref=f12e211]: sb-d4o1h47820600@personal.example.com
+          - generic [ref=f12e214]:
+            - generic [ref=f12e215]: Login Info
+            - separator [ref=f12e218]
+            - generic [ref=f12e219]:
+              - generic [ref=f12e220]:
+                - generic [ref=f12e221]: Sandbox URL
+                - generic [ref=f12e223]: https://sandbox.paypal.com
+                - button [ref=f12e226] [cursor=pointer]
+              - generic [ref=f12e228]:
+                - generic [ref=f12e229]: Email
+                - generic [ref=f12e231]: sb-d4o1h47820600@personal.example.com
+                - button [ref=f12e234] [cursor=pointer]
+                - generic [ref=f12e236]: Change email
+              - generic [ref=f12e237]:
+                - generic [ref=f12e238]: Password
+                - generic [ref=f12e240]: ••••••••••••••••
+                - button [ref=f12e242] [cursor=pointer]
+                - button [ref=f12e245] [cursor=pointer]
+                - generic [ref=f12e247]: Change password
+            - separator [ref=f12e248]
+          - generic [ref=f12e249]:
+            - generic [ref=f12e250]: Sandbox account info
+            - separator [ref=f12e253]
+            - generic [ref=f12e254]:
+              - generic [ref=f12e255]:
+                - generic [ref=f12e256]:
+                  - generic [ref=f12e257]:
+                    - generic [ref=f12e258]: Name
+                    - generic [ref=f12e260]: John Doe
+                    - button [ref=f12e262] [cursor=pointer]
+                  - generic [ref=f12e264]:
+                    - generic [ref=f12e265]: Phone
+                    - generic [ref=f12e267]: "5934681074"
+                  - generic [ref=f12e269]:
+                    - generic [ref=f12e270]: Country
+                    - generic [ref=f12e272]: EC
+                - generic [ref=f12e274]:
+                  - generic [ref=f12e275]:
+                    - generic [ref=f12e276]: Account type
+                    - generic [ref=f12e278]: Personal
+                  - generic [ref=f12e280]:
+                    - generic [ref=f12e281]: Account ID
+                    - generic [ref=f12e283]: DKABABLLDELFS
+                  - generic [ref=f12e285]:
+                    - generic [ref=f12e286]: Status
+                    - generic [ref=f12e288]: Verified
+              - separator [ref=f12e290]
+              - generic [ref=f12e291]:
+                - generic [ref=f12e292]:
+                  - generic [ref=f12e293]:
+                    - generic [ref=f12e294]: Credit Cards
+                    - generic [ref=f12e295]: 1 added
+                    - generic [ref=f12e297]: Manage
+                  - generic [ref=f12e299]:
+                    - generic [ref=f12e300]: Banks
+                    - generic [ref=f12e301]: 1 of 4 added
+                    - generic [ref=f12e303]: Manage
+                - generic [ref=f12e306]:
+                  - generic [ref=f12e307]: PayPal balance
+                  - generic [ref=f12e309]: USD 5,000
+                  - button [ref=f12e311] [cursor=pointer]
+            - separator [ref=f12e313]
+          - generic [ref=f12e314]:
+            - generic [ref=f12e315]: Settings
+            - separator [ref=f12e318]
+            - generic [ref=f12e321]:
+              - generic [ref=f12e322]:
+                - text: Payment Review
+                - generic [ref=f12e323]: Review sandbox payments before they are completed.
+              - generic [ref=f12e324]:
+                - switch "Payment Review Review sandbox payments before they are completed." [ref=f12e325]
+                - generic [ref=f12e326] [cursor=pointer]
+            - separator [ref=f12e327]
+      - generic [ref=f12e109]:
+        - link "Reference" [ref=f12e110] [cursor=pointer]:
+          - /url: https://developer.paypal.com/reference
+        - link "PayPal.com" [ref=f12e111] [cursor=pointer]:
+          - /url: https://www.paypal.com
+        - link "Privacy" [ref=f12e112] [cursor=pointer]:
+          - /url: https://www.paypal.com/us/webapps/mpp/ua/privacy-full
+        - link "Support" [ref=f12e113] [cursor=pointer]:
+          - /url: https://developer.paypal.com/docs/support
+        - link "Legal" [ref=f12e114] [cursor=pointer]:
+          - /url: https://www.paypal.com/us/webapps/mpp/ua/legalhub-full
+        - link "Contact" [ref=f12e115] [cursor=pointer]:
+          - /url: https://www.paypal.com/us/smarthelp/contact-us
+  - generic [ref=f12e117]:
+    - generic [ref=f12e121]:
+      - heading [level=4] [ref=f12e123]:
+        - text: We currently use cookies to improve and customize your experience on our site. If you accept, we’ll also use marketing cookies to show you personalized ads.
+        - link "Manage your cookies and learn more." [ref=f12e124] [cursor=pointer]:
+          - /url: https://www.paypal.com/myaccount/privacy/cookiePrefs?locale=en_EC
+      - button "Yes, I accept" [ref=f12e126]
+    - button "Close" [ref=f12e127]

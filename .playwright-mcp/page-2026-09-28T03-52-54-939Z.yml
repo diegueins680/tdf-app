@@ -1,0 +1,178 @@
+- generic [active] [ref=f13e1]:
+  - link "Skip to main content" [ref=f13e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=f13e4]:
+    - banner [ref=f13e5]:
+      - navigation [ref=f13e6]:
+        - generic [ref=f13e7]:
+          - generic [ref=f13e8]:
+            - link [ref=f13e10] [cursor=pointer]:
+              - /url: https://us.ovhcloud.com/
+            - menubar [ref=f13e14]:
+              - text: 
+              - menuitem "My Account " [ref=f13e15] [cursor=pointer]:
+                - generic [ref=f13e20]: My Account
+                - text: 
+              - menuitem "Contact Sales" [ref=f13e21] [cursor=pointer]
+              - menuitem "Support " [ref=f13e23] [cursor=pointer]:
+                - generic [ref=f13e24]: Support
+                - text: 
+              - menuitem "Resources " [ref=f13e25] [cursor=pointer]:
+                - generic [ref=f13e26]: Resources
+                - text: 
+              - menuitem "OVHcloud Blog" [ref=f13e27] [cursor=pointer]
+            - text: 
+          - text: 
+      - navigation [ref=f13e29]:
+        - menubar [ref=f13e34]:
+          - menuitem "Bare Metal & VPS" [ref=f13e35] [cursor=pointer]
+          - menuitem "Public Cloud" [ref=f13e37] [cursor=pointer]
+          - menuitem "Hosted Private Cloud" [ref=f13e39] [cursor=pointer]
+          - menuitem "Enterprise" [ref=f13e41] [cursor=pointer]
+          - menuitem "Ecosystem" [ref=f13e43] [cursor=pointer]
+          - menuitem "About" [ref=f13e45] [cursor=pointer]
+    - main [ref=f13e47]:
+      - article [ref=f13e51]:
+        - generic [ref=f13e57]:
+          - generic [ref=f13e58]:
+            - heading "VPS Configurator" [level=1] [ref=f13e60]
+            - separator [ref=f13e62]
+            - navigation [ref=f13e64]:
+              - list [ref=f13e65]:
+                - listitem [ref=f13e66]:
+                  - link "Homepage" [ref=f13e67] [cursor=pointer]:
+                    - /url: https://us.ovhcloud.com/
+                    - text: 
+                - listitem [ref=f13e68]: Configurator
+          - progressbar [ref=f13e72]
+    - contentinfo [ref=f13e79]:
+      - generic [ref=f13e80]:
+        - navigation [ref=f13e81]:
+          - generic [ref=f13e86]:
+            - list [ref=f13e87]:
+              - listitem [ref=f13e88]:
+                - generic [ref=f13e89]:
+                  - text: Tools
+                  - list [ref=f13e91]:
+                    - listitem [ref=f13e92]: My Account
+                    - listitem [ref=f13e93]:
+                      - link "API" [ref=f13e94] [cursor=pointer]:
+                        - /url: https://api.us.ovhcloud.com/
+                    - listitem [ref=f13e95]: Service Status
+                    - listitem [ref=f13e96]:
+                      - link "Report Abuse" [ref=f13e97] [cursor=pointer]:
+                        - /url: https://us.ovhcloud.com/abuse/#!/
+            - list [ref=f13e98]:
+              - listitem [ref=f13e99]:
+                - generic [ref=f13e100]:
+                  - text: Support
+                  - list [ref=f13e102]:
+                    - listitem [ref=f13e103]:
+                      - link "Help Center" [ref=f13e104] [cursor=pointer]:
+                        - /url: https://us.ovhcloud.com/support/
+                    - listitem [ref=f13e105]:
+                      - link "Learning Center" [ref=f13e106] [cursor=pointer]:
+                        - /url: https://us.ovhcloud.com/learn/
+                    - listitem [ref=f13e107]:
+                      - link "Glossary" [ref=f13e108] [cursor=pointer]:
+                        - /url: https://us.ovhcloud.com/glossary/
+              - listitem [ref=f13e109]:
+                - generic [ref=f13e110]:
+                  - text: Contact us
+                  - list [ref=f13e112]:
+                    - generic [ref=f13e113]:
+                      - paragraph [ref=f13e114]: New orders, technical advice, questions?
+                      - paragraph [ref=f13e115]:
+                        - link "Contact Sales" [ref=f13e116] [cursor=pointer]:
+                          - /url: https://us.ovhcloud.com/contact-sales/
+                      - paragraph [ref=f13e117]:
+                        - link "Talk to an Expert" [ref=f13e118] [cursor=pointer]:
+                          - /url: "#"
+            - list [ref=f13e119]:
+              - listitem [ref=f13e120]:
+                - generic [ref=f13e121]:
+                  - text: News
+                  - list [ref=f13e123]:
+                    - listitem [ref=f13e124]: Press
+                    - listitem [ref=f13e125]:
+                      - link "Blog" [ref=f13e126] [cursor=pointer]:
+                        - /url: https://us.ovhcloud.com/resources/blog/
+                    - listitem [ref=f13e127]:
+                      - link "Events" [ref=f13e128] [cursor=pointer]:
+                        - /url: https://us.ovhcloud.com/events/
+                    - listitem [ref=f13e129]:
+                      - link "Deals" [ref=f13e130] [cursor=pointer]:
+                        - /url: https://us.ovhcloud.com/deals/
+                    - listitem [ref=f13e131]: Articles
+              - listitem [ref=f13e132]:
+                - generic [ref=f13e133]:
+                  - text: Social Networks
+                  - list [ref=f13e135]:
+                    - listitem [ref=f13e136]:
+                      - navigation [ref=f13e137]:
+                        - listitem [ref=f13e138]:
+                          - link [ref=f13e139] [cursor=pointer]:
+                            - /url: https://twitter.com/OVHcloud_US
+                            - img "X logo" [ref=f13e140]
+                        - listitem [ref=f13e141]:
+                          - link [ref=f13e142] [cursor=pointer]:
+                            - /url: https://www.linkedin.com/company/ovhgroup/
+                            - img "linkedin logo" [ref=f13e143]
+                        - listitem [ref=f13e144]:
+                          - link [ref=f13e145] [cursor=pointer]:
+                            - /url: https://www.facebook.com/OVHcloudUS/
+                            - img "facebook logo" [ref=f13e146]
+                        - listitem [ref=f13e147]:
+                          - link [ref=f13e148] [cursor=pointer]:
+                            - /url: https://www.youtube.com/channel/UCSYEKzkvDEu9jeAAPovlYlw
+                            - img "youtube logo" [ref=f13e149]
+                        - listitem [ref=f13e150]:
+                          - link [ref=f13e151] [cursor=pointer]:
+                            - /url: https://discord.com/invite/ovhcloud
+                            - img "discord logo" [ref=f13e152]
+                        - listitem [ref=f13e153]:
+                          - link [ref=f13e154] [cursor=pointer]:
+                            - /url: https://us.ovhcloud.com/resources/blog/
+                            - img "github logo" [ref=f13e155]
+                    - listitem
+            - list [ref=f13e156]:
+              - listitem [ref=f13e157]:
+                - generic [ref=f13e158]:
+                  - text: Newsletter Signup
+                  - list [ref=f13e160]:
+                    - iframe [ref=f13e162]:
+                      - generic [ref=f14e3]:
+                        - paragraph [ref=f14e9]: Get the latest cloud news in your inbox every month.
+                        - textbox "* Email Address:" [ref=f14e13]:
+                          - /placeholder: "*Email Address:"
+                        - paragraph [ref=f14e18]:
+                          - text: By clicking the “Sign Up” button below, you accept the OVHcloud
+                          - link "Terms of Service" [ref=f14e19] [cursor=pointer]:
+                            - /url: https://us.ovhcloud.com/legal/terms-of-service/
+                          - text: and acknowledge that your data will be used as described in the OVHcloud
+                          - link "Privacy Policy" [ref=f14e20] [cursor=pointer]:
+                            - /url: https://us.ovhcloud.com/legal/privacy-policy/
+                          - text: .
+                        - button "Sign up" [ref=f14e23] [cursor=pointer]
+        - navigation [ref=f13e163]:
+          - list [ref=f13e166]:
+            - listitem [ref=f13e167]:
+              - generic [ref=f13e168]: Copyright ©2026 OVH US LLC and affiliated companies all rights reserved. OVHcloud, the OVHcloud logo and all other OVH marks contained herein are registered trademarks of OVH SAS. All other marks contained herein are the property of their respective owners.
+            - listitem [ref=f13e169]: Terms of Service |
+            - listitem [ref=f13e170]: Privacy policy |
+            - listitem [ref=f13e171]: About OVHcloud |
+            - listitem [ref=f13e172]: OVHcloud Careers
+  - dialog [ref=f13e173]:
+    - paragraph [ref=f13e176]:
+      - text: This website uses cookies, web beacons, and other similar technologies to provide you with the best browsing experience, to perform marketing activities, and to analyze our traffic. OVHcloud uses this technology in accordance with our
+      - link "Privacy Policy " [ref=f13e177] [cursor=pointer]:
+        - /url: https://us.ovhcloud.com/legal/privacy-policy/
+      - text: and
+      - link "Cookie Policy " [ref=f13e178] [cursor=pointer]:
+        - /url: https://us.ovhcloud.com/legal/cookies-policy/
+      - text: . Click
+      - link "here" [ref=f13e179] [cursor=pointer]:
+        - /url: "#"
+      - text: to change your settings.
+    - list [ref=f13e180]:
+      - listitem "Accept" [ref=f13e181] [cursor=pointer]

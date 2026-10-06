@@ -1,0 +1,1698 @@
+\set ON_ERROR_STOP on
+DO $verify$
+DECLARE
+  campaign_table TEXT;
+  commerce_table TEXT;
+  catalog_table TEXT;
+  cutover_code TEXT;
+  discovery_table TEXT;
+  ddex_table TEXT;
+  feature_table TEXT;
+  social_table TEXT;
+  ticketing_table TEXT;
+  enrichment_table TEXT;
+BEGIN
+  IF to_regclass('public.google_calendar_config') IS NULL
+     OR to_regclass('public.google_calendar_event') IS NULL THEN
+    RAISE EXCEPTION 'Calendar runtime relations are missing';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM (VALUES
+      ('google_calendar_config', 'id', 'bigint', 'NO'),
+      ('google_calendar_config', 'owner_id', 'bigint', 'YES'),
+      ('google_calendar_config', 'calendar_id', 'character varying', 'NO'),
+      ('google_calendar_config', 'access_token', 'character varying', 'YES'),
+      ('google_calendar_config', 'refresh_token', 'character varying', 'YES'),
+      ('google_calendar_config', 'token_type', 'character varying', 'YES'),
+      ('google_calendar_config', 'token_expires_at', 'timestamp with time zone', 'YES'),
+      ('google_calendar_config', 'sync_cursor', 'character varying', 'YES'),
+      ('google_calendar_config', 'synced_at', 'timestamp with time zone', 'YES'),
+      ('google_calendar_config', 'created_at', 'timestamp with time zone', 'NO'),
+      ('google_calendar_config', 'updated_at', 'timestamp with time zone', 'NO'),
+      ('google_calendar_event', 'id', 'bigint', 'NO'),
+      ('google_calendar_event', 'calendar_id', 'character varying', 'NO'),
+      ('google_calendar_event', 'google_id', 'character varying', 'NO'),
+      ('google_calendar_event', 'status', 'character varying', 'NO'),
+      ('google_calendar_event', 'summary', 'character varying', 'YES'),
+      ('google_calendar_event', 'description', 'character varying', 'YES'),
+      ('google_calendar_event', 'location', 'character varying', 'YES'),
+      ('google_calendar_event', 'start_at', 'timestamp with time zone', 'YES'),
+      ('google_calendar_event', 'end_at', 'timestamp with time zone', 'YES'),
+      ('google_calendar_event', 'updated_at', 'timestamp with time zone', 'YES'),
+      ('google_calendar_event', 'html_link', 'character varying', 'YES'),
+      ('google_calendar_event', 'attendees', 'character varying', 'YES'),
+      ('google_calendar_event', 'raw_payload', 'character varying', 'YES'),
+      ('google_calendar_event', 'created_at', 'timestamp with time zone', 'NO'),
+      ('google_calendar_event', 'updated_local', 'timestamp with time zone', 'NO')
+    ) expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns actual
+      ON actual.table_schema='public' AND actual.table_name=expected.table_name
+      AND actual.column_name=expected.column_name
+    WHERE actual.column_name IS NULL OR actual.data_type<>expected.data_type
+      OR actual.is_nullable<>expected.is_nullable
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgrelid='public.google_calendar_config'::regclass
+      AND tgname='identity_archive_reference_guard' AND NOT tgisinternal
+      AND tgfoid='identity_reject_archived_reference()'::regprocedure AND tgenabled='O'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conrelid='public.google_calendar_config'::regclass
+      AND contype='u' AND pg_get_constraintdef(oid)='UNIQUE (calendar_id)'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conrelid='public.google_calendar_event'::regclass
+      AND contype='u' AND pg_get_constraintdef(oid)='UNIQUE (calendar_id, google_id)'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conrelid='public.google_calendar_config'::regclass
+      AND contype='f' AND confrelid='public.party'::regclass AND convalidated
+      AND conkey=ARRAY[(SELECT attnum FROM pg_attribute
+        WHERE attrelid='public.google_calendar_config'::regclass AND attname='owner_id')]
+  ) THEN
+    RAISE EXCEPTION 'Calendar runtime columns or archived-owner guard are incompatible';
+  END IF;
+  IF to_regclass('public.notification') IS NULL THEN
+    RAISE EXCEPTION 'The notification relation is missing';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='notification' AND column_name='target_key' AND data_type='text' AND is_nullable='YES') OR to_regclass('public.notification_navigation_backfill') IS NULL OR to_regclass('public.notification_navigation_constraint_history') IS NULL THEN
+    RAISE EXCEPTION 'Notification destination identity or reversible history journal is missing';
+  END IF;
+  -- A named allowlist must include the access-request events. The pre-ledger
+  -- notification baseline had no allowlist at all, which is also valid: it
+  -- persists types produced by independently released notification features.
+  -- Do not mistake that supported unconstrained form for an incomplete
+  -- allowlist.
+  IF EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conrelid = 'public.notification'::regclass
+      AND (
+        conname = 'notification_notif_type_check'
+        OR (contype = 'c' AND 3 = ANY (conkey))
+      )
+  ) AND NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conrelid = 'public.notification'::regclass
+      AND conname = 'notification_notif_type_check'
+      AND contype = 'c'
+      AND convalidated
+      AND pg_get_constraintdef(oid) ILIKE '%reaction_received%'
+      AND pg_get_constraintdef(oid) ILIKE '%post_trending%'
+      AND pg_get_constraintdef(oid) ILIKE '%weekly_top%'
+      AND pg_get_constraintdef(oid) ILIKE '%artist_liked%'
+      AND pg_get_constraintdef(oid) ILIKE '%access_request_submitted%'
+      AND pg_get_constraintdef(oid) ILIKE '%access_request_review%'
+      AND pg_get_constraintdef(oid) ILIKE '%access_request_decided%'
+  ) THEN
+    RAISE EXCEPTION 'The notification type constraint is missing access-request events';
+  END IF;
+
+  IF to_regclass('public.directory_rate_limit') IS NULL OR NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conrelid = 'public.directory_rate_limit'::regclass
+      AND conname = 'directory_rate_limit_scope_check'
+      AND contype = 'c'
+      AND convalidated
+      AND pg_get_constraintdef(oid) LIKE '%party_selector:event_invitation%'
+      AND pg_get_constraintdef(oid) LIKE '%party_selector:social_connection%'
+  ) THEN
+    RAISE EXCEPTION 'The directory rate-limit constraint is missing Party selector scopes';
+  END IF;
+
+  FOREACH catalog_table IN ARRAY ARRAY[
+    'workflow_definition',
+    'workflow_state',
+    'workflow_transition',
+    'catalog_definition',
+    'catalog_revision',
+    'catalog_audit_event',
+    'catalog_backfill_run',
+    'catalog_migration_mapping',
+    'catalog_slug_alias',
+    'catalog_scoped_default',
+    'security_module',
+    'security_action',
+    'security_permission',
+    'security_role',
+    'role_permission',
+    'party_security_role',
+    'country_reference',
+    'locale_reference',
+    'currency_reference',
+    'language_reference',
+    'genre',
+    'instrument',
+    'service_offering',
+    'event_type',
+    'content_type',
+    'authored_content',
+    'record_release',
+    'recording',
+    'recording_session',
+    'editorial_collection',
+    'ddex_standard_version',
+    'ddex_message_type',
+    'ddex_standard_support'
+  ] LOOP
+    IF to_regclass('public.' || catalog_table) IS NULL THEN
+      RAISE EXCEPTION 'Canonical catalog relation public.% is missing', catalog_table;
+    END IF;
+  END LOOP;
+
+  IF (SELECT count(*) FROM workflow_definition WHERE active) < 16
+     OR (SELECT count(*) FROM workflow_state WHERE active) < 97
+     OR (SELECT count(*) FROM workflow_transition WHERE active) < 295
+     OR (SELECT count(*) FROM catalog_definition WHERE active) < 47
+     OR (SELECT count(*) FROM country_reference WHERE active) < 249
+     OR (SELECT count(*) FROM security_module WHERE active) < 8
+     OR (SELECT count(*) FROM security_action WHERE active) < 16
+     OR (SELECT count(*) FROM security_permission WHERE active) < 30
+     OR (SELECT count(*) FROM security_role WHERE active) < 31
+     OR (SELECT count(*) FROM role_permission WHERE active) < 116 THEN
+    RAISE EXCEPTION 'Canonical catalog foundation seed is incomplete';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('party', 'country_id'),
+        ('artist_profile', 'country_id'),
+        ('user_locale_preferences', 'locale_id'),
+        ('user_locale_preferences', 'currency_id'),
+        ('user_locale_preferences', 'country_id'),
+        ('service_order', 'service_offering_id'),
+        ('booking', 'service_offering_id'),
+        ('booking', 'booking_type_id'),
+        ('booking', 'workflow_state_id'),
+        ('pipeline_card', 'service_offering_id'),
+        ('pipeline_card', 'workflow_state_id'),
+        ('feedback', 'category_id'),
+        ('feedback', 'severity_id'),
+        ('input_row', 'instrument_id'),
+        ('social_event', 'event_type_id'),
+        ('social_event', 'workflow_state_id'),
+        ('social_event', 'currency_id'),
+        ('ddex_document', 'standard_version_id'),
+        ('ddex_document', 'message_type_id'),
+        ('ddex_document', 'workflow_state_id')
+    ) AS expected(table_name, column_name)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL OR actual.data_type <> 'uuid'
+  ) THEN
+    RAISE EXCEPTION 'A canonical catalog consumer UUID reference is missing or invalid';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'social_event'
+      AND column_name = 'end_time'
+      AND data_type = 'timestamp with time zone'
+      AND is_nullable = 'YES'
+  ) THEN
+    RAISE EXCEPTION 'social_event.end_time must allow an unconfirmed end';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conrelid = 'public.social_event'::regclass
+      AND conname = 'social_event_time_order'
+      AND contype = 'c'
+      AND convalidated
+      AND pg_get_constraintdef(oid) ILIKE '%end_time IS NULL%'
+      AND pg_get_constraintdef(oid) ILIKE '%start_time < end_time%'
+  ) THEN
+    RAISE EXCEPTION 'social_event_time_order is missing or invalid';
+  END IF;
+
+  IF to_regclass('public.directory_public_event') IS NULL
+     OR to_regclass('public.directory_public_search_document') IS NULL THEN
+    RAISE EXCEPTION 'The anonymous directory privacy views are missing';
+  END IF;
+  IF pg_get_viewdef('public.directory_public_event'::regclass, TRUE)
+       NOT ILIKE '%external_event_ref%'
+     OR pg_get_viewdef('public.directory_public_event'::regclass, TRUE)
+       NOT ILIKE '%suppressed%' THEN
+    RAISE EXCEPTION 'directory_public_event does not enforce imported-event tombstones';
+  END IF;
+  IF pg_get_viewdef('public.directory_public_event'::regclass, TRUE)
+       NOT ILIKE '%directory_social_event_metadata_is_public%' THEN
+    RAISE EXCEPTION 'directory_public_event does not enforce event metadata privacy';
+  END IF;
+  IF directory_social_event_metadata_is_public('{"isPublic":true,"_discoveryOwned":{}}') IS DISTINCT FROM TRUE
+     OR directory_social_event_metadata_is_public('{"isPublic":false,"_discoveryOwned":{}}') IS DISTINCT FROM FALSE
+     OR directory_social_event_metadata_is_public('{"isPublic":true,"_discoveryOwned":null}') IS DISTINCT FROM FALSE
+     OR directory_social_event_metadata_is_public('{"isPublic":true,"_discoveryOwned":{},"unexpected":1}') IS DISTINCT FROM FALSE
+     OR directory_social_event_metadata_is_public('{"isPublic":true,"_discoveryOwned":{},"_discoveryOwned":{}}') IS DISTINCT FROM FALSE THEN
+    RAISE EXCEPTION 'Directory metadata ownership/privacy boundary is missing or invalid';
+  END IF;
+  IF pg_get_viewdef('public.directory_public_search_document'::regclass, TRUE)
+       NOT ILIKE '%directory_public_event%'
+     OR pg_get_viewdef('public.directory_public_search_document'::regclass, TRUE)
+       NOT ILIKE '%directory_public_venue%' THEN
+    RAISE EXCEPTION 'directory_public_search_document does not recheck live event and venue eligibility';
+  END IF;
+  IF EXISTS (
+    SELECT 1
+    FROM directory_public_event event
+    JOIN external_event_ref reference ON reference.event_id = event.id
+    WHERE lower(btrim(reference.source_status)) = 'suppressed'
+  ) THEN
+    RAISE EXCEPTION 'A suppressed imported event remains in the anonymous directory';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM catalog_backfill_run
+    WHERE NOT dry_run AND status <> 'completed'
+  ) THEN
+    RAISE EXCEPTION 'A canonical catalog cutover did not complete';
+  END IF;
+
+  FOREACH cutover_code IN ARRAY ARRAY[
+    'catalog-cutover-2026-08-07',
+    'records-cms-cutover-2026-08-07',
+    'instrument-input-cutover-2026-08-11',
+    'feedback-catalog-cutover-2026-08-11',
+    'pipeline-workflow-cutover-2026-08-11',
+    'social-event-type-cutover-2026-08-11',
+    'social-event-workflow-cutover-2026-08-11',
+    'event-moment-reaction-cutover-2026-08-12',
+    'content-reaction-cutover-2026-08-12',
+    'creator-badge-cutover-2026-08-12',
+    'ddex-reference-cutover-2026-08-12',
+    'ddex-validation-reference-cutover-2026-08-12',
+    'ddex-operational-cutover-2026-08-12'
+  ] LOOP
+    IF NOT EXISTS (
+      SELECT 1 FROM catalog_backfill_run
+      WHERE run_code = cutover_code AND NOT dry_run AND status = 'completed'
+    ) THEN
+      RAISE EXCEPTION 'Canonical catalog cutover % has no completed run', cutover_code;
+    END IF;
+  END LOOP;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'event_ticket_order'
+      AND column_name = 'checkout_idempotency_key'
+      AND data_type = 'character varying'
+  ) THEN
+    RAISE EXCEPTION 'event_ticket_order.checkout_idempotency_key is missing or invalid';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.event_ticket_order'::regclass
+      AND conname = 'unique_event_ticket_checkout'
+      AND contype = 'u'
+      AND convalidated
+      AND pg_get_constraintdef(oid) ILIKE '%buyer_party_id, checkout_idempotency_key%'
+  ) THEN
+    RAISE EXCEPTION 'unique_event_ticket_checkout is missing or invalid';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_indexes
+    WHERE schemaname = 'public'
+      AND tablename = 'event_ticket_order'
+      AND indexname = 'uq_event_ticket_order_stripe_payment_intent'
+      AND indexdef ILIKE '%UNIQUE%'
+      AND indexdef ILIKE '%WHERE (stripe_payment_intent_id IS NOT NULL)%'
+  ) THEN
+    RAISE EXCEPTION 'ticket PaymentIntent uniqueness index is missing or invalid';
+  END IF;
+
+  FOREACH ticketing_table IN ARRAY ARRAY[
+    'promo_code',
+    'promo_code_redemption',
+    'ticket_refund_request',
+    'ticket_transfer',
+    'event_waitlist',
+    'stripe_payment_intent',
+    'stripe_webhook_event',
+    'ticket_qr_code'
+  ] LOOP
+    IF to_regclass('public.' || ticketing_table) IS NULL THEN
+      RAISE EXCEPTION 'Ticketing relation public.% is missing', ticketing_table;
+    END IF;
+  END LOOP;
+
+  IF (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'promo_code'
+  ) <> 17 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'promo_code_redemption'
+  ) <> 5 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'ticket_refund_request'
+  ) <> 13 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'ticket_transfer'
+  ) <> 13 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'event_waitlist'
+  ) <> 14 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'stripe_payment_intent'
+  ) <> 10 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'stripe_webhook_event'
+  ) <> 5 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'ticket_qr_code'
+  ) <> 5 THEN
+    RAISE EXCEPTION 'A ticketing relation has an unexpected column count';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('event_ticket_order', 'stripe_payment_intent_id', 'character varying', 'YES'),
+        ('event_ticket_order', 'promo_code_id', 'bigint', 'YES'),
+        ('event_ticket_order', 'original_amount_cents', 'bigint', 'YES'),
+        ('event_ticket_order', 'payment_method', 'character varying', 'YES'),
+        ('event_ticket', 'current_holder_party_id', 'character varying', 'YES'),
+        ('event_ticket', 'current_holder_email', 'character varying', 'YES'),
+        ('event_ticket', 'current_holder_name', 'character varying', 'YES'),
+        ('event_ticket', 'original_holder_party_id', 'character varying', 'YES'),
+        ('event_ticket', 'transfer_history', 'character varying', 'YES'),
+        ('event_ticket_tier', 'enable_waitlist', 'boolean', 'NO'),
+        ('event_ticket_tier', 'allow_transfers', 'boolean', 'NO'),
+        ('event_ticket_tier', 'refund_policy', 'character varying', 'NO'),
+        ('event_ticket_tier', 'refund_deadline', 'timestamp with time zone', 'YES'),
+        ('promo_code', 'discount_value', 'bigint', 'NO'),
+        ('promo_code', 'current_redemptions', 'bigint', 'NO'),
+        ('promo_code', 'valid_until', 'timestamp with time zone', 'YES'),
+        ('promo_code_redemption', 'discount_amount_cents', 'bigint', 'NO'),
+        ('ticket_refund_request', 'processed_at', 'timestamp with time zone', 'YES'),
+        ('ticket_transfer', 'transfer_code', 'character varying', 'NO'),
+        ('event_waitlist', 'quantity', 'bigint', 'NO'),
+        ('stripe_payment_intent', 'stripe_payment_intent_id', 'character varying', 'NO'),
+        ('stripe_webhook_event', 'stripe_event_id', 'character varying', 'NO'),
+        ('ticket_qr_code', 'ticket_id', 'bigint', 'NO')
+    ) AS expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Ticketing columns do not match the runtime schema';
+  END IF;
+
+  IF (
+    SELECT COUNT(*) FROM pg_constraint
+    WHERE conrelid IN (
+      'public.promo_code'::regclass,
+      'public.ticket_transfer'::regclass,
+      'public.stripe_payment_intent'::regclass,
+      'public.stripe_webhook_event'::regclass,
+      'public.ticket_qr_code'::regclass
+    ) AND contype = 'u' AND convalidated
+  ) <> 5 THEN
+    RAISE EXCEPTION 'A ticketing uniqueness constraint is missing or invalid';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('promo_code', 'unique_promo_code', 'u', 'UNIQUE (code)'),
+        ('promo_code', 'promo_code_event_id_fkey', 'f', 'FOREIGN KEY (event_id) REFERENCES social_event(id)'),
+        ('promo_code_redemption', 'promo_code_redemption_promo_code_id_fkey', 'f', 'FOREIGN KEY (promo_code_id) REFERENCES promo_code(id)'),
+        ('promo_code_redemption', 'promo_code_redemption_order_id_fkey', 'f', 'FOREIGN KEY (order_id) REFERENCES event_ticket_order(id)'),
+        ('ticket_refund_request', 'ticket_refund_request_order_id_fkey', 'f', 'FOREIGN KEY (order_id) REFERENCES event_ticket_order(id)'),
+        ('ticket_transfer', 'unique_ticket_transfer_code', 'u', 'UNIQUE (transfer_code)'),
+        ('ticket_transfer', 'ticket_transfer_ticket_id_fkey', 'f', 'FOREIGN KEY (ticket_id) REFERENCES event_ticket(id)'),
+        ('event_waitlist', 'event_waitlist_event_id_fkey', 'f', 'FOREIGN KEY (event_id) REFERENCES social_event(id)'),
+        ('event_waitlist', 'event_waitlist_tier_id_fkey', 'f', 'FOREIGN KEY (tier_id) REFERENCES event_ticket_tier(id)'),
+        ('event_waitlist', 'event_waitlist_converted_order_id_fkey', 'f', 'FOREIGN KEY (converted_order_id) REFERENCES event_ticket_order(id)'),
+        ('stripe_payment_intent', 'unique_stripe_payment_intent', 'u', 'UNIQUE (stripe_payment_intent_id)'),
+        ('stripe_payment_intent', 'stripe_payment_intent_order_id_fkey', 'f', 'FOREIGN KEY (order_id) REFERENCES event_ticket_order(id)'),
+        ('stripe_webhook_event', 'unique_stripe_webhook_event', 'u', 'UNIQUE (stripe_event_id)'),
+        ('ticket_qr_code', 'unique_ticket_qr_code', 'u', 'UNIQUE (ticket_id)'),
+        ('ticket_qr_code', 'ticket_qr_code_ticket_id_fkey', 'f', 'FOREIGN KEY (ticket_id) REFERENCES event_ticket(id)'),
+        ('event_ticket_order', 'event_ticket_order_promo_code_id_fkey', 'f', 'FOREIGN KEY (promo_code_id) REFERENCES promo_code(id)')
+    ) AS expected(table_name, constraint_name, constraint_type, definition)
+    LEFT JOIN pg_constraint AS actual
+      ON actual.conrelid = ('public.' || expected.table_name)::regclass
+     AND actual.conname = expected.constraint_name
+     AND actual.contype = expected.constraint_type::"char"
+    WHERE actual.oid IS NULL
+       OR NOT actual.convalidated
+       OR replace(pg_get_constraintdef(actual.oid), 'public.', '') <> expected.definition
+  ) THEN
+    RAISE EXCEPTION 'A ticketing constraint definition is missing or invalid';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('promo_code', 'idx_promo_code_event', FALSE, '(event_id) WHERE (event_id IS NOT NULL)'),
+        ('promo_code', 'idx_promo_code_lookup', FALSE, '(code, is_active)'),
+        ('promo_code_redemption', 'idx_promo_redemption_order', FALSE, '(order_id)'),
+        ('ticket_refund_request', 'idx_refund_order', FALSE, '(order_id)'),
+        ('ticket_refund_request', 'idx_refund_status', FALSE, '(status, created_at)'),
+        ('ticket_transfer', 'idx_transfer_ticket', FALSE, '(ticket_id)'),
+        ('event_waitlist', 'idx_waitlist_event', FALSE, '(event_id, status)'),
+        ('event_ticket_order', 'idx_ticket_order_promo', FALSE, '(promo_code_id) WHERE (promo_code_id IS NOT NULL)'),
+        ('event_ticket_order', 'uq_event_ticket_order_stripe_payment_intent', TRUE, '(stripe_payment_intent_id) WHERE (stripe_payment_intent_id IS NOT NULL)'),
+        ('event_ticket', 'idx_ticket_current_holder', FALSE, '(current_holder_party_id) WHERE (current_holder_party_id IS NOT NULL)')
+    ) AS expected(table_name, index_name, is_unique, definition_fragment)
+    LEFT JOIN pg_class AS relation
+      ON relation.oid = ('public.' || expected.table_name)::regclass
+    LEFT JOIN pg_class AS index_relation
+      ON index_relation.relnamespace = 'public'::regnamespace
+     AND index_relation.relname = expected.index_name
+     AND index_relation.relkind = 'i'
+    LEFT JOIN pg_index AS actual
+      ON actual.indrelid = relation.oid
+     AND actual.indexrelid = index_relation.oid
+    WHERE actual.indexrelid IS NULL
+       OR actual.indisunique <> expected.is_unique
+       OR NOT actual.indisvalid
+       OR NOT actual.indisready
+       OR position(lower(expected.definition_fragment) IN lower(pg_get_indexdef(actual.indexrelid))) = 0
+  ) THEN
+    RAISE EXCEPTION 'A ticketing index definition is missing or invalid';
+  END IF;
+
+  FOREACH discovery_table IN ARRAY ARRAY[
+    'external_venue_ref',
+    'external_artist_ref',
+    'external_event_ref',
+    'external_event_discovery_run',
+    'event_city',
+    'event_city_subscription',
+    'event_discovery_source'
+  ] LOOP
+    IF to_regclass('public.' || discovery_table) IS NULL THEN
+      RAISE EXCEPTION 'Discovery relation public.% is missing', discovery_table;
+    END IF;
+  END LOOP;
+
+  IF (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'external_venue_ref'
+  ) <> 5 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'external_artist_ref'
+  ) <> 5 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'external_event_ref'
+  ) <> 12 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'external_event_discovery_run'
+  ) <> 14 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'event_city'
+  ) <> 7 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'event_city_subscription'
+  ) <> 4 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'event_discovery_source'
+  ) <> 16 THEN
+    RAISE EXCEPTION 'A discovery relation has an unexpected column count';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('external_venue_ref', 'id', 'bigint', 'NO'),
+        ('external_venue_ref', 'provider', 'text', 'NO'),
+        ('external_venue_ref', 'external_id', 'text', 'NO'),
+        ('external_venue_ref', 'venue_id', 'bigint', 'NO'),
+        ('external_venue_ref', 'last_seen_at', 'timestamp with time zone', 'NO'),
+        ('external_artist_ref', 'id', 'bigint', 'NO'),
+        ('external_artist_ref', 'provider', 'text', 'NO'),
+        ('external_artist_ref', 'external_id', 'text', 'NO'),
+        ('external_artist_ref', 'artist_id', 'bigint', 'NO'),
+        ('external_artist_ref', 'last_seen_at', 'timestamp with time zone', 'NO'),
+        ('external_event_ref', 'id', 'bigint', 'NO'),
+        ('external_event_ref', 'provider', 'text', 'NO'),
+        ('external_event_ref', 'external_id', 'text', 'NO'),
+        ('external_event_ref', 'event_id', 'bigint', 'NO'),
+        ('external_event_ref', 'city', 'text', 'NO'),
+        ('external_event_ref', 'country_code', 'text', 'YES'),
+        ('external_event_ref', 'source_url', 'text', 'YES'),
+        ('external_event_ref', 'price_cents', 'integer', 'YES'),
+        ('external_event_ref', 'currency', 'text', 'YES'),
+        ('external_event_ref', 'last_seen_at', 'timestamp with time zone', 'NO'),
+        ('external_event_ref', 'missing_runs', 'integer', 'NO'),
+        ('external_event_ref', 'source_status', 'text', 'NO'),
+        ('external_event_discovery_run', 'id', 'bigint', 'NO'),
+        ('external_event_discovery_run', 'provider', 'text', 'NO'),
+        ('external_event_discovery_run', 'run_date', 'date', 'NO'),
+        ('external_event_discovery_run', 'scheduled_for', 'timestamp with time zone', 'YES'),
+        ('external_event_discovery_run', 'status', 'text', 'NO'),
+        ('external_event_discovery_run', 'cities_count', 'integer', 'NO'),
+        ('external_event_discovery_run', 'events_seen', 'integer', 'NO'),
+        ('external_event_discovery_run', 'events_created', 'integer', 'NO'),
+        ('external_event_discovery_run', 'events_updated', 'integer', 'NO'),
+        ('external_event_discovery_run', 'venues_created', 'integer', 'NO'),
+        ('external_event_discovery_run', 'artists_created', 'integer', 'NO'),
+        ('external_event_discovery_run', 'error_message', 'text', 'YES'),
+        ('external_event_discovery_run', 'started_at', 'timestamp with time zone', 'NO'),
+        ('external_event_discovery_run', 'finished_at', 'timestamp with time zone', 'YES'),
+        ('event_city', 'id', 'bigint', 'NO'),
+        ('event_city', 'name', 'text', 'NO'),
+        ('event_city', 'normalized_name', 'text', 'NO'),
+        ('event_city', 'country_code', 'text', 'NO'),
+        ('event_city', 'time_zone', 'text', 'YES'),
+        ('event_city', 'created_at', 'timestamp with time zone', 'NO'),
+        ('event_city', 'updated_at', 'timestamp with time zone', 'NO'),
+        ('event_city_subscription', 'id', 'bigint', 'NO'),
+        ('event_city_subscription', 'party_id', 'text', 'NO'),
+        ('event_city_subscription', 'city_id', 'bigint', 'NO'),
+        ('event_city_subscription', 'created_at', 'timestamp with time zone', 'NO'),
+        ('event_discovery_source', 'id', 'bigint', 'NO'),
+        ('event_discovery_source', 'source_key', 'text', 'NO'),
+        ('event_discovery_source', 'name', 'text', 'NO'),
+        ('event_discovery_source', 'source_type', 'text', 'NO'),
+        ('event_discovery_source', 'feed_url', 'text', 'YES'),
+        ('event_discovery_source', 'city_id', 'bigint', 'YES'),
+        ('event_discovery_source', 'enabled', 'boolean', 'NO'),
+        ('event_discovery_source', 'priority', 'integer', 'NO'),
+        ('event_discovery_source', 'configuration', 'text', 'YES'),
+        ('event_discovery_source', 'etag', 'text', 'YES'),
+        ('event_discovery_source', 'last_modified', 'text', 'YES'),
+        ('event_discovery_source', 'consecutive_failures', 'integer', 'NO'),
+        ('event_discovery_source', 'last_success_at', 'timestamp with time zone', 'YES'),
+        ('event_discovery_source', 'last_error', 'text', 'YES'),
+        ('event_discovery_source', 'created_at', 'timestamp with time zone', 'NO'),
+        ('event_discovery_source', 'updated_at', 'timestamp with time zone', 'NO')
+    ) AS expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'A discovery relation has unexpected column types or nullability';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.external_venue_ref'::regclass
+      AND conname = 'unique_external_venue_ref' AND contype = 'u'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.external_artist_ref'::regclass
+      AND conname = 'unique_external_artist_ref' AND contype = 'u'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.external_event_ref'::regclass
+      AND conname = 'unique_external_event_ref' AND contype = 'u'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.event_city'::regclass
+      AND conname = 'unique_event_city' AND contype = 'u'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.event_city_subscription'::regclass
+      AND conname = 'unique_event_city_subscription' AND contype = 'u'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.event_discovery_source'::regclass
+      AND conname = 'unique_event_discovery_source' AND contype = 'u'
+  ) THEN
+    RAISE EXCEPTION 'A discovery uniqueness constraint is missing';
+  END IF;
+  IF (
+    SELECT COUNT(*) FROM pg_constraint
+    WHERE conrelid IN (
+      'public.external_venue_ref'::regclass,
+      'public.external_artist_ref'::regclass,
+      'public.external_event_ref'::regclass,
+      'public.event_city_subscription'::regclass,
+      'public.event_discovery_source'::regclass
+    ) AND contype = 'f' AND convalidated
+  ) <> 5 THEN
+    RAISE EXCEPTION 'A discovery foreign key is missing or invalid';
+  END IF;
+
+  -- Inventory handlers select the full custody/payment/evidence shape even when
+  -- no checkout rows exist. Keep legacy databases from failing at request time.
+  -- The inventory module is optional in the ticketing/discovery migration fixture,
+  -- so only enforce this contract when either inventory relation is present.
+  IF to_regclass('public.asset') IS NOT NULL OR to_regclass('public.asset_checkout') IS NOT NULL THEN
+    IF to_regclass('public.asset') IS NULL OR to_regclass('public.asset_checkout') IS NULL THEN
+      RAISE EXCEPTION 'Inventory relation public.asset or public.asset_checkout is missing';
+    END IF;
+
+    IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('asset_checkout', 'disposition', 'character varying', 'NO'),
+        ('asset_checkout', 'terms_and_conditions', 'character varying', 'YES'),
+        ('asset_checkout', 'holder_email', 'character varying', 'YES'),
+        ('asset_checkout', 'holder_phone', 'character varying', 'YES'),
+        ('asset_checkout', 'payment_type', 'character varying', 'YES'),
+        ('asset_checkout', 'payment_installments', 'bigint', 'YES'),
+        ('asset_checkout', 'payment_reference', 'character varying', 'YES'),
+        ('asset_checkout', 'payment_amount_cents', 'bigint', 'YES'),
+        ('asset_checkout', 'payment_currency', 'character varying', 'YES'),
+        ('asset_checkout', 'payment_outstanding_cents', 'bigint', 'YES'),
+        ('asset_checkout', 'photo_out_url', 'character varying', 'YES'),
+        ('asset_checkout', 'photo_in_url', 'character varying', 'YES')
+    ) AS expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+    ) THEN
+      RAISE EXCEPTION 'Inventory checkout schema is missing required custody/payment/evidence columns';
+    END IF;
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('external_venue_ref', 'unique_external_venue_ref', 'u', 'UNIQUE (provider, external_id)'),
+        ('external_venue_ref', 'external_venue_ref_venue_id_fkey', 'f', 'FOREIGN KEY (venue_id) REFERENCES venue(id)'),
+        ('external_artist_ref', 'unique_external_artist_ref', 'u', 'UNIQUE (provider, external_id)'),
+        ('external_artist_ref', 'external_artist_ref_artist_id_fkey', 'f', 'FOREIGN KEY (artist_id) REFERENCES social_artist_profile(id)'),
+        ('external_event_ref', 'unique_external_event_ref', 'u', 'UNIQUE (provider, external_id)'),
+        ('external_event_ref', 'external_event_ref_event_id_fkey', 'f', 'FOREIGN KEY (event_id) REFERENCES social_event(id)'),
+        ('event_city', 'unique_event_city', 'u', 'UNIQUE (normalized_name, country_code)'),
+        ('event_city_subscription', 'unique_event_city_subscription', 'u', 'UNIQUE (party_id, city_id)'),
+        ('event_city_subscription', 'event_city_subscription_city_id_fkey', 'f', 'FOREIGN KEY (city_id) REFERENCES event_city(id) ON DELETE CASCADE'),
+        ('event_discovery_source', 'unique_event_discovery_source', 'u', 'UNIQUE (source_key)'),
+        ('event_discovery_source', 'event_discovery_source_city_id_fkey', 'f', 'FOREIGN KEY (city_id) REFERENCES event_city(id)')
+    ) AS expected(table_name, constraint_name, constraint_type, definition)
+    LEFT JOIN pg_constraint AS actual
+      ON actual.conrelid = ('public.' || expected.table_name)::regclass
+     AND actual.conname = expected.constraint_name
+     AND actual.contype = expected.constraint_type::"char"
+    WHERE actual.oid IS NULL
+       OR NOT actual.convalidated
+       OR replace(pg_get_constraintdef(actual.oid), 'public.', '') <> expected.definition
+  ) THEN
+    RAISE EXCEPTION 'A discovery constraint definition is missing or invalid';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_indexes
+    WHERE schemaname = 'public'
+      AND tablename = 'external_event_ref'
+      AND indexname = 'idx_external_event_ref_city'
+      AND indexdef ILIKE '%lower(city)%'
+  ) THEN
+    RAISE EXCEPTION 'idx_external_event_ref_city is missing or invalid';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_indexes
+    WHERE schemaname = 'public'
+      AND tablename = 'external_event_ref'
+      AND indexname = 'idx_external_event_ref_event_id'
+      AND indexdef ILIKE '%(event_id)%'
+  ) THEN
+    RAISE EXCEPTION 'idx_external_event_ref_event_id is missing or invalid';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_indexes
+    WHERE schemaname = 'public'
+      AND tablename = 'external_event_discovery_run'
+      AND indexname = 'unique_external_event_discovery_slot'
+      AND indexdef ILIKE '%UNIQUE%'
+      AND indexdef ILIKE '%(provider, scheduled_for)%'
+      AND indexdef ILIKE '%WHERE (scheduled_for IS NOT NULL)%'
+  ) THEN
+    RAISE EXCEPTION 'unique_external_event_discovery_slot is missing or invalid';
+  END IF;
+
+  IF to_regclass('public.records_ingestion_control') IS NULL
+    OR to_regclass('public.records_ingestion_quota') IS NULL
+    OR to_regclass('public.records_ingestion_change') IS NULL
+    OR to_regclass('public.records_ingestion_admin_audit') IS NULL
+    OR to_regprocedure('public.tdf_ingest_public_video(bigint,uuid,jsonb)') IS NULL
+    OR to_regprocedure('public.tdf_mark_video_unavailable(bigint,uuid,text,text,timestamptz)') IS NULL
+    OR to_regprocedure('public.tdf_expire_records_provider_data()') IS NULL THEN
+    RAISE EXCEPTION 'Records ingestion runtime schema is incomplete';
+  END IF;
+  IF (SELECT count(*) FROM records_ingestion_control WHERE singleton) <> 1
+    OR NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='social_sync_account'::regclass
+      AND tgname='records_source_configuration_lock' AND tgenabled='O')
+    OR NOT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public'
+      AND table_name='record_external_resource' AND column_name='provider_metadata' AND data_type='jsonb')
+    OR NOT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public'
+      AND table_name='record_external_resource' AND column_name='source_account_id' AND data_type='bigint') THEN
+    RAISE EXCEPTION 'Records ingestion controls, metadata or source locking are incomplete';
+  END IF;
+
+  IF to_regclass('public.event_discovery_publication_approval') IS NULL
+    OR to_regprocedure('public.tdf_event_pilot_keys(bigint,bigint)') IS NULL
+    OR NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='external_event_ref'::regclass
+      AND tgname='event_discovery_pilot_limit_trigger' AND tgenabled='O')
+    OR NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='event_discovery_source'::regclass
+      AND tgname='event_source_publication_scope' AND tgenabled='O') THEN
+    RAISE EXCEPTION 'Shared event pilot or publication authority is incomplete';
+  END IF;
+
+  FOREACH social_table IN ARRAY ARRAY[
+    'social_sync_account',
+    'social_sync_post',
+    'social_sync_run',
+    'social_discovery_review'
+  ] LOOP
+    IF to_regclass('public.' || social_table) IS NULL THEN
+      RAISE EXCEPTION 'Social-sync relation public.% is missing', social_table;
+    END IF;
+  END LOOP;
+
+  IF (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'social_sync_account'
+  ) <> 13 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'social_sync_post'
+  ) <> 20 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'social_sync_run'
+  ) <> 9 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'social_discovery_review'
+  ) <> 8 THEN
+    RAISE EXCEPTION 'A social-sync relation has an unexpected column count';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('social_sync_account', 'records_ingestion', 'jsonb', 'YES'),
+        ('social_sync_account', 'party_id', 'bigint', 'YES'),
+        ('social_sync_account', 'artist_profile_id', 'bigint', 'YES'),
+        ('social_sync_account', 'platform', 'character varying', 'NO'),
+        ('social_sync_account', 'external_user_id', 'character varying', 'NO'),
+        ('social_sync_account', 'created_at', 'timestamp with time zone', 'NO'),
+        ('social_sync_post', 'account_id', 'bigint', 'YES'),
+        ('social_sync_post', 'platform', 'character varying', 'NO'),
+        ('social_sync_post', 'external_post_id', 'character varying', 'NO'),
+        ('social_sync_post', 'artist_party_id', 'bigint', 'YES'),
+        ('social_sync_post', 'artist_profile_id', 'bigint', 'YES'),
+        ('social_sync_post', 'fetched_at', 'timestamp with time zone', 'NO'),
+        ('social_sync_post', 'ingest_source', 'character varying', 'NO'),
+        ('social_sync_post', 'like_count', 'bigint', 'YES'),
+        ('social_sync_post', 'created_at', 'timestamp with time zone', 'NO'),
+        ('social_sync_post', 'updated_at', 'timestamp with time zone', 'NO'),
+        ('social_sync_run', 'platform', 'character varying', 'NO'),
+        ('social_sync_run', 'new_posts', 'bigint', 'NO'),
+        ('social_discovery_review', 'social_sync_post_id', 'bigint', 'NO'),
+        ('social_discovery_review', 'status', 'text', 'NO'),
+        ('social_discovery_review', 'reviewed_by_party_id', 'bigint', 'YES'),
+        ('social_discovery_review', 'created_at', 'timestamp with time zone', 'NO')
+    ) AS expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Social-sync columns do not match the runtime schema';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.social_sync_account'::regclass
+      AND conname = 'unique_social_sync_account'
+      AND contype = 'u'
+      AND convalidated
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.social_sync_post'::regclass
+      AND conname = 'unique_social_sync_post'
+      AND contype = 'u'
+      AND convalidated
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.social_discovery_review'::regclass
+      AND conname = 'unique_social_discovery_review'
+      AND contype = 'u'
+      AND convalidated
+  ) THEN
+    RAISE EXCEPTION 'A social-sync uniqueness constraint is missing or invalid';
+  END IF;
+
+  IF (
+    SELECT COUNT(*) FROM pg_constraint
+    WHERE conrelid IN (
+      'public.social_sync_account'::regclass,
+      'public.social_sync_post'::regclass,
+      'public.social_discovery_review'::regclass
+    ) AND contype = 'f' AND convalidated
+  ) <> 7 THEN
+    RAISE EXCEPTION 'A social-sync foreign key is missing or invalid';
+  END IF;
+
+  FOREACH enrichment_table IN ARRAY ARRAY[
+    'artist_profile_enrichment',
+    'artist_inventory_reference',
+    'artist_research_source',
+    'artist_enrichment_suggestion',
+    'artist_field_change',
+    'artist_enrichment_run',
+    'artist_identity_candidate',
+    'artist_media_asset'
+  ] LOOP
+    IF to_regclass('public.' || enrichment_table) IS NULL THEN
+      RAISE EXCEPTION 'Artist enrichment relation public.% is missing', enrichment_table;
+    END IF;
+  END LOOP;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('artist_profile_enrichment', 'last_verified_at', 'timestamp with time zone', 'YES'),
+        ('artist_profile_enrichment', 'confidence', 'double precision', 'YES'),
+        ('artist_research_source', 'supported_fields', 'text', 'NO'),
+        ('artist_research_source', 'content_hash', 'text', 'YES'),
+        ('artist_enrichment_suggestion', 'decided_at', 'timestamp with time zone', 'YES'),
+        ('artist_enrichment_suggestion', 'decided_by', 'bigint', 'YES'),
+        ('artist_enrichment_suggestion', 'decision_note', 'text', 'YES'),
+        ('artist_identity_candidate', 'decided_at', 'timestamp with time zone', 'YES'),
+        ('artist_identity_candidate', 'decided_by', 'bigint', 'YES'),
+        ('artist_identity_candidate', 'decision_note', 'text', 'YES'),
+        ('artist_media_asset', 'source_content_hash', 'text', 'NO'),
+        ('artist_media_asset', 'source_attribution', 'text', 'NO'),
+        ('artist_media_asset', 'source_width', 'integer', 'NO'),
+        ('artist_media_asset', 'source_height', 'integer', 'NO'),
+        ('artist_media_asset', 'source_mime_type', 'text', 'NO'),
+        ('artist_media_asset', 'source_byte_size', 'bigint', 'NO'),
+        ('artist_media_asset', 'drive_file_id', 'text', 'NO')
+    ) AS expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Artist enrichment columns do not match the runtime schema';
+  END IF;
+
+  IF to_regclass('public.uq_artist_profile_slug_ci') IS NULL
+     OR to_regclass('public.uq_artist_enrichment_active_full_run') IS NULL
+     OR to_regclass('public.idx_artist_suggestion_queue') IS NULL
+     OR to_regclass('public.idx_artist_field_change_history') IS NULL
+     OR to_regclass('public.idx_artist_media_asset_hash') IS NULL
+     OR to_regclass('public.unique_artist_media_drive_file') IS NULL THEN
+    RAISE EXCEPTION 'Artist enrichment indexes are incomplete';
+  END IF;
+
+  IF (
+    SELECT COUNT(*) FROM pg_constraint
+    WHERE conrelid IN (
+      'public.artist_profile_enrichment'::regclass,
+      'public.artist_inventory_reference'::regclass,
+      'public.artist_research_source'::regclass,
+      'public.artist_enrichment_suggestion'::regclass,
+      'public.artist_field_change'::regclass,
+      'public.artist_enrichment_run'::regclass,
+      'public.artist_identity_candidate'::regclass,
+      'public.artist_media_asset'::regclass
+    ) AND contype = 'f' AND convalidated
+  ) <> 16 THEN
+    RAISE EXCEPTION 'An artist enrichment foreign key is missing or invalid';
+  END IF;
+
+  FOREACH campaign_table IN ARRAY ARRAY[
+    'campaign_automation',
+    'campaign_automation_step',
+    'campaign_enrollment',
+    'campaign_delivery'
+  ] LOOP
+    IF to_regclass('public.' || campaign_table) IS NULL THEN
+      RAISE EXCEPTION 'Campaign automation relation public.% is missing', campaign_table;
+    END IF;
+  END LOOP;
+
+  IF (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'campaign_automation'
+  ) <> 9 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'campaign_automation_step'
+  ) <> 12 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'campaign_enrollment'
+  ) <> 11 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'campaign_delivery'
+  ) <> 15 THEN
+    RAISE EXCEPTION 'A campaign automation relation has an unexpected column count';
+  END IF;
+
+  FOREACH feature_table IN ARRAY ARRAY[
+    'feature_access_requests',
+    'feature_access_request_history',
+    'feature_navigation_preferences'
+  ] LOOP
+    IF to_regclass('public.' || feature_table) IS NULL THEN
+      RAISE EXCEPTION 'Feature discovery relation public.% is missing', feature_table;
+    END IF;
+  END LOOP;
+
+  IF (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'feature_access_requests'
+  ) <> 16 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'feature_access_request_history'
+  ) <> 8 OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'feature_navigation_preferences'
+  ) <> 9 OR EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('party_id', 'bigint', 'NO'),
+        ('feature_id', 'text', 'NO'),
+        ('favorite', 'boolean', 'NO'),
+        ('pinned', 'boolean', 'NO'),
+        ('pin_order', 'integer', 'YES'),
+        ('last_visited_at', 'timestamp with time zone', 'YES'),
+        ('use_count', 'integer', 'NO'),
+        ('updated_at', 'timestamp with time zone', 'NO')
+    ) AS expected(column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = 'feature_navigation_preferences'
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Feature discovery tables do not match the runtime schema';
+  END IF;
+
+  FOREACH ddex_table IN ARRAY ARRAY[
+    'catalog_release',
+    'catalog_resource',
+    'catalog_release_resource',
+    'catalog_identifier',
+    'catalog_credit',
+    'catalog_deal',
+    'catalog_deal_territory',
+    'catalog_asset',
+    'catalog_source_link',
+    'ddex_document',
+    'ddex_message_header',
+    'ddex_validation_run',
+    'ddex_validation_issue',
+    'ddex_import_plan',
+    'ddex_import_run',
+    'ddex_import_change',
+    'ddex_export',
+    'ddex_partner',
+    'ddex_job'
+  ] LOOP
+    IF to_regclass('public.' || ddex_table) IS NULL THEN
+      RAISE EXCEPTION 'DDEX/catalog relation public.% is missing', ddex_table;
+    END IF;
+  END LOOP;
+
+  IF (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'ddex_document'
+  ) <> 18 OR EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('id', 'integer', 'NO'),
+        ('file_name', 'text', 'NO'),
+        ('private_uri', 'text', 'NO'),
+        ('sha256', 'text', 'NO'),
+        ('size_bytes', 'bigint', 'NO'),
+        ('family', 'text', 'YES'),
+        ('version', 'text', 'YES'),
+        ('namespace', 'text', 'YES'),
+        ('message_type', 'text', 'YES'),
+        ('status', 'text', 'YES'),
+        ('uploaded_by', 'integer', 'NO'),
+        ('message_id', 'text', 'YES'),
+        ('sender_id', 'text', 'YES'),
+        ('recipient_id', 'text', 'YES'),
+        ('created_at', 'timestamp with time zone', 'NO'),
+        ('standard_version_id', 'uuid', 'YES'),
+        ('message_type_id', 'uuid', 'YES'),
+        ('workflow_state_id', 'uuid', 'YES')
+    ) AS expected(column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = 'ddex_document'
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'ddex_document does not match the inbox runtime schema';
+  END IF;
+  FOREACH commerce_table IN ARRAY ARRAY[
+    'commerce_checkout_session',
+    'commerce_checkout_line_item',
+    'commerce_payment_attempt',
+    'commerce_provider_binding',
+    'commerce_provider_event_inbox',
+    'commerce_refund',
+    'commerce_refund_allocation',
+    'commerce_refund_reason_code',
+    'commerce_reconciliation_exception',
+    'commerce_manual_payment_evidence',
+    'commerce_receipt',
+    'commerce_ledger_transaction',
+    'commerce_ledger_entry'
+  ] LOOP
+    IF to_regclass('public.' || commerce_table) IS NULL THEN
+      RAISE EXCEPTION 'Commerce relation public.% is missing', commerce_table;
+    END IF;
+  END LOOP;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (VALUES
+      ('commerce_validate_payment_attempt()', 'checkout_environment'),
+      ('commerce_validate_provider_binding()', 'attempt_provider'),
+      ('distribution_validate_submission_gate()', 'checkout_status'),
+      ('distribution_validate_delivery()', 'package_release_version_id'),
+      ('distribution_validate_status_evidence()', 'delivery_environment'),
+      ('distribution_validate_recipient_status()', 'evidence_delivery_attempt_id'),
+      ('distribution_validate_payout_gate()', 'statement_net_minor')
+    ) AS expected(signature, marker)
+    LEFT JOIN pg_proc AS actual
+      ON actual.oid = to_regprocedure('public.' || expected.signature)
+    WHERE actual.oid IS NULL
+       OR strpos(pg_get_functiondef(actual.oid), expected.marker) = 0
+  ) THEN
+    RAISE EXCEPTION 'Commerce or distribution trigger row-binding compatibility is missing';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'commerce_manual_payment_evidence'
+      AND column_name = 'submitted_by'
+      AND data_type = 'bigint'
+      AND is_nullable = 'YES'
+  ) OR to_regclass('public.commerce_manual_payment_evidence_review_report') IS NULL THEN
+    RAISE EXCEPTION 'Manual payment evidence review schema is missing or invalid';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.commerce_manual_payment_evidence'::regclass
+      AND conname = 'fk_commerce_manual_evidence_submitted_by'
+      AND contype = 'f'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgrelid = 'public.commerce_manual_payment_evidence'::regclass
+      AND tgname = 'trg_commerce_validate_manual_payment_evidence'
+      AND tgenabled = 'O'
+  ) THEN
+    RAISE EXCEPTION 'Manual payment evidence identity or transition controls are missing';
+  END IF;
+
+  IF (
+    SELECT count(*) FROM revenue_feature_flag
+    WHERE flag_key IN ('checkout.bank_transfer','checkout.cash','checkout.pos')
+      AND environment = 'production'
+      AND enabled
+  ) <> 3 THEN
+    RAISE EXCEPTION 'Manual settlement capability flags are missing or disabled';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'service_storefront_order'
+      AND column_name = 'checkout_id'
+      AND data_type = 'uuid'
+      AND is_nullable = 'YES'
+  ) THEN
+    RAISE EXCEPTION 'service_storefront_order.checkout_id is missing or invalid';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.service_storefront_order'::regclass
+      AND conname = 'fk_service_storefront_order_checkout'
+      AND contype = 'f'
+      AND convalidated
+      AND pg_get_constraintdef(oid) ILIKE '%FOREIGN KEY (checkout_id) REFERENCES commerce_checkout_session(id) ON DELETE RESTRICT%'
+  ) THEN
+    RAISE EXCEPTION 'service storefront canonical checkout foreign key is missing or invalid';
+  END IF;
+
+  IF to_regclass('public.service_storefront_checkout_backfill_report') IS NULL
+     OR to_regclass('public.uq_service_storefront_order_checkout') IS NULL
+     OR to_regclass('public.uq_commerce_manual_evidence_attempt') IS NULL
+     OR to_regclass('public.uq_commerce_succeeded_attempt_checkout') IS NULL
+     OR to_regclass('public.uq_commerce_active_payment_receipt_checkout') IS NULL
+     OR to_regclass('public.uq_commerce_open_reconciliation_fingerprint') IS NULL THEN
+    RAISE EXCEPTION 'Service storefront checkout runtime view or indexes are incomplete';
+  END IF;
+
+  IF to_regclass('public.marketplace_sale_order_runtime') IS NULL
+     OR to_regclass('public.marketplace_sale_fulfillment_event') IS NULL
+     OR to_regclass('public.marketplace_sale_checkout_backfill_report') IS NULL THEN
+    RAISE EXCEPTION 'Marketplace sale checkout runtime relations are missing';
+  END IF;
+
+  IF to_regclass('public.marketplace_rental_listing_terms') IS NULL
+     OR to_regclass('public.marketplace_rental_cart_selection') IS NULL
+     OR to_regclass('public.marketplace_rental_listing_terms_history') IS NULL
+     OR to_regclass('public.marketplace_rental_order_runtime') IS NULL
+     OR to_regclass('public.marketplace_rental_event') IS NULL
+     OR to_regclass('public.marketplace_order_checkout_runtime') IS NULL THEN
+    RAISE EXCEPTION 'Marketplace rental checkout runtime relations are missing';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('marketplace_sale_order_runtime', 'order_id', 'uuid', 'NO'),
+        ('marketplace_sale_order_runtime', 'checkout_id', 'uuid', 'NO'),
+        ('marketplace_sale_order_runtime', 'lookup_token_hash', 'text', 'NO'),
+        ('marketplace_sale_order_runtime', 'create_idempotency_key', 'text', 'NO'),
+        ('marketplace_sale_order_runtime', 'create_request_sha256', 'text', 'NO'),
+        ('marketplace_sale_order_runtime', 'fulfillment_method', 'text', 'NO'),
+        ('marketplace_sale_order_runtime', 'fulfillment_status', 'text', 'NO'),
+        ('marketplace_sale_order_runtime', 'recipient_name', 'text', 'NO'),
+        ('marketplace_sale_order_runtime', 'recipient_phone', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'address_line_1', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'address_line_2', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'city', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'province', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'postal_code', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'country_code', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'carrier', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'tracking_reference', 'text', 'YES'),
+        ('marketplace_sale_order_runtime', 'hold_expires_at', 'timestamp with time zone', 'NO'),
+        ('marketplace_sale_order_runtime', 'delivered_at', 'timestamp with time zone', 'YES'),
+        ('marketplace_sale_order_runtime', 'returned_at', 'timestamp with time zone', 'YES'),
+        ('marketplace_sale_order_runtime', 'created_at', 'timestamp with time zone', 'NO'),
+        ('marketplace_sale_order_runtime', 'updated_at', 'timestamp with time zone', 'NO'),
+        ('marketplace_sale_fulfillment_event', 'id', 'bigint', 'NO'),
+        ('marketplace_sale_fulfillment_event', 'order_id', 'uuid', 'NO'),
+        ('marketplace_sale_fulfillment_event', 'from_status', 'text', 'YES'),
+        ('marketplace_sale_fulfillment_event', 'to_status', 'text', 'NO'),
+        ('marketplace_sale_fulfillment_event', 'actor_type', 'text', 'NO'),
+        ('marketplace_sale_fulfillment_event', 'actor_id', 'text', 'YES'),
+        ('marketplace_sale_fulfillment_event', 'reason_code', 'text', 'YES'),
+        ('marketplace_sale_fulfillment_event', 'notes', 'text', 'YES'),
+        ('marketplace_sale_fulfillment_event', 'created_at', 'timestamp with time zone', 'NO')
+    ) AS expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Marketplace sale checkout runtime columns are missing or invalid';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('marketplace_rental_listing_terms', 'listing_id', 'uuid', 'NO'),
+        ('marketplace_rental_listing_terms', 'daily_rate_usd_cents', 'bigint', 'NO'),
+        ('marketplace_rental_listing_terms', 'security_deposit_usd_cents', 'bigint', 'NO'),
+        ('marketplace_rental_listing_terms', 'terms_version', 'text', 'NO'),
+        ('marketplace_rental_listing_terms', 'active', 'boolean', 'NO'),
+        ('marketplace_rental_listing_terms', 'approved_at', 'timestamp with time zone', 'YES'),
+        ('marketplace_rental_cart_selection', 'cart_item_id', 'uuid', 'NO'),
+        ('marketplace_rental_cart_selection', 'start_date', 'date', 'NO'),
+        ('marketplace_rental_cart_selection', 'end_date', 'date', 'NO'),
+        ('marketplace_rental_order_runtime', 'order_id', 'uuid', 'NO'),
+        ('marketplace_rental_order_runtime', 'checkout_id', 'uuid', 'NO'),
+        ('marketplace_rental_order_runtime', 'asset_id', 'uuid', 'NO'),
+        ('marketplace_rental_order_runtime', 'rental_status', 'text', 'NO'),
+        ('marketplace_rental_order_runtime', 'deposit_status', 'text', 'NO'),
+        ('marketplace_rental_order_runtime', 'rental_charge_usd_cents', 'bigint', 'NO'),
+        ('marketplace_rental_order_runtime', 'security_deposit_usd_cents', 'bigint', 'NO'),
+        ('marketplace_rental_order_runtime', 'identity_document_type', 'text', 'NO'),
+        ('marketplace_rental_order_runtime', 'identity_document_last4', 'text', 'NO'),
+        ('marketplace_rental_order_runtime', 'condition_out', 'text', 'YES'),
+        ('marketplace_rental_order_runtime', 'condition_in', 'text', 'YES'),
+        ('marketplace_rental_event', 'order_id', 'uuid', 'NO'),
+        ('marketplace_rental_event', 'to_status', 'text', 'NO')
+    ) AS expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Marketplace rental checkout runtime columns are missing or invalid';
+  END IF;
+
+  IF to_regclass('public.marketplace_sale_order_runtime_pkey') IS NULL
+     OR to_regclass('public.marketplace_sale_order_runtime_checkout_id_key') IS NULL
+     OR to_regclass('public.marketplace_sale_order_runtime_lookup_token_hash_key') IS NULL
+     OR to_regclass('public.marketplace_sale_order_runtime_create_idempotency_key_key') IS NULL
+     OR to_regclass('public.idx_marketplace_sale_runtime_status') IS NULL
+     OR to_regclass('public.idx_marketplace_sale_fulfillment_event_order') IS NULL THEN
+    RAISE EXCEPTION 'Marketplace sale checkout runtime indexes are incomplete';
+  END IF;
+
+  IF to_regclass('public.marketplace_rental_order_runtime_pkey') IS NULL
+     OR to_regclass('public.marketplace_rental_order_runtime_checkout_id_key') IS NULL
+     OR to_regclass('public.marketplace_rental_order_runtime_lookup_token_hash_key') IS NULL
+     OR to_regclass('public.marketplace_rental_order_runtime_create_idempotency_key_key') IS NULL
+     OR to_regclass('public.idx_marketplace_rental_terms_active') IS NULL
+     OR to_regclass('public.idx_marketplace_rental_terms_history') IS NULL
+     OR to_regclass('public.idx_marketplace_rental_runtime_status') IS NULL
+     OR to_regclass('public.idx_marketplace_rental_event_order') IS NULL
+     OR NOT EXISTS (
+       SELECT 1 FROM pg_constraint
+       WHERE conrelid = 'public.marketplace_rental_order_runtime'::regclass
+         AND contype = 'x'
+         AND convalidated
+     ) THEN
+    RAISE EXCEPTION 'Marketplace rental uniqueness, date-exclusion, or runtime indexes are incomplete';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (VALUES
+      ('marketplace_sale_order_runtime', 'trg_marketplace_validate_sale_runtime'),
+      ('marketplace_sale_order_runtime', 'trg_marketplace_validate_fulfillment_transition'),
+      ('marketplace_sale_order_runtime', 'trg_marketplace_record_fulfillment_transition'),
+      ('marketplace_rental_listing_terms', 'trg_marketplace_validate_rental_terms'),
+      ('marketplace_rental_listing_terms', 'trg_marketplace_record_rental_terms_history'),
+      ('marketplace_rental_order_runtime', 'trg_marketplace_validate_rental_runtime'),
+      ('marketplace_rental_order_runtime', 'trg_marketplace_validate_rental_transition'),
+      ('marketplace_rental_order_runtime', 'trg_marketplace_record_rental_transition'),
+      ('commerce_checkout_session', 'trg_marketplace_sync_verified_checkout'),
+      ('marketplace_order', 'trg_marketplace_protect_canonical_payment_state')
+    ) AS expected(table_name, trigger_name)
+    LEFT JOIN pg_trigger AS actual
+      ON actual.tgrelid = ('public.' || expected.table_name)::regclass
+     AND actual.tgname = expected.trigger_name
+     AND actual.tgenabled = 'O'
+    WHERE actual.oid IS NULL
+  ) THEN
+    RAISE EXCEPTION 'Marketplace sale checkout invariant triggers are missing or disabled';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (VALUES
+      ('commerce.marketplace_sales'),
+      ('commerce.marketplace_rentals')
+    ) AS expected(flag_key)
+    LEFT JOIN revenue_feature_flag AS flag
+      ON flag.flag_key = expected.flag_key AND flag.environment = 'production'
+    WHERE flag.flag_key IS NULL OR NOT flag.enabled
+  ) THEN
+    RAISE EXCEPTION 'Production marketplace sales and rentals capability gates must exist enabled';
+  END IF;
+
+  IF to_regclass('public.service_booking_commerce_policy') IS NULL
+     OR to_regclass('public.service_booking_commerce_policy_history') IS NULL
+     OR to_regclass('public.service_booking_checkout_runtime') IS NULL
+     OR to_regclass('public.service_booking_resource_allocation') IS NULL
+     OR to_regclass('public.service_booking_event') IS NULL THEN
+    RAISE EXCEPTION 'Service booking checkout runtime relations are missing';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('service_booking_commerce_policy', 'service_offering_id', 'uuid', 'NO'),
+        ('service_booking_commerce_policy', 'policy_version', 'text', 'NO'),
+        ('service_booking_commerce_policy', 'rate_minor', 'bigint', 'NO'),
+        ('service_booking_commerce_policy', 'tax_bps', 'integer', 'NO'),
+        ('service_booking_commerce_policy', 'deposit_bps', 'integer', 'NO'),
+        ('service_booking_commerce_policy', 'approval_status', 'text', 'NO'),
+        ('service_booking_checkout_runtime', 'booking_id', 'bigint', 'NO'),
+        ('service_booking_checkout_runtime', 'checkout_id', 'uuid', 'NO'),
+        ('service_booking_checkout_runtime', 'lookup_token_hash', 'text', 'NO'),
+        ('service_booking_checkout_runtime', 'create_idempotency_key', 'text', 'NO'),
+        ('service_booking_checkout_runtime', 'fulfillment_status', 'text', 'NO'),
+        ('service_booking_checkout_runtime', 'deposit_status', 'text', 'NO'),
+        ('service_booking_checkout_runtime', 'total_minor', 'bigint', 'NO'),
+        ('service_booking_checkout_runtime', 'deposit_minor', 'bigint', 'NO'),
+        ('service_booking_checkout_runtime', 'balance_minor', 'bigint', 'NO'),
+        ('service_booking_resource_allocation', 'booking_id', 'bigint', 'NO'),
+        ('service_booking_resource_allocation', 'resource_id', 'bigint', 'NO'),
+        ('service_booking_resource_allocation', 'starts_at', 'timestamp with time zone', 'NO'),
+        ('service_booking_resource_allocation', 'ends_at', 'timestamp with time zone', 'NO'),
+        ('service_booking_event', 'booking_id', 'bigint', 'NO'),
+        ('service_booking_event', 'to_status', 'text', 'NO')
+    ) AS expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Service booking checkout runtime columns are missing or invalid';
+  END IF;
+
+  IF to_regclass('public.uq_service_booking_active_policy') IS NULL
+     OR to_regclass('public.idx_service_booking_runtime_status') IS NULL
+     OR to_regclass('public.idx_service_booking_allocation_window') IS NULL
+     OR to_regclass('public.idx_service_booking_event_booking') IS NULL
+     OR NOT EXISTS (
+       SELECT 1 FROM pg_constraint
+       WHERE conrelid = 'public.service_booking_resource_allocation'::regclass
+         AND contype = 'x'
+         AND convalidated
+     ) THEN
+    RAISE EXCEPTION 'Service booking policy, runtime, or resource exclusion indexes are incomplete';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (VALUES
+      ('service_booking_commerce_policy', 'trg_service_booking_validate_policy'),
+      ('service_booking_commerce_policy', 'trg_service_booking_policy_history'),
+      ('service_booking_checkout_runtime', 'trg_service_booking_validate_runtime'),
+      ('service_booking_checkout_runtime', 'trg_service_booking_validate_transition'),
+      ('service_booking_checkout_runtime', 'trg_service_booking_record_transition'),
+      ('booking_resource', 'trg_service_booking_allocate_resource'),
+      ('booking', 'trg_service_booking_sync_legacy_allocation'),
+      ('commerce_checkout_session', 'trg_service_booking_require_verified_payment'),
+      ('commerce_checkout_session', 'trg_service_booking_sync_checkout')
+    ) AS expected(table_name, trigger_name)
+    LEFT JOIN pg_trigger AS actual
+      ON actual.tgrelid = ('public.' || expected.table_name)::regclass
+     AND actual.tgname = expected.trigger_name
+     AND actual.tgenabled = 'O'
+    WHERE actual.oid IS NULL
+  ) THEN
+    RAISE EXCEPTION 'Service booking invariant triggers are missing or disabled';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_proc
+    WHERE oid = to_regprocedure('public.service_booking_expire_holds(timestamp with time zone)')
+      AND strpos(pg_get_functiondef(oid), '''failed''') > 0
+  ) THEN
+    RAISE EXCEPTION 'Service booking hold expiry must release failed provider attempts';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM revenue_feature_flag
+    WHERE flag_key = 'commerce.service_bookings'
+      AND environment = 'production'
+      AND NOT enabled
+  ) THEN
+    RAISE EXCEPTION 'Production service booking capability gate must exist disabled';
+  END IF;
+
+  IF to_regclass('public.course_checkout_policy') IS NULL
+     OR to_regclass('public.course_checkout_policy_history') IS NULL
+     OR to_regclass('public.course_registration_checkout_runtime') IS NULL
+     OR to_regclass('public.course_enrollment_event') IS NULL THEN
+    RAISE EXCEPTION 'Course checkout runtime relations are missing';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('course_checkout_policy', 'id', 'uuid', 'NO'),
+        ('course_checkout_policy', 'course_id', 'bigint', 'NO'),
+        ('course_checkout_policy', 'policy_version', 'text', 'NO'),
+        ('course_checkout_policy', 'currency', 'text', 'NO'),
+        ('course_checkout_policy', 'price_minor', 'bigint', 'NO'),
+        ('course_checkout_policy', 'approval_status', 'text', 'NO'),
+        ('course_checkout_policy', 'active', 'boolean', 'NO'),
+        ('course_checkout_policy_history', 'id', 'bigint', 'NO'),
+        ('course_checkout_policy_history', 'policy_id', 'uuid', 'NO'),
+        ('course_registration_checkout_runtime', 'registration_id', 'bigint', 'NO'),
+        ('course_registration_checkout_runtime', 'course_id', 'bigint', 'NO'),
+        ('course_registration_checkout_runtime', 'checkout_id', 'uuid', 'NO'),
+        ('course_registration_checkout_runtime', 'policy_id', 'uuid', 'NO'),
+        ('course_registration_checkout_runtime', 'lookup_token_hash', 'text', 'NO'),
+        ('course_registration_checkout_runtime', 'create_idempotency_key', 'text', 'NO'),
+        ('course_registration_checkout_runtime', 'enrollment_status', 'text', 'NO'),
+        ('course_registration_checkout_runtime', 'payment_status', 'text', 'NO'),
+        ('course_registration_checkout_runtime', 'total_minor', 'bigint', 'NO'),
+        ('course_registration_checkout_runtime', 'due_now_minor', 'bigint', 'NO'),
+        ('course_registration_checkout_runtime', 'balance_minor', 'bigint', 'NO'),
+        ('course_registration_checkout_runtime', 'hold_expires_at', 'timestamp with time zone', 'NO'),
+        ('course_enrollment_event', 'registration_id', 'bigint', 'NO'),
+        ('course_enrollment_event', 'to_status', 'text', 'NO')
+    ) AS expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Course checkout runtime columns are missing or invalid';
+  END IF;
+
+  IF to_regclass('public.uq_course_checkout_active_policy') IS NULL
+     OR to_regclass('public.course_registration_checkout_runtime_pkey') IS NULL
+     OR to_regclass('public.course_registration_checkout_runtime_checkout_id_key') IS NULL
+     OR to_regclass('public.course_registration_checkout_runtime_lookup_token_hash_key') IS NULL
+     OR to_regclass('public.course_registration_checkout_runtime_create_idempotency_key_key') IS NULL
+     OR to_regclass('public.idx_course_registration_runtime_capacity') IS NULL
+     OR to_regclass('public.idx_course_registration_runtime_payment') IS NULL
+     OR to_regclass('public.idx_course_enrollment_event_registration') IS NULL THEN
+    RAISE EXCEPTION 'Course checkout policy, lookup, capacity, or event indexes are incomplete';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (VALUES
+      ('course_checkout_policy', 'trg_course_checkout_validate_policy'),
+      ('course_checkout_policy', 'trg_course_checkout_policy_history'),
+      ('course_registration_checkout_runtime', 'trg_course_checkout_validate_runtime'),
+      ('commerce_checkout_session', 'trg_course_checkout_require_verified_payment'),
+      ('commerce_checkout_session', 'trg_course_checkout_sync_verified_payment'),
+      ('course_registration', 'trg_course_registration_require_canonical_payment')
+    ) AS expected(table_name, trigger_name)
+    LEFT JOIN pg_trigger AS actual
+      ON actual.tgrelid = ('public.' || expected.table_name)::regclass
+     AND actual.tgname = expected.trigger_name
+     AND actual.tgenabled = 'O'
+    WHERE actual.oid IS NULL
+  ) THEN
+    RAISE EXCEPTION 'Course checkout invariant triggers are missing or disabled';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_proc
+    WHERE oid = to_regprocedure(
+      'public.course_checkout_expire_holds(timestamp with time zone,bigint)'
+    )
+      AND strpos(pg_get_functiondef(oid), 'target_course_id') > 0
+      AND strpos(pg_get_functiondef(oid), '''failed''') > 0
+  ) THEN
+    RAISE EXCEPTION 'Course hold expiry must be course-scoped and release failed provider attempts';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (VALUES
+      ('commerce.courses'),
+      ('commerce.course_recurring_billing')
+    ) AS expected(flag_key)
+    LEFT JOIN revenue_feature_flag AS flag
+      ON flag.flag_key = expected.flag_key AND flag.environment = 'production'
+    WHERE flag.flag_key IS NULL OR flag.enabled
+  ) THEN
+    RAISE EXCEPTION 'Production course checkout and recurring billing gates must exist disabled';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('commerce_payment_attempt', 'payment_intent_id', 'uuid', 'YES'),
+        ('commerce_provider_event_inbox', 'checkout_id', 'uuid', 'YES'),
+        ('commerce_provider_event_inbox', 'payment_attempt_id', 'uuid', 'YES'),
+        ('commerce_provider_event_inbox', 'refund_id', 'uuid', 'YES'),
+        ('commerce_provider_event_inbox', 'provider_resource_id', 'text', 'YES'),
+        ('commerce_provider_event_inbox', 'processing_started_at', 'timestamp with time zone', 'YES'),
+        ('commerce_provider_event_inbox', 'last_attempt_at', 'timestamp with time zone', 'YES'),
+        ('commerce_refund', 'provider', 'text', 'YES'),
+        ('commerce_refund', 'environment', 'text', 'YES'),
+        ('commerce_refund', 'merchant_account_ref', 'text', 'YES'),
+        ('commerce_refund', 'failure_code', 'text', 'YES'),
+        ('commerce_refund', 'failure_summary', 'text', 'YES'),
+        ('commerce_refund', 'updated_at', 'timestamp with time zone', 'NO'),
+        ('commerce_refund_reason_code', 'reason_code', 'text', 'NO'),
+        ('commerce_refund_reason_code', 'name_es', 'text', 'NO'),
+        ('commerce_refund_reason_code', 'name_en', 'text', 'NO'),
+        ('commerce_refund_reason_code', 'active', 'boolean', 'NO'),
+        ('commerce_refund_reason_code', 'requires_note', 'boolean', 'NO'),
+        ('commerce_receipt', 'refund_id', 'uuid', 'YES')
+    ) AS expected(table_name, column_name, data_type, is_nullable)
+    LEFT JOIN information_schema.columns AS actual
+      ON actual.table_schema = 'public'
+     AND actual.table_name = expected.table_name
+     AND actual.column_name = expected.column_name
+    WHERE actual.column_name IS NULL
+       OR actual.data_type <> expected.data_type
+       OR actual.is_nullable <> expected.is_nullable
+  ) THEN
+    RAISE EXCEPTION 'Provider event/refund runtime columns are missing or invalid';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('commerce_payment_attempt', 'fk_commerce_payment_attempt_intent', 'f', 'FOREIGN KEY (payment_intent_id) REFERENCES commerce_payment_intent(id) ON DELETE RESTRICT'),
+        ('commerce_provider_event_inbox', 'fk_commerce_provider_event_checkout', 'f', 'FOREIGN KEY (checkout_id) REFERENCES commerce_checkout_session(id) ON DELETE RESTRICT'),
+        ('commerce_provider_event_inbox', 'fk_commerce_provider_event_attempt', 'f', 'FOREIGN KEY (payment_attempt_id) REFERENCES commerce_payment_attempt(id) ON DELETE RESTRICT'),
+        ('commerce_provider_event_inbox', 'fk_commerce_provider_event_refund', 'f', 'FOREIGN KEY (refund_id) REFERENCES commerce_refund(id) ON DELETE RESTRICT'),
+        ('commerce_refund', 'ck_commerce_refund_provider', 'c', 'CHECK (((provider IS NULL) OR (provider = ANY (ARRAY[''datafast''::text, ''paypal''::text, ''placetopay''::text, ''payphone''::text, ''stripe''::text, ''bank_transfer''::text, ''cash''::text, ''pos''::text]))))'),
+        ('commerce_refund', 'ck_commerce_refund_environment', 'c', 'CHECK (((environment IS NULL) OR (environment = ANY (ARRAY[''sandbox''::text, ''production''::text]))))'),
+        ('commerce_receipt', 'fk_commerce_receipt_refund', 'f', 'FOREIGN KEY (refund_id) REFERENCES commerce_refund(id) ON DELETE RESTRICT')
+    ) AS expected(table_name, constraint_name, constraint_type, definition)
+    LEFT JOIN pg_constraint AS actual
+      ON actual.conrelid = ('public.' || expected.table_name)::regclass
+     AND actual.conname = expected.constraint_name
+     AND actual.contype = expected.constraint_type::"char"
+    WHERE actual.oid IS NULL
+       OR NOT actual.convalidated
+       OR replace(pg_get_constraintdef(actual.oid), 'public.', '') <> expected.definition
+  ) THEN
+    RAISE EXCEPTION 'Provider event/refund constraints are missing or invalid';
+  END IF;
+
+  IF to_regclass('public.idx_commerce_payment_attempt_intent') IS NULL
+     OR to_regclass('public.idx_commerce_provider_event_work') IS NULL
+     OR to_regclass('public.idx_commerce_provider_event_resource') IS NULL
+     OR to_regclass('public.idx_commerce_refund_checkout_status') IS NULL
+     OR to_regclass('public.uq_commerce_credit_note_refund') IS NULL THEN
+    RAISE EXCEPTION 'Provider event/refund runtime indexes are incomplete';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgrelid = 'public.commerce_refund'::regclass
+      AND tgname = 'trg_commerce_validate_refund_write' AND tgenabled = 'O'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgrelid = 'public.commerce_refund_allocation'::regclass
+      AND tgname = 'trg_commerce_refund_allocation_immutable' AND tgenabled = 'O'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgrelid = 'public.commerce_receipt'::regclass
+      AND tgname = 'trg_commerce_validate_credit_note' AND tgenabled = 'O'
+  ) THEN
+    RAISE EXCEPTION 'Provider refund invariant triggers are missing or disabled';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (VALUES
+      ('checkout.paypal.webhooks'),
+      ('checkout.paypal.refunds'),
+      ('checkout.datafast.webhooks'),
+      ('checkout.datafast.refunds')
+    ) AS expected(flag_key)
+    LEFT JOIN revenue_feature_flag AS flag
+      ON flag.flag_key = expected.flag_key AND flag.environment = 'production'
+    -- PayPal webhook intake is an approved production capability. Restarts
+    -- must preserve its configured state; refunds and Datafast stay staged.
+    WHERE flag.flag_key IS NULL
+       OR (flag.enabled AND expected.flag_key <> 'checkout.paypal.webhooks')
+  ) THEN
+    RAISE EXCEPTION 'Production provider capability gates must exist; refunds and Datafast must remain disabled';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM ddex_document
+    WHERE standard_version_id IS NULL
+       OR workflow_state_id IS NULL
+       OR family IS NOT NULL
+       OR version IS NOT NULL
+       OR message_type IS NOT NULL
+       OR status IS NOT NULL
+  ) OR EXISTS (
+    SELECT 1 FROM ddex_partner
+    WHERE jsonb_array_length(COALESCE(to_jsonb(ddex_partner)->'allowed_versions', '[]'::jsonb)) <> 0
+  ) THEN
+    RAISE EXCEPTION 'DDEX canonical cutover retained legacy values or missing IDs';
+  END IF;
+
+  IF to_regclass('public.user_onboarding_progress') IS NULL OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'user_onboarding_progress'
+  ) <> 8 OR to_regclass('public.user_onboarding_progress_eligible_idx') IS NULL THEN
+    RAISE EXCEPTION 'Account-bound onboarding progress schema is missing or incomplete';
+  END IF;
+
+  IF (
+    SELECT COUNT(*) FROM pg_constraint
+    WHERE conrelid = 'public.user_onboarding_progress'::regclass
+      AND convalidated
+      AND contype IN ('f', 'u', 'c')
+  ) <> 8 THEN
+    RAISE EXCEPTION 'Account-bound onboarding progress constraints are incomplete';
+  END IF;
+
+  IF to_regclass('public.user_experiment_assignment') IS NULL OR (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'user_experiment_assignment'
+  ) <> 8 OR to_regclass('public.user_experiment_assignment_pending_exposure_idx') IS NULL THEN
+    RAISE EXCEPTION 'Account-bound experiment assignment schema is missing or incomplete';
+  END IF;
+
+  IF (
+    SELECT COUNT(*) FROM pg_constraint
+    WHERE conrelid = 'public.user_experiment_assignment'::regclass
+      AND convalidated
+      AND contype IN ('f', 'u', 'c')
+  ) <> 7 THEN
+    RAISE EXCEPTION 'Account-bound experiment assignment constraints are incomplete';
+  END IF;
+  IF to_regclass('public.interaction_runtime') IS NULL
+     OR to_regclass('public.interaction_report_comment_open') IS NULL
+     OR to_regprocedure('interaction_command(bigint,uuid,uuid,jsonb)') IS NULL
+     OR to_regprocedure('interaction_dispatch_events(integer)') IS NULL
+     OR to_regprocedure('interaction_report_reasons(bigint,uuid)') IS NULL
+     OR EXISTS(SELECT 1 FROM interaction_entity_kind WHERE code='artist_update' AND enabled)
+     OR NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public'
+       AND table_name='interaction_event' AND column_name='mention_party_ids'
+       AND udt_name='_int8' AND is_nullable='NO')
+     OR NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public'
+       AND table_name='interaction_notification' AND column_name='last_event_id'
+       AND data_type='bigint' AND is_nullable='NO') THEN
+    RAISE EXCEPTION 'Canonical interaction schema and review repairs are missing or incomplete';
+  END IF;
+END
+$verify$;

@@ -1,0 +1,4 @@
+139a45102c4b715cc8762b5653d0a2db061b167c 2026-09-15T00:16:56-05:00 continuous-improvement-loop[bot] docs(payments): document fenced recovery evidence and activation gates
+7f8633050a5123559823ccdcd6fc6c1923a7d22a 2026-09-15T00:10:29-05:00 continuous-improvement-loop[bot] chore(payments): use required technical-review allowlist marker
+ddfc19eb9247bf539a676755986cb5e5369d8f3b 2026-09-15T00:06:42-05:00 continuous-improvement-loop[bot] feat(payments): reconcile known resources with fenced recovery jobs
+b9875ff176c35f446c64d53dccadfd15b839cda4 2026-09-14T23:13:57-05:00 continuous-improvement-loop[bot] feat(payments): persist disabled query recovery jobs and shared budgets

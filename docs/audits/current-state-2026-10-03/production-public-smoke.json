@@ -1,0 +1,105 @@
+{
+  "observedAt": "2026-10-05T03:41:03.767547+00:00",
+  "mutations": false,
+  "results": [
+    {
+      "url": "https://api.tdfrecords.net/health",
+      "status": 200,
+      "contentType": "application/json;charset=utf-8",
+      "bytes": 25,
+      "sha256": "d996479d94f900ef9b33b173ef75ebe94be72be324576712f15e9d460bb36017",
+      "publicBody": {
+        "db": "ok",
+        "status": "ok"
+      }
+    },
+    {
+      "url": "https://api.tdfrecords.net/version",
+      "status": 200,
+      "contentType": "application/json;charset=utf-8",
+      "bytes": 124,
+      "sha256": "e808d0113bfd6fd1f4a6c44e285f08b6134f03303eb79df48d67616baa3a53ea",
+      "publicBody": {
+        "buildTime": "2026-09-30T10:36:07Z",
+        "commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a",
+        "name": "tdf-hq",
+        "version": "0.1.0.0"
+      }
+    },
+    {
+      "url": "https://www.tdfrecords.net/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 1910,
+      "sha256": "b55c025792af02f1d661fabfe1c085b545a3dd3f4b98fa323508608d91b3f035"
+    },
+    {
+      "url": "https://tdfrecords.net/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 1910,
+      "sha256": "b55c025792af02f1d661fabfe1c085b545a3dd3f4b98fa323508608d91b3f035"
+    },
+    {
+      "url": "https://www.tdfrecords.net/login",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 1910,
+      "sha256": "b55c025792af02f1d661fabfe1c085b545a3dd3f4b98fa323508608d91b3f035"
+    },
+    {
+      "url": "https://api.tdfrecords.net/session",
+      "status": 200,
+      "contentType": "application/json;charset=utf-8",
+      "bytes": 4,
+      "sha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+    },
+    {
+      "url": "https://api.tdfrecords.net/social/v2/me",
+      "status": 401
+    },
+    {
+      "url": "https://api.tdfrecords.net/social-events/events?limit=1",
+      "status": 401
+    },
+    {
+      "url": "https://api.tdfrecords.net/records/feed?limit=1",
+      "status": 200,
+      "contentType": "application/json;charset=utf-8",
+      "bytes": 148013,
+      "sha256": "628f8c7a8a69a998168fd1d154c9477f860264cd6fb415a5d840aef6d9af745b"
+    },
+    {
+      "url": "https://api.tdfrecords.net/merch/capabilities",
+      "status": 200,
+      "contentType": "application/json;charset=utf-8",
+      "bytes": 493,
+      "sha256": "d0a764c4017adba37756beccaf3ad6bf06809ed49fe22235fb7d1ce45a814981",
+      "publicBody": {
+        "automaticPayouts": false,
+        "environment": "production",
+        "features": {
+          "checkout": false,
+          "disputeMonitoring": false,
+          "experimental": false,
+          "notifications": false,
+          "publicCatalog": false,
+          "refundOperations": false,
+          "reviews": false,
+          "sellerApplications": false,
+          "storefronts": false
+        },
+        "market": {
+          "countryCode": "EC",
+          "currency": "USD"
+        },
+        "message": "Artist merch is pilot-gated. Availability reflects both flags and configured provider capabilities.",
+        "paymentMethods": {
+          "bankTransfer": false,
+          "datafast": false,
+          "paypal": false
+        }
+      }
+    }
+  ]
+}

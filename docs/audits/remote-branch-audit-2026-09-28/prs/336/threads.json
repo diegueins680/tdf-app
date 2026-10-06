@@ -1,0 +1,621 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 336,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "00f796e74da9e9ec9417ead93980b8a8e71d5fcc",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6iZ225",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Make invitation authorization and mutation atomic**\n\nWhen an invited party updates an invitation concurrently with an organizer transfer or decline, authorization is evaluated from `mExisting` in one `runSqlPool` transaction, but the mutation executes later in another transaction without a version predicate or row lock. A stale recipient request can therefore restore the invitation to themselves and mark it accepted after the organizer removed their access. Lock and revalidate the row in the same transaction as the conditional update.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4012761818",
+                      "createdAt": "2026-09-15T06:45:26Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in cad2ff3d5cbc0afd019f9d5badf0e5230d5392ea. Invitation authority is re-read and validated under event/invitation row locks in the same transaction as the update. The regression runs the actual handler against PostgreSQL 16.10, verifies that the recipient waits on the organizer transaction, then receives 403 after transfer; stored recipient/status remain unchanged. The threaded Stack invitation suite passed 15 examples, zero failures; the full backend suite passed 2546 examples, zero failures, and the production executable built successfully. See docs/event-operations/review-repair-2026-09-15.md.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4017526720",
+                      "createdAt": "2026-09-15T15:47:16Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQxNTo0NzoxNlrO73aXwA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iZ229",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "formal/event-operations/EventLifecycle.tla",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Model finance approval as a separate authority**\n\nThe model uses the same `Approver` actor for both event approval and financial settlement, even though the migration distinguishes `event_approver` from `finance_approver` and the formal README claims separation of those duties. Consequently, this TLC run cannot detect a policy that improperly lets an event approver settle finances; introduce a distinct finance approver constant and require it for the `settled` transition.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4012761823",
+                      "createdAt": "2026-09-15T06:45:26Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in cad2ff3d5cbc0afd019f9d5badf0e5230d5392ea. FinanceApprover is distinct from EventCoordinator; RequiredAuthority independently checks the accepted audit actor, and the boundary configuration starts from all 14 lifecycle states to reach settlement. UnsafeFinanceApproval fails exactly AcceptedAuditIsAuthorized. Eight positive TLC configurations, two specific negative controls and all nine Alloy commands passed their expected results. See docs/event-operations/review-repair-2026-09-15.md.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4017527804",
+                      "createdAt": "2026-09-15T15:47:23Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQxNTo0NzoyM1rO73ab_A=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iZ23F",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "formal/event-operations/EventLifecycle.tla",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Check audit prefixes instead of only sequence length**\n\n`AuditAppendOnly` only proves that the audit sequence never becomes shorter. A transition could rewrite or delete prior records while appending enough replacements to keep the length nondecreasing, and this property would still pass despite the documented append-only guarantee. Require the old audit sequence to remain an unchanged prefix of the new sequence.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4012761834",
+                      "createdAt": "2026-09-15T06:45:26Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in cad2ff3d5cbc0afd019f9d5badf0e5230d5392ea. AuditAppendOnly now checks every entry in the complete prior audit prefix, in addition to length growth. UnsafeAuditRewrite changes an existing entry while appending and fails exactly the AuditAppendOnly action property. Eight positive TLC configurations, two specific negative controls and all nine Alloy commands passed their expected results. See docs/event-operations/review-repair-2026-09-15.md.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4017528678",
+                      "createdAt": "2026-09-15T15:47:29Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQxNTo0NzoyOVrO73afZg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6ily7X",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+                "line": 671,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Guard dependencies added after task completion**\n\nWhen an activity update marks a task completed while also adding dependency IDs, this trigger checks only the dependencies already stored at the time of the status update. `updateLogisticsActivity` commits the activity update first and only then calls `replaceLogisticsActivityRelations` in a separate transaction (`SocialEventsHandlers.hs:6547-6567`), whose dependency inserts are guarded only for cycles, so an incomplete prerequisite can be attached after completion without an override. Validate dependency inserts against the dependent task's completed state, or replace relations and update status atomically.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4017452187",
+                      "createdAt": "2026-09-15T15:39:24Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 25aa233da5e05fbe738cc32544642ff042bce759. Foundation-only installations now reuse the event write fence and deferred task-graph checks from PR339/a6cd9d1892, preserving attribution. A protected completed task cannot acquire an incomplete prerequisite in a later relation write. The foundation regression passed; the successor suite also passed final-state/immediate checks and both observed status/dependency race orders. The successor validity fix is published at 831e4b93f1798d478c1d46d18da2d48ce25a9188. See docs/event-operations/review-repair-2026-09-15.md.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4018308841",
+                      "createdAt": "2026-09-15T17:17:38Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQxNzoxNzozOFrO74KG6Q=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6ily7k",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Treat expired RACI assignments as inactive**\n\nWhen an assignment reaches `valid_until` without being explicitly revoked, these counts still treat it as active because they test only `revoked_at`. A task can therefore be completed after its Responsible or Accountable assignment has expired, and the partial unique indexes at lines 415-420 can also block assigning a replacement because the expired row still has `revoked_at IS NULL`. Include validity-window semantics in coverage checks and in the mechanism used to retire or supersede expired assignments.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4017452201",
+                      "createdAt": "2026-09-15T15:39:24Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 25aa233da5e05fbe738cc32544642ff042bce759 and preserved by successor PR339 at 831e4b93f1798d478c1d46d18da2d48ce25a9188. All coverage checks require valid_from <= validation time < valid_until. An explicit SECURITY INVOKER retirement function records actor/reason and preserves expired rows; PUBLIC execution is revoked, and replacement occurs in the same transaction under the existing unique indexes. Actual timed expiry denied completion, attributed replacement succeeded with history retained, and future-dated coverage and PUBLIC execution were denied. No API authorization or automatic actor attribution is invented.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4018309649",
+                      "createdAt": "2026-09-15T17:17:44Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQxNzoxNzo0NFrO74KKEQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6ily7r",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+                "line": 537,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Serialize concurrent Responsible-assignment removals**\n\nWhen an activity has two Responsible assignments, two concurrent transactions can delete or revoke one assignment each; each deferred trigger can count the other transaction's still-visible row and pass, after which both commits leave the activity with no Responsible party. The count query takes no per-activity lock, so the claimed `ResponsibleNeverEmpty` invariant is not concurrency-safe. Serialize RACI mutations for an activity before evaluating these counts.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4017452213",
+                      "createdAt": "2026-09-15T15:39:24Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 25aa233da5e05fbe738cc32544642ff042bce759. Every RACI mutation first writes the event-scoped fence reused from PR339; deferred validation runs after that serialization boundary. The foundation fixture observed writer two waiting before releasing writer one, and exactly one Responsible remained at READ COMMITTED, REPEATABLE READ and SERIALIZABLE. The successor fixture also verified the expected 23514/40001 errors at those isolation levels. Apply/reapply, rollback and immutable history checks passed.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4018310611",
+                      "createdAt": "2026-09-15T17:17:51Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQxNzoxNzo1MVrO74KN0w=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6ily72",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "formal/event-operations/EventLifecycle.tla",
+                "line": 36,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Require records-manager authority for archival**\n\nWhen TLC explores `settled -> archived` or `cancelled -> archived`, this definition falls through to `Owner`, even though the migration's transition policy requires `records_manager` for both archival transitions (`2026-09-14_event_operations_foundation.sql:60-63`). The model will therefore validate an implementation that lets an owner archive records without the intended records-management authority. Add a distinct records-manager actor and require it when the target is `archived`.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4017452224",
+                      "createdAt": "2026-09-15T15:39:24Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 25aa233da5e05fbe738cc32544642ff042bce759. RecordsManager is distinct from owner/event/finance approvers and is required for both archival transitions. The owner-archive mutant fails exactly AcceptedAuditIsAuthorized. All eight positive TLC configurations, three specific negative controls and nine Alloy commands passed their expected results; lifecycle exploration covered 9941 draft-start and 139174 all-boundary states. These are finite checks, not a claim of whole-product refinement. See formal/event-operations/README.md.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4018311691",
+                      "createdAt": "2026-09-15T17:17:59Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQxNzoxNzo1OVrO74KSCw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6in7cf",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+                "line": 715,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Allow deletion of events with task-fence rows**\n\nWhen a non-imported event with an unprotected logistics activity is deleted, the new `event_operation_00_task_lock` trigger writes a fence row for `OLD.event_id` while `hardDeleteEventGraph` removes the activities, then `SocialEventsHandlers.hs:3019` deletes the event itself. This `ON DELETE RESTRICT` reference is never removed, so the final delete fails and rolls back; the rollback migration also deliberately preserves the fence table. Make the fence cascade with its event or explicitly remove its row during event deletion.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4018310692",
+                      "createdAt": "2026-09-15T17:17:52Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in b97046f59374b0243f257c80cc0f49d592433955 and successor PR339 at 259becd7b3763e084b54da8749b1e6fde8d9d862. The task write fence now cascades with its event; reapplication upgrades existing restrictive FKs. Only synchronization metadata cascades: protected-task deletion, immutable audit/override and other history restrictions remain. Both complete SQL suites passed event deletion; foundation additionally rehearsed old-FK upgrade and deletion after rollback. No production migration or deployment occurred. See docs/event-operations/fence-and-override-followup-2026-09-15.md.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4019903015",
+                      "createdAt": "2026-09-15T20:27:32Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQyMDoyNzozMlrO75raJw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6in7cm",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+                "line": 854,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Bind completion overrides to the dependency graph**\n\nWhen a task was completed using a `blocked_completion` override at version N, this new deferred check treats that immutable override as authorization for every later dependency insertion because it checks only `activity_id` and `activity.version - 1`, while inserting a dependency does not advance the activity version. The fresh evidence beyond the earlier post-completion-dependency comment is this newly added bypass clause: a new incomplete prerequisite added after the override now passes validation. Bind the override to the dependency-graph revision/snapshot or reject new prerequisites on completed tasks.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4018310702",
+                      "createdAt": "2026-09-15T17:17:52Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in b97046f59374b0243f257c80cc0f49d592433955 and successor PR339 at 259becd7b3763e084b54da8749b1e6fde8d9d862. Deferred final-state checks reject a newly inserted or retargeted incomplete prerequisite on a completed protected task even when an old blocked_completion override exists. Deleted edges and unchanged updates are excluded; completing the prerequisite later in the same transaction still passes. Both complete SQL suites passed insert/retarget rejection with immutable override retained; the successor retained valid statement-order, immediate-constraint and observed concurrency cases. The conservative separate graph-then-authorized-completion restriction is documented; no approval graph binding is invented.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4019903519",
+                      "createdAt": "2026-09-15T20:27:36Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNVQyMDoyNzozNlrO75rcHw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6ir95z",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+                "line": 893,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Make protected task relation replacement atomic**\n\nWhen the existing logistics endpoint marks a protected task completed while replacing its dependencies with a new incomplete prerequisite, the activity update and version increment commit first in `SocialEventsHandlers.hs:6547-6567`; this newly added exception is then raised during `replaceLogisticsActivityRelations` in a separate transaction. The request therefore fails while leaving the task completed, its version advanced, and its old relations intact. Run the activity update and relation replacement in one transaction, or validate the proposed final graph before committing the activity update.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4019922730",
+                      "createdAt": "2026-09-15T20:29:50Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 9b153231690b5c3700af6d84e922c8d76db23a62 by backporting the existing PR338/f500b62 logistics transaction correction with contributor attribution. Activity create/CAS update and dependency/assignment replacement now share one SqlPersistT transaction; version loss does not replace relations. Full Stack backend: 2546 examples, zero failures; production executable, repository quality and strict catalog JSON/CSV passed. In owned PostgreSQL, the rejected protected-task final graph raised 23514 and preserved planned:1 plus the old relation snapshot; a valid transaction completing its prerequisite committed. Docker was unavailable, so that targeted SQL evidence used an isolated local socket database, now stopped. No parent PR was closed or production deployment performed. See docs/event-operations/review-boundaries-2026-09-16.md.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4022192494",
+                      "createdAt": "2026-09-16T03:19:12Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQwMzoxOToxMlrO773Jbg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6ixn2D",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+                "line": 7560,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Accept the web client's status-only invitation response**\n\nWhen an invited user accepts or declines through the existing web UI, `SocialEventsPage.tsx:679` calls `respondInvitation` without a message, but `socialEvents.ts:623-627` still sends `invitationMessage: null`; the DTO parser converts that to `FieldNull`, so this guard rejects every UI response with 403 rather than updating the status. Omit the message field from recipient requests or distinguish an unchanged/null client payload from an attempted message edit.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4022205537",
+                      "createdAt": "2026-09-16T03:22:22Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in f9378a973359f8ff7ef22448fb0edca40f4a6b2d. Consolidates concurrent fa7c2e43 with additional PostgreSQL evidence. Status-only recipient responses now omit invitationMessage when it was not supplied. Explicit message edits retain their existing payload and authorization. The existing web UI accepts/declines without a message; new Accepted/Declined request regressions verify no edit field is sent. All 18 API-client tests and UI typecheck passed; backend authorization was not relaxed. Full Stack backend2547, repository quality and strict catalog JSON/CSV passed. See docs/event-operations/review-boundaries-2026-09-16.md.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4022502456",
+                      "createdAt": "2026-09-16T04:31:06Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQwNDozMTowNlrO78KEOA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6ixn2F",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+                "line": 880,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Preserve existing overridden dependency edges during replacement**\n\nWhen a protected task is completed with a valid `blocked_completion` override while retaining an incomplete prerequisite, the now-atomic handler still replaces relations by deleting and reinserting every edge (`SocialEventsHandlers.hs:6697-6709`). Each retained edge therefore arrives here as `TG_OP = 'INSERT'` and is rejected as newly acquired, so the actual update endpoint cannot complete the task under its authorized override and later unrelated edits to such a completed task also fail. The fresh interaction beyond the earlier atomicity finding is this DELETE+INSERT representation of unchanged edges; diff the relation set or otherwise recognize edges that existed before the command.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4022205541",
+                      "createdAt": "2026-09-16T03:22:22Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in f9378a973359f8ff7ef22448fb0edca40f4a6b2d. Consolidates the dependency helper from concurrent fa7c2e43. Dependency replacement now diffs the stored relation set within the same activity transaction: unchanged edge rows/IDs are retained, removed edges deleted and only new edges inserted. The same Haskell helper used by create/update passed an actual PostgreSQL regression: authorized blocked completion with an existing incomplete prerequisite commits and retains its original ID; replay retains it; acquiring another incomplete prerequisite raises 23514 and rolls back. Deferred new-edge checks and version-bound override authority remain unchanged. This does not authorize overrides for later activity versions. Full Stack backend2547, repository quality and strict catalog JSON/CSV passed. See docs/event-operations/review-boundaries-2026-09-16.md.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4022502745",
+                      "createdAt": "2026-09-16T04:31:11Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQwNDozMToxMVrO78KFWQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6ix5CS",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+                "line": 387,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Allow revoking invitations after acceptance**\n\nWhen an accepted invitation is later revoked, acceptance has already populated `consumed_at`, so populating `revoked_at` makes both columns non-null and violates this constraint. This contradicts the documented `accepted -> revoked` lifecycle in `docs/event-operations/state-machines.md:49-56` and prevents the future revoke flow from removing derived access while preserving consumption history; model these states separately or permit the accepted-and-revoked combination.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4022312202",
+                      "createdAt": "2026-09-16T03:48:41Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in f9378a973359f8ff7ef22448fb0edca40f4a6b2d. Invitation security permits consumed_at and a later revoked_at together, retaining acceptance history while enforcing revocation chronology. An explicit ALTER upgrades existing installations of the old mutually-exclusive check. Purpose, scopes, digest uniqueness, expiry and version gates remain. The full PostgreSQL foundation runner passed old-constraint upgrade, accepted-then-revoked preservation, invalid chronology rejection, rollback/reapply and existing races. No new public revoke endpoint or authorization bypass was added. Full Stack backend2547, repository quality and strict catalog JSON/CSV passed. See docs/event-operations/review-boundaries-2026-09-16.md.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4022503076",
+                      "createdAt": "2026-09-16T04:31:15Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQwNDozMToxNVrO78KGpA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6ix5CW",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+                "line": 489,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Block TRUNCATE on append-only audit history**\n\nWhen the table owner/application database role executes `TRUNCATE event_operation_audit_event`, this row-level `UPDATE OR DELETE` trigger does not fire, so the entire supposedly append-only audit can be erased. The same gap affects the other history tables protected only by this function; add a statement-level `BEFORE TRUNCATE` guard or revoke `TRUNCATE` from every runtime role.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4022312208",
+                      "createdAt": "2026-09-16T03:48:41Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in f9378a973359f8ff7ef22448fb0edca40f4a6b2d. All five append-only history tables now have statement-level BEFORE TRUNCATE guards using the existing 55000 rejection function. Existing row UPDATE/DELETE guards remain. Full PostgreSQL tests require 55000 append-only rejection for TRUNCATE CASCADE on each table and unchanged counts, including empty tables and after application rollback/reapply. No runtime permission was widened; database-superuser trigger disabling remains outside application authorization. Full Stack backend2547, repository quality and strict catalog JSON/CSV passed. See docs/event-operations/review-boundaries-2026-09-16.md.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4022503359",
+                      "createdAt": "2026-09-16T04:31:19Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQwNDozMToxOVrO78KHvw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iyMM5",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Make invitation creation authorization atomic**\n\nWhen event ownership is transferred or cleared after this organizer check but before the separate `runSqlPool` insert, the former organizer can still create a pending invitation after losing authority. The update path now locks and revalidates the event in the mutation transaction, but creation still performs authorization and insertion in separate transactions; lock/revalidate the event and insert the invitation within one transaction.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4022431542",
+                      "createdAt": "2026-09-16T04:14:42Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 67b454dc0afdbcd01e029c2c22adf6b8438d1eab. Creation now locks the event and rechecks organizer/strict-admin authority inside the insert transaction. Actual PostgreSQL handler races cover organizer transfer and clearing, return403 with unchanged invitation counts, and retain authorized pending creation. SQLite takes its write lock before reading authority; sender, recipient, pending-status and visibility validation remain. Stack2547 examples, actual PostgreSQL invitation15 examples including both creation races, full foundation migration suite, repository quality and strict JSON/CSV catalogs passed. See docs/event-operations/creation-deletion-review-2026-09-16.md. No production migration or deployment was performed.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4028249627",
+                      "createdAt": "2026-09-16T16:18:02Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQxNjoxODowMlrO8Bo2Gw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6iybmy",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Protect prerequisites referenced by protected tasks**\n\nWhen an unprotected activity is a prerequisite of a policy-protected task, this check still permits deleting it because it examines only the deleted row's own policy. `deleteLogisticsActivity` removes every incoming dependency edge before deleting the activity, so the protected task's graph changes without advancing its version; a stale update using the old task version can then complete successfully because the deferred check sees no remaining prerequisite. Reject deletion while a protected task references the activity, or perform a versioned/audited update of every affected dependent task.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4022527203",
+                      "createdAt": "2026-09-16T04:36:15Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 67b454dc0afdbcd01e029c2c22adf6b8438d1eab. Deletion now invokes the opt-in foundation guard before removing any child edges, under the event write fence used by policy/dependency writers. It rejects protected tasks and prerequisites of protected tasks; the direct row-delete trigger uses the same guard. PostgreSQL verifies SQLSTATE23514, unchanged graph/activity/protected-task version, unprotected deletion and rollback activation detection. Apply/reapply/rollback and all existing foundation races pass. Stack2547 examples, actual PostgreSQL invitation15 examples including both creation races, full foundation migration suite, repository quality and strict JSON/CSV catalogs passed. See docs/event-operations/creation-deletion-review-2026-09-16.md. No production migration or deployment was performed.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4028250588",
+                      "createdAt": "2026-09-16T16:18:09Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQxNjoxODowOVrO8Bo53A=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jBJwY",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+                "line": 924,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Reject pre-existing invalid dependency graphs during migration**\n\nWhen this migration is applied to legacy data affected by the previously race-prone dependency checks, this installation-time validation checks only RACI and completion state through `event_operation_validate_task_event`; it never scans existing dependency rows for cycles or cross-event edges. The new `BEFORE INSERT OR UPDATE` cycle trigger is not retroactive, so the migration can commit while an already-corrupt graph remains and the advertised event-local DAG invariant is still false. Validate the locked existing graph before committing, or record and disable incompatible events.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4028282759",
+                      "createdAt": "2026-09-16T16:22:00Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Verified current head c2b7ba65fc8bc86c9cdd593c262e3ec9e8504deb. The current concurrent commit c2b7ba65fc8bc86c9cdd593c262e3ec9e8504deb already validates the entire locked legacy graph, including unprotected activities, before migration commit. UNION makes reachability terminate on cyclic data. This audit independently reran the complete foundation suite on that exact implementation: self-loop, three-node cycle and cross-event fixtures all reject with SQLSTATE23514, preserve exact source edges and roll back sidecar creation. Existing apply/reapply/rollback and RC/RR/Serializable checks also pass. The equivalent unpushed audit alternative was archived; the concurrent implementation and contributor history were retained by local fast-forward. This is not claimed as a new fix published by this audit. Verified suite: evidence/events-existing-graph-consolidated.log in the audit workspace. No production migration or deployment occurred.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4028989749",
+                      "createdAt": "2026-09-16T17:41:01Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQxNzo0MTowMVrO8CWBNQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jB_Uz",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+                "line": 320,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Enforce same-event session revisions**\n\nWhen a session is created for event A with a `revision_id` belonging to event B, both independent foreign keys succeed, so later revision-based scheduling or snapshot queries can associate one event's session with another event's plan. Add an event-qualified relationship, such as a composite foreign key from `(event_id, revision_id)` to a corresponding unique key on `event_operation_revision`.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4028615455",
+                      "createdAt": "2026-09-16T16:59:39Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in e403b7a1d and included in a32a395995f714c8bb0c8442984312e755dff514. A composite (event_id, revision_id) foreign key validates both existing rows and future writes. The disposable PostgreSQL foundation suite passed same-event assignment, cross-event rejection with SQLSTATE 23503 and the named constraint, preservation after rejection, reapplication, concurrency, and rollback. Nullable revisions remain supported; no production data was rewritten. Fresh CI: https://github.com/diegueins680/tdf-app/actions/runs/35130295918 (other jobs still being observed).",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4029075386",
+                      "createdAt": "2026-09-16T17:50:49Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQxNzo1MDo0OVrO8CbPug=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jDVXL",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-14_event_operations_foundation.sql",
+                "line": 854,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Invalidate overrides when the dependency graph changes**\n\nWhen a database or future graph writer inserts an incomplete dependency while the protected task is still open, the new-edge guard permits it because it only rejects edges for an already completed task, and the dependency mutation does not advance the activity version. A previously issued `blocked_completion` override for that version then satisfies this version-only lookup and can complete the task despite authorizing an older graph. The fresh scenario beyond the earlier completed-task fix is an edge added after override creation but before completion; bind the override to a graph revision/snapshot or invalidate it on every dependency mutation.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4029142616",
+                      "createdAt": "2026-09-16T17:58:29Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in e06c81f5e, included in final integration head 00f796e74da9e9ec9417ead93980b8a8e71d5fcc. New overrides capture an immutable ordered dependency-edge snapshot under the same event write fence; completion requires both exact activity version and matching snapshot. Old NULL snapshots do not invent approval. Regression reproduced stale-override acceptance before the fix; full PostgreSQL 16.10 suite passed afterward, including unchanged-edge preservation, changed-open-graph denial, fresh approval, immutable snapshots, concurrency, rollback and reapply. Final-head Docker PostgreSQL and formal CI passed: https://github.com/diegueins680/tdf-app/actions/runs/35144444855 . No production activation or history rewrite.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/336#discussion_r4030305960",
+                      "createdAt": "2026-09-16T20:08:11Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQyMDowODoxMVrO8DmWqA=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQxNzo1ODoyOVrOow1Vyw=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

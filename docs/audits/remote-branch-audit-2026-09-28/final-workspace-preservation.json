@@ -1,0 +1,10 @@
+{
+  "capturedAt": "2026-10-01T02:38:07.378090+00:00",
+  "initialExistingWorktrees": 66,
+  "existingNow": 66,
+  "missing": [],
+  "auditDirectoryPreserved": true,
+  "freeBytes": 92750839808,
+  "diskSpaceNote": "Current availability includes concurrent machine changes; audit cleanup only claims separately recorded ~3.2GiB.",
+  "auditDeletedWorktrees": 0
+}

@@ -1,0 +1,976 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4029174459",
+      "pull_request_review_id": 5226417118,
+      "id": 4029174459,
+      "node_id": "PRRC_kwDOQPdUrM7wKFK7",
+      "diff_hunk": "@@ -520,6 +526,11 @@\n       \"id\": \"2026-09-10_payment_attempt_intent_binding\",\n       \"path\": \"tdf-hq/sql/2026-09-10_payment_attempt_intent_binding.sql\",\n       \"introducedBy\": \"709036630fcad32102b67a34996c4da73bc4d128\"\n+    },\n+    {\n+      \"id\": \"2026-09-16_artist_self_service\",\n+      \"path\": \"tdf-hq/sql/2026-09-16_artist_self_service.sql\",\n+      \"introducedBy\": \"d8fd169c1bfec56c4f24bab7a49a0d56bbadeb37\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "912f8326ba7a13611cfbad592f6680fe50bdbefc",
+      "original_commit_id": "8a1bb430a6830a94f4a2d735020d447781373dd5",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Point the migration introduction at an ancestor**\n\nProduction releases of this exact commit are blocked because `d8fd169c...` is not an ancestor of `83e17588...`. Running `node scripts/production-release.mjs plan --sha 83e17588bb29ce267c9d26a37a33a60e150db98f` exits with \u201cwhich is not an ancestor of release ...; refusing to omit a registered migration,\u201d so the manifest must identify a commit contained in the release history.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-16T18:02:02Z",
+      "updated_at": "2026-09-16T18:02:02Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4029174459",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4029174459"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4029174459"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4029174459/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 542,
+      "original_line": 533,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 39,
+      "position": 61,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4029174469",
+      "pull_request_review_id": 5226417118,
+      "id": 4029174469,
+      "node_id": "PRRC_kwDOQPdUrM7wKFLF",
+      "diff_hunk": "@@ -35,16 +36,66 @@ import           Data.Time                 (UTCTime, getCurrentTime)\n import           Data.UUID                 (UUID)\n import qualified Data.UUID                 as UUID\n import           Database.Persist\n-import           Database.Persist.Sql      (SqlPersistT, fromSqlKey)\n+import           Database.Persist.Sql      (SqlPersistT, fromSqlKey, rawSql)\n \n+import           TDF.Catalog.Security (applySecurityRoleAssignmentPolicy, hasCanonicalPartyRole)\n import qualified TDF.Catalog.Models        as Catalog\n import           TDF.DTO                   ( ArtistProfileDTO(..)\n                                            , ArtistProfileUpsert(..)\n                                            )\n import           TDF.Models\n import qualified TDF.Models                as M\n+import qualified TDF.ModelsExtra           as ME\n import qualified TDF.Trials.Server         as TrialsServer (isValidHttpUrl)\n \n+-- The caller supplies only the authenticated identity. Serialize repeated web/mobile\n+-- activation on that Party so role, audit and profile creation are idempotent.\n+activateOwnArtistProfile :: PartyId -> UTCTime -> SqlPersistT IO (Either Text ArtistProfileDTO)\n+activateOwnArtistProfile partyId now = do\n+  _ <- rawSql \"SELECT ?? FROM party WHERE id = ? FOR UPDATE\" [toPersistValue partyId] :: SqlPersistT IO [Entity Party]\n+  credentials <- count [UserCredentialPartyId ==. partyId, UserCredentialActive ==. True]\n+  if credentials /= 1\n+    then pure (Left \"Artist activation requires one active user account\")\n+    else do\n+      -- Administrators already have profile access. Adding a mixed Artist role\n+      -- would remove their strict administrative scope after session refresh.\n+      isAdmin <- hasCanonicalPartyRole partyId Admin\n+      result <- if isAdmin\n+        then pure (Right Admin)\n+        else applySecurityRoleAssignmentPolicy\n+          \"artist.self-service.artist\" partyId False (Just partyId)\n+          \"artist-self-service\" (\"artist-self-service:\" <> T.pack (show (fromSqlKey partyId))) now\n+      case result of\n+        Left message -> pure (Left message)\n+        Right _ -> do\n+          profile <- loadOrCreateArtistProfileDTO partyId\n+          pending <- selectList\n+            [ ME.FeatureAccessRequestRequesterPartyId ==. partyId\n+            , ME.FeatureAccessRequestFeatureId ==. \"artist.onboarding\"\n+            , ME.FeatureAccessRequestAction ==. \"create\"\n+            , ME.FeatureAccessRequestStatus ==. \"pending\"\n+            ] []\n+          forM_ pending $ \\(Entity key _) -> do\n+            let note = Just \"Perfil de artista activado por su titular, sin aprobaci\u00f3n manual.\"\n+            update key",
+      "path": "tdf-hq/src/TDF/Profiles/Artist.hs",
+      "commit_id": "912f8326ba7a13611cfbad592f6680fe50bdbefc",
+      "original_commit_id": "8a1bb430a6830a94f4a2d735020d447781373dd5",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Record an audit when completing pending requests**\n\nWhen activation finds an existing pending artist request, this block changes it to `approved` and writes only request history, not the centralized `AuditLog` entry written for every other request transition. This also affects the legacy access-request endpoint: `activateOwnArtistProfile` approves the request first, after which `createArtistAccess` takes its already-approved fast path and skips its own `writeFeatureAccessRequestAudit` call, leaving audit-log consumers unable to observe the automatic approval.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-16T18:02:02Z",
+      "updated_at": "2026-09-16T18:02:02Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4029174469",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4029174469"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4029174469"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4029174469/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 80,
+      "original_line": 80,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 56,
+      "position": 56,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4029930316",
+      "pull_request_review_id": 5227335686,
+      "id": 4029930316,
+      "node_id": "PRRC_kwDOQPdUrM7wM9tM",
+      "diff_hunk": "@@ -139,24 +161,26 @@ export default function ArtistOnboardingPage() {\n                   Te llevamos directo al portal para completar tu perfil y publicarlo en tu URL.\n                 </Typography>\n                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}>\n-                  <Button\n-                    variant=\"contained\"\n-                    size=\"large\"\n-                    component={RouterLink}\n-                    to={buildArtistSignupLink(claimArtistId)}\n-                    sx={{ textTransform: 'none' }}\n-                  >\n-                    Crear mi perfil de artista\n-                  </Button>\n-                  <Button\n+                  {session?.partyId ? (\n+                    <Button variant=\"contained\" size=\"large\" disabled={activating}\n+                      onClick={() => hasArtistRole ? navigate('/mi-artista') : void activateProfile()}>",
+      "path": "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
+      "commit_id": "912f8326ba7a13611cfbad592f6680fe50bdbefc",
+      "original_commit_id": "0f7573ca507d2923093677f2fbc6d91a946d6ccc",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Honor claim links before self-activating a profile**\n\nWhen an authenticated Customer follows \u201cReclamar este perfil\u201d from `ArtistPublicPage`, this page receives a non-null `claimArtistId`, but the new session branch calls `activateProfile()`, whose request accepts no target identity. It therefore creates a new empty profile for the viewer and opens that editor instead of claiming the selected existing profile. Branch on `claimArtistId` here and continue through a supported claim flow rather than invoking self-activation.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-16T19:24:20Z",
+      "updated_at": "2026-09-16T19:24:21Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4029930316",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4029930316"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4029930316"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4029930316/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 204,
+      "original_line": 166,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 104,
+      "position": 153,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4030505343",
+      "pull_request_review_id": 5227999612,
+      "id": 4030505343,
+      "node_id": "PRRC_kwDOQPdUrM7wPKF_",
+      "diff_hunk": "@@ -20,26 +22,50 @@ const buildArtistSignupLink = (claimArtistId: number | null) => {\n   return `/login?${params.toString()}`;\n };\n \n-const buildArtistLoginLink = () => {\n+const buildArtistLoginLink = (claimArtistId: number | null) => {\n   const params = new URLSearchParams();\n-  params.set('redirect', '/mi-artista');\n+  params.set('redirect', claimArtistId === null ? '/mi-artista' : `/artista/crear?claimArtistId=${claimArtistId}`);\n   return `/login?${params.toString()}`;\n };\n \n-const artistAccessRequest = () => {\n-  const feature = getFeatureById('artist.onboarding');\n-  return feature ? accessRequestPath(feature, 'create') : '/solicitudes-acceso/nueva';\n-};\n-\n export default function ArtistOnboardingPage() {\n-  const { session } = useSession();\n+  const { session, login, logout } = useSession();\n+  const navigate = useNavigate();\n+  const [activating, setActivating] = useState(false);\n+  const [activationError, setActivationError] = useState<string | null>(null);\n+\n+  const activateProfile = async () => {\n+    if (!session?.partyId || activating || claimArtistId !== null) return;\n+    const partyId = session.partyId;\n+    setActivating(true);\n+    setActivationError(null);\n+    try {\n+      await Fans.activateMyArtistProfile();\n+      const refreshed = await get<SessionResponseDTO>('/session');\n+      if (getActiveSession()?.partyId !== partyId || refreshed.partyId !== partyId) return;\n+      login({ ...refreshed, apiToken: session.apiToken }, {\n+        remember: !window.sessionStorage.getItem(SESSION_STORAGE_KEY),\n+      });\n+      navigate('/mi-artista');\n+    } catch (error) {\n+      setActivationError(error instanceof Error ? error.message : 'No pudimos crear tu perfil. Int\u00e9ntalo de nuevo.');\n+    } finally {\n+      setActivating(false);\n+    }\n+  };\n   const [searchParams] = useSearchParams();\n \n   const claimArtistId = useMemo(() => {\n     const raw = searchParams.get('claimArtistId') ?? searchParams.get('claim');\n     return parsePositiveSafeInt(raw);\n   }, [searchParams]);\n \n+  const continueClaim = () => {\n+    if (claimArtistId === null) return;\n+    logout();\n+    navigate(buildArtistSignupLink(claimArtistId));",
+      "path": "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
+      "commit_id": "6eb51c4b1362ac115caf6685a90dc83e53161d1b",
+      "original_commit_id": "7c6fed48a96f8f3c5576c07b1c7b17d2f035d7c1",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Preserve the selected claim through Google signup**\n\nWhen a signed-in user follows a claim link and then chooses Google in the signup dialog, this redirects them into a claim URL but `LoginPage.handleGoogleCredential` submits only the ID token and consent fields; `completeGoogleLogin` has no claim parameter, so the returned Customer session is sent to generic `/artista/crear` and the selected existing profile is lost. Fresh evidence beyond the earlier claim-flow comment is that the revised `continueClaim` now explicitly enters this signup-only path while the Google branch still cannot transmit `claimArtistId`.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-16T20:32:37Z",
+      "updated_at": "2026-09-16T20:32:37Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4030505343",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4030505343"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4030505343"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4030505343/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 66,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 71,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4038453871",
+      "pull_request_review_id": 5237712318,
+      "id": 4038453871,
+      "node_id": "PRRC_kwDOQPdUrM7wtepv",
+      "diff_hunk": "@@ -20,26 +22,50 @@ const buildArtistSignupLink = (claimArtistId: number | null) => {\n   return `/login?${params.toString()}`;\n };\n \n-const buildArtistLoginLink = () => {\n+const buildArtistLoginLink = (claimArtistId: number | null) => {\n   const params = new URLSearchParams();\n-  params.set('redirect', '/mi-artista');\n+  params.set('redirect', claimArtistId === null ? '/mi-artista' : `/artista/crear?claimArtistId=${claimArtistId}`);\n   return `/login?${params.toString()}`;\n };\n \n-const artistAccessRequest = () => {\n-  const feature = getFeatureById('artist.onboarding');\n-  return feature ? accessRequestPath(feature, 'create') : '/solicitudes-acceso/nueva';\n-};\n-\n export default function ArtistOnboardingPage() {\n-  const { session } = useSession();\n+  const { session, login, logout } = useSession();\n+  const navigate = useNavigate();\n+  const [activating, setActivating] = useState(false);\n+  const [activationError, setActivationError] = useState<string | null>(null);\n+\n+  const activateProfile = async () => {\n+    if (!session?.partyId || activating || claimArtistId !== null) return;\n+    const partyId = session.partyId;\n+    setActivating(true);\n+    setActivationError(null);\n+    try {\n+      await Fans.activateMyArtistProfile();\n+      const refreshed = await get<SessionResponseDTO>('/session');\n+      if (getActiveSession()?.partyId !== partyId || refreshed.partyId !== partyId) return;\n+      login({ ...refreshed, apiToken: session.apiToken }, {\n+        remember: !window.sessionStorage.getItem(SESSION_STORAGE_KEY),\n+      });\n+      navigate('/mi-artista');\n+    } catch (error) {\n+      setActivationError(error instanceof Error ? error.message : 'No pudimos crear tu perfil. Int\u00e9ntalo de nuevo.');\n+    } finally {\n+      setActivating(false);\n+    }\n+  };\n   const [searchParams] = useSearchParams();\n \n   const claimArtistId = useMemo(() => {\n     const raw = searchParams.get('claimArtistId') ?? searchParams.get('claim');\n     return parsePositiveSafeInt(raw);\n   }, [searchParams]);\n \n+  const continueClaim = () => {\n+    if (claimArtistId === null) return;\n+    logout();\n+    navigate(buildArtistSignupLink(claimArtistId));",
+      "path": "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
+      "commit_id": "6eb51c4b1362ac115caf6685a90dc83e53161d1b",
+      "original_commit_id": "7c6fed48a96f8f3c5576c07b1c7b17d2f035d7c1",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in ab9630d089386b6d712f88cc828757667359c4ef: a selected claim stays in the supported email-matched claim form. Google signup is hidden for that selection and late callbacks are rejected before login/navigation; ordinary Google signup remains available. The new regression reproduces the callback and asserts that no authentication happens and the claim/dialog remain. Both login/onboarding suites pass (11 tests), plus TypeScript, lint and the production build. Adding a Google account-linking contract is not part of this repair.",
+      "created_at": "2026-09-17T15:12:01Z",
+      "updated_at": "2026-09-17T15:12:01Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4038453871",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4038453871"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4038453871"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4038453871/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 66,
+      "side": "RIGHT",
+      "in_reply_to_id": 4030505343,
+      "author_association": "OWNER",
+      "original_position": 71,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4041182614",
+      "pull_request_review_id": 5241108107,
+      "id": 4041182614,
+      "node_id": "PRRC_kwDOQPdUrM7w342W",
+      "diff_hunk": "@@ -20,26 +22,50 @@ const buildArtistSignupLink = (claimArtistId: number | null) => {\n   return `/login?${params.toString()}`;\n };\n \n-const buildArtistLoginLink = () => {\n+const buildArtistLoginLink = (claimArtistId: number | null) => {\n   const params = new URLSearchParams();\n-  params.set('redirect', '/mi-artista');\n+  params.set('redirect', claimArtistId === null ? '/mi-artista' : `/artista/crear?claimArtistId=${claimArtistId}`);\n   return `/login?${params.toString()}`;\n };\n \n-const artistAccessRequest = () => {\n-  const feature = getFeatureById('artist.onboarding');\n-  return feature ? accessRequestPath(feature, 'create') : '/solicitudes-acceso/nueva';\n-};\n-\n export default function ArtistOnboardingPage() {\n-  const { session } = useSession();\n+  const { session, login, logout } = useSession();\n+  const navigate = useNavigate();\n+  const [activating, setActivating] = useState(false);\n+  const [activationError, setActivationError] = useState<string | null>(null);\n+\n+  const activateProfile = async () => {\n+    if (!session?.partyId || activating || claimArtistId !== null) return;\n+    const partyId = session.partyId;\n+    setActivating(true);\n+    setActivationError(null);\n+    try {\n+      await Fans.activateMyArtistProfile();\n+      const refreshed = await get<SessionResponseDTO>('/session');\n+      if (getActiveSession()?.partyId !== partyId || refreshed.partyId !== partyId) return;\n+      login({ ...refreshed, apiToken: session.apiToken }, {\n+        remember: !window.sessionStorage.getItem(SESSION_STORAGE_KEY),\n+      });\n+      navigate('/mi-artista');\n+    } catch (error) {\n+      setActivationError(error instanceof Error ? error.message : 'No pudimos crear tu perfil. Int\u00e9ntalo de nuevo.');\n+    } finally {\n+      setActivating(false);\n+    }\n+  };\n   const [searchParams] = useSearchParams();\n \n   const claimArtistId = useMemo(() => {\n     const raw = searchParams.get('claimArtistId') ?? searchParams.get('claim');\n     return parsePositiveSafeInt(raw);\n   }, [searchParams]);\n \n+  const continueClaim = () => {\n+    if (claimArtistId === null) return;\n+    logout();\n+    navigate(buildArtistSignupLink(claimArtistId));",
+      "path": "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
+      "commit_id": "6eb51c4b1362ac115caf6685a90dc83e53161d1b",
+      "original_commit_id": "6eb51c4b1362ac115caf6685a90dc83e53161d1b",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Support claims from existing signed-in accounts**\n\nWhen a signed-in Customer follows a claim link, this forces them into the new-account signup flow, but that flow cannot accept the email already belonging to their account: `runSignupDb` rejects it via `signupEmailExists` before `resolveParty` processes `claimArtistId` (`tdf-hq/src/TDF/ServerAuth.hs:1830-1835`). Consequently, using the profile-associated email fails as an existing signup, while another email fails claim verification, so the customer still cannot claim the selected profile. Fresh evidence beyond the earlier claim-flow finding is that the new forced logout/signup branch preserves the ID but routes it through this incompatible backend contract; this needs an authenticated claim/merge flow rather than another signup.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-17T20:30:06Z",
+      "updated_at": "2026-09-17T20:30:06Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4041182614",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4041182614"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4041182614"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4041182614/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 65,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 66,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 71,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4041209443",
+      "pull_request_review_id": 5241140354,
+      "id": 4041209443,
+      "node_id": "PRRC_kwDOQPdUrM7w3_Zj",
+      "diff_hunk": "@@ -20,26 +22,50 @@ const buildArtistSignupLink = (claimArtistId: number | null) => {\n   return `/login?${params.toString()}`;\n };\n \n-const buildArtistLoginLink = () => {\n+const buildArtistLoginLink = (claimArtistId: number | null) => {\n   const params = new URLSearchParams();\n-  params.set('redirect', '/mi-artista');\n+  params.set('redirect', claimArtistId === null ? '/mi-artista' : `/artista/crear?claimArtistId=${claimArtistId}`);\n   return `/login?${params.toString()}`;\n };\n \n-const artistAccessRequest = () => {\n-  const feature = getFeatureById('artist.onboarding');\n-  return feature ? accessRequestPath(feature, 'create') : '/solicitudes-acceso/nueva';\n-};\n-\n export default function ArtistOnboardingPage() {\n-  const { session } = useSession();\n+  const { session, login, logout } = useSession();\n+  const navigate = useNavigate();\n+  const [activating, setActivating] = useState(false);\n+  const [activationError, setActivationError] = useState<string | null>(null);\n+\n+  const activateProfile = async () => {\n+    if (!session?.partyId || activating || claimArtistId !== null) return;\n+    const partyId = session.partyId;\n+    setActivating(true);\n+    setActivationError(null);\n+    try {\n+      await Fans.activateMyArtistProfile();\n+      const refreshed = await get<SessionResponseDTO>('/session');\n+      if (getActiveSession()?.partyId !== partyId || refreshed.partyId !== partyId) return;\n+      login({ ...refreshed, apiToken: session.apiToken }, {\n+        remember: !window.sessionStorage.getItem(SESSION_STORAGE_KEY),\n+      });\n+      navigate('/mi-artista');\n+    } catch (error) {\n+      setActivationError(error instanceof Error ? error.message : 'No pudimos crear tu perfil. Int\u00e9ntalo de nuevo.');\n+    } finally {\n+      setActivating(false);\n+    }\n+  };\n   const [searchParams] = useSearchParams();\n \n   const claimArtistId = useMemo(() => {\n     const raw = searchParams.get('claimArtistId') ?? searchParams.get('claim');\n     return parsePositiveSafeInt(raw);\n   }, [searchParams]);\n \n+  const continueClaim = () => {\n+    if (claimArtistId === null) return;\n+    logout();\n+    navigate(buildArtistSignupLink(claimArtistId));",
+      "path": "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
+      "commit_id": "6eb51c4b1362ac115caf6685a90dc83e53161d1b",
+      "original_commit_id": "6eb51c4b1362ac115caf6685a90dc83e53161d1b",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "BLOCKED_OR_AMBIGUOUS \u2014 this is a separate, valid concern from the Google callback losing the selection. The current signup contract rejects an existing account email before resolving the selected claim. The latest head `6eb51c4b1362ac115caf6685a90dc83e53161d1b` is approved and all applicable CI has passed, but this concern remains unresolved and the PR must not merge in its current state.\n\nAn authenticated claim needs an explicit identity/ownership contract: whether the account links to the existing artist identity or identities are merged, what verified ownership evidence authorizes it, and how existing artist/account relationships and records are preserved. The existing new-account signup contract is not sufficient authority for a generic Party merge or profile ownership transfer. No such transfer or security exception was added. The smallest next decision is the canonical account-to-artist identity model and its verified ownership rule; then implement and test the authenticated operation and update this route. The earlier claim-preservation repair remains independently tested; it is not claimed to solve authenticated account linking. This thread and branch are retained.\n",
+      "created_at": "2026-09-17T20:33:54Z",
+      "updated_at": "2026-09-17T20:33:54Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4041209443",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4041209443"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4041209443"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4041209443/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 65,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 66,
+      "side": "RIGHT",
+      "in_reply_to_id": 4041182614,
+      "author_association": "OWNER",
+      "original_position": 71,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042014228",
+      "pull_request_review_id": 5242135752,
+      "id": 4042014228,
+      "node_id": "PRRC_kwDOQPdUrM7w7D4U",
+      "diff_hunk": "@@ -20,26 +22,50 @@ const buildArtistSignupLink = (claimArtistId: number | null) => {\n   return `/login?${params.toString()}`;\n };\n \n-const buildArtistLoginLink = () => {\n+const buildArtistLoginLink = (claimArtistId: number | null) => {\n   const params = new URLSearchParams();\n-  params.set('redirect', '/mi-artista');\n+  params.set('redirect', claimArtistId === null ? '/mi-artista' : `/artista/crear?claimArtistId=${claimArtistId}`);\n   return `/login?${params.toString()}`;\n };\n \n-const artistAccessRequest = () => {\n-  const feature = getFeatureById('artist.onboarding');\n-  return feature ? accessRequestPath(feature, 'create') : '/solicitudes-acceso/nueva';\n-};\n-\n export default function ArtistOnboardingPage() {\n-  const { session } = useSession();\n+  const { session, login, logout } = useSession();\n+  const navigate = useNavigate();\n+  const [activating, setActivating] = useState(false);\n+  const [activationError, setActivationError] = useState<string | null>(null);\n+\n+  const activateProfile = async () => {\n+    if (!session?.partyId || activating || claimArtistId !== null) return;\n+    const partyId = session.partyId;\n+    setActivating(true);\n+    setActivationError(null);\n+    try {\n+      await Fans.activateMyArtistProfile();\n+      const refreshed = await get<SessionResponseDTO>('/session');\n+      if (getActiveSession()?.partyId !== partyId || refreshed.partyId !== partyId) return;\n+      login({ ...refreshed, apiToken: session.apiToken }, {\n+        remember: !window.sessionStorage.getItem(SESSION_STORAGE_KEY),\n+      });\n+      navigate('/mi-artista');\n+    } catch (error) {\n+      setActivationError(error instanceof Error ? error.message : 'No pudimos crear tu perfil. Int\u00e9ntalo de nuevo.');\n+    } finally {\n+      setActivating(false);\n+    }\n+  };\n   const [searchParams] = useSearchParams();\n \n   const claimArtistId = useMemo(() => {\n     const raw = searchParams.get('claimArtistId') ?? searchParams.get('claim');\n     return parsePositiveSafeInt(raw);\n   }, [searchParams]);\n \n+  const continueClaim = () => {\n+    if (claimArtistId === null) return;\n+    logout();\n+    navigate(buildArtistSignupLink(claimArtistId));",
+      "path": "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
+      "commit_id": "6eb51c4b1362ac115caf6685a90dc83e53161d1b",
+      "original_commit_id": "6eb51c4b1362ac115caf6685a90dc83e53161d1b",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed at e23a0bd936805ccc99fc0f0b3fc50a696036be94. The owner explicitly chose separate account and artist identities with verified management access. Signed-in claims now reuse the existing authenticated directory claim/review/manager flow: resolve the selected artist's public profile, submit ownership evidence, retain the account/session, and grant no access until administrative verification. Approved management appears in Mis perfiles y clasificados; no credentials/history move and no global Artist or commercial permissions are granted.\n\n16 focused UI tests, app TypeScript, changed-file lint, UI build, strict catalog and full repository checks passed. A real PostgreSQL fixture on the complete 104-migration schema verifies pending/mismatched-claim denial, matching reviewed grants, revocation, and separate Party/credential/follower identities. The fixture is wired into the existing directory migration suite. The published head's hosted checks remain pending. Details: docs/artist-management-claims.md.\n",
+      "created_at": "2026-09-17T22:39:48Z",
+      "updated_at": "2026-09-17T22:39:49Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4042014228",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042014228"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4042014228"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042014228/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 65,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 66,
+      "side": "RIGHT",
+      "in_reply_to_id": 4041182614,
+      "author_association": "OWNER",
+      "original_position": 71,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042389907",
+      "pull_request_review_id": 5242557965,
+      "id": 4042389907,
+      "node_id": "PRRC_kwDOQPdUrM7w8fmT",
+      "diff_hunk": "@@ -0,0 +1,100 @@\n+import { Alert, Button, Stack, TextField, Typography } from '@mui/material';\n+import { useCallback, useEffect, useRef, useState } from 'react';\n+import { Link as RouterLink } from 'react-router-dom';\n+import { Directory } from '../api/directory';\n+import { getActiveSession } from '../session/SessionContext';\n+\n+// Claims reuse the directory's reviewed management grants. Never change the\n+// signed-in Party, create artist credentials, or grant access from email alone.\n+export default function ArtistClaimPanel({ artistId, accountPartyId }: {\n+  artistId: number;\n+  accountPartyId: number;\n+}) {\n+  const [profile, setProfile] = useState<{ id: string; name: string } | null>(null);\n+  const [evidence, setEvidence] = useState('');\n+  const [error, setError] = useState<string | null>(null);\n+  const [loading, setLoading] = useState(true);\n+  const [submitting, setSubmitting] = useState(false);\n+  const [submitted, setSubmitted] = useState(false);\n+  const request = useRef<{ evidence: string; key: string } | null>(null);\n+  const active = useRef(true);\n+  const authority = useRef(getActiveSession()).current;\n+  const isCurrent = useCallback(() => active.current && getActiveSession() === authority\n+    && authority?.partyId === accountPartyId, [authority, accountPartyId]);\n+  const sending = useRef(false);\n+\n+  useEffect(() => {\n+    active.current = true;\n+    let cancelled = false;\n+    void Directory.profileByParty(artistId).then((value) => {",
+      "path": "tdf-hq-ui/src/components/ArtistClaimPanel.tsx",
+      "commit_id": "2f09be7fb92ae091d6213f70f7657df8b86d04d7",
+      "original_commit_id": "2f09be7fb92ae091d6213f70f7657df8b86d04d7",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Support claims without a public directory twin**\n\nWhen a signed-in user follows the claim link for an unclaimed core artist created after the one-time directory backfill, this lookup returns 404 and the page never renders a claim form: `ensureArtistProfileForParty` still inserts only an `artist_profile` (`TDF/Artists/Enrichment.hs:486-503`), while `publicProfileByParty` requires a matching published `directory_profile` (`TDF/Server/Directory.hs:305-313`). Draft directory twins fail for the same reason. Fresh evidence beyond the earlier signed-in-claim thread is this still-active post-backfill creation path, so the flow needs to materialize/resolve a claimable directory target or provide a core-profile fallback.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-17T23:57:09Z",
+      "updated_at": "2026-09-17T23:57:09Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4042389907",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042389907"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4042389907"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042389907/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 29,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 29,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042517621",
+      "pull_request_review_id": 5242718086,
+      "id": 4042517621,
+      "node_id": "PRRC_kwDOQPdUrM7w8-x1",
+      "diff_hunk": "@@ -0,0 +1,100 @@\n+import { Alert, Button, Stack, TextField, Typography } from '@mui/material';\n+import { useCallback, useEffect, useRef, useState } from 'react';\n+import { Link as RouterLink } from 'react-router-dom';\n+import { Directory } from '../api/directory';\n+import { getActiveSession } from '../session/SessionContext';\n+\n+// Claims reuse the directory's reviewed management grants. Never change the\n+// signed-in Party, create artist credentials, or grant access from email alone.\n+export default function ArtistClaimPanel({ artistId, accountPartyId }: {\n+  artistId: number;\n+  accountPartyId: number;\n+}) {\n+  const [profile, setProfile] = useState<{ id: string; name: string } | null>(null);\n+  const [evidence, setEvidence] = useState('');\n+  const [error, setError] = useState<string | null>(null);\n+  const [loading, setLoading] = useState(true);\n+  const [submitting, setSubmitting] = useState(false);\n+  const [submitted, setSubmitted] = useState(false);\n+  const request = useRef<{ evidence: string; key: string } | null>(null);\n+  const active = useRef(true);\n+  const authority = useRef(getActiveSession()).current;\n+  const isCurrent = useCallback(() => active.current && getActiveSession() === authority\n+    && authority?.partyId === accountPartyId, [authority, accountPartyId]);\n+  const sending = useRef(false);\n+\n+  useEffect(() => {\n+    active.current = true;\n+    let cancelled = false;\n+    void Directory.profileByParty(artistId).then((value) => {",
+      "path": "tdf-hq-ui/src/components/ArtistClaimPanel.tsx",
+      "commit_id": "2f09be7fb92ae091d6213f70f7657df8b86d04d7",
+      "original_commit_id": "2f09be7fb92ae091d6213f70f7657df8b86d04d7",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 1fe6195a0. Authenticated preparation now reuses a canonical directory twin or creates one private draft for a post-backfill core artist under a transaction-held Party row lock. Drafts stay private; blocked/archived/suspended targets remain unavailable. Only the core public name and opaque target ID are returned; no manager, credential, role, publication or identity transfer is created. The existing reviewed claim/grant flow remains authoritative. Loading errors offer retry. Actual PostgreSQL17 and compiled backend tests passed: eight concurrent requests reuse one target, anonymous denial, private-field non-disclosure, blocked denial, and persisted idempotent claim receipts. TLC safety/liveness passed (49 states), and removing the lock produced the expected uniqueness counterexample. 25 UI tests, typecheck/lint and contract checks passed; exact-head CI is pending. See docs/artist-management-claims.md and the new backend CI fixture.",
+      "created_at": "2026-09-18T00:15:51Z",
+      "updated_at": "2026-09-18T00:15:51Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4042517621",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042517621"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4042517621"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042517621/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 29,
+      "side": "RIGHT",
+      "in_reply_to_id": 4042389907,
+      "author_association": "OWNER",
+      "original_position": 29,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042542142",
+      "pull_request_review_id": 5242747262,
+      "id": 4042542142,
+      "node_id": "PRRC_kwDOQPdUrM7w9Ew-",
+      "diff_hunk": "@@ -1184,6 +1185,43 @@ createSavedSearch user idempotency request@SavedSearchCreateRequest\n   runDB $ rawExecute \"INSERT INTO directory_saved_search(id,account_party_id,name,canonical_query,query_hash,alerts_enabled,alert_frequency) VALUES (?,?,?,?::jsonb,encode(digest(?,'sha256'),'hex'),?,?) ON CONFLICT(account_party_id,query_hash) DO UPDATE SET name=EXCLUDED.name,alerts_enabled=EXCLUDED.alerts_enabled,alert_frequency=EXCLUDED.alert_frequency,updated_at=now()\" [toPersistValue savedId,toPersistValue (auPartyId user),PersistText (T.strip name),PersistText queryText,PersistText queryText,PersistBool alertsEnabled,PersistText alertFrequency]\n   jsonOne err500 \"SELECT jsonb_build_object('id',id,'name',name,'canonicalQuery',canonical_query,'alertsEnabled',alerts_enabled,'alertFrequency',alert_frequency) FROM directory_saved_search WHERE account_party_id=? AND query_hash=encode(digest(?,'sha256'),'hex')\" [toPersistValue (auPartyId user),PersistText queryText]\n \n+-- Authenticated, naturally idempotent preparation, not a management grant.\n+-- Serialize on the existing core artist before looking up/inserting the twin.\n+-- Never publish a draft or disclose its private fields to the claimant.\n+prepareArtistClaim :: AuthedUser -> Int64 -> AppM Value\n+prepareArtistClaim _user partyId = do\n+  result <- runDB $ do\n+    artists <- rawSql\n+      \"SELECT party.display_name FROM party JOIN artist_profile artist ON artist.artist_party_id=party.id WHERE party.id=? FOR UPDATE OF party\"\n+      [PersistInt64 partyId] :: SqlPersistT IO [Single Text]\n+    case artists of\n+      [] -> pure Nothing\n+      Single artistName : _ -> do\n+        targets <- rawSql\n+          ( \"SELECT resolved.id::text FROM directory_profile source JOIN directory_profile resolved \"\n+         <> \"ON resolved.id=coalesce(source.canonical_profile_id,source.id) \"\n+         <> \"WHERE source.subject_party_id=? ORDER BY (source.id=resolved.id) DESC,source.updated_at DESC,source.id LIMIT 1\" )",
+      "path": "tdf-hq/src/TDF/Server/Directory.hs",
+      "commit_id": "1fe6195a08a73574ee597cc0d227bcdf1a9157b2",
+      "original_commit_id": "1fe6195a08a73574ee597cc0d227bcdf1a9157b2",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Restrict claim targets to artist profiles**\n\nWhen the core artist's Party also owns another directory profile, such as a band profile created by the legacy backfill, this unfiltered lookup can select that newer non-artist row because `directory_profile` permits multiple profiles per `subject_party_id`. The resulting administration claim is then submitted\u2014and may be approved\u2014for the wrong directory resource while the selected artist profile remains unmanaged. Filter source candidates to the artist profile kinds associated with this claim flow before resolving the canonical target.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T00:19:39Z",
+      "updated_at": "2026-09-18T00:19:39Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4042542142",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042542142"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4042542142"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042542142/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 1203,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 27,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042801092",
+      "pull_request_review_id": 5243051987,
+      "id": 4042801092,
+      "node_id": "PRRC_kwDOQPdUrM7w-D_E",
+      "diff_hunk": "@@ -20,19 +23,63 @@ const buildArtistSignupLink = (claimArtistId: number | null) => {\n   return `/login?${params.toString()}`;\n };\n \n-const buildArtistLoginLink = () => {\n+const buildArtistLoginLink = (claimArtistId: number | null) => {\n   const params = new URLSearchParams();\n-  params.set('redirect', '/mi-artista');\n+  params.set('redirect', claimArtistId === null ? '/mi-artista' : `/artista/crear?claimArtistId=${claimArtistId}`);\n   return `/login?${params.toString()}`;\n };\n \n-const artistAccessRequest = () => {\n-  const feature = getFeatureById('artist.onboarding');\n-  return feature ? accessRequestPath(feature, 'create') : '/solicitudes-acceso/nueva';\n-};\n-\n export default function ArtistOnboardingPage() {\n-  const { session } = useSession();\n+  const { session, login } = useSession();\n+  const navigate = useNavigate();\n+  const mounted = useRef(true);\n+  const flight = useRef<typeof session>(null);\n+  const context = useRef({ session, generation: 0 });\n+  if (context.current.session !== session) {\n+    context.current = { session, generation: context.current.generation + 1 };\n+  }\n+  const isCurrent = () => mounted.current && context.current.session === session\n+    && getActiveSession() === session;",
+      "path": "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
+      "commit_id": "7411a2a6271b9995dbb01f6b9d21be5832b0834a",
+      "original_commit_id": "7411a2a6271b9995dbb01f6b9d21be5832b0834a",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Fence activation against claim-route changes**\n\nIf an account starts activation on `/artista/crear` and then browser navigation changes the same mounted route to `?claimArtistId=\u2026` before either request completes, `isCurrent()` still returns true because it tracks only the session. The stale activation therefore refreshes the session and navigates to `/mi-artista`, overriding the newly selected claim flow despite the entry guard checking `claimArtistId`; include the route/claim generation in the asynchronous validity check.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T01:04:01Z",
+      "updated_at": "2026-09-18T01:04:01Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4042801092",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042801092"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4042801092"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042801092/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 41,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 42,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 47,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042931622",
+      "pull_request_review_id": 5243212749,
+      "id": 4042931622,
+      "node_id": "PRRC_kwDOQPdUrM7w-j2m",
+      "diff_hunk": "@@ -1184,6 +1185,43 @@ createSavedSearch user idempotency request@SavedSearchCreateRequest\n   runDB $ rawExecute \"INSERT INTO directory_saved_search(id,account_party_id,name,canonical_query,query_hash,alerts_enabled,alert_frequency) VALUES (?,?,?,?::jsonb,encode(digest(?,'sha256'),'hex'),?,?) ON CONFLICT(account_party_id,query_hash) DO UPDATE SET name=EXCLUDED.name,alerts_enabled=EXCLUDED.alerts_enabled,alert_frequency=EXCLUDED.alert_frequency,updated_at=now()\" [toPersistValue savedId,toPersistValue (auPartyId user),PersistText (T.strip name),PersistText queryText,PersistText queryText,PersistBool alertsEnabled,PersistText alertFrequency]\n   jsonOne err500 \"SELECT jsonb_build_object('id',id,'name',name,'canonicalQuery',canonical_query,'alertsEnabled',alerts_enabled,'alertFrequency',alert_frequency) FROM directory_saved_search WHERE account_party_id=? AND query_hash=encode(digest(?,'sha256'),'hex')\" [toPersistValue (auPartyId user),PersistText queryText]\n \n+-- Authenticated, naturally idempotent preparation, not a management grant.\n+-- Serialize on the existing core artist before looking up/inserting the twin.\n+-- Never publish a draft or disclose its private fields to the claimant.\n+prepareArtistClaim :: AuthedUser -> Int64 -> AppM Value\n+prepareArtistClaim _user partyId = do\n+  result <- runDB $ do\n+    artists <- rawSql\n+      \"SELECT party.display_name FROM party JOIN artist_profile artist ON artist.artist_party_id=party.id WHERE party.id=? FOR UPDATE OF party\"\n+      [PersistInt64 partyId] :: SqlPersistT IO [Single Text]\n+    case artists of\n+      [] -> pure Nothing\n+      Single artistName : _ -> do\n+        targets <- rawSql\n+          ( \"SELECT resolved.id::text FROM directory_profile source JOIN directory_profile resolved \"\n+         <> \"ON resolved.id=coalesce(source.canonical_profile_id,source.id) \"\n+         <> \"WHERE source.subject_party_id=? ORDER BY (source.id=resolved.id) DESC,source.updated_at DESC,source.id LIMIT 1\" )",
+      "path": "tdf-hq/src/TDF/Server/Directory.hs",
+      "commit_id": "1fe6195a08a73574ee597cc0d227bcdf1a9157b2",
+      "original_commit_id": "1fe6195a08a73574ee597cc0d227bcdf1a9157b2",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in7411a2a: source and canonical targets are restricted to artist profiles. Expanded real HTTP/PostgreSQL17 fixture reproduces old200 instead of404 for a blocked artist with a newer band; rebuilt backend and hosted backend-quality job105440820017 pass. ArtistClaimKind TLC safety/liveness and wrong-kind negative control pass. No manager grant or identity transfer.",
+      "created_at": "2026-09-18T01:26:51Z",
+      "updated_at": "2026-09-18T01:26:51Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4042931622",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042931622"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4042931622"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042931622/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 1203,
+      "side": "RIGHT",
+      "in_reply_to_id": 4042542142,
+      "author_association": "OWNER",
+      "original_position": 27,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042931843",
+      "pull_request_review_id": 5243213029,
+      "id": 4042931843,
+      "node_id": "PRRC_kwDOQPdUrM7w-j6D",
+      "diff_hunk": "@@ -20,19 +23,63 @@ const buildArtistSignupLink = (claimArtistId: number | null) => {\n   return `/login?${params.toString()}`;\n };\n \n-const buildArtistLoginLink = () => {\n+const buildArtistLoginLink = (claimArtistId: number | null) => {\n   const params = new URLSearchParams();\n-  params.set('redirect', '/mi-artista');\n+  params.set('redirect', claimArtistId === null ? '/mi-artista' : `/artista/crear?claimArtistId=${claimArtistId}`);\n   return `/login?${params.toString()}`;\n };\n \n-const artistAccessRequest = () => {\n-  const feature = getFeatureById('artist.onboarding');\n-  return feature ? accessRequestPath(feature, 'create') : '/solicitudes-acceso/nueva';\n-};\n-\n export default function ArtistOnboardingPage() {\n-  const { session } = useSession();\n+  const { session, login } = useSession();\n+  const navigate = useNavigate();\n+  const mounted = useRef(true);\n+  const flight = useRef<typeof session>(null);\n+  const context = useRef({ session, generation: 0 });\n+  if (context.current.session !== session) {\n+    context.current = { session, generation: context.current.generation + 1 };\n+  }\n+  const isCurrent = () => mounted.current && context.current.session === session\n+    && getActiveSession() === session;",
+      "path": "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
+      "commit_id": "7411a2a6271b9995dbb01f6b9d21be5832b0834a",
+      "original_commit_id": "7411a2a6271b9995dbb01f6b9d21be5832b0834a",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in912f8326ba7a13611cfbad592f6680fe50bdbefc. The generation now includes location.key and session identity, including navigation away and back; flight cleanup belongs to its generation. Two regressions fail before the fix at the activation/session-refresh boundaries;13 activation tests, TypeScript and full UI lint pass. ArtistActivation TLC explores15 states, proves current context/persisted authority under documented bounds, and its negative control violates CurrentContext. Full pinned TLC/Alloy runner and23 CI contracts pass. Evidence is versioned under docs/ux-ui-audit/2026-09-17/evidence/artist-route-*; hosted checks are running.",
+      "created_at": "2026-09-18T01:26:53Z",
+      "updated_at": "2026-09-18T01:26:53Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4042931843",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042931843"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4042931843"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/406"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042931843/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 41,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 42,
+      "side": "RIGHT",
+      "in_reply_to_id": 4042801092,
+      "author_association": "OWNER",
+      "original_position": 47,
+      "position": 1,
+      "subject_type": "line"
+    }
+  ]
+]

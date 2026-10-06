@@ -1,0 +1,176 @@
+{
+  "captured_at": "2026-10-04T02:22:45.971582+00:00",
+  "paginated": true,
+  "branches": {
+    "audit/critical-completion-20260916": "d24e025b8bf8c90ce373fab277ebe869eaf0fce5",
+    "audit/editorial-ownership-repair-20261003": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+    "audit/event-stack-consolidation-20260928": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+    "audit/notification-history-rescue-20261003": "6d00fa1463603bacecbb3210279b09ed88bbba0c",
+    "audit/provider-reviewed-release-tooling-20260918": "fcc03784895f08761483e1e7a844d6e6e95b443e",
+    "chore/event-catalog-stale-reconciliation": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+    "chore/event-operations-catalog-review": "d5505e2731d395cc2a5859d215e36ffda9e88138",
+    "codex/event-ingestion-boundaries-20260927": "a125a347cacb8d941a515171e2a81d4c92f2c2d2",
+    "codex/event-ingestion-editorial-20260928": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+    "codex/hetzner-cutover-evidence-20260928": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+    "codex/payment-capture-replay-integrity-20260915": "c8ef56f404dc12f5311635214549221a7090ea70",
+    "codex/payment-checkout-surfaces-20260914": "70823741bd33ed713cb2e703f812a884ad8ba1e7",
+    "codex/payment-closed-checkout-evidence-20260915": "9d0d84dbb4e5afafbfda7f0074421246926fd98d",
+    "codex/payment-held-refund-query-20260916": "365561aecff57e76d38cb0e98217a34f1d642ff4",
+    "codex/payment-http-boundary-20260914": "aac15a69e9bc2e6de01652282d9da4012a0af067",
+    "codex/payment-notification-identity-20260914": "86a8ce38cd131bfcb1b3e3035fd9a3e3aea1d503",
+    "codex/payment-notification-minimization-20260914": "6bd0c9316f1816ccfc1873363787a99f33ff72e0",
+    "codex/payment-platform-20260911": "e9c81a2a3977ab1f69c92e82805bdeff6550ea03",
+    "codex/payment-provider-execution-20260913": "536964de601c5e031835781b3af07ff797cd249e",
+    "codex/payment-reconciliation-atomicity-20260914": "a5ba14f0be4e4f6da1df666b31dd6ae343afedab",
+    "codex/payment-reconciliation-evidence-view-20260915": "a64ea1b580faab59e547e3b307f74b0313d58866",
+    "codex/payment-reconciliation-safety-20260914": "b8c0e38cdd365e7f977d5cf15f93c164ebfc2149",
+    "codex/payment-reconciliation-worker-20260915": "139a45102c4b715cc8762b5653d0a2db061b167c",
+    "codex/payment-recovery-observability-20260915": "c19c4f5d87abdb5a9b3e935e79af2238fdb99c43",
+    "codex/payment-refund-execution-safety-20260916": "20566eab9e99685983beac359f2462386e59f8f7",
+    "codex/payment-refund-reconciliation-20260916": "66fa88e90c80866e0090761addfabd9f1e817cc2",
+    "codex/payment-stack-integration-20260915": "824e1e9aeaa99d399c31bc5755c4967c03cb17fc",
+    "codex/payment-stack-integration-20260916": "4ff7109a378d640a179601fd0ad88b38f3074526",
+    "codex/payment-staging-qualification-20260914": "0081b6b03bd58716090c57d936f31a364e944522",
+    "codex/payment-terminal-recovery-20260914": "c263a499cc760ce7f97fe7833211f4d7de7494ea",
+    "codex/payment-worker-log-safety-20260915": "ed064a7549f93bdd9239c5781706400c6fad5aa7",
+    "codex/payphone-cancellation-compatibility-20260915": "4ccaaa190c4ae6b1d041d8eabd7eed8fd5327c5e",
+    "docs/critical-completion-closeout-20260917": "9523a4816b4668581eb7232212cc53398bd844ac",
+    "feat/event-logistics-transaction-hardening": "f500b62c453e7da8981bc66138418fa59a586565",
+    "feat/event-operations-api-foundation": "b6ba963623861d1e2804b18adb46e6e4f5f5be80",
+    "feat/event-raci-editor-context": "13abde1cba82b7b79c21b6f35e87c91de676366e",
+    "feat/event-raci-reassignment-api": "bfd5f17b92d629f578bc02f4aee338ed15843806",
+    "feat/event-raci-reassignment-command": "f6ffb2a27b87ed42d4d49289024d5b8a612b94cf",
+    "feat/event-raci-web-editor": "061553d085d3106a9c8877ca08ccb3e2420cdd09",
+    "feat/event-task-aggregate-revision": "3b1ce4d9dbd0efb6d1e354ffd9f58e92a6916320",
+    "feat/event-task-commit-invariants": "259becd7b3763e084b54da8749b1e6fde8d9d862",
+    "feat/event-task-completion-api": "823da0fa801abe3bdb3b7679550f1315ad0946ed",
+    "feat/event-task-completion-client": "f2f01194090a241777c451d06cb0848af7aa759a",
+    "feat/event-task-completion-command": "78bdd4df465d1c7d8a752f9df0ed714ecad2330d",
+    "feat/event-task-raci-view": "f03f366de44c8ad09248e9d399caa5994af06d5a",
+    "feat/event-task-read-api": "881882e15cd1b2400cc2e0452ea50683dea675de",
+    "feat/event-task-read-projection": "a1b92c220691b694e5f53e7deaf4d455ce46bc44",
+    "feat/event-task-revisioned-read": "503fd7b651843e9f7cadf4fd15931256bb847ece",
+    "fix/access-request-name-production-20260916": "954e995f1cd08f363afe2b0e34ccf02dcd80ea8c",
+    "fix/access-request-requester-name-20260916": "efb09219be25941af574eaac4ec5d2e7e3a421b2",
+    "fix/artist-follow-onboarding-continuity": "1299f9c63a325e17dff0bfe1f048ff52f7bb8b15",
+    "fix/event-command-existence-privacy": "892038c7d7ec64082b39917127f67748e6d1dca7",
+    "fix/event-command-replay-authorization": "6b0913bab2b065b327149a6d3a042efecd9e75d7",
+    "fix/event-raci-review-contrast": "cbbb3da9f20c2314c73a5114b8c0aa943647054e",
+    "fix/event-schema-migration-dependencies": "192f9578665109e52d28a96c772e3307bdc684e5",
+    "fix/event-session-transaction-fence": "3cd978045aa406c55512a6673c2ba5f2983ebc7c",
+    "fix/event-snapshot-privacy-boundary": "db81fdbe71d9b8e83d40d279b98c69df3749b316",
+    "fix/event-ui-lazy-validation": "d4e7ed0505a87a03706b765fc304ffa50362b8fb",
+    "fix/fanhub-authoritative-onboarding": "ff3cd1676a6db7b6ceef56d44407b0846a4f2071",
+    "fix/instagram-checkpoint-metadata-20260916": "40034a31e32ca7d1dbbf6dae67efda8eef982586",
+    "fix/notification-mobile-release-pin-20260918": "6449b75fe5387fcb1b80e55f4a71602a3fed2403",
+    "fix/preserve-enabled-paypal-webhooks-20260916": "a28b94d74a49ebdf71481694bc910ab95298e027",
+    "fix/release-artwork-20260915": "760763642ae9641b19ef0adfb317f4243ff30a25",
+    "fix/reservation-pluscal-integrity": "ec24b70b1b2319a875099cc118db0e68b62a5ed0",
+    "fix/web-onboarding-reconciliation-integration": "827d745629f8cdbaee4429ded3689d3bf520a09d",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "test/event-operations-http-boundary": "dbe975d3143446c5e7cd9b132b6f994067065e7b",
+    "test/event-operations-schema-rehearsal": "cf591e1faa975b8023c6c06892fb50a51ba06dff",
+    "test/event-raci-accessibility-evidence": "6047377348e901c919d7691b849faab30980b952",
+    "test/event-raci-full-stack": "7cdd712568311975407cf0b7cb2ee2081a0c0414",
+    "test/event-rsvp-ci-contracts": "5ad2333c2a6ce379579a1cffa2708d56cbb21f5f",
+    "test/event-task-browser-startup": "221d1205c9cc2e992f8f36f73d441a3f9c6fda21",
+    "test/merch-expiry-checkout-contract": "a1895105c6e15e1f95b4b72fd6218b34a311f6e6"
+  },
+  "open_pr_heads_and_bases": {
+    "468": [
+      "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+      "main"
+    ],
+    "414": [
+      "4ff7109a378d640a179601fd0ad88b38f3074526",
+      "codex/payment-held-refund-query-20260916"
+    ],
+    "408": [
+      "365561aecff57e76d38cb0e98217a34f1d642ff4",
+      "codex/payment-refund-reconciliation-20260916"
+    ],
+    "401": [
+      "66fa88e90c80866e0090761addfabd9f1e817cc2",
+      "codex/payment-refund-execution-safety-20260916"
+    ],
+    "396": [
+      "20566eab9e99685983beac359f2462386e59f8f7",
+      "codex/payment-worker-log-safety-20260915"
+    ],
+    "393": [
+      "ed064a7549f93bdd9239c5781706400c6fad5aa7",
+      "codex/payment-stack-integration-20260915"
+    ],
+    "389": [
+      "824e1e9aeaa99d399c31bc5755c4967c03cb17fc",
+      "codex/payment-reconciliation-evidence-view-20260915"
+    ],
+    "385": [
+      "a64ea1b580faab59e547e3b307f74b0313d58866",
+      "codex/payment-closed-checkout-evidence-20260915"
+    ],
+    "380": [
+      "9d0d84dbb4e5afafbfda7f0074421246926fd98d",
+      "codex/payment-capture-replay-integrity-20260915"
+    ],
+    "378": [
+      "c8ef56f404dc12f5311635214549221a7090ea70",
+      "codex/payment-recovery-observability-20260915"
+    ],
+    "374": [
+      "c19c4f5d87abdb5a9b3e935e79af2238fdb99c43",
+      "codex/payphone-cancellation-compatibility-20260915"
+    ],
+    "371": [
+      "4ccaaa190c4ae6b1d041d8eabd7eed8fd5327c5e",
+      "codex/payment-reconciliation-worker-20260915"
+    ],
+    "363": [
+      "139a45102c4b715cc8762b5653d0a2db061b167c",
+      "codex/payment-reconciliation-atomicity-20260914"
+    ],
+    "358": [
+      "a5ba14f0be4e4f6da1df666b31dd6ae343afedab",
+      "codex/payment-notification-identity-20260914"
+    ],
+    "353": [
+      "86a8ce38cd131bfcb1b3e3035fd9a3e3aea1d503",
+      "codex/payment-http-boundary-20260914"
+    ],
+    "350": [
+      "aac15a69e9bc2e6de01652282d9da4012a0af067",
+      "codex/payment-notification-minimization-20260914"
+    ],
+    "347": [
+      "6bd0c9316f1816ccfc1873363787a99f33ff72e0",
+      "codex/payment-terminal-recovery-20260914"
+    ],
+    "344": [
+      "0081b6b03bd58716090c57d936f31a364e944522",
+      "codex/payment-terminal-recovery-20260914"
+    ],
+    "343": [
+      "c263a499cc760ce7f97fe7833211f4d7de7494ea",
+      "codex/payment-reconciliation-safety-20260914"
+    ],
+    "340": [
+      "b8c0e38cdd365e7f977d5cf15f93c164ebfc2149",
+      "codex/payment-checkout-surfaces-20260914"
+    ],
+    "334": [
+      "70823741bd33ed713cb2e703f812a884ad8ba1e7",
+      "codex/payment-provider-execution-20260913"
+    ],
+    "332": [
+      "536964de601c5e031835781b3af07ff797cd249e",
+      "codex/payment-platform-20260911"
+    ],
+    "331": [
+      "e9c81a2a3977ab1f69c92e82805bdeff6550ea03",
+      "main"
+    ]
+  },
+  "branch_count": 73,
+  "open_pr_count": 23,
+  "matches_final_33": true
+}

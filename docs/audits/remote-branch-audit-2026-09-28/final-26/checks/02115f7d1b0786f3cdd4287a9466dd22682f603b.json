@@ -1,0 +1,166 @@
+[
+  {
+    "total_count": 2,
+    "check_runs": [
+      {
+        "id": 105553912054,
+        "name": "Cloudflare Pages",
+        "node_id": "CR_kwDOQPdUrM8AAAAYk4Dg9g",
+        "head_sha": "02115f7d1b0786f3cdd4287a9466dd22682f603b",
+        "external_id": "e6a96e80-1a94-4569-962a-a9078c4d59ec",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/105553912054",
+        "html_url": "https://github.com/diegueins680/tdf-app/runs/105553912054",
+        "details_url": "https://dash.cloudflare.com/?to=/c07256e78d05ad9a508d0aee82ac577a/pages/view/tdf-app/e6a96e80-1a94-4569-962a-a9078c4d59ec",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-09-18T09:39:00Z",
+        "completed_at": "2026-09-18T09:39:00Z",
+        "output": {
+          "title": "Deployed successfully",
+          "summary": "<table><tr><td><strong>Latest commit:</strong> </td><td>\n<code>02115f7</code>\n</td></tr>\n<tr><td><strong>Status:</strong></td><td>&nbsp;\u2705&nbsp; Deploy successful!</td></tr>\n<tr><td><strong>Preview URL:</strong></td><td>\n<a href='https://e6a96e80.tdf-app.pages.dev'>https://e6a96e80.tdf-app.pages.dev</a>\n</td></tr>\n<tr><td><strong>Branch Preview URL:</strong></td><td>\n<a href='https://feat-identity-intake-prevent.tdf-app.pages.dev'>https://feat-identity-intake-prevent.tdf-app.pages.dev</a>\n</td></tr>\n</table>\n\n[View logs](https://dash.cloudflare.com/?to=/c07256e78d05ad9a508d0aee82ac577a/pages/view/tdf-app/e6a96e80-1a94-4569-962a-a9078c4d59ec)\n",
+          "text": null,
+          "annotations_count": 0,
+          "annotations_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/105553912054/annotations"
+        },
+        "check_suite": {
+          "id": 95682863602
+        },
+        "app": {
+          "id": 85455,
+          "client_id": "Iv1.0879b6ff6c8f7a1a",
+          "slug": "cloudflare-workers-and-pages",
+          "node_id": "MDM6QXBwODU0NTU=",
+          "owner": {
+            "login": "cloudflare",
+            "id": 314135,
+            "node_id": "MDEyOk9yZ2FuaXphdGlvbjMxNDEzNQ==",
+            "avatar_url": "https://avatars.githubusercontent.com/u/314135?v=4",
+            "gravatar_id": "",
+            "url": "https://api.github.com/users/cloudflare",
+            "html_url": "https://github.com/cloudflare",
+            "followers_url": "https://api.github.com/users/cloudflare/followers",
+            "following_url": "https://api.github.com/users/cloudflare/following{/other_user}",
+            "gists_url": "https://api.github.com/users/cloudflare/gists{/gist_id}",
+            "starred_url": "https://api.github.com/users/cloudflare/starred{/owner}{/repo}",
+            "subscriptions_url": "https://api.github.com/users/cloudflare/subscriptions",
+            "organizations_url": "https://api.github.com/users/cloudflare/orgs",
+            "repos_url": "https://api.github.com/users/cloudflare/repos",
+            "events_url": "https://api.github.com/users/cloudflare/events{/privacy}",
+            "received_events_url": "https://api.github.com/users/cloudflare/received_events",
+            "type": "Organization",
+            "user_view_type": "public",
+            "site_admin": false
+          },
+          "name": "Cloudflare Workers and Pages",
+          "description": "The **Cloudflare GitHub App** automatically deploys your code to Cloudflare when you merge a pull request to your GitHub repository. It can also create a new repository on your GitHub account when you get started with a Cloudflare template. \r\n\r\n\r\nThis integration also:\r\n- Displays the status of your deployments as check runs\r\n- Posts links to preview URLs as comments on each pull request (Cloudflare Pages only)\r\n\r\n\r\n<img src=\"https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/b3c1fc84-7d73-4fc4-8835-69e85980df00/public\" width=67% >\r\n\r\n\r\n<img src=\"https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/e9a5ffb3-4ec3-4dd6-8bc8-ed0eec5ddb00/public\" width=67% >\r\n\r\n\r\nFor more information, refer to the [Cloudflare Workers docs](https://developers.cloudflare.com/workers/ci-cd/builds/) and [Cloudflare Pages docs](https://developers.cloudflare.com/pages/configuration/git-integration/).",
+          "external_url": "https://developers.cloudflare.com/workers/ci-cd/builds/",
+          "html_url": "https://github.com/apps/cloudflare-workers-and-pages",
+          "created_at": "2020-10-19T20:23:00Z",
+          "updated_at": "2024-12-19T22:06:10Z",
+          "permissions": {
+            "administration": "write",
+            "checks": "write",
+            "contents": "write",
+            "deployments": "write",
+            "metadata": "read",
+            "pull_requests": "write"
+          },
+          "events": [
+            "pull_request",
+            "push"
+          ]
+        },
+        "pull_requests": []
+      },
+      {
+        "id": 105553598438,
+        "name": "Vercel Preview Comments",
+        "node_id": "CR_kwDOQPdUrM8AAAAYk3wX5g",
+        "head_sha": "02115f7d1b0786f3cdd4287a9466dd22682f603b",
+        "external_id": "",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/105553598438",
+        "html_url": "https://github.com/diegueins680/tdf-app/runs/105553598438",
+        "details_url": "https://vercel.com/github",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-09-18T09:37:49Z",
+        "completed_at": "2026-09-18T09:37:49Z",
+        "output": {
+          "title": "\u2705 No unresolved feedback",
+          "summary": "\ud83d\udcac 0 unresolved, 0 resolved. [Go to feedback](https://vercel.live/open-feedback/tdf-app-tdf-hq-ui-git-feat-identity-24da89-diego-saas-projects.vercel.app?via=pr-comment-feedback-link)",
+          "text": null,
+          "annotations_count": 0,
+          "annotations_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/105553598438/annotations"
+        },
+        "check_suite": {
+          "id": 95682863418
+        },
+        "app": {
+          "id": 8329,
+          "client_id": "Iv1.9d7d662ea00b8481",
+          "slug": "vercel",
+          "node_id": "MDM6QXBwODMyOQ==",
+          "owner": {
+            "login": "vercel",
+            "id": 14985020,
+            "node_id": "MDEyOk9yZ2FuaXphdGlvbjE0OTg1MDIw",
+            "avatar_url": "https://avatars.githubusercontent.com/u/14985020?v=4",
+            "gravatar_id": "",
+            "url": "https://api.github.com/users/vercel",
+            "html_url": "https://github.com/vercel",
+            "followers_url": "https://api.github.com/users/vercel/followers",
+            "following_url": "https://api.github.com/users/vercel/following{/other_user}",
+            "gists_url": "https://api.github.com/users/vercel/gists{/gist_id}",
+            "starred_url": "https://api.github.com/users/vercel/starred{/owner}{/repo}",
+            "subscriptions_url": "https://api.github.com/users/vercel/subscriptions",
+            "organizations_url": "https://api.github.com/users/vercel/orgs",
+            "repos_url": "https://api.github.com/users/vercel/repos",
+            "events_url": "https://api.github.com/users/vercel/events{/privacy}",
+            "received_events_url": "https://api.github.com/users/vercel/received_events",
+            "type": "Organization",
+            "user_view_type": "public",
+            "site_admin": false
+          },
+          "name": "Vercel",
+          "description": "Vercel for GitHub automatically deploys your PRs to Vercel.\r\nPreview every PR live, without any configuration required.\r\n\r\nFor more information, see our [documentation](https://vercel.com/docs/github?utm_source=github&utm_medium=marketplace&utm_campaign=vercel-app).\r\n\r\n![](https://assets.vercel.com/image/upload/v1597943727/front/github/github-comment-monorepo.png)",
+          "external_url": "https://vercel.com/github",
+          "html_url": "https://github.com/apps/vercel",
+          "created_at": "2018-01-19T21:51:06Z",
+          "updated_at": "2026-08-20T01:39:01Z",
+          "permissions": {
+            "actions": "read",
+            "administration": "write",
+            "checks": "write",
+            "contents": "write",
+            "deployments": "write",
+            "emails": "read",
+            "issues": "write",
+            "members": "read",
+            "metadata": "read",
+            "pull_requests": "write",
+            "repository_hooks": "write",
+            "statuses": "write",
+            "workflows": "write"
+          },
+          "events": [
+            "branch_protection_rule",
+            "check_run",
+            "delete",
+            "deployment",
+            "issue_comment",
+            "membership",
+            "pull_request",
+            "pull_request_review",
+            "pull_request_review_comment",
+            "pull_request_review_thread",
+            "push",
+            "repository",
+            "status",
+            "team"
+          ]
+        },
+        "pull_requests": []
+      }
+    ]
+  }
+]

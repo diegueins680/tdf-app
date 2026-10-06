@@ -1,0 +1,25 @@
+ docs/social/audit.md                               |  13 +
+ docs/social/dm-read-boundary.md                    |  14 +-
+ .../evidence/chat-client-baseline/comparison.txt   |   2 +
+ .../test-inclusive-typecheck-baseline.txt          | 134 ++++
+ .../evidence/completed-parent-ci/dm-api-final.json | 757 +++++++++++++++++++++
+ .../profile-browser-first-failure.txt              |  31 +
+ .../completed-parent-ci/profile-rerun-final.json   | 757 +++++++++++++++++++++
+ .../evidence/dm-read-boundary/backend-result.txt   |  43 ++
+ .../child-schema-startup-failed.txt                |  89 +++
+ .../dm-read-boundary/ci-44a1c7bed-in-progress.json |   1 +
+ .../evidence/dm-read-boundary/schema-docker.txt    | 197 ++++++
+ .../evidence/fan-effects-ci/full-current.json      |   1 +
+ .../evidence/fan-effects-ci/initial-checks.json    |   1 +
+ .../evidence/fan-effects-ci/latest-checks.json     |   1 +
+ .../evidence/fan-effects-ci/social-current.json    |   1 +
+ .../evidence/legacy-write-ci/current-checks.json   |   1 +
+ .../evidence/legacy-write-ci/final-full-ci.json    |   1 +
+ .../evidence/legacy-write-ci/initial-checks.json   |   1 +
+ .../profile-ci/initial-final-head-checks.json      |   1 +
+ .../evidence/relationship-ci/final-full-ci.json    |   1 +
+ .../evidence/relationship-ci/initial-checks.json   | 137 ++++
+ docs/social/fan-integration-next.md                |  40 ++
+ docs/social/handoff.md                             | 221 +++++-
+ docs/social/policy.md                              |   1 +
+ 24 files changed, 2442 insertions(+), 4 deletions(-)

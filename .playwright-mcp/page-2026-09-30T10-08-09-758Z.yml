@@ -1,0 +1,422 @@
+- generic [ref=f33e1]:
+  - generic:
+    - generic:
+      - generic:
+        - generic [ref=f33e9]:
+          - generic [ref=f33e12]:
+            - link [ref=f33e568] [cursor=pointer]:
+              - /url: /
+            - generic [ref=f33e25]:
+              - link [ref=f33e570] [cursor=pointer]:
+                - /url: /
+              - link [ref=f33e572] [cursor=pointer]:
+                - /url: /reels/
+              - link [ref=f33e574] [cursor=pointer]:
+                - /url: /direct/inbox/
+                - generic [ref=f33e53]: "8"
+              - link [ref=f33e577] [cursor=pointer]:
+                - /url: /explore/
+              - link [ref=f33e579] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f33e581] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f33e583] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f33e585] [cursor=pointer]:
+                - /url: /tdf.records.label/
+                - link [ref=f33e586]
+            - generic [ref=f33e119]:
+              - link [ref=f33e588] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f33e590] [cursor=pointer]:
+                - /url: "#"
+          - generic [ref=f33e138]:
+            - main [ref=f33e139]:
+              - generic [ref=f33e141]:
+                - generic [ref=f33e263]:
+                  - generic [ref=f33e264]:
+                    - generic [ref=f33e268]:
+                      - button [ref=f33e592] [cursor=pointer]:
+                        - generic [ref=f33e270]: Note...
+                      - button [ref=f33e593] [cursor=pointer]
+                    - generic [ref=f33e283]:
+                      - generic [ref=f33e284]:
+                        - generic [ref=f33e285]:
+                          - link [ref=f33e595] [cursor=pointer]:
+                            - /url: "#"
+                            - heading [level=2] [ref=f33e596]:
+                              - generic [ref=f33e289]: tdf.records.label
+                          - button [ref=f33e598] [cursor=pointer]
+                        - generic [ref=f33e298]: TDF Records
+                        - generic [ref=f33e300]:
+                          - generic [ref=f33e302]:
+                            - generic [ref=f33e303]: "344"
+                            - text: posts
+                          - link [ref=f33e600] [cursor=pointer]:
+                            - /url: "#"
+                            - generic [ref=f33e306]:
+                              - generic [ref=f33e601]: 4,153
+                              - text: followers
+                          - link [ref=f33e602] [cursor=pointer]:
+                            - /url: "#"
+                            - generic [ref=f33e310]:
+                              - generic [ref=f33e311]: 1,963
+                              - text: following
+                      - generic [ref=f33e313]:
+                        - generic [ref=f33e314]: Entrepreneur
+                        - generic [ref=f33e316]:
+                          - button [ref=f33e603] [cursor=pointer]:
+                            - generic [ref=f33e318]: ⏺️ Estudio de grabación 🎹 Renta de equipos 🎛️ Mezcla y mastering 🖥️ Edición 🎸
+                          - generic [ref=f33e319]:
+                            - text: ...
+                            - button [ref=f33e604] [cursor=pointer]:
+                              - generic [ref=f33e321]: more
+                        - heading [level=1] [ref=f33e605]: Félix Oralabal y calle C, Quito, Ecuador 170510
+                        - generic [ref=f33e323]:
+                          - link [ref=f33e607] [cursor=pointer]:
+                            - /url: https://l.instagram.com/?u=https%3A%2F%2Flinktr.ee%2Ftdfestudiodegrabacion%3Futm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio%26fbclid%3DPAZXh0bgNhZW0CMTEAcGRvZgJzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAaePYcXxq-v3G7EV9kE1sD513vzKvVOj7lKxxS7dCqRlktoVNOf40d67VIgaqg_aem_49xd1rPpXvZjCgb85JiKUQ&e=AUBm4Q3LhIltjfZL68sPdqudX6yC8iVjd5MjDZKf3Qj6VIOZHz5w2ODYrM5qjMXLih03NUArTjodjmG1FxC0Djcbeazln_H15e7EgfERhZuwDY0sRLnpZqwh44WxxJfFqpuCyCmJWyV5
+                            - generic [ref=f33e331]: linktr.ee/tdfestudiodegrabacion
+                          - link [ref=f33e608] [cursor=pointer]:
+                            - /url: https://www.threads.com/@tdf.records.label?xmt=AQG0aopLXzeARGbiae_nYksoOYqvlii802JLnBoqWaxxuTw
+                            - generic [ref=f33e337]: tdf.records.label
+                  - generic [ref=f33e343]:
+                    - link [ref=f33e610] [cursor=pointer]:
+                      - /url: /accounts/edit/
+                      - text: Edit profile
+                    - link [ref=f33e611] [cursor=pointer]:
+                      - /url: /archive/stories/
+                      - text: View archive
+                  - menu [ref=f33e349]:
+                    - list [ref=f33e353]:
+                      - listitem [ref=f33e354]
+                      - listitem [ref=f33e355]
+                      - listitem [ref=f33e356]:
+                        - link [ref=f33e612] [cursor=pointer]:
+                          - /url: /stories/highlights/18020134514197304/
+                          - button [ref=f33e613]:
+                            - button [ref=f33e614]
+                            - generic [ref=f33e365]: Tour Colombia
+                      - listitem [ref=f33e368]:
+                        - link [ref=f33e616] [cursor=pointer]:
+                          - /url: /stories/highlights/18029198257359774/
+                          - button [ref=f33e617]:
+                            - button [ref=f33e618]
+                            - generic [ref=f33e377]: G U E S T S
+                      - listitem [ref=f33e380]:
+                        - link [ref=f33e620] [cursor=pointer]:
+                          - /url: /stories/highlights/18200542021155753/
+                          - button [ref=f33e621]:
+                            - button [ref=f33e622]
+                            - generic [ref=f33e389]: S Y N T H S
+                      - listitem [ref=f33e392]:
+                        - link [ref=f33e624] [cursor=pointer]:
+                          - /url: /stories/highlights/17928456047228438/
+                          - button [ref=f33e625]:
+                            - button [ref=f33e626]
+                            - generic [ref=f33e401]: E S T U D I O
+                      - listitem [ref=f33e404]:
+                        - button [ref=f33e628] [cursor=pointer]:
+                          - generic [ref=f33e413]: New
+                - tablist [ref=f33e417]:
+                  - link [ref=f33e630] [cursor=pointer]:
+                    - /url: /tdf.records.label/
+                  - link [ref=f33e632] [cursor=pointer]:
+                    - /url: /tdf.records.label/reels/
+                  - link [ref=f33e634] [cursor=pointer]:
+                    - /url: /tdf.records.label/saved/
+                  - link [ref=f33e636] [cursor=pointer]:
+                    - /url: /tdf.records.label/reposts/
+                  - link [ref=f33e638] [cursor=pointer]:
+                    - /url: /tdf.records.label/tagged/
+                - generic [ref=f33e456]:
+                  - generic [ref=f33e457]:
+                    - link [ref=f33e640] [cursor=pointer]:
+                      - /url: /tdf.records.label/p/DRnkzyTjlVD/
+                    - link [ref=f33e642] [cursor=pointer]:
+                      - /url: /tdf.records.label/p/DRihKjAEVSV/
+                    - link [ref=f33e644] [cursor=pointer]:
+                      - /url: /tdf.records.label/p/DRdPZsqErwy/
+                  - generic [ref=f33e476]:
+                    - link [ref=f33e646] [cursor=pointer]:
+                      - /url: /tdf.records.label/reel/DdX1VpgxlO1/
+                    - link [ref=f33e648] [cursor=pointer]:
+                      - /url: /letal_______/reel/DdIJF9xAEjx/
+                    - link [ref=f33e650] [cursor=pointer]:
+                      - /url: /tdf.records.label/p/DdAoQc0kQ0Y/
+                  - generic [ref=f33e495]:
+                    - link [ref=f33e652] [cursor=pointer]:
+                      - /url: /tdf.records.label/p/DdAlcYhkWF0/
+                    - link [ref=f33e654] [cursor=pointer]:
+                      - /url: /letal_______/reel/Dc14qfagLM5/
+                    - link [ref=f33e656] [cursor=pointer]:
+                      - /url: /blue_records333/reel/DcycJ0SxqxO/
+                  - generic [ref=f33e514]:
+                    - link [ref=f33e658] [cursor=pointer]:
+                      - /url: /juano_music/reel/DXPB2bjDn-E/
+                    - link [ref=f33e660] [cursor=pointer]:
+                      - /url: /blackpalacio_music/p/DV_V39QjlPa/
+                    - link [ref=f33e662] [cursor=pointer]:
+                      - /url: /takijanaskaec/reel/DUqPOqfjqsS/
+            - contentinfo [ref=f33e183]:
+              - generic [ref=f33e184]:
+                - generic [ref=f33e186]:
+                  - link [ref=f33e664] [cursor=pointer]:
+                    - /url: https://about.meta.com/
+                    - generic [ref=f33e189]: Meta
+                  - link [ref=f33e665] [cursor=pointer]:
+                    - /url: https://about.instagram.com/
+                    - generic [ref=f33e192]: About
+                  - link [ref=f33e666] [cursor=pointer]:
+                    - /url: https://about.instagram.com/blog/
+                    - generic [ref=f33e195]: Blog
+                  - link [ref=f33e667] [cursor=pointer]:
+                    - /url: https://about.instagram.com/about-us/careers
+                    - generic [ref=f33e198]: Jobs
+                  - link [ref=f33e668] [cursor=pointer]:
+                    - /url: https://help.instagram.com/
+                    - generic [ref=f33e201]: Help
+                  - link [ref=f33e669] [cursor=pointer]:
+                    - /url: https://developers.facebook.com/docs/instagram
+                    - generic [ref=f33e204]: API
+                  - link [ref=f33e670] [cursor=pointer]:
+                    - /url: /legal/privacy/
+                    - generic [ref=f33e207]: Privacy
+                  - link [ref=f33e671] [cursor=pointer]:
+                    - /url: /legal/terms/
+                    - generic [ref=f33e210]: Terms
+                  - link [ref=f33e672] [cursor=pointer]:
+                    - /url: /explore/locations/
+                    - generic [ref=f33e213]: Locations
+                  - link [ref=f33e673] [cursor=pointer]:
+                    - /url: /popular/
+                    - generic [ref=f33e216]: Popular
+                  - link [ref=f33e674] [cursor=pointer]:
+                    - /url: /web/lite/
+                    - generic [ref=f33e219]: Instagram Lite
+                  - link [ref=f33e675] [cursor=pointer]:
+                    - /url: https://www.meta.ai/?utm_source=foa_web_footer
+                    - generic [ref=f33e222]: Meta AI
+                  - link [ref=f33e676] [cursor=pointer]:
+                    - /url: https://muse.ai/
+                    - generic [ref=f33e225]: Muse
+                  - link [ref=f33e677] [cursor=pointer]:
+                    - /url: https://www.threads.com/
+                    - generic [ref=f33e228]: Threads
+                  - link [ref=f33e678] [cursor=pointer]:
+                    - /url: https://www.facebook.com/help/instagram/261704639352628
+                    - generic [ref=f33e231]: Contact Uploading & Non-Users
+                  - link [ref=f33e679] [cursor=pointer]:
+                    - /url: /accounts/meta_verified/?entrypoint=web_footer
+                    - generic [ref=f33e234]: Meta Verified
+                - generic [ref=f33e235]:
+                  - generic [ref=f33e236] [cursor=pointer]:
+                    - generic [ref=f33e237]: English
+                    - combobox [ref=f33e681]
+                  - generic [ref=f33e244]: © 2026 Instagram from Meta
+        - button [ref=f33e534] [cursor=pointer]:
+          - generic "Messages - 8 new notifications" [ref=f33e535]:
+            - generic [ref=f33e536]:
+              - generic [ref=f33e538]:
+                - img "Messages" [ref=f33e539]
+                - generic "Direct messaging - 8 new notifications link" [ref=f33e542]: "8"
+              - generic [ref=f33e545]: Messages
+            - generic [ref=f33e546]:
+              - button [ref=f33e547]:
+                - img "8 unread chats" [ref=f33e549]
+              - button "User avatar ..." [ref=f33e554]:
+                - img "User avatar" [ref=f33e557]
+              - button "User avatar David Márquez" [ref=f33e559]:
+                - img "User avatar" [ref=f33e562]
+              - button "User avatar Limberg Steven Garcia Alava" [ref=f33e564]:
+                - img "User avatar" [ref=f33e567]
+  - dialog [ref=f33e693]:
+    - generic [ref=f33e697]:
+      - generic [ref=f33e699]:
+        - heading "Followers" [active] [level=1] [ref=f33e702]
+        - button [ref=f33e705] [cursor=pointer]:
+          - img "Close" [ref=f33e707]
+      - generic [ref=f33e711]:
+        - textbox "Search input" [ref=f33e712]:
+          - /placeholder: Search
+        - generic:
+          - generic:
+            - img "Search"
+            - generic: Search
+      - generic [ref=f33e713]:
+        - generic [ref=f33e715]:
+          - generic [ref=f33e719]:
+            - button [ref=f33e725] [cursor=pointer]:
+              - link [ref=f33e727]:
+                - img "tisann.00's profile picture" [ref=f33e728]
+            - generic [ref=f33e731]:
+              - generic [ref=f33e732]:
+                - link "tisann.00" [ref=f33e736] [cursor=pointer]:
+                  - /url: /tisann.00/
+                - generic [ref=f33e740]: ·
+                - button "Follow" [ref=f33e741] [cursor=pointer]
+              - generic [ref=f33e744]: TISAN.
+            - button "Remove" [ref=f33e748] [cursor=pointer]
+          - generic [ref=f33e752]:
+            - button [disabled] [ref=f33e758]:
+              - link [disabled] [ref=f33e760] [cursor=pointer]:
+                - /url: /matiasbalcazar_/
+                - img "matiasbalcazar_'s profile picture" [ref=f33e761]
+            - generic [ref=f33e764]:
+              - generic [ref=f33e765]:
+                - link "matiasbalcazar_" [ref=f33e769] [cursor=pointer]:
+                  - /url: /matiasbalcazar_/
+                - generic [ref=f33e773]: ·
+                - button "Follow" [ref=f33e774] [cursor=pointer]
+              - generic [ref=f33e777]: Matías
+            - button "Remove" [ref=f33e781] [cursor=pointer]
+          - generic [ref=f33e785]:
+            - button [disabled] [ref=f33e791]:
+              - link [disabled] [ref=f33e793] [cursor=pointer]:
+                - /url: /consuelolbw/
+                - img "consuelolbw's profile picture" [ref=f33e794]
+            - generic [ref=f33e797]:
+              - generic [ref=f33e798]:
+                - link "consuelolbw" [ref=f33e802] [cursor=pointer]:
+                  - /url: /consuelolbw/
+                - generic [ref=f33e806]: ·
+                - button "Follow" [ref=f33e807] [cursor=pointer]
+              - generic [ref=f33e810]: Consuelo LBw
+            - button "Remove" [ref=f33e814] [cursor=pointer]
+          - generic [ref=f33e818]:
+            - button [disabled] [ref=f33e824]:
+              - link [disabled] [ref=f33e826] [cursor=pointer]:
+                - /url: /danny_zk8/
+                - img "danny_zk8's profile picture" [ref=f33e827]
+            - generic [ref=f33e830]:
+              - generic [ref=f33e831]:
+                - link "danny_zk8" [ref=f33e835] [cursor=pointer]:
+                  - /url: /danny_zk8/
+                - generic [ref=f33e839]: ·
+                - button "Follow" [ref=f33e840] [cursor=pointer]
+              - generic [ref=f33e843]: Danny
+            - button "Remove" [ref=f33e847] [cursor=pointer]
+          - generic [ref=f33e851]:
+            - button [disabled] [ref=f33e857]:
+              - link [disabled] [ref=f33e859] [cursor=pointer]:
+                - /url: /panchocore/
+                - img "panchocore's profile picture" [ref=f33e860]
+            - generic [ref=f33e863]:
+              - generic [ref=f33e864]:
+                - link "panchocore" [ref=f33e868] [cursor=pointer]:
+                  - /url: /panchocore/
+                - generic [ref=f33e872]: ·
+                - button "Follow" [ref=f33e873] [cursor=pointer]
+              - generic [ref=f33e876]: Francisco
+            - button "Remove" [ref=f33e880] [cursor=pointer]
+          - generic [ref=f33e884]:
+            - button [disabled] [ref=f33e890]:
+              - link [disabled] [ref=f33e892] [cursor=pointer]:
+                - /url: /ma.jolieuwu/
+                - img "ma.jolieuwu's profile picture" [ref=f33e893]
+            - generic [ref=f33e896]:
+              - generic [ref=f33e897]:
+                - link "ma.jolieuwu" [ref=f33e901] [cursor=pointer]:
+                  - /url: /ma.jolieuwu/
+                - generic [ref=f33e905]: ·
+                - button "Follow" [ref=f33e906] [cursor=pointer]
+              - generic [ref=f33e909]: Ma Jolie ♡
+            - button "Remove" [ref=f33e913] [cursor=pointer]
+          - generic [ref=f33e917]:
+            - button [disabled] [ref=f33e923]:
+              - link [disabled] [ref=f33e925] [cursor=pointer]:
+                - /url: /jonathanmaia_ec/
+                - img "jonathanmaia_ec's profile picture" [ref=f33e926]
+            - generic [ref=f33e929]:
+              - generic [ref=f33e930]:
+                - link "jonathanmaia_ec Verified" [ref=f33e934] [cursor=pointer]:
+                  - /url: /jonathanmaia_ec/
+                  - generic [ref=f33e936]:
+                    - generic [ref=f33e937]: jonathanmaia_ec
+                    - img "Verified" [ref=f33e939]
+                - generic [ref=f33e941]: ·
+                - button "Follow" [ref=f33e942] [cursor=pointer]
+              - generic [ref=f33e945]: Jonathan Santiago
+            - button "Remove" [ref=f33e949] [cursor=pointer]
+          - generic [ref=f33e953]:
+            - button [disabled] [ref=f33e959]:
+              - link [disabled] [ref=f33e961] [cursor=pointer]:
+                - /url: /dorian99272018/
+                - img "dorian99272018's profile picture" [ref=f33e962]
+            - generic [ref=f33e965]:
+              - generic [ref=f33e966]:
+                - link "dorian99272018" [ref=f33e970] [cursor=pointer]:
+                  - /url: /dorian99272018/
+                - generic [ref=f33e974]: ·
+                - button "Follow" [ref=f33e975] [cursor=pointer]
+              - generic [ref=f33e978]: Dorian Wilfrido Cordova Pupiales
+            - button "Remove" [ref=f33e982] [cursor=pointer]
+          - generic [ref=f33e986]:
+            - button [ref=f33e992] [cursor=pointer]:
+              - link [ref=f33e994]:
+                - img "diegonavarretecarvajal's profile picture" [ref=f33e995]
+            - generic [ref=f33e998]:
+              - generic [ref=f33e999]:
+                - link "diegonavarretecarvajal" [ref=f33e1003] [cursor=pointer]:
+                  - /url: /diegonavarretecarvajal/
+                - generic [ref=f33e1007]: ·
+                - button "Follow" [ref=f33e1008] [cursor=pointer]
+              - generic [ref=f33e1011]: Diego Navarrete
+            - button "Remove" [ref=f33e1015] [cursor=pointer]
+          - generic [ref=f33e1019]:
+            - button [disabled] [ref=f33e1025]:
+              - link [disabled] [ref=f33e1027] [cursor=pointer]:
+                - /url: /rommel_unda/
+                - img "rommel_unda's profile picture" [ref=f33e1028]
+            - generic [ref=f33e1031]:
+              - generic [ref=f33e1032]:
+                - link "rommel_unda" [ref=f33e1036] [cursor=pointer]:
+                  - /url: /rommel_unda/
+                - generic [ref=f33e1040]: ·
+                - button "Follow" [ref=f33e1041] [cursor=pointer]
+              - generic [ref=f33e1044]: Rommel Unda
+            - button "Remove" [ref=f33e1048] [cursor=pointer]
+          - generic [ref=f33e1052]:
+            - button [ref=f33e1058] [cursor=pointer]:
+              - link [ref=f33e1060]:
+                - img "byron_rvzt's profile picture" [ref=f33e1061]
+            - generic [ref=f33e1064]:
+              - generic [ref=f33e1065]:
+                - link "byron_rvzt" [ref=f33e1069] [cursor=pointer]:
+                  - /url: /byron_rvzt/
+                - generic [ref=f33e1073]: ·
+                - button "Follow" [ref=f33e1074] [cursor=pointer]
+              - generic [ref=f33e1077]: Byron Fonseca
+            - button "Remove" [ref=f33e1081] [cursor=pointer]
+          - generic [ref=f33e1085]:
+            - button [disabled] [ref=f33e1091]:
+              - link [disabled] [ref=f33e1093] [cursor=pointer]:
+                - /url: /felipe_tampikina/
+                - img "felipe_tampikina's profile picture" [ref=f33e1094]
+            - generic [ref=f33e1097]:
+              - generic [ref=f33e1098]:
+                - link "felipe_tampikina" [ref=f33e1102] [cursor=pointer]:
+                  - /url: /felipe_tampikina/
+                - generic [ref=f33e1106]: ·
+                - button "Follow" [ref=f33e1107] [cursor=pointer]
+              - generic [ref=f33e1110]: Felipe Gracia
+            - button "Remove" [ref=f33e1114] [cursor=pointer]
+          - generic [ref=f33e1118]:
+            - link [ref=f33e1121] [cursor=pointer]:
+              - /url: /its_abee0/
+              - img "its_abee0's profile picture" [ref=f33e1122]
+            - generic [ref=f33e1125]:
+              - link "its_abee0" [ref=f33e1127] [cursor=pointer]:
+                - /url: /its_abee0/
+              - generic [ref=f33e1131]: Fernanda Bal
+            - button "Remove" [ref=f33e1135] [cursor=pointer]
+          - generic [ref=f33e1139]:
+            - link [ref=f33e1142] [cursor=pointer]:
+              - /url: /jmateo__l/
+              - img "jmateo__l's profile picture" [ref=f33e1143]
+            - generic [ref=f33e1146]:
+              - link "jmateo__l" [ref=f33e1148] [cursor=pointer]:
+                - /url: /jmateo__l/
+              - generic [ref=f33e1152]: Mateo Pacheco
+            - button "Remove" [ref=f33e1156] [cursor=pointer]
+        - progressbar [ref=f33e1159]:
+          - img "Loading..." [ref=f33e1160]

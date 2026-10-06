@@ -1,0 +1,317 @@
+- generic [ref=f48e9]:
+  - generic [ref=f48e12]:
+    - link [ref=f48e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f48e22]
+    - generic [ref=f48e25]:
+      - link [ref=f48e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f48e35]
+      - link [ref=f48e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f48e45]
+      - link [ref=f48e52] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - generic [ref=f48e55]:
+          - img "Messages" [ref=f48e57]
+          - generic "Direct messaging - 6 new notifications link" [ref=f48e59]: "6"
+      - link [ref=f48e65] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f48e70]
+      - link [ref=f48e77] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f48e82]
+      - link [ref=f48e88] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f48e93]
+      - link [ref=f48e98] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f48e103]
+      - link [ref=f48e110] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f48e115]:
+          - img "tdf.records.label's profile picture" [ref=f48e116]
+    - generic [ref=f48e117]:
+      - link [ref=f48e120] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f48e125]
+      - link [ref=f48e128] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f48e133]
+  - main [ref=f48e137]:
+    - generic [ref=f48e142]:
+      - navigation "Thread list" [ref=f48e143]:
+        - generic [ref=f48e144]:
+          - generic [ref=f48e145]:
+            - button [ref=f48e146] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f48e148]
+              - img "Verified" [ref=f48e151]
+              - img "Down chevron icon" [ref=f48e154]
+            - generic [ref=f48e157]:
+              - button [ref=f48e158] [cursor=pointer]:
+                - img "More options" [ref=f48e160]
+              - button [ref=f48e164] [cursor=pointer]:
+                - img "New message" [ref=f48e166]
+          - tablist [ref=f48e171]:
+            - tab "Primary" [selected] [ref=f48e172] [cursor=pointer]
+            - tab "General" [ref=f48e175] [cursor=pointer]
+            - tab "From ads" [ref=f48e178] [cursor=pointer]
+            - tab "Requests" [ref=f48e182] [cursor=pointer]
+          - generic [ref=f48e188]:
+            - img "Search" [ref=f48e190]
+            - textbox "Search" [ref=f48e193]
+          - generic [ref=f48e194]:
+            - generic [ref=f48e196]:
+              - generic [ref=f48e199]:
+                - status "Loading..." [ref=f48e200]
+                - status "Loading..." [ref=f48e201]
+              - generic [ref=f48e204]:
+                - status "Loading..." [ref=f48e205]
+                - status "Loading..." [ref=f48e206]
+              - generic [ref=f48e209]:
+                - status "Loading..." [ref=f48e210]
+                - status "Loading..." [ref=f48e211]
+            - generic [ref=f48e215]:
+              - 'button "user-profile-picture Ciscú Mastó You: ¡Hola, Francisco! TDF es una plataforma para conectar proyectos musicales y gente que vive la escena de Quito. Puedes explorar perfiles de artistas y lanzamientos, seguir proyectos y crear tu perfil público de artista con biografía y enlaces a tu música. El enlace que te compartimos abre el registro general: puedes crear tu cuenta con correo y contraseña, elegir el rol que te corresponda y empezar siguiendo un proyecto. Si te animas a probarla, cuéntanos qué te resulta útil o qué te falta para tu música. — TDF Records 3 minutes ago" [ref=f48e219] [cursor=pointer]':
+                - generic [ref=f48e221]:
+                  - img "user-profile-picture" [ref=f48e225]
+                  - generic [ref=f48e228]:
+                    - generic [ref=f48e229]: Ciscú Mastó
+                    - generic [ref=f48e235]:
+                      - generic [ref=f48e236]: "You: ¡Hola, Francisco! TDF es una plataforma para conectar proyectos musicales y gente que vive la escena de Quito. Puedes explorar perfiles de artistas y lanzamientos, seguir proyectos y crear tu perfil público de artista con biografía y enlaces a tu música. El enlace que te compartimos abre el registro general: puedes crear tu cuenta con correo y contraseña, elegir el rol que te corresponda y empezar siguiendo un proyecto. Si te animas a probarla, cuéntanos qué te resulta útil o qué te falta para tu música. — TDF Records"
+                      - generic [ref=f48e238]:
+                        - generic [ref=f48e239]: ·
+                        - generic "3 minutes ago" [ref=f48e244]: 3m
+              - button "user-profile-picture Emanuele Pilo-Pais L. 2 new messages about an hour ago Unread" [ref=f48e248] [cursor=pointer]:
+                - generic [ref=f48e250]:
+                  - img "user-profile-picture" [ref=f48e254]
+                  - generic [ref=f48e257]:
+                    - generic [ref=f48e258]: Emanuele Pilo-Pais L.
+                    - generic [ref=f48e264]:
+                      - generic [ref=f48e265]: 2 new messages
+                      - generic [ref=f48e267]:
+                        - generic [ref=f48e268]: ·
+                        - generic "about an hour ago" [ref=f48e273]: 1h
+                  - generic [ref=f48e274]: Unread
+              - button "user-profile-picture Arkabuz | Galapagos You sent an attachment. 2 hours ago" [ref=f48e281] [cursor=pointer]:
+                - generic [ref=f48e283]:
+                  - img "user-profile-picture" [ref=f48e287]
+                  - generic [ref=f48e290]:
+                    - generic [ref=f48e291]: Arkabuz | Galapagos
+                    - generic [ref=f48e297]:
+                      - generic [ref=f48e298]: You sent an attachment.
+                      - generic [ref=f48e300]:
+                        - generic [ref=f48e301]: ·
+                        - generic "2 hours ago" [ref=f48e306]: 2h
+              - button "user-profile-picture elemental.zoser elemental.zoser sent an attachment. 6 hours ago Unread" [ref=f48e310] [cursor=pointer]:
+                - generic [ref=f48e312]:
+                  - img "user-profile-picture" [ref=f48e316]
+                  - generic [ref=f48e319]:
+                    - generic [ref=f48e320]: elemental.zoser
+                    - generic [ref=f48e326]:
+                      - generic [ref=f48e327]: elemental.zoser sent an attachment.
+                      - generic [ref=f48e329]:
+                        - generic [ref=f48e330]: ·
+                        - generic "6 hours ago" [ref=f48e335]: 6h
+                  - generic [ref=f48e336]: Unread
+              - 'button "user-profile-picture El Bloque You: Hola, El Bloque 👋 Vimos su rap en el Star Fest de Quito. En TDF reunimos perfiles, artistas y lanzamientos para que cada proyecto tenga un punto de encuentro con quienes escuchan. Pueden empezar el perfil de la banda con sus enlaces musicales y recorrer la comunidad. Les invitamos a probar: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records 7 hours ago" [ref=f48e343] [cursor=pointer]':
+                - generic [ref=f48e345]:
+                  - img "user-profile-picture" [ref=f48e349]
+                  - generic [ref=f48e352]:
+                    - generic [ref=f48e353]: El Bloque
+                    - generic [ref=f48e359]:
+                      - generic [ref=f48e360]: "You: Hola, El Bloque 👋 Vimos su rap en el Star Fest de Quito. En TDF reunimos perfiles, artistas y lanzamientos para que cada proyecto tenga un punto de encuentro con quienes escuchan. Pueden empezar el perfil de la banda con sus enlaces musicales y recorrer la comunidad. Les invitamos a probar: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f48e362]:
+                        - generic [ref=f48e363]: ·
+                        - generic "7 hours ago" [ref=f48e368]: 7h
+              - 'button "user-profile-picture Los Argonautas You: Hola, Los Argonautas 👋 Vimos «Audionáutica» y su mezcla de ska, dub y soul desde Quito. Tu escena necesita un espacio propio para que las bandas y su gente puedan encontrarse. En TDF pueden empezar el perfil del proyecto con sus enlaces y explorar a otros artistas. Les invitamos a probar: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records 7 hours ago" [ref=f48e372] [cursor=pointer]':
+                - generic [ref=f48e374]:
+                  - img "user-profile-picture" [ref=f48e378]
+                  - generic [ref=f48e381]:
+                    - generic [ref=f48e382]: Los Argonautas
+                    - generic [ref=f48e388]:
+                      - generic [ref=f48e389]: "You: Hola, Los Argonautas 👋 Vimos «Audionáutica» y su mezcla de ska, dub y soul desde Quito. Tu escena necesita un espacio propio para que las bandas y su gente puedan encontrarse. En TDF pueden empezar el perfil del proyecto con sus enlaces y explorar a otros artistas. Les invitamos a probar: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f48e391]:
+                        - generic [ref=f48e392]: ·
+                        - generic "7 hours ago" [ref=f48e397]: 7h
+              - 'button "user-profile-picture Gura Verified You: Hola, Gura 👋 Vimos tu presentación en Excéntrico UIO junto a Ricardo Subía. Tu escena necesita un espacio propio para que las canciones sigan circulando después del concierto. En TDF puedes empezar tu perfil de artista con tus enlaces y explorar otros proyectos. Te invitamos a sumarte: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records 7 hours ago" [ref=f48e401] [cursor=pointer]':
+                - generic [ref=f48e403]:
+                  - img "user-profile-picture" [ref=f48e407]
+                  - generic [ref=f48e410]:
+                    - generic [ref=f48e412]:
+                      - generic [ref=f48e413]: Gura
+                      - img "Verified" [ref=f48e416]
+                    - generic [ref=f48e420]:
+                      - generic [ref=f48e421]: "You: Hola, Gura 👋 Vimos tu presentación en Excéntrico UIO junto a Ricardo Subía. Tu escena necesita un espacio propio para que las canciones sigan circulando después del concierto. En TDF puedes empezar tu perfil de artista con tus enlaces y explorar otros proyectos. Te invitamos a sumarte: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f48e423]:
+                        - generic [ref=f48e424]: ·
+                        - generic "7 hours ago" [ref=f48e429]: 7h
+              - 'button "user-profile-picture Isaac You: Hola Isaac, ¡gracias por escribirnos y por tu interés en las clases de DJ! 🎧 Nuestro paquete completo de clases es de 16 horas y tiene un costo de $500. Además, puedes tomar una clase de prueba para conocer nuestra forma de trabajar y resolver todas tus dudas. La puedes solicitar aquí: https://www.tdfrecords.net/trials Si quieres, cuéntame también qué experiencia tienes como DJ y qué horarios te acomodan, así te recomiendo la opción ideal para ti. 😉 9 hours ago Unread" [ref=f48e433] [cursor=pointer]':
+                - generic [ref=f48e435]:
+                  - img "user-profile-picture" [ref=f48e439]
+                  - generic [ref=f48e442]:
+                    - generic [ref=f48e443]: Isaac
+                    - generic [ref=f48e449]:
+                      - generic [ref=f48e450]: "You: Hola Isaac, ¡gracias por escribirnos y por tu interés en las clases de DJ! 🎧 Nuestro paquete completo de clases es de 16 horas y tiene un costo de $500. Además, puedes tomar una clase de prueba para conocer nuestra forma de trabajar y resolver todas tus dudas. La puedes solicitar aquí: https://www.tdfrecords.net/trials Si quieres, cuéntame también qué experiencia tienes como DJ y qué horarios te acomodan, así te recomiendo la opción ideal para ti. 😉"
+                      - generic [ref=f48e452]:
+                        - generic [ref=f48e453]: ·
+                        - generic "9 hours ago" [ref=f48e458]: 9h
+                  - generic [ref=f48e459]: Unread
+              - button "user-profile-picture Fundación Kunayan Verified Fundación sent an attachment. 10 hours ago Unread" [ref=f48e466] [cursor=pointer]:
+                - generic [ref=f48e468]:
+                  - img "user-profile-picture" [ref=f48e472]
+                  - generic [ref=f48e475]:
+                    - generic [ref=f48e477]:
+                      - generic [ref=f48e478]: Fundación Kunayan
+                      - img "Verified" [ref=f48e481]
+                    - generic [ref=f48e485]:
+                      - generic [ref=f48e486]: Fundación sent an attachment.
+                      - generic [ref=f48e488]:
+                        - generic [ref=f48e489]: ·
+                        - generic "10 hours ago" [ref=f48e494]: 10h
+                  - generic [ref=f48e495]: Unread
+              - button "user-profile-picture Jonathan Campoverde Jonathan Campoverde replied to an ad. View ad(https://www.instagram.com/p/DL58rbRgiys/) 11 hours ago Unread" [ref=f48e502] [cursor=pointer]:
+                - generic [ref=f48e504]:
+                  - img "user-profile-picture" [ref=f48e508]
+                  - generic [ref=f48e511]:
+                    - generic [ref=f48e512]: Jonathan Campoverde
+                    - generic [ref=f48e518]:
+                      - generic [ref=f48e519]: Jonathan Campoverde replied to an ad. View ad(https://www.instagram.com/p/DL58rbRgiys/)
+                      - generic [ref=f48e521]:
+                        - generic [ref=f48e522]: ·
+                        - generic "11 hours ago" [ref=f48e527]: 11h
+                  - generic [ref=f48e528]: Unread
+              - button "user-profile-picture Carla Román Super !! Gracias 11 hours ago" [ref=f48e535] [cursor=pointer]:
+                - generic [ref=f48e537]:
+                  - img "user-profile-picture" [ref=f48e541]
+                  - generic [ref=f48e544]:
+                    - generic [ref=f48e545]: Carla Román
+                    - generic [ref=f48e551]:
+                      - generic [ref=f48e552]: Super !! Gracias
+                      - generic [ref=f48e554]:
+                        - generic [ref=f48e555]: ·
+                        - generic "11 hours ago" [ref=f48e560]: 11h
+              - 'button "user-profile-picture Águeda 𓂀𓋹 You: ¡Hola Águeda! 😊 Gracias por escribirnos. Soy Diego de TDF Records. El anuncio es de nuestro curso de Producción Musical (presencial en Quito) donde aprendes a producir desde cero y también vemos mezcla y mastering 🎧 📌 Opciones: ✅ 1) Curso intensivo grupal * Duración: 4 sábados * Horario: 8h30 a 12h30 * Lugar: Quito, sector El Bosque * Costo: $150 Info e inscripción: https://www.tdfrecords.net/curso/produccion-musical ✅ 2) Clases 1 a 1 (personalizadas) * Módulo de 16 horas: $500 * Horarios flexibles (tarde o fines de semana) Si quieres, también puedes agendar una clase de prueba aquí: https://www.tdfrecords.net/trials ¿Tú ya has producido algo o estarías empezando desde cero? 21 hours ago Unread" [ref=f48e564] [cursor=pointer]':
+                - generic [ref=f48e566]:
+                  - img "user-profile-picture" [ref=f48e570]
+                  - generic [ref=f48e573]:
+                    - generic [ref=f48e574]: Águeda 𓂀𓋹
+                    - generic [ref=f48e580]:
+                      - generic [ref=f48e581]: "You: ¡Hola Águeda! 😊 Gracias por escribirnos. Soy Diego de TDF Records. El anuncio es de nuestro curso de Producción Musical (presencial en Quito) donde aprendes a producir desde cero y también vemos mezcla y mastering 🎧 📌 Opciones: ✅ 1) Curso intensivo grupal * Duración: 4 sábados * Horario: 8h30 a 12h30 * Lugar: Quito, sector El Bosque * Costo: $150 Info e inscripción: https://www.tdfrecords.net/curso/produccion-musical ✅ 2) Clases 1 a 1 (personalizadas) * Módulo de 16 horas: $500 * Horarios flexibles (tarde o fines de semana) Si quieres, también puedes agendar una clase de prueba aquí: https://www.tdfrecords.net/trials ¿Tú ya has producido algo o estarías empezando desde cero?"
+                      - generic [ref=f48e583]:
+                        - generic [ref=f48e584]: ·
+                        - generic "21 hours ago" [ref=f48e589]: 21h
+                  - generic [ref=f48e590]: Unread
+              - 'button "user-profile-picture Isasha Luna You: Hola, Isasha 👋 Vimos tu interpretación de «Oye Como Va» en flauta y tu vínculo con SKAner. Tu escena necesita un espacio propio, con lugar para los cruces entre instrumentos y géneros. En TDF puedes explorar artistas, seguir sus perfiles y recorrer lanzamientos. Te invitamos a empezar con una cuenta general: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records a day ago" [ref=f48e597] [cursor=pointer]':
+                - generic [ref=f48e599]:
+                  - img "user-profile-picture" [ref=f48e603]
+                  - generic [ref=f48e606]:
+                    - generic [ref=f48e607]: Isasha Luna
+                    - generic [ref=f48e613]:
+                      - generic [ref=f48e614]: "You: Hola, Isasha 👋 Vimos tu interpretación de «Oye Como Va» en flauta y tu vínculo con SKAner. Tu escena necesita un espacio propio, con lugar para los cruces entre instrumentos y géneros. En TDF puedes explorar artistas, seguir sus perfiles y recorrer lanzamientos. Te invitamos a empezar con una cuenta general: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f48e616]:
+                        - generic [ref=f48e617]: ·
+                        - generic "a day ago" [ref=f48e622]: 1d
+              - 'button "user-profile-picture Dj. Produccion de Eventos en Quito You: Hola, Juan 👋 Vimos tus sesiones «Golden Mix» y tu trabajo como DJ en Quito. En TDF reunimos perfiles, artistas y lanzamientos para explorar música y volver a los proyectos que te interesan. Te invitamos a crear tu cuenta y seguir un primer artista. Este enlace abre el registro con intención profesional: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_b Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records a day ago" [ref=f48e626] [cursor=pointer]':
+                - generic [ref=f48e628]:
+                  - img "user-profile-picture" [ref=f48e632]
+                  - generic [ref=f48e635]:
+                    - generic [ref=f48e636]: Dj. Produccion de Eventos en Quito
+                    - generic [ref=f48e642]:
+                      - generic [ref=f48e643]: "You: Hola, Juan 👋 Vimos tus sesiones «Golden Mix» y tu trabajo como DJ en Quito. En TDF reunimos perfiles, artistas y lanzamientos para explorar música y volver a los proyectos que te interesan. Te invitamos a crear tu cuenta y seguir un primer artista. Este enlace abre el registro con intención profesional: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_b Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f48e645]:
+                        - generic [ref=f48e646]: ·
+                        - generic "a day ago" [ref=f48e651]: 1d
+              - button "user-profile-picture LHΞØ Hola si quisiera ir a ver la clase demostrativa y conocer las instalaciones a day ago" [ref=f48e655] [cursor=pointer]:
+                - generic [ref=f48e657]:
+                  - img "user-profile-picture" [ref=f48e661]
+                  - generic [ref=f48e664]:
+                    - generic [ref=f48e665]: LHΞØ
+                    - generic [ref=f48e671]:
+                      - generic [ref=f48e672]: Hola si quisiera ir a ver la clase demostrativa y conocer las instalaciones
+                      - generic [ref=f48e674]:
+                        - generic [ref=f48e675]: ·
+                        - generic "a day ago" [ref=f48e680]: 1d
+              - 'button "user-profile-picture Quito Bohemio You: Hola, equipo de Quito Bohemio 👋 Vimos «Hazte un Hit» y su trabajo de difusión cultural. TDF reúne perfiles de artistas y lanzamientos que pueden explorar desde un mismo lugar. Nos gustaría que lo revisen pensando en su labor de difusión y nos cuenten qué sería útil para colaborar con la escena de Quito: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records a day ago" [ref=f48e684] [cursor=pointer]':
+                - generic [ref=f48e686]:
+                  - img "user-profile-picture" [ref=f48e690]
+                  - generic [ref=f48e693]:
+                    - generic [ref=f48e694]: Quito Bohemio
+                    - generic [ref=f48e700]:
+                      - generic [ref=f48e701]: "You: Hola, equipo de Quito Bohemio 👋 Vimos «Hazte un Hit» y su trabajo de difusión cultural. TDF reúne perfiles de artistas y lanzamientos que pueden explorar desde un mismo lugar. Nos gustaría que lo revisen pensando en su labor de difusión y nos cuenten qué sería útil para colaborar con la escena de Quito: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_b Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f48e703]:
+                        - generic [ref=f48e704]: ·
+                        - generic "a day ago" [ref=f48e709]: 1d
+              - 'button "user-profile-picture Lysergicman(official) You: Hola, Lysergicman 👋 Vimos tus sets de house en La Cuadra. Tu escena necesita un espacio propio, más allá de lo que dura una noche en la pista. Te invitamos a TDF: crea tu cuenta, explora perfiles y sigue artistas para mantener cerca su música. Ruta profesional: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records a day ago" [ref=f48e713] [cursor=pointer]':
+                - generic [ref=f48e715]:
+                  - img "user-profile-picture" [ref=f48e719]
+                  - generic [ref=f48e722]:
+                    - generic [ref=f48e723]: Lysergicman(official)
+                    - generic [ref=f48e729]:
+                      - generic [ref=f48e730]: "You: Hola, Lysergicman 👋 Vimos tus sets de house en La Cuadra. Tu escena necesita un espacio propio, más allá de lo que dura una noche en la pista. Te invitamos a TDF: crea tu cuenta, explora perfiles y sigue artistas para mantener cerca su música. Ruta profesional: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f48e732]:
+                        - generic [ref=f48e733]: ·
+                        - generic "a day ago" [ref=f48e738]: 1d
+              - button [ref=f48e740] [cursor=pointer]:
+                - generic [ref=f48e742]:
+                  - status "Loading..." [ref=f48e745]
+                  - generic [ref=f48e748]:
+                    - status "Loading..." [ref=f48e750]
+                    - status "Loading..." [ref=f48e752]
+      - generic [ref=f48e756]:
+        - generic [ref=f48e760]:
+          - link "Open the profile page of pakul_music" [ref=f48e761] [cursor=pointer]:
+            - /url: /pakul_music/
+            - generic [ref=f48e762]:
+              - img "user-profile-picture" [ref=f48e766]
+              - generic [ref=f48e767]:
+                - heading "Pakul" [level=2] [ref=f48e769]
+                - generic [ref=f48e771]: pakul_music
+          - generic [ref=f48e775]:
+            - button [ref=f48e776] [cursor=pointer]:
+              - img "Audio call" [ref=f48e778]
+            - button [ref=f48e780] [cursor=pointer]:
+              - img "Video call" [ref=f48e782]
+            - button [ref=f48e785] [cursor=pointer]:
+              - img "Conversation information" [ref=f48e787]
+        - generic [ref=f48e791]:
+          - generic [ref=f48e795]:
+            - generic [ref=f48e796]:
+              - img "user-profile-picture" [ref=f48e800]
+              - generic [ref=f48e801]:
+                - heading "Pakul" [level=2] [ref=f48e804]
+                - generic [ref=f48e806]: pakul_music · Instagram
+                - link "View profile" [ref=f48e809] [cursor=pointer]:
+                  - /url: /pakul_music/
+            - generic [ref=f48e813]:
+              - generic [ref=f48e814]: Sat 4:55 PM
+              - group [ref=f48e817]:
+                - generic [ref=f48e820]:
+                  - article [ref=f48e821]:
+                    - generic [ref=f48e823]:
+                      - generic [ref=f48e826]:
+                        - text: Hola, Pakul
+                        - img "👋" [ref=f48e828]
+                        - text: "Vimos «Canción Común» junto a La Gran Sociedad y tus fechas en Guayunga. Tu escena necesita un espacio propio, también para la música que se mueve por La Floresta. En TDF puedes empezar tu perfil de artista, compartir tus enlaces y seguir otros proyectos. Te invitamos a probar:"
+                        - link "https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a" [ref=f48e830] [cursor=pointer]:
+                          - /url: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a
+                        - text: "Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - link "TDF Records" [ref=f48e831] [cursor=pointer]:
+                        - /url: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a
+                  - generic:
+                    - group "Message actions"
+            - generic [ref=f48e836]: Seen yesterday
+          - generic [ref=f48e847]:
+            - button [ref=f48e850] [cursor=pointer]:
+              - img "Choose an emoji" [ref=f48e852]
+            - generic [ref=f48e854]:
+              - textbox [active] [ref=f48e855]:
+                - paragraph [ref=f48e856]
+              - generic: Message...
+            - generic [ref=f48e857]:
+              - button [ref=f48e858] [cursor=pointer]:
+                - img "Voice Clip" [ref=f48e860]
+              - button [ref=f48e863] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=f48e865]
+              - button [ref=f48e870] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=f48e872]

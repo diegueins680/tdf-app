@@ -1,0 +1,247 @@
+- generic [ref=f54e4]:
+  - generic [ref=f54e9]:
+    - generic [ref=f54e12]:
+      - link [ref=f54e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f54e22]
+      - generic [ref=f54e25]:
+        - link [ref=f54e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f54e35]
+        - link [ref=f54e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f54e45]
+        - link [ref=f54e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - generic [ref=f54e55]:
+            - img "Messages" [ref=f54e57]
+            - generic "Direct messaging - 8 new notifications link" [ref=f54e60]: "8"
+        - link [ref=f54e66] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f54e71]
+        - link [ref=f54e78] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f54e83]
+        - link [ref=f54e89] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f54e94]
+        - link [ref=f54e99] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f54e104]
+        - link [ref=f54e111] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f54e116]:
+            - img "tdf.records.label's profile picture" [ref=f54e117]
+      - generic [ref=f54e118]:
+        - link [ref=f54e121] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f54e126]
+        - link [ref=f54e129] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f54e134]
+    - generic [ref=f54e137]:
+      - main [ref=f54e138]:
+        - generic [ref=f54e140]:
+          - generic [ref=f54e141]:
+            - generic [ref=f54e142]:
+              - link [ref=f54e148] [cursor=pointer]:
+                - /url: /samuelordonez.music/
+                - img "samuelordonez.music's profile picture" [ref=f54e149]
+              - generic [ref=f54e150]:
+                - generic [ref=f54e151]:
+                  - generic [ref=f54e152]:
+                    - link [ref=f54e154] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "samuelordonez.music" [level=2] [ref=f54e155]
+                    - button [ref=f54e157] [cursor=pointer]:
+                      - img "Options" [ref=f54e159]
+                  - generic [ref=f54e163]: Samuel Ordoñez
+                  - generic [ref=f54e165]:
+                    - generic [ref=f54e167]:
+                      - generic [ref=f54e168]: "157"
+                      - text: posts
+                    - link "1,140 followers" [ref=f54e170] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f54e171]:
+                        - generic "1,140" [ref=f54e172]
+                        - text: followers
+                    - link "2,062 following" [ref=f54e174] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f54e175]:
+                        - generic [ref=f54e176]: 2,062
+                        - text: following
+                - generic [ref=f54e178]:
+                  - button "Valle de Yunguilla Azuay Ecuador" [ref=f54e180] [cursor=pointer]
+                  - generic [ref=f54e181]:
+                    - generic [ref=f54e182]:
+                      - img "Link icon" [ref=f54e184]
+                      - link "yahoo.com" [ref=f54e188] [cursor=pointer]:
+                        - /url: https://l.instagram.com/?u=http%3A%2F%2Fyahoo.com%2F%3Futm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio&e=AUCZUbWVyXxU0SmrIu6xvmzukHDDwld4fq4CuhTptIxpu7DxsnGqt1rAfB9VUH6gjLnG5D2WivbToinPGrs4WHHDvaBDPUZu-jlHnFQ4PvoYhBGCEuLEFkeMF7fOZVyyU9OgKrvHTwoG
+                    - link "Threads samuelordonez.music" [ref=f54e191] [cursor=pointer]:
+                      - /url: https://www.threads.com/@samuelordonez.music?xmt=AQG0In9GZirv5ZpZL2K-IHITPXTCcPjp-_xsD-0Xt68Rwj0
+                      - img "Threads" [ref=f54e193]
+                      - generic [ref=f54e195]: samuelordonez.music
+            - generic [ref=f54e201]:
+              - button "Follow Back" [ref=f54e203] [cursor=pointer]
+              - button [ref=f54e207] [cursor=pointer]:
+                - img "Similar accounts" [ref=f54e209]
+            - menu [ref=f54e213]:
+              - list [ref=f54e217]:
+                - listitem [ref=f54e218]
+                - listitem [ref=f54e219]
+                - listitem [ref=f54e220]:
+                  - link "View Yunguillaparty's highlight" [ref=f54e223] [cursor=pointer]:
+                    - /url: /stories/highlights/18015488705590352/
+                    - button "samuelordonez.music's highlight story picture Yunguillaparty's" [ref=f54e224]:
+                      - button [ref=f54e225]:
+                        - img "samuelordonez.music's highlight story picture" [ref=f54e228]
+                      - generic [ref=f54e229]: Yunguillaparty's
+                - listitem [ref=f54e232]:
+                  - link "View Destacada highlight" [ref=f54e235] [cursor=pointer]:
+                    - /url: /stories/highlights/18030405479565056/
+                    - button "samuelordonez.music's highlight story picture Destacada" [ref=f54e236]:
+                      - button [ref=f54e237]:
+                        - img "samuelordonez.music's highlight story picture" [ref=f54e240]
+                      - generic [ref=f54e241]: Destacada
+                - listitem [ref=f54e244]:
+                  - link "View Destacada highlight" [ref=f54e247] [cursor=pointer]:
+                    - /url: /stories/highlights/18313406311207660/
+                    - button "samuelordonez.music's highlight story picture Destacada" [ref=f54e248]:
+                      - button [ref=f54e249]:
+                        - img "samuelordonez.music's highlight story picture" [ref=f54e252]
+                      - generic [ref=f54e253]: Destacada
+                - listitem [ref=f54e256]:
+                  - link "View Destacada highlight" [ref=f54e259] [cursor=pointer]:
+                    - /url: /stories/highlights/17970601189695580/
+                    - button "samuelordonez.music's highlight story picture Destacada" [ref=f54e260]:
+                      - button [ref=f54e261]:
+                        - img "samuelordonez.music's highlight story picture" [ref=f54e264]
+                      - generic [ref=f54e265]: Destacada
+          - generic [ref=f54e268]:
+            - tablist [ref=f54e269]:
+              - link [ref=f54e271] [cursor=pointer]:
+                - /url: /samuelordonez.music/
+                - img "Posts" [ref=f54e273]
+              - link [ref=f54e284] [cursor=pointer]:
+                - /url: /samuelordonez.music/reels/
+                - img "Reels" [ref=f54e286]
+              - link [ref=f54e289] [cursor=pointer]:
+                - /url: /samuelordonez.music/reposts/
+                - img "Reposts" [ref=f54e291]
+              - link [ref=f54e294] [cursor=pointer]:
+                - /url: /samuelordonez.music/tagged/
+                - img "Tagged" [ref=f54e296]
+            - tabpanel
+          - progressbar [ref=f54e300]:
+            - img "Loading..." [ref=f54e301]
+      - contentinfo [ref=f54e314]:
+        - generic [ref=f54e315]:
+          - generic [ref=f54e317]:
+            - link "Meta" [ref=f54e319] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f54e322] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f54e325] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f54e328] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f54e331] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f54e334] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f54e337] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f54e340] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f54e343] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f54e346] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f54e349] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f54e352] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f54e355] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f54e358] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f54e361] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f54e364] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f54e366]:
+            - generic [ref=f54e367] [cursor=pointer]:
+              - generic [ref=f54e368]:
+                - generic [ref=f54e369]: English
+                - img "Down chevron icon" [ref=f54e372]
+              - combobox "Switch Display Language" [ref=f54e374]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f54e375]: © 2026 Instagram from Meta
+  - button [ref=f54e378] [cursor=pointer]:
+    - generic "Messages - 8 new notifications" [ref=f54e379]:
+      - generic [ref=f54e380]:
+        - generic [ref=f54e382]:
+          - img "Messages" [ref=f54e383]
+          - generic "Direct messaging - 8 new notifications link" [ref=f54e386]: "8"
+        - generic [ref=f54e389]: Messages
+      - generic [ref=f54e390]:
+        - button [ref=f54e391]:
+          - img "8 unread chats" [ref=f54e393]
+        - button "User avatar ..." [ref=f54e398]:
+          - img "User avatar" [ref=f54e401]
+        - button "User avatar David Márquez" [ref=f54e403]:
+          - img "User avatar" [ref=f54e406]
+        - button "User avatar Limberg Steven Garcia Alava" [ref=f54e408]:
+          - img "User avatar" [ref=f54e411]

@@ -1,0 +1,9 @@
+{
+  "UI targeted tests": 0,
+  "UI typecheck": 0,
+  "UI zero-warning lint": 0,
+  "catalog regression suite unchanged": 0,
+  "catalog unreviewed and stale gate": 0,
+  "specification inventory regeneration": 0,
+  "specification inventory check": 0
+}

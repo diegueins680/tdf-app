@@ -1,0 +1,36 @@
+{
+  "sha": "a6c29d54c03031004d7473ff524d01bb95310038",
+  "migrations": 166,
+  "last": [
+    {
+      "id": "2026-09-11_payment_intent_runtime_sync",
+      "introducedBy": "0e07d8d1e2ab3f9831a548a9a77702f7e20c26b1",
+      "checksum": "ea101956d6219c27f0ba165ff82b13aab4bee267c8e4d4e398c9759535893ae8"
+    },
+    {
+      "id": "2026-09-11_manual_bank_provider_activation",
+      "introducedBy": "a177068959f31f269ad24efe454c2978798105ae",
+      "checksum": "949ece38874dcf24397d6a5a05f8cdd15f08d167b4989598a95a749fa5984093"
+    },
+    {
+      "id": "2026-09-11_provider_capability_catalog",
+      "introducedBy": "585ca46fd6699ec33c7520ba141500c5bf7e1139",
+      "checksum": "a54789fb9ffe381be03e040456884845e92044710a4688616660b06564d45235"
+    },
+    {
+      "id": "2026-09-13_provider_execution_runtime",
+      "introducedBy": "6d81ee1296e4dfc9d5b3207904c4b3fde7f3f5e5",
+      "checksum": "d420ef7bebf4862f5fd6b1e3754f725e8cb8bf5e1768f94d71a13947f777a51f"
+    },
+    {
+      "id": "2026-09-15_provider_query_recovery",
+      "introducedBy": "b9875ff176c35f446c64d53dccadfd15b839cda4",
+      "checksum": "8ce7535fcdce37ef5742e8261484e7cbdc42605dee815921c722536b46e8dbe1"
+    },
+    {
+      "id": "2026-09-16_payment_intent_refund_sync",
+      "introducedBy": "f965c3d53cbbb3b42f4fb82bf1e373bc0ce2fb6b",
+      "checksum": "e70e67606e1ff1451ee6cf0404a7cad28b2ede0b72ffa92c16aab9cea9d72cca"
+    }
+  ]
+}

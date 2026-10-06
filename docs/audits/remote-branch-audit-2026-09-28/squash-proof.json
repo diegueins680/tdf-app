@@ -1,0 +1,70 @@
+[
+  {
+    "branch": "audit/critical-completion-20260916",
+    "pr": 418,
+    "head": "d24e025b8bf8c90ce373fab277ebe869eaf0fce5",
+    "mergedRecordHead": "d24e025b8bf8c90ce373fab277ebe869eaf0fce5",
+    "merge": "6f77a7eec93d96de36840a13235adff9ad13c917",
+    "mergeInMain": true,
+    "headPatch": "22a2107d7b4ffc3bb469c994f745c7fe304808ee",
+    "mergePatch": "22a2107d7b4ffc3bb469c994f745c7fe304808ee",
+    "patchEqual": true
+  },
+  {
+    "branch": "docs/critical-completion-closeout-20260917",
+    "pr": 423,
+    "head": "9523a4816b4668581eb7232212cc53398bd844ac",
+    "mergedRecordHead": "9523a4816b4668581eb7232212cc53398bd844ac",
+    "merge": "515b39852f47e35216f67715dff3067a1862c8fe",
+    "mergeInMain": true,
+    "headPatch": "9074083a033813043e8c1da33823b9e713e68d95",
+    "mergePatch": "9074083a033813043e8c1da33823b9e713e68d95",
+    "patchEqual": true
+  },
+  {
+    "branch": "fix/access-request-requester-name-20260916",
+    "pr": 405,
+    "head": "efb09219be25941af574eaac4ec5d2e7e3a421b2",
+    "mergedRecordHead": "efb09219be25941af574eaac4ec5d2e7e3a421b2",
+    "merge": "43466ad532d83b3bfdb3730f07567d1c45214462",
+    "mergeInMain": true,
+    "headPatch": "3bcedf9a90a241f7b5b09e84b8adabadb376de24",
+    "mergePatch": "3bcedf9a90a241f7b5b09e84b8adabadb376de24",
+    "patchEqual": true
+  },
+  {
+    "branch": "fix/instagram-checkpoint-metadata-20260916",
+    "pr": 420,
+    "head": "40034a31e32ca7d1dbbf6dae67efda8eef982586",
+    "mergedRecordHead": "40034a31e32ca7d1dbbf6dae67efda8eef982586",
+    "merge": "5c84736ff5727502a77413b24f6a4ccc55a89274",
+    "mergeInMain": true,
+    "headPatch": "000dec615991bd1f054ff734af5d750336b81f0f",
+    "mergePatch": "000dec615991bd1f054ff734af5d750336b81f0f",
+    "patchEqual": true
+  },
+  {
+    "branch": "fix/preserve-enabled-paypal-webhooks-20260916",
+    "pr": 412,
+    "head": "a28b94d74a49ebdf71481694bc910ab95298e027",
+    "mergedRecordHead": "a28b94d74a49ebdf71481694bc910ab95298e027",
+    "merge": "4c66687dcba76dc7036f0c44089959b55a7bf3b0",
+    "mergeInMain": true,
+    "headPatch": "c24a7184317b6269b6d82aff6bed8ebda45d882f",
+    "mergePatch": "c24a7184317b6269b6d82aff6bed8ebda45d882f",
+    "patchEqual": true
+  },
+  {
+    "branch": "fix/release-artwork-20260915",
+    "pr": 369,
+    "head": "760763642ae9641b19ef0adfb317f4243ff30a25",
+    "mergedRecordHead": "760763642ae9641b19ef0adfb317f4243ff30a25",
+    "merge": "52b32e4c17b3b0485c66e666137f85d44cc962d4",
+    "mergeInMain": true,
+    "headPatch": "a85b1c1b29e1493b2cb626e600219ebb7cd1da8f",
+    "mergePatch": "0efa831c175fcb269522d530439b2a4c5ecaafd6",
+    "patchEqual": true,
+    "range": "760763642ae9641b19ef0adfb317f4243ff30a25~3..760763642ae9641b19ef0adfb317f4243ff30a25",
+    "rangePatch": "0efa831c175fcb269522d530439b2a4c5ecaafd6"
+  }
+]

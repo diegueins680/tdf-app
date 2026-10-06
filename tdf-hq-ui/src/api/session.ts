@@ -113,3 +113,24 @@ export async function persistOnboardingIntent(
 
   return response.json() as Promise<OnboardingProgressDTO>;
 }
+
+export async function redeemArtistInvitation(
+  artistInvitation: string,
+  apiToken?: string | null,
+): Promise<SessionResponseDTO> {
+  const response = await fetch(sessionUrl('/session/artist-invitation'), {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(apiToken ? { Authorization: `Bearer ${apiToken}` } : {}),
+    },
+    body: JSON.stringify({ artistInvitation }),
+  });
+
+  if (!response.ok) {
+    throw new Error(await readErrorText(response));
+  }
+
+  return response.json() as Promise<SessionResponseDTO>;
+}

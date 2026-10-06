@@ -1,0 +1,28 @@
+[
+  {
+    "log": "events-lifecycle-catalog-regression.log",
+    "command": [
+      "node",
+      "--test",
+      "scripts/__tests__/catalog-list-audit.test.mjs"
+    ],
+    "exit_code": 0
+  },
+  {
+    "log": "events-lifecycle-inventory.log",
+    "command": [
+      "python3",
+      "scripts/test-specification-inventory.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "log": "events-lifecycle-shell.log",
+    "command": [
+      "sh",
+      "-n",
+      "scripts/test-event-operations-api-migration.sh"
+    ],
+    "exit_code": 0
+  }
+]

@@ -1,0 +1,16 @@
+{
+  "capturedAt": "2026-10-04T02:02:53.707883+00:00",
+  "initialExistingWorktrees": 66,
+  "existingDirectoriesNow": 66,
+  "missingDirectories": [],
+  "directoriesWithoutGitEntry": [
+    "/private/tmp/tdf-event-ingestion-20260927",
+    "/private/tmp/tdf-hosting-migration-20260928",
+    "/private/tmp/tdf-video-event-20260925"
+  ],
+  "auditDirectoryPreserved": true,
+  "freeBytes": 83373801472,
+  "auditDeletedWorktrees": 0,
+  "limitation": "Directory presence rechecked against original retained cleanup inventory; pre-existing missing Git metadata is not claimed repaired. No original directory or worktree was removed.",
+  "sourceInventory": "disk-cleanup-original-evidence-recovered.json"
+}

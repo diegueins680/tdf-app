@@ -1,0 +1,63 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 445,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "563dafa4240933ed7d615ad61cb3d38f000ada22",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6jua38",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 572,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Preserve the migration introduction in the release ancestry**\n\nReleasing this exact commit is blocked because `49ff02de5ade1b8923f099c22af0bbf57350a078` is not an ancestor of `bb894bf650ebccd3935c0cd640ec04f8eba83b5a` (`git merge-base --is-ancestor` returns nonzero; its help defines the first argument as the required ancestor). The guarded release path checks every `introducedBy` value at `scripts/production-release.mjs:247-256` and will therefore abort before applying migrations. Merge the schema-introduction commit into the ancestry before this manifest registration is released.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/445#discussion_r4046386906",
+                      "createdAt": "2026-09-18T11:42:25Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Verified against the actual published PR heads: git merge-base --is-ancestor 49ff02de5ade1b8923f099c22af0bbf57350a078 HEAD exits 0. The normal history includes the schema introduction before manifest registration. The guarded release plan passes for the exact published head (444:9497be8f4;445:563dafa42), including all110 migrations. The temporary review commits cited here are not the release targets. No migration rewrite or squash is used; normal merge ancestry remains required. Actual plan output is retained locally for release preflight; this is planning, not deployment.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/445#discussion_r4046466574",
+                      "createdAt": "2026-09-18T11:54:33Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxMTo1NDozM1rO8TAuDg=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxMTo0MjoyNVrOo7mt_A=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

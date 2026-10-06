@@ -1,0 +1,116 @@
+- generic [ref=f16e1]:
+  - generic [ref=f16e3]:
+    - link "Skip to content" [ref=f16e209] [cursor=pointer]:
+      - /url: "#_R_3ndjqctdbntccged79l75_"
+    - generic [ref=f16e4]:
+      - complementary [ref=f16e5]:
+        - generic [ref=f16e9]:
+          - navigation "App navigation" [ref=f16e576]:
+            - generic [ref=f16e11]:
+              - button "Home" [ref=f16e577] [cursor=pointer]
+              - button "Space" [ref=f16e578] [cursor=pointer]
+              - button "Scheduled" [ref=f16e579] [cursor=pointer]
+              - button "Plugins" [ref=f16e580] [cursor=pointer]
+              - button "Explore" [ref=f16e581] [cursor=pointer]
+            - button "Open profile menu" [ref=f16e582] [cursor=pointer]
+          - navigation "Scheduled task folders" [ref=f16e583]:
+            - generic [ref=f16e113]:
+              - generic [ref=f16e114]:
+                - generic [ref=f16e115]:
+                  - heading "Scheduled" [level=1] [ref=f16e584]
+                  - generic [ref=f16e117]:
+                    - button "Search scheduled tasks" [ref=f16e585] [cursor=pointer]
+                    - button "Toggle sidebar" [expanded] [ref=f16e586] [cursor=pointer]
+                - button "New task" [ref=f16e587] [cursor=pointer]
+              - generic [ref=f16e140]:
+                - generic [ref=f16e141]:
+                  - generic [ref=f16e142]: Upcoming
+                  - button "Filter tasks" [ref=f16e588] [cursor=pointer]
+                - list [ref=f16e157]:
+                  - listitem [ref=f16e181]:
+                    - button "TDF — Tu escena, conectada · diario 08:00" [ref=f16e591] [cursor=pointer]:
+                      - generic [ref=f16e187]:
+                        - generic [ref=f16e188]: TDF — Tu escena, conectada · diario 08:00
+                        - generic [ref=f16e194]: Tomorrow 8 AM·Daily
+                      - button "More task actions" [expanded] [ref=f16e592]
+                  - listitem [ref=f16e158]:
+                    - button "Quito Electronic Event Watch" [ref=f16e589] [cursor=pointer]:
+                      - generic [ref=f16e164]:
+                        - generic [ref=f16e165]: Quito Electronic Event Watch
+                        - generic [ref=f16e171]: Monitoring
+                      - button "More task actions" [ref=f16e590]
+                  - listitem [ref=f16e204]:
+                    - button "Show more" [ref=f16e593] [cursor=pointer]
+        - generic:
+          - separator
+      - generic [ref=f16e100]:
+        - main [ref=f16e102]:
+          - generic [ref=f16e216]:
+            - generic [ref=f16e219]:
+              - separator "Today 11:53 AM" [ref=f16e602]:
+                - time [ref=f16e221]: Today 11:53 AM
+              - generic [ref=f16e222]:
+                - generic [ref=f16e224]:
+                  - generic [ref=f16e226]:
+                    - generic [ref=f16e227]:
+                      - generic [ref=f16e231]:
+                        - paragraph [ref=f16e232]: TDF — Tu escena, conectada. Inicio diario de operación a las 08:00 America/Guayaquil, todos los días sin fecha de fin, conforme autorización expresa de Diego. Reporta en español. Esta tarea continúa el piloto TDF-TEC-20261001-01 aprobado; no concede autorización ilimitada a nuevos destinatarios.
+                        - paragraph [ref=f16e233]:
+                          - text: En cada ejecución, antes de actuar comprueba que puedes usar EXCLUSIVAMENTE el navegador adjunto autorizado con la sesión oficial @tdf.records.label y el CRM TDF
+                          - link "https://www.tdfrecords.net/crm/contactos" [ref=f16e234] [cursor=pointer]:
+                            - /url: https://www.tdfrecords.net/crm/contactos
+                          - text: . Una tarea cloud no debe asumir que tiene acceso al navegador local ni al repo. Si faltan acceso, sesión o historial completo suficiente, detente y reporta el bloqueo, sin enviar, sin pedir credenciales ni códigos, sin crear una base paralela ni buscar un navegador alternativo. No uses scraping, bots externos, extensiones, macros, APIs de Instagram o scripts ejecutados en Instagram. Cada revisión y envío se hace individualmente por la interfaz visible.
+                        - paragraph [ref=f16e239]: Si existe acceso al proyecto /Users/diegosaa/GitHub/tdf-app, lee las instrucciones vigentes y docs/campaigns/tu-escena-conectada-revision-2026-09-30.md y memoria reciente. Aun sin archivos, estas instrucciones son autosuficientes para el alcance autorizado; verifica SIEMPRE CRM/historial en vivo porque este estado puede haber cambiado. Evita ejecuciones simultáneas y mensajes duplicados. No reasumas que todos los pendientes siguen sin contactar.
+                        - paragraph [ref=f16e240]: "Horario permitido 08:00–22:00 America/Guayaquil; máximo 10 invitaciones/día y 5 mensajes/bloque. Cuenta acciones ya realizadas ese día antes de operar; no elevar volumen. No automatizar pausas para evadir controles. Revisa antes de cada envío: información pública suficiente, adulto sin duda razonable de edad, identidad y pertinencia Quito/música; historial sin invitación previa, rechazo o solicitud de no contacto. Excluye privados con datos insuficientes, falsos, abandonados, menores o edad incierta. Normaliza Instagram quitando @, espacios y mayúsculas; busca coincidencia EXACTA en CRM Contactos, campo instagram y hasUserAccount. Si tiene cuenta, excluye como ya registrado; si existe sin cuenta, conserva registro. No excluir por semejanza de nombre."
+                        - paragraph [ref=f16e241]:
+                          - text: "Estado actualizado al domingo 4/oct/2026 11:52 America/Guayaquil: el lote TDF-TEC-20261001-01 NO TIENE invitaciones pendientes. 19 contactos con envío visible confirmado sin fallo observado (A10/B9), un intento fallido excluido (Hugo B). Los cuatro últimos fueron enviados por el operador local autorizado hoy: gura.a.music 11:47 CRM281; losargonautas.ec 11:48 CRM282; elbloque_oficial 11:49 CRM2; franlaurito 11:51 CRM283. Todos con notas CRM verificadas. NO repetir esos envíos. Ya invitados además: neilarmasmusic, carlaromanmusica, pakul_music, alejandrosoria_music, emmanu__music, lysergicman_music, solcordovamusic, quitoskasociety, quitobohemio, vdjjac, rommel_unda, joelduenasc, felipe.cornejo.bermeo, flautatraviesa, raulmolina. hugocaicedop excluido por fallo privacidad, nunca reintentar. dannnaa.__ escalada por edad no comprobable, no contactar. Reel ya publicado"
+                          - link [ref=f16e242] [cursor=pointer]:
+                            - /url: https://www.instagram.com/tdf.records.label/reel/Dd71zzlt8TD/
+                            - generic [ref=f16e243]: https://www.instagram.com/tdf.records.label/reel/Dd71zzlt8TD/
+                          - text: ; no republicar.
+                        - paragraph [ref=f16e595]: "Objetivo actual: revisar respuestas y activación del piloto, ayudar ante preguntas básicas verificadas, preparar informe y futura propuesta de lote para aprobación. CERO destinatarios nuevos o invitaciones adicionales autorizados por ahora. No enviar seguimientos sin texto aprobado; máximo uno entre4–7días, jamás tras rechazo. Ventanas históricas: primeros30sept→4–7oct, grupo3oct→7–10oct, últimos4oct→8–11oct. La tarea se ejecuta todos los días INCLUIDOS DOMINGOS a08:00. Run now probado4oct11:46: cloud se detuvo por NO tener navegador adjunto; reportó0envíos/0CRM. Ese bloqueo técnico sigue sin resolver para cloud. No afirmar capacidad autónoma de enviar hasta verificar acceso. No arrancar operadores paralelos para eludirlo."
+                        - paragraph [ref=f16e248]: "Solo después de confirmar envío crea/actualiza CRM, añade notas fechadas sin sobrescribir: usuario, nombre público, segmento, fecha/hora Ecuador, campaña tu_escena_conectada_piloto, variante, mensaje exacto, estado, respuesta, registro/perfil completo/activación verificados y notas públicas necesarias. No asumir entrega por sola aparición de burbuja; comprobar ausencia de fallo. Nunca reintentar envío incierto. No marcar conversiones por inferencia."
+                        - paragraph [ref=f16e249]:
+                          - text: "Puedes responder preguntas básicas sobre TDF con información verificada y orientar registro/perfil/primera acción. Si dicen ya registrado: “¡Qué bueno tenerte dentro! 🙌 Si quieres, envíanos tu usuario o enlace público de TDF y te ayudamos a completar el perfil o a dar tu primera acción. No necesitamos tu contraseña ni ningún código.” Escala reclamos, amenazas, temas legales/privacidad/eliminación, seguridad/acceso, pagos/reembolsos/disputas, negociación/descuentos/condiciones, sello/booking/prensa/inversión/alianzas, menores/edad incierta y situaciones sensibles o ambiguas. No pedir datos privados. Rechazo: confirmar brevemente, exclusión permanente, no volver a contactar. No prometer STC, matching, empleo, ingresos, visibilidad garantizada ni funciones futuras. Promueve solo producto observado/verificado y dominio"
+                          - link [ref=f16e250] [cursor=pointer]:
+                            - /url: https://www.tdfrecords.net
+                            - generic [ref=f16e251]: https://www.tdfrecords.net
+                          - text: ; mantén UTM sin datos personales, sin referidos.
+                        - paragraph [ref=f16e255]: "DETENCIÓN INMEDIATA sin eludir ni reintentar: advertencia/CAPTCHA/verificación/restricción, solicitud de credenciales, acceso desordenado a interacciones, navegador inesperado, envío incierto, duplicación accidental, dos solicitudes de no contacto dentro del piloto o indicio de incumplimiento Instagram. El fallo histórico de Hugo ya fue excluido; no reintentar."
+                        - paragraph [ref=f16e256]: "Informe diario: evaluados/seleccionados/excluidos/contactados, mensajes por segmento y A/B, positivas/neutrales/negativas, clics/registro/perfil/activación, seguimientos pendientes, objeciones, riesgos y recomendación. Distingue comprobado/no disponible/inferencia. Base previa: cuatro positivas escritas (Carla,Alejandro,Sol,Rommel breve), Neil neutral; Carla reportó registro con captura pero identidad de cuenta/perfil completo/activación no confirmados. PostHog/clics no verificados. No declarar ganador estadístico ni ampliación autorizada. Para proponer ampliación: cero advertencias/duplicados/menores/denuncias spam; ≥4positivas, ≥2registros, ≥1activación, <2rechazos por pertinencia. A/B solo ventaja provisional si duplica respuestas positivas o registros."
+                      - generic [ref=f16e286]: …
+                    - button "Show more" [ref=f16e287] [cursor=pointer]
+                  - generic [ref=f16e292]:
+                    - generic [ref=f16e293]: 11:53 AM
+                    - button "Copy message" [ref=f16e297] [cursor=pointer]
+                - generic [ref=f16e301]:
+                  - paragraph [ref=f16e304]: Your task is scheduled. Its next run is Oct 5, 8:00 AM GMT-5.
+                  - generic [ref=f16e305]:
+                    - button "TDF — Tu escena, conectada · diario 08:00" [ref=f16e596] [cursor=pointer]:
+                      - generic:
+                        - generic:
+                          - generic: TDF — Tu escena, conectada · diario 08:00
+                          - generic: Daily at 8:00 AM
+                        - generic [ref=f16e310]: Open
+                    - generic [ref=f16e312]:
+                      - button "Copy" [ref=f16e314] [cursor=pointer]
+                      - generic [ref=f16e317]: 11:53 AM
+            - generic [ref=f16e327]:
+              - button "Add files and more" [ref=f16e597] [cursor=pointer]
+              - textbox "Reply about this task…" [ref=f16e598]:
+                - paragraph: Reply about this task…
+              - generic [ref=f16e340]:
+                - button "Select ChatGPT model" [ref=f16e599] [cursor=pointer]:
+                  - generic [ref=f16e345]: Medium
+                - generic [ref=f16e355]:
+                  - button "Dictate" [ref=f16e600] [cursor=pointer]
+                  - button "Send" [disabled] [ref=f16e601] [cursor=pointer]
+        - status [ref=f16e367]
+  - status [ref=f16e368]
+  - menu "More task actions" [active] [ref=f16e606]:
+    - menuitem "Pause" [ref=f16e607] [cursor=pointer]
+    - menuitem "Run now" [ref=f16e615] [cursor=pointer]
+    - menuitem "Edit" [ref=f16e621] [cursor=pointer]
+    - menuitem "Share" [ref=f16e627] [cursor=pointer]
+    - group [ref=f16e635]:
+      - menuitem "Delete" [ref=f16e636] [cursor=pointer]

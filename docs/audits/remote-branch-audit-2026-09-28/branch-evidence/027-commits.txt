@@ -1,0 +1,2 @@
+6ba185a697b3b6b6983ebb48e0ab6454f716cf23 2026-09-28T05:17:46+02:00 continuous-improvement-loop[bot] Register shared event controls and validate source scope in CI
+441dfcc968559f829e84c89751f008657566138c 2026-09-28T05:11:09+02:00 continuous-improvement-loop[bot] Share event pilot capacity and require separate publication authority

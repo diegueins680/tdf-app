@@ -13,6 +13,9 @@ const GOOGLE_CONSENT_ERROR =
 const googleLoginRequestMock = jest.fn<(payload: Record<string, unknown>) => Promise<Record<string, unknown>>>();
 const loginMock = jest.fn();
 const signupResetMock = jest.fn();
+const redeemArtistInvitationMock = jest.fn<
+  (invitation: string, apiToken?: string | null) => Promise<Record<string, unknown>>
+>();
 
 jest.unstable_mockModule('../api/auth', () => ({
   googleLoginRequest: (payload: Record<string, unknown>) => googleLoginRequestMock(payload),
@@ -31,6 +34,7 @@ jest.unstable_mockModule('../api/fans', () => ({
 
 jest.unstable_mockModule('../api/session', () => ({
   loadSessionSnapshot: () => Promise.resolve(null),
+  redeemArtistInvitation: redeemArtistInvitationMock,
 }));
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
@@ -45,8 +49,8 @@ jest.unstable_mockModule('../analytics/useAnalytics', () => ({
   useAnalytics: () => ({ capture: jest.fn() }),
 }));
 
-jest.unstable_mockModule('../analytics/onboardingProgress', () => ({
-  markWebSignupCompleted: jest.fn(),
+jest.unstable_mockModule('../session/onboardingIntentRecovery', () => ({
+  persistOnboardingIntentWithRetry: jest.fn(async () => true),
 }));
 
 jest.unstable_mockModule('../utils/env', () => ({
@@ -71,7 +75,7 @@ const findButton = (name: string): HTMLButtonElement | null =>
   Array.from(document.querySelectorAll<HTMLButtonElement>('button'))
     .find((button) => button.textContent?.trim() === name) ?? null;
 
-const renderLoginPage = async () => {
+const renderLoginPage = async (initialEntry = '/login') => {
   const container = document.createElement('div');
   document.body.appendChild(container);
   let root: Root | null = createRoot(container);
@@ -84,7 +88,7 @@ const renderLoginPage = async () => {
   await act(async () => {
     root?.render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={['/login']}>
+        <MemoryRouter initialEntries={[initialEntry]}>
           <LoginPage />
         </MemoryRouter>
       </QueryClientProvider>,
@@ -115,6 +119,7 @@ describe('LoginPage Google signup consent flow', () => {
   beforeEach(() => {
     googleCallback = null;
     googleLoginRequestMock.mockReset();
+    redeemArtistInvitationMock.mockReset();
     loginMock.mockReset();
     document.head.querySelectorAll('script[src="https://accounts.google.com/gsi/client"]').forEach((node) => node.remove());
 
@@ -235,6 +240,71 @@ describe('LoginPage Google signup consent flow', () => {
       });
       expect(loginMock).toHaveBeenCalledWith(
         expect.objectContaining({ partyId: 404, apiToken: 'fictional-session-token' }),
+        { remember: true },
+      );
+    } finally {
+      await cleanup();
+    }
+  }, 15_000);
+
+  it('redeems the allowlisted Instagram artist invitation before entering the artist profile', async () => {
+    googleLoginRequestMock.mockResolvedValueOnce({
+      token: 'invited-session-token',
+      partyId: 405,
+      roles: ['Customer'],
+      modules: ['Packages'],
+      accountCreated: true,
+    });
+    redeemArtistInvitationMock.mockResolvedValueOnce({
+      username: 'andrea@example.com',
+      displayName: 'Andrea',
+      partyId: 405,
+      roles: ['Customer', 'Artist'],
+      modules: ['Packages', 'Scheduling'],
+      featureFlags: [],
+      preferences: {},
+    });
+    const cleanup = await renderLoginPage(
+      '/login?signup=1&intent=artist&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=invited_artist',
+    );
+
+    try {
+      const signupDialog = await waitFor(() => {
+        const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
+        expect(dialog).not.toBeNull();
+        return dialog;
+      });
+      expect(signupDialog.textContent).toContain('sin una revisión adicional');
+
+      const termsCheckbox = signupDialog.querySelector<HTMLInputElement>(
+        'input[aria-label="Acepto los términos y la política de privacidad"]',
+      );
+      await act(async () => {
+        termsCheckbox?.click();
+        await flushPromises();
+      });
+      await waitFor(() => {
+        expect(findButton('Google signup test button')).not.toBeNull();
+      });
+      await act(async () => {
+        findButton('Google signup test button')?.click();
+        await flushPromises();
+        await flushPromises();
+      });
+
+      expect(googleLoginRequestMock).toHaveBeenCalledWith({
+        idToken: GOOGLE_CREDENTIAL,
+        marketingOptIn: false,
+        termsAccepted: true,
+        termsVersion: 'tdf-account-terms-v1',
+        onboardingIntent: 'artist_profile',
+      });
+      expect(redeemArtistInvitationMock).toHaveBeenCalledWith(
+        'tu_escena_conectada_piloto',
+        'invited-session-token',
+      );
+      expect(loginMock).toHaveBeenCalledWith(
+        expect.objectContaining({ partyId: 405, roles: ['customer', 'artist'] }),
         { remember: true },
       );
     } finally {

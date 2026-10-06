@@ -1,0 +1,10 @@
+- generic [ref=e9]:
+  - img "Google Play Console logo" [ref=e11]
+  - generic [ref=e12]:
+    - button [ref=e14] [cursor=pointer]:
+      - generic [ref=e16]:
+        - text: cuco.saa@gmail.com
+        - img [ref=e18]: keyboard_arrow_down
+    - heading "Choose developer account" [level=2] [ref=e27]
+    - listbox [ref=e28]:
+      - option "TDF Records" [ref=e29] [cursor=pointer]

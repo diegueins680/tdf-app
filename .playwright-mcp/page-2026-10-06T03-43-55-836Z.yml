@@ -1,0 +1,365 @@
+- generic [ref=f21e9]:
+  - generic [ref=f21e12]:
+    - link [ref=f21e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f21e22]
+    - generic [ref=f21e25]:
+      - link [ref=f21e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f21e35]
+      - link [ref=f21e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f21e45]
+      - link [ref=f21e714] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - generic [ref=f21e55]:
+          - img "Messages" [ref=f21e57]
+          - generic "Direct messaging - 3 new notifications link" [ref=f21e715]: "3"
+      - link [ref=f21e62] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f21e67]
+      - link [ref=f21e720] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f21e725]
+      - link [ref=f21e85] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f21e90]
+      - link [ref=f21e95] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f21e100]
+      - link [ref=f21e107] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f21e112]:
+          - img "tdf.records.label's profile picture" [ref=f21e113]
+    - generic [ref=f21e114]:
+      - link [ref=f21e117] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f21e122]
+      - link [ref=f21e125] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f21e130]
+  - main [ref=f21e134]:
+    - generic [ref=f21e139]:
+      - navigation "Thread list" [ref=f21e140]:
+        - generic [ref=f21e141]:
+          - generic [ref=f21e142]:
+            - button [ref=f21e143] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f21e145]
+              - img "Verified" [ref=f21e148]
+              - img "Down chevron icon" [ref=f21e151]
+            - generic [ref=f21e154]:
+              - button [ref=f21e155] [cursor=pointer]:
+                - img "More options" [ref=f21e157]
+              - button [ref=f21e161] [cursor=pointer]:
+                - img "New message" [ref=f21e163]
+          - tablist [ref=f21e168]:
+            - tab "Primary" [selected] [ref=f21e169] [cursor=pointer]
+            - tab "General" [ref=f21e172] [cursor=pointer]
+            - tab "From ads" [ref=f21e175] [cursor=pointer]
+            - tab "Requests" [ref=f21e179] [cursor=pointer]
+          - generic [ref=f21e185]:
+            - img "Search" [ref=f21e187]
+            - textbox "Search" [ref=f21e190]
+          - generic [ref=f21e191]:
+            - generic [ref=f21e281]:
+              - list [ref=f21e283]:
+                - listitem [ref=f21e284]
+                - listitem [ref=f21e285]:
+                  - button "What's on your mind? Your note" [ref=f21e287] [cursor=pointer]:
+                    - generic [ref=f21e288]:
+                      - generic [ref=f21e289]: What's on your mind?
+                      - generic [ref=f21e295]:
+                        - link [ref=f21e297]
+                        - generic [ref=f21e298]: Your note
+                - listitem [ref=f21e300]:
+                  - button "Este 24 de octubre taller introducción a la Síntesis Modular en @andesbrewing elemental.zoser's profile picture Elemental Zoser Sound Studio" [ref=f21e303] [cursor=pointer]:
+                    - generic [ref=f21e304]:
+                      - generic [ref=f21e312]:
+                        - text: Este 24 de octubre taller introducción a la Síntesis Modular en
+                        - link "@andesbrewing" [ref=f21e313]:
+                          - /url: /andesbrewing/
+                      - generic [ref=f21e314]:
+                        - link [ref=f21e316]:
+                          - img "elemental.zoser's profile picture" [ref=f21e317]
+                        - generic [ref=f21e318]: Elemental Zoser Sound Studio
+                - listitem [ref=f21e321]:
+                  - button "De vuelta al rancho reemus___'s profile picture REEMUS" [ref=f21e324] [cursor=pointer]:
+                    - generic [ref=f21e325]:
+                      - generic [ref=f21e326]: De vuelta al rancho
+                      - generic [ref=f21e333]:
+                        - link [ref=f21e335]:
+                          - img "reemus___'s profile picture" [ref=f21e336]
+                        - generic [ref=f21e337]: REEMUS
+                - listitem [ref=f21e340]:
+                  - button "Escuché ARKABUZ en Guayaquil?? fede.idrovo's profile picture Fede Ib" [ref=f21e343] [cursor=pointer]:
+                    - generic [ref=f21e344]:
+                      - generic [ref=f21e345]: Escuché ARKABUZ en Guayaquil??
+                      - generic [ref=f21e352]:
+                        - link [ref=f21e354]:
+                          - img "fede.idrovo's profile picture" [ref=f21e355]
+                        - generic [ref=f21e356]: Fede Ib
+                - listitem [ref=f21e359]:
+                  - button "Entradas Funk Tribu DM 📩 natiqdati's profile picture Natali Quintero" [ref=f21e362] [cursor=pointer]:
+                    - generic [ref=f21e363]:
+                      - generic [ref=f21e364]: Entradas Funk Tribu DM 📩
+                      - generic [ref=f21e371]:
+                        - link [ref=f21e373]:
+                          - img "natiqdati's profile picture" [ref=f21e374]
+                        - generic [ref=f21e375]: Natali Quintero
+                - listitem [ref=f21e378]:
+                  - button "Tienes una cita en Cat Cave este Jueves. Entrada libre con disfraz oximoron_tu_tentaculo's profile picture Tentáculos" [ref=f21e381] [cursor=pointer]:
+                    - generic [ref=f21e382]:
+                      - generic [ref=f21e383]: Tienes una cita en Cat Cave este Jueves. Entrada libre con disfraz
+                      - generic [ref=f21e390]:
+                        - link [ref=f21e392]:
+                          - img "oximoron_tu_tentaculo's profile picture" [ref=f21e393]
+                        - generic [ref=f21e394]: Tentáculos
+                - listitem [ref=f21e397]:
+                  - button "New Home 🩵 planblu.ec's profile picture MODA SUSTENTABLE" [ref=f21e400] [cursor=pointer]:
+                    - generic [ref=f21e401]:
+                      - generic [ref=f21e402]: New Home 🩵
+                      - generic [ref=f21e409]:
+                        - link [ref=f21e411]:
+                          - img "planblu.ec's profile picture" [ref=f21e412]
+                        - generic [ref=f21e413]: MODA SUSTENTABLE
+                - listitem [ref=f21e416]:
+                  - button "Alguien viene de la usa ?🇺🇸 obrerodelritmo's profile picture obrerodelritmo" [ref=f21e419] [cursor=pointer]:
+                    - generic [ref=f21e420]:
+                      - generic [ref=f21e421]: Alguien viene de la usa ?🇺🇸
+                      - generic [ref=f21e428]:
+                        - link [ref=f21e430]:
+                          - img "obrerodelritmo's profile picture" [ref=f21e431]
+                        - generic [ref=f21e432]: obrerodelritmo
+                - listitem [ref=f21e435]:
+                  - button "Entrada a funk tribu back $55 anajusegovia's profile picture Ana Julia" [ref=f21e438] [cursor=pointer]:
+                    - generic [ref=f21e439]:
+                      - generic [ref=f21e440]: Entrada a funk tribu back $55
+                      - generic [ref=f21e447]:
+                        - link [ref=f21e449]:
+                          - img "anajusegovia's profile picture" [ref=f21e450]
+                        - generic [ref=f21e451]: Ana Julia
+              - button "Next" [ref=f21e454] [cursor=pointer]
+            - generic [ref=f21e457]:
+              - button "user-profile-picture Quito Bohemio De nuestra parte podemos complementar con posteos en la web y notas de prensa complementarias para afianzar la comunicación about an hour ago More options" [pressed] [ref=f21e729] [cursor=pointer]:
+                - generic [ref=f21e463]:
+                  - img "user-profile-picture" [ref=f21e467]
+                  - generic [ref=f21e470]:
+                    - generic [ref=f21e471]: Quito Bohemio
+                    - generic [ref=f21e732]:
+                      - generic [ref=f21e733]: De nuestra parte podemos complementar con posteos en la web y notas de prensa complementarias para afianzar la comunicación
+                      - generic [ref=f21e735]:
+                        - generic [ref=f21e736]: ·
+                        - generic "about an hour ago" [ref=f21e741]: 1h
+                  - button [ref=f21e742]:
+                    - img "More options" [ref=f21e745]
+              - button "user-profile-picture Mijail Mijail replied to an ad. View ad(https://www.instagram.com/p/DL58rbRgiys/) about an hour ago Unread" [ref=f21e494] [cursor=pointer]:
+                - generic [ref=f21e496]:
+                  - img "user-profile-picture" [ref=f21e500]
+                  - generic [ref=f21e503]:
+                    - generic [ref=f21e504]: Mijail
+                    - generic [ref=f21e510]:
+                      - generic [ref=f21e511]: Mijail replied to an ad. View ad(https://www.instagram.com/p/DL58rbRgiys/)
+                      - generic [ref=f21e513]:
+                        - generic [ref=f21e514]: ·
+                        - generic "about an hour ago" [ref=f21e519]: 1h
+                  - generic [ref=f21e520]: Unread
+              - 'button "user-profile-picture | QUITO SKA SOCIETY | You: ¡Gracias por contarnos, equipo! Nos faltó explicar mejor la invitación. Les escribíamos para conocer https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a , la plataforma de TDF, donde pueden explorar perfiles de artistas y lanzamientos, y decirnos qué les serviría para su comunidad. La idea de grabar con Marianno sería una propuesta aparte, que tendríamos que revisar con Diego. Pensando en Ska Ba Boom y su autogestión, ¿qué apoyo concreto están buscando? Así podemos evaluar una colaboración con sentido para ambos. — TDF Records 2 hours ago" [ref=f21e527] [cursor=pointer]':
+                - generic [ref=f21e529]:
+                  - img "user-profile-picture" [ref=f21e533]
+                  - generic [ref=f21e536]:
+                    - generic [ref=f21e537]: "| QUITO SKA SOCIETY |"
+                    - generic [ref=f21e543]:
+                      - generic [ref=f21e544]: "You: ¡Gracias por contarnos, equipo! Nos faltó explicar mejor la invitación. Les escribíamos para conocer https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a , la plataforma de TDF, donde pueden explorar perfiles de artistas y lanzamientos, y decirnos qué les serviría para su comunidad. La idea de grabar con Marianno sería una propuesta aparte, que tendríamos que revisar con Diego. Pensando en Ska Ba Boom y su autogestión, ¿qué apoyo concreto están buscando? Así podemos evaluar una colaboración con sentido para ambos. — TDF Records"
+                      - generic [ref=f21e546]:
+                        - generic [ref=f21e547]: ·
+                        - generic "2 hours ago" [ref=f21e552]: 2h
+              - 'button "user-profile-picture Gza_cx You: Hola Andrés, ¡gracias por escribirnos y por tu interés en las clases de DJ! 🎧 Ésta es nuestra ubicación: https://maps.app.goo.gl/CDncta89jMCX8FLM6 Nuestro paquete completo de clases es de 16 horas y tiene un costo de $500. Además, puedes tomar una clase de prueba para conocer nuestra forma de trabajar y resolver todas tus dudas. La puedes solicitar aquí: https://www.tdfrecords.net/trials Si quieres, cuéntame también qué experiencia tienes como DJ y qué horarios te acomodan, así te recomiendo la opción ideal para ti. 😉 13 hours ago" [ref=f21e556] [cursor=pointer]':
+                - generic [ref=f21e558]:
+                  - img "user-profile-picture" [ref=f21e562]
+                  - generic [ref=f21e565]:
+                    - generic [ref=f21e566]: Gza_cx
+                    - generic [ref=f21e572]:
+                      - generic [ref=f21e573]: "You: Hola Andrés, ¡gracias por escribirnos y por tu interés en las clases de DJ! 🎧 Ésta es nuestra ubicación: https://maps.app.goo.gl/CDncta89jMCX8FLM6 Nuestro paquete completo de clases es de 16 horas y tiene un costo de $500. Además, puedes tomar una clase de prueba para conocer nuestra forma de trabajar y resolver todas tus dudas. La puedes solicitar aquí: https://www.tdfrecords.net/trials Si quieres, cuéntame también qué experiencia tienes como DJ y qué horarios te acomodan, así te recomiendo la opción ideal para ti. 😉"
+                      - generic [ref=f21e575]:
+                        - generic [ref=f21e576]: ·
+                        - generic "13 hours ago" [ref=f21e581]: 13h
+              - 'button "user-profile-picture Joel Dueñas You: Hola, Joel 👋 Te dejamos un único recordatorio de la invitación que te enviamos por tu trabajo con Delirio. Puedes empezar explorando un proyecto y seguirlo desde tu cuenta de TDF: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=Producer&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a Si no te interesa, todo bien; aquí dejamos la invitación y no volvemos a escribirte. — TDF Records 13 hours ago" [ref=f21e585] [cursor=pointer]':
+                - generic [ref=f21e587]:
+                  - img "user-profile-picture" [ref=f21e591]
+                  - generic [ref=f21e594]:
+                    - generic [ref=f21e595]: Joel Dueñas
+                    - generic [ref=f21e601]:
+                      - generic [ref=f21e602]: "You: Hola, Joel 👋 Te dejamos un único recordatorio de la invitación que te enviamos por tu trabajo con Delirio. Puedes empezar explorando un proyecto y seguirlo desde tu cuenta de TDF: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=Producer&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=musico_a Si no te interesa, todo bien; aquí dejamos la invitación y no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f21e604]:
+                        - generic [ref=f21e605]: ·
+                        - generic "13 hours ago" [ref=f21e610]: 13h
+              - button "user-profile-picture Isaac Quiero saber cómo es su método de trabajo 23 hours ago" [ref=f21e614] [cursor=pointer]:
+                - generic [ref=f21e616]:
+                  - img "user-profile-picture" [ref=f21e620]
+                  - generic [ref=f21e623]:
+                    - generic [ref=f21e624]: Isaac
+                    - generic [ref=f21e630]:
+                      - generic [ref=f21e631]: Quiero saber cómo es su método de trabajo
+                      - generic [ref=f21e633]:
+                        - generic [ref=f21e634]: ·
+                        - generic "23 hours ago" [ref=f21e639]: 23h
+              - 'button "user-profile-picture Ciscú Mastó You: ¡Hola, Francisco! TDF es una plataforma para conectar proyectos musicales y gente que vive la escena de Quito. Puedes explorar perfiles de artistas y lanzamientos, seguir proyectos y crear tu perfil público de artista con biografía y enlaces a tu música. El enlace que te compartimos abre el registro general: puedes crear tu cuenta con correo y contraseña, elegir el rol que te corresponda y empezar siguiendo un proyecto. Si te animas a probarla, cuéntanos qué te resulta útil o qué te falta para tu música. — TDF Records a day ago" [ref=f21e643] [cursor=pointer]':
+                - generic [ref=f21e645]:
+                  - img "user-profile-picture" [ref=f21e649]
+                  - generic [ref=f21e652]:
+                    - generic [ref=f21e653]: Ciscú Mastó
+                    - generic [ref=f21e659]:
+                      - generic [ref=f21e660]: "You: ¡Hola, Francisco! TDF es una plataforma para conectar proyectos musicales y gente que vive la escena de Quito. Puedes explorar perfiles de artistas y lanzamientos, seguir proyectos y crear tu perfil público de artista con biografía y enlaces a tu música. El enlace que te compartimos abre el registro general: puedes crear tu cuenta con correo y contraseña, elegir el rol que te corresponda y empezar siguiendo un proyecto. Si te animas a probarla, cuéntanos qué te resulta útil o qué te falta para tu música. — TDF Records"
+                      - generic [ref=f21e662]:
+                        - generic [ref=f21e663]: ·
+                        - generic "a day ago" [ref=f21e668]: 1d
+              - button [ref=f21e700] [cursor=pointer]:
+                - generic [ref=f21e702]:
+                  - status "Loading..." [ref=f21e705]
+                  - generic [ref=f21e708]:
+                    - status "Loading..." [ref=f21e710]
+                    - status "Loading..." [ref=f21e712]
+      - generic [ref=f21e750]:
+        - generic [ref=f21e754]:
+          - link "Open the profile page of quitobohemio" [ref=f21e755] [cursor=pointer]:
+            - /url: /quitobohemio/
+            - generic [ref=f21e756]:
+              - img "user-profile-picture" [ref=f21e760]
+              - generic [ref=f21e761]:
+                - heading "Quito Bohemio" [level=2] [ref=f21e763]
+                - generic [ref=f21e765]: quitobohemio
+          - generic [ref=f21e769]:
+            - button [ref=f21e770] [cursor=pointer]:
+              - img "Audio call" [ref=f21e772]
+            - button [ref=f21e774] [cursor=pointer]:
+              - img "Video call" [ref=f21e776]
+            - button [ref=f21e779] [cursor=pointer]:
+              - img "Conversation information" [ref=f21e781]
+        - generic [ref=f21e785]:
+          - generic [ref=f21e789]:
+            - generic [ref=f21e790]:
+              - img "user-profile-picture" [ref=f21e794]
+              - generic [ref=f21e795]:
+                - heading "Quito Bohemio" [level=2] [ref=f21e798]
+                - generic [ref=f21e800]: quitobohemio · Instagram
+                - link "View profile" [ref=f21e803] [cursor=pointer]:
+                  - /url: /quitobohemio/
+            - generic [ref=f21e804]:
+              - group [ref=f21e822]:
+                - generic [ref=f21e824]:
+                  - link "Open the profile page of quitobohemio" [ref=f21e827] [cursor=pointer]:
+                    - /url: /quitobohemio
+                    - img "user-profile-picture" [ref=f21e830]
+                  - generic [ref=f21e832]:
+                    - article "Con gusto, me parece adecuado eso, mmm hagamos unas pruebas gratuitas, nosotros por la difusión de todo el material en colaboración, historias y en la web cobramos 20$, pero yo creo que si hacemos difusión de unas 3 producciones en conjunto de manera gratuita podemos acentar mejor qué métricas tenemos y de ahí vemos que sería bueno hacer con la data en mano ya que si logramos buen alcance ya tenemos un plus para todos los clientes." [ref=f21e833]
+                    - generic [ref=f21e837]:
+                      - group "Message actions":
+                        - generic:
+                          - generic:
+                            - generic:
+                              - button "React to message from quitobohemio":
+                                - generic:
+                                  - img "React to message from quitobohemio"
+                          - generic:
+                            - generic:
+                              - button "Reply to message from quitobohemio":
+                                - generic:
+                                  - img "Reply to message from quitobohemio"
+                          - generic:
+                            - generic:
+                              - button "See more options for message from quitobohemio":
+                                - generic:
+                                  - img "See more options for message from quitobohemio"
+              - generic [ref=f21e840]:
+                - generic [ref=f21e841]: 8:27 PM
+                - group [ref=f21e844]:
+                  - generic [ref=f21e847]:
+                    - article [ref=f21e848]:
+                      - generic [ref=f21e851]:
+                        - text: ¡Gracias, amigos! Nos interesa explorar esa prueba con tres producciones
+                        - img "🤟" [ref=f21e853]
+                        - text: "Antes de confirmar los proyectos, ¿qué incluiría la difusión de cada uno: publicación colaborativa, historias y nota en la web? Cuéntennos también qué materiales necesitan, qué fechas proponen y qué métricas podrían compartir después. Con eso podemos revisar los proyectos y concretar juntos el alcance de la prueba gratuita. — TDF Records"
+                    - generic [ref=f21e854]:
+                      - group "Message actions":
+                        - generic:
+                          - generic:
+                            - generic:
+                              - button "React to message from tdf.records.label":
+                                - generic:
+                                  - img "React to message from tdf.records.label"
+                          - generic:
+                            - generic:
+                              - button "Reply to message from tdf.records.label":
+                                - generic:
+                                  - img "Reply to message from tdf.records.label"
+                          - generic:
+                            - generic:
+                              - button "See more options for message from tdf.records.label":
+                                - generic:
+                                  - img "See more options for message from tdf.records.label"
+              - generic [ref=f21e857]:
+                - generic [ref=f21e858]: 9:35 PM
+                - generic [ref=f21e861]:
+                  - separator [ref=f21e863]
+                  - generic [ref=f21e864]: New messages
+                  - separator [ref=f21e867]
+                - group [ref=f21e868]:
+                  - generic [ref=f21e872]:
+                    - article "A ver en este aspecto nos conviene ver las métricas de Instagram entonces para poner en colaboración todo y ver desde ahí las métricas" [ref=f21e873]
+                    - generic [ref=f21e877]:
+                      - group "Message actions":
+                        - generic:
+                          - generic:
+                            - generic:
+                              - button "React to message from quitobohemio":
+                                - generic:
+                                  - img "React to message from quitobohemio"
+                          - generic:
+                            - generic:
+                              - button "Reply to message from quitobohemio":
+                                - generic:
+                                  - img "Reply to message from quitobohemio"
+                          - generic:
+                            - generic:
+                              - button "See more options for message from quitobohemio":
+                                - generic:
+                                  - img "See more options for message from quitobohemio"
+              - group [ref=f21e881]:
+                - generic [ref=f21e883]:
+                  - link "Open the profile page of quitobohemio" [ref=f21e886] [cursor=pointer]:
+                    - /url: /quitobohemio
+                    - img "user-profile-picture" [ref=f21e889]
+                  - generic [ref=f21e891]:
+                    - article "De nuestra parte podemos complementar con posteos en la web y notas de prensa complementarias para afianzar la comunicación" [ref=f21e892]
+                    - generic [ref=f21e896]:
+                      - group "Message actions":
+                        - generic:
+                          - generic:
+                            - generic:
+                              - button "React to message from quitobohemio":
+                                - generic:
+                                  - img "React to message from quitobohemio"
+                          - generic:
+                            - generic:
+                              - button "Reply to message from quitobohemio":
+                                - generic:
+                                  - img "Reply to message from quitobohemio"
+                          - generic:
+                            - generic:
+                              - button "See more options for message from quitobohemio":
+                                - generic:
+                                  - img "See more options for message from quitobohemio"
+          - generic [ref=f21e906]:
+            - button [ref=f21e909] [cursor=pointer]:
+              - img "Choose an emoji" [ref=f21e911]
+            - generic [ref=f21e913]:
+              - textbox [active] [ref=f21e914]:
+                - paragraph [ref=f21e915]
+              - generic: Message...
+            - generic [ref=f21e916]:
+              - button [ref=f21e917] [cursor=pointer]:
+                - img "Voice Clip" [ref=f21e919]
+              - button [ref=f21e922] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=f21e924]
+              - button [ref=f21e929] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=f21e931]

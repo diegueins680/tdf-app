@@ -1,0 +1,22 @@
+{
+  "captured_at": "2026-09-28T18:39:57.714918+00:00",
+  "pr": 468,
+  "clarification": "Asked for existing authorized host/account or named secret reference, not passwords; implementation dependent on authoritative access configuration remains blocked.",
+  "resolved_at": "2026-09-30T00:58:25.613226+00:00",
+  "resolution": "User instructed autonomous discovery. Existing daily memory identified dedicated host/account/key; strict-host-key SSH and running container/image/database binding verified. Both tools repaired at 102662f13e690394ba87267e34dc513a5496ed40, local installed monitor updated with original-hash guard, read-only live catalog and exact scheduled mail command passed. Both GitHub review threads verified resolved. Original observed blockers retained below as historical evidence.",
+  "historical_unresolved": [
+    {
+      "thread": "PRRT_kwDOQPdUrM6myV4V",
+      "tool": "scripts/production-catalog-inventory.mjs",
+      "observed_behavior": "hardcodes Fly app/database, queries Fly health/version/machines, and runs read-only SQL via flyctl ssh; current production is Hetzner",
+      "required_next_action": "Provide the approved current-host/read-only database connection and provenance identifiers, then implement/test a current provider adapter retaining bounded read-only anonymized SQL and source/target identity verification. Never silently inventory the retained stale Fly database."
+    },
+    {
+      "thread": "PRRT_kwDOQPdUrM6myV4a",
+      "tool": "scripts/mail-deliverability-monitor.py and installed LaunchAgent copy",
+      "observed_behavior": "loads SMTP_USERNAME/SMTP_PASSWORD from a healthy Fly API machine; the machines are stopped. DNS work can run, mailbox observation fails.",
+      "required_next_action": "Provide approved current credential source/connection and identify the installed copy. Implement/test secure retrieval without logging secrets, update the installed copy, and verify scheduled read-only mailbox access. Do not reactivate Fly or invent credentials."
+    }
+  ],
+  "currently_unresolved": []
+}

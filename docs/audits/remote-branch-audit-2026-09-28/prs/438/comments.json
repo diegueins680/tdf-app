@@ -1,0 +1,143 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045109452",
+      "pull_request_review_id": 5245815646,
+      "id": 4045109452,
+      "node_id": "PRRC_kwDOQPdUrM7xG3jM",
+      "diff_hunk": "@@ -652,27 +700,71 @@ function previousSha(machine) {\n   }\n }\n \n+// This reviewed commit binds Google authentication to issuer/subject and requires\n+// deliberate new-account intent. Restoring an earlier binary would re-enable\n+// email-only authority even if the additive table itself remains intact.\n+const providerIdentityFloor = 'c53b33e7ef868fb7b64f876199ed66be0f617efc';\n+\n+async function gitIsAncestor(ancestor, descendant) {\n+  try {\n+    await run(['git', 'merge-base', '--is-ancestor', ancestor, descendant], { log: false });\n+    return true;\n+  } catch (error) {\n+    if (error.cause?.code === 1) return false;\n+    throw error; // Missing history/tooling is not evidence of compatibility.\n+  }\n+}\n+\n+export async function rollbackCompatibility(context, sha, isAncestor = gitIsAncestor) {\n+  const candidate = normalizeFullSha(sha);\n+  const requiredCommit = context.migrations.some(({ id }) => id === '2026-09-18_provider_subject_identity')\n+    ? providerIdentityFloor\n+    : null;\n+  return {\n+    sha: candidate,\n+    requiredCommit,\n+    compatible: requiredCommit === null || await isAncestor(requiredCommit, candidate),\n+  };\n+}\n+\n+export async function withCompatibleRollback(context, sha, deploy, isAncestor = gitIsAncestor) {\n+  const policy = await rollbackCompatibility(context, sha, isAncestor);\n+  if (!policy.compatible) {\n+    throw new Error(`Unsafe authentication rollback blocked: ${policy.sha} predates ${policy.requiredCommit}. Keep provider bindings and recover forward with a compatible reviewed image.`);\n+  }\n+  return deploy();\n+}\n+\n+export function selectRecoveryTarget(snapshot, fallback) {\n+  if (snapshot.rollbackPolicy?.compatible) {\n+    return { sha: snapshot.sha, image: snapshot.image, acceptableImageDigests: [snapshot.imageDigest] };\n+  }\n+  if (!fallback?.sha || !fallback.image || !fallback.acceptableImageDigests?.length) {\n+    throw new Error('No verified compatible recovery artifact; refusing legacy rollback.');\n+  }\n+  return fallback;\n+}\n+\n async function rollbackMachine(context, machine) {\n-  const image = machine.releaseSnapshot?.image ?? previousImage(machine);\n-  const sha = previousSha(machine);\n+  const { image, sha, acceptableImageDigests } = selectRecoveryTarget(machine.releaseSnapshot, context.recoveryArtifact);",
+      "path": "scripts/production-release.mjs",
+      "commit_id": "35172083af75f9c7530624173d82819252e25d1a",
+      "original_commit_id": "3ad97a31e940f4000fc56cddae00c2b7ee12852c",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Recover all legacy machines after a canary failure**\n\nOn the first rollout from the legacy fleet, a public canary can create a subject binding before verification fails. This fallback upgrades only the canary to the compatible recovery image; the canary is then removed from `touchedMachines`, and the outer recovery loop skips every untouched legacy machine. The release therefore exits with a mixed fleet where requests routed to the old machines can still authorize by email despite the new binding. Either move every unsafe machine to the compatible recovery artifact on this failure path or prevent provider bindings/public traffic until the entire fleet is compatible.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T08:31:45Z",
+      "updated_at": "2026-09-18T08:31:45Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/438#discussion_r4045109452",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/438",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045109452"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/438#discussion_r4045109452"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/438"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045109452/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 769,
+      "original_line": 749,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 149,
+      "position": 169,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045188084",
+      "pull_request_review_id": 5245910800,
+      "id": 4045188084,
+      "node_id": "PRRC_kwDOQPdUrM7xHKv0",
+      "diff_hunk": "@@ -652,27 +700,71 @@ function previousSha(machine) {\n   }\n }\n \n+// This reviewed commit binds Google authentication to issuer/subject and requires\n+// deliberate new-account intent. Restoring an earlier binary would re-enable\n+// email-only authority even if the additive table itself remains intact.\n+const providerIdentityFloor = 'c53b33e7ef868fb7b64f876199ed66be0f617efc';\n+\n+async function gitIsAncestor(ancestor, descendant) {\n+  try {\n+    await run(['git', 'merge-base', '--is-ancestor', ancestor, descendant], { log: false });\n+    return true;\n+  } catch (error) {\n+    if (error.cause?.code === 1) return false;\n+    throw error; // Missing history/tooling is not evidence of compatibility.\n+  }\n+}\n+\n+export async function rollbackCompatibility(context, sha, isAncestor = gitIsAncestor) {\n+  const candidate = normalizeFullSha(sha);\n+  const requiredCommit = context.migrations.some(({ id }) => id === '2026-09-18_provider_subject_identity')\n+    ? providerIdentityFloor\n+    : null;\n+  return {\n+    sha: candidate,\n+    requiredCommit,\n+    compatible: requiredCommit === null || await isAncestor(requiredCommit, candidate),\n+  };\n+}\n+\n+export async function withCompatibleRollback(context, sha, deploy, isAncestor = gitIsAncestor) {\n+  const policy = await rollbackCompatibility(context, sha, isAncestor);\n+  if (!policy.compatible) {\n+    throw new Error(`Unsafe authentication rollback blocked: ${policy.sha} predates ${policy.requiredCommit}. Keep provider bindings and recover forward with a compatible reviewed image.`);\n+  }\n+  return deploy();\n+}\n+\n+export function selectRecoveryTarget(snapshot, fallback) {\n+  if (snapshot.rollbackPolicy?.compatible) {\n+    return { sha: snapshot.sha, image: snapshot.image, acceptableImageDigests: [snapshot.imageDigest] };\n+  }\n+  if (!fallback?.sha || !fallback.image || !fallback.acceptableImageDigests?.length) {\n+    throw new Error('No verified compatible recovery artifact; refusing legacy rollback.');\n+  }\n+  return fallback;\n+}\n+\n async function rollbackMachine(context, machine) {\n-  const image = machine.releaseSnapshot?.image ?? previousImage(machine);\n-  const sha = previousSha(machine);\n+  const { image, sha, acceptableImageDigests } = selectRecoveryTarget(machine.releaseSnapshot, context.recoveryArtifact);",
+      "path": "scripts/production-release.mjs",
+      "commit_id": "35172083af75f9c7530624173d82819252e25d1a",
+      "original_commit_id": "3ad97a31e940f4000fc56cddae00c2b7ee12852c",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Corrected in 35172083a. The canary catch now retains the original error and delegates to the actual outer fleet recovery loop. Once any deployment was attempted, recoverReleaseMachines includes every incompatible snapshot, including untouched replicas, as well as all touched machines. It continues after individual recovery failures and records each error; pre-deployment failures cause no recovery mutation.\n\n74 release tests pass, including both canary choices/all four prior combinations and injected recovery failure. The full pinned TLA+/Alloy runner passes. New StoppedFleetSafe checks the whole recovered fleet; ProviderRollbackPartial reproduces this exact omission (25 generated / 18 distinct states) and must violate that property. Existing unsafe restoration counterexample is retained. Successful recovery commands are an explicit model assumption; temporary mixed-fleet intervals during rollout/recovery are not certified by it.",
+      "created_at": "2026-09-18T08:43:49Z",
+      "updated_at": "2026-09-18T08:43:49Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/438#discussion_r4045188084",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/438",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045188084"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/438#discussion_r4045188084"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/438"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045188084/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 769,
+      "original_line": 749,
+      "side": "RIGHT",
+      "in_reply_to_id": 4045109452,
+      "author_association": "OWNER",
+      "original_position": 149,
+      "position": 169,
+      "subject_type": "line"
+    }
+  ]
+]

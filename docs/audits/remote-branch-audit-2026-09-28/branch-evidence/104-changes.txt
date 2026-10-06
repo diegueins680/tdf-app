@@ -1,0 +1,8 @@
+ docs/event-operations/README.md                    |  2 +
+ docs/event-operations/pr-34-raci-review-paint.md   | 81 ++++++++++++++++++++++
+ .../event-operations/raci-review-paint-contract.md | 30 ++++++++
+ docs/event-operations/traceability-matrix.md       |  1 +
+ e2e/web/event-raci-editor.spec.mjs                 | 40 +++++++++++
+ e2e/web/helpers/review-paint.mjs                   | 23 ++++++
+ scripts/__tests__/event-raci-web-editor.test.mjs   | 15 ++++
+ 7 files changed, 192 insertions(+)

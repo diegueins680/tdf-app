@@ -15,6 +15,7 @@ export interface FeatureAccessRequestHistoryDTO {
 export interface FeatureAccessRequestDTO {
   id: number;
   requesterPartyId: number;
+  requesterName: string | null;
   featureId: string;
   action: FeatureAction;
   roleContext: string[];

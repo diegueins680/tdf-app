@@ -1,0 +1,358 @@
+- generic [ref=f81e1]:
+  - generic [ref=f81e4]:
+    - generic [ref=f81e18]:
+      - generic [ref=f81e21]:
+        - link [ref=f81e26] [cursor=pointer]:
+          - /url: /
+          - img "Instagram" [ref=f81e31]
+        - generic [ref=f81e34]:
+          - link [ref=f81e39] [cursor=pointer]:
+            - /url: /
+            - img "Home" [ref=f81e44]
+          - link [ref=f81e49] [cursor=pointer]:
+            - /url: /reels/
+            - img "Reels" [ref=f81e54]
+          - link [ref=f81e61] [cursor=pointer]:
+            - /url: /direct/inbox/
+            - generic [ref=f81e64]:
+              - img "Messages" [ref=f81e66]
+              - generic "Direct messaging - 8 new notifications link" [ref=f81e69]: "8"
+          - link [ref=f81e75] [cursor=pointer]:
+            - /url: /explore/
+            - img "Search" [ref=f81e80]
+          - link [ref=f81e87] [cursor=pointer]:
+            - /url: "#"
+            - img "Notifications" [ref=f81e92]
+          - link [ref=f81e98] [cursor=pointer]:
+            - /url: "#"
+            - img "New post" [ref=f81e103]
+          - link [ref=f81e108] [cursor=pointer]:
+            - /url: "#"
+            - img "Professional dashboard" [ref=f81e113]
+          - link [ref=f81e120] [cursor=pointer]:
+            - /url: /tdf.records.label/
+            - link [ref=f81e125]:
+              - img "tdf.records.label's profile picture" [ref=f81e126]
+        - generic [ref=f81e127]:
+          - link [ref=f81e130] [cursor=pointer]:
+            - /url: "#"
+            - img "Settings" [ref=f81e135]
+          - link [ref=f81e138] [cursor=pointer]:
+            - /url: "#"
+            - img "Also from Meta" [ref=f81e143]
+      - generic [ref=f81e146]:
+        - main [ref=f81e147]:
+          - generic [ref=f81e149]:
+            - generic [ref=f81e150]:
+              - generic [ref=f81e151]:
+                - button [ref=f81e156] [cursor=pointer]:
+                  - link [ref=f81e158]:
+                    - img "quitobohemio's profile picture" [ref=f81e159]
+                - generic [ref=f81e160]:
+                  - generic [ref=f81e161]:
+                    - generic [ref=f81e162]:
+                      - link [ref=f81e164] [cursor=pointer]:
+                        - /url: "#"
+                        - heading "quitobohemio" [level=2] [ref=f81e165]
+                      - button [ref=f81e167] [cursor=pointer]:
+                        - img "Options" [ref=f81e169]
+                    - generic [ref=f81e173]: Quito Bohemio
+                    - generic [ref=f81e175]:
+                      - generic [ref=f81e177]:
+                        - generic [ref=f81e178]: 4,105
+                        - text: posts
+                      - link "10.3K followers" [ref=f81e180] [cursor=pointer]:
+                        - /url: "#"
+                        - generic [ref=f81e181]:
+                          - generic "10,383" [ref=f81e182]: 10.3K
+                          - text: followers
+                      - link "5,669 following" [ref=f81e184] [cursor=pointer]:
+                        - /url: "#"
+                        - generic [ref=f81e185]:
+                          - generic [ref=f81e186]: 5,669
+                          - text: following
+                  - generic [ref=f81e187]:
+                    - generic [ref=f81e188]:
+                      - generic [ref=f81e189]: Community
+                      - button [ref=f81e192] [cursor=pointer]:
+                        - generic [ref=f81e193]: Saludos desde Quito Ecuador!Somos un espacio de gestión y difusión cultural 🤟 a nivel nacional e internacional.
+                      - heading [level=1]
+                      - generic [ref=f81e194]:
+                        - button "Link icon www.quitobohemio.com and 2 more" [ref=f81e195] [cursor=pointer]:
+                          - generic [ref=f81e196]:
+                            - img "Link icon" [ref=f81e198]
+                            - generic [ref=f81e201]: www.quitobohemio.com and 2 more
+                        - link "Threads quitobohemio" [ref=f81e203] [cursor=pointer]:
+                          - /url: https://www.threads.com/@quitobohemio?xmt=AQG0FVxboM2HbdxXsU8NC4saaIC7a1gXaWq6R7S25KS_22M
+                          - img "Threads" [ref=f81e205]
+                          - generic [ref=f81e207]: quitobohemio
+                    - link "Followed by camymantillan, muytranquilo + 82 more" [ref=f81e209] [cursor=pointer]:
+                      - /url: /quitobohemio/followers/mutualOnly
+                      - generic [ref=f81e211]:
+                        - generic [ref=f81e213]:
+                          - button [ref=f81e214]:
+                            - link [ref=f81e215]
+                          - button [ref=f81e216]:
+                            - link [ref=f81e217]
+                          - button [ref=f81e218]:
+                            - link [ref=f81e219]
+                        - generic [ref=f81e220]: Followed by camymantillan, muytranquilo + 82 more
+              - generic [ref=f81e225]:
+                - button "Following Down chevron icon" [ref=f81e227] [cursor=pointer]:
+                  - generic [ref=f81e228]:
+                    - generic [ref=f81e229]: Following
+                    - img "Down chevron icon" [ref=f81e232]
+                - button "Message" [active] [ref=f81e235] [cursor=pointer]
+                - button [ref=f81e237] [cursor=pointer]:
+                  - img "Similar accounts" [ref=f81e239]
+              - menu [ref=f81e243]:
+                - list [ref=f81e247]:
+                  - listitem [ref=f81e248]
+                  - listitem [ref=f81e249]
+                  - listitem [ref=f81e250]:
+                    - link "View Quito en Llamas highlight" [ref=f81e253] [cursor=pointer]:
+                      - /url: /stories/highlights/18030702227004829/
+                      - button "quitobohemio's highlight story picture Quito en Llamas" [ref=f81e254]:
+                        - button [ref=f81e255]:
+                          - img "quitobohemio's highlight story picture" [ref=f81e258]
+                        - generic [ref=f81e259]: Quito en Llamas
+                  - listitem [ref=f81e262]:
+                    - link "View Coberturas highlight" [ref=f81e265] [cursor=pointer]:
+                      - /url: /stories/highlights/18451391431029819/
+                      - button "quitobohemio's highlight story picture Coberturas" [ref=f81e266]:
+                        - button [ref=f81e267]:
+                          - img "quitobohemio's highlight story picture" [ref=f81e270]
+                        - generic [ref=f81e271]: Coberturas
+                  - listitem [ref=f81e274]:
+                    - link "View Investigación highlight" [ref=f81e277] [cursor=pointer]:
+                      - /url: /stories/highlights/17878219323124264/
+                      - button "quitobohemio's highlight story picture Investigación" [ref=f81e278]:
+                        - button [ref=f81e279]:
+                          - img "quitobohemio's highlight story picture" [ref=f81e282]
+                        - generic [ref=f81e283]: Investigación
+                  - listitem [ref=f81e286]:
+                    - link "View Booking highlight" [ref=f81e289] [cursor=pointer]:
+                      - /url: /stories/highlights/17863647969198622/
+                      - button "quitobohemio's highlight story picture Booking" [ref=f81e290]:
+                        - button [ref=f81e291]:
+                          - img "quitobohemio's highlight story picture" [ref=f81e294]
+                        - generic [ref=f81e295]: Booking
+                  - listitem [ref=f81e298]:
+                    - link "View Merch highlight" [ref=f81e301] [cursor=pointer]:
+                      - /url: /stories/highlights/18043689400933196/
+                      - button "quitobohemio's highlight story picture Merch" [ref=f81e302]:
+                        - button [ref=f81e303]:
+                          - img "quitobohemio's highlight story picture" [ref=f81e306]
+                        - generic [ref=f81e307]: Merch
+                  - listitem [ref=f81e310]:
+                    - link "View Music Top Rank highlight" [ref=f81e313] [cursor=pointer]:
+                      - /url: /stories/highlights/18041401849840010/
+                      - button "quitobohemio's highlight story picture Music Top Rank" [ref=f81e314]:
+                        - button [ref=f81e315]:
+                          - img "quitobohemio's highlight story picture" [ref=f81e318]
+                        - generic [ref=f81e319]: Music Top Rank
+            - generic [ref=f81e322]:
+              - tablist [ref=f81e323]:
+                - link [ref=f81e325] [cursor=pointer]:
+                  - /url: /quitobohemio/
+                  - img "Posts" [ref=f81e327]
+                - link [ref=f81e338] [cursor=pointer]:
+                  - /url: /quitobohemio/reels/
+                  - img "Reels" [ref=f81e340]
+                - link [ref=f81e343] [cursor=pointer]:
+                  - /url: /quitobohemio/reposts/
+                  - img "Reposts" [ref=f81e345]
+                - link [ref=f81e348] [cursor=pointer]:
+                  - /url: /quitobohemio/tagged/
+                  - img "Tagged" [ref=f81e350]
+              - tabpanel
+            - generic [ref=f81e357]:
+              - generic [ref=f81e358]:
+                - link [ref=f81e360] [cursor=pointer]:
+                  - /url: /quitobohemio/p/DdcF_7DFqgG/
+                  - 'img "Para Noviembre! Estamos por vivir un brutal evento! Quito será testigo del nuevo lanzamiento de la Rocola Bacalao! . Te contamos más de la fecha en www.quitobohemio.com . Todos los bohemios llegan a Quito! #quitobohemio" [ref=f81e363]'
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img "Pinned post icon"
+                - link [ref=f81e366] [cursor=pointer]:
+                  - /url: /quitobohemio/p/Ddkk7M3x_Sj/
+                  - 'img "La Rocola lo hizo de nuevo! @larocolita . Oficialmente quedaron agotadas las entradas de las do etapas de pre venta para la fecha del 14 de noviembre de Rocola Bacalao en la ideal! . Se espera una noche épica para el nuevo gran lanzamiento que está por llegar a tus oídos! . Recuerda que la info completa del evento la puedes revisar en www.quitobohemio.com . . Todos los bohemios llegan a Quito. #quitobohemio" [ref=f81e369]'
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img "Pinned post icon"
+                - link [ref=f81e372] [cursor=pointer]:
+                  - /url: /quitobohemio/p/DdsKyFGkaiO/
+                  - 'img "Te has dado cuenta que en la escena no tenemos idea de cuáles son los talentos en cámara? . Estamos cansados de que los créditos de los artistas se reduzcan a un @, y queremos compartirte la propuesta que tenemos para cambiar esta situación. . Tenemos toda la info de la convocatoria en www.quitobohemio.com . Todos los bohemios llegan a Quito. #quitobohemio" [ref=f81e375]'
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img "Pinned post icon"
+              - generic [ref=f81e377]:
+                - link [ref=f81e379] [cursor=pointer]:
+                  - /url: /quitobohemio/p/Dd4PkDixdNH/
+                  - 'img "Hay una buena y una mala noticia! La buena! Es que la Rocola ya abrió una nueva fecha! @larocolita Y la mala es que ya se terminaron las primeras 50! . Solo queda la segunda etapa de preventa! . Pronto consigue tu entrada! Aquí te tenemos toda la info del evento! https://www.quitobohemio.com/evento/23-2da-fecha-rocola-bacalao . . Todos los bohemios llegan a Quito. #quitobohemio" [ref=f81e382]'
+                - link [ref=f81e385] [cursor=pointer]:
+                  - /url: /mil_sentires/p/Dd12Qp5mfL4/
+                  - 'img "🎤✨ ¡EL CORO MARISCAL ESTÁ LISTO PARA EL ESCENARIO! ❤️ Estas voces ya están preparadas para ser parte del Festival Coral Mil Sentires. 🎶 📅 8 de octubre | 19h00 📍 Teatro Capitol 🆓 Entrada gratuita 🔥 ¡Que se escuchen las voces del Coro Mariscal! #uio #coro #canto #adultomayor #concierto" [ref=f81e388]'
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img "Carousel"
+                - link [ref=f81e391] [cursor=pointer]:
+                  - /url: /culturaempeso/p/Ddy9d8OuLMA/
+                  - img [ref=f81e394]
+              - generic [ref=f81e396]:
+                - link [ref=f81e398] [cursor=pointer]:
+                  - /url: /mil_sentires/p/Ddu6WUijlqY/
+                  - 'img "🎶 El Coro Preludio Toleño llega al escenario del Festival Red Coral Mil Sentires. ❤️ Más de 100 voces, historias y canciones que se encuentran en un mismo escenario. ✨ 📍 Teatro Capitol 📅 Jueves 8 de octubre | 19h00 #RedCoralMilSentires #FestivalCoral #quito #MilSentires #AdultosMayores EnvejecimientoActivo" [ref=f81e401]'
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img "Carousel"
+                - link [ref=f81e404] [cursor=pointer]:
+                  - /url: /mil_sentires/p/DdsOdHwjs46/
+                  - 'img "🎶 ¡SAN BLAS ESTÁ LISTO! 🎶 Conoce a su directora y descubre al coro que estará EN ESCENA en el Festival Red Coral Mil Sentires. ❤️ 📅 Jueves 8 de octubre 📍 Teatro Capitol 🕖 19h00 ¡Nos vemos en el escenario! ✨#canto #música #quito #coro #adultomayor" [ref=f81e407]'
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img "Carousel"
+                - link [ref=f81e410] [cursor=pointer]:
+                  - /url: /andruka2014/p/DdrAM94uLMp/
+              - generic [ref=f81e415]:
+                - link [ref=f81e417] [cursor=pointer]:
+                  - /url: /mil_sentires/p/Ddprn0JDtsl/
+                  - 'img "¡ #RedCoral está a un paso del escenario! ❤️ El Coro Chilibulo será parte del Festival Red Coral Mil Sentires. ✨ ¡Prepárate para disfrutar de más de 100 voces compartiendo su pasión por la música! 🎤 📅 Jueves 8 de octubre 📍 Teatro Capitol 🕖 19h00 ¡Nos vemos en el festival! 🎶❤️ #coro #adultomayor #festival #quito" [ref=f81e420]'
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img "Carousel"
+                - link [ref=f81e423] [cursor=pointer]:
+                  - /url: /patadaenlanuca/reel/Ddo51ffvJcC/
+                  - img "Patada en la Nuca en \"Hazte un Hit\" El primer museo online de @quitobohemio !!!! Gracias a nuestro hermano @blus_ojosrojos por tenernos siempre presentes" [ref=f81e426]
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img "Clip"
+                - link [ref=f81e429] [cursor=pointer]:
+                  - /url: /soldeorowrestling/reel/DdotK10OvUc/
+                  - 'img "Ya se cumplió un año de una noche que guardo con muchísimo cariño. ❤️ Hace un año, mis parceros de Cálmese Banda Brava llegaron a Quito y tuve la oportunidad de disfrutar al máximo de este show, una noche que quedó marcada en mi memoria. Pero este recuerdo tiene un significado todavía más especial: fue la última vez que pude compartir y ver a mi amigo Luigie, quien hoy ya está en un lugar mejor. 🕊️ Por eso este reel no es solo un recuerdo de un concierto; es también un abrazo a la memoria de un gran amigo y a esos momentos que el tiempo jamás podrá borrar. Gracias por aquella noche, parceros. Y si todavía no los siguen, vayan a su Instagram y denle amor a Cálmese Banda Brava. (@calmesebandab) ¡MANTENGAN LA CALMA! 🎸🔥" [ref=f81e432]'
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img "Clip"
+        - contentinfo [ref=f81e434]:
+          - generic [ref=f81e435]:
+            - generic [ref=f81e437]:
+              - link "Meta" [ref=f81e439] [cursor=pointer]:
+                - /url: https://about.meta.com/
+              - link "About" [ref=f81e442] [cursor=pointer]:
+                - /url: https://about.instagram.com/
+              - link "Blog" [ref=f81e445] [cursor=pointer]:
+                - /url: https://about.instagram.com/blog/
+              - link "Jobs" [ref=f81e448] [cursor=pointer]:
+                - /url: https://about.instagram.com/about-us/careers
+              - link "Help" [ref=f81e451] [cursor=pointer]:
+                - /url: https://help.instagram.com/
+              - link "API" [ref=f81e454] [cursor=pointer]:
+                - /url: https://developers.facebook.com/docs/instagram
+              - link "Privacy" [ref=f81e457] [cursor=pointer]:
+                - /url: /legal/privacy/
+              - link "Terms" [ref=f81e460] [cursor=pointer]:
+                - /url: /legal/terms/
+              - link "Locations" [ref=f81e463] [cursor=pointer]:
+                - /url: /explore/locations/
+              - link "Popular" [ref=f81e466] [cursor=pointer]:
+                - /url: /popular/
+              - link "Instagram Lite" [ref=f81e469] [cursor=pointer]:
+                - /url: /web/lite/
+              - link "Meta AI" [ref=f81e472] [cursor=pointer]:
+                - /url: https://www.meta.ai/?utm_source=foa_web_footer
+              - link "Muse" [ref=f81e475] [cursor=pointer]:
+                - /url: https://muse.ai/
+              - link "Threads" [ref=f81e478] [cursor=pointer]:
+                - /url: https://www.threads.com/
+              - link "Contact Uploading & Non-Users" [ref=f81e481] [cursor=pointer]:
+                - /url: https://www.facebook.com/help/instagram/261704639352628
+              - link "Meta Verified" [ref=f81e484] [cursor=pointer]:
+                - /url: /accounts/meta_verified/?entrypoint=web_footer
+            - generic [ref=f81e486]:
+              - generic [ref=f81e487] [cursor=pointer]:
+                - generic [ref=f81e488]:
+                  - generic [ref=f81e489]: English
+                  - img "Down chevron icon" [ref=f81e492]
+                - combobox "Switch Display Language" [ref=f81e494]:
+                  - option "Afrikaans"
+                  - option "العربية"
+                  - option "Čeština"
+                  - option "Dansk"
+                  - option "Deutsch"
+                  - option "Ελληνικά"
+                  - option "English" [selected]
+                  - option "English (UK)"
+                  - option "Español (España)"
+                  - option "Español"
+                  - option "فارسی"
+                  - option "Suomi"
+                  - option "Français"
+                  - option "עברית"
+                  - option "Bahasa Indonesia"
+                  - option "Italiano"
+                  - option "日本語"
+                  - option "한국어"
+                  - option "Bahasa Melayu"
+                  - option "Norsk"
+                  - option "Nederlands"
+                  - option "Polski"
+                  - option "Português (Brasil)"
+                  - option "Português (Portugal)"
+                  - option "Русский"
+                  - option "Svenska"
+                  - option "ภาษาไทย"
+                  - option "Filipino"
+                  - option "Türkçe"
+                  - option "中文(简体)"
+                  - option "中文(台灣)"
+                  - option "বাংলা"
+                  - option "ગુજરાતી"
+                  - option "हिन्दी"
+                  - option "Hrvatski"
+                  - option "Magyar"
+                  - option "ಕನ್ನಡ"
+                  - option "മലയാളം"
+                  - option "मराठी"
+                  - option "नेपाली"
+                  - option "ਪੰਜਾਬੀ"
+                  - option "සිංහල"
+                  - option "Slovenčina"
+                  - option "தமிழ்"
+                  - option "తెలుగు"
+                  - option "اردو"
+                  - option "Tiếng Việt"
+                  - option "中文(香港)"
+                  - option "Български"
+                  - option "Français (Canada)"
+                  - option "Română"
+                  - option "Српски"
+                  - option "Українська"
+              - generic [ref=f81e495]: © 2026 Instagram from Meta
+    - button [ref=f81e498] [cursor=pointer]:
+      - generic "Messages - 8 new notifications" [ref=f81e499]:
+        - generic [ref=f81e500]:
+          - generic [ref=f81e502]:
+            - img "Messages" [ref=f81e503]
+            - generic "Direct messaging - 8 new notifications link" [ref=f81e506]: "8"
+          - generic [ref=f81e509]: Messages
+        - generic [ref=f81e510]:
+          - button [ref=f81e511]:
+            - img "8 unread chats" [ref=f81e513]
+          - button "User avatar ..." [ref=f81e518]:
+            - img "User avatar" [ref=f81e521]
+          - button "User avatar David Márquez" [ref=f81e523]:
+            - img "User avatar" [ref=f81e526]
+          - button "User avatar Limberg Steven Garcia Alava" [ref=f81e528]:
+            - img "User avatar" [ref=f81e531]
+  - generic [ref=f81e535]:
+    - paragraph [ref=f81e536]: Something went wrong. Please try again.
+    - alert [ref=f81e537]: Something went wrong. Please try again.

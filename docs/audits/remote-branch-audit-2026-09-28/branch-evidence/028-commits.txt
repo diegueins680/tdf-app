@@ -1,0 +1,4 @@
+c8ef56f404dc12f5311635214549221a7090ea70 2026-09-15T10:54:40-05:00 continuous-improvement-loop[bot] docs(payments): record capture replay verification and rollout limits
+b2ab560b250fd11ac7c0f3aa98b6dd8f5307ab03 2026-09-15T10:47:03-05:00 continuous-improvement-loop[bot] test(payments): include canonical bank activation prerequisite
+03d563c18d7f0ce5339f0e7f0023d55c0c037dc6 2026-09-15T10:39:19-05:00 continuous-improvement-loop[bot] fix(payments): preserve exact capture and binding evidence on replay
+4a88878d046b36d46361998739fc31fb5951a55a 2026-09-15T10:29:33-05:00 continuous-improvement-loop[bot] test(payments): expose capture replay evidence defects

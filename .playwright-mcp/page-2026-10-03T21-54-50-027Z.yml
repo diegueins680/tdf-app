@@ -1,0 +1,357 @@
+- generic [ref=f6e4]:
+  - generic [ref=f6e281]:
+    - generic [ref=f6e284]:
+      - link [ref=f6e289] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f6e294]
+      - generic [ref=f6e297]:
+        - link [ref=f6e302] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f6e307]
+        - link [ref=f6e312] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f6e317]
+        - link [ref=f6e324] [cursor=pointer]:
+          - /url: /direct/t/117853139603480
+          - generic [ref=f6e327]:
+            - img "Messages" [ref=f6e329]
+            - generic "Direct messaging - 2 new notifications link" [ref=f6e332]: "2"
+        - link [ref=f6e338] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f6e343]
+        - link [ref=f6e350] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f6e355]
+        - link [ref=f6e361] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f6e366]
+        - link [ref=f6e371] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f6e376]
+        - link [ref=f6e383] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f6e388]:
+            - img "tdf.records.label's profile picture" [ref=f6e389]
+      - generic [ref=f6e390]:
+        - link [ref=f6e393] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f6e398]
+        - link [ref=f6e401] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f6e406]
+    - generic [ref=f6e409]:
+      - main [ref=f6e18]:
+        - generic [ref=f6e20]:
+          - generic [ref=f6e21]:
+            - generic [ref=f6e22]:
+              - button [ref=f6e27] [cursor=pointer]:
+                - link [ref=f6e29]:
+                  - img "pakul_music's profile picture" [ref=f6e30]
+              - generic [ref=f6e31]:
+                - generic [ref=f6e32]:
+                  - generic [ref=f6e33]:
+                    - link [ref=f6e35] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "pakul_music" [level=2] [ref=f6e36]
+                    - button [ref=f6e38] [cursor=pointer]:
+                      - img "Options" [ref=f6e40]
+                  - generic [ref=f6e44]: Pakul
+                  - generic [ref=f6e46]:
+                    - generic [ref=f6e48]:
+                      - generic [ref=f6e49]: "347"
+                      - text: posts
+                    - link "1,363 followers" [ref=f6e51] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f6e52]:
+                        - generic "1,363" [ref=f6e53]
+                        - text: followers
+                    - link "1,390 following" [ref=f6e55] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f6e56]:
+                        - generic [ref=f6e57]: 1,390
+                        - text: following
+                - generic [ref=f6e58]:
+                  - generic [ref=f6e59]:
+                    - generic [ref=f6e60]: Musician/band
+                    - button "“CANCIÓN COMÚN” 🎤🎧🎤🎧🎤🎧🎤🎧" [ref=f6e63] [cursor=pointer]
+                    - generic [ref=f6e64]:
+                      - generic [ref=f6e65]:
+                        - img "Link icon" [ref=f6e67]
+                        - link "open.spotify.com/track/3lFImVo8x1SwxFXIOZtFA0?si=cFfYdgn0QwyC1do_ZfzjYw" [ref=f6e71] [cursor=pointer]:
+                          - /url: https://l.instagram.com/?u=https%3A%2F%2Fopen.spotify.com%2Ftrack%2F3lFImVo8x1SwxFXIOZtFA0%3Fsi%3DcFfYdgn0QwyC1do_ZfzjYw%26utm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio%26fbclid%3DPAZXh0bgNhZW0CMTEAcGRvZgJzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAadZKRLno4OjxIIuoTOtHKja-As9XPaqx9svduaNeZ5cqIYwpo0EwRoG9Jb1Ww_aem_t7h_FOVf9YutKRtfXJRnww&e=AUCubY11WOVI2CaXlIpNeGkxu7geitcNc6vMRdhhx739JUp9XaTytS14xM9b1G83O0of9wd3MiLLSZQEu1JDAxs2aphgp7tHHc0KZiGmi2OvjGKu4BFdzH6kylX4lSDWqp4GtUVMajUL
+                      - link "Threads pakul_music" [ref=f6e74] [cursor=pointer]:
+                        - /url: https://www.threads.com/@pakul_music?xmt=AQG0VPwf4ErpIOtaNZJcjonYdT9JrdMp-E2MqO7KV81mjVQ
+                        - img "Threads" [ref=f6e76]
+                        - generic [ref=f6e78]: pakul_music
+                  - link "Followed by batolavida, eldestrabetropical + 42 more" [ref=f6e80] [cursor=pointer]:
+                    - /url: /pakul_music/followers/mutualOnly
+                    - generic [ref=f6e82]:
+                      - generic [ref=f6e84]:
+                        - button [ref=f6e85]:
+                          - link [ref=f6e86]
+                        - button [ref=f6e87]:
+                          - link [ref=f6e88]
+                        - button [ref=f6e89]:
+                          - link [ref=f6e90]
+                      - generic [ref=f6e91]: Followed by batolavida, eldestrabetropical + 42 more
+            - generic [ref=f6e96]:
+              - button "Following Down chevron icon" [ref=f6e98] [cursor=pointer]:
+                - generic [ref=f6e99]:
+                  - generic [ref=f6e100]: Following
+                  - img "Down chevron icon" [ref=f6e103]
+              - button "Message" [ref=f6e106] [cursor=pointer]
+              - button [ref=f6e108] [cursor=pointer]:
+                - img "Similar accounts" [ref=f6e110]
+            - menu [ref=f6e114]:
+              - list [ref=f6e118]:
+                - listitem [ref=f6e119]
+                - listitem [ref=f6e120]
+                - listitem [ref=f6e121]:
+                  - link "View Conciertos highlight" [ref=f6e124] [cursor=pointer]:
+                    - /url: /stories/highlights/18021284546451854/
+                    - button "pakul_music's highlight story picture Conciertos" [ref=f6e125]:
+                      - button [ref=f6e126]:
+                        - img "pakul_music's highlight story picture" [ref=f6e129]
+                      - generic [ref=f6e130]: Conciertos
+                - listitem [ref=f6e133]:
+                  - link "View Chama highlight" [ref=f6e136] [cursor=pointer]:
+                    - /url: /stories/highlights/18264004471079748/
+                    - button "pakul_music's highlight story picture Chama" [ref=f6e137]:
+                      - button [ref=f6e138]:
+                        - img "pakul_music's highlight story picture" [ref=f6e141]
+                      - generic [ref=f6e142]: Chama
+                - listitem [ref=f6e145]:
+                  - link "View Mala Facha highlight" [ref=f6e148] [cursor=pointer]:
+                    - /url: /stories/highlights/17940872797930290/
+                    - button "pakul_music's highlight story picture Mala Facha" [ref=f6e149]:
+                      - button [ref=f6e150]:
+                        - img "pakul_music's highlight story picture" [ref=f6e153]
+                      - generic [ref=f6e154]: Mala Facha
+                - listitem [ref=f6e157]:
+                  - link "View Ulloa Style highlight" [ref=f6e160] [cursor=pointer]:
+                    - /url: /stories/highlights/17913963538286719/
+                    - button "pakul_music's highlight story picture Ulloa Style" [ref=f6e161]:
+                      - button [ref=f6e162]:
+                        - img "pakul_music's highlight story picture" [ref=f6e165]
+                      - generic [ref=f6e166]: Ulloa Style
+          - generic [ref=f6e169]:
+            - tablist [ref=f6e170]:
+              - link [ref=f6e172] [cursor=pointer]:
+                - /url: /pakul_music/
+                - img "Posts" [ref=f6e174]
+              - link [ref=f6e185] [cursor=pointer]:
+                - /url: /pakul_music/reels/
+                - img "Reels" [ref=f6e187]
+              - link [ref=f6e190] [cursor=pointer]:
+                - /url: /pakul_music/reposts/
+                - img "Reposts" [ref=f6e192]
+              - link [ref=f6e195] [cursor=pointer]:
+                - /url: /pakul_music/tagged/
+                - img "Tagged" [ref=f6e197]
+            - tabpanel
+          - generic [ref=f6e204]:
+            - generic [ref=f6e205]:
+              - link [ref=f6e207] [cursor=pointer]:
+                - /url: /mrproduccionesecuador/p/Dd1auQyuJ0m/
+                - 'img "🎶🔥 ¡Seguimos conectando música con grandes escenarios y medios! Desde MR Producciones acompañamos a Pakul feat. La Gran Sociedad en su gira de medios con su tema “Canción Común”. 🎤🎷 📻 ¿Tienes un programa o espacio y quieres recibir a nuestros artistas? ¡Recomiéndanos tu programa o presenta tu espacio! 🙌 📲 Booking oficial MR Producciones 099 981 1566 – Gabby Muñoz #MRProducciones #GiraDeMedios #Pakul #LaGranSociedad #CanciónComún 🔴⚫️MR PRODUCCIONES🔴⚫️" [ref=f6e210]'
+              - link [ref=f6e213] [cursor=pointer]:
+                - /url: /pakul_music/p/Dc1V2wOxeOj/
+                - img "🔥 Este sábado nos vemos en KIF Kultural 🔥 Voy a estar tocando a las 12 del día 🎶🎤, así que si están por La Floresta, caigan a darse una vuelta, escuchar musiquita y pasarla chévere. 📍 Génova y Rubio de Arévalo — La Floresta 🗓️ Sábado 5 de septiembre ⏰ 12:00 del día 🎟️ Entrada gratis Hay un montón de artistas y bandas durante todo el día, así que apoyemos la escena local ❤️‍🔥 ¡Nos vemos por ahí! 🍻🎶" [ref=f6e216]
+              - link [ref=f6e219] [cursor=pointer]:
+                - /url: /pakul_music/p/Daa2TwpRzeA/
+                - 'img "🎶 Nos vemos este 10 de julio 🎶 Hay canciones que se disfrutan más cuando se viven de cerca. Este viernes quiero invitarlos a compartir una noche íntima, llena de música, historias y buena energía. 🎤 Concierto Acústico 🗓️ 10 de julio 🕗 20:00 📍 Guayunga Rooftop (José Antepara E4-27 y Vicente León, Quito) Me acompañarán grandes músicos invitados: 🎸 Nicolás Espinoza 🎸 Sergio Espinoza 🎸 Juan Yánez Será un espacio para cantar, sentir y conectar. Los espero para compartir una noche que promete ser muy especial. ❤️ ¡Nos vemos en Guayunga Rooftop! #PakulLlucho #ConciertoAcústico #MúsicaEnVivo #Quito #GuayungaRooftop MúsicaEcuatoriana" [ref=f6e222]'
+            - generic [ref=f6e224]:
+              - link [ref=f6e226] [cursor=pointer]:
+                - /url: /jhosimar.actor/reel/DaWNV36p_c3/
+                - 'img "Hay canciones que simplemente se escuchan y otras que te hacen pensar. 🎶 Les comparto un poco de lo que se vivió detrás de cámaras del videoclip de \"Canción común\", el nuevo tema de Pakul junto a La Gran Sociedad. Una canción que habla de esas cosas que vivimos todos, de lo cotidiano, de lo que muchas veces sentimos y no decimos. Qué bacán haber sido parte de este proyecto junto a un equipazo. 📷 Dirección de fotografía: @hakanstagram_ 🎨 Dirección de arte: @t_d_hormigas 🎥 Asistencia de fotografía, asistencia de arte y making of: Jhosimar Moposita Gracias por la confianza. Siempre es un gusto estar detrás de cámara y registrar esos momentos que la gente no ve, pero que hacen posible el resultado final. Si aún no la escuchan, vayan a darle una oportunidad a \"Canción común\". Seguro alguna parte de la letra les va a llegar. 🎧🇪🇨 #Pakul #LaGranSociedad #CanciónComún #BTS #BehindTheScenes" [ref=f6e229]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f6e232] [cursor=pointer]:
+                - /url: /pakul_music/p/DaDbtxIRATd/
+                - 'img "🔥 ¡HOY ES LA NOCHE! 🔥 La espera terminó. Hoy nos encontramos para vivir una Peña Bailable llena de música, baile y buena vibra. 🎶💃🕺 🎤 Pacul “El Príncipe de Cocha” junto a La Gran Sociedad en vivo. ✨ Además, celebraremos el lanzamiento oficial del videoclip de “Canción Común”. 📍 La Bolera – C.C. El Bosque 🕗 8:00 p. m. 🎧 DJ toda la noche 🎟️ Entradas en puerta: $15 🚗 Parqueadero: $1 toda la noche ¡No te quedes fuera! Ven con tu familia y amigos y hagamos de esta una noche inolvidable. ¡Te esperamos! 🎉🔥" [ref=f6e235]'
+              - link [ref=f6e238] [cursor=pointer]:
+                - /url: /pakul_music/p/DZ5tjIGGt8p/
+                - img "Es esta semana 💃🕺💃🕺💃🕺💃🕺💃🕺" [ref=f6e241]
+            - generic [ref=f6e243]:
+              - link [ref=f6e245] [cursor=pointer]:
+                - /url: /pakul_music/reel/DZVBa8DRZUi/
+                - 'img "🔥 ¡LA PEÑA BAILABLE YA TIENE FECHA! 🔥 Este viernes 26 de junio nos vemos en La Bolera del C.C. El Bosque para una noche llena de música, baile y celebración. 🎤 PAKUL “El Príncipe de Cocha” 🎺 Orquesta La Gran Sociedad 🎬 Lanzamiento oficial del videoclip de “Canción Común” 🎧 DJ toda la noche 🕗 8:00 PM 🎟 Preventa: $10 🎟 Día del evento: $15 Ven a cantar, bailar y ser parte de una noche muy especial para nosotros. ¡No te quedes fuera del lanzamiento de Canción Común y vivamos juntos una fiesta inolvidable! #Pakul #LaGranSociedad #CanciónComún #PeñaBailable #LaBolera MusicaEnVivo Cochabamba LanzamientoOficial" [ref=f6e248]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f6e251] [cursor=pointer]:
+                - /url: /pakul_music/reel/DZIMnq5tNPO/
+                - 'img "Nadie te prepara para entender que dejar ir también es una forma de amar. 💔 Porque a veces el amor no se trata de quedarse. Se trata de agradecer, soltar y seguir. Si alguna vez tuviste que despedirte de alguien que todavía querías, esta canción es para ti. 🎶 Canción Común — Pakul x La Gran Sociedad Ya disponible en todas las plataformas. #CanciónComún #Pakul #LaGranSociedad #MúsicaEcuatoriana #ParaTi FYP" [ref=f6e254]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f6e257] [cursor=pointer]:
+                - /url: /pakul_music/reel/DY3q06eOQlT/
+                - img "🚨 HOY ES 28 🚨 “Canción común” ya está disponible 💥 Vayan a escucharla en todas las plataformas digitales y súbanle todo el volumen 🔊🔥 Gracias por todo el apoyo que le están dando a este tema junto a La Gran Sociedad ❤️ Queremos ver sus historias, videos y reacciones cantándola 🎶 Disponible en Spotify, Apple Music, YouTube y todas las plataformas. “Canción común” — Pakul x La Gran Sociedad ✨" [ref=f6e260]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f6e262]:
+              - link [ref=f6e264] [cursor=pointer]:
+                - /url: /orion_live_photo/p/DYr-RrfEWPP/
+                - img "Volfest 2 - @pakul_music" [ref=f6e267]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f6e270] [cursor=pointer]:
+                - /url: /hakanstagram_/reel/DYlhpFsOoKK/
+                - 'img "🎬 Así terminamos la grabación con la familia Ulloa, nos lanzamos a hacer un videoclip para el nuevo tema de @pakul_music con la orquesta “La Gran Sociedad” 📝 Convoqué a @jhosimar.actor para la asistencia y a @t_d_hormigas que se encargó de la gran dirección de arte de toda esta producción. 🔦 Agradecimientos especial a @airbeats.ec por el alquiler de las luces y ahí @uyh.industry 🎥 Equipo que se usó en este rodaje: Lente @sirui_global 24mm cine/FManual Cámara @alphabysony_latin 7iv Luces @visico.global Led 200w" [ref=f6e273]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f6e276] [cursor=pointer]:
+                - /url: /3vol3vol3vol/reel/DYYb-V3MiCw/
+                - 'img "@pakul_music mega redi para mañana! #venganseeee" [ref=f6e279]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+      - contentinfo [ref=f6e410]:
+        - generic [ref=f6e411]:
+          - generic [ref=f6e413]:
+            - link "Meta" [ref=f6e415] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f6e418] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f6e421] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f6e424] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f6e427] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f6e430] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f6e433] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f6e436] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f6e439] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f6e442] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f6e445] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f6e448] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f6e451] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f6e454] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f6e457] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f6e460] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f6e462]:
+            - generic [ref=f6e463] [cursor=pointer]:
+              - generic [ref=f6e464]:
+                - generic [ref=f6e465]: English
+                - img "Down chevron icon" [ref=f6e468]
+              - combobox "Switch Display Language" [ref=f6e470]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f6e471]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f6e474] [cursor=pointer]:
+              - generic "Messages - 2 new notifications" [ref=f6e475]:
+                - generic [ref=f6e476]:
+                  - generic [ref=f6e478]:
+                    - img "Messages" [ref=f6e479]
+                    - generic "Direct messaging - 2 new notifications link" [ref=f6e482]: "2"
+                  - generic [ref=f6e485]: Messages
+                - generic [ref=f6e486]:
+                  - button "User avatar Juren" [ref=f6e488]:
+                    - img "User avatar" [ref=f6e491]
+                  - button "User avatar Eduardo ED" [ref=f6e493]:
+                    - img "User avatar" [ref=f6e496]
+            - generic [ref=f6e497]:
+              - generic [ref=f6e498]:
+                - generic [ref=f6e499]:
+                  - generic [ref=f6e501]:
+                    - status "Loading..." [ref=f6e503]
+                    - status "Loading..." [ref=f6e505]
+                  - button [active] [ref=f6e507] [cursor=pointer]:
+                    - img "Close" [ref=f6e509]
+                - separator [ref=f6e512]
+              - generic [ref=f6e513]:
+                - generic [ref=f6e514]:
+                  - status "Loading..." [ref=f6e516]
+                  - status "Loading..." [ref=f6e518]
+                - status "Loading..." [ref=f6e521]
+                - generic [ref=f6e522]:
+                  - status "Loading..." [ref=f6e524]
+                  - status "Loading..." [ref=f6e526]
+                - generic [ref=f6e527]:
+                  - status "Loading..." [ref=f6e529]
+                  - status "Loading..." [ref=f6e531]
+                - status "Loading..." [ref=f6e534]
+                - generic [ref=f6e535]:
+                  - status "Loading..." [ref=f6e537]
+                  - status "Loading..." [ref=f6e539]
+                - status "Loading..." [ref=f6e541]

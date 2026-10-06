@@ -1,0 +1,100 @@
+[
+  [
+    {
+      "sha": "676efd6063f3ff1274f3967fa37faa1d62cf8d8d",
+      "filename": "tdf-hq-ui/src/api/accessRequests.ts",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 0,
+      "changes": 1,
+      "blob_url": "https://github.com/diegueins680/tdf-app/blob/efb09219be25941af574eaac4ec5d2e7e3a421b2/tdf-hq-ui%2Fsrc%2Fapi%2FaccessRequests.ts",
+      "raw_url": "https://github.com/diegueins680/tdf-app/raw/efb09219be25941af574eaac4ec5d2e7e3a421b2/tdf-hq-ui%2Fsrc%2Fapi%2FaccessRequests.ts",
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/tdf-hq-ui%2Fsrc%2Fapi%2FaccessRequests.ts?ref=efb09219be25941af574eaac4ec5d2e7e3a421b2",
+      "patch": "@@ -15,6 +15,7 @@ export interface FeatureAccessRequestHistoryDTO {\n export interface FeatureAccessRequestDTO {\n   id: number;\n   requesterPartyId: number;\n+  requesterName: string | null;\n   featureId: string;\n   action: FeatureAction;\n   roleContext: string[];"
+    },
+    {
+      "sha": "51947933debfcf2b40d8944b02970c94940854d8",
+      "filename": "tdf-hq-ui/src/api/generated/types.ts",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 0,
+      "changes": 2,
+      "blob_url": "https://github.com/diegueins680/tdf-app/blob/efb09219be25941af574eaac4ec5d2e7e3a421b2/tdf-hq-ui%2Fsrc%2Fapi%2Fgenerated%2Ftypes.ts",
+      "raw_url": "https://github.com/diegueins680/tdf-app/raw/efb09219be25941af574eaac4ec5d2e7e3a421b2/tdf-hq-ui%2Fsrc%2Fapi%2Fgenerated%2Ftypes.ts",
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/tdf-hq-ui%2Fsrc%2Fapi%2Fgenerated%2Ftypes.ts?ref=efb09219be25941af574eaac4ec5d2e7e3a421b2",
+      "patch": "@@ -11517,6 +11517,8 @@ export interface components {\n              * @description Internal subject identifier; clients must not expose it unnecessarily.\n              */\n             requesterPartyId: number;\n+            /** @description Requester's display name, or null when unavailable. Visible only to the requester and authorized reviewers. */\n+            requesterName: string | null;\n             featureId: string;\n             action: string;\n             roleContext: string[];"
+    },
+    {
+      "sha": "52cc533cee029d9c861aa56ab66e92471b2d65a8",
+      "filename": "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
+      "status": "modified",
+      "additions": 76,
+      "deletions": 3,
+      "changes": 79,
+      "blob_url": "https://github.com/diegueins680/tdf-app/blob/efb09219be25941af574eaac4ec5d2e7e3a421b2/tdf-hq-ui%2Fsrc%2Fpages%2FAccessRequestsPage.test.tsx",
+      "raw_url": "https://github.com/diegueins680/tdf-app/raw/efb09219be25941af574eaac4ec5d2e7e3a421b2/tdf-hq-ui%2Fsrc%2Fpages%2FAccessRequestsPage.test.tsx",
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/tdf-hq-ui%2Fsrc%2Fpages%2FAccessRequestsPage.test.tsx?ref=efb09219be25941af574eaac4ec5d2e7e3a421b2",
+      "patch": "@@ -4,19 +4,26 @@ import { act } from 'react';\n import { createRoot, type Root } from 'react-dom/client';\n import { MemoryRouter } from 'react-router-dom';\n \n-import type { CreateFeatureAccessRequest, FeatureAccessRequestDTO } from '../api/accessRequests';\n+import type {\n+  CreateFeatureAccessRequest,\n+  FeatureAccessRequestDTO,\n+  FeatureAccessRequestStatus,\n+} from '../api/accessRequests';\n import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';\n \n (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;\n \n const createMock = jest.fn<(payload: CreateFeatureAccessRequest) => Promise<FeatureAccessRequestDTO>>();\n+const listReviewMock = jest.fn<\n+  (status: FeatureAccessRequestStatus) => Promise<FeatureAccessRequestDTO[]>\n+>();\n const captureMock = jest.fn();\n \n jest.unstable_mockModule('../api/accessRequests', () => ({\n   AccessRequests: {\n     listMine: jest.fn(),\n     create: (payload: CreateFeatureAccessRequest) => createMock(payload),\n-    listReview: jest.fn(),\n+    listReview: (status: FeatureAccessRequestStatus) => listReviewMock(status),\n     decide: jest.fn(),\n     cancel: jest.fn(),\n   },\n@@ -49,13 +56,14 @@ jest.unstable_mockModule('react-i18next', () => ({\n   useTranslation: () => ({ i18n: { language: 'es', resolvedLanguage: 'es' } }),\n }));\n \n-const { NewAccessRequestPage } = await import('./AccessRequestsPage');\n+const { AccessRequestReviewPage, NewAccessRequestPage } = await import('./AccessRequestsPage');\n \n const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));\n \n const buildRequest = (): FeatureAccessRequestDTO => ({\n   id: 7,\n   requesterPartyId: 42,\n+  requesterName: 'Ana Mar\u00eda Torres',\n   featureId: 'label.ddex.inbox',\n   action: 'import',\n   roleContext: ['ReadOnly'],\n@@ -101,9 +109,43 @@ async function renderPage(path: string) {\n   };\n }\n \n+async function renderReviewPage() {\n+  const container = document.createElement('div');\n+  document.body.appendChild(container);\n+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });\n+  let root: Root | null = createRoot(container);\n+  await act(async () => {\n+    root?.render(\n+      <MemoryRouter>\n+        <QueryClientProvider client={queryClient}>\n+          <AccessRequestReviewPage />\n+        </QueryClientProvider>\n+      </MemoryRouter>,\n+    );\n+    await flushPromises();\n+  });\n+  await act(async () => {\n+    await flushPromises();\n+    await flushPromises();\n+  });\n+  return {\n+    container,\n+    cleanup: async () => {\n+      await act(async () => {\n+        root?.unmount();\n+        await flushPromises();\n+      });\n+      root = null;\n+      queryClient.clear();\n+      container.remove();\n+    },\n+  };\n+}\n+\n describe('internal access request flow', () => {\n   beforeEach(() => {\n     createMock.mockReset();\n+    listReviewMock.mockReset();\n     captureMock.mockReset();\n   });\n \n@@ -154,6 +196,37 @@ describe('internal access request flow', () => {\n     }\n   });\n \n+  it.each<FeatureAccessRequestStatus>(['pending', 'approved', 'rejected', 'cancelled', 'expired'])(\n+    'shows the requester name on %s review cards without opening history',\n+    async (status) => {\n+      listReviewMock.mockResolvedValue([{ ...buildRequest(), status }]);\n+      const view = await renderReviewPage();\n+      try {\n+        expect(view.container.textContent).toContain('Solicitante: Ana Mar\u00eda Torres');\n+      } finally {\n+        await view.cleanup();\n+      }\n+    },\n+  );\n+\n+  it.each([null, '', '   ', undefined])('handles unavailable requester names (%s)', async (requesterName) => {\n+    const request = buildRequest();\n+    if (requesterName === undefined) {\n+      // Older API versions do not yet return this field.\n+      Reflect.deleteProperty(request, 'requesterName');\n+    } else {\n+      request.requesterName = requesterName;\n+    }\n+    listReviewMock.mockResolvedValue([request]);\n+    const view = await renderReviewPage();\n+    try {\n+      expect(view.container.textContent).toContain('Solicitante: Nombre no disponible');\n+      expect(view.container.textContent).not.toContain('Solicitante: 42');\n+    } finally {\n+      await view.cleanup();\n+    }\n+  });\n+\n   it('has no serious automated accessibility violations in the request form', async () => {\n     const accessibilityView = await renderPage('/solicitudes-acceso/nueva?feature=label.ddex.inbox&action=import');\n     try {"
+    },
+    {
+      "sha": "ae821fb41815d38ef73e468149e4302628a57be3",
+      "filename": "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
+      "status": "modified",
+      "additions": 11,
+      "deletions": 0,
+      "changes": 11,
+      "blob_url": "https://github.com/diegueins680/tdf-app/blob/efb09219be25941af574eaac4ec5d2e7e3a421b2/tdf-hq-ui%2Fsrc%2Fpages%2FAccessRequestsPage.tsx",
+      "raw_url": "https://github.com/diegueins680/tdf-app/raw/efb09219be25941af574eaac4ec5d2e7e3a421b2/tdf-hq-ui%2Fsrc%2Fpages%2FAccessRequestsPage.tsx",
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/tdf-hq-ui%2Fsrc%2Fpages%2FAccessRequestsPage.tsx?ref=efb09219be25941af574eaac4ec5d2e7e3a421b2",
+      "patch": "@@ -83,6 +83,8 @@ const copy = {\n     back: 'Volver a mis solicitudes',\n     reviewTitle: 'Revisar solicitudes de acceso',\n     requestReference: 'Solicitud',\n+    requester: 'Solicitante',\n+    unnamedRequester: 'Nombre no disponible',\n     currentContext: 'Contexto al solicitar',\n     reviewerNote: 'Nota del revisor',\n     approve: 'Aprobar para provisi\u00f3n',\n@@ -120,6 +122,8 @@ const copy = {\n     back: 'Back to my requests',\n     reviewTitle: 'Review access requests',\n     requestReference: 'Request',\n+    requester: 'Requested by',\n+    unnamedRequester: 'Name unavailable',\n     currentContext: 'Context when requested',\n     reviewerNote: 'Reviewer note',\n     approve: 'Approve for provisioning',\n@@ -151,6 +155,11 @@ function requestTitle(request: FeatureAccessRequestDTO, locale: 'es' | 'en') {\n   return feature ? featureLabel(feature, locale) : locale === 'en' ? 'Unavailable feature' : 'Funci\u00f3n no disponible';\n }\n \n+function requesterName(request: FeatureAccessRequestDTO, locale: 'es' | 'en') {\n+  const name = request.requesterName?.trim() ?? '';\n+  return name.length > 0 ? name : copy[locale].unnamedRequester;\n+}\n+\n function History({ request }: { request: FeatureAccessRequestDTO }) {\n   const { locale, text } = useAccessCopy();\n   if (request.history.length === 0) return null;\n@@ -215,6 +224,7 @@ export default function AccessRequestsPage() {\n               <Stack direction=\"row\" justifyContent=\"space-between\" alignItems=\"flex-start\" gap={2}>\n                 <Box>\n                   <Typography variant=\"h6\" component=\"h2\">{requestTitle(request, locale)}</Typography>\n+                  <Typography variant=\"body2\">{text.requester}: {requesterName(request, locale)}</Typography>\n                   <Typography variant=\"body2\">{text.action}: {request.action}</Typography>\n                   <Typography variant=\"caption\" color=\"text.secondary\">\n                     {text.requested}: {formatDate(request.requestedAt, locale)}\n@@ -363,6 +373,7 @@ function ReviewCard({ request, onChanged }: { request: FeatureAccessRequestDTO;\n       <CardContent>\n         <Typography variant=\"h6\" component=\"h2\">{requestTitle(request, locale)}</Typography>\n         <Typography>{text.requestReference}: #{request.id}</Typography>\n+        <Typography>{text.requester}: {requesterName(request, locale)}</Typography>\n         <Typography>{text.action}: {request.action}</Typography>\n         <Typography color=\"text.secondary\">{text.currentContext}: {context.join(', ') || '\u2014'}</Typography>\n         {request.justification ? <Alert severity=\"info\" sx={{ mt: 2 }}>{request.justification}</Alert> : null}"
+    },
+    {
+      "sha": "c8f7c1b49b126936c6dbcca088c87d5a1a365d20",
+      "filename": "tdf-hq/docs/openapi/api.yaml",
+      "status": "modified",
+      "additions": 5,
+      "deletions": 0,
+      "changes": 5,
+      "blob_url": "https://github.com/diegueins680/tdf-app/blob/efb09219be25941af574eaac4ec5d2e7e3a421b2/tdf-hq%2Fdocs%2Fopenapi%2Fapi.yaml",
+      "raw_url": "https://github.com/diegueins680/tdf-app/raw/efb09219be25941af574eaac4ec5d2e7e3a421b2/tdf-hq%2Fdocs%2Fopenapi%2Fapi.yaml",
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/tdf-hq%2Fdocs%2Fopenapi%2Fapi.yaml?ref=efb09219be25941af574eaac4ec5d2e7e3a421b2",
+      "patch": "@@ -13586,6 +13586,7 @@ components:\n       required:\n         - id\n         - requesterPartyId\n+        - requesterName\n         - featureId\n         - action\n         - roleContext\n@@ -13603,6 +13604,10 @@ components:\n           type: integer\n           format: int64\n           description: Internal subject identifier; clients must not expose it unnecessarily.\n+        requesterName:\n+          type: string\n+          nullable: true\n+          description: Requester's display name, or null when unavailable. Visible only to the requester and authorized reviewers.\n         featureId:\n           type: string\n         action:"
+    },
+    {
+      "sha": "d5840332eaba8d188434cfbe84b8644e6f40c803",
+      "filename": "tdf-hq/src/TDF/DTO.hs",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 0,
+      "changes": 1,
+      "blob_url": "https://github.com/diegueins680/tdf-app/blob/efb09219be25941af574eaac4ec5d2e7e3a421b2/tdf-hq%2Fsrc%2FTDF%2FDTO.hs",
+      "raw_url": "https://github.com/diegueins680/tdf-app/raw/efb09219be25941af574eaac4ec5d2e7e3a421b2/tdf-hq%2Fsrc%2FTDF%2FDTO.hs",
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/tdf-hq%2Fsrc%2FTDF%2FDTO.hs?ref=efb09219be25941af574eaac4ec5d2e7e3a421b2",
+      "patch": "@@ -1183,6 +1183,7 @@ instance ToJSON FeatureAccessRequestHistoryDTO where\n data FeatureAccessRequestDTO = FeatureAccessRequestDTO\n   { farId               :: Int64\n   , farRequesterPartyId :: Int64\n+  , farRequesterName    :: Maybe Text\n   , farFeatureId        :: Text\n   , farAction           :: Text\n   , farRoleContext      :: [Text]"
+    },
+    {
+      "sha": "aa0b9e65448deb938e658428861a38e7f50812f2",
+      "filename": "tdf-hq/src/TDF/Server.hs",
+      "status": "modified",
+      "additions": 7,
+      "deletions": 1,
+      "changes": 8,
+      "blob_url": "https://github.com/diegueins680/tdf-app/blob/efb09219be25941af574eaac4ec5d2e7e3a421b2/tdf-hq%2Fsrc%2FTDF%2FServer.hs",
+      "raw_url": "https://github.com/diegueins680/tdf-app/raw/efb09219be25941af574eaac4ec5d2e7e3a421b2/tdf-hq%2Fsrc%2FTDF%2FServer.hs",
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/tdf-hq%2Fsrc%2FTDF%2FServer.hs?ref=efb09219be25941af574eaac4ec5d2e7e3a421b2",
+      "patch": "@@ -4082,12 +4082,14 @@ accessRequestsServer user =\n \n loadFeatureAccessRequestDTO :: Entity ME.FeatureAccessRequest -> AppM FeatureAccessRequestDTO\n loadFeatureAccessRequestDTO (Entity requestId requestValue) = do\n+  requester <- runDB $ get (ME.featureAccessRequestRequesterPartyId requestValue)\n   historyRows <- runDB $ selectList\n     [ME.FeatureAccessRequestHistoryRequestId ==. requestId]\n     [Asc ME.FeatureAccessRequestHistoryCreatedAt]\n   pure FeatureAccessRequestDTO\n     { farId = fromSqlKey requestId\n     , farRequesterPartyId = fromSqlKey (ME.featureAccessRequestRequesterPartyId requestValue)\n+    , farRequesterName = normalizeOptionalInput (M.partyDisplayName <$> requester)\n     , farFeatureId = ME.featureAccessRequestFeatureId requestValue\n     , farAction = ME.featureAccessRequestAction requestValue\n     , farRoleContext = decodeAccessContext (ME.featureAccessRequestRoleContext requestValue)\n@@ -4247,6 +4249,9 @@ notifyEligibleFeatureReviewers\n   -> UTCTime\n   -> SqlPersistT IO ()\n notifyEligibleFeatureReviewers requester feature actionName requestId now = do\n+  requesterParty <- get (auPartyId requester)\n+  let requesterName = fromMaybe \"Un usuario sin nombre\"\n+        (normalizeOptionalInput (M.partyDisplayName <$> requesterParty))\n   reviewerPartyIds <- Set.toList . Set.fromList . concat <$>\n     traverse selectCanonicalPartyIdsByRole [Admin, Manager, StudioManager]\n   forM_ reviewerPartyIds $ \\reviewerPartyId -> when (reviewerPartyId /= auPartyId requester) $ do\n@@ -4258,7 +4263,8 @@ notifyEligibleFeatureReviewers requester feature actionName requestId now = do\n         { notificationRecipientPartyId = reviewerPartyId\n         , notificationNotifType = \"access_request_review\"\n         , notificationTitle = \"Nueva solicitud de acceso\"\n-        , notificationBody = \"Hay una solicitud compatible con tu \u00e1mbito de revisi\u00f3n.\"\n+        , notificationBody = requesterName\n+            <> \" solicit\u00f3 acceso. La solicitud est\u00e1 disponible para revisi\u00f3n.\"\n         , notificationTargetType = Just \"feature_access_request\"\n         , notificationTargetId = Just (fromIntegral (fromSqlKey requestId))\n         , notificationIsRead = False"
+    },
+    {
+      "sha": "bd918826fae055b51f96870fcf297920b78a2376",
+      "filename": "tdf-mobile",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "changes": 2,
+      "blob_url": null,
+      "raw_url": null,
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/tdf-mobile?ref=efb09219be25941af574eaac4ec5d2e7e3a421b2",
+      "patch": "@@ -1 +1 @@\n-Subproject commit 790e03e1fb19083a92c2828a8b77ba1016fd53e4\n+Subproject commit bd918826fae055b51f96870fcf297920b78a2376"
+    }
+  ]
+]

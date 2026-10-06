@@ -1,0 +1,8 @@
+M	tdf-hq-ui/src/api/accessRequests.ts
+M	tdf-hq-ui/src/api/generated/types.ts
+M	tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx
+M	tdf-hq-ui/src/pages/AccessRequestsPage.tsx
+M	tdf-hq/docs/openapi/api.yaml
+M	tdf-hq/src/TDF/DTO.hs
+M	tdf-hq/src/TDF/Server.hs
+M	tdf-mobile

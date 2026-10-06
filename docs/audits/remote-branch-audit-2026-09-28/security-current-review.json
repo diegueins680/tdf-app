@@ -1,0 +1,29 @@
+{
+  "data": {
+    "repository": {
+      "pullRequest": {
+        "headRefOid": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+        "reviewDecision": "APPROVED",
+        "reviewThreads": {
+          "nodes": [],
+          "pageInfo": {
+            "hasNextPage": false
+          }
+        },
+        "reviews": {
+          "nodes": [
+            {
+              "author": {
+                "login": "tdfrecords"
+              },
+              "state": "APPROVED",
+              "commit": {
+                "oid": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92"
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -5261,7 +5261,7 @@ spec = describe "TDF.Server helpers" $ do
                                 { envPool = pool
                                 , envConfig = marketplaceTestConfig False
                                 }
-                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> reconcileProgress = sessionServer
+                        _currentSession :<|> _logoutSession :<|> _getPreferences :<|> _updatePreferences :<|> _recordConversion :<|> _getOnboarding :<|> _updateIntent :<|> completeProgress :<|> reconcileProgress :<|> _redeemArtistInvitation = sessionServer
                         reconcileWith mToken =
                             liftIO $ runHandler $ runReaderT
                                 (reconcileProgress (("Bearer " <>) <$> mToken) Nothing)
@@ -15352,6 +15352,7 @@ marketplaceTestConfig seedFlag =
         , stripePublishableKey = Nothing
         , stripeWebhookSecret = Nothing
         , contextualReputationEnabled = False
+        , publicReputationProjectionEnabled = False
         , eventDiscoveryEnabled = False
         , eventDiscoveryAutoPublish = False
         , eventDiscoveryPilotLimit = 20

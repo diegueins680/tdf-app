@@ -1,0 +1,94 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 436,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "23311f29279b691cf2e80c445fb345f9cbfc57f5",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6jqbAK",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/Server.hs",
+                "line": 7929,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Preserve identity across manual-evidence retries**\n\nIn the marketplace manual-payment flow, `submitMarketplaceManualEvidence` still calls this helper before checking the existing evidence and checkout, so always inserting a new Party gives every retry a different `customerId`. Once the first submission sets `commerce_checkout_session.customer_party_id`, an identical retry\u2014or a corrected submission after rejection\u2014hits the identity-mismatch guard and returns 409, while the newly inserted Party remains orphaned because it was created in a separate transaction. Use the checkout's established customer Party on subsequent submissions, or otherwise make this per-operation creation behavior specific to booking creation rather than changing the shared helper.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/436#discussion_r4044822469",
+                      "createdAt": "2026-09-18T07:47:52Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 673a7a4d7: manual evidence locks checkout/attempt/evidence before any contact creation and reuses the contact recorded on that operation. Four real PostgreSQL regressions pass, including five concurrent submissions, replay, changed-reference conflict, rejection/correction, absent payment selection, and audit-write rollback. Shared email never adopts another account.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/436#discussion_r4045074975",
+                      "createdAt": "2026-09-18T08:26:19Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwODoyNjoxOVrO8RryHw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jsNP9",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/Server.hs",
+                "line": 7929,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Keep unverified contacts out of unique email lookups**\n\nWhen an existing user submits a guest booking\u2014or one guest submits two separate bookings\u2014this unconditional insert creates multiple `Party` rows with the same primary email. `ensurePartyWithAccount`, called by public course registration, and `ensurePartyForInquiry` still use `selectUniquePartyByPrimaryEmail`, whose duplicate branch returns 409, so those users can no longer register or submit an inquiry after booking. Either distinguish unverified operation contacts in those lookup paths or store their contact email outside the primary-email namespace.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/436#discussion_r4045523328",
+                      "createdAt": "2026-09-18T09:31:15Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Addressed in the coordinated final release through #437 and #439 (6eab85927, integrated head bdd9e24bd). Course enquiries no longer use email identity selection; #439 adds source-scoped atomic ad inquiry receipts, removes ensurePartyForInquiry email/phone reuse and automatic grants, and removes the now-unused ensurePartyWithAccount/ensureUserAccount helper. #439 also includes this commerce branch, so guest booking/manual-evidence identity changes and inquiry/course changes will be deployed together only after combined staging validation. Shared contact details remain valid; we do not treat primary email as a unique identity namespace. New PostgreSQL ad tests cover concurrent replay, independent shared-email operations, notification reservation and dependent-write rollback. Hosted checks remain required.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/436#discussion_r4048578806",
+                      "createdAt": "2026-09-18T16:23:14Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxNjoyMzoxNFrO8VBo9g=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwOTozMToxNVrOo7DT_Q=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

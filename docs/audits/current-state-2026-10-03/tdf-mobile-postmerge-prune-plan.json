@@ -1,0 +1,97 @@
+{
+  "main": "bca7f39cebcae24b62a4404bf5fd76bb9328f95a",
+  "branchesBefore": 21,
+  "openPRs": [
+    {
+      "baseRefName": "codex/payment-held-refund-query-contract-20260916",
+      "headRefName": "codex/payment-stack-contract-integration-20260916",
+      "headRefOid": "ff77c2060034762f69aed81473c8f94a25684d7e",
+      "number": 88
+    },
+    {
+      "baseRefName": "codex/payment-reconciliation-evidence-contract-20260915",
+      "headRefName": "codex/payment-held-refund-query-contract-20260916",
+      "headRefOid": "b9222df77d0a187cca4359278704362ec17fb3af",
+      "number": 85
+    },
+    {
+      "baseRefName": "codex/provider-neutral-ticket-checkout-20260911",
+      "headRefName": "fix/payment-summary-environment-audit-20260916",
+      "headRefOid": "337d46f25a8b7c7c688aa3657ffb599ecb4c47c7",
+      "number": 83
+    },
+    {
+      "baseRefName": "codex/payment-query-observability-contract-20260915",
+      "headRefName": "codex/payment-reconciliation-evidence-contract-20260915",
+      "headRefOid": "33720ef45b0565005c4b54b0e0c106cc93831613",
+      "number": 82
+    },
+    {
+      "baseRefName": "codex/payment-recovery-contract-20260914",
+      "headRefName": "codex/payment-query-observability-contract-20260915",
+      "headRefOid": "d84fc3196202f2ac2468f78816b3c98fb4a22144",
+      "number": 81
+    },
+    {
+      "baseRefName": "codex/provider-neutral-ticket-checkout-20260911",
+      "headRefName": "codex/payment-recovery-contract-20260914",
+      "headRefOid": "9c86c459081b32b47579b9c95c8514029225ad75",
+      "number": 79
+    },
+    {
+      "baseRefName": "main",
+      "headRefName": "codex/provider-neutral-ticket-checkout-20260911",
+      "headRefOid": "90a08f56fcd8df08dac2effd9253bceeb2c3e9a8",
+      "number": 78
+    },
+    {
+      "baseRefName": "main",
+      "headRefName": "feat/payment-capabilities-contract-20260909",
+      "headRefOid": "b08f0c600468773f13e9c1b8c2701df5b7673467",
+      "number": 76
+    },
+    {
+      "baseRefName": "main",
+      "headRefName": "feature/public-booking-idempotency-contract-20260909",
+      "headRefOid": "57abd23c0522133274e5bc2aa1a7e524d94dd62b",
+      "number": 71
+    },
+    {
+      "baseRefName": "feature/onboarding-completion-retry-20260908-reviewed",
+      "headRefName": "feature/onboarding-cross-device-reconciliation-20260909",
+      "headRefOid": "f487de478939b3c19a62b5f54aa876d96a4eb32c",
+      "number": 61
+    },
+    {
+      "baseRefName": "feature/onboarding-recovery-localization-20260908-reviewed",
+      "headRefName": "feature/onboarding-completion-retry-20260908-reviewed",
+      "headRefOid": "c790ab586ac324c31bc43e8899de36e9f93803e6",
+      "number": 54
+    },
+    {
+      "baseRefName": "feature/event-moment-privacy-20260908-reviewed",
+      "headRefName": "feature/onboarding-recovery-localization-20260908-reviewed",
+      "headRefOid": "3b7bf3ed28fc7d95ec9fac84bddc0fa5ba5ceafc",
+      "number": 51
+    },
+    {
+      "baseRefName": "feature/moment-reaction-evidence-20260907-reviewed",
+      "headRefName": "feature/event-moment-privacy-20260908-reviewed",
+      "headRefOid": "3409aeb692ee754525567412ec053b6ae18c2458",
+      "number": 48
+    },
+    {
+      "baseRefName": "feature/event-save-continuity-20260907-reviewed",
+      "headRefName": "feature/moment-reaction-evidence-20260907-reviewed",
+      "headRefOid": "bc02f52d0cc9bc31d66afcfd0e6f1c28d14466d8",
+      "number": 47
+    },
+    {
+      "baseRefName": "main",
+      "headRefName": "feature/event-save-continuity-20260907-reviewed",
+      "headRefOid": "ee3f20955b11f66a6663aa9dd4fb023e8eec749c",
+      "number": 46
+    }
+  ],
+  "candidates": []
+}

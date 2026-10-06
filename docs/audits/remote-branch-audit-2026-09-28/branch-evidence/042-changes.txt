@@ -1,0 +1,14 @@
+ docs/adr/0128-refund-execution-fence.md            |  99 +++++++
+ .../reports/list-consumer-matrix.csv               | 150 +++++-----
+ .../reports/static-list-inventory.json             | 245 ++++++++++------
+ .../ecuador-payment-platform-audit-2026-09-11.md   |   7 +
+ docs/payments/operator-runbooks.md                 |  12 +
+ .../payments/refund-execution-safety-2026-09-16.md | 319 +++++++++++++++++++++
+ tdf-hq-ui/src/pages/MerchAdminPage.test.tsx        |  49 +++-
+ tdf-hq-ui/src/pages/MerchAdminPage.tsx             |   5 +-
+ tdf-hq/src/TDF/Commerce/RefundStore.hs             |  54 ++--
+ tdf-hq/src/TDF/Server/ServiceStorefront.hs         |  18 +-
+ tdf-hq/tdf-hq.cabal                                |   1 +
+ tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs      |   3 +
+ tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs       | 271 +++++++++++++++++
+ 13 files changed, 1039 insertions(+), 194 deletions(-)

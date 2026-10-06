@@ -1,0 +1,47 @@
+- main [ref=f1e2]:
+  - generic [ref=f1e6]:
+    - img "PayPal Logo" [ref=f1e8]
+    - heading "Log in to your PayPal account" [level=1] [ref=f1e9]
+    - generic [ref=f1e10]:
+      - generic [ref=f1e12]:
+        - generic [ref=f1e14]:
+          - generic [ref=f1e15]:
+            - generic [ref=f1e17]:
+              - textbox "Email or mobile number" [ref=f1e18]
+              - generic: Email or mobile number
+            - link "Forgot email?" [ref=f1e19] [cursor=pointer]:
+              - /url: /authflow/email-recovery/?contextId=&redirectUri=%252Fsignin%253FreturnUri%253Dhttps%25253A%25252F%25252Fdeveloper.paypal.com%25252Fdashboard%25252F%2526state%253Dapplications%25252Fsandbox%2526intent%253Ddeveloper%2526ctxId%253Dul5882139b635b4d48833a72e353d4e9d8%2526sso%253Dtrue
+          - button "Next" [ref=f1e21] [cursor=pointer]
+        - generic [ref=f1e22]:
+          - generic [ref=f1e23]: or
+          - button "Sign Up" [ref=f1e24] [cursor=pointer]
+      - list [ref=f1e27]:
+        - listitem [ref=f1e28]:
+          - link "English" [ref=f1e29] [cursor=pointer]:
+            - /url: /signin?returnUri=https%3A%2F%2Fdeveloper.paypal.com%2Fdashboard%2F&state=applications%2Fsandbox&intent=developer&ctxId=ul5882139b635b4d48833a72e353d4e9d8&country.x=US&locale.x=en_US&langTgl=en
+        - listitem [ref=f1e30]:
+          - link "Français" [ref=f1e31] [cursor=pointer]:
+            - /url: /signin?returnUri=https%3A%2F%2Fdeveloper.paypal.com%2Fdashboard%2F&state=applications%2Fsandbox&intent=developer&ctxId=ul5882139b635b4d48833a72e353d4e9d8&country.x=US&locale.x=fr_XC&langTgl=fr
+        - listitem [ref=f1e32]:
+          - link "Español" [ref=f1e33] [cursor=pointer]:
+            - /url: /signin?returnUri=https%3A%2F%2Fdeveloper.paypal.com%2Fdashboard%2F&state=applications%2Fsandbox&intent=developer&ctxId=ul5882139b635b4d48833a72e353d4e9d8&country.x=US&locale.x=es_XC&langTgl=es
+        - listitem [ref=f1e34]:
+          - link "中文" [ref=f1e35] [cursor=pointer]:
+            - /url: /signin?returnUri=https%3A%2F%2Fdeveloper.paypal.com%2Fdashboard%2F&state=applications%2Fsandbox&intent=developer&ctxId=ul5882139b635b4d48833a72e353d4e9d8&country.x=US&locale.x=zh_XC&langTgl=zh
+  - contentinfo [ref=f1e36]:
+    - list [ref=f1e38]:
+      - listitem [ref=f1e39]:
+        - link "Contact Us" [ref=f1e40] [cursor=pointer]:
+          - /url: /us/smarthelp/contact-us
+      - listitem [ref=f1e41]:
+        - link "Privacy" [ref=f1e42] [cursor=pointer]:
+          - /url: /us/webapps/mpp/ua/privacy-full
+      - listitem [ref=f1e43]:
+        - link "Legal" [ref=f1e44] [cursor=pointer]:
+          - /url: /us/webapps/mpp/ua/legalhub-full
+      - listitem [ref=f1e45]:
+        - link "Policy Updates" [ref=f1e46] [cursor=pointer]:
+          - /url: /us/webapps/mpp/ua/upcoming-policies-full
+      - listitem [ref=f1e47]:
+        - link "Worldwide" [ref=f1e48] [cursor=pointer]:
+          - /url: /us/webapps/mpp/country-worldwide

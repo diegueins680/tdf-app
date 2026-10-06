@@ -1,0 +1,10 @@
+{
+  "ref": "refs/heads/audit/editorial-ownership-repair-20261003",
+  "node_id": "REF_kwDOQPdUrNoANHJlZnMvaGVhZHMvYXVkaXQvZWRpdG9yaWFsLW93bmVyc2hpcC1yZXBhaXItMjAyNjEwMDM",
+  "url": "https://api.github.com/repos/diegueins680/tdf-app/git/refs/heads/audit/editorial-ownership-repair-20261003",
+  "object": {
+    "sha": "9ecac924a43f71e59b3b9b2d713aa3eed4a8772d",
+    "type": "commit",
+    "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/9ecac924a43f71e59b3b9b2d713aa3eed4a8772d"
+  }
+}

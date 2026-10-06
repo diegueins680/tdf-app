@@ -1,0 +1,340 @@
+- generic [ref=e4]:
+  - generic [ref=e7]:
+    - generic [ref=e9]:
+      - generic [ref=e12]:
+        - link [ref=e17] [cursor=pointer]:
+          - /url: /
+          - img "Instagram" [ref=e22]
+        - generic [ref=e25]:
+          - link [ref=e30] [cursor=pointer]:
+            - /url: /
+            - img "Home" [ref=e35]
+          - link [ref=e40] [cursor=pointer]:
+            - /url: /reels/
+            - img "Reels" [ref=e45]
+          - link [ref=e52] [cursor=pointer]:
+            - /url: /direct/inbox/
+            - generic [ref=e55]:
+              - img "Messages" [ref=e57]
+              - generic "Direct messaging - 2 new notifications link" [ref=e60]: "2"
+          - link [ref=e66] [cursor=pointer]:
+            - /url: /explore/
+            - img "Search" [ref=e71]
+          - link [ref=e79] [cursor=pointer]:
+            - /url: "#"
+            - img "Notifications" [ref=e84]
+          - link [ref=e92] [cursor=pointer]:
+            - /url: "#"
+            - img "New post" [ref=e97]
+          - link [ref=e102] [cursor=pointer]:
+            - /url: "#"
+            - img "Professional dashboard" [ref=e107]
+          - link [ref=e114] [cursor=pointer]:
+            - /url: /tdf.records.label/
+            - link [ref=e119]:
+              - img "tdf.records.label's profile picture" [ref=e120]
+        - generic [ref=e121]:
+          - link [ref=e124] [cursor=pointer]:
+            - /url: "#"
+            - img "Settings" [ref=e129]
+          - link [ref=e132] [cursor=pointer]:
+            - /url: "#"
+            - img "Also from Meta" [ref=e137]
+      - generic [ref=e140]:
+        - main [ref=e141]:
+          - generic [ref=e142]:
+            - generic [ref=e144]:
+              - group "Video player" [ref=e163]:
+                - slider "Adjust volume" [ref=e164]:
+                  - button [ref=e168] [cursor=pointer]:
+                    - img "Audio is muted" [ref=e169]
+                - button [ref=e172] [cursor=pointer]:
+                  - img "Tags" [ref=e174]
+              - generic [ref=e177]:
+                - generic [ref=e179]:
+                  - generic [ref=e181]:
+                    - link [ref=e182]:
+                      - img "henryblues__'s profile picture" [ref=e183]
+                    - link [ref=e186]:
+                      - img "th_vibes.productions's profile picture" [ref=e187]
+                  - generic [ref=e191]:
+                    - generic [ref=e194]:
+                      - link "th_vibes.productions" [ref=e199] [cursor=pointer]:
+                        - /url: /th_vibes.productions/
+                      - text: and
+                      - link "3 others" [ref=e204] [cursor=pointer]:
+                        - /url: "#"
+                    - link "Original audio" [ref=e208] [cursor=pointer]:
+                      - /url: /reels/audio/765087329503121/
+                  - button [ref=e214] [cursor=pointer]:
+                    - img "More options" [ref=e217]
+                - separator [ref=e221]
+                - generic [ref=e223]:
+                  - generic [ref=e225]:
+                    - link [ref=e230] [cursor=pointer]:
+                      - /url: /th_vibes.productions/
+                      - img "th_vibes.productions's profile picture" [ref=e231]
+                    - generic [ref=e235]:
+                      - generic [ref=e236]:
+                        - link "th_vibes.productions" [ref=e240] [cursor=pointer]:
+                          - /url: /th_vibes.productions/
+                        - time [ref=e245]: 59w
+                      - generic [ref=e246]:
+                        - text: "Nos enorgullece haber participado en la producción de futuros proyectos junto a nuestros hermanos de MX 🇲🇽 y todos mis ñaños de 🇪🇨. TH-ViBe$ rompiéndola en NY 🗽. Cámara:"
+                        - link "@alexcast140" [ref=e247] [cursor=pointer]:
+                          - /url: /alexcast140/
+                        - text: ft
+                        - link "@3langel_zzz" [ref=e248] [cursor=pointer]:
+                          - /url: /3langel_zzz/
+                        - text: "📸Soundtrack:"
+                        - link "@adkto_zs" [ref=e249] [cursor=pointer]:
+                          - /url: /adkto_zs/
+                        - text: 🎤
+                  - generic [ref=e250]:
+                    - generic [ref=e253]:
+                      - link [ref=e259] [cursor=pointer]:
+                        - /url: /prez_one_/
+                        - img "prez_one_'s profile picture" [ref=e260]
+                      - generic [ref=e261]:
+                        - generic [ref=e262]:
+                          - generic [ref=e264]:
+                            - generic [ref=e265]:
+                              - link "prez_one_" [ref=e270] [cursor=pointer]:
+                                - /url: /prez_one_/
+                              - link [ref=e275] [cursor=pointer]:
+                                - /url: /p/DMmVzSqsP1I/c/18134591935380932/
+                                - time [ref=e276]: 59w
+                            - generic [ref=e277]: 🔥🔥🔥🔥🔥🔥🔥🔥
+                          - generic [ref=e279]:
+                            - button "1 like" [ref=e280] [cursor=pointer]
+                            - button "Reply" [ref=e283] [cursor=pointer]
+                        - button [ref=e290] [cursor=pointer]:
+                          - img "Like" [ref=e293]
+                    - generic [ref=e297]:
+                      - link [ref=e303] [cursor=pointer]:
+                        - /url: /alexcast140/
+                        - img "alexcast140's profile picture" [ref=e304]
+                      - generic [ref=e305]:
+                        - generic [ref=e306]:
+                          - generic [ref=e308]:
+                            - generic [ref=e309]:
+                              - link "alexcast140" [ref=e314] [cursor=pointer]:
+                                - /url: /alexcast140/
+                              - link [ref=e319] [cursor=pointer]:
+                                - /url: /p/DMmVzSqsP1I/c/18074098621820726/
+                                - time [ref=e320]: 59w
+                            - generic [ref=e321]: Mucho rap en un solo reel 🤯🔥🔥
+                          - generic [ref=e323]:
+                            - button "1 like" [ref=e324] [cursor=pointer]
+                            - button "Reply" [ref=e327] [cursor=pointer]
+                        - button [ref=e334] [cursor=pointer]:
+                          - img "Like" [ref=e337]
+                    - generic [ref=e339]:
+                      - generic [ref=e341]:
+                        - link [ref=e347] [cursor=pointer]:
+                          - /url: /henryblues__/
+                          - img "henryblues__'s profile picture" [ref=e348]
+                        - generic [ref=e349]:
+                          - generic [ref=e350]:
+                            - generic [ref=e352]:
+                              - generic [ref=e353]:
+                                - link "henryblues__" [ref=e358] [cursor=pointer]:
+                                  - /url: /henryblues__/
+                                - link [ref=e363] [cursor=pointer]:
+                                  - /url: /p/DMmVzSqsP1I/c/17867165616423101/
+                                  - time [ref=e364]: 59w
+                              - generic [ref=e365]: Duros mis G’s vamos pa’ arriba 🙌
+                            - generic [ref=e367]:
+                              - button "1 like" [ref=e368] [cursor=pointer]
+                              - button "Reply" [ref=e371] [cursor=pointer]
+                          - button [ref=e378] [cursor=pointer]:
+                            - img "Like" [ref=e381]
+                      - button "View all 1 replies" [ref=e384] [cursor=pointer]
+                - generic [ref=e388]:
+                  - generic [ref=e389]:
+                    - generic [ref=e390]:
+                      - button [ref=e393] [cursor=pointer]:
+                        - img "Like" [ref=e396]
+                      - button "74" [ref=e398] [cursor=pointer]
+                      - button [ref=e400] [cursor=pointer]:
+                        - img "Comment" [ref=e402]
+                      - button "5" [ref=e404] [cursor=pointer]
+                      - button [ref=e405] [cursor=pointer]:
+                        - img "Repost" [ref=e406]
+                      - button [ref=e408] [cursor=pointer]:
+                        - img "Share" [ref=e409]
+                    - button [ref=e414] [cursor=pointer]:
+                      - button [ref=e415]:
+                        - img "Save" [ref=e417]
+                  - link [ref=e421] [cursor=pointer]:
+                    - /url: /th_vibes.productions/reel/DMmVzSqsP1I/
+                    - time [ref=e423]: July 27, 2025
+                - generic [ref=e426]:
+                  - link [ref=e427]
+                  - generic [ref=e429]:
+                    - button [ref=e431] [cursor=pointer]:
+                      - img "Emoji" [ref=e433]
+                    - textbox "Add a comment…" [ref=e435]
+            - separator [ref=e437]
+            - generic [ref=e438]:
+              - generic [ref=e440]:
+                - text: More posts from
+                - link "th_vibes.productions" [ref=e441] [cursor=pointer]:
+                  - /url: /th_vibes.productions/
+              - generic [ref=e444]:
+                - generic [ref=e445]:
+                  - link [ref=e447] [cursor=pointer]:
+                    - /url: /henryblues__/reel/DcjFyJSTaoe/
+                    - img "Hoy salimos con “13 11” con mi hermano @3lhito_444 🫡 Activosss 6:00pm🇺🇸 / 5:00pm🇪🇨" [ref=e450]
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Clip"
+                  - link [ref=e453] [cursor=pointer]:
+                    - /url: /3lhito_444/reel/DcZRf0dpl-_/
+                    - 'img "1311- HiTo ft @henryblues__ . Estreno oficial: Jueves 27 de Agosto en todas las plataformas!!! Shot by: @th_vibes.productions Musical prod by: ADK.prod" [ref=e456]'
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Clip"
+                  - link [ref=e459] [cursor=pointer]:
+                    - /url: /th_vibes.productions/reel/DbtZs7jzbZW/
+                    - img "“EL MISMO” by @teo_mc1 🎤🔥 Ya tenemos fecha de estreno!! El 13 de agosto se estrena el nuevo sencillo de Teo Style en todas las plataformas. Produced by TH-ViBe$ Directed by @3lhito_444 Esto es TH-ViBe$ y Que sea beNdiTo el ErRor" [ref=e462]
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Clip"
+                - generic [ref=e464]:
+                  - link [ref=e466] [cursor=pointer]:
+                    - /url: /3lhito_444/reel/DY9wmThxNze/
+                    - img "1311 HiTo (feat Henry Blues). Próximamente se viene un temita con mi hermanito @henryblues__ . “H&H” Les dejo un adelanto de este temazo corta venas. EC in the Leta ñaño. shot by @th_vibes.productions ADK prod." [ref=e469]
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Clip"
+                  - link [ref=e472] [cursor=pointer]:
+                    - /url: /th_vibes.productions/p/DXJ4gUJlbQ_/
+                    - 'img "Latín Bohemias Session Nro.1 🇪🇨🇨🇴🇨🇱 Ya dispone en todas las plataformas. Spotify, YouTube: https://youtu.be/H8V5iuRGsmQ?si=UAwtiMF5RU_Hsde_ shot by TH-ViBe$" [ref=e475]'
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Carousel"
+                  - link [ref=e478] [cursor=pointer]:
+                    - /url: /henryblues__/reel/DW99UC7j3Ee/
+                    - 'img "OUT NOW! El chyper de los “Latín bohemians” 🌎🗽. Disponible x todos lados, LINK en mi bio 🌪️. @beat.real.music @alcatraz_isipri @garso.mc.oficial Movie: @3lhito_444 📽️ 2da cámara: @oldz_001 📷 Gracias a todas las personas que se sumaron a este proyecto se vienen más chypers 🙌. #LatinBohemias #latinchyper #nyc🗽" [ref=e481]'
+                    - generic:
+                      - generic:
+                        - generic:
+                          - img "Clip"
+        - contentinfo [ref=e483]:
+          - generic [ref=e484]:
+            - generic [ref=e486]:
+              - link "Meta" [ref=e488] [cursor=pointer]:
+                - /url: https://about.meta.com/
+              - link "About" [ref=e491] [cursor=pointer]:
+                - /url: https://about.instagram.com/
+              - link "Blog" [ref=e494] [cursor=pointer]:
+                - /url: https://about.instagram.com/blog/
+              - link "Jobs" [ref=e497] [cursor=pointer]:
+                - /url: https://about.instagram.com/about-us/careers
+              - link "Help" [ref=e500] [cursor=pointer]:
+                - /url: https://help.instagram.com/
+              - link "API" [ref=e503] [cursor=pointer]:
+                - /url: https://developers.facebook.com/docs/instagram
+              - link "Privacy" [ref=e506] [cursor=pointer]:
+                - /url: /legal/privacy/
+              - link "Terms" [ref=e509] [cursor=pointer]:
+                - /url: /legal/terms/
+              - link "Locations" [ref=e512] [cursor=pointer]:
+                - /url: /explore/locations/
+              - link "Popular" [ref=e515] [cursor=pointer]:
+                - /url: /popular/
+              - link "Instagram Lite" [ref=e518] [cursor=pointer]:
+                - /url: /web/lite/
+              - link "Meta AI" [ref=e521] [cursor=pointer]:
+                - /url: https://www.meta.ai/?utm_source=foa_web_footer
+              - link "Muse" [ref=e524] [cursor=pointer]:
+                - /url: https://muse.ai/
+              - link "Threads" [ref=e527] [cursor=pointer]:
+                - /url: https://www.threads.com/
+              - link "Contact Uploading & Non-Users" [ref=e530] [cursor=pointer]:
+                - /url: https://www.facebook.com/help/instagram/261704639352628
+              - link "Meta Verified" [ref=e533] [cursor=pointer]:
+                - /url: /accounts/meta_verified/?entrypoint=web_footer
+            - generic [ref=e535]:
+              - generic [ref=e536] [cursor=pointer]:
+                - generic [ref=e537]:
+                  - generic [ref=e538]: English
+                  - img "Down chevron icon" [ref=e541]
+                - combobox "Switch Display Language" [ref=e543]:
+                  - option "Afrikaans"
+                  - option "العربية"
+                  - option "Čeština"
+                  - option "Dansk"
+                  - option "Deutsch"
+                  - option "Ελληνικά"
+                  - option "English" [selected]
+                  - option "English (UK)"
+                  - option "Español (España)"
+                  - option "Español"
+                  - option "فارسی"
+                  - option "Suomi"
+                  - option "Français"
+                  - option "עברית"
+                  - option "Bahasa Indonesia"
+                  - option "Italiano"
+                  - option "日本語"
+                  - option "한국어"
+                  - option "Bahasa Melayu"
+                  - option "Norsk"
+                  - option "Nederlands"
+                  - option "Polski"
+                  - option "Português (Brasil)"
+                  - option "Português (Portugal)"
+                  - option "Русский"
+                  - option "Svenska"
+                  - option "ภาษาไทย"
+                  - option "Filipino"
+                  - option "Türkçe"
+                  - option "中文(简体)"
+                  - option "中文(台灣)"
+                  - option "বাংলা"
+                  - option "ગુજરાતી"
+                  - option "हिन्दी"
+                  - option "Hrvatski"
+                  - option "Magyar"
+                  - option "ಕನ್ನಡ"
+                  - option "മലയാളം"
+                  - option "मराठी"
+                  - option "नेपाली"
+                  - option "ਪੰਜਾਬੀ"
+                  - option "සිංහල"
+                  - option "Slovenčina"
+                  - option "தமிழ்"
+                  - option "తెలుగు"
+                  - option "اردو"
+                  - option "Tiếng Việt"
+                  - option "中文(香港)"
+                  - option "Български"
+                  - option "Français (Canada)"
+                  - option "Română"
+                  - option "Српски"
+                  - option "Українська"
+              - generic [ref=e544]: © 2026 Instagram from Meta
+    - button [ref=e547] [cursor=pointer]:
+      - tooltip "Like 1" [ref=e549]:
+        - generic [ref=e552]:
+          - generic "Like" [ref=e553]
+          - generic [ref=e554]: "1"
+  - button [ref=e558] [cursor=pointer]:
+    - generic "Messages - 2 new notifications" [ref=e559]:
+      - generic [ref=e560]:
+        - generic [ref=e562]:
+          - img "Messages" [ref=e563]
+          - generic "Direct messaging - 2 new notifications link" [ref=e566]: "2"
+        - generic [ref=e569]: Messages
+      - generic [ref=e570]:
+        - button "User avatar Andrés Martín Arauz" [ref=e572]:
+          - img "User avatar" [ref=e575]
+        - button "User avatar Llama Este Pez" [ref=e577]:
+          - img "User avatar" [ref=e580]

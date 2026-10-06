@@ -1,0 +1,320 @@
+- generic [ref=f72e1]:
+  - generic:
+    - generic:
+      - generic:
+        - generic [ref=f72e9]:
+          - generic [ref=f72e12]:
+            - link [ref=f72e697] [cursor=pointer]:
+              - /url: /
+            - generic [ref=f72e25]:
+              - link [ref=f72e699] [cursor=pointer]:
+                - /url: /
+              - link [ref=f72e701] [cursor=pointer]:
+                - /url: /reels/
+              - link [ref=f72e703] [cursor=pointer]:
+                - /url: /direct/inbox/
+                - generic [ref=f72e53]: "8"
+              - link [ref=f72e706] [cursor=pointer]:
+                - /url: /explore/
+              - link [ref=f72e708] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f72e710] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f72e712] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f72e714] [cursor=pointer]:
+                - /url: /tdf.records.label/
+                - link [ref=f72e715]
+            - generic [ref=f72e115]:
+              - link [ref=f72e717] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f72e719] [cursor=pointer]:
+                - /url: "#"
+          - generic [ref=f72e134]:
+            - main [ref=f72e135]:
+              - generic [ref=f72e137]:
+                - generic [ref=f72e138]:
+                  - generic [ref=f72e139]:
+                    - button [ref=f72e721] [cursor=pointer]:
+                      - link [ref=f72e722]
+                    - generic [ref=f72e148]:
+                      - generic [ref=f72e149]:
+                        - generic [ref=f72e150]:
+                          - link [ref=f72e724] [cursor=pointer]:
+                            - /url: "#"
+                            - heading [level=2] [ref=f72e725]:
+                              - generic [ref=f72e154]: alejandrosoria_music
+                          - button [ref=f72e726] [cursor=pointer]
+                        - generic [ref=f72e161]: Alejandro Soria
+                        - generic [ref=f72e163]:
+                          - generic [ref=f72e165]:
+                            - generic [ref=f72e166]: "329"
+                            - text: posts
+                          - link [ref=f72e728] [cursor=pointer]:
+                            - /url: "#"
+                            - generic [ref=f72e169]:
+                              - generic [ref=f72e729]: 6,664
+                              - text: followers
+                          - link [ref=f72e730] [cursor=pointer]:
+                            - /url: "#"
+                            - generic [ref=f72e173]:
+                              - generic [ref=f72e174]: 4,292
+                              - text: following
+                      - generic [ref=f72e175]:
+                        - generic [ref=f72e176]:
+                          - generic [ref=f72e177]: Artist
+                          - generic [ref=f72e179]:
+                            - button [ref=f72e731] [cursor=pointer]:
+                              - generic [ref=f72e181]:
+                                - text: "►𝘾𝙀𝙊:"
+                                - link [ref=f72e732]:
+                                  - /url: /modular_academy_/
+                                  - text: "@modular_academy_"
+                                - text: /
+                                - link [ref=f72e733]:
+                                  - /url: /azimute_musique/
+                                  - text: "@azimute_musique"
+                                - text: /
+                                - link [ref=f72e734]:
+                                  - /url: /x.club.uio/
+                                  - text: "@x.club.uio"
+                                - text: "►𝙍𝙚𝙨𝙞𝙙𝙚𝙣𝙩 𝘿𝙟:"
+                                - link [ref=f72e735]:
+                                  - /url: /kankariclub/
+                                  - text: "@kankariclub"
+                                - text: ►𝗠𝗮𝗻𝗮𝗴𝗲𝗿
+                                - link [ref=f72e736]:
+                                  - /url: /pexsm/
+                                  - text: "@pexsm"
+                                - text: "&"
+                                - link [ref=f72e737]:
+                                  - /url: /purohueso999/
+                                  - text: "@purohueso999"
+                            - generic [ref=f72e188]:
+                              - text: ...
+                              - button [ref=f72e738] [cursor=pointer]:
+                                - generic [ref=f72e190]: more
+                          - generic [ref=f72e191]:
+                            - button [ref=f72e739] [cursor=pointer]:
+                              - generic [ref=f72e193]: linktr.ee/AlejandroSoria_Music and 1 more
+                            - link [ref=f72e741] [cursor=pointer]:
+                              - /url: https://www.threads.com/@alejandrosoria_music?xmt=AQG0s7JYhNYuyWCH7C6Th-UQtwpj7cIjZmvViHWQRKXhzm0
+                              - generic [ref=f72e204]: alejandrosoria_music
+                        - link [ref=f72e743] [cursor=pointer]:
+                          - /url: /alejandrosoria_music/followers/mutualOnly
+                          - generic [ref=f72e208]:
+                            - generic [ref=f72e210]:
+                              - button [ref=f72e211]:
+                                - link [ref=f72e212]
+                              - button [ref=f72e395]:
+                                - link [ref=f72e396]
+                              - button [ref=f72e397]:
+                                - link [ref=f72e398]
+                            - generic [ref=f72e217]: Followed by cohema.music, jersomaleandro + 84 more
+                  - generic [ref=f72e400]:
+                    - button [ref=f72e744] [cursor=pointer]:
+                      - generic [ref=f72e403]: Following
+                    - button [ref=f72e746] [cursor=pointer]: Message
+                    - button [ref=f72e747] [cursor=pointer]
+                  - menu [ref=f72e228]:
+                    - generic [ref=f72e418]:
+                      - list [ref=f72e420]:
+                        - listitem [ref=f72e421]
+                        - listitem [ref=f72e422]
+                        - listitem [ref=f72e423]:
+                          - link [ref=f72e749] [cursor=pointer]:
+                            - /url: /stories/highlights/17884158279408432/
+                            - button [ref=f72e750]:
+                              - button [ref=f72e751]
+                              - generic [ref=f72e432]: Yo
+                        - listitem [ref=f72e435]:
+                          - link [ref=f72e753] [cursor=pointer]:
+                            - /url: /stories/highlights/17990182826835556/
+                            - button [ref=f72e754]:
+                              - button [ref=f72e755]
+                              - generic [ref=f72e444]: TOUR COL 2025
+                        - listitem [ref=f72e447]:
+                          - link [ref=f72e757] [cursor=pointer]:
+                            - /url: /stories/highlights/18052774616222236/
+                            - button [ref=f72e758]:
+                              - button [ref=f72e759]
+                              - generic [ref=f72e456]: Peru 2025 🇵🇪
+                        - listitem [ref=f72e459]:
+                          - link [ref=f72e761] [cursor=pointer]:
+                            - /url: /stories/highlights/18044915438415872/
+                            - button [ref=f72e762]:
+                              - button [ref=f72e763]
+                              - generic [ref=f72e468]: Colombia 2025 🇨🇴
+                        - listitem [ref=f72e471]:
+                          - link [ref=f72e765] [cursor=pointer]:
+                            - /url: /stories/highlights/18252428830257097/
+                            - button [ref=f72e766]:
+                              - button [ref=f72e767]
+                              - generic [ref=f72e480]: Gigs 2024🇪🇨🇨🇴🇨🇱
+                        - listitem [ref=f72e483]:
+                          - link [ref=f72e769] [cursor=pointer]:
+                            - /url: /stories/highlights/18018393902222887/
+                            - button [ref=f72e770]:
+                              - button [ref=f72e771]
+                              - generic [ref=f72e492]: CHILE TOUR 2024
+                        - listitem [ref=f72e495]:
+                          - link [ref=f72e773] [cursor=pointer]:
+                            - /url: /stories/highlights/18004904009253198/
+                            - button [ref=f72e774]:
+                              - button [ref=f72e775]
+                              - generic [ref=f72e504]: Gig's 2022
+                        - listitem [ref=f72e507]:
+                          - link [ref=f72e777] [cursor=pointer]:
+                            - /url: /stories/highlights/18050914933508017/
+                            - button [ref=f72e778]:
+                              - button [ref=f72e779]
+                              - generic [ref=f72e516]: 🇨🇴Tour 2023
+                        - listitem [ref=f72e519]:
+                          - link [ref=f72e781] [cursor=pointer]:
+                            - /url: /stories/highlights/17988063284564246/
+                            - button [ref=f72e782]:
+                              - button [ref=f72e783]
+                              - generic [ref=f72e528]: Gig’s 2023
+                        - listitem [ref=f72e531]:
+                          - link [ref=f72e785] [cursor=pointer]:
+                            - /url: /stories/highlights/18105199933303454/
+                            - button [ref=f72e786]:
+                              - button [ref=f72e787]
+                              - generic [ref=f72e540]: 🇵🇪 Tour 2022
+                        - listitem [ref=f72e543]:
+                          - link [ref=f72e789] [cursor=pointer]:
+                            - /url: /stories/highlights/17889835988441464/
+                            - button [ref=f72e790]:
+                              - button [ref=f72e791]
+                              - generic [ref=f72e552]: Gig’s 2021✨
+                        - listitem [ref=f72e555]:
+                          - link [ref=f72e793] [cursor=pointer]:
+                            - /url: /stories/highlights/17911824712500896/
+                            - button [ref=f72e794]:
+                              - button [ref=f72e795]
+                              - generic [ref=f72e564]: Gig's 2020
+                        - listitem [ref=f72e567]:
+                          - link [ref=f72e797] [cursor=pointer]:
+                            - /url: /stories/highlights/17875477450471403/
+                            - button [ref=f72e798]:
+                              - button [ref=f72e799]
+                              - generic [ref=f72e576]: Gigs 2019⬅️
+                      - button [ref=f72e801] [cursor=pointer]
+                - tablist [ref=f72e274]:
+                  - link [ref=f72e802] [cursor=pointer]:
+                    - /url: /alejandrosoria_music/
+                  - link [ref=f72e804] [cursor=pointer]:
+                    - /url: /alejandrosoria_music/reels/
+                  - link [ref=f72e806] [cursor=pointer]:
+                    - /url: /alejandrosoria_music/reposts/
+                  - link [ref=f72e808] [cursor=pointer]:
+                    - /url: /alejandrosoria_music/tagged/
+                - generic [ref=f72e585]:
+                  - generic [ref=f72e586]:
+                    - link [ref=f72e810] [cursor=pointer]:
+                      - /url: /alejandrosoria_music/p/Dd4L5HElMBS/
+                    - link [ref=f72e812] [cursor=pointer]:
+                      - /url: /alejandrosoria_music/p/Dc9BIGPIgCI/
+                    - link [ref=f72e814] [cursor=pointer]:
+                      - /url: /modular_academy_/p/DbTuDRruQMV/
+                  - generic [ref=f72e605]:
+                    - link [ref=f72e816] [cursor=pointer]:
+                      - /url: /alejandrosoria_music/p/DdB-ed7Fqhg/
+                    - link [ref=f72e818] [cursor=pointer]:
+                      - /url: /alejandrosoria_music/p/DcZirbXlKyG/
+                    - link [ref=f72e820] [cursor=pointer]:
+                      - /url: /purafrecuencia.mde/reel/DbmQdDDtfEz/
+                  - generic [ref=f72e624]:
+                    - link [ref=f72e822] [cursor=pointer]:
+                      - /url: /purafrecuencia.mde/p/DbMOzEGD0z7/
+                    - link [ref=f72e824] [cursor=pointer]:
+                      - /url: /_studio401/p/DbUNBSGFiTh/
+                    - link [ref=f72e826] [cursor=pointer]:
+                      - /url: /alejandrosoria_music/p/Da8kp4BlDeO/
+                  - generic [ref=f72e643]:
+                    - link [ref=f72e828] [cursor=pointer]:
+                      - /url: /alejandrosoria_music/p/ClNC2pUO5G2/
+                    - link [ref=f72e830] [cursor=pointer]:
+                      - /url: /alejandrosoria_music/p/CRwm05oLNeL/
+                    - link [ref=f72e832] [cursor=pointer]:
+                      - /url: /alejandrosoria_music/p/CrTqO2bOEdk/
+            - contentinfo [ref=f72e319]:
+              - generic [ref=f72e320]:
+                - generic [ref=f72e322]:
+                  - link [ref=f72e834] [cursor=pointer]:
+                    - /url: https://about.meta.com/
+                    - generic [ref=f72e325]: Meta
+                  - link [ref=f72e835] [cursor=pointer]:
+                    - /url: https://about.instagram.com/
+                    - generic [ref=f72e328]: About
+                  - link [ref=f72e836] [cursor=pointer]:
+                    - /url: https://about.instagram.com/blog/
+                    - generic [ref=f72e331]: Blog
+                  - link [ref=f72e837] [cursor=pointer]:
+                    - /url: https://about.instagram.com/about-us/careers
+                    - generic [ref=f72e334]: Jobs
+                  - link [ref=f72e838] [cursor=pointer]:
+                    - /url: https://help.instagram.com/
+                    - generic [ref=f72e337]: Help
+                  - link [ref=f72e839] [cursor=pointer]:
+                    - /url: https://developers.facebook.com/docs/instagram
+                    - generic [ref=f72e340]: API
+                  - link [ref=f72e840] [cursor=pointer]:
+                    - /url: /legal/privacy/
+                    - generic [ref=f72e343]: Privacy
+                  - link [ref=f72e841] [cursor=pointer]:
+                    - /url: /legal/terms/
+                    - generic [ref=f72e346]: Terms
+                  - link [ref=f72e842] [cursor=pointer]:
+                    - /url: /explore/locations/
+                    - generic [ref=f72e349]: Locations
+                  - link [ref=f72e843] [cursor=pointer]:
+                    - /url: /popular/
+                    - generic [ref=f72e352]: Popular
+                  - link [ref=f72e844] [cursor=pointer]:
+                    - /url: /web/lite/
+                    - generic [ref=f72e355]: Instagram Lite
+                  - link [ref=f72e845] [cursor=pointer]:
+                    - /url: https://www.meta.ai/?utm_source=foa_web_footer
+                    - generic [ref=f72e358]: Meta AI
+                  - link [ref=f72e846] [cursor=pointer]:
+                    - /url: https://muse.ai/
+                    - generic [ref=f72e361]: Muse
+                  - link [ref=f72e847] [cursor=pointer]:
+                    - /url: https://www.threads.com/
+                    - generic [ref=f72e364]: Threads
+                  - link [ref=f72e848] [cursor=pointer]:
+                    - /url: https://www.facebook.com/help/instagram/261704639352628
+                    - generic [ref=f72e367]: Contact Uploading & Non-Users
+                  - link [ref=f72e849] [cursor=pointer]:
+                    - /url: /accounts/meta_verified/?entrypoint=web_footer
+                    - generic [ref=f72e370]: Meta Verified
+                - generic [ref=f72e371]:
+                  - generic [ref=f72e372] [cursor=pointer]:
+                    - generic [ref=f72e373]: English
+                    - combobox [ref=f72e851]
+                  - generic [ref=f72e380]: © 2026 Instagram from Meta
+        - button [ref=f72e663] [cursor=pointer]:
+          - generic "Messages - 8 new notifications" [ref=f72e664]:
+            - generic [ref=f72e665]:
+              - generic [ref=f72e667]:
+                - img "Messages" [ref=f72e668]
+                - generic "Direct messaging - 8 new notifications link" [ref=f72e671]: "8"
+              - generic [ref=f72e674]: Messages
+            - generic [ref=f72e675]:
+              - button [ref=f72e676]:
+                - img "8 unread chats" [ref=f72e678]
+              - button "User avatar ..." [ref=f72e683]:
+                - img "User avatar" [ref=f72e686]
+              - button "User avatar David Márquez" [ref=f72e688]:
+                - img "User avatar" [ref=f72e691]
+              - button "User avatar Limberg Steven Garcia Alava" [ref=f72e693]:
+                - img "User avatar" [ref=f72e696]
+  - dialog [ref=f72e858]:
+    - generic [ref=f72e863]:
+      - generic [ref=f72e864]:
+        - heading "Messaging alejandrosoria_music" [active] [level=3] [ref=f72e867]
+        - generic [ref=f72e868]: Partnership messages are more likely to get a response because they have a dedicated place in alejandrosoria_music's inbox.
+      - generic [ref=f72e870]:
+        - button "Send prioritized message" [ref=f72e871] [cursor=pointer]
+        - button "Send message request" [ref=f72e872] [cursor=pointer]

@@ -1,0 +1,621 @@
+{
+  "capturedAt": "2026-10-05T06:37:56.523641+00:00",
+  "repository": "/Users/diegosaa/GitHub/tdf-app/tdf-mobile",
+  "currentGitHubMain": "7aaa78dcc7bda19a59e312fdf3316f900fddca4a",
+  "localBranchCount": 52,
+  "worktreeCount": 20,
+  "dirtyWorktreeCount": 1,
+  "inspectionTimeouts": 5,
+  "branches": [
+    {
+      "branch": "agent/event-discovery",
+      "sha": "7225a65bc9599bcd5791d0dd730904d66c7f536f",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "aria/exp-single-feature-onboarding-v1",
+      "sha": "d38d0c502d835d149b478cf1f8f5fc101c9acc26",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "aria/exp-single-feature-onboarding-v1-posthog-spec",
+      "sha": "b1b146cd5647d37ca3d50b5c33b5f60b02b96f72",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "chore/mobile-release-infra",
+      "sha": "21f5f52deb6475169a7162d190ef0682e578fabc",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [
+        "/Users/diegosaa/GitHub/tdf-app/.tmp/tdf-mobile-platform-director"
+      ],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "codex/feat-moment-gallery-fast-previews-20260826",
+      "sha": "3db6d2f39ba7fd7498b5f558e9a5ec805e521c64",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "codex/finish-mobile-release-infra-20260826",
+      "sha": "c2f567f4a75dc78994f1b48c41b3e10c5ec701bc",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "4 preserve uncommitted local work; commit ancestry alone cannot authorize deletion",
+      "worktrees": [
+        "/private/tmp/tdf-mobile-local-sweep.QsbbPs/worktree"
+      ],
+      "dirtyWorktree": true
+    },
+    {
+      "branch": "codex/mobile-publishing-audit-docs",
+      "sha": "868d8a0186695e3be209a2b53043d34d752cb278",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "codex/platform-internationalization",
+      "sha": "75c1fbb9a61ca80549ede8c7908d013f2a8f4c83",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "codex/verified-review-system",
+      "sha": "ba02fa87771056eeef7a01d52fa650bd6d2b635b",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "continuous-improvement-loop/dirty/codex/mobile-publishing-audit-docs/dirty-worktree-2026-04-08t01-06-07",
+      "sha": "30d5bfb17194f738175a8ceb6c4a3f0d9741878c",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "continuous-improvement-loop/dirty/codex/mobile-publishing-audit-docs/dirty-worktree-2026-04-08t04-17-54-676z",
+      "sha": "f5e20346aa1a45f8ddfb3beba80653e0d1ce7719",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "continuous-improvement-loop/dirty/codex/mobile-publishing-audit-docs/dirty-worktree-2026-04-09t02-48-24-674z",
+      "sha": "9d4933f328b86c9bc7b65af6fd5621ae947f6db2",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "continuous-improvement-loop/dirty/codex/mobile-publishing-audit-docs/dirty-worktree-2026-04-09t04-09-14-529z",
+      "sha": "ecf194e0a72d5d5c49379643f2ec832578a93a8f",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "continuous-improvement-loop/dirty/codex/mobile-publishing-audit-docs/dirty-worktree-2026-04-09t10-35-01-023z",
+      "sha": "d9f11cb60b8e13cc5e12997a3df6ebadf855496e",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "continuous-improvement-loop/dirty/continuous-improvement-loop/dirty/codex/mobile-publishing-audit-docs/dirty-worktree-2026-04-09t10-35-01-023z/dirty-worktree-2026-04-09t10-35-20-150z",
+      "sha": "e4c2473495c43ea19969fbaf3341cb8a4943256c",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "continuous-improvement-loop/dirty/continuous-improvement-loop/dirty/codex/mobile-publishing-audit-docs/dirty-worktree-2026-04-09t10-35-01-023z/dirty-worktree-2026-04-09t12-02-57-802z",
+      "sha": "663a3034d29535a4e21d260d31a4da71b1f81518",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "continuous-improvement-loop/dirty/continuous-improvement-loop/dirty/codex/mobile-publishing-audit-docs/dirty-worktree-2026-04-09t10-35-01-023z/dirty-worktree-2026-04-09t12-07-19-778z",
+      "sha": "bf91d6af9eb513b968c0d994fc5b5aac98726b7d",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "continuous-improvement-loop/dirty/continuous-improvement-loop/dirty/codex/mobile-publishing-audit-docs/dirty-worktree-2026-04-09t10-35-01-023z/dirty-worktree-2026-04-09t12-12-39-289z",
+      "sha": "230ae09dfca3f8df904b89bc53c61e7e8b443842",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "expo-native-integration",
+      "sha": "5bcfbbd4873b648da246ba5ea37ba5b17f8939b0",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "feat/ab-experiment-infrastructure",
+      "sha": "51565eaba134bcbb6578aee6dff622041bda6884",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "feat/contextual-reputation",
+      "sha": "9dfaca7d9252db5a35214f0c3305d85869cf56cd",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "feat/contextual-reputation-mobile",
+      "sha": "02d69013f4798732e7213f33d51072f6823da5ff",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "4 preserve uncommitted local work; commit ancestry alone cannot authorize deletion",
+      "worktrees": [
+        "/private/tmp/tdf-mobile-contextual-reputation"
+      ],
+      "dirtyWorktree": true
+    },
+    {
+      "branch": "feat/governed-onboarding-20260821",
+      "sha": "040d8b516d34d35aa30cd0bf2a9967c83871ab16",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "feat/live-intake-idempotency-contract-20260918",
+      "sha": "162793c7b5521d9b3a8aae4010f72e229a9240d8",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "4 preserve uncommitted local work; commit ancestry alone cannot authorize deletion",
+      "worktrees": [
+        "/private/tmp/tdf-identity-provider-mobile-20260918"
+      ],
+      "dirtyWorktree": true
+    },
+    {
+      "branch": "feat/mobile-about",
+      "sha": "d08794b0ef2ef92e502baafb9336d37289f76074",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "feat/party-selector-mobile",
+      "sha": "3e2ce584be443f74bf1f28247db70d6b6c88b36d",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "feat/posthog-analytics-129",
+      "sha": "51087aa1b0f5c7bf9da77efa20998070615e534c",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "feat/provider-subject-linking-20260918",
+      "sha": "fb64a1f94e19161944f8b67e88eb34e69512e8ae",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "feat/social-contracts-20260915",
+      "sha": "c1832c5eb150299c12b36ba156ff38c981a6b046",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [
+        "/Users/diegosaa/GitHub/tdf-app-social-20260914/tdf-mobile"
+      ],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "feat/social-rsvp-invitations",
+      "sha": "5427e1a9401154a77210b234c5fcd3b02c5fae2f",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "feat/stripe-paymentsheet",
+      "sha": "80697ecaca03072ba6f130cb655c5677b8aaacb7",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "feat/tester-feedback-20261004",
+      "sha": "07fe6db71966932c0021b42ca25aa7158b720dc6",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "feat/universal-interactions-20260928",
+      "sha": "371fc64784212b14d74909d46791b9b4e24a4ae0",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "fix/android-comment-focus-20260929",
+      "sha": "3ee82fe403b358b405568ed5164cf7798eb45e0b",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "4 preserve uncommitted local work; commit ancestry alone cannot authorize deletion",
+      "worktrees": [
+        "/private/tmp/tdf-universal-interactions-mobile-20260928"
+      ],
+      "dirtyWorktree": true
+    },
+    {
+      "branch": "fix/contact-idempotency-contract-20260917",
+      "sha": "df3983e5b14ef06a3e83cb220ffd2cf34c1c68ae",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "fix/google-explicit-creation-20260918",
+      "sha": "63fb9546730b4f1595bae4bd2c9e363e615c9957",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "fix/identity-locale-contract-20260918",
+      "sha": "30686143f3108c6e2fe0ccbff016f570d2ef51f6",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "4 preserve uncommitted local work; commit ancestry alone cannot authorize deletion",
+      "worktrees": [
+        "/private/tmp/tdf-identity-mobile-20260917"
+      ],
+      "dirtyWorktree": true
+    },
+    {
+      "branch": "fix/interaction-moderation-reasons-20260929",
+      "sha": "66d6ee809afb60ffb810266cd95b400e0cedbd9f",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "fix/interaction-response-validation-20260929",
+      "sha": "2b4fe6d7159e4e029d4a4605140c9e7143ac6e93",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "fix/interaction-summary-response-validation-20260929",
+      "sha": "1ae6e4317ed1a26ab54b70291a139c1d2f8c62c0",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "fix/interaction-update-runtime-20260929",
+      "sha": "5eb05bce8266cc7eb6e165528d565e63da3836a9",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "fix/ios-artifact-entitlement-output-20260929",
+      "sha": "85bac6e6ca241edb305ad444b79fe36b241c2764",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "fix/mobile-program-current-main-20261004",
+      "sha": "ce6cc5116577a063af7cddb870b97cd82e2abb7f",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "fix/mobile-program-feature-registry-20261004",
+      "sha": "044627a51a54a9406760d3b26d813cbab2d9b866",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "fix/moderation-block-boundary-20260929",
+      "sha": "634d8fbcd47654267aa2cd3b618f3e018133fae6",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "fix/ownerless-comment-policy-20260929",
+      "sha": "7e38bdd0e6efc0836b503660b9d5566ff8f6ec3e",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "fix/tester-feedback-category-routing",
+      "sha": "147ec8bc4ad4150eaab1ad410aa1803822075697",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [
+        "/private/tmp/tdf-mobile-feedback-20261004"
+      ],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "integrate/all-branches-20260825",
+      "sha": "e3604afcb5af58f8d8fc2b757ab8be2c0c852e40",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "main",
+      "sha": "859d7d66a4df5e74850f23dd58dbf94bc9fe44d2",
+      "sourceContainedInCurrentMain": false,
+      "disposition": "4 unique ancestry requires patch/specification audit; retain",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "pr-4",
+      "sha": "07bacf76109eb0dcc244ea2602f438f5a0c04918",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "release/store-publish-20260312",
+      "sha": "8601e0c3b684ed9bb1434749ee06d81c45766693",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    },
+    {
+      "branch": "release/store-submission-20260312",
+      "sha": "cc281b1d91787d68a5be029a5a5ee93d0d5a8682",
+      "sourceContainedInCurrentMain": true,
+      "disposition": "1 commit fully present in current main; retain occupied worktree until owner cleanup",
+      "worktrees": [],
+      "dirtyWorktree": false
+    }
+  ],
+  "worktrees": [
+    {
+      "worktree": "/Users/diegosaa/GitHub/tdf-app/tdf-mobile",
+      "HEAD": "53569fc4baa842a6882235d9a12c4ee68c44ff24",
+      "detached": "",
+      "statusExit": 0,
+      "trackedChanges": 2,
+      "untrackedEntries": 0,
+      "dirty": true
+    },
+    {
+      "worktree": "/private/tmp/tdf-identity-mobile-20260917",
+      "HEAD": "30686143f3108c6e2fe0ccbff016f570d2ef51f6",
+      "branch": "refs/heads/fix/identity-locale-contract-20260918",
+      "prunable": "gitdir file points to non-existent location",
+      "statusExit": 128,
+      "status": "unavailable; retain pending inspection"
+    },
+    {
+      "worktree": "/private/tmp/tdf-identity-provider-mobile-20260918",
+      "HEAD": "162793c7b5521d9b3a8aae4010f72e229a9240d8",
+      "branch": "refs/heads/feat/live-intake-idempotency-contract-20260918",
+      "prunable": "gitdir file points to non-existent location",
+      "statusExit": 128,
+      "status": "unavailable; retain pending inspection"
+    },
+    {
+      "worktree": "/private/tmp/tdf-mobile-contextual-reputation",
+      "HEAD": "02d69013f4798732e7213f33d51072f6823da5ff",
+      "branch": "refs/heads/feat/contextual-reputation-mobile",
+      "prunable": "gitdir file points to non-existent location",
+      "statusExit": 128,
+      "status": "unavailable; retain pending inspection"
+    },
+    {
+      "worktree": "/private/tmp/tdf-mobile-feedback-20261004",
+      "HEAD": "147ec8bc4ad4150eaab1ad410aa1803822075697",
+      "branch": "refs/heads/fix/tester-feedback-category-routing",
+      "statusExit": 0,
+      "trackedChanges": 0,
+      "untrackedEntries": 0,
+      "dirty": false
+    },
+    {
+      "worktree": "/private/tmp/tdf-mobile-local-sweep.QsbbPs/worktree",
+      "HEAD": "c2f567f4a75dc78994f1b48c41b3e10c5ec701bc",
+      "branch": "refs/heads/codex/finish-mobile-release-infra-20260826",
+      "prunable": "gitdir file points to non-existent location",
+      "statusExit": 128,
+      "status": "unavailable; retain pending inspection"
+    },
+    {
+      "worktree": "/private/tmp/tdf-universal-interactions-mobile-20260928",
+      "HEAD": "3ee82fe403b358b405568ed5164cf7798eb45e0b",
+      "branch": "refs/heads/fix/android-comment-focus-20260929",
+      "prunable": "gitdir file points to non-existent location",
+      "statusExit": 128,
+      "status": "unavailable; retain pending inspection"
+    },
+    {
+      "worktree": "/Users/diegosaa/GitHub/tdf-app-social-20260914/tdf-mobile",
+      "HEAD": "c1832c5eb150299c12b36ba156ff38c981a6b046",
+      "branch": "refs/heads/feat/social-contracts-20260915",
+      "statusExit": 0,
+      "trackedChanges": 0,
+      "untrackedEntries": 0,
+      "dirty": false
+    },
+    {
+      "worktree": "/Users/diegosaa/GitHub/tdf-app-social-chat-20260915/tdf-mobile",
+      "HEAD": "c1832c5eb150299c12b36ba156ff38c981a6b046",
+      "detached": "",
+      "statusExit": 0,
+      "trackedChanges": 0,
+      "untrackedEntries": 0,
+      "dirty": false
+    },
+    {
+      "worktree": "/Users/diegosaa/GitHub/tdf-app-social-dm-20260915/tdf-mobile",
+      "HEAD": "c1832c5eb150299c12b36ba156ff38c981a6b046",
+      "detached": "",
+      "statusExit": 0,
+      "trackedChanges": 0,
+      "untrackedEntries": 0,
+      "dirty": false
+    },
+    {
+      "worktree": "/Users/diegosaa/GitHub/tdf-app-social-enforcement-20260915/tdf-mobile",
+      "HEAD": "c1832c5eb150299c12b36ba156ff38c981a6b046",
+      "detached": "",
+      "statusExit": 0,
+      "trackedChanges": 0,
+      "untrackedEntries": 0,
+      "dirty": false
+    },
+    {
+      "worktree": "/Users/diegosaa/GitHub/tdf-app-social-fanclub-20260916/tdf-mobile",
+      "HEAD": "c1832c5eb150299c12b36ba156ff38c981a6b046",
+      "detached": "",
+      "statusExit": 0,
+      "trackedChanges": 0,
+      "untrackedEntries": 0,
+      "dirty": false
+    },
+    {
+      "worktree": "/Users/diegosaa/GitHub/tdf-app-social-legacy-writes-20260916/tdf-mobile",
+      "HEAD": "c1832c5eb150299c12b36ba156ff38c981a6b046",
+      "detached": "",
+      "statusExit": 0,
+      "trackedChanges": 0,
+      "untrackedEntries": 0,
+      "dirty": false
+    },
+    {
+      "worktree": "/Users/diegosaa/GitHub/tdf-app-social-profiles-20260915/tdf-mobile",
+      "HEAD": "c1832c5eb150299c12b36ba156ff38c981a6b046",
+      "detached": "",
+      "statusExit": 0,
+      "trackedChanges": 0,
+      "untrackedEntries": 0,
+      "dirty": false
+    },
+    {
+      "worktree": "/Users/diegosaa/GitHub/tdf-app-social-relationships-20260915/tdf-mobile",
+      "HEAD": "c1832c5eb150299c12b36ba156ff38c981a6b046",
+      "detached": "",
+      "statusExit": 0,
+      "trackedChanges": 0,
+      "untrackedEntries": 0,
+      "dirty": false
+    },
+    {
+      "worktree": "/Users/diegosaa/GitHub/tdf-app/.tmp/mobile-onboarding-merge",
+      "HEAD": "5d9851fb76f540cd8aa35703f37951b43c77958d",
+      "detached": "",
+      "statusExit": 0,
+      "trackedChanges": 0,
+      "untrackedEntries": 0,
+      "dirty": false
+    },
+    {
+      "worktree": "/Users/diegosaa/GitHub/tdf-app/.tmp/mobile-persona-merge",
+      "HEAD": "88df2677cb6d55deca9bc0aa88c941b024d2165b",
+      "detached": "",
+      "statusExit": 0,
+      "trackedChanges": 0,
+      "untrackedEntries": 0,
+      "dirty": false
+    },
+    {
+      "worktree": "/Users/diegosaa/GitHub/tdf-app/.tmp/mobile-pr25-merge",
+      "HEAD": "a087d7855eb805451824fa370baf7fdaf8a61caf",
+      "detached": "",
+      "statusExit": 0,
+      "trackedChanges": 0,
+      "untrackedEntries": 0,
+      "dirty": false
+    },
+    {
+      "worktree": "/Users/diegosaa/GitHub/tdf-app/.tmp/tdf-mobile-platform-director",
+      "HEAD": "21f5f52deb6475169a7162d190ef0682e578fabc",
+      "branch": "refs/heads/chore/mobile-release-infra",
+      "statusExit": 0,
+      "trackedChanges": 0,
+      "untrackedEntries": 0,
+      "dirty": false
+    },
+    {
+      "worktree": "/Users/diegosaa/GitHub/tdf-app/.tmp/tdf-mobile-release-build-20260826",
+      "HEAD": "c2f567f4a75dc78994f1b48c41b3e10c5ec701bc",
+      "detached": "",
+      "statusExit": 0,
+      "trackedChanges": 0,
+      "untrackedEntries": 0,
+      "dirty": false
+    }
+  ],
+  "scope": "Local checkout only; no branch/worktree deletion or edits. Paths and uncommitted file counts are private audit evidence."
+}

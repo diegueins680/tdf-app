@@ -4,7 +4,7 @@ export async function onRequest(context) {
   const eventId = String(context.params.eventId ?? '').trim();
   if (!isSafeEventId(eventId)) return new Response('Not found', { status: 404 });
 
-  const apiBase = String(context.env.PUBLIC_API_BASE ?? 'https://tdf-hq.fly.dev').replace(/\/$/, '');
+  const apiBase = String(context.env.PUBLIC_API_BASE ?? 'https://api.tdfrecords.net').replace(/\/$/, '');
   const [assetResponse, eventResponse] = await Promise.all([
     context.next(),
     fetch(`${apiBase}/directory/events/${eventId}`, {

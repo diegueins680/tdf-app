@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-10-04T01:13:49.268844+00:00",
+  "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+  "branches": [
+    "audit/provider-recovery-artifact-20260918",
+    "release/identity-compatible-recovery-20260918",
+    "codex/portable-backend-release-20260928"
+  ],
+  "scanned_paths": [
+    ".github",
+    "scripts",
+    "ops",
+    "docs",
+    "README.md"
+  ],
+  "matches": [],
+  "limitation": "No textual references in this scoped current-tree search. External automation/operational usage is not certified. User explicitly directed keeping concurrent deletions and recovery evidence."
+}

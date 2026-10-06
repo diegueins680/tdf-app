@@ -1,0 +1,61 @@
+{
+  "state": "OPEN",
+  "headRefOid": "a125a347cacb8d941a515171e2a81d4c92f2c2d2",
+  "baseRefName": "fix/event-confirmed-end-20260920",
+  "reviewThreads": {
+    "nodes": [
+      {
+        "id": "PRRT_kwDOQPdUrM6mht0D",
+        "isResolved": true,
+        "comments": {
+          "nodes": [
+            {
+              "id": "PRRC_kwDOQPdUrM71eI-f",
+              "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Anchor the migration to an ancestor of this release**\n\nFor release SHA `7e78303ac3ea0c9ce025d7ea4edab5d03d81b8fa`, `441dfcc968559f829e84c89751f008657566138c` is not an ancestor (`git merge-base --is-ancestor` returns false). The guarded release path in `scripts/production-release.mjs` checks every `introducedBy` commit and explicitly refuses such a release, so planning or deploying this exact commit will fail before applying the migration. Record an introduction commit that is actually in this release's ancestry.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/463#discussion_r4118319007"
+            },
+            {
+              "id": "PRRC_kwDOQPdUrM71v1Ma",
+              "body": "Verified on 697bd58b5ea1c8134be490cce588b65e9a08dad8: introduction commit 441dfcc968559f829e84c89751f008657566138c is in the current release ancestry. All 115 registered introduction commits pass git merge-base --is-ancestor, and all 82 production-release tests pass. The earlier review snapshot is superseded by the existing normal commits; no ancestry guard or manifest entry was weakened. Native-stack automatic rebasing has not been invoked.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/463#discussion_r4122956570"
+            }
+          ]
+        }
+      },
+      {
+        "id": "PRRT_kwDOQPdUrM6mht0E",
+        "isResolved": true,
+        "comments": {
+          "nodes": [
+            {
+              "id": "PRRC_kwDOQPdUrM71eI-l",
+              "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Include discovery events in the pilot status count**\n\nThis function makes structured imports consume the same 20-item allowance as research candidates, but `loadPilotDTO` in `TDF.Server.EventResearch` still computes `erPilotActiveCandidates` solely from `event_research_candidate`. For example, with 19 candidates and one imported event, `GET /social-events/event-research/pilot` reports 19 of 20 while the next candidate is rejected by this trigger. Clients following the documented preflight therefore receive a misleading capacity value; derive the status count from the shared identities (or expose a separate shared count).\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/463#discussion_r4118319013"
+            },
+            {
+              "id": "PRRC_kwDOQPdUrM71v1ea",
+              "body": "Fixed in 697bd58b5ea1c8134be490cce588b65e9a08dad8. The pilot-status endpoint and PostgreSQL import preflight now call the same canonical-identity count used by the database capacity guard. The real PostgreSQL regression exercises mixed candidates/imports, linked-event deduplication, duplicate source references and suppression (20 \u2192 20 \u2192 19 \u2192 20), with fixture changes rolled back. Mixed-writer races, authority/revocation and rollback/reapplication still pass; all 28 focused examples and the actual handler/dependency compilation pass. The existing response field is retained for compatibility.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/463#discussion_r4122957722"
+            }
+          ]
+        }
+      },
+      {
+        "id": "PRRT_kwDOQPdUrM6mtRZC",
+        "isResolved": false,
+        "comments": {
+          "nodes": [
+            {
+              "id": "PRRC_kwDOQPdUrM71v7y0",
+              "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Abort reconciliation when the source is disabled**\n\nWhen an administrator disables a source after its fetch begins, this new check makes each per-event sync fail, but `syncOne` catches those failures and `runDiscoverySource` still reaches the success branch in `Cron.hs:617-626`, where it calls `reconcileProviderEvents` and `markSourceSuccess`. The stale response can therefore increment `missing_runs`, potentially hide an event that had already missed one run, and record the disabled source as successful; propagate this failure or recheck/lock source enablement around reconciliation and the success update.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+              "url": "https://github.com/diegueins680/tdf-app/pull/463#discussion_r4122983604"
+            }
+          ]
+        }
+      }
+    ],
+    "pageInfo": {
+      "hasNextPage": false
+    }
+  }
+}

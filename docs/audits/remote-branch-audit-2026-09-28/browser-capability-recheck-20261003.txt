@@ -1,0 +1,1 @@
+2026-10-03T22:10:50Z browser_tabs action=list: Browser is already in use for the configured profile; tool requests --isolated but exposes no instance/profile option. No browser process or profile was changed. Actual production Google login/authenticated upload remains unverified.

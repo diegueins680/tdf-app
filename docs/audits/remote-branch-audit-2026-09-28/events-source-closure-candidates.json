@@ -1,0 +1,1154 @@
+[
+  {
+    "branch": "chore/event-catalog-stale-reconciliation",
+    "head": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+    "prs": [
+      {
+        "number": 417,
+        "url": "https://github.com/diegueins680/tdf-app/pull/417",
+        "title": "docs(events): reconcile nine stale catalog decisions with retained evidence",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "chore/event-operations-catalog-review",
+        "base_sha": "d5505e2731d395cc2a5859d215e36ffda9e88138",
+        "head": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "chore/event-operations-catalog-review",
+    "head": "d5505e2731d395cc2a5859d215e36ffda9e88138",
+    "prs": [
+      {
+        "number": 416,
+        "url": "https://github.com/diegueins680/tdf-app/pull/416",
+        "title": "docs(events): review canonical event catalog fingerprints",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "fix/event-raci-review-contrast",
+        "base_sha": "cbbb3da9f20c2314c73a5114b8c0aa943647054e",
+        "head": "d5505e2731d395cc2a5859d215e36ffda9e88138",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "feat/event-logistics-transaction-hardening",
+    "head": "f500b62c453e7da8981bc66138418fa59a586565",
+    "prs": [
+      {
+        "number": 338,
+        "url": "https://github.com/diegueins680/tdf-app/pull/338",
+        "title": "fix(events): atomic logistics activity and relation writes",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "feat/event-operations-api-foundation",
+        "base_sha": "b6ba963623861d1e2804b18adb46e6e4f5f5be80",
+        "head": "f500b62c453e7da8981bc66138418fa59a586565",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": {
+          "id": 1126674,
+          "number": 361,
+          "base": {
+            "ref": "main",
+            "sha": "d6244296925e20ccb6b2261290204415201843f3"
+          },
+          "size": 11,
+          "position": 3
+        },
+        "mergeable": false,
+        "mergeable_state": "dirty",
+        "review_decision": "APPROVED",
+        "reviews": [
+          {
+            "author": "tdfrecords",
+            "state": "APPROVED",
+            "commit": "f500b62c453e7da8981bc66138418fa59a586565",
+            "url": "https://github.com/diegueins680/tdf-app/pull/338#pullrequestreview-5205825623"
+          }
+        ],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "feat/event-operations-api-foundation",
+    "head": "b6ba963623861d1e2804b18adb46e6e4f5f5be80",
+    "prs": [
+      {
+        "number": 337,
+        "url": "https://github.com/diegueins680/tdf-app/pull/337",
+        "title": "feat(events): guarded lifecycle API and typed clients",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "main",
+        "base_sha": "d6244296925e20ccb6b2261290204415201843f3",
+        "head": "b6ba963623861d1e2804b18adb46e6e4f5f5be80",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": {
+          "id": 1126674,
+          "number": 361,
+          "base": {
+            "ref": "main",
+            "sha": "d6244296925e20ccb6b2261290204415201843f3"
+          },
+          "size": 11,
+          "position": 2
+        },
+        "mergeable": false,
+        "mergeable_state": "dirty",
+        "review_decision": "APPROVED",
+        "reviews": [
+          {
+            "author": "tdfrecords",
+            "state": "APPROVED",
+            "commit": "b6ba963623861d1e2804b18adb46e6e4f5f5be80",
+            "url": "https://github.com/diegueins680/tdf-app/pull/337#pullrequestreview-5205822985"
+          }
+        ],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "feat/event-raci-editor-context",
+    "head": "13abde1cba82b7b79c21b6f35e87c91de676366e",
+    "prs": [
+      {
+        "number": 387,
+        "url": "https://github.com/diegueins680/tdf-app/pull/387",
+        "title": "feat(events): add authorized paginated RACI editor context",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "feat/event-raci-reassignment-api",
+        "base_sha": "bfd5f17b92d629f578bc02f4aee338ed15843806",
+        "head": "13abde1cba82b7b79c21b6f35e87c91de676366e",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "feat/event-raci-reassignment-api",
+    "head": "bfd5f17b92d629f578bc02f4aee338ed15843806",
+    "prs": [
+      {
+        "number": 384,
+        "url": "https://github.com/diegueins680/tdf-app/pull/384",
+        "title": "feat(events): authenticated RACI reassignment API and typed client",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "feat/event-raci-reassignment-command",
+        "base_sha": "f6ffb2a27b87ed42d4d49289024d5b8a612b94cf",
+        "head": "bfd5f17b92d629f578bc02f4aee338ed15843806",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "feat/event-raci-reassignment-command",
+    "head": "f6ffb2a27b87ed42d4d49289024d5b8a612b94cf",
+    "prs": [
+      {
+        "number": 383,
+        "url": "https://github.com/diegueins680/tdf-app/pull/383",
+        "title": "feat(events): private atomic RACI reassignment with formal checks",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "feat/event-task-revisioned-read",
+        "base_sha": "503fd7b651843e9f7cadf4fd15931256bb847ece",
+        "head": "f6ffb2a27b87ed42d4d49289024d5b8a612b94cf",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "feat/event-raci-web-editor",
+    "head": "061553d085d3106a9c8877ca08ccb3e2420cdd09",
+    "prs": [
+      {
+        "number": 388,
+        "url": "https://github.com/diegueins680/tdf-app/pull/388",
+        "title": "feat(events): add confirmed scoped RACI web editor",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "feat/event-raci-editor-context",
+        "base_sha": "13abde1cba82b7b79c21b6f35e87c91de676366e",
+        "head": "061553d085d3106a9c8877ca08ccb3e2420cdd09",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "feat/event-task-aggregate-revision",
+    "head": "3b1ce4d9dbd0efb6d1e354ffd9f58e92a6916320",
+    "prs": [
+      {
+        "number": 379,
+        "url": "https://github.com/diegueins680/tdf-app/pull/379",
+        "title": "feat(events): add canonical task aggregate revisions and stale-write guard",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "test/event-task-browser-startup",
+        "base_sha": "221d1205c9cc2e992f8f36f73d441a3f9c6fda21",
+        "head": "3b1ce4d9dbd0efb6d1e354ffd9f58e92a6916320",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "feat/event-task-commit-invariants",
+    "head": "259becd7b3763e084b54da8749b1e6fde8d9d862",
+    "prs": [
+      {
+        "number": 339,
+        "url": "https://github.com/diegueins680/tdf-app/pull/339",
+        "title": "fix(events): model and enforce task commit invariants",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "feat/event-logistics-transaction-hardening",
+        "base_sha": "f500b62c453e7da8981bc66138418fa59a586565",
+        "head": "259becd7b3763e084b54da8749b1e6fde8d9d862",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": {
+          "id": 1126674,
+          "number": 361,
+          "base": {
+            "ref": "main",
+            "sha": "d6244296925e20ccb6b2261290204415201843f3"
+          },
+          "size": 11,
+          "position": 4
+        },
+        "mergeable": null,
+        "mergeable_state": "unknown",
+        "review_decision": "REVIEW_REQUIRED",
+        "reviews": [
+          {
+            "author": "tdfrecords",
+            "state": "DISMISSED",
+            "commit": "35f261097d9e295794f4db7404ae7d9556a8e9d4",
+            "url": "https://github.com/diegueins680/tdf-app/pull/339#pullrequestreview-5205818904"
+          },
+          {
+            "author": "tdfrecords",
+            "state": "DISMISSED",
+            "commit": "831e4b93f1798d478c1d46d18da2d48ce25a9188",
+            "url": "https://github.com/diegueins680/tdf-app/pull/339#pullrequestreview-5213524933"
+          },
+          {
+            "author": "tdfrecords",
+            "state": "APPROVED",
+            "commit": "259becd7b3763e084b54da8749b1e6fde8d9d862",
+            "url": "https://github.com/diegueins680/tdf-app/pull/339#pullrequestreview-5215389231"
+          }
+        ],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "feat/event-task-completion-api",
+    "head": "823da0fa801abe3bdb3b7679550f1315ad0946ed",
+    "prs": [
+      {
+        "number": 410,
+        "url": "https://github.com/diegueins680/tdf-app/pull/410",
+        "title": "feat(events): session-fenced preparation task completion API",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "feat/event-task-completion-command",
+        "base_sha": "78bdd4df465d1c7d8a752f9df0ed714ecad2330d",
+        "head": "823da0fa801abe3bdb3b7679550f1315ad0946ed",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "feat/event-task-completion-client",
+    "head": "f2f01194090a241777c451d06cb0848af7aa759a",
+    "prs": [
+      {
+        "number": 411,
+        "url": "https://github.com/diegueins680/tdf-app/pull/411",
+        "title": "feat(events): captured and validated task completion client",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "feat/event-task-completion-api",
+        "base_sha": "823da0fa801abe3bdb3b7679550f1315ad0946ed",
+        "head": "f2f01194090a241777c451d06cb0848af7aa759a",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "feat/event-task-completion-command",
+    "head": "78bdd4df465d1c7d8a752f9df0ed714ecad2330d",
+    "prs": [
+      {
+        "number": 407,
+        "url": "https://github.com/diegueins680/tdf-app/pull/407",
+        "title": "feat(events): guarded preparation task completion",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "test/event-raci-accessibility-evidence",
+        "base_sha": "6047377348e901c919d7691b849faab30980b952",
+        "head": "78bdd4df465d1c7d8a752f9df0ed714ecad2330d",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "feat/event-task-raci-view",
+    "head": "f03f366de44c8ad09248e9d399caa5994af06d5a",
+    "prs": [
+      {
+        "number": 373,
+        "url": "https://github.com/diegueins680/tdf-app/pull/373",
+        "title": "feat(events): scoped task RACI view; browser startup gate unresolved",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "fix/reservation-pluscal-integrity",
+        "base_sha": "ec24b70b1b2319a875099cc118db0e68b62a5ed0",
+        "head": "f03f366de44c8ad09248e9d399caa5994af06d5a",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "feat/event-task-read-api",
+    "head": "881882e15cd1b2400cc2e0452ea50683dea675de",
+    "prs": [
+      {
+        "number": 357,
+        "url": "https://github.com/diegueins680/tdf-app/pull/357",
+        "title": "feat: expose authenticated task/RACI read API",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "feat/event-task-read-projection",
+        "base_sha": "a1b92c220691b694e5f53e7deaf4d455ce46bc44",
+        "head": "881882e15cd1b2400cc2e0452ea50683dea675de",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "feat/event-task-read-projection",
+    "head": "a1b92c220691b694e5f53e7deaf4d455ce46bc44",
+    "prs": [
+      {
+        "number": 354,
+        "url": "https://github.com/diegueins680/tdf-app/pull/354",
+        "title": "feat: add scoped canonical task/RACI read projection",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "test/merch-expiry-checkout-contract",
+        "base_sha": "a1895105c6e15e1f95b4b72fd6218b34a311f6e6",
+        "head": "a1b92c220691b694e5f53e7deaf4d455ce46bc44",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "feat/event-task-revisioned-read",
+    "head": "503fd7b651843e9f7cadf4fd15931256bb847ece",
+    "prs": [
+      {
+        "number": 381,
+        "url": "https://github.com/diegueins680/tdf-app/pull/381",
+        "title": "feat(events): expose coherent task revision reads",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "feat/event-task-aggregate-revision",
+        "base_sha": "3b1ce4d9dbd0efb6d1e354ffd9f58e92a6916320",
+        "head": "503fd7b651843e9f7cadf4fd15931256bb847ece",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "fix/artist-follow-onboarding-continuity",
+    "head": "1299f9c63a325e17dff0bfe1f048ff52f7bb8b15",
+    "prs": [
+      {
+        "number": 364,
+        "url": "https://github.com/diegueins680/tdf-app/pull/364",
+        "title": "fix(discovery): restore consent-bound artist follow continuity",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "fix/web-onboarding-reconciliation-integration",
+        "base_sha": "827d745629f8cdbaee4429ded3689d3bf520a09d",
+        "head": "1299f9c63a325e17dff0bfe1f048ff52f7bb8b15",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "fix/event-command-existence-privacy",
+    "head": "892038c7d7ec64082b39917127f67748e6d1dca7",
+    "prs": [
+      {
+        "number": 346,
+        "url": "https://github.com/diegueins680/tdf-app/pull/346",
+        "title": "fix(events): hide unreadable transition target existence",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "test/event-operations-http-boundary",
+        "base_sha": "dbe975d3143446c5e7cd9b132b6f994067065e7b",
+        "head": "892038c7d7ec64082b39917127f67748e6d1dca7",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": {
+          "id": 1126674,
+          "number": 361,
+          "base": {
+            "ref": "main",
+            "sha": "d6244296925e20ccb6b2261290204415201843f3"
+          },
+          "size": 11,
+          "position": 8
+        },
+        "mergeable": null,
+        "mergeable_state": "unknown",
+        "review_decision": "REVIEW_REQUIRED",
+        "reviews": [
+          {
+            "author": "tdfrecords",
+            "state": "APPROVED",
+            "commit": "892038c7d7ec64082b39917127f67748e6d1dca7",
+            "url": "https://github.com/diegueins680/tdf-app/pull/346#pullrequestreview-5205804469"
+          }
+        ],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "fix/event-command-replay-authorization",
+    "head": "6b0913bab2b065b327149a6d3a042efecd9e75d7",
+    "prs": [
+      {
+        "number": 341,
+        "url": "https://github.com/diegueins680/tdf-app/pull/341",
+        "title": "fix(events): reauthorize lifecycle command replay",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "feat/event-task-commit-invariants",
+        "base_sha": "35f261097d9e295794f4db7404ae7d9556a8e9d4",
+        "head": "6b0913bab2b065b327149a6d3a042efecd9e75d7",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": {
+          "id": 1126674,
+          "number": 361,
+          "base": {
+            "ref": "main",
+            "sha": "d6244296925e20ccb6b2261290204415201843f3"
+          },
+          "size": 11,
+          "position": 5
+        },
+        "mergeable": null,
+        "mergeable_state": "unknown",
+        "review_decision": "REVIEW_REQUIRED",
+        "reviews": [
+          {
+            "author": "tdfrecords",
+            "state": "APPROVED",
+            "commit": "6b0913bab2b065b327149a6d3a042efecd9e75d7",
+            "url": "https://github.com/diegueins680/tdf-app/pull/341#pullrequestreview-5205816815"
+          }
+        ],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "fix/event-raci-review-contrast",
+    "head": "cbbb3da9f20c2314c73a5114b8c0aa943647054e",
+    "prs": [
+      {
+        "number": 413,
+        "url": "https://github.com/diegueins680/tdf-app/pull/413",
+        "title": "test(events): require settled paint before RACI contrast scan",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "feat/event-task-completion-client",
+        "base_sha": "f2f01194090a241777c451d06cb0848af7aa759a",
+        "head": "cbbb3da9f20c2314c73a5114b8c0aa943647054e",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "fix/event-schema-migration-dependencies",
+    "head": "192f9578665109e52d28a96c772e3307bdc684e5",
+    "prs": [
+      {
+        "number": 351,
+        "url": "https://github.com/diegueins680/tdf-app/pull/351",
+        "title": "fix(migrations): restore canonical dependencies for event schema rehearsal",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "test/event-operations-schema-rehearsal",
+        "base_sha": "cf591e1faa975b8023c6c06892fb50a51ba06dff",
+        "head": "192f9578665109e52d28a96c772e3307bdc684e5",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": {
+          "id": 1126674,
+          "number": 361,
+          "base": {
+            "ref": "main",
+            "sha": "d6244296925e20ccb6b2261290204415201843f3"
+          },
+          "size": 11,
+          "position": 11
+        },
+        "mergeable": false,
+        "mergeable_state": "dirty",
+        "review_decision": "APPROVED",
+        "reviews": [
+          {
+            "author": "tdfrecords",
+            "state": "APPROVED",
+            "commit": "192f9578665109e52d28a96c772e3307bdc684e5",
+            "url": "https://github.com/diegueins680/tdf-app/pull/351#pullrequestreview-5205793573"
+          }
+        ],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "fix/event-session-transaction-fence",
+    "head": "3cd978045aa406c55512a6673c2ba5f2983ebc7c",
+    "prs": [
+      {
+        "number": 348,
+        "url": "https://github.com/diegueins680/tdf-app/pull/348",
+        "title": "fix(events): fence event transactions with authenticated sessions",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "fix/event-command-existence-privacy",
+        "base_sha": "892038c7d7ec64082b39917127f67748e6d1dca7",
+        "head": "3cd978045aa406c55512a6673c2ba5f2983ebc7c",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": {
+          "id": 1126674,
+          "number": 361,
+          "base": {
+            "ref": "main",
+            "sha": "d6244296925e20ccb6b2261290204415201843f3"
+          },
+          "size": 11,
+          "position": 9
+        },
+        "mergeable": null,
+        "mergeable_state": "unknown",
+        "review_decision": "REVIEW_REQUIRED",
+        "reviews": [
+          {
+            "author": "tdfrecords",
+            "state": "APPROVED",
+            "commit": "3cd978045aa406c55512a6673c2ba5f2983ebc7c",
+            "url": "https://github.com/diegueins680/tdf-app/pull/348#pullrequestreview-5205800699"
+          }
+        ],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "fix/event-snapshot-privacy-boundary",
+    "head": "db81fdbe71d9b8e83d40d279b98c69df3749b316",
+    "prs": [
+      {
+        "number": 342,
+        "url": "https://github.com/diegueins680/tdf-app/pull/342",
+        "title": "fix: authorize coherent event snapshots and redact database errors",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "fix/event-command-replay-authorization",
+        "base_sha": "6b0913bab2b065b327149a6d3a042efecd9e75d7",
+        "head": "db81fdbe71d9b8e83d40d279b98c69df3749b316",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": {
+          "id": 1126674,
+          "number": 361,
+          "base": {
+            "ref": "main",
+            "sha": "d6244296925e20ccb6b2261290204415201843f3"
+          },
+          "size": 11,
+          "position": 6
+        },
+        "mergeable": null,
+        "mergeable_state": "unknown",
+        "review_decision": "REVIEW_REQUIRED",
+        "reviews": [
+          {
+            "author": "tdfrecords",
+            "state": "APPROVED",
+            "commit": "db81fdbe71d9b8e83d40d279b98c69df3749b316",
+            "url": "https://github.com/diegueins680/tdf-app/pull/342#pullrequestreview-5205814417"
+          }
+        ],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "fix/event-ui-lazy-validation",
+    "head": "d4e7ed0505a87a03706b765fc304ffa50362b8fb",
+    "prs": [
+      {
+        "number": 399,
+        "url": "https://github.com/diegueins680/tdf-app/pull/399",
+        "title": "fix(ui): preserve lazy validation and initial bundle budget",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "test/event-rsvp-ci-contracts",
+        "base_sha": "5ad2333c2a6ce379579a1cffa2708d56cbb21f5f",
+        "head": "d4e7ed0505a87a03706b765fc304ffa50362b8fb",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "fix/fanhub-authoritative-onboarding",
+    "head": "ff3cd1676a6db7b6ceef56d44407b0846a4f2071",
+    "prs": [
+      {
+        "number": 368,
+        "url": "https://github.com/diegueins680/tdf-app/pull/368",
+        "title": "fix(onboarding): restore account-bound FanHub exit recovery",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "fix/artist-follow-onboarding-continuity",
+        "base_sha": "1299f9c63a325e17dff0bfe1f048ff52f7bb8b15",
+        "head": "ff3cd1676a6db7b6ceef56d44407b0846a4f2071",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "fix/reservation-pluscal-integrity",
+    "head": "ec24b70b1b2319a875099cc118db0e68b62a5ed0",
+    "prs": [
+      {
+        "number": 372,
+        "url": "https://github.com/diegueins680/tdf-app/pull/372",
+        "title": "fix(formal): verify exact PlusCal reservation regeneration",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "fix/fanhub-authoritative-onboarding",
+        "base_sha": "ff3cd1676a6db7b6ceef56d44407b0846a4f2071",
+        "head": "ec24b70b1b2319a875099cc118db0e68b62a5ed0",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "fix/web-onboarding-reconciliation-integration",
+    "head": "827d745629f8cdbaee4429ded3689d3bf520a09d",
+    "prs": [
+      {
+        "number": 359,
+        "url": "https://github.com/diegueins680/tdf-app/pull/359",
+        "title": "fix(web): restore canonical onboarding reconciliation integration",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "feat/event-task-read-api",
+        "base_sha": "881882e15cd1b2400cc2e0452ea50683dea675de",
+        "head": "827d745629f8cdbaee4429ded3689d3bf520a09d",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "test/event-operations-http-boundary",
+    "head": "dbe975d3143446c5e7cd9b132b6f994067065e7b",
+    "prs": [
+      {
+        "number": 345,
+        "url": "https://github.com/diegueins680/tdf-app/pull/345",
+        "title": "test: cover event operations authenticated HTTP boundary",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "fix/event-snapshot-privacy-boundary",
+        "base_sha": "db81fdbe71d9b8e83d40d279b98c69df3749b316",
+        "head": "dbe975d3143446c5e7cd9b132b6f994067065e7b",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": {
+          "id": 1126674,
+          "number": 361,
+          "base": {
+            "ref": "main",
+            "sha": "d6244296925e20ccb6b2261290204415201843f3"
+          },
+          "size": 11,
+          "position": 7
+        },
+        "mergeable": null,
+        "mergeable_state": "unknown",
+        "review_decision": "REVIEW_REQUIRED",
+        "reviews": [
+          {
+            "author": "tdfrecords",
+            "state": "APPROVED",
+            "commit": "dbe975d3143446c5e7cd9b132b6f994067065e7b",
+            "url": "https://github.com/diegueins680/tdf-app/pull/345#pullrequestreview-5205812135"
+          }
+        ],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "test/event-operations-schema-rehearsal",
+    "head": "cf591e1faa975b8023c6c06892fb50a51ba06dff",
+    "prs": [
+      {
+        "number": 349,
+        "url": "https://github.com/diegueins680/tdf-app/pull/349",
+        "title": "test(events): expose complete-schema migration blockers",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "fix/event-session-transaction-fence",
+        "base_sha": "3cd978045aa406c55512a6673c2ba5f2983ebc7c",
+        "head": "cf591e1faa975b8023c6c06892fb50a51ba06dff",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": {
+          "id": 1126674,
+          "number": 361,
+          "base": {
+            "ref": "main",
+            "sha": "d6244296925e20ccb6b2261290204415201843f3"
+          },
+          "size": 11,
+          "position": 10
+        },
+        "mergeable": null,
+        "mergeable_state": "unknown",
+        "review_decision": "REVIEW_REQUIRED",
+        "reviews": [
+          {
+            "author": "tdfrecords",
+            "state": "APPROVED",
+            "commit": "cf591e1faa975b8023c6c06892fb50a51ba06dff",
+            "url": "https://github.com/diegueins680/tdf-app/pull/349#pullrequestreview-5205797123"
+          }
+        ],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "test/event-raci-accessibility-evidence",
+    "head": "6047377348e901c919d7691b849faab30980b952",
+    "prs": [
+      {
+        "number": 403,
+        "url": "https://github.com/diegueins680/tdf-app/pull/403",
+        "title": "test(events): retain actionable RACI accessibility evidence",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "fix/event-ui-lazy-validation",
+        "base_sha": "d4e7ed0505a87a03706b765fc304ffa50362b8fb",
+        "head": "6047377348e901c919d7691b849faab30980b952",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "test/event-raci-full-stack",
+    "head": "7cdd712568311975407cf0b7cb2ee2081a0c0414",
+    "prs": [
+      {
+        "number": 395,
+        "url": "https://github.com/diegueins680/tdf-app/pull/395",
+        "title": "test(events): verify RACI editor through real auth and PostgreSQL",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "feat/event-raci-web-editor",
+        "base_sha": "061553d085d3106a9c8877ca08ccb3e2420cdd09",
+        "head": "7cdd712568311975407cf0b7cb2ee2081a0c0414",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "test/event-rsvp-ci-contracts",
+    "head": "5ad2333c2a6ce379579a1cffa2708d56cbb21f5f",
+    "prs": [
+      {
+        "number": 398,
+        "url": "https://github.com/diegueins680/tdf-app/pull/398",
+        "title": "fix(events): restore directory contact continuity and RSVP CI contracts",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "test/event-raci-full-stack",
+        "base_sha": "7cdd712568311975407cf0b7cb2ee2081a0c0414",
+        "head": "5ad2333c2a6ce379579a1cffa2708d56cbb21f5f",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "test/event-task-browser-startup",
+    "head": "221d1205c9cc2e992f8f36f73d441a3f9c6fda21",
+    "prs": [
+      {
+        "number": 375,
+        "url": "https://github.com/diegueins680/tdf-app/pull/375",
+        "title": "test(events): verify task browser startup without module interception overhead",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "feat/event-task-raci-view",
+        "base_sha": "f03f366de44c8ad09248e9d399caa5994af06d5a",
+        "head": "221d1205c9cc2e992f8f36f73d441a3f9c6fda21",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  },
+  {
+    "branch": "test/merch-expiry-checkout-contract",
+    "head": "a1895105c6e15e1f95b4b72fd6218b34a311f6e6",
+    "prs": [
+      {
+        "number": 352,
+        "url": "https://github.com/diegueins680/tdf-app/pull/352",
+        "title": "test(merch): verify canonical checkout expiry and CI coverage",
+        "state": "open",
+        "merged": false,
+        "merged_commit": null,
+        "base": "fix/event-schema-migration-dependencies",
+        "base_sha": "192f9578665109e52d28a96c772e3307bdc684e5",
+        "head": "a1895105c6e15e1f95b4b72fd6218b34a311f6e6",
+        "draft": true,
+        "author": "diegueins680",
+        "labels": [],
+        "native_stack": null,
+        "mergeable": true,
+        "mergeable_state": "unstable",
+        "review_decision": null,
+        "reviews": [],
+        "unresolved_threads": [],
+        "linked_issues": []
+      }
+    ],
+    "rationale": "Unique event-stack contributions retained in local consolidation; main authentication, UX and migration ancestry preserved. Parallel PR339 task guards rescued via merge. Replacement PR465 preserves all contributions. Its current-head checks/review must pass again after the mobile API pin correction; mobile115 independent review and current target compatibility remain dependencies."
+  }
+]

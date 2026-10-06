@@ -1,0 +1,12 @@
+M	.github/workflows/event-operations-formal.yml
+M	docs/event-operations/README.md
+M	docs/event-operations/delivery-plan.md
+A	docs/event-operations/pluscal-integrity-contract.md
+A	docs/event-operations/pr-18-pluscal-integrity.md
+M	docs/event-operations/traceability-matrix.md
+M	formal/event-operations/README.md
+M	formal/event-operations/ReservationRace.tla
+M	package.json
+A	scripts/__tests__/event-operations-pluscal.test.mjs
+M	scripts/verify-event-operations-formal.sh
+A	scripts/verify-event-operations-pluscal.mjs

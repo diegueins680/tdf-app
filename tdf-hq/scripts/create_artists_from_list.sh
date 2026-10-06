@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Usage:
-#   ADMIN_TOKEN=... BASE_URL=https://tdf-hq.fly.dev ./scripts/create_artists_from_list.sh
+#   ADMIN_TOKEN=... BASE_URL=https://api.tdfrecords.net ./scripts/create_artists_from_list.sh
 #
 # Requires: curl, jq, bash (4+).
 
@@ -11,7 +11,7 @@ if [[ -z "${ADMIN_TOKEN:-}" ]]; then
   exit 1
 fi
 
-BASE_URL="${BASE_URL:-https://tdf-hq.fly.dev}"
+BASE_URL="${BASE_URL:-https://api.tdfrecords.net}"
 
 ARTISTS=(
   "Federico Molinari"

@@ -1,0 +1,1277 @@
+- generic [ref=e4]:
+  - generic [ref=e9]:
+    - generic [ref=e1298]:
+      - button "Close" [ref=e1300] [cursor=pointer]:
+        - img "Close" [ref=e1302]
+      - generic [ref=e1306]:
+        - heading "Notifications" [level=1] [ref=e1308]
+        - generic [ref=e1311]:
+          - button "All" [ref=e1312] [cursor=pointer]
+          - button "People you follow" [ref=e1314] [cursor=pointer]
+          - button "Comments" [ref=e1316] [cursor=pointer]
+          - button "Follows" [ref=e1318] [cursor=pointer]
+          - button "Tags & mentions" [ref=e1320] [cursor=pointer]
+          - button "Verified" [ref=e1322] [cursor=pointer]
+        - generic [ref=e1324]:
+          - heading "New" [level=1] [ref=e1325]
+          - generic [ref=e1327]:
+            - generic [ref=e1329] [cursor=pointer]:
+              - button [ref=e1331]
+              - generic [ref=e1336]:
+                - link "jc.herrera.troya" [ref=e1337]:
+                  - /url: /jc.herrera.troya/
+                - text: ","
+                - link "andyurrea11" [ref=e1341]:
+                  - /url: /andyurrea11/
+                - text: and others liked your reel.
+                - generic "24 minutes ago" [ref=e1347]: 24m
+              - link "Media thumbnail" [ref=e1349]:
+                - /url: /p/DdIJF9xAEjx/
+                - img "Media thumbnail" [ref=e1350]
+            - generic [ref=e1352] [cursor=pointer]:
+              - button [ref=e1354]
+              - generic [ref=e1359]:
+                - link "hugocaicedop" [ref=e1360]:
+                  - /url: /hugocaicedop/
+                - text: ","
+                - link "wladi_thecreator" [ref=e1364]:
+                  - /url: /wladi_thecreator/
+                - text: and others liked your reel.
+                - generic "3 hours ago" [ref=e1370]: 3h
+              - link "Media thumbnail" [ref=e1372]:
+                - /url: /p/Dc14qfagLM5/
+                - img "Media thumbnail" [ref=e1373]
+            - generic [ref=e1375] [cursor=pointer]:
+              - button [ref=e1377]
+              - generic [ref=e1382]:
+                - link "miolimusic" [ref=e1383]:
+                  - /url: /miolimusic/
+                - text: ","
+                - link "chezbastianin" [ref=e1387]:
+                  - /url: /chezbastianin/
+                - text: and others liked your reel.
+                - generic "6 hours ago" [ref=e1393]: 6h
+              - link "Media thumbnail" [ref=e1395]:
+                - /url: /p/DcycJ0SxqxO/
+                - img "Media thumbnail" [ref=e1396]
+            - generic [ref=e1398] [cursor=pointer]:
+              - link [ref=e1400]:
+                - /url: /rojelioelrojorojas/
+                - img "rojelioelrojorojas's profile picture" [ref=e1401]
+              - generic [ref=e1403]:
+                - link "rojelioelrojorojas" [ref=e1404]:
+                  - /url: /rojelioelrojorojas/
+                - text: invited you to collaborate on their reel 1 day ago.
+                - generic "7 hours ago" [ref=e1410]: 7h
+              - link "Media thumbnail" [ref=e1412]:
+                - /url: /p/Dd2sEaWirv2/
+                - img "Media thumbnail" [ref=e1413]
+            - generic [ref=e1415] [cursor=pointer]:
+              - button [ref=e1417]
+              - generic [ref=e1422]:
+                - link "wilsonrivera0_" [ref=e1423]:
+                  - /url: /wilsonrivera0_/
+                - text: ","
+                - link "daguiler_" [ref=e1427]:
+                  - /url: /daguiler_/
+                - text: and others liked your reel.
+                - generic "9 hours ago" [ref=e1433]: 9h
+              - link "Media thumbnail" [ref=e1435]:
+                - /url: /p/DKLNphSs_Ni/
+                - img "Media thumbnail" [ref=e1436]
+            - generic [ref=e1438] [cursor=pointer]:
+              - button [ref=e1440]
+              - generic [ref=e1445]:
+                - link "turunen_moon" [ref=e1446]:
+                  - /url: /turunen_moon/
+                - text: ","
+                - link "joel_2011vv" [ref=e1450]:
+                  - /url: /joel_2011vv/
+                - text: and others liked your reel.
+                - generic "11 hours ago" [ref=e1456]: 11h
+              - link "Media thumbnail" [ref=e1458]:
+                - /url: /p/DL58rbRgiys/
+                - img "Media thumbnail" [ref=e1459]
+            - generic [ref=e1461] [cursor=pointer]:
+              - button [ref=e1463]
+              - generic [ref=e1468]:
+                - link "isrxxl_idk" [ref=e1469]:
+                  - /url: /isrxxl_idk/
+                - text: ","
+                - link "sebas.j.e" [ref=e1473]:
+                  - /url: /sebas.j.e/
+                - text: and others liked your reel.
+                - generic "a day ago" [ref=e1479]: 1d
+              - link "Media thumbnail" [ref=e1481]:
+                - /url: /p/DL57XEtgmwh/
+                - img "Media thumbnail" [ref=e1482]
+            - generic [ref=e1484] [cursor=pointer]:
+              - link [ref=e1486]:
+                - /url: /tisann.00/
+                - img "tisann.00's profile picture" [ref=e1487]
+              - generic [ref=e1489]:
+                - link "tisann.00" [ref=e1490]:
+                  - /url: /tisann.00/
+                - text: started following you.
+                - generic "a day ago" [ref=e1496]: 1d
+              - button "Follow Back" [ref=e1498]
+            - generic [ref=e1502] [cursor=pointer]:
+              - link [ref=e1504]:
+                - /url: /rojelioelrojorojas/
+                - img "rojelioelrojorojas's profile picture" [ref=e1505]
+              - generic [ref=e1507]:
+                - link "rojelioelrojorojas" [ref=e1508]:
+                  - /url: /rojelioelrojorojas/
+                - text: invited you to collaborate on a reel.
+                - generic "a day ago" [ref=e1514]: 1d
+              - link "Media thumbnail" [ref=e1516]:
+                - /url: /p/Dd2sEaWirv2/
+                - img "Media thumbnail" [ref=e1517]
+            - generic [ref=e1519] [cursor=pointer]:
+              - link [ref=e1521]:
+                - /url: /rojelioelrojorojas/
+                - img "rojelioelrojorojas's profile picture" [ref=e1522]
+              - generic [ref=e1524]:
+                - link "rojelioelrojorojas" [ref=e1525]:
+                  - /url: /rojelioelrojorojas/
+                - text: "mentioned you in a reel: En febrero del 2025 grabamos una sesión en vivo en"
+                - link "@tdf.records.label" [ref=e1529]:
+                  - /url: /tdf.records.label/
+                - text: de 4 temas con
+                - link "@rojo.uio" [ref=e1530]:
+                  - /url: /rojo.uio/
+                - text: con una alineación increíble 🙌
+                - link "@victor.capuli" [ref=e1531]:
+                  - /url: /victor.capuli/
+                - link "@joelduenasc" [ref=e1532]:
+                  - /url: /joelduenasc/
+                - text: y Jofiel Icaza. Como la autogestión y la falta de presupuesto es así, recién la van a poder ver el ...
+                - button "more" [ref=e1533]
+                - link "#livesession" [ref=e1535]:
+                  - /url: /explore/tags/livesession/
+                - link "#alternative" [ref=e1536]:
+                  - /url: /explore/tags/alternative/
+                - link "#andes" [ref=e1537]:
+                  - /url: /explore/tags/andes/
+                - generic "a day ago" [ref=e1540]: 1d
+              - link "Media thumbnail" [ref=e1542]:
+                - /url: /p/Dd2sEaWirv2/
+                - img "Media thumbnail" [ref=e1543]
+            - generic [ref=e1545] [cursor=pointer]:
+              - link [ref=e1547]:
+                - /url: /matiasbalcazar_/
+                - img "matiasbalcazar_'s profile picture" [ref=e1548]
+              - generic [ref=e1550]:
+                - link "matiasbalcazar_" [ref=e1551]:
+                  - /url: /matiasbalcazar_/
+                - text: started following you from your ad.
+                - generic "a day ago" [ref=e1557]: 1d
+              - button "Follow Back" [ref=e1559]
+            - generic [ref=e1563] [cursor=pointer]:
+              - link [ref=e1565]:
+                - /url: /consuelolbw/
+                - img "consuelolbw's profile picture" [ref=e1566]
+              - generic [ref=e1568]:
+                - link "consuelolbw" [ref=e1569]:
+                  - /url: /consuelolbw/
+                - text: started following you.
+                - generic "a day ago" [ref=e1575]: 1d
+              - button "Follow Back" [ref=e1577]
+            - generic [ref=e1581] [cursor=pointer]:
+              - link [ref=e1583]:
+                - /url: /danny_zk8/
+                - img "danny_zk8's profile picture" [ref=e1584]
+              - generic [ref=e1586]:
+                - link "danny_zk8" [ref=e1587]:
+                  - /url: /danny_zk8/
+                - text: started following you.
+                - generic "a day ago" [ref=e1593]: 1d
+              - button "Follow Back" [ref=e1595]
+            - generic [ref=e1599] [cursor=pointer]:
+              - link [ref=e1601]:
+                - /url: /pablogvr7/
+                - img "pablogvr7's profile picture" [ref=e1602]
+              - generic [ref=e1604]:
+                - link "pablogvr7" [ref=e1605]:
+                  - /url: /pablogvr7/
+                - text: "commented: 69🔥"
+                - generic "a day ago" [ref=e1611]: 1d
+              - link "Media thumbnail" [ref=e1613]:
+                - /url: /p/DL58rbRgiys/
+                - img "Media thumbnail" [ref=e1614]
+            - generic [ref=e1616] [cursor=pointer]:
+              - link [ref=e1618]:
+                - /url: /panchocore/
+                - img "panchocore's profile picture" [ref=e1619]
+              - generic [ref=e1621]:
+                - link "panchocore" [ref=e1622]:
+                  - /url: /panchocore/
+                - text: started following you.
+                - generic "a day ago" [ref=e1628]: 1d
+              - button "Follow Back" [ref=e1630]
+            - generic [ref=e1634] [cursor=pointer]:
+              - link [ref=e1636]:
+                - /url: /ma.jolieuwu/
+                - img "ma.jolieuwu's profile picture" [ref=e1637]
+              - generic [ref=e1639]:
+                - link "ma.jolieuwu" [ref=e1640]:
+                  - /url: /ma.jolieuwu/
+                - text: started following you.
+                - generic "a day ago" [ref=e1646]: 1d
+              - button "Follow Back" [ref=e1648]
+            - generic [ref=e1652] [cursor=pointer]:
+              - button [ref=e1654]
+              - generic [ref=e1659]:
+                - link "lordethnic" [ref=e1660]:
+                  - /url: /lordethnic/
+                - text: ","
+                - link "morras182" [ref=e1664]:
+                  - /url: /morras182/
+                - text: and others liked your reel.
+                - generic "2 days ago" [ref=e1670]: 2d
+              - link "Media thumbnail" [ref=e1672]:
+                - /url: /p/DdX1VpgxlO1/
+                - img "Media thumbnail" [ref=e1673]
+            - generic [ref=e1675] [cursor=pointer]:
+              - link [ref=e1677]:
+                - /url: /jonathanmaia_ec/
+                - img "jonathanmaia_ec's profile picture" [ref=e1678]
+              - generic [ref=e1680]:
+                - link "jonathanmaia_ec Verified" [ref=e1681]:
+                  - /url: /jonathanmaia_ec/
+                  - generic [ref=e1683]:
+                    - generic [ref=e1684]: jonathanmaia_ec
+                    - img "Verified" [ref=e1686]
+                - text: started following you.
+                - generic "3 days ago" [ref=e1690]: 3d
+              - button "Follow Back" [ref=e1692]
+            - generic [ref=e1696] [cursor=pointer]:
+              - link [ref=e1698]:
+                - /url: /dorian99272018/
+                - img "dorian99272018's profile picture" [ref=e1699]
+              - generic [ref=e1701]:
+                - link "dorian99272018" [ref=e1702]:
+                  - /url: /dorian99272018/
+                - text: started following you.
+                - generic "3 days ago" [ref=e1708]: 3d
+              - button "Follow Back" [ref=e1710]
+            - generic [ref=e1714] [cursor=pointer]:
+              - button [ref=e1716]
+              - generic [ref=e1721]:
+                - link "valenziamusic" [ref=e1722]:
+                  - /url: /valenziamusic/
+                - text: ","
+                - link "world_sounds_records" [ref=e1726]:
+                  - /url: /world_sounds_records/
+                - text: and others liked your reel.
+                - generic "4 days ago" [ref=e1732]: 4d
+              - link "Media thumbnail" [ref=e1734]:
+                - /url: /p/DXPB2bjDn-E/
+                - img "Media thumbnail" [ref=e1735]
+            - generic [ref=e1737] [cursor=pointer]:
+              - link [ref=e1739]:
+                - /url: /diegonavarretecarvajal/
+                - img "diegonavarretecarvajal's profile picture" [ref=e1740]
+              - generic [ref=e1742]:
+                - link "diegonavarretecarvajal" [ref=e1743]:
+                  - /url: /diegonavarretecarvajal/
+                - text: started following you.
+                - generic "4 days ago" [ref=e1749]: 4d
+              - button "Follow Back" [ref=e1751]
+            - generic [ref=e1755] [cursor=pointer]:
+              - link [ref=e1757]:
+                - /url: /rommel_unda/
+                - img "rommel_unda's profile picture" [ref=e1758]
+              - generic [ref=e1760]:
+                - link "rommel_unda" [ref=e1761]:
+                  - /url: /rommel_unda/
+                - text: started following you.
+                - generic "5 days ago" [ref=e1767]: 5d
+              - button "Follow Back" [ref=e1769]
+            - generic [ref=e1773] [cursor=pointer]:
+              - link [ref=e1775]:
+                - /url: /byron_rvzt/
+                - img "byron_rvzt's profile picture" [ref=e1776]
+              - generic [ref=e1778]:
+                - link "byron_rvzt" [ref=e1779]:
+                  - /url: /byron_rvzt/
+                - text: started following you.
+                - generic "5 days ago" [ref=e1785]: 5d
+              - button "Follow Back" [ref=e1787]
+        - generic [ref=e1790]:
+          - separator [ref=e1792]
+          - heading "This week" [level=1] [ref=e1793]
+          - generic [ref=e1795]:
+            - generic [ref=e1797] [cursor=pointer]:
+              - generic [ref=e1799]:
+                - link [ref=e1801]:
+                  - /url: /solcordovamusic/
+                  - img "solcordovamusic's profile picture" [ref=e1802]
+                - link [ref=e1804]
+              - generic [ref=e1806]:
+                - link "solcordovamusic" [ref=e1807]:
+                  - /url: /solcordovamusic/
+                - text: ","
+                - link "enrikecruz.music" [ref=e1811]:
+                  - /url: /enrikecruz.music/
+                - text: and 1 other liked your story.
+                - generic "6 days ago" [ref=e1817]: 6d
+              - link "Media thumbnail" [ref=e1819]:
+                - /url: /stories/archive/18163911163421978/?initial_media_id=3992528788557837809
+                - img "Media thumbnail" [ref=e1820]
+            - generic [ref=e1822] [cursor=pointer]:
+              - link [ref=e1824]:
+                - /url: /felipe_tampikina/
+                - img "felipe_tampikina's profile picture" [ref=e1825]
+              - generic [ref=e1827]:
+                - link "felipe_tampikina" [ref=e1828]:
+                  - /url: /felipe_tampikina/
+                - text: started following you.
+                - generic "6 days ago" [ref=e1834]: 6d
+              - button "Follow Back" [ref=e1836]
+        - generic [ref=e1839]:
+          - separator [ref=e1841]
+          - heading "This month" [level=1] [ref=e1842]
+          - generic [ref=e1844]:
+            - generic [ref=e1846] [cursor=pointer]:
+              - link [ref=e1848]:
+                - /url: /neilarmasmusic/
+                - img "neilarmasmusic's profile picture" [ref=e1849]
+              - generic [ref=e1851]:
+                - link "neilarmasmusic" [ref=e1852]:
+                  - /url: /neilarmasmusic/
+                - text: "commented: Info"
+                - generic "6 days ago" [ref=e1858]: 6d
+              - link "Media thumbnail" [ref=e1860]:
+                - /url: /p/DL57XEtgmwh/
+                - img "Media thumbnail" [ref=e1861]
+            - generic [ref=e1863] [cursor=pointer]:
+              - link [ref=e1865]:
+                - /url: /dirkwalls_/
+                - img "dirkwalls_'s profile picture" [ref=e1866]
+              - generic [ref=e1868]:
+                - link "dirkwalls_" [ref=e1869]:
+                  - /url: /dirkwalls_/
+                - text: started following you. Sep 23
+              - button "Follow Back" [ref=e1874]
+            - generic [ref=e1878] [cursor=pointer]:
+              - link [ref=e1880]:
+                - /url: /daniiellin_/
+                - img "daniiellin_'s profile picture" [ref=e1881]
+              - generic [ref=e1883]:
+                - link "daniiellin_" [ref=e1884]:
+                  - /url: /daniiellin_/
+                - text: started following you. Sep 22
+              - button "Follow Back" [ref=e1889]
+            - generic [ref=e1893] [cursor=pointer]:
+              - link [ref=e1895]:
+                - /url: /fd_v.z/
+                - img "fd_v.z's profile picture" [ref=e1896]
+              - generic [ref=e1898]:
+                - link "fd_v.z" [ref=e1899]:
+                  - /url: /fd_v.z/
+                - text: started following you. Sep 22
+              - button "Follow Back" [ref=e1904]
+            - generic [ref=e1908] [cursor=pointer]:
+              - link [ref=e1910]:
+                - /url: /johalicius/
+                - img "johalicius's profile picture" [ref=e1911]
+              - generic [ref=e1913]:
+                - link "johalicius" [ref=e1914]:
+                  - /url: /johalicius/
+                - text: started following you. Sep 22
+              - button "Follow Back" [ref=e1919]
+            - generic [ref=e1923] [cursor=pointer]:
+              - link [ref=e1925]:
+                - /url: /mattu_aru/
+                - img "mattu_aru's profile picture" [ref=e1926]
+              - generic [ref=e1928]:
+                - link "mattu_aru" [ref=e1929]:
+                  - /url: /mattu_aru/
+                - text: started following you. Sep 22
+              - button "Follow Back" [ref=e1934]
+            - generic [ref=e1938] [cursor=pointer]:
+              - button [ref=e1940]:
+                - link [ref=e1942]:
+                  - img "letal_______'s profile picture" [ref=e1943]
+              - generic [ref=e1945]:
+                - link "letal_______" [ref=e1946]:
+                  - /url: /letal_______/
+                - text: "mentioned you in a reel: lo de"
+                - link "@jammalsanchez" [ref=e1950]:
+                  - /url: /jammalsanchez/
+                - text: "no tiene sentido, es el despertar de un gigante Producción general:"
+                - link "@daniloeduardobarba" [ref=e1951]:
+                  - /url: /daniloeduardobarba/
+                - text: "Runner:"
+                - link "@byronzambrano.18" [ref=e1952]:
+                  - /url: /byronzambrano.18/
+                - text: "Runner:"
+                - link "@amelu_aldaz" [ref=e1953]:
+                  - /url: /amelu_aldaz/
+                - text: "Van:"
+                - link "@ricardodavidsalcedo" [ref=e1954]:
+                  - /url: /ricardodavidsalcedo/
+                - text: "Van Produ:"
+                - link "@ma.caman" [ref=e1955]:
+                  - /url: /ma.caman/
+                - text: "Operador cam:"
+                - link "@iamgabrielruiz" [ref=e1956]:
+                  - /url: /iamgabrielruiz/
+                - text: "Director de fotografía:"
+                - link "@diegoleondop" [ref=e1957]:
+                  - /url: /diegoleondop/
+                - text: "Realizador:"
+                - link "@lerouxfilms" [ref=e1958]:
+                  - /url: /lerouxfilms/
+                - text: "Eléctrico:"
+                - link "@teban_marlon94" [ref=e1959]:
+                  - /url: /teban_marlon94/
+                - text: "Dirección de arte:"
+                - link "@jdm21___" [ref=e1960]:
+                  - /url: /jdm21___/
+                - text: "Dirección de cámaras:"
+                - link "@7mo.sentido" [ref=e1961]:
+                  - /url: /7mo.sentido/
+                - text: "Cam entrevistas:"
+                - link "@don_pouris" [ref=e1962]:
+                  - /url: /don_pouris/
+                - text: "Casters:"
+                - link "@leidy_agudelo.g" [ref=e1963]:
+                  - /url: /leidy_agudelo.g/
+                - link "@paula_salvadort" [ref=e1964]:
+                  - /url: /paula_salvadort/
+                - link "@viioletperez" [ref=e1965]:
+                  - /url: /viioletperez/
+                - link "@samay.tomaselli" [ref=e1966]:
+                  - /url: /samay.tomaselli/
+                - text: "Productora:"
+                - link "@atv__ec" [ref=e1967]:
+                  - /url: /atv__ec/
+                - text: "Productor ejecutivo:"
+                - link "@jaimetoledo86" [ref=e1968]:
+                  - /url: /jaimetoledo86/
+                - text: "Sonido:"
+                - link "@tdf.records.label" [ref=e1969]:
+                  - /url: /tdf.records.label/
+                - text: "dron:"
+                - link "@skypulse.ec" [ref=e1970]:
+                  - /url: /skypulse.ec/
+                - text: "Bebidas:"
+                - link "@nortenoecuador" [ref=e1971]:
+                  - /url: /nortenoecuador/
+                - link "@las_cumbres_destileria" [ref=e1972]:
+                  - /url: /las_cumbres_destileria/
+                - text: "Detail:"
+                - link "@755barbers" [ref=e1973]:
+                  - /url: /755barbers/
+                - text: "Lista:"
+                - link "@mr.orbea" [ref=e1974]:
+                  - /url: /mr.orbea/
+                - text: "Jefe de camerino:"
+                - link "@maartiyaselga" [ref=e1975]:
+                  - /url: /maartiyaselga/
+                - text: "Producción ejecutiva:"
+                - link "@paula_salvadort" [ref=e1976]:
+                  - /url: /paula_salvadort/
+                - text: "Dirección creativa:"
+                - link "@erremif" [ref=e1977]:
+                  - /url: /erremif/
+                - link "@sb_siete_" [ref=e1978]:
+                  - /url: /sb_siete_/
+                - text: "Dirección general:"
+                - link "@sb_siete_" [ref=e1979]:
+                  - /url: /sb_siete_/
+                - text: Sep 22
+              - link "Media thumbnail" [ref=e1981]:
+                - /url: /p/Ddklwprg8GE/
+                - img "Media thumbnail" [ref=e1982]
+            - generic [ref=e1984] [cursor=pointer]:
+              - link [ref=e1986]:
+                - /url: /guayasamin.marco/
+                - img "guayasamin.marco's profile picture" [ref=e1987]
+              - generic [ref=e1989]:
+                - link "guayasamin.marco" [ref=e1990]:
+                  - /url: /guayasamin.marco/
+                - text: started following you. Sep 21
+              - button "Follow Back" [ref=e1995]
+            - generic [ref=e1999] [cursor=pointer]:
+              - button [ref=e2001]:
+                - link [ref=e2003]:
+                  - img "havid_figueroa07's profile picture" [ref=e2004]
+              - generic [ref=e2006]:
+                - link "havid_figueroa07" [ref=e2007]:
+                  - /url: /havid_figueroa07/
+                - text: started following you. Sep 21
+              - button "Follow Back" [ref=e2012]
+            - generic [ref=e2016] [cursor=pointer]:
+              - link [ref=e2018]:
+                - /url: /old_jayz/
+                - img "old_jayz's profile picture" [ref=e2019]
+              - generic [ref=e2021]:
+                - link "old_jayz" [ref=e2022]:
+                  - /url: /old_jayz/
+                - text: started following you. Sep 21
+              - button "Follow Back" [ref=e2027]
+            - generic [ref=e2031] [cursor=pointer]:
+              - link [ref=e2033]:
+                - /url: /marti_nag23/
+                - img "marti_nag23's profile picture" [ref=e2034]
+              - generic [ref=e2036]:
+                - link "marti_nag23" [ref=e2037]:
+                  - /url: /marti_nag23/
+                - text: started following you from your ad. Sep 21
+              - button "Follow Back" [ref=e2042]
+            - generic [ref=e2046] [cursor=pointer]:
+              - link [ref=e2048]:
+                - /url: /pleiva1983/
+                - img "pleiva1983's profile picture" [ref=e2049]
+              - generic [ref=e2051]:
+                - link "pleiva1983" [ref=e2052]:
+                  - /url: /pleiva1983/
+                - text: started following you. Sep 20
+              - button "Follow Back" [ref=e2057]
+            - generic [ref=e2061] [cursor=pointer]:
+              - button [ref=e2063]:
+                - link [ref=e2065]:
+                  - img "marti_alvc's profile picture" [ref=e2066]
+              - generic [ref=e2068]:
+                - link "marti_alvc" [ref=e2069]:
+                  - /url: /marti_alvc/
+                - text: started following you. Sep 19
+              - button "Follow Back" [ref=e2074]
+            - generic [ref=e2078] [cursor=pointer]:
+              - link [ref=e2080]:
+                - /url: /carloschizola/
+                - img "carloschizola's profile picture" [ref=e2081]
+              - generic [ref=e2083]:
+                - link "carloschizola" [ref=e2084]:
+                  - /url: /carloschizola/
+                - text: started following you. Sep 19
+              - button "Follow Back" [ref=e2089]
+            - generic [ref=e2093] [cursor=pointer]:
+              - link [ref=e2095]:
+                - /url: /jorge.rodriguez.585559/
+                - img "jorge.rodriguez.585559's profile picture" [ref=e2096]
+              - generic [ref=e2098]:
+                - link "jorge.rodriguez.585559" [ref=e2099]:
+                  - /url: /jorge.rodriguez.585559/
+                - text: started following you. Sep 19
+              - button "Follow Back" [ref=e2104]
+            - generic [ref=e2108] [cursor=pointer]:
+              - link [ref=e2110]:
+                - /url: /fusionimperium/
+                - img "fusionimperium's profile picture" [ref=e2111]
+              - generic [ref=e2113]:
+                - link "fusionimperium" [ref=e2114]:
+                  - /url: /fusionimperium/
+                - text: tagged you in a reel. Sep 18
+              - link "Media thumbnail" [ref=e2119]:
+                - /url: /p/DdcAwQRpmSc/
+                - img "Media thumbnail" [ref=e2120]
+            - generic [ref=e2122] [cursor=pointer]:
+              - link [ref=e2124]:
+                - /url: /angsant_1/
+                - img "angsant_1's profile picture" [ref=e2125]
+              - generic [ref=e2127]:
+                - link "angsant_1" [ref=e2128]:
+                  - /url: /angsant_1/
+                - text: started following you. Sep 18
+              - button "Follow Back" [ref=e2133]
+            - generic [ref=e2137] [cursor=pointer]:
+              - link [ref=e2139]:
+                - /url: /hector_nacata/
+                - img "hector_nacata's profile picture" [ref=e2140]
+              - generic [ref=e2142]:
+                - link "hector_nacata" [ref=e2143]:
+                  - /url: /hector_nacata/
+                - text: started following you. Sep 18
+              - button "Follow Back" [ref=e2148]
+            - generic [ref=e2152] [cursor=pointer]:
+              - link [ref=e2154]:
+                - /url: /erikmolano/
+                - img "erikmolano's profile picture" [ref=e2155]
+              - generic [ref=e2157]:
+                - link "erikmolano" [ref=e2158]:
+                  - /url: /erikmolano/
+                - text: started following you. Sep 18
+              - button "Follow Back" [ref=e2163]
+            - generic [ref=e2167] [cursor=pointer]:
+              - generic [ref=e2169]:
+                - link [ref=e2171]:
+                  - /url: /solcordovamusic/
+                  - img "solcordovamusic's profile picture" [ref=e2172]
+                - link [ref=e2174]
+              - generic [ref=e2176]:
+                - link "solcordovamusic" [ref=e2177]:
+                  - /url: /solcordovamusic/
+                - text: and
+                - link "kenihosik9" [ref=e2181]:
+                  - /url: /kenihosik9/
+                - text: liked your story. Sep 17
+              - link "Media thumbnail" [ref=e2186]:
+                - /url: /stories/archive/17948235021270254/?initial_media_id=3987891544615143004
+                - img "Media thumbnail" [ref=e2187]
+            - generic [ref=e2189] [cursor=pointer]:
+              - button [ref=e2191]
+              - generic [ref=e2196]:
+                - link "tedy3ds" [ref=e2197]:
+                  - /url: /tedy3ds/
+                - text: ","
+                - link "romanrodrigomonge" [ref=e2201]:
+                  - /url: /romanrodrigomonge/
+                - text: and others liked your reel. Sep 17
+              - link "Media thumbnail" [ref=e2206]:
+                - /url: /p/DRS8IbTErRQ/
+                - img "Media thumbnail" [ref=e2207]
+            - generic [ref=e2209] [cursor=pointer]:
+              - link [ref=e2211]:
+                - /url: /horuscenit/
+                - img "horuscenit's profile picture" [ref=e2212]
+              - generic [ref=e2214]:
+                - link "horuscenit" [ref=e2215]:
+                  - /url: /horuscenit/
+                - text: started following you. Sep 17
+              - button "Follow Back" [ref=e2220]
+            - generic [ref=e2224] [cursor=pointer]:
+              - button [ref=e2226]:
+                - link [ref=e2228]:
+                  - img "serenomorenoec's profile picture" [ref=e2229]
+              - generic [ref=e2231]:
+                - link "serenomorenoec" [ref=e2232]:
+                  - /url: /serenomorenoec/
+                - text: liked your reel. Sep 17
+              - link "Media thumbnail" [ref=e2237]:
+                - /url: /p/Dc14qfagLM5/
+                - img "Media thumbnail" [ref=e2238]
+            - generic [ref=e2240] [cursor=pointer]:
+              - button [ref=e2242]:
+                - link [ref=e2244]:
+                  - img "serenomorenoec's profile picture" [ref=e2245]
+              - generic [ref=e2247]:
+                - link "serenomorenoec" [ref=e2248]:
+                  - /url: /serenomorenoec/
+                - text: started following you. Sep 17
+              - button "Following" [ref=e2253]
+            - generic [ref=e2257] [cursor=pointer]:
+              - button [ref=e2259]
+              - generic [ref=e2264]:
+                - link "mystica_music22" [ref=e2265]:
+                  - /url: /mystica_music22/
+                - text: ","
+                - link "lexer_industries" [ref=e2269]:
+                  - /url: /lexer_industries/
+                - text: and others liked your post. Sep 16
+              - link "Media thumbnail" [ref=e2274]:
+                - /url: /p/DdAlcYhkWF0/
+                - img "Media thumbnail" [ref=e2275]
+            - generic [ref=e2277] [cursor=pointer]:
+              - button [ref=e2279]
+              - generic [ref=e2284]:
+                - link "henry_molina.uio" [ref=e2285]:
+                  - /url: /henry_molina.uio/
+                - text: ","
+                - link "andresvenegas.78" [ref=e2289]:
+                  - /url: /andresvenegas.78/
+                - text: and others liked your reel. Sep 16
+              - link "Media thumbnail" [ref=e2294]:
+                - /url: /p/DMtestoM2ym/
+                - img "Media thumbnail" [ref=e2295]
+            - generic [ref=e2297] [cursor=pointer]:
+              - generic [ref=e2299]:
+                - link [ref=e2301]:
+                  - /url: /ilimityec/
+                  - img "ilimityec's profile picture" [ref=e2302]
+                - link [ref=e2304]
+              - generic [ref=e2306]:
+                - link "ilimityec" [ref=e2307]:
+                  - /url: /ilimityec/
+                - text: ","
+                - link "jennypao2019" [ref=e2311]:
+                  - /url: /jennypao2019/
+                - text: and 1 other liked your story. Sep 15
+              - link "Media thumbnail" [ref=e2316]:
+                - /url: /stories/archive/18103762934614400/?initial_media_id=3986379381186618476
+                - img "Media thumbnail" [ref=e2317]
+            - generic [ref=e2319] [cursor=pointer]:
+              - button [ref=e2321]
+              - generic [ref=e2326]:
+                - link "leopard.5678206" [ref=e2327]:
+                  - /url: /leopard.5678206/
+                - text: ","
+                - link "capi_cuyo" [ref=e2331]:
+                  - /url: /capi_cuyo/
+                - text: and others liked your post. Sep 15
+              - link "Media thumbnail" [ref=e2336]:
+                - /url: /p/DG1ceMCJXkR/
+                - img "Media thumbnail" [ref=e2337]
+            - generic [ref=e2339] [cursor=pointer]:
+              - button [ref=e2341]:
+                - link [ref=e2343]:
+                  - img "jennypao2019's profile picture" [ref=e2344]
+              - generic [ref=e2346]:
+                - link "jennypao2019" [ref=e2347]:
+                  - /url: /jennypao2019/
+                - text: liked your story. Sep 15
+              - link "Media thumbnail" [ref=e2352]:
+                - /url: /stories/archive/18103762934614400/?initial_media_id=3986386546324521462
+                - img "Media thumbnail" [ref=e2353]
+            - generic [ref=e2355] [cursor=pointer]:
+              - button [ref=e2357]:
+                - link [ref=e2359]:
+                  - img "ticketclub.com.ec's profile picture" [ref=e2360]
+              - generic [ref=e2362]:
+                - link "ticketclub.com.ec" [ref=e2363]:
+                  - /url: /ticketclub.com.ec/
+                - text: started following you. Sep 14
+              - button "Following" [ref=e2368]
+            - generic [ref=e2372] [cursor=pointer]:
+              - link [ref=e2374]:
+                - /url: /veeseman/
+                - img "veeseman's profile picture" [ref=e2375]
+              - generic [ref=e2377]:
+                - link "veeseman" [ref=e2378]:
+                  - /url: /veeseman/
+                - text: "commented: Y no es el Dvoid"
+                - link "@annael.88" [ref=e2382]:
+                  - /url: /annael.88/
+                - text: Sep 14
+              - link "Media thumbnail" [ref=e2384]:
+                - /url: /p/DdIJF9xAEjx/
+                - img "Media thumbnail" [ref=e2385]
+    - generic [ref=e140]:
+      - main [ref=e141]:
+        - generic [ref=e142]:
+          - generic [ref=e144]:
+            - generic [ref=e149]:
+              - list [ref=e151]:
+                - listitem [ref=e152]
+                - listitem [ref=e153]:
+                  - button "Story by _seereendipia_, not seen" [ref=e154] [cursor=pointer]:
+                    - link [ref=e159]:
+                      - img "_seereendipia_'s profile picture" [ref=e160]
+                    - generic [ref=e161]: _seereendipia_
+                - listitem [ref=e164]:
+                  - button "Story by tamagochi_bb, not seen" [ref=e165] [cursor=pointer]:
+                    - link [ref=e170]:
+                      - img "tamagochi_bb's profile picture" [ref=e171]
+                    - generic [ref=e172]: tamagochi_bb
+                - listitem [ref=e175]:
+                  - button "Story by eliisa.soledad, not seen" [ref=e176] [cursor=pointer]:
+                    - link [ref=e181]:
+                      - img "eliisa.soledad's profile picture" [ref=e182]
+                    - generic [ref=e183]: eliisa.soledad
+                - listitem [ref=e186]:
+                  - button "Story by reemus___, not seen" [ref=e187] [cursor=pointer]:
+                    - link [ref=e192]:
+                      - img "reemus___'s profile picture" [ref=e193]
+                    - generic [ref=e194]: reemus___
+                - listitem [ref=e197]:
+                  - button "Story by 0iego.saa, not seen" [ref=e198] [cursor=pointer]:
+                    - link [ref=e203]:
+                      - img "0iego.saa's profile picture" [ref=e204]
+                    - generic [ref=e205]: 0iego.saa
+                - listitem [ref=e208]:
+                  - button "Story by el_rovlex, not seen" [ref=e209] [cursor=pointer]:
+                    - link [ref=e214]:
+                      - img "el_rovlex's profile picture" [ref=e215]
+                    - generic [ref=e216]: el_rovlex
+                - listitem [ref=e219]:
+                  - button "Story by gabmeza.png, not seen" [ref=e220] [cursor=pointer]:
+                    - link [ref=e225]:
+                      - img "gabmeza.png's profile picture" [ref=e226]
+                    - generic [ref=e227]: gabmeza.png
+                - listitem [ref=e230]:
+                  - button "Story by blue_records333, not seen" [ref=e231] [cursor=pointer]:
+                    - link [ref=e236]:
+                      - img "blue_records333's profile picture" [ref=e237]
+                    - generic [ref=e238]: blue_records333
+                - listitem [ref=e241]:
+                  - button "Story by davidjcuio, not seen" [ref=e242] [cursor=pointer]:
+                    - link [ref=e247]:
+                      - img "davidjcuio's profile picture" [ref=e248]
+                    - generic [ref=e249]: davidjcuio
+                - listitem [ref=e252]:
+                  - button "Story by galapagosmystic, not seen" [ref=e253] [cursor=pointer]:
+                    - link [ref=e258]:
+                      - img "galapagosmystic's profile picture" [ref=e259]
+                    - generic [ref=e260]: galapagosmystic
+                - listitem [ref=e263]:
+                  - button "Story by unaclaudiapalma, not seen" [ref=e264] [cursor=pointer]:
+                    - link [ref=e269]:
+                      - img "unaclaudiapalma's profile picture" [ref=e270]
+                    - generic [ref=e271]: unaclaudiapalma
+                - listitem [ref=e274]:
+                  - button "Story by hno613613, not seen" [ref=e275] [cursor=pointer]:
+                    - link [ref=e280]:
+                      - img "hno613613's profile picture" [ref=e281]
+                    - generic [ref=e282]: hno613613
+              - button "Next" [ref=e285] [cursor=pointer]
+            - generic [ref=e288]:
+              - generic [ref=e290]:
+                - article [ref=e291]:
+                  - generic [ref=e292]:
+                    - generic [ref=e294]:
+                      - button [ref=e299] [cursor=pointer]:
+                        - link [ref=e301]:
+                          - img "letal_______'s profile picture" [ref=e302]
+                      - generic [ref=e306]:
+                        - generic [ref=e307]:
+                          - generic [ref=e309]:
+                            - link "letal_______" [ref=e315] [cursor=pointer]:
+                              - /url: /letal_______/
+                            - img "Verified" [ref=e320]
+                          - generic [ref=e322]:
+                            - generic [ref=e323]: •
+                            - link [ref=e326] [cursor=pointer]:
+                              - /url: /p/Dd4pK-vD0qN/
+                              - time [ref=e328]: 13h
+                        - link "Quito, Ecudor" [ref=e332] [cursor=pointer]:
+                          - /url: /explore/locations/844877036/quito-ecudor/
+                      - button [ref=e335] [cursor=pointer]:
+                        - img "More options" [ref=e338]
+                    - generic [ref=e342]:
+                      - generic [ref=e352]:
+                        - list [ref=e354]:
+                          - listitem [ref=e355]
+                          - listitem [ref=e356]:
+                            - group "Video player" [ref=e987]:
+                              - slider "Adjust volume" [ref=e988]:
+                                - button [ref=e992] [cursor=pointer]:
+                                  - img "Audio is muted" [ref=e993]
+                          - listitem [ref=e363]:
+                            - group "Video player" [ref=e1006]:
+                              - generic "Play" [ref=e1010] [cursor=pointer]
+                              - slider "Adjust volume" [ref=e1011]:
+                                - button [ref=e1015] [cursor=pointer]:
+                                  - img "Audio is muted" [ref=e1016]
+                        - button "Next" [ref=e370] [cursor=pointer]
+                      - button [ref=e375]:
+                        - button [ref=e377] [cursor=pointer]:
+                          - generic [ref=e379]:
+                            - link [ref=e380]
+                            - img "Repost" [ref=e382]
+                    - generic [ref=e387]:
+                      - generic [ref=e390]:
+                        - button "Go to slide 1" [ref=e391] [cursor=pointer]
+                        - button "Go to slide 2" [ref=e392] [cursor=pointer]
+                        - button "Go to slide 3" [ref=e393] [cursor=pointer]
+                        - button "Go to slide 4" [ref=e394] [cursor=pointer]
+                        - button "Go to slide 5" [ref=e395] [cursor=pointer]
+                      - generic [ref=e397]:
+                        - generic [ref=e398]:
+                          - generic [ref=e399]:
+                            - button [ref=e402] [cursor=pointer]:
+                              - img "Like" [ref=e405]
+                            - button "172" [ref=e407] [cursor=pointer]
+                            - button [ref=e409] [cursor=pointer]:
+                              - img "Comment" [ref=e411]
+                            - button "4" [ref=e413] [cursor=pointer]
+                            - button [ref=e414] [cursor=pointer]:
+                              - img "Repost" [ref=e415]
+                            - button "7" [ref=e417] [cursor=pointer]
+                            - button [ref=e418] [cursor=pointer]:
+                              - img "Share" [ref=e419]
+                          - button [ref=e424] [cursor=pointer]:
+                            - button [ref=e425]:
+                              - img "Save" [ref=e427]
+                        - generic [ref=e430]:
+                          - link [ref=e432] [cursor=pointer]:
+                            - /url: /p/Dd4pK-vD0qN/liked_by/
+                            - button [ref=e435]:
+                              - link [ref=e436]
+                          - generic [ref=e438]:
+                            - text: Liked by
+                            - link "sb_siete_" [ref=e439] [cursor=pointer]:
+                              - /url: /sb_siete_/
+                            - text: and
+                            - link "171 others" [ref=e440] [cursor=pointer]:
+                              - /url: /p/Dd4pK-vD0qN/liked_by/
+                        - generic [ref=e442]:
+                          - link "letal_______ Verified" [ref=e447] [cursor=pointer]:
+                            - /url: /letal_______/
+                            - generic [ref=e449]:
+                              - generic [ref=e450]: letal_______
+                              - img "Verified" [ref=e452]
+                          - generic [ref=e456]:
+                            - link "@festivaledoc" [ref=e457] [cursor=pointer]:
+                              - /url: /festivaledoc/
+                            - text: vamo a darle 🇪🇨
+                - article [ref=e458]:
+                  - generic [ref=e459]:
+                    - generic [ref=e461]:
+                      - generic [ref=e465]:
+                        - button [ref=e470] [cursor=pointer]:
+                          - link [ref=e472]:
+                            - img "goatsongscollection's profile picture" [ref=e473]
+                        - generic [ref=e476]:
+                          - generic [ref=e477]:
+                            - generic [ref=e478]:
+                              - generic [ref=e480]:
+                                - link "goatsongscollection" [ref=e486] [cursor=pointer]:
+                                  - /url: /goatsongscollection/
+                                - img "Verified" [ref=e491]
+                              - generic [ref=e493]:
+                                - generic [ref=e494]: •
+                                - link [ref=e497] [cursor=pointer]:
+                                  - /url: /p/Ddli4ryzb6O/
+                                  - time [ref=e499]: 1w
+                            - generic [ref=e500]: Suggested for you
+                          - button "Follow" [ref=e505] [cursor=pointer]
+                        - button [ref=e508] [cursor=pointer]:
+                          - img "More options" [ref=e511]
+                      - link [ref=e1022] [cursor=pointer]:
+                        - /url: /reels/Ddli4ryzb6O/
+                        - group "Video player" [ref=e1034]:
+                          - generic "Play" [ref=e1038]
+                          - slider "Adjust volume" [ref=e1039]:
+                            - button [ref=e1043]:
+                              - img "Audio is muted" [ref=e1044]
+                    - generic [ref=e525]:
+                      - generic [ref=e526]:
+                        - generic [ref=e527]:
+                          - button [ref=e530] [cursor=pointer]:
+                            - img "Like" [ref=e533]
+                          - button "16.9K" [ref=e535] [cursor=pointer]
+                          - button [ref=e537] [cursor=pointer]:
+                            - img "Comment" [ref=e539]
+                          - button "496" [ref=e541] [cursor=pointer]
+                          - button [ref=e542] [cursor=pointer]:
+                            - img "Repost" [ref=e543]
+                          - button "824" [ref=e545] [cursor=pointer]
+                          - button [ref=e546] [cursor=pointer]:
+                            - img "Share" [ref=e547]
+                        - button [ref=e552] [cursor=pointer]:
+                          - button [ref=e553]:
+                            - img "Save" [ref=e555]
+                      - generic [ref=e558]:
+                        - link [ref=e560] [cursor=pointer]:
+                          - /url: /p/Ddli4ryzb6O/liked_by/
+                          - button [ref=e563]:
+                            - link [ref=e564]
+                        - generic [ref=e566]:
+                          - text: Liked by
+                          - link "1010_music" [ref=e567] [cursor=pointer]:
+                            - /url: /1010_music/
+                          - text: and
+                          - link "16.9K others" [ref=e568] [cursor=pointer]:
+                            - /url: /p/Ddli4ryzb6O/liked_by/
+                      - generic [ref=e570]:
+                        - link "goatsongscollection Verified" [ref=e575] [cursor=pointer]:
+                          - /url: /goatsongscollection/
+                          - generic [ref=e577]:
+                            - generic [ref=e578]: goatsongscollection
+                            - img "Verified" [ref=e580]
+                        - generic [ref=e582]:
+                          - generic [ref=e583]: When synth-pop trailblazers Information Society took the stage live on MTV in 1988 to perform their smash hit "What's On
+                          - generic [ref=e584]:
+                            - text: ...
+                            - button "more" [ref=e585] [cursor=pointer]
+                      - button "See translation" [ref=e588] [cursor=pointer]
+                - article [ref=e1046]:
+                  - generic [ref=e1047]:
+                    - generic [ref=e1049]:
+                      - generic [ref=e1053]:
+                        - button [ref=e1058] [cursor=pointer]:
+                          - link [ref=e1060]:
+                            - img "_seereendipia_'s profile picture" [ref=e1061]
+                        - generic [ref=e1065]:
+                          - generic [ref=e1066]:
+                            - link "_seereendipia_" [ref=e1074] [cursor=pointer]:
+                              - /url: /_seereendipia_/
+                            - generic [ref=e1078]:
+                              - generic [ref=e1079]: •
+                              - link [ref=e1082] [cursor=pointer]:
+                                - /url: /p/Dd2ypVntEM9/
+                                - time [ref=e1084]: 1d
+                          - link "Original audio" [ref=e1088] [cursor=pointer]:
+                            - /url: /reels/audio/38637627322550907/
+                        - button [ref=e1094] [cursor=pointer]:
+                          - img "More options" [ref=e1097]
+                      - link [ref=e1101] [cursor=pointer]:
+                        - /url: /reels/Dd2ypVntEM9/
+                        - group "Video player" [ref=e1118]:
+                          - generic "Play" [ref=e1122]
+                          - slider "Adjust volume" [ref=e1123]:
+                            - button [ref=e1127]:
+                              - img "Audio is muted" [ref=e1128]
+                    - generic [ref=e1132]:
+                      - generic [ref=e1133]:
+                        - generic [ref=e1134]:
+                          - button [ref=e1137] [cursor=pointer]:
+                            - img "Like" [ref=e1140]
+                          - button [ref=e1143] [cursor=pointer]:
+                            - img "Comment" [ref=e1145]
+                          - button "5" [ref=e1147] [cursor=pointer]
+                          - button [ref=e1148] [cursor=pointer]:
+                            - img "Repost" [ref=e1149]
+                          - button "5" [ref=e1151] [cursor=pointer]
+                          - button [ref=e1152] [cursor=pointer]:
+                            - img "Share" [ref=e1153]
+                        - button [ref=e1158] [cursor=pointer]:
+                          - button [ref=e1159]:
+                            - img "Save" [ref=e1161]
+                      - generic [ref=e1164]:
+                        - link [ref=e1166] [cursor=pointer]:
+                          - /url: /p/Dd2ypVntEM9/liked_by/
+                          - generic [ref=e1168]:
+                            - button [ref=e1169]:
+                              - link [ref=e1170]
+                            - button [ref=e1171]:
+                              - link [ref=e1172]
+                            - button [ref=e1173]:
+                              - link [ref=e1174]
+                        - generic [ref=e1176]:
+                          - text: Liked by
+                          - link "santiii.mmm" [ref=e1177] [cursor=pointer]:
+                            - /url: /santiii.mmm/
+                          - text: and
+                          - link "others" [ref=e1178] [cursor=pointer]:
+                            - /url: /p/Dd2ypVntEM9/liked_by/
+                      - generic [ref=e1179]:
+                        - link "_seereendipia_" [ref=e1184] [cursor=pointer]:
+                          - /url: /_seereendipia_/
+                        - generic [ref=e1188]:
+                          - generic [ref=e1189]: Un pequeño storytime de la serendipia más grande de mi vida
+                          - generic [ref=e1190]:
+                            - text: ...
+                            - button "more" [ref=e1191] [cursor=pointer]
+              - progressbar [ref=e591]:
+                - img "Loading..." [ref=e592]
+          - generic [ref=e606]:
+            - generic [ref=e612]:
+              - button [disabled] [ref=e615]:
+                - link [disabled] [ref=e617] [cursor=pointer]:
+                  - /url: /tdf.records.label/
+                  - img "tdf.records.label's profile picture" [ref=e618]
+              - generic [ref=e621]:
+                - link "tdf.records.label" [ref=e623] [cursor=pointer]:
+                  - /url: /tdf.records.label/
+                - generic [ref=e624]: TDF Records
+              - button "Switch" [ref=e630] [cursor=pointer]
+            - generic [ref=e633]:
+              - generic [ref=e634]:
+                - generic [ref=e635]: Suggested for you
+                - link "See all" [ref=e637] [cursor=pointer]:
+                  - /url: /explore/people/
+              - generic [ref=e642]:
+                - generic [ref=e646]:
+                  - link [ref=e653] [cursor=pointer]:
+                    - /url: /nicolemeza.nyc/
+                    - img "nicolemeza.nyc's profile picture" [ref=e654]
+                  - generic [ref=e657]:
+                    - link "Nicole Meza" [ref=e662] [cursor=pointer]:
+                      - /url: /nicolemeza.nyc/
+                    - generic [ref=e668]:
+                      - generic [ref=e669]:
+                        - button [ref=e670] [cursor=pointer]:
+                          - link [ref=e671]
+                        - button [ref=e672] [cursor=pointer]:
+                          - link [ref=e673]
+                      - generic [ref=e674]: Followed by mateojaramillomusic + 1 more
+                  - button "Follow" [ref=e677] [cursor=pointer]
+                - generic [ref=e683]:
+                  - link [ref=e690] [cursor=pointer]:
+                    - /url: /jumokerecords/
+                    - img "jumokerecords's profile picture" [ref=e691]
+                  - generic [ref=e694]:
+                    - link "Jumoke Records" [ref=e699] [cursor=pointer]:
+                      - /url: /jumokerecords/
+                    - generic [ref=e705]:
+                      - generic [ref=e706]:
+                        - button [ref=e707] [cursor=pointer]:
+                          - link [ref=e708]
+                        - button [ref=e709] [cursor=pointer]:
+                          - link [ref=e710]
+                      - generic [ref=e711]: Followed by matre_yiu + 1 more
+                  - button "Follow" [ref=e714] [cursor=pointer]
+                - generic [ref=e720]:
+                  - link [ref=e727] [cursor=pointer]:
+                    - /url: /ceres.nourishment/
+                    - img "ceres.nourishment's profile picture" [ref=e728]
+                  - generic [ref=e731]:
+                    - link "Pamela Rosero" [ref=e736] [cursor=pointer]:
+                      - /url: /ceres.nourishment/
+                    - generic [ref=e742]:
+                      - generic [ref=e743]:
+                        - button [ref=e744] [cursor=pointer]:
+                          - link [ref=e745]
+                        - button [ref=e746] [cursor=pointer]:
+                          - link [ref=e747]
+                      - generic [ref=e748]: Followed by lasabejasclubdevinilos + 3 more
+                  - button "Follow" [ref=e751] [cursor=pointer]
+                - generic [ref=e757]:
+                  - link [ref=e764] [cursor=pointer]:
+                    - /url: /thugstarough1017/
+                    - img "thugstarough1017's profile picture" [ref=e765]
+                  - generic [ref=e768]:
+                    - link "Phrahim" [ref=e773] [cursor=pointer]:
+                      - /url: /thugstarough1017/
+                    - generic [ref=e777]: Suggested for you
+                  - button "Follow" [ref=e781] [cursor=pointer]
+                - generic [ref=e787]:
+                  - link [ref=e794] [cursor=pointer]:
+                    - /url: /geomauec/
+                    - img "geomauec's profile picture" [ref=e795]
+                  - generic [ref=e798]:
+                    - link "Mauricio Rivadeneira" [ref=e803] [cursor=pointer]:
+                      - /url: /geomauec/
+                    - generic [ref=e809]:
+                      - button [ref=e811] [cursor=pointer]:
+                        - link [ref=e812]
+                      - generic [ref=e813]: Followed by davidedrums.drummer
+                  - button "Follow" [ref=e816] [cursor=pointer]
+            - generic [ref=e820]:
+              - navigation [ref=e821]:
+                - list [ref=e822]:
+                  - listitem [ref=e823]:
+                    - link "About" [ref=e824] [cursor=pointer]:
+                      - /url: https://about.instagram.com/
+                    - text: ·
+                  - listitem [ref=e826]:
+                    - link "Help" [ref=e827] [cursor=pointer]:
+                      - /url: https://help.instagram.com/
+                    - text: ·
+                  - listitem [ref=e829]:
+                    - link "Press" [ref=e830] [cursor=pointer]:
+                      - /url: https://about.instagram.com/blog/
+                    - text: ·
+                  - listitem [ref=e832]:
+                    - link "API" [ref=e833] [cursor=pointer]:
+                      - /url: https://developers.facebook.com/docs/instagram
+                    - text: ·
+                  - listitem [ref=e835]:
+                    - link "Jobs" [ref=e836] [cursor=pointer]:
+                      - /url: https://about.instagram.com/about-us/careers
+                    - text: ·
+                  - listitem [ref=e838]:
+                    - link "Privacy" [ref=e839] [cursor=pointer]:
+                      - /url: /legal/privacy/
+                    - text: ·
+                  - listitem [ref=e841]:
+                    - link "Terms" [ref=e842] [cursor=pointer]:
+                      - /url: /legal/terms/
+                    - text: ·
+                  - listitem [ref=e844]:
+                    - link "Locations" [ref=e845] [cursor=pointer]:
+                      - /url: /explore/locations/
+                    - text: ·
+                  - listitem [ref=e847]:
+                    - link "Language" [ref=e848] [cursor=pointer]:
+                      - /url: /language/preferences/
+                    - text: ·
+                  - listitem [ref=e850]:
+                    - link "Meta Verified" [ref=e851] [cursor=pointer]:
+                      - /url: /accounts/meta_verified/?entrypoint=web_footer
+              - generic [ref=e853]: © 2026 Instagram from Meta
+      - contentinfo [ref=e855]:
+        - generic [ref=e856]:
+          - generic [ref=e858]:
+            - link "Meta" [ref=e860] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=e863] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=e866] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=e869] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=e872] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=e875] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=e878] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=e881] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=e884] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=e887] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=e890] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=e893] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=e896] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=e899] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=e902] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=e905] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=e907]:
+            - generic [ref=e908] [cursor=pointer]:
+              - generic [ref=e909]:
+                - generic [ref=e910]: English
+                - img "Down chevron icon" [ref=e913]
+              - combobox "Switch Display Language" [ref=e915]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=e916]: © 2026 Instagram from Meta
+  - button [ref=e942] [cursor=pointer]:
+    - generic "Messages - 10 new notifications" [ref=e943]:
+      - generic [ref=e944]:
+        - generic [ref=e946]:
+          - img "Messages" [ref=e947]
+          - generic "Direct messaging - 10 new notifications link" [ref=e950]: 9+
+        - generic [ref=e953]: Messages
+      - generic [ref=e954]:
+        - button [ref=e955]:
+          - img "10 unread chats" [ref=e957]
+        - button "User avatar David Márquez" [ref=e962]:
+          - img "User avatar" [ref=e965]
+        - button "User avatar Andrés Martín Arauz" [ref=e967]:
+          - img "User avatar" [ref=e970]
+        - button "User avatar Limberg Steven Garcia Alava" [ref=e972]:
+          - img "User avatar" [ref=e975]

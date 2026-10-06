@@ -1,0 +1,311 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 434,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "4b029f2c92714dffb4f24e2d5e665d49a5e18491",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6jprtX",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 567,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Point migration provenance at an ancestor**\n\nThe recorded introduction commit is not an ancestor of the reviewed SHA: `git merge-base --is-ancestor 062143d3cb98befb6a52a987c7d42980f70313f3 882918d942e68a801d07302234a22165e044c7e5` exits 1. The guarded release path in `scripts/production-release.mjs` explicitly rejects that condition, so any production release containing this manifest will stop before assembling migrations. Record a commit that is actually in this change's ancestry.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044532247",
+                      "createdAt": "2026-09-18T07:01:05Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Verified the actual pushed PR head 1344f0f266529446c52c97eca9fca842e3d58637: git merge-base --is-ancestor 062143d3cb98befb6a52a987c7d42980f70313f3 HEAD exits 0. The cited 882918d commit is not this PR head. The introduction was preserved by normal merges; all 109 migrations and schema replay passed against the isolated restored production schema. No migration provenance was rewritten.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044699976",
+                      "createdAt": "2026-09-18T07:28:25Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwNzoyODoyNVrO8RU5SA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jprth",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/Server.hs",
+                "line": 9347,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Update the bundled artist importer to send retry keys**\n\nRequiring this header makes the repository's `tdf-hq/scripts/create_artists_from_list.sh` unusable: its `create_party` request at lines 52\u201355 still posts to `/parties` without `Idempotency-Key`, so every artist receives this 400 response and no profiles are created. Add a stable per-artist operation key to that caller as part of making the endpoint mandatory.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044532265",
+                      "createdAt": "2026-09-18T07:01:05Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 497286e82 (included in 1344f0f2). The importer sends stable source-operation/row keys, requires explicitly reviewed person/band/org classifications, and stops on HTTP failures. Three executable importer regressions passed. It deliberately leaves artist profile creation to the existing administrative directory: the legacy profile upsert could erase later edits on retries, so the batch no longer calls it. No import was executed against production.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044700238",
+                      "createdAt": "2026-09-18T07:28:28Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwNzoyODoyOFrO8RU6Tg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jprto",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq/src/TDF/ServerLiveSessions.hs",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Check accepted retries before mutable catalog validation**\n\nIf an accepted intake references a genre or instrument that is later unpublished or deactivated, a retry after a lost response now fails here with 400 before the request receipt is consulted. The intake has already been committed, but the client is told the retry failed instead of receiving the stored success promised by the idempotency contract; perform the receipt comparison before revalidating mutable catalog state for a new submission.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044532276",
+                      "createdAt": "2026-09-18T07:01:05Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 497286e82. Accepted payload receipts are checked under the request transaction lock before mutable genre/instrument validation. The PostgreSQL regression seeds an accepted catalog selection whose source is no longer available and verifies replay success with unchanged row counts. All 11 integration examples passed.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044700582",
+                      "createdAt": "2026-09-18T07:28:30Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwNzoyODozMFrO8RU7pg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jprt3",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq/src/TDF/ServerLiveSessions.hs",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Verify rider storage on accepted retries**\n\nFor an exact retry with a rider, this branch returns success immediately and never calls `storeRiderFile`, where the stored bytes are actually checked. If the saved file is missing or corrupted\u2014or the retry reaches an application node without the local file\u2014the API reports success while the persisted intake still points at unavailable or incorrect storage, contrary to the documented retry verification behavior.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044532294",
+                      "createdAt": "2026-09-18T07:01:05Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 497286e82. An accepted retry verifies rider storage and its saved path, restores missing bytes only from identical accepted content, and returns 409 for conflicting bytes without overwriting them. The PostgreSQL test covers missing-file restoration and corruption with unchanged database counts; all 11 examples passed.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044700985",
+                      "createdAt": "2026-09-18T07:28:33Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwNzoyODozM1rO8RU9OQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jqMv0",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq-ui/src/pages/PartiesPage.tsx",
+                "line": 102,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Preserve the retry key while contact creation is pending**\n\nIf the user closes this dialog via Cancel, Escape, or the backdrop while the create mutation is pending, this effect immediately discards the request key because those close paths remain enabled. When the server accepted the request but the client later observes a timeout or lost response, reopening and retrying uses a new key and creates a duplicate contact instead of replaying the first result. Prevent closing while the mutation is pending, or defer resetting the key until the request has definitively settled.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044734413",
+                      "createdAt": "2026-09-18T07:33:53Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 688575d8c: the contact dialog now guards submission synchronously and blocks Cancel, Escape, and backdrop dismissal until settlement. The actual contact, company, and lead dialogs passed all three pending-dismissal tests; TypeScript and focused lint also passed.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045020673",
+                      "createdAt": "2026-09-18T08:18:04Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwODoxODowNFrO8RoeAQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jq40Q",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 567,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Point migration provenance at an ancestor**\n\nFresh evidence for this review target: `git merge-base --is-ancestor 062143d3cb98befb6a52a987c7d42980f70313f3 75965844a0cbb868e06563bd6720d0a8f10be752` exits 1. The guarded release path in `scripts/production-release.mjs` rejects any `introducedBy` commit that is not an ancestor of the release SHA, so production releases of this commit stop while resolving the migration manifest. Record a commit in this target's ancestry.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045005283",
+                      "createdAt": "2026-09-18T08:16:04Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Verified against actual branch head 4b029f2c9: git merge-base --is-ancestor 062143d3cb98befb6a52a987c7d42980f70313f3 HEAD exits 0. The earlier dc2398353 head also passed production-migrations CI. The cited 75965844 target is not this branch head. The introduction commit is preserved because this migration has already been applied and replayed in staging.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045444423",
+                      "createdAt": "2026-09-18T09:20:20Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwOToyMDoyMFrO8SCVRw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jq41O",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/ServerLiveSessions.hs",
+                "line": 230,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Hide CRM-only contact reuse from Scheduling-only users**\n\nFor Scheduling-only roles such as Engineer, Teacher, Artist, or Student, the Live Sessions feature and its `live_session` party selector are both authorized through `ModuleScheduling`, so the form lets these users search for and select an existing contact. This new check then rejects that selected contact with 403 because those roles lack `ModuleCRM`, making an offered workflow fail only at final submission; hide the selector for users without CRM access or align its authorization with this restriction.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045005357",
+                      "createdAt": "2026-09-18T08:16:05Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 4b029f2c9: existing-contact selection is shown only when the session grants CRM, and the submission omits existing IDs without that authority. Both permission variants are covered in the rendered form tests. Seven intake tests, TypeScript, and focused lint passed.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045444551",
+                      "createdAt": "2026-09-18T09:20:21Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwOToyMDoyMVrO8SCVxw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jq41g",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/ServerLiveSessions.hs",
+                "line": 257,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Stop promising login creation for new musicians**\n\nFor every musician without a `partyId`, this path now deliberately creates only a contact and no credentials, but `LiveSessionIntakePage.tsx` still displays \u201cSe crear\u00e1 usuario y contacto autom\u00e1ticamente\u201d for that same case. Users can therefore finish intake believing a login was provisioned when none exists; update the form messaging to describe contact-only creation.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045005378",
+                      "createdAt": "2026-09-18T08:16:05Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 4b029f2c9: the form now says it creates a contact for this session and no longer promises login creation. Both permission variants assert this copy; seven intake tests, TypeScript, and focused lint passed.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045444612",
+                      "createdAt": "2026-09-18T09:20:21Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwOToyMDoyMVrO8SCWBA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jsEge",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
+                "line": 169,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Reset the retry key when abandoning the intake**\n\nPersisting `submissionKey` makes the owner reuse it indefinitely because the form's Cancel action only navigates back and never clears the draft or rotates the key. If the server accepted a request but its response was lost, then the user changes the form or can no longer reattach the same rider, the retry returns 409; pressing Cancel and reopening restores this same key, so every new submission remains blocked. Add an explicit abandonment path that clears the persisted draft or starts a fresh key.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045471032",
+                      "createdAt": "2026-09-18T09:24:17Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Added an explicit discard confirmation: Cancel now explains that an uncertain send may already be saved, offers continued editing, and clears the owned draft/rotates the key only after explicit discard. Pending sends cannot be dismissed. The rendered abandonment/reopen regression and seven other intake tests pass, as do TypeScript and focused lint.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045554378",
+                      "createdAt": "2026-09-18T09:35:00Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwOTozNTowMFrO8SJCyg=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwOToyNDoxN1rOo7BIHg=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

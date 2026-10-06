@@ -1,0 +1,7 @@
+ ...116-minimized-provider-notification-evidence.md | 107 +++++++++
+ .../notification-minimization-2026-09-14.md        |  88 +++++++
+ docs/payments/operator-runbooks.md                 |   4 +
+ tdf-hq/src/TDF/Commerce/ProviderEventStore.hs      | 142 ++++++++++-
+ tdf-hq/src/TDF/Server/ServiceStorefront.hs         |   2 +-
+ tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs      | 266 ++++++++++++++++++++-
+ 6 files changed, 598 insertions(+), 11 deletions(-)

@@ -1,0 +1,169 @@
+- generic [active] [ref=e1]:
+  - link "Saltar al contenido principal" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e4]:
+    - link "Saltar al contenido principal" [ref=e5] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=e6]:
+      - generic [ref=e8]:
+        - generic [ref=e9]:
+          - link "Ir a TDF" [ref=e10] [cursor=pointer]:
+            - /url: /tdf
+            - img "TDF Records logo"
+          - navigation "Navegación principal" [ref=e11]:
+            - link "Buscar" [ref=e12] [cursor=pointer]:
+              - /url: /buscar
+            - link "TDF" [ref=e13] [cursor=pointer]:
+              - /url: /tdf
+            - link "TDF Mobile" [ref=e14] [cursor=pointer]:
+              - /url: /app
+            - link "Servicios" [ref=e15] [cursor=pointer]:
+              - /url: /comercio
+            - link "Comunidad" [ref=e16] [cursor=pointer]:
+              - /url: /fans
+            - link "Tienda" [ref=e17] [cursor=pointer]:
+              - /url: /marketplace
+            - link "Domo" [ref=e18] [cursor=pointer]:
+              - /url: /domo-del-pululahua
+            - link "Reservar" [ref=e19] [cursor=pointer]:
+              - /url: /reservar
+            - link "DJ Booth" [ref=e20] [cursor=pointer]:
+              - /url: /dj-booth
+            - link "Lanzamientos" [ref=e21] [cursor=pointer]:
+              - /url: /records
+        - generic [ref=e22]:
+          - button "Abrir menú de sesión" [ref=e23] [cursor=pointer]:
+            - generic [ref=e24]: D
+          - button "Más opciones" [ref=e25] [cursor=pointer]
+    - main [ref=e28]:
+      - generic [ref=e29]:
+        - generic [ref=e32]:
+          - generic [ref=e33]: Ecuador · Quito · Latinoamérica
+          - heading "Encuentra a la gente y las oportunidades que hacen música" [level=1] [ref=e35]
+          - heading "Profesionales, artistas, bandas, venues, eventos, servicios y clasificados, primero por ciudad y cercanía." [level=6] [ref=e36]
+          - generic [ref=e38]:
+            - generic [ref=e40]:
+              - generic: ¿Qué necesitas?
+              - generic [ref=e41]:
+                - combobox "¿Qué necesitas?" [ref=e42]
+                - group:
+                  - generic: ¿Qué necesitas?
+            - generic [ref=e43]:
+              - generic: Ciudad
+              - generic [ref=e44]:
+                - combobox "Ciudad" [ref=e45] [cursor=pointer]
+                - textbox
+                - group:
+                  - generic: Ciudad
+            - button [ref=e46] [cursor=pointer]
+          - generic [ref=e50]:
+            - button [ref=e51] [cursor=pointer]
+            - generic [ref=e55]: Solo con tu permiso. Las ubicaciones privadas nunca se muestran.
+        - generic [ref=e57]:
+          - generic [ref=e59]:
+            - generic [ref=e60]:
+              - generic: Profesión
+              - generic [ref=e61]:
+                - combobox "Profesión" [ref=e62] [cursor=pointer]
+                - textbox
+                - group:
+                  - generic: Profesión
+            - generic [ref=e63]:
+              - generic: Servicio
+              - generic [ref=e64]:
+                - combobox "Servicio" [ref=e65] [cursor=pointer]
+                - textbox
+                - group:
+                  - generic: Servicio
+            - generic [ref=e66]:
+              - generic: Instrumento
+              - generic [ref=e67]:
+                - combobox "Instrumento" [ref=e68] [cursor=pointer]
+                - textbox
+                - group:
+                  - generic: Instrumento
+            - generic [ref=e69]:
+              - generic: Género
+              - generic [ref=e70]:
+                - combobox "Género" [ref=e71] [cursor=pointer]
+                - textbox
+                - group:
+                  - generic: Género
+            - generic [ref=e72] [cursor=pointer]:
+              - checkbox "Remoto" [ref=e75]
+              - generic [ref=e78]: Remoto
+            - generic [ref=e79] [cursor=pointer]:
+              - checkbox "Disponible" [ref=e82]
+              - generic [ref=e85]: Disponible
+            - button "Limpiar filtros" [ref=e86] [cursor=pointer]
+          - generic [ref=e87]:
+            - tablist "Tipos de resultado" [ref=e91]:
+              - tab "Todo" [selected] [ref=e92] [cursor=pointer]
+              - tab "Perfiles" [ref=e93] [cursor=pointer]
+              - tab "Clasificados" [ref=e94] [cursor=pointer]
+              - tab "Eventos" [ref=e95] [cursor=pointer]
+              - tab "Venues" [ref=e96] [cursor=pointer]
+            - group "Vista de resultados" [ref=e98]:
+              - button "Lista" [pressed] [ref=e99] [cursor=pointer]
+              - button "Cuadrícula" [ref=e102] [cursor=pointer]
+              - button "Mapa" [ref=e105] [cursor=pointer]
+          - heading "Resultados orgánicos · 0" [level=2] [ref=e108]
+          - generic [ref=e109]:
+            - progressbar "Buscando resultados" [ref=e110]
+            - paragraph [ref=e113]: Buscando en TDF…
+      - complementary "TDF Mobile" [ref=e114]:
+        - generic [ref=e115]:
+          - paragraph [ref=e116]: Construyamos TDF Mobile juntos
+          - paragraph [ref=e117]: Prueba la app en tu día a día y cuéntanos qué mejorar. Consulta el acceso disponible para tu teléfono.
+          - link "Quiero participar" [ref=e119] [cursor=pointer]:
+            - /url: /app?surface=authenticated_home
+    - contentinfo [ref=e120]:
+      - generic [ref=e121]:
+        - complementary "TDF Mobile" [ref=e122]:
+          - link "TDF Mobile / Testers" [ref=e125] [cursor=pointer]:
+            - /url: /app?surface=footer
+        - generic [ref=e126]:
+          - generic [ref=e127]:
+            - heading "TDF Records" [level=6] [ref=e128]
+            - paragraph [ref=e129]: Si te atoras, te dejamos una salida clara desde esta página para que sigas avanzando.
+            - generic [ref=e130]:
+              - link "Crear cuenta" [ref=e131] [cursor=pointer]:
+                - /url: /login?signup=1&redirect=/fans
+              - link "WhatsApp" [ref=e132] [cursor=pointer]:
+                - /url: https://wa.me/593984755301?text=Hola%20quiero%20reservar%20un%20servicio%20en%20TDF%20Records
+          - navigation "Explorar TDF" [ref=e133]:
+            - generic [ref=e134]: Explorar
+            - generic [ref=e135]:
+              - link "Buscar" [ref=e136] [cursor=pointer]:
+                - /url: /buscar
+              - link "TDF" [ref=e137] [cursor=pointer]:
+                - /url: /tdf
+              - link "TDF Mobile" [ref=e138] [cursor=pointer]:
+                - /url: /app
+              - link "Servicios" [ref=e139] [cursor=pointer]:
+                - /url: /comercio
+              - link "Comunidad" [ref=e140] [cursor=pointer]:
+                - /url: /fans
+              - link "Tienda" [ref=e141] [cursor=pointer]:
+                - /url: /marketplace
+              - link "Domo" [ref=e142] [cursor=pointer]:
+                - /url: /domo-del-pululahua
+              - link "Reservar" [ref=e143] [cursor=pointer]:
+                - /url: /reservar
+              - link "DJ Booth" [ref=e144] [cursor=pointer]:
+                - /url: /dj-booth
+              - link "Lanzamientos" [ref=e145] [cursor=pointer]:
+                - /url: /records
+              - link "Sugerencias" [ref=e146] [cursor=pointer]:
+                - /url: /feedback
+              - link "Donar" [ref=e147] [cursor=pointer]:
+                - /url: /donar
+          - generic [ref=e148]:
+            - generic [ref=e149]: Gestión de mensajes
+            - generic [ref=e150]:
+              - link "Consentimiento WhatsApp" [ref=e151] [cursor=pointer]:
+                - /url: /whatsapp/consentimiento
+              - link "Confirmación WhatsApp" [ref=e152] [cursor=pointer]:
+                - /url: /whatsapp/ok
+          - link "Ir a login" [ref=e154] [cursor=pointer]:
+            - /url: /login?redirect=%2Finicio

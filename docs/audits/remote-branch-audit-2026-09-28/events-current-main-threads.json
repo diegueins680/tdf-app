@@ -1,0 +1,48 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "headRefOid": "23ff8f588bbdefd4d14e0d2a39cc39953d2c114f",
+          "reviewDecision": "APPROVED",
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6nx9wW",
+                "isResolved": false,
+                "path": "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
+                "line": 651,
+                "comments": {
+                  "nodes": [
+                    {
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Hide task links until event operations are enabled**\n\nThis renders the task CTA for every valid logistics activity even though the adapter migrations are deliberately absent from the production manifest and `event.operations.api` defaults to disabled. In that deployment state, clicking the newly exposed button always reaches `requireEventOperationsEnabled`, receives a 404 `feature_disabled`, and leaves the user on the generic task error screen. Gate the link on actual feature availability or defer exposing it until activation.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/465#discussion_r4151212112"
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6nx9wa",
+                "isResolved": false,
+                "path": "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+                "line": 236,
+                "comments": {
+                  "nodes": [
+                    {
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Refresh follow state after a late successful mutation**\n\nWhen a follow/unfollow request succeeds after the user changes profile or otherwise changes the location key, `isCurrent()` is false and this early return skips every cache invalidation. The server mutation has still committed, but the shared `['fan-follows', viewerId]` query remains stale across the newly rendered profile and even after returning to the original one, so the UI can offer the opposite action until an unrelated refetch occurs. Keep the navigation-specific analytics/resume effects fenced, but invalidate the shared follow data after every successful mutation.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/465#discussion_r4151212117"
+                    }
+                  ]
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0xMC0wMVQwMjoyMjo0NVrOp8fcGg=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

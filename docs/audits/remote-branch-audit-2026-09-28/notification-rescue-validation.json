@@ -1,0 +1,18 @@
+{
+  "source_pr": 441,
+  "source_head": "6449b75fe5387fcb1b80e55f4a71602a3fed2403",
+  "file": "docs/notifications/navigation-2026-09-17.md",
+  "source_addition_preserved_verbatim": true,
+  "current_document_retained": true,
+  "mobile_pin_unchanged": true,
+  "validation": "diff whitespace and exact source-text preservation passed",
+  "generated_hash_updated": true,
+  "changed_paths": [
+    "docs/notifications/navigation-2026-09-17.md",
+    "formal/system/inventory.json"
+  ],
+  "initial_inventory_check": "Failed on changed documentation hash; regenerated one hash and unchanged prescribed check passed",
+  "specification_inventory_check": "PASS",
+  "pr": 476,
+  "head": "6d00fa1463603bacecbb3210279b09ed88bbba0c"
+}

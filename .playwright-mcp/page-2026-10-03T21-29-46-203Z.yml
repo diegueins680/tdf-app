@@ -1,0 +1,442 @@
+- generic [ref=e4]:
+  - generic [ref=e978]:
+    - generic [ref=e981]:
+      - link [ref=e986] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=e991]
+      - generic [ref=e994]:
+        - link [ref=e999] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=e1004]
+        - link [ref=e1009] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=e1014]
+        - link [ref=e1021] [cursor=pointer]:
+          - /url: /direct/t/115627226500347
+          - generic [ref=e1024]:
+            - img "Messages" [ref=e1026]
+            - generic "Direct messaging - 2 new notifications link" [ref=e1029]: "2"
+        - link [ref=e1035] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=e1040]
+        - link [ref=e1047] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=e1052]
+        - link [ref=e1058] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=e1063]
+        - link [ref=e1068] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=e1073]
+        - link [ref=e1080] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=e1085]:
+            - img "tdf.records.label's profile picture" [ref=e1086]
+      - generic [ref=e1087]:
+        - link [ref=e1090] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=e1095]
+        - link [ref=e1098] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=e1103]
+    - generic [ref=e1106]:
+      - main [ref=e1107]:
+        - generic [ref=e1109]:
+          - generic [ref=e1110]:
+            - generic [ref=e1111]:
+              - link [ref=e1117] [cursor=pointer]:
+                - /url: /dannnaa.__/
+                - img "dannnaa.__'s profile picture" [ref=e1118]
+              - generic [ref=e1119]:
+                - generic [ref=e1120]:
+                  - generic [ref=e1121]:
+                    - link [ref=e1123] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "dannnaa.__" [level=2] [ref=e1124]
+                    - button [ref=e1126] [cursor=pointer]:
+                      - img "Options" [ref=e1128]
+                  - generic [ref=e1132]: ༒ 𖦹
+                  - generic [ref=e1134]:
+                    - generic [ref=e1136]:
+                      - generic [ref=e1137]: "2"
+                      - text: posts
+                    - link "555 followers" [ref=e1139] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=e1140]:
+                        - generic "555" [ref=e1141]
+                        - text: followers
+                    - link "487 following" [ref=e1143] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=e1144]:
+                        - generic [ref=e1145]: "487"
+                        - text: following
+                - generic [ref=e1147]:
+                  - button [ref=e1149] [cursor=pointer]:
+                    - generic [ref=e1150]:
+                      - text: "– ⋆｡𖦹°‧★1111 |⋆🥭⋆𝐌𝐨 𝐂𝐮𝐢𝐬𝐡𝐞𝐥♡´･ᴗ･`♡"
+                      - link "@glep_version" [ref=e1151]:
+                        - /url: /glep_version/
+                  - link "Threads dannnaa.__" [ref=e1154] [cursor=pointer]:
+                    - /url: https://www.threads.com/@dannnaa.__?xmt=AQG0cee5OgwcKcnLVFN9_6ksXiWQjvJmmARTtp_8zZgCE-c
+                    - img "Threads" [ref=e1156]
+                    - generic [ref=e1158]: dannnaa.__
+            - button "Follow" [ref=e1166] [cursor=pointer]
+          - separator [ref=e1169]
+          - generic [ref=e1178]:
+            - generic [ref=e1179]: This profile is private
+            - generic [ref=e1181]: Follow to see their photos and videos.
+          - generic [ref=e1182]:
+            - generic [ref=e1183]:
+              - heading "Suggested for you" [level=4] [ref=e1185]
+              - link "See all" [ref=e1186] [cursor=pointer]:
+                - /url: /dannnaa.__/
+            - generic [ref=e1189]:
+              - list [ref=e1191]:
+                - listitem [ref=e1192]
+                - listitem [ref=e1193]:
+                  - generic [ref=e1195]:
+                    - button "Dismiss fusionimperium's profile picture fusionimperium Fusion Imperium" [ref=e1196] [cursor=pointer]:
+                      - button "Dismiss" [ref=e1198]
+                      - generic [ref=e1201]:
+                        - link [ref=e1203]:
+                          - /url: /fusionimperium/
+                          - img "fusionimperium's profile picture" [ref=e1204]
+                        - link "fusionimperium" [ref=e1208]:
+                          - /url: /fusionimperium/
+                        - generic [ref=e1211]: Fusion Imperium
+                    - button "Follow" [ref=e1216] [cursor=pointer]
+                - listitem [ref=e1217]:
+                  - generic [ref=e1219]:
+                    - button "Dismiss rcricardocabrera's profile picture rcricardocabrera Ricardo Cabrera Zambrano" [ref=e1220] [cursor=pointer]:
+                      - button "Dismiss" [ref=e1222]
+                      - generic [ref=e1225]:
+                        - link [ref=e1227]:
+                          - /url: /rcricardocabrera/
+                          - img "rcricardocabrera's profile picture" [ref=e1228]
+                        - link "rcricardocabrera" [ref=e1232]:
+                          - /url: /rcricardocabrera/
+                        - generic [ref=e1235]: Ricardo Cabrera Zambrano
+                    - button "Follow" [ref=e1240] [cursor=pointer]
+                - listitem [ref=e1241]:
+                  - generic [ref=e1243]:
+                    - button "Dismiss diego_amneciam's profile picture diego_amneciam Diego Rojas" [ref=e1244] [cursor=pointer]:
+                      - button "Dismiss" [ref=e1246]
+                      - generic [ref=e1249]:
+                        - link [ref=e1251]:
+                          - /url: /diego_amneciam/
+                          - img "diego_amneciam's profile picture" [ref=e1252]
+                        - link "diego_amneciam" [ref=e1256]:
+                          - /url: /diego_amneciam/
+                        - generic [ref=e1259]: Diego Rojas
+                    - button "Follow" [ref=e1264] [cursor=pointer]
+                - listitem [ref=e1265]:
+                  - generic [ref=e1267]:
+                    - button "Dismiss consuelolbw's profile picture consuelolbw Consuelo LBw" [ref=e1268] [cursor=pointer]:
+                      - button "Dismiss" [ref=e1270]
+                      - generic [ref=e1273]:
+                        - link [ref=e1275]:
+                          - /url: /consuelolbw/
+                          - img "consuelolbw's profile picture" [ref=e1276]
+                        - link "consuelolbw" [ref=e1280]:
+                          - /url: /consuelolbw/
+                        - generic [ref=e1283]: Consuelo LBw
+                    - button "Follow" [ref=e1288] [cursor=pointer]
+                - listitem [ref=e1289]:
+                  - generic [ref=e1291]:
+                    - button "Dismiss personalshopperuio's profile picture personalshopperuio GRACY" [ref=e1292] [cursor=pointer]:
+                      - button "Dismiss" [ref=e1294]
+                      - generic [ref=e1297]:
+                        - link [ref=e1299]:
+                          - /url: /personalshopperuio/
+                          - img "personalshopperuio's profile picture" [ref=e1300]
+                        - link "personalshopperuio" [ref=e1304]:
+                          - /url: /personalshopperuio/
+                        - generic [ref=e1307]: GRACY
+                    - button "Follow" [ref=e1312] [cursor=pointer]
+                - listitem [ref=e1313]:
+                  - generic [ref=e1315]:
+                    - button "Dismiss graciesb84's profile picture graciesb84 Gracy S." [ref=e1316] [cursor=pointer]:
+                      - button "Dismiss" [ref=e1318]
+                      - generic [ref=e1321]:
+                        - link [ref=e1323]:
+                          - /url: /graciesb84/
+                          - img "graciesb84's profile picture" [ref=e1324]
+                        - link "graciesb84" [ref=e1328]:
+                          - /url: /graciesb84/
+                        - generic [ref=e1331]: Gracy S.
+                    - button "Follow" [ref=e1336] [cursor=pointer]
+                - listitem [ref=e1337]:
+                  - generic [ref=e1339]:
+                    - button "Dismiss remachesusy's profile picture remachesusy Susy Remache" [ref=e1340] [cursor=pointer]:
+                      - button "Dismiss" [ref=e1342]
+                      - generic [ref=e1345]:
+                        - link [ref=e1347]:
+                          - /url: /remachesusy/
+                          - img "remachesusy's profile picture" [ref=e1348]
+                        - link "remachesusy" [ref=e1352]:
+                          - /url: /remachesusy/
+                        - generic [ref=e1355]: Susy Remache
+                    - button "Follow" [ref=e1360] [cursor=pointer]
+                - listitem [ref=e1361]:
+                  - generic [ref=e1363]:
+                    - button "Dismiss karenulloaaa's profile picture karenulloaaa rojita" [ref=e1364] [cursor=pointer]:
+                      - button "Dismiss" [ref=e1366]
+                      - generic [ref=e1369]:
+                        - link [ref=e1371]:
+                          - /url: /karenulloaaa/
+                          - img "karenulloaaa's profile picture" [ref=e1372]
+                        - link "karenulloaaa" [ref=e1376]:
+                          - /url: /karenulloaaa/
+                        - generic [ref=e1379]: rojita
+                    - button "Follow" [ref=e1384] [cursor=pointer]
+                - listitem [ref=e1385]:
+                  - generic [ref=e1387]:
+                    - button "Dismiss matiasbalcazar_'s profile picture matiasbalcazar_ Matías" [ref=e1388] [cursor=pointer]:
+                      - button "Dismiss" [ref=e1390]
+                      - generic [ref=e1393]:
+                        - link [ref=e1395]:
+                          - /url: /matiasbalcazar_/
+                          - img "matiasbalcazar_'s profile picture" [ref=e1396]
+                        - link "matiasbalcazar_" [ref=e1400]:
+                          - /url: /matiasbalcazar_/
+                        - generic [ref=e1403]: Matías
+                    - button "Follow" [ref=e1408] [cursor=pointer]
+                - listitem [ref=e1409]:
+                  - generic [ref=e1411]:
+                    - button "Dismiss ninanpacha's profile picture ninanpacha NinanPacha" [ref=e1412] [cursor=pointer]:
+                      - button "Dismiss" [ref=e1414]
+                      - generic [ref=e1417]:
+                        - link [ref=e1419]:
+                          - /url: /ninanpacha/
+                          - img "ninanpacha's profile picture" [ref=e1420]
+                        - link "ninanpacha" [ref=e1424]:
+                          - /url: /ninanpacha/
+                        - generic [ref=e1427]: NinanPacha
+                    - button "Follow" [ref=e1432] [cursor=pointer]
+                - listitem [ref=e1433]:
+                  - generic [ref=e1435]:
+                    - button "Dismiss dorian99272018's profile picture dorian99272018 Dorian Wilfrido Cordova Pupiales" [ref=e1436] [cursor=pointer]:
+                      - button "Dismiss" [ref=e1438]
+                      - generic [ref=e1441]:
+                        - link [ref=e1443]:
+                          - /url: /dorian99272018/
+                          - img "dorian99272018's profile picture" [ref=e1444]
+                        - link "dorian99272018" [ref=e1448]:
+                          - /url: /dorian99272018/
+                        - generic [ref=e1451]: Dorian Wilfrido Cordova Pupiales
+                    - button "Follow" [ref=e1456] [cursor=pointer]
+              - button "Next" [ref=e1457] [cursor=pointer]
+      - contentinfo [ref=e1459]:
+        - generic [ref=e1460]:
+          - generic [ref=e1462]:
+            - link "Meta" [ref=e1464] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=e1467] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=e1470] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=e1473] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=e1476] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=e1479] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=e1482] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=e1485] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=e1488] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=e1491] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=e1494] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=e1497] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=e1500] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=e1503] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=e1506] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=e1509] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=e1511]:
+            - generic [ref=e1512] [cursor=pointer]:
+              - generic [ref=e1513]:
+                - generic [ref=e1514]: English
+                - img "Down chevron icon" [ref=e1517]
+              - combobox "Switch Display Language" [ref=e1519]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=e1520]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=e1523] [cursor=pointer]:
+              - generic "Messages - 2 new notifications" [ref=e1524]:
+                - generic [ref=e1525]:
+                  - generic [ref=e1527]:
+                    - img "Messages" [ref=e1528]
+                    - generic "Direct messaging - 2 new notifications link" [ref=e1531]: "2"
+                  - generic [ref=e1534]: Messages
+                - generic [ref=e1535]:
+                  - button "User avatar Juren" [ref=e1537]:
+                    - img "User avatar" [ref=e1540]
+                  - button "User avatar Eduardo ED" [ref=e1542]:
+                    - img "User avatar" [ref=e1545]
+            - generic [ref=e1546]:
+              - generic [ref=e1548]:
+                - generic [ref=e1549]:
+                  - button [ref=e1551] [cursor=pointer]:
+                    - img "Go back" [ref=e1553]
+                  - link "Open the profile page of dannnaa.__" [ref=e1556] [cursor=pointer]:
+                    - /url: /dannnaa.__/
+                    - generic [ref=e1557]:
+                      - img "user-profile-picture" [ref=e1560]
+                      - heading "༒ 𖦹" [level=2] [ref=e1564]
+                  - generic [ref=e1566]:
+                    - button [ref=e1567] [cursor=pointer]:
+                      - img "Expand" [ref=e1569]
+                    - button [ref=e1571] [cursor=pointer]:
+                      - img "Close" [ref=e1573]
+                - separator [ref=e1576]
+              - generic "༒ 𖦹" [ref=e1577]:
+                - generic [ref=e1579]:
+                  - generic [ref=e1583]:
+                    - generic [ref=e1584]:
+                      - img "user-profile-picture" [ref=e1588]
+                      - generic [ref=e1589]:
+                        - heading "༒ 𖦹" [level=2] [ref=e1592]
+                        - generic [ref=e1594]: dannnaa.__ · Instagram
+                        - link "View profile" [ref=e1597] [cursor=pointer]:
+                          - /url: /dannnaa.__/
+                    - generic [ref=e1598]:
+                      - generic [ref=e1605]:
+                        - generic [ref=e1606]: 2:14 PM
+                        - group [ref=e1609]:
+                          - generic [ref=e1612]:
+                            - article [ref=e1613]:
+                              - generic [ref=e1615]:
+                                - generic [ref=e1618]:
+                                  - text: Hola Danna, ¡gracias por escribirnos y por tu interés en las clases de DJ!
+                                  - img "🎧" [ref=e1620]
+                                  - text: "Nuestro paquete completo de clases es de 16 horas y tiene un costo de $500. Además, puedes tomar una clase de prueba para conocer nuestra forma de trabajar y resolver todas tus dudas. La puedes solicitar aquí:"
+                                  - link "https://www.tdfrecords.net/trials" [ref=e1622] [cursor=pointer]:
+                                    - /url: https://www.tdfrecords.net/trials
+                                  - text: Si quieres, cuéntame también qué experiencia tienes como DJ y qué horarios te acomodan, así te recomiendo la opción ideal para ti.
+                                  - img "😉" [ref=e1624]
+                                - link "TDF Records" [ref=e1625] [cursor=pointer]:
+                                  - /url: https://www.tdfrecords.net/trials
+                            - generic [ref=e1630]:
+                              - group "Message actions":
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - button "React to message from tdf.records.label":
+                                        - generic:
+                                          - img "React to message from tdf.records.label"
+                                  - generic:
+                                    - generic:
+                                      - button "Reply to message from tdf.records.label":
+                                        - generic:
+                                          - img "Reply to message from tdf.records.label"
+                                  - generic:
+                                    - generic:
+                                      - button "See more options for message from tdf.records.label":
+                                        - generic:
+                                          - img "See more options for message from tdf.records.label"
+                      - generic [ref=e1633]:
+                        - generic [ref=e1634]: 4:00 PM
+                        - group [ref=e1637]:
+                          - generic [ref=e1639]:
+                            - link "Open the profile page of dannnaa.__" [ref=e1642] [cursor=pointer]:
+                              - /url: /dannnaa.__
+                              - img "user-profile-picture" [ref=e1645]
+                            - generic [ref=e1647]:
+                              - article "$ 500? Pero en la página dice $150" [ref=e1648]
+                              - generic [ref=e1652]:
+                                - group "Message actions":
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - button "React to message from dannnaa.__":
+                                          - generic:
+                                            - img "React to message from dannnaa.__"
+                                    - generic:
+                                      - generic:
+                                        - button "Reply to message from dannnaa.__":
+                                          - generic:
+                                            - img "Reply to message from dannnaa.__"
+                                    - generic:
+                                      - generic:
+                                        - button "See more options for message from dannnaa.__":
+                                          - generic:
+                                            - img "See more options for message from dannnaa.__"
+                  - generic [ref=e1661]:
+                    - button [ref=e1664] [cursor=pointer]:
+                      - img "Choose an emoji" [ref=e1666]
+                    - generic [ref=e1668]:
+                      - textbox [active] [ref=e1669]:
+                        - paragraph [ref=e1670]
+                      - generic: Message...
+                    - generic [ref=e1671]:
+                      - button [ref=e1672] [cursor=pointer]:
+                        - img "Voice Clip" [ref=e1674]
+                      - button [ref=e1677] [cursor=pointer]:
+                        - img "Add Photo or Video" [ref=e1679]
+                      - button [ref=e1684] [cursor=pointer]:
+                        - img "Choose a GIF or sticker" [ref=e1686]

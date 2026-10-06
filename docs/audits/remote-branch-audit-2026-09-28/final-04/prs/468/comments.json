@@ -1,0 +1,142 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4123803371",
+      "pull_request_review_id": 5340691203,
+      "id": 4123803371,
+      "node_id": "PRRC_kwDOQPdUrM71zD7r",
+      "diff_hunk": "@@ -1,11 +1,65 @@\n-# Hetzner restore evidence \u2014 2026-09-28\n+# Hetzner cutover evidence \u2014 2026-09-28\n \n-## Result\n+## Live result\n \n-An isolated CPX12 restore serves trusted HTTPS health/version checks at\n-`https://api.tdfrecords.net`. Production remains on Fly. The production Pages\n-environment still uses `https://tdf-hq.fly.dev`; no live traffic or database\n-writes have been moved.\n+The authorized web-first cutover completed on 2026-09-28. Production\n+`https://www.tdfrecords.net` now uses `https://api.tdfrecords.net` on the dedicated\n+Hetzner CPX12. Cloudflare deployment\n+`4f1e7744-460e-46c7-bdd9-b47d6ae706ad` succeeded at 14:42:14 UTC with frontend\n+merge `7e7106b36e7ac427711c2f64af650527d619f9ce` from reviewed PR #467.\n+Both production API bindings changed; all sixteen other bindings were preserved.\n+The backend runs the reviewed video-ingestion release `cc244b1f86603055997b51379b297baebfd3e7ce`.\n+All six post-merge main workflows completed successfully.\n+\n+| Final cutover check | Observed result |\n+| --- | --- |\n+| Old writers | TDF source role NOLOGIN; zero TDF connections; both old API machines stopped and cordoned |",
+      "path": "ops/hetzner/validation-2026-09-28.md",
+      "commit_id": "85bc69a766f88f002fa1362ba26a1a2e4f8b41ba",
+      "original_commit_id": "85bc69a766f88f002fa1362ba26a1a2e4f8b41ba",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Retarget scheduled enrichment before stopping Fly**\n\nFor scheduled production runs, `.github/workflows/artist-enrichment-daily.yml:33` still sets `TDF_API_BASE` to `https://tdf-hq.fly.dev` and lines 67\u201378 execute enrichment in production mode. With both Fly API machines stopped and their TDF role set to `NOLOGIN` as recorded here, every daily run targets the retired backend rather than the current Hetzner database and cannot perform enrichment. Retarget or pause this workflow before treating the old writers as retired.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T15:10:14Z",
+      "updated_at": "2026-09-28T15:10:15Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4123803371",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4123803371"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4123803371"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4123803371/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 16,
+      "original_line": 16,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 22,
+      "position": 22,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4123803395",
+      "pull_request_review_id": 5340691203,
+      "id": 4123803395,
+      "node_id": "PRRC_kwDOQPdUrM71zD8D",
+      "diff_hunk": "@@ -1,11 +1,65 @@\n-# Hetzner restore evidence \u2014 2026-09-28\n+# Hetzner cutover evidence \u2014 2026-09-28\n \n-## Result\n+## Live result\n \n-An isolated CPX12 restore serves trusted HTTPS health/version checks at\n-`https://api.tdfrecords.net`. Production remains on Fly. The production Pages\n-environment still uses `https://tdf-hq.fly.dev`; no live traffic or database\n-writes have been moved.\n+The authorized web-first cutover completed on 2026-09-28. Production\n+`https://www.tdfrecords.net` now uses `https://api.tdfrecords.net` on the dedicated\n+Hetzner CPX12. Cloudflare deployment\n+`4f1e7744-460e-46c7-bdd9-b47d6ae706ad` succeeded at 14:42:14 UTC with frontend\n+merge `7e7106b36e7ac427711c2f64af650527d619f9ce` from reviewed PR #467.\n+Both production API bindings changed; all sixteen other bindings were preserved.\n+The backend runs the reviewed video-ingestion release `cc244b1f86603055997b51379b297baebfd3e7ce`.\n+All six post-merge main workflows completed successfully.\n+\n+| Final cutover check | Observed result |\n+| --- | --- |\n+| Old writers | TDF source role NOLOGIN; zero TDF connections; both old API machines stopped and cordoned |\n+| Shared Fly database | Retained running for Trader; four Trader connections observed after cleanup |\n+| Final export | 10,215,235 bytes; SHA256 `b94ed77e2de06f57be280691c5e197b5eecfbf19480798c38b21b30c20e52541` |\n+| Restore equivalence | All 616 original tables / 33,189 rows match by sorted row-content hash before migrations |\n+| Guarded schema | 115 ledger entries, 623 public tables; schema and emergency database-readiness checks passed |\n+| Assets | 62 uploaded files / 15,399,112 bytes preserved; all 37 referenced local image URLs returned HTTPS 200 |\n+| Final restricted canary | 64/64 reads passed; concurrency 8; median 165.69 ms, p95 279.26 ms; outbound access blocked |\n+| Live writer transition | Canary stopped, reader NOLOGIN, production role LOGIN with fresh credentials; live health and exact version passed |\n+| Browser | Directory search and video feed use the new API with HTTP 200; records page 11 images, zero broken |\n+| Event preview | `/directory/events/24` and canonical `/eventos/24` return 200; event-specific title and canonical metadata present |\n+| Payment callbacks | Existing PayPal and Stripe webhook URLs updated; IDs, secrets and subscribed event types preserved |\n+| Signature rejection | Invalid Stripe signature 400; invalid PayPal signature 401; no real charge created |\n+| Mail | SMTP STARTTLS and credential authentication passed without sending a message |\n+| Release leases | This migration's exact token removed on both databases; both lease tables empty |\n+| Obsolete staging | TDF staging API stopped and cordoned; its TDF-only database stopped; volumes retained |\n+| Backup | Daily logical timer active; first backup independently restored and schema-verified; hash-verified off-host copy retained |\n+\n+The first production logical backup is 10,440,643 bytes, SHA256\n+`229c3b61a22a27865c2fda8e2ee62ed93fb0951547c4d5bf5038a03258faa868`.\n+Its separate verification database passed the 115-entry schema check before\n+being dropped. Native Hetzner backups are enabled; this does not assert a\n+post-cutover server snapshot has already completed.\n+\n+New writes have been enabled. **Do not reopen the old Fly TDF role or route\n+traffic back to its stale database.** Application recovery must use the tested\n+compatible image against the current Hetzner database. A provider reversal\n+requires another write freeze and fresh reverse migration.\n+\n+Older installed mobile builds still point at Fly and need an updated release;\n+the operator explicitly accepted that downtime. Google interactive login and\n+authenticated uploads have not been exercised end to end after cutover.",
+      "path": "ops/hetzner/validation-2026-09-28.md",
+      "commit_id": "85bc69a766f88f002fa1362ba26a1a2e4f8b41ba",
+      "original_commit_id": "85bc69a766f88f002fa1362ba26a1a2e4f8b41ba",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Complete the authentication and upload gates before declaring success**\n\nIn this deployed state, writes have already been enabled even though these end-to-end checks remain unperformed, while the cutover procedure in `ops/hetzner/README.md:143-145` explicitly requires Google authentication and uploads to be verified before reopening writes. This leaves two user-facing write paths unvalidated after the hostname, database, and asset-storage migration despite the record calling the cutover complete; either perform those gates or record an explicit waiver and keep the cutover status incomplete.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-28T15:10:14Z",
+      "updated_at": "2026-09-28T15:10:15Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4123803395",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4123803395"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4123803395"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4123803395/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 44,
+      "original_start_line": 44,
+      "start_side": "RIGHT",
+      "line": 46,
+      "original_line": 46,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 52,
+      "position": 52,
+      "subject_type": "line"
+    }
+  ]
+]

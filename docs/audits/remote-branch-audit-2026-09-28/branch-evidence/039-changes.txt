@@ -1,0 +1,16 @@
+ .github/workflows/ci.yml                           |   8 +
+ docs/payments/operator-runbooks.md                 |   3 +
+ .../provider-execution-verification-2026-09-14.md  |   5 +
+ .../retry-reconciliation-safety-2026-09-14.md      |  70 ++++++
+ scripts/test-provider-retry-runtime.sh             |  72 ++++++
+ tdf-hq/src/TDF/Commerce/CheckoutStore.hs           |   1 +
+ tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs     | 103 +++++++-
+ tdf-hq/src/TDF/Commerce/ProviderAdapter.hs         |   2 +-
+ .../src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs |  83 ++++--
+ tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs  |  17 ++
+ tdf-hq/src/TDF/Server/ProviderExecution.hs         |  32 ++-
+ tdf-hq/src/TDF/Server/ServiceStorefront.hs         |   6 +-
+ tdf-hq/tdf-hq.cabal                                |   3 +-
+ tdf-hq/test/Spec.hs                                |  86 ++++++-
+ tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs      | 278 +++++++++++++++++++++
+ 15 files changed, 719 insertions(+), 50 deletions(-)

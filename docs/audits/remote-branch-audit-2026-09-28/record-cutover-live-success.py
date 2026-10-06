@@ -1,0 +1,13 @@
+import collect,json,subprocess,datetime
+P=collect.ROOT;head='ce1a71fe241ccc05b6114088fb36dd919974dc87'
+def api(path,*args):return json.loads(subprocess.check_output(['/usr/local/bin/gh','api',collect.REPO+path,*args],env=collect.ENV,text=True))
+proof=json.loads((P/'cutover-provenance-live-verified.json').read_text());assert proof['result']=='PASS'
+p=api('/pulls/468');assert p['state']=='open' and p['head']['sha']==head
+old='Current live verification is blocked: the existing authorized SSH connection timed out on repeated read-only attempts. Public DNS still resolves to the expected server and HTTPS health returns200/databaseOK, which does not substitute for authenticated container/image verification. No production metadata or inventory success is claimed for this follow-up; no installed monitor update, production write, restart or manual deployment was performed. The separate actual Google login/authenticated upload gate remains open. Fresh current-head CI and independent approval are required.'
+assert old in p['body']
+new='Initial live attempts were blocked by SSH timeouts; those failures are retained. The existing authorized connection subsequently recovered. On2026-10-04 the new helper verified the configured PostgreSQL digest and authoritative database volume; the complete read-only catalog returned777 records across652 tables after both bound public health/version rechecks. The new mail helper passed a live read-only run, then replaced the installed helper only after exact previous-hash checks and a retained backup. The unchanged LaunchAgent command passed with mailboxReadSucceeded=true,8 aggregate reports andzero errors; the LaunchAgent and monitor program are unchanged. No mail was sent, application data written, service restarted or deployment manually triggered. Currentce1a71fe2 has independent approval and passing checks. The separate actual Google interactive-login/authenticated-upload acceptance gate remains open because the attached browser profile is occupied.'
+body=p['body'].replace(old,new);api('/pulls/468','--method','PATCH','-f','body='+body)
+after=api('/pulls/468');assert after['body']==body and after['head']['sha']==head
+(P/'cutover-provenance-live-body-verified.json').write_text(json.dumps(after,indent=2))
+with (P/'mutations.jsonl').open('a') as f:f.write(json.dumps({'time':datetime.datetime.now(datetime.timezone.utc).isoformat(),'action':'updated_pull_request_body','pr':468,'sha':head,'url':after['html_url'],'evidence':'cutover-provenance-live-body-verified.json'})+'\n')
+print('Verified current live success and remaining manual gate in PR468')

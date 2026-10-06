@@ -1,0 +1,143 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4046711715",
+      "pull_request_review_id": 5247762988,
+      "id": 4046711715,
+      "node_id": "PRRC_kwDOQPdUrM7xM-uj",
+      "diff_hunk": "@@ -531,8 +548,8 @@ function ResultCard({\n           )}\n         </CardActions>\n         {favorite.isError ? (\n-          <Alert severity=\"error\" sx={{ mx: 2, mb: 2 }}>\n-            No se pudo {isFavorite ? 'quitar' : 'guardar'} este resultado. Tu cuenta no cambi\u00f3; int\u00e9ntalo otra vez.\n+          <Alert severity=\"error\" sx={{ mx: 2, mb: 2 }} action={<Button onClick={onRefreshFavorites}>Consultar guardados</Button>}>",
+      "path": "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+      "commit_id": "ee66c4fddc3513e14b47d60b314a4ffad57c7244",
+      "original_commit_id": "ee66c4fddc3513e14b47d60b314a4ffad57c7244",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Clear the mutation error after refreshing favorites**\n\nWhen an add/remove request fails but the subsequent authoritative favorites request succeeds, `onRefreshFavorites` only refetches the separate query; the mutation remains in `isError` until it is reset or another mutation starts. The card therefore continues showing this error and its \u201cConsultar guardados\u201d action even after the refreshed favorite state is displayed, leaving the recovery flow in a contradictory error state. Reset the mutation after a successful refresh, or derive this alert from refresh completion.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T12:28:50Z",
+      "updated_at": "2026-09-18T12:28:50Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/447#discussion_r4046711715",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/447",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4046711715"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/447#discussion_r4046711715"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/447"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4046711715/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 551,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 165,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4046761846",
+      "pull_request_review_id": 5247823440,
+      "id": 4046761846,
+      "node_id": "PRRC_kwDOQPdUrM7xNK92",
+      "diff_hunk": "@@ -531,8 +548,8 @@ function ResultCard({\n           )}\n         </CardActions>\n         {favorite.isError ? (\n-          <Alert severity=\"error\" sx={{ mx: 2, mb: 2 }}>\n-            No se pudo {isFavorite ? 'quitar' : 'guardar'} este resultado. Tu cuenta no cambi\u00f3; int\u00e9ntalo otra vez.\n+          <Alert severity=\"error\" sx={{ mx: 2, mb: 2 }} action={<Button onClick={onRefreshFavorites}>Consultar guardados</Button>}>",
+      "path": "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+      "commit_id": "ee66c4fddc3513e14b47d60b314a4ffad57c7244",
+      "original_commit_id": "ee66c4fddc3513e14b47d60b314a4ffad57c7244",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in c7124f906. The refresh callback now returns a successful authoritative receipt only while the initiating session occurrence is still current. The card resets the mutation error after that receipt; a failed refresh keeps the alert and retry action. Both outcomes are covered by the 19 passing component/helper tests. Five production-bundle recovery scenarios passed in three engines, including ambiguous write -> refreshed saved state -> dismissed error. TypeScript, lint and rebuilt bundle also pass.",
+      "created_at": "2026-09-18T12:36:01Z",
+      "updated_at": "2026-09-18T12:36:01Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/447#discussion_r4046761846",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/447",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4046761846"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/447#discussion_r4046761846"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/447"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4046761846/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 551,
+      "side": "RIGHT",
+      "in_reply_to_id": 4046711715,
+      "author_association": "OWNER",
+      "original_position": 165,
+      "position": 1,
+      "subject_type": "line"
+    }
+  ]
+]

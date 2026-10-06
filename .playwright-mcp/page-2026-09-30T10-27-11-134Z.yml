@@ -1,0 +1,388 @@
+- generic [ref=f84e4]:
+  - generic [ref=f84e18]:
+    - generic [ref=f84e21]:
+      - link [ref=f84e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f84e31]
+      - generic [ref=f84e34]:
+        - link [ref=f84e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f84e44]
+        - link [ref=f84e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f84e54]
+        - link [ref=f84e61] [cursor=pointer]:
+          - /url: /direct/t/108549543872229
+          - generic [ref=f84e64]:
+            - img "Messages" [ref=f84e66]
+            - generic "Direct messaging - 8 new notifications link" [ref=f84e69]: "8"
+        - link [ref=f84e75] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f84e80]
+        - link [ref=f84e87] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f84e92]
+        - link [ref=f84e98] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f84e103]
+        - link [ref=f84e108] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f84e113]
+        - link [ref=f84e120] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f84e125]:
+            - img "tdf.records.label's profile picture" [ref=f84e126]
+      - generic [ref=f84e127]:
+        - link [ref=f84e130] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f84e135]
+        - link [ref=f84e138] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f84e143]
+    - generic [ref=f84e146]:
+      - main [ref=f84e147]:
+        - generic [ref=f84e149]:
+          - generic [ref=f84e150]:
+            - generic [ref=f84e151]:
+              - button [ref=f84e156] [cursor=pointer]:
+                - link [ref=f84e158]:
+                  - img "vdjjac's profile picture" [ref=f84e159]
+              - generic [ref=f84e160]:
+                - generic [ref=f84e161]:
+                  - generic [ref=f84e162]:
+                    - link [ref=f84e164] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "vdjjac" [level=2] [ref=f84e165]
+                    - button [ref=f84e167] [cursor=pointer]:
+                      - img "Options" [ref=f84e169]
+                  - generic [ref=f84e173]: Dj. Produccion de Eventos en Quito
+                  - generic [ref=f84e175]:
+                    - generic [ref=f84e177]:
+                      - generic [ref=f84e178]: "167"
+                      - text: posts
+                    - link "738 followers" [ref=f84e180] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f84e181]:
+                        - generic "738" [ref=f84e182]
+                        - text: followers
+                    - link "5,337 following" [ref=f84e184] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f84e185]:
+                        - generic [ref=f84e186]: 5,337
+                        - text: following
+                - generic [ref=f84e187]:
+                  - generic [ref=f84e188]:
+                    - generic [ref=f84e189]: Product/service
+                    - button [ref=f84e192] [cursor=pointer]:
+                      - generic [ref=f84e193]: 🎧 Dj. lo mejor en música video mix todo género✨️Dj. todo tipo de fiesta🎉 🚚 servicio móvil exclusivo
+                    - generic [ref=f84e194]:
+                      - button "Link icon Dj Juan Argüello and 1 more" [ref=f84e195] [cursor=pointer]:
+                        - generic [ref=f84e196]:
+                          - img "Link icon" [ref=f84e198]
+                          - generic [ref=f84e201]: Dj Juan Argüello and 1 more
+                      - link "Threads vdjjac" [ref=f84e203] [cursor=pointer]:
+                        - /url: https://www.threads.com/@vdjjac?xmt=AQG04J_vdDOxLJIxjp-iVAoMZhuhnnN2yTE7BaZPCdZD2co
+                        - img "Threads" [ref=f84e205]
+                        - generic [ref=f84e207]: vdjjac
+                  - link "Followed by lasabejasclubdevinilos, oximoron_tu_tentaculo + 5 more" [ref=f84e209] [cursor=pointer]:
+                    - /url: /vdjjac/followers/mutualOnly
+                    - generic [ref=f84e211]:
+                      - generic [ref=f84e213]:
+                        - button [ref=f84e214]:
+                          - link [ref=f84e215]
+                        - button [ref=f84e216]:
+                          - link [ref=f84e217]
+                        - button [ref=f84e218]:
+                          - link [ref=f84e219]
+                      - generic [ref=f84e220]: Followed by lasabejasclubdevinilos, oximoron_tu_tentaculo + 5 more
+            - generic [ref=f84e225]:
+              - button "Follow Back" [ref=f84e227] [cursor=pointer]
+              - button "Message" [ref=f84e231] [cursor=pointer]
+              - button [ref=f84e233] [cursor=pointer]:
+                - img "Similar accounts" [ref=f84e235]
+            - menu [ref=f84e239]:
+              - list [ref=f84e243]:
+                - listitem [ref=f84e244]
+                - listitem [ref=f84e245]
+                - listitem [ref=f84e246]:
+                  - link "View Destacada highlight" [ref=f84e249] [cursor=pointer]:
+                    - /url: /stories/highlights/17860085353894944/
+                    - button "vdjjac's highlight story picture Destacada" [ref=f84e250]:
+                      - button [ref=f84e251]:
+                        - img "vdjjac's highlight story picture" [ref=f84e254]
+                      - generic [ref=f84e255]: Destacada
+                - listitem [ref=f84e258]:
+                  - link "View Set. highlight" [ref=f84e261] [cursor=pointer]:
+                    - /url: /stories/highlights/18088064864186893/
+                    - button "vdjjac's highlight story picture Set." [ref=f84e262]:
+                      - button [ref=f84e263]:
+                        - img "vdjjac's highlight story picture" [ref=f84e266]
+                      - generic [ref=f84e267]: Set.
+                - listitem [ref=f84e270]:
+                  - link "View Dj. Life highlight" [ref=f84e273] [cursor=pointer]:
+                    - /url: /stories/highlights/18049436266784273/
+                    - button "vdjjac's highlight story picture Dj. Life" [ref=f84e274]:
+                      - button [ref=f84e275]:
+                        - img "vdjjac's highlight story picture" [ref=f84e278]
+                      - generic [ref=f84e279]: Dj. Life
+                - listitem [ref=f84e282]:
+                  - link "View music highlight" [ref=f84e285] [cursor=pointer]:
+                    - /url: /stories/highlights/17869761061679085/
+                    - button "vdjjac's highlight story picture music" [ref=f84e286]:
+                      - button [ref=f84e287]:
+                        - img "vdjjac's highlight story picture" [ref=f84e290]
+                      - generic [ref=f84e291]: music
+                - listitem [ref=f84e294]:
+                  - link "View Sábados 7-9 PM highlight" [ref=f84e297] [cursor=pointer]:
+                    - /url: /stories/highlights/17906054842531734/
+                    - button "vdjjac's highlight story picture Sábados 7-9 PM" [ref=f84e298]:
+                      - button [ref=f84e299]:
+                        - img "vdjjac's highlight story picture" [ref=f84e302]
+                      - generic [ref=f84e303]: Sábados 7-9 PM
+                - listitem [ref=f84e306]:
+                  - link "View videomix pedidos highlight" [ref=f84e309] [cursor=pointer]:
+                    - /url: /stories/highlights/17901368317455510/
+                    - button "vdjjac's highlight story picture videomix pedidos" [ref=f84e310]:
+                      - button [ref=f84e311]:
+                        - img "vdjjac's highlight story picture" [ref=f84e314]
+                      - generic [ref=f84e315]: videomix pedidos
+          - generic [ref=f84e318]:
+            - tablist [ref=f84e319]:
+              - link [ref=f84e321] [cursor=pointer]:
+                - /url: /vdjjac/
+                - img "Posts" [ref=f84e323]
+              - link [ref=f84e334] [cursor=pointer]:
+                - /url: /vdjjac/reels/
+                - img "Reels" [ref=f84e336]
+              - link [ref=f84e339] [cursor=pointer]:
+                - /url: /vdjjac/reposts/
+                - img "Reposts" [ref=f84e341]
+              - link [ref=f84e344] [cursor=pointer]:
+                - /url: /vdjjac/tagged/
+                - img "Tagged" [ref=f84e346]
+            - tabpanel
+          - generic [ref=f84e353]:
+            - generic [ref=f84e354]:
+              - link [ref=f84e356] [cursor=pointer]:
+                - /url: /vdjjac/reel/C4IjpspLTVC/
+                - 'img "🎉 ¡Haz de tus eventos algo inolvidable con nuestra producción completa! 🎉 ▪ Música Vídeo Mix ▪Combo VDj + Grupo-Banda ▪Luces - Efectos varios ▪Carpas decoración, muebles exteriores ▪Bar tender Barra móvil ▪ Catering ¡Contáctanos ahora al 📲 0999660813 y déjanos hacer realidad la fiesta de tus sueños! 🎊📞 . . . #EventosInolvidables #ProducciónCompleta #MúsicaEnVivo #LucesyEfectos #CarpasDecorativas #BarTender #Catering" [ref=f84e359]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f84e362] [cursor=pointer]:
+                - /url: /vdjjac/reel/C6wNapkr2cb/
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f84e368] [cursor=pointer]:
+                - /url: /vdjjac/reel/C5rYcEcrnsr/
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+            - generic [ref=f84e373]:
+              - link [ref=f84e375] [cursor=pointer]:
+                - /url: /vdjjac/reel/Dd2SdNmEkDF/
+                - 'img "@todos invitados a desconectarse ! > > Nueva temporada ... \"GOLDEN MIX\" > Sets de música seleccionada... sin hueso. MARTES 18:00 Hrs 👉 turadioonline.net 👈 #dj #djjuanarguello #goldenmix #TuRadioOnLine" [ref=f84e378]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f84e381] [cursor=pointer]:
+                - /url: /vdjjac/reel/DdXHlRwibxV/
+                - 'img "#dj #djjuanarguello #eventos #party" [ref=f84e384]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f84e387] [cursor=pointer]:
+                - /url: /vdjjac/reel/DdEXNY8xHqo/
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f84e392]:
+              - link [ref=f84e394] [cursor=pointer]:
+                - /url: /vdjjac/reel/Dc7Oi8cAKSB/
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f84e400] [cursor=pointer]:
+                - /url: /vdjjac/reel/Dc2Kh_oSt0I/
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f84e406] [cursor=pointer]:
+                - /url: /vdjjac/reel/Db3Mp3nEZS8/
+                - img "#Tbt Dirty Sanchez 🎧✨️🙌🎉" [ref=f84e409]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f84e411]:
+              - link [ref=f84e413] [cursor=pointer]:
+                - /url: /vdjjac/reel/DbZhkhpCbJt/
+                - 'img "Este Sábado la cita es en el Rhapsody .. Retro music party #djjuanarguello #80s #retromusic #rockclasico \\Rhapsody" [ref=f84e416]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f84e419] [cursor=pointer]:
+                - /url: /vdjjac/reel/Da3T_74EuRq/
+                - img "Daft Punk" [ref=f84e422]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f84e425] [cursor=pointer]:
+                - /url: /vdjjac/reel/DaFTyGxkYUG/
+                - img "Homes Marcelo Perez" [ref=f84e428]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+      - contentinfo [ref=f84e430]:
+        - generic [ref=f84e431]:
+          - generic [ref=f84e433]:
+            - link "Meta" [ref=f84e435] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f84e438] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f84e441] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f84e444] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f84e447] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f84e450] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f84e453] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f84e456] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f84e459] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f84e462] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f84e465] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f84e468] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f84e471] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f84e474] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f84e477] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f84e480] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f84e482]:
+            - generic [ref=f84e483] [cursor=pointer]:
+              - generic [ref=f84e484]:
+                - generic [ref=f84e485]: English
+                - img "Down chevron icon" [ref=f84e488]
+              - combobox "Switch Display Language" [ref=f84e490]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f84e491]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f84e494] [cursor=pointer]:
+              - generic "Messages - 8 new notifications" [ref=f84e495]:
+                - generic [ref=f84e496]:
+                  - generic [ref=f84e498]:
+                    - img "Messages" [ref=f84e499]
+                    - generic "Direct messaging - 8 new notifications link" [ref=f84e502]: "8"
+                  - generic [ref=f84e505]: Messages
+                - generic [ref=f84e506]:
+                  - button [ref=f84e507]:
+                    - img "8 unread chats" [ref=f84e509]
+                  - button "User avatar ..." [ref=f84e514]:
+                    - img "User avatar" [ref=f84e517]
+                  - button "User avatar David Márquez" [ref=f84e519]:
+                    - img "User avatar" [ref=f84e522]
+                  - button "User avatar Limberg Steven Garcia Alava" [ref=f84e524]:
+                    - img "User avatar" [ref=f84e527]
+            - generic [ref=f84e528]:
+              - generic [ref=f84e529]:
+                - generic [ref=f84e530]:
+                  - generic [ref=f84e532]:
+                    - status "Loading..." [ref=f84e534]
+                    - status "Loading..." [ref=f84e536]
+                  - button [active] [ref=f84e538] [cursor=pointer]:
+                    - img "Close" [ref=f84e540]
+                - separator [ref=f84e543]
+              - generic [ref=f84e544]:
+                - generic [ref=f84e545]:
+                  - status "Loading..." [ref=f84e547]
+                  - status "Loading..." [ref=f84e549]
+                - status "Loading..." [ref=f84e552]
+                - generic [ref=f84e553]:
+                  - status "Loading..." [ref=f84e555]
+                  - status "Loading..." [ref=f84e557]
+                - generic [ref=f84e558]:
+                  - status "Loading..." [ref=f84e560]
+                  - status "Loading..." [ref=f84e562]
+                - status "Loading..." [ref=f84e565]
+                - generic [ref=f84e566]:
+                  - status "Loading..." [ref=f84e568]
+                  - status "Loading..." [ref=f84e570]
+                - status "Loading..." [ref=f84e572]

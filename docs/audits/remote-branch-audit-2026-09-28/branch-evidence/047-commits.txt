@@ -1,0 +1,7 @@
+c263a499cc760ce7f97fe7833211f4d7de7494ea 2026-09-14T18:17:44-05:00 continuous-improvement-loop[bot] docs(payments): record terminal recovery tests and staging access limits
+b2a7710e33be4aad0eec0df3f2b6005f360c31ba 2026-09-14T18:05:35-05:00 continuous-improvement-loop[bot] chore(api): synchronize payment recovery documentation across clients
+af759ee65530aa55d79c55aa00a4f37f575b1ae0 2026-09-14T17:49:03-05:00 continuous-improvement-loop[bot] fix(checkout): make recovery effect cleanup returns explicit
+b83299e271518c0a4df7a6cac2f3861adb881e63 2026-09-14T17:46:57-05:00 continuous-improvement-loop[bot] fix(payments): validate replay environment through canonical checkout
+bdace65e57da46cdd5d9a2831f980e98abc6340b 2026-09-14T17:38:43-05:00 continuous-improvement-loop[bot] fix(checkout): retain uncertainty after failed status recovery
+4f65fb9cc3aaa56ec7a8b0a97809b032526c407e 2026-09-14T17:36:25-05:00 continuous-improvement-loop[bot] fix(checkout): retain exact payment recovery on terminal orders
+1e1309347c1e981197c7b42252a665fd7cad3989 2026-09-14T17:35:35-05:00 continuous-improvement-loop[bot] fix(payments): recover exact contacted operations after checkout closure

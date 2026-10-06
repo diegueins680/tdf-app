@@ -1,0 +1,15 @@
+M	.github/workflows/ci.yml
+M	docs/payments/operator-runbooks.md
+M	docs/payments/provider-execution-verification-2026-09-14.md
+A	docs/payments/retry-reconciliation-safety-2026-09-14.md
+A	scripts/test-provider-retry-runtime.sh
+M	tdf-hq/src/TDF/Commerce/CheckoutStore.hs
+M	tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs
+M	tdf-hq/src/TDF/Commerce/ProviderAdapter.hs
+M	tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs
+M	tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs
+M	tdf-hq/src/TDF/Server/ProviderExecution.hs
+M	tdf-hq/src/TDF/Server/ServiceStorefront.hs
+M	tdf-hq/tdf-hq.cabal
+M	tdf-hq/test/Spec.hs
+A	tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs

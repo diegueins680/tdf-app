@@ -1,0 +1,236 @@
+- generic [ref=f21e4]:
+  - generic [ref=f21e9]:
+    - generic [ref=f21e12]:
+      - link [ref=f21e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f21e22]
+      - generic [ref=f21e25]:
+        - link [ref=f21e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f21e35]
+        - link [ref=f21e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f21e45]
+        - link [ref=f21e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - img "Messages" [ref=f21e57]
+        - link [ref=f21e63] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f21e68]
+        - link [ref=f21e75] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f21e80]
+        - link [ref=f21e86] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f21e91]
+        - link [ref=f21e96] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f21e101]
+        - link [ref=f21e108] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f21e113]:
+            - img "tdf.records.label's profile picture" [ref=f21e114]
+      - generic [ref=f21e115]:
+        - link [ref=f21e118] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f21e123]
+        - link [ref=f21e126] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f21e131]
+    - generic [ref=f21e134]:
+      - main [ref=f21e135]:
+        - generic [ref=f21e137]:
+          - generic [ref=f21e138]:
+            - generic [ref=f21e139]:
+              - link [ref=f21e145] [cursor=pointer]:
+                - /url: /emmanu__music/
+                - img "emmanu__music's profile picture" [ref=f21e146]
+              - generic [ref=f21e147]:
+                - generic [ref=f21e148]:
+                  - generic [ref=f21e149]:
+                    - link [ref=f21e151] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "emmanu__music" [level=2] [ref=f21e152]
+                    - button [ref=f21e154] [cursor=pointer]:
+                      - img "Options" [ref=f21e156]
+                  - generic [ref=f21e160]: 𝔼𝕄𝗠𝔸ℕ𝕌
+                  - generic [ref=f21e162]:
+                    - generic [ref=f21e164]:
+                      - generic [ref=f21e165]: "77"
+                      - text: posts
+                    - link "2,729 followers" [ref=f21e167] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f21e168]:
+                        - generic "2,729" [ref=f21e169]
+                        - text: followers
+                    - link "2,101 following" [ref=f21e171] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f21e172]:
+                        - generic [ref=f21e173]: 2,101
+                        - text: following
+                - generic [ref=f21e174]:
+                  - generic [ref=f21e175]:
+                    - generic [ref=f21e176]: Artist
+                    - button "🎧 Psychoacoustics ❤️ 🇪🇨 /🇻🇪 🕺💃" [ref=f21e179] [cursor=pointer]
+                    - generic [ref=f21e181]:
+                      - button "Link icon youtu.be/P0jnWtfxQJQ?si=LXSHrktLZKjx2Zbz and 1 more" [ref=f21e182] [cursor=pointer]:
+                        - generic [ref=f21e183]:
+                          - img "Link icon" [ref=f21e185]
+                          - generic [ref=f21e188]: youtu.be/P0jnWtfxQJQ?si=LXSHrktLZKjx2Zbz and 1 more
+                      - link "Threads emmanu__music" [ref=f21e190] [cursor=pointer]:
+                        - /url: https://www.threads.com/@emmanu__music?xmt=AQG0BDqE0cb8Xg3CR-QvsEXzT_5NWjwAbHrwWg0QEaq2Ym8
+                        - img "Threads" [ref=f21e192]
+                        - generic [ref=f21e194]: emmanu__music
+                  - link "Followed by backroom_session, elbloque_oficial + 36 more" [ref=f21e196] [cursor=pointer]:
+                    - /url: /emmanu__music/followers/mutualOnly
+                    - generic [ref=f21e198]:
+                      - generic [ref=f21e200]:
+                        - button [ref=f21e201]:
+                          - link [ref=f21e202]
+                        - button [ref=f21e203]:
+                          - link [ref=f21e204]
+                        - button [ref=f21e205]:
+                          - link [ref=f21e206]
+                      - generic [ref=f21e207]: Followed by backroom_session, elbloque_oficial + 36 more
+            - generic [ref=f21e212]:
+              - status "Loading..." [ref=f21e214]
+              - status "Loading..." [ref=f21e216]
+            - menu [ref=f21e218]:
+              - generic [ref=f21e220]:
+                - generic [ref=f21e222]:
+                  - status "Loading..." [ref=f21e224]
+                  - status "Loading..." [ref=f21e226]
+                - generic [ref=f21e228]:
+                  - status "Loading..." [ref=f21e230]
+                  - status "Loading..." [ref=f21e232]
+                - generic [ref=f21e234]:
+                  - status "Loading..." [ref=f21e236]
+                  - status "Loading..." [ref=f21e238]
+                - generic [ref=f21e240]:
+                  - status "Loading..." [ref=f21e242]
+                  - status "Loading..." [ref=f21e244]
+                - generic [ref=f21e246]:
+                  - status "Loading..." [ref=f21e248]
+                  - status "Loading..." [ref=f21e250]
+                - generic [ref=f21e252]:
+                  - status "Loading..." [ref=f21e254]
+                  - status "Loading..." [ref=f21e256]
+                - generic [ref=f21e258]:
+                  - status "Loading..." [ref=f21e260]
+                  - status "Loading..." [ref=f21e262]
+          - generic [ref=f21e263]:
+            - tablist [ref=f21e264]:
+              - link [ref=f21e266] [cursor=pointer]:
+                - /url: /emmanu__music/
+                - img "Posts" [ref=f21e268]
+              - link [ref=f21e279] [cursor=pointer]:
+                - /url: /emmanu__music/reels/
+                - img "Reels" [ref=f21e281]
+              - link [ref=f21e284] [cursor=pointer]:
+                - /url: /emmanu__music/reposts/
+                - img "Reposts" [ref=f21e286]
+              - link [ref=f21e289] [cursor=pointer]:
+                - /url: /emmanu__music/tagged/
+                - img "Tagged" [ref=f21e291]
+            - tabpanel
+          - progressbar [ref=f21e295]:
+            - img "Loading..." [ref=f21e296]
+      - contentinfo [ref=f21e309]:
+        - generic [ref=f21e310]:
+          - generic [ref=f21e312]:
+            - link "Meta" [ref=f21e314] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f21e317] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f21e320] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f21e323] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f21e326] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f21e329] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f21e332] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f21e335] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f21e338] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f21e341] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f21e344] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f21e347] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f21e350] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f21e353] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f21e356] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f21e359] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f21e361]:
+            - generic [ref=f21e362] [cursor=pointer]:
+              - generic [ref=f21e363]:
+                - generic [ref=f21e364]: English
+                - img "Down chevron icon" [ref=f21e367]
+              - combobox "Switch Display Language" [ref=f21e369]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f21e370]: © 2026 Instagram from Meta
+  - button "Messages Messages" [ref=f21e373] [cursor=pointer]:
+    - generic [ref=f21e375]:
+      - img "Messages" [ref=f21e377]
+      - generic [ref=f21e380]: Messages

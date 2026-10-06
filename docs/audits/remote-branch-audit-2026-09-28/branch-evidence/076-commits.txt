@@ -1,0 +1,11 @@
+0bac512baed505f7f035f44c022fc0b64405b9e7 2026-09-15T22:55:11-05:00 diegueins680 [CF-Pages-Skip] merge: reconcile social client with current parent
+9a68db7448909741b6084bfa41bfcfc55fba2597 2026-09-15T10:25:46-05:00 continuous-improvement-loop[bot] [CF-Pages-Skip] docs(social): record refreshed verification and incomplete acceptance gates
+46ef9eb7b0887ad61592bab619e2c7b039f73d7d 2026-09-15T10:20:35-05:00 continuous-improvement-loop[bot] [CF-Pages-Skip] test(social): verify consent ownership through HTTP and reconcile derived state
+22b436767e550c417386dea377d50fd0164f1c50 2026-09-15T09:38:18-05:00 continuous-improvement-loop[bot] [CF-Pages-Skip] fix(test): resolve React from the workspace dependency tree
+3e5a7d130a5e645560d7429152152b3088d852a0 2026-09-15T09:18:57-05:00 continuous-improvement-loop[bot] [CF-Pages-Skip] fix(social): qualify HTTP and synchronize generated clients
+08051d985a6ca77cc8f684b314b6a439ca114118 2026-09-15T02:00:28-05:00 continuous-improvement-loop[bot] [CF-Pages-Skip] feat(social): add gated Following and Discover client preview
+aa56289c3b01d0d74d45c5e590882eca98fd5b2c 2026-09-15T01:50:31-05:00 continuous-improvement-loop[bot] [CF-Pages-Skip] perf(social): scope Following queries to authorized clubs
+4962f005bc2413e60b0762b9b43572c80b9fd0cd 2026-09-15T00:27:33-05:00 continuous-improvement-loop[bot] [CF-Pages-Skip] fix: preserve explicit reaction state and retry evidence
+fa6b99e7a4e718f7e6db7226ed01301ff762e4f9 2026-09-14T23:46:21-05:00 continuous-improvement-loop[bot] [CF-Pages-Skip] perf(social): bound and batch discovery policy evaluation
+1078a07c5d6a7c5a54231e1640ea36d03f30b977 2026-09-15T09:44:20-05:00 continuous-improvement-loop[bot] [CF-Pages-Skip] fix(social): preserve the other actor consent on withdrawal
+4c216cc02bae2ce80d26fc30ecf51ca9d5138d5c 2026-09-14T22:57:17-05:00 continuous-improvement-loop[bot] feat(social): add inactive transactional consent and feed foundation

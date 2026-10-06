@@ -1,0 +1,160 @@
+- generic [ref=f12e1]:
+  - link "Saltar al contenido principal" [ref=f12e882] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=f12e883]:
+    - link "Saltar al contenido principal" [ref=f12e884] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f12e885]:
+      - generic [ref=f12e887]:
+        - generic [ref=f12e888]:
+          - link "Ir a TDF" [ref=f12e889] [cursor=pointer]:
+            - /url: /tdf
+            - img "TDF Records logo"
+          - navigation "Navegación principal" [ref=f12e890]:
+            - link "Buscar" [ref=f12e891] [cursor=pointer]:
+              - /url: /buscar
+            - link "TDF" [ref=f12e892] [cursor=pointer]:
+              - /url: /tdf
+            - link "TDF Mobile" [ref=f12e893] [cursor=pointer]:
+              - /url: /app
+            - link "Servicios" [ref=f12e894] [cursor=pointer]:
+              - /url: /comercio
+            - link "Comunidad" [ref=f12e895] [cursor=pointer]:
+              - /url: /fans
+            - link "Tienda" [ref=f12e896] [cursor=pointer]:
+              - /url: /marketplace
+            - link "Domo" [ref=f12e897] [cursor=pointer]:
+              - /url: /domo-del-pululahua
+            - link "Reservar" [ref=f12e898] [cursor=pointer]:
+              - /url: /reservar
+            - link "DJ Booth" [ref=f12e899] [cursor=pointer]:
+              - /url: /dj-booth
+            - link "Lanzamientos" [ref=f12e900] [cursor=pointer]:
+              - /url: /records
+        - button "Más opciones" [ref=f12e902] [cursor=pointer]
+    - main [ref=f12e905]:
+      - generic [ref=f12e908]:
+        - generic [ref=f12e911]:
+          - generic [ref=f12e912]:
+            - generic [ref=f12e913]:
+              - generic [ref=f12e914]: TDF Records
+              - button "Cambiar tema" [ref=f12e916] [cursor=pointer]
+            - heading "Iniciar sesión" [level=5] [ref=f12e919]
+            - paragraph [ref=f12e920]: Usa tus credenciales para entrar al panel. Si es tu primera vez, elige una ruta rápida en la tarjeta de al lado.
+          - generic [ref=f12e922]:
+            - generic [ref=f12e923]:
+              - generic [ref=f12e924]: Usuario o correo *
+              - generic [ref=f12e925]:
+                - textbox "Usuario o correo *" [active] [ref=f12e926]
+                - group:
+                  - generic: Usuario o correo *
+              - paragraph [ref=f12e927]: Puedes iniciar sesión con tu usuario o con el correo principal.
+            - generic [ref=f12e928]:
+              - generic: Contraseña *
+              - generic [ref=f12e929]:
+                - textbox "Contraseña *" [ref=f12e930]
+                - button "Mostrar contraseña" [ref=f12e932] [cursor=pointer]
+                - group:
+                  - generic: Contraseña *
+          - generic [ref=f12e935]:
+            - paragraph [ref=f12e936]: O continúa con Google
+            - iframe [ref=f12e939]:
+              - button "Continue as Diego, cuco.saa@gmail.com. Opens in new tab" [ref=f15e3] [cursor=pointer]:
+                - generic [ref=f15e5]:
+                  - img "Diego's profile image" [ref=f15e6]
+                  - generic [ref=f15e7]:
+                    - generic [ref=f15e8]: Continue as Diego
+                    - generic [ref=f15e9]: cuco.saa@gmail.com
+            - button "¿Primera vez? Crear cuenta con Google" [ref=f12e940] [cursor=pointer]
+          - generic [ref=f12e941] [cursor=pointer]:
+            - checkbox "Recordarme en este dispositivo" [checked] [ref=f12e943]
+            - generic [ref=f12e946]: Recordarme en este dispositivo
+          - generic [ref=f12e947]: Mantendremos tu sesión iniciada si este navegador permite guardar sus datos.
+          - generic [ref=f12e948]:
+            - generic [ref=f12e949]:
+              - button "Ingresar" [ref=f12e950] [cursor=pointer]
+              - button "Crear cuenta general" [ref=f12e951] [cursor=pointer]
+            - link "Explorar sin cuenta" [ref=f12e953] [cursor=pointer]:
+              - /url: /fans
+          - generic [ref=f12e954]:
+            - paragraph [ref=f12e955]:
+              - text: ¿Olvidaste tu contraseña?
+              - button "Recuperar acceso" [ref=f12e956] [cursor=pointer]
+            - paragraph [ref=f12e957]:
+              - text: ¿Buscas una clase de prueba?
+              - link "Solicitar clase de prueba" [ref=f12e958] [cursor=pointer]:
+                - /url: /trials
+            - paragraph [ref=f12e959]:
+              - text: ¿Quieres explorar la música?
+              - link "Ir a la comunidad" [ref=f12e960] [cursor=pointer]:
+                - /url: /fans
+        - generic [ref=f12e966]:
+          - generic [ref=f12e967]:
+            - generic [ref=f12e968]: Onboarding rápido
+            - heading "Empieza aquí" [level=6] [ref=f12e970]
+            - paragraph [ref=f12e971]: Elige lo que quieres hacer y te ayudaremos a empezar.
+          - generic [ref=f12e972]:
+            - generic [ref=f12e978]:
+              - heading "Soy artista" [level=6] [ref=f12e979]
+              - paragraph [ref=f12e980]: Crea tu perfil, comparte tu enlace y presenta tu música.
+              - button "Crear perfil" [ref=f12e981] [cursor=pointer]
+            - generic [ref=f12e987]:
+              - heading "Soy fan" [level=6] [ref=f12e988]
+              - paragraph [ref=f12e989]: Sigue artistas, recibe lanzamientos y reserva experiencias.
+              - button "Crear cuenta fan" [ref=f12e990] [cursor=pointer]
+            - generic [ref=f12e996]:
+              - heading "Busco prácticas" [level=6] [ref=f12e997]
+              - paragraph [ref=f12e998]: Postula, define tu plan y organiza tus rotaciones.
+              - button "Postular prácticas" [ref=f12e999] [cursor=pointer]
+          - generic [ref=f12e1000]:
+            - generic [ref=f12e1001]: Configuración breve
+            - generic [ref=f12e1003]: Permisos revisados
+            - generic [ref=f12e1005]: Solicitudes con seguimiento
+    - contentinfo [ref=f12e1007]:
+      - generic [ref=f12e1008]:
+        - complementary "TDF Mobile" [ref=f12e1009]:
+          - link "TDF Mobile / Testers" [ref=f12e1012] [cursor=pointer]:
+            - /url: /app?surface=footer
+        - generic [ref=f12e1013]:
+          - generic [ref=f12e1014]:
+            - heading "TDF Records" [level=6] [ref=f12e1015]
+            - paragraph [ref=f12e1016]: Si te atoras, te dejamos una salida clara desde esta página para que sigas avanzando.
+            - generic [ref=f12e1017]:
+              - link "Crear cuenta" [ref=f12e1018] [cursor=pointer]:
+                - /url: /login?signup=1&redirect=/fans
+              - link "WhatsApp" [ref=f12e1019] [cursor=pointer]:
+                - /url: https://wa.me/593984755301?text=Hola%20quiero%20reservar%20un%20servicio%20en%20TDF%20Records
+          - navigation "Explorar TDF" [ref=f12e1020]:
+            - generic [ref=f12e1021]: Explorar
+            - generic [ref=f12e1022]:
+              - link "Buscar" [ref=f12e1023] [cursor=pointer]:
+                - /url: /buscar
+              - link "TDF" [ref=f12e1024] [cursor=pointer]:
+                - /url: /tdf
+              - link "TDF Mobile" [ref=f12e1025] [cursor=pointer]:
+                - /url: /app
+              - link "Servicios" [ref=f12e1026] [cursor=pointer]:
+                - /url: /comercio
+              - link "Comunidad" [ref=f12e1027] [cursor=pointer]:
+                - /url: /fans
+              - link "Tienda" [ref=f12e1028] [cursor=pointer]:
+                - /url: /marketplace
+              - link "Domo" [ref=f12e1029] [cursor=pointer]:
+                - /url: /domo-del-pululahua
+              - link "Reservar" [ref=f12e1030] [cursor=pointer]:
+                - /url: /reservar
+              - link "DJ Booth" [ref=f12e1031] [cursor=pointer]:
+                - /url: /dj-booth
+              - link "Lanzamientos" [ref=f12e1032] [cursor=pointer]:
+                - /url: /records
+              - link "Sugerencias" [ref=f12e1033] [cursor=pointer]:
+                - /url: /feedback
+              - link "Donar" [ref=f12e1034] [cursor=pointer]:
+                - /url: /donar
+          - generic [ref=f12e1035]:
+            - generic [ref=f12e1036]: Gestión de mensajes
+            - generic [ref=f12e1037]:
+              - link "Consentimiento WhatsApp" [ref=f12e1038] [cursor=pointer]:
+                - /url: /whatsapp/consentimiento
+              - link "Confirmación WhatsApp" [ref=f12e1039] [cursor=pointer]:
+                - /url: /whatsapp/ok

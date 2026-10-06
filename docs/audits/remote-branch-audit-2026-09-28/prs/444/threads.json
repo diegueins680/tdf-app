@@ -1,0 +1,63 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 444,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "9497be8f4da96159a492c7f290f6b6229095cff2",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6jtxnJ",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 572,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Anchor the calendar migration to the release ancestry**\n\nWhen this commit is passed to the guarded backend release command, `resolveReleaseContext` checks every `introducedBy` SHA with `git merge-base --is-ancestor`; `49ff02de...` is a sibling of `152f2c14...` (both have parent `2ce7a1a0...`), not its ancestor. Consequently, `node scripts/production-release.mjs plan --sha 152f2c14071b48512af94edb5332bacf3ce53eb9` aborts with \u201crefusing to omit a registered migration,\u201d so this calendar schema repair cannot be deployed through the required release lane.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/444#discussion_r4046134721",
+                      "createdAt": "2026-09-18T11:04:01Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Verified against the actual published PR heads: git merge-base --is-ancestor 49ff02de5ade1b8923f099c22af0bbf57350a078 HEAD exits 0. The normal history includes the schema introduction before manifest registration. The guarded release plan passes for the exact published head (444:9497be8f4;445:563dafa42), including all110 migrations. The temporary review commits cited here are not the release targets. No migration rewrite or squash is used; normal merge ancestry remains required. Actual plan output is retained locally for release preflight; this is planning, not deployment.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/444#discussion_r4046465136",
+                      "createdAt": "2026-09-18T11:54:18Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxMTo1NDoxOFrO8TAocA=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxMTowNDowMVrOo7cZyQ=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

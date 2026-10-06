@@ -1,0 +1,5 @@
+PR441 was closed after its mobile fix was superseded, but its notification delivery and recovery notes were never copied to main. This preserves those notes in the existing notification document, identifies their source commit, and explicitly dates their device/store evidence to September 18. The historical account is retained verbatim; it does not claim that this audit repeated those device tests.
+
+The change is limited to `docs/notifications/navigation-2026-09-17.md` and its generated specification-inventory hash. The mobile pin stays unchanged; the source PR441 pin `0c1ee7f3387875496afadf930cb71b29c9edde99` is already an ancestor of the reviewed mobile integration. No store release or deployment is performed.
+
+Validation: exact source-text preservation, unchanged existing document, the reviewed two-file diff and whitespace checks, and the repository specification-inventory check passed. Original PR441 and its branch remain retained. Independent approval and current-head CI are required before merge.

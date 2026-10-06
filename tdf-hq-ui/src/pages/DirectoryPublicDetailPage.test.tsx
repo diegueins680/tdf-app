@@ -31,6 +31,8 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
 }));
 
 jest.unstable_mockModule('../hooks/useMetaTags', () => ({ useMetaTags: jest.fn() }));
+jest.unstable_mockModule('../components/events/EventRsvpControls', () => ({ default: () => null }));
+jest.unstable_mockModule('../components/events/EventRsvpFeed', () => ({ default: () => null }));
 jest.unstable_mockModule('../api/client', () => ({ API_BASE_URL: 'https://tdf-hq.example.test' }));
 
 const { default: DirectoryPublicDetailPage } = await import('./DirectoryPublicDetailPage');

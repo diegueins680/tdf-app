@@ -1,0 +1,31 @@
+{
+  "recordedAt": "2026-10-05T06:58:12.780837+00:00",
+  "sourceBase": "e4f8bd7dda46da123523897147189c1426732d71",
+  "repairCommit": "fdd7863892f415820fd1ddcc7dc19dfc355dc2e5",
+  "runtimeChanges": false,
+  "migrationChanges": false,
+  "results": {
+    "originalUnmodifiedRun": "19 examples, 0 failures; does not disprove intermittent hosted failure",
+    "forcedSevenDigitPrecisionControl": "19 examples, 1 expected failure at cutoff assertion",
+    "repairedPostgresHarness": "19 examples, 0 failures",
+    "inclusiveComparisonRuntimeMutant": "1 example, 1 expected failure; original production source restored",
+    "specificationInventory": "PASS",
+    "boundedAdmissionModel": "2 tests pass; eight-state abstraction and three mutants, not implementation refinement",
+    "verifyFormal": "exit0; 0 critical, 0 errors, 420 warnings, 10219 info"
+  },
+  "initialHarnessSetupFailures": [
+    "initdb rejected inherited locale; corrected with LC_ALL=C before starting owned server",
+    "initial default-port attempt could not authenticate because role did not exist; no database created; owned instance uses private Unix socket only",
+    "second fixture apply rejected existing tables; subsequent test executions reused the loaded disposable fixture"
+  ],
+  "isolation": {
+    "database": "tdf_ticket_admission_test",
+    "privateSocket": "/private/tmp/tdf-current-audit-20261003/ticket-cutoff-pg/socket",
+    "tcpListener": false,
+    "stopped": true,
+    "productionWritten": false
+  },
+  "integration": "Published existing480, synchronized main259; runtime/test files identical to verified repair, only four incoming distribution/doc/index files differ; renewed review and CI37276009282 pending",
+  "comment": "https://github.com/diegueins680/tdf-app/pull/480#issuecomment-5989627298",
+  "publishedHead": "2b53bad3705e8a026b9b5443e74c2795fe333e63"
+}

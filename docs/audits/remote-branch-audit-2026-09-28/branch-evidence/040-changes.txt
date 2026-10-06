@@ -1,0 +1,14 @@
+ docs/adr/0120-durable-provider-query-recovery.md   | 140 ++++++++
+ .../catalog-list-decisions.json                    |  34 +-
+ .../ecuador-payment-platform-audit-2026-09-11.md   |   6 +-
+ docs/payments/operator-runbooks.md                 |   8 +-
+ docs/payments/query-recovery-2026-09-15.md         | 236 ++++++++++++++
+ scripts/production-migrations.json                 |   5 +
+ scripts/test-provider-retry-runtime.sh             |  29 +-
+ tdf-hq/sql/2026-09-15_provider_query_recovery.sql  |  80 +++++
+ ...2026-09-15_provider_query_recovery_rollback.sql |  20 ++
+ tdf-hq/src/TDF/App/Boot.hs                         |   2 +
+ tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs  | 207 ++++++++++++
+ tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs  | 179 ++++++++--
+ tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs      | 363 ++++++++++++++++++++-
+ 13 files changed, 1266 insertions(+), 43 deletions(-)

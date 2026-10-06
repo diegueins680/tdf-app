@@ -1,0 +1,17 @@
+{
+  "outcomes": [
+    {
+      "label": "before",
+      "exit_code": 1,
+      "results": "/private/tmp/tdf-branch-audit-20260928/lifecycle-before-results-e0ur4yss"
+    },
+    {
+      "label": "fixed",
+      "exit_code": 0,
+      "results": "/private/tmp/tdf-branch-audit-20260928/lifecycle-fixed-results-a7r4weev"
+    }
+  ],
+  "result": "PASS",
+  "old_defect_reproduced": true,
+  "both_orders_all_three_isolations_pass": true
+}

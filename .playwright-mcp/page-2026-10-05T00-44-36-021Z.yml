@@ -1,0 +1,95 @@
+- generic [ref=f24e9]:
+  - generic [ref=f24e12]:
+    - link [ref=f24e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f24e22]
+    - generic [ref=f24e25]:
+      - link [ref=f24e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f24e35]
+      - link [ref=f24e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f24e45]
+      - link [ref=f24e52] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - img "Messages" [ref=f24e57]
+      - link [ref=f24e62] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f24e67]
+      - link [ref=f24e74] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f24e79]
+      - link [ref=f24e85] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f24e90]
+      - link [ref=f24e95] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f24e100]
+      - link [ref=f24e107] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f24e112]:
+          - img "tdf.records.label's profile picture" [ref=f24e113]
+    - generic [ref=f24e114]:
+      - link [ref=f24e117] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f24e122]
+      - link [ref=f24e125] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f24e130]
+  - main [ref=f24e134]:
+    - navigation "Thread list" [ref=f24e140]:
+      - generic [ref=f24e141]:
+        - generic [ref=f24e142]:
+          - button [ref=f24e143] [cursor=pointer]:
+            - heading "tdf.records.label" [level=2] [ref=f24e145]
+            - img "Verified" [ref=f24e148]
+            - img "Down chevron icon" [ref=f24e151]
+          - generic [ref=f24e154]:
+            - button [ref=f24e155] [cursor=pointer]:
+              - img "More options" [ref=f24e157]
+            - button [ref=f24e161] [cursor=pointer]:
+              - img "New message" [ref=f24e163]
+        - tablist [ref=f24e168]:
+          - tab "Primary" [selected] [ref=f24e169] [cursor=pointer]
+          - tab "General" [ref=f24e172] [cursor=pointer]
+          - tab "From ads" [ref=f24e175] [cursor=pointer]
+          - tab "Requests" [ref=f24e179] [cursor=pointer]
+        - generic [ref=f24e185]:
+          - img "Search" [ref=f24e187]
+          - textbox "Search" [ref=f24e190]
+        - generic [ref=f24e191]:
+          - generic [ref=f24e193]:
+            - generic [ref=f24e196]:
+              - status "Loading..." [ref=f24e197]
+              - status "Loading..." [ref=f24e198]
+            - generic [ref=f24e201]:
+              - status "Loading..." [ref=f24e202]
+              - status "Loading..." [ref=f24e203]
+            - generic [ref=f24e206]:
+              - status "Loading..." [ref=f24e207]
+              - status "Loading..." [ref=f24e208]
+          - generic [ref=f24e211]:
+            - button [ref=f24e212] [cursor=pointer]:
+              - generic [ref=f24e214]:
+                - status "Loading..." [ref=f24e217]
+                - generic [ref=f24e220]:
+                  - status "Loading..." [ref=f24e222]
+                  - status "Loading..." [ref=f24e224]
+            - button [ref=f24e225] [cursor=pointer]:
+              - generic [ref=f24e227]:
+                - status "Loading..." [ref=f24e230]
+                - generic [ref=f24e233]:
+                  - status "Loading..." [ref=f24e235]
+                  - status "Loading..." [ref=f24e237]
+            - button [ref=f24e238] [cursor=pointer]:
+              - generic [ref=f24e240]:
+                - status "Loading..." [ref=f24e243]
+                - generic [ref=f24e246]:
+                  - status "Loading..." [ref=f24e248]
+                  - status "Loading..." [ref=f24e250]
+            - button [ref=f24e251] [cursor=pointer]:
+              - generic [ref=f24e253]:
+                - status "Loading..." [ref=f24e256]
+                - generic [ref=f24e259]:
+                  - status "Loading..." [ref=f24e261]
+                  - status "Loading..." [ref=f24e263]

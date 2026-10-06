@@ -1,0 +1,4 @@
+ docs/INSTAGRAM_TOKEN_SETUP.md                      |  1 +
+ .../__tests__/instagram-token-workflows.test.mjs   | 40 +++++++++++++++++++++-
+ scripts/instagram-lifecycle-artifact.mjs           | 27 ++++++++++++---
+ 3 files changed, 63 insertions(+), 5 deletions(-)

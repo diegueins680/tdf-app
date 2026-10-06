@@ -1,0 +1,51 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/issues/comments/4620238424",
+      "html_url": "https://github.com/diegueins680/tdf-app/issues/128#issuecomment-4620238424",
+      "issue_url": "https://api.github.com/repos/diegueins680/tdf-app/issues/128",
+      "id": 4620238424,
+      "node_id": "IC_kwDOQPdUrM8AAAABE2M-WA",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "created_at": "2026-06-04T08:07:38Z",
+      "updated_at": "2026-06-04T08:07:38Z",
+      "body": "## Scope locked in (review answers from @diegueins680, 2026-06-04)\n\n### 1. Definition of 'new user'\n**First app install** (mobile) **AND first signup** (web + mobile). Returning-but-never-activated users are **not** enrolled \u2014 they keep whatever onboarding they originally got. Implementation: use install-time UUID on mobile + first-login flag on web to gate enrollment.\n\n### 2. Analytics destination\n**PostHog** (open-source, EU cloud, free tier covers our volume). Filed as **prerequisite #129** \u2014 this experiment is blocked until #129 ships.\n\n### 3. Audience + chosen feature\n**Pivoted to Event RSVP as the single feature** (was vCard). Rationale: works equally well for in-person + remote users, vCard QR is too in-person-only for the audience mix.\n\n**Follow-on:** once RSVP onboarding ships, the next experiment is to surface **in-event vCard exchange** to RSVP'd users \u2014 fans who confirmed for the same event get a 'Meet other fans here' surface that opens the vCard scanner with social context. That's a separate issue I'll file once #128 has data; tracking it here as a connected idea so we design the RSVP flow with that follow-up in mind.\n\n### 4. 'First meaningful action' = RSVP broadcast\nFor the chosen Event RSVP feature, the success event is:\n\n> **A new user submits an RSVP, AND that RSVP gets broadcast to the fanclub members of the artist playing the event.**\n\nThe broadcast is the engagement amplifier \u2014 it's what turns a private 'I'm going' into social proof inside the fanclub. Implementation note: **the broadcast-to-fanclub path is new backend work** \u2014 the repo has `FanClubPost` and validators in `tdf-hq/src/TDF/ServerFanClub.hs` but no RSVP-triggered broadcast yet. Will need a new `broadcastRsvpToFanclub` server action that:\n1. Looks up the event's headlining artist\n2. Resolves the artist's fanclub members\n3. Posts a `FanClubPost` (or a lighter 'activity feed' event if we want to avoid spam) on each new RSVP\n4. Respects fanclub members' notification preferences (must exist or be added)\n\nThis means #128 has a sub-task: **'Backend: RSVP-to-fanclub broadcast'** \u2014 I'll file it as **#130** after this comment lands.\n\n### 5. Holdout arm \u2014 YES, three-arm design\nRun with three arms instead of two for cleaner attribution:\n\n| Arm | Onboarding modal | Tab bar on first launch | First screen |\n|---|---|---|---|\n| **control** | yes (current 3-step) | full (6 tabs) | `/(tabs)/parties` |\n| **treatment_singlefeature** | skipped | hidden, replaced with 'Explore more \u2192' link | Event RSVP focused screen |\n| **treatment_notabbar** | skipped | hidden, replaced with 'Explore more \u2192' link | `/(tabs)/parties` (same content as control) |\n\nThe third arm isolates 'the modal sucks' from 'single-feature focus helps'. If `treatment_notabbar` \u2248 `control` but worse than `treatment_singlefeature`, focus wins. If all three diverge, both effects matter independently.\n\nWeights: 0.34 / 0.33 / 0.33.\n\n### 6. Sample size + power\nTarget: **100 new users/week**. With three arms that's ~33/arm/week. At a 15% baseline D1 retention and looking for a 5pp absolute lift, we need ~700 users/arm for 80% power at \u03b1=0.05 \u2192 **~6 weeks minimum** to call the experiment. **Run for 6\u20138 weeks**, monitor weekly but don't peek-and-decide before week 6.\n\nIf new-user rate stays below ~50/week through week 3, shorten the primary metric to a noisier-but-louder binary ('completed first RSVP in session 0: yes/no') and reduce the lift threshold; we'll add that decision rule when we see week-3 numbers.\n\n### 7. Scope: mobile + web\n**Expanded to web (`tdf-hq-ui`) in addition to mobile.** Both surfaces need:\n- the same three-arm split\n- the same 'first feature' (Event RSVP focused page)\n- the same 'Explore more \u2192' escape hatch\n- the same experiment ID for cross-surface analysis\n\nWeb onboarding today drops users on `/dashboard`. Treatment will drop them on a focused `/welcome/rsvp` (or equivalent) route with the next event card and one CTA.\n\n### 8. Reviewer\n**@diegueins680** \u2014 single sign-off path. I will draft the implementation PRs once #129 (analytics) is merged. **Will not start implementation until #129 ships.**\n\n---\n\n## Updated dependency chain\n\n```\n#129 (PostHog analytics)  \u2500\u2500\u25ba  #130 (RSVP\u2192fanclub backend broadcast)\n                                 \u2502\n                                 \u25bc\n                              #128 (this issue: single-feature onboarding A/B test)\n```\n\nBoth #129 and #130 block this.",
+      "author_association": "OWNER",
+      "pin": null,
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/issues/comments/4620238424/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "performed_via_github_app": null,
+      "minimized": null
+    }
+  ]
+]

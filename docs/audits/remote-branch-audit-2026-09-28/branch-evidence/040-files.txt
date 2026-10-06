@@ -1,0 +1,13 @@
+A	docs/adr/0120-durable-provider-query-recovery.md
+M	docs/catalog-persistence/catalog-list-decisions.json
+M	docs/payments/ecuador-payment-platform-audit-2026-09-11.md
+M	docs/payments/operator-runbooks.md
+A	docs/payments/query-recovery-2026-09-15.md
+M	scripts/production-migrations.json
+M	scripts/test-provider-retry-runtime.sh
+A	tdf-hq/sql/2026-09-15_provider_query_recovery.sql
+A	tdf-hq/sql/2026-09-15_provider_query_recovery_rollback.sql
+M	tdf-hq/src/TDF/App/Boot.hs
+M	tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs
+M	tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs
+M	tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs

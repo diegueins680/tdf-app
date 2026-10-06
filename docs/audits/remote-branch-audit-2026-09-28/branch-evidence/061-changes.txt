@@ -1,0 +1,25 @@
+ .github/workflows/event-operations-formal.yml      |  12 ++
+ docs/event-operations/README.md                    |   3 +
+ docs/event-operations/delivery-plan.md             |   6 +
+ .../fence-and-override-followup-2026-09-15.md      |  30 +++
+ .../event-operations/github-delivery-2026-09-14.md |  43 ++++
+ .../implementation-report-2026-09-14.md            |  36 +++-
+ docs/event-operations/pr-01-formal-foundation.md   |   6 +-
+ docs/event-operations/pr-02-api-foundation.md      |  13 +-
+ .../pr-03-logistics-transaction-hardening.md       |   3 +-
+ .../pr-04-task-commit-invariants.md                |  63 ++++++
+ .../raci-validity-followup-2026-09-15.md           |  14 ++
+ .../repository-audit-2026-09-14.md                 |  10 +
+ docs/event-operations/task-commit-contract.md      |  54 +++++
+ docs/event-operations/traceability-matrix.md       |   5 +
+ formal/event-operations/README.md                  |  12 ++
+ formal/event-operations/TaskCommit.cfg             |   5 +
+ formal/event-operations/TaskCommit.tla             |  60 ++++++
+ .../event-operations/TaskCommitEarlyValidation.cfg |   5 +
+ formal/event-operations/TaskCommitWriteSkew.cfg    |   5 +
+ package.json                                       |   1 +
+ scripts/test-event-task-commit-migration.sh        | 226 +++++++++++++++++++++
+ scripts/verify-event-operations-formal.sh          |  14 ++
+ tdf-hq/sql/2026-09-14_event_task_commit.sql        | 177 ++++++++++++++++
+ .../sql/2026-09-14_event_task_commit_rollback.sql  |  22 ++
+ 24 files changed, 815 insertions(+), 10 deletions(-)

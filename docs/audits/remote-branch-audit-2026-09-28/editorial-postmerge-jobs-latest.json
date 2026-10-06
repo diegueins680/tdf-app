@@ -1,0 +1,1012 @@
+[
+  {
+    "total_count": 10,
+    "jobs": [
+      {
+        "id": 111318994711,
+        "run_id": 37162611686,
+        "workflow_name": "Build Image",
+        "head_branch": "main",
+        "run_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/runs/37162611686",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOQPdUrM8AAAAZ6yEPFw",
+        "head_sha": "f8925e339447cb593f7cce5d86403d1396aaf5a5",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/jobs/111318994711",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/37162611686/job/111318994711",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-03T23:42:17Z",
+        "started_at": "2026-10-03T23:42:20Z",
+        "completed_at": "2026-10-03T23:42:38Z",
+        "name": "required-tests / changes",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-03T23:42:20Z",
+            "completed_at": "2026-10-03T23:42:21Z"
+          },
+          {
+            "name": "Checkout",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-03T23:42:21Z",
+            "completed_at": "2026-10-03T23:42:36Z"
+          },
+          {
+            "name": "Classify changed paths",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-03T23:42:36Z",
+            "completed_at": "2026-10-03T23:42:37Z"
+          },
+          {
+            "name": "Post Checkout",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-03T23:42:37Z",
+            "completed_at": "2026-10-03T23:42:37Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-10-03T23:42:37Z",
+            "completed_at": "2026-10-03T23:42:37Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/111318994711",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000047179,
+        "runner_name": "GitHub Actions 1000047179",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 111319051392,
+        "run_id": 37162611686,
+        "workflow_name": "Build Image",
+        "head_branch": "main",
+        "run_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/runs/37162611686",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOQPdUrM8AAAAZ6yHsgA",
+        "head_sha": "f8925e339447cb593f7cce5d86403d1396aaf5a5",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/jobs/111319051392",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/37162611686/job/111319051392",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-03T23:42:39Z",
+        "started_at": "2026-10-03T23:42:42Z",
+        "completed_at": "2026-10-03T23:43:45Z",
+        "name": "required-tests / repo-quality",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-03T23:42:43Z",
+            "completed_at": "2026-10-03T23:42:43Z"
+          },
+          {
+            "name": "Checkout",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-03T23:42:43Z",
+            "completed_at": "2026-10-03T23:42:58Z"
+          },
+          {
+            "name": "Setup Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-03T23:42:58Z",
+            "completed_at": "2026-10-03T23:43:03Z"
+          },
+          {
+            "name": "Install root dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-03T23:43:03Z",
+            "completed_at": "2026-10-03T23:43:30Z"
+          },
+          {
+            "name": "Run repository checks",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-03T23:43:30Z",
+            "completed_at": "2026-10-03T23:43:42Z"
+          },
+          {
+            "name": "Post Setup Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-10-03T23:43:42Z",
+            "completed_at": "2026-10-03T23:43:42Z"
+          },
+          {
+            "name": "Post Checkout",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-10-03T23:43:42Z",
+            "completed_at": "2026-10-03T23:43:43Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-10-03T23:43:43Z",
+            "completed_at": "2026-10-03T23:43:43Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/111319051392",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000047181,
+        "runner_name": "GitHub Actions 1000047181",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 111319051393,
+        "run_id": 37162611686,
+        "workflow_name": "Build Image",
+        "head_branch": "main",
+        "run_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/runs/37162611686",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOQPdUrM8AAAAZ6yHsgQ",
+        "head_sha": "f8925e339447cb593f7cce5d86403d1396aaf5a5",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/jobs/111319051393",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/37162611686/job/111319051393",
+        "status": "in_progress",
+        "conclusion": null,
+        "created_at": "2026-10-03T23:42:39Z",
+        "started_at": "2026-10-03T23:42:41Z",
+        "completed_at": null,
+        "name": "required-tests / backend-quality",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-03T23:42:42Z",
+            "completed_at": "2026-10-03T23:42:43Z"
+          },
+          {
+            "name": "Initialize containers",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-03T23:42:43Z",
+            "completed_at": "2026-10-03T23:43:21Z"
+          },
+          {
+            "name": "Checkout",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-03T23:43:21Z",
+            "completed_at": "2026-10-03T23:43:26Z"
+          },
+          {
+            "name": "Install native build dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-03T23:43:26Z",
+            "completed_at": "2026-10-03T23:43:33Z"
+          },
+          {
+            "name": "Restore immutable Stack dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-03T23:43:33Z",
+            "completed_at": "2026-10-03T23:43:53Z"
+          },
+          {
+            "name": "Restore incremental backend objects",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-03T23:43:53Z",
+            "completed_at": "2026-10-03T23:44:03Z"
+          },
+          {
+            "name": "Build and test backend once",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-10-03T23:44:03Z",
+            "completed_at": "2026-10-03T23:53:56Z"
+          },
+          {
+            "name": "Verify artist self-service transactions and migration",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-03T23:53:56Z",
+            "completed_at": "2026-10-03T23:53:59Z"
+          },
+          {
+            "name": "Verify social session revocation and model-derived HTTP fixtures",
+            "status": "in_progress",
+            "conclusion": null,
+            "number": 9,
+            "started_at": "2026-10-03T23:53:59Z",
+            "completed_at": null
+          },
+          {
+            "name": "Verify authenticated artist merch HTTP runtime",
+            "status": "pending",
+            "conclusion": null,
+            "number": 10,
+            "started_at": null,
+            "completed_at": null
+          },
+          {
+            "name": "Verify provider identity authentication and concurrent linking",
+            "status": "pending",
+            "conclusion": null,
+            "number": 11,
+            "started_at": null,
+            "completed_at": null
+          },
+          {
+            "name": "Verify atomic Live Session identity intake",
+            "status": "pending",
+            "conclusion": null,
+            "number": 12,
+            "started_at": null,
+            "completed_at": null
+          },
+          {
+            "name": "Verify source-scoped course contacts and registration retries",
+            "status": "pending",
+            "conclusion": null,
+            "number": 13,
+            "started_at": null,
+            "completed_at": null
+          },
+          {
+            "name": "Verify trial enquiries and actor-scoped student creation",
+            "status": "pending",
+            "conclusion": null,
+            "number": 14,
+            "started_at": null,
+            "completed_at": null
+          },
+          {
+            "name": "Verify marketplace contact identity and evidence retries",
+            "status": "pending",
+            "conclusion": null,
+            "number": 15,
+            "started_at": null,
+            "completed_at": null
+          },
+          {
+            "name": "Verify reversible identity reconciliation",
+            "status": "pending",
+            "conclusion": null,
+            "number": 16,
+            "started_at": null,
+            "completed_at": null
+          },
+          {
+            "name": "Verify resumable video ingestion and migration invariants",
+            "status": "pending",
+            "conclusion": null,
+            "number": 17,
+            "started_at": null,
+            "completed_at": null
+          },
+          {
+            "name": "Verify shared event pilot and publication boundaries",
+            "status": "pending",
+            "conclusion": null,
+            "number": 18,
+            "started_at": null,
+            "completed_at": null
+          },
+          {
+            "name": "Verify automatic migrations against the production schema",
+            "status": "pending",
+            "conclusion": null,
+            "number": 19,
+            "started_at": null,
+            "completed_at": null
+          },
+          {
+            "name": "Verify contact HTTP concurrency, authorization, archival and rollback",
+            "status": "pending",
+            "conclusion": null,
+            "number": 20,
+            "started_at": null,
+            "completed_at": null
+          },
+          {
+            "name": "Verify artist claim preparation concurrency and privacy",
+            "status": "pending",
+            "conclusion": null,
+            "number": 21,
+            "started_at": null,
+            "completed_at": null
+          },
+          {
+            "name": "Verify public catalog persistence contract and database round trips",
+            "status": "pending",
+            "conclusion": null,
+            "number": 22,
+            "started_at": null,
+            "completed_at": null
+          },
+          {
+            "name": "Verify calendar runtime schema and admin HTTP contract",
+            "status": "pending",
+            "conclusion": null,
+            "number": 23,
+            "started_at": null,
+            "completed_at": null
+          },
+          {
+            "name": "Verify navigation first-visit concurrency and account isolation",
+            "status": "pending",
+            "conclusion": null,
+            "number": 24,
+            "started_at": null,
+            "completed_at": null
+          },
+          {
+            "name": "Verify paused experiment authority and concurrent HTTP persistence",
+            "status": "pending",
+            "conclusion": null,
+            "number": 25,
+            "started_at": null,
+            "completed_at": null
+          },
+          {
+            "name": "Exercise public booking HTTP idempotency and resource conflicts",
+            "status": "pending",
+            "conclusion": null,
+            "number": 26,
+            "started_at": null,
+            "completed_at": null
+          },
+          {
+            "name": "Verify universal interactions through real HTTP sessions",
+            "status": "pending",
+            "conclusion": null,
+            "number": 27,
+            "started_at": null,
+            "completed_at": null
+          },
+          {
+            "name": "Upload tested backend executable",
+            "status": "pending",
+            "conclusion": null,
+            "number": 28,
+            "started_at": null,
+            "completed_at": null
+          },
+          {
+            "name": "Post Restore incremental backend objects",
+            "status": "pending",
+            "conclusion": null,
+            "number": 53,
+            "started_at": null,
+            "completed_at": null
+          },
+          {
+            "name": "Post Restore immutable Stack dependencies",
+            "status": "pending",
+            "conclusion": null,
+            "number": 54,
+            "started_at": null,
+            "completed_at": null
+          },
+          {
+            "name": "Post Checkout",
+            "status": "pending",
+            "conclusion": null,
+            "number": 55,
+            "started_at": null,
+            "completed_at": null
+          },
+          {
+            "name": "Stop containers",
+            "status": "pending",
+            "conclusion": null,
+            "number": 56,
+            "started_at": null,
+            "completed_at": null
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/111319051393",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000047180,
+        "runner_name": "GitHub Actions 1000047180",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 111319051412,
+        "run_id": 37162611686,
+        "workflow_name": "Build Image",
+        "head_branch": "main",
+        "run_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/runs/37162611686",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOQPdUrM8AAAAZ6yHslA",
+        "head_sha": "f8925e339447cb593f7cce5d86403d1396aaf5a5",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/jobs/111319051412",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/37162611686/job/111319051412",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-03T23:42:39Z",
+        "started_at": "2026-10-03T23:42:41Z",
+        "completed_at": "2026-10-03T23:45:15Z",
+        "name": "required-tests / migration-tests",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-03T23:42:42Z",
+            "completed_at": "2026-10-03T23:42:42Z"
+          },
+          {
+            "name": "Initialize containers",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-03T23:42:42Z",
+            "completed_at": "2026-10-03T23:42:56Z"
+          },
+          {
+            "name": "Checkout",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-03T23:42:56Z",
+            "completed_at": "2026-10-03T23:43:09Z"
+          },
+          {
+            "name": "Setup Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-03T23:43:09Z",
+            "completed_at": "2026-10-03T23:43:09Z"
+          },
+          {
+            "name": "Test the production release contract",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-03T23:43:09Z",
+            "completed_at": "2026-10-03T23:43:09Z"
+          },
+          {
+            "name": "Rehearse access-request notification compatibility migration",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-03T23:43:09Z",
+            "completed_at": "2026-10-03T23:43:21Z"
+          },
+          {
+            "name": "Rehearse notification navigation and history-preserving rollback",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-10-03T23:43:21Z",
+            "completed_at": "2026-10-03T23:43:21Z"
+          },
+          {
+            "name": "Rehearse Party selector rate-limit scope migration",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-03T23:43:21Z",
+            "completed_at": "2026-10-03T23:43:25Z"
+          },
+          {
+            "name": "Rehearse the studio internship audit migration and rollback",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-10-03T23:43:25Z",
+            "completed_at": "2026-10-03T23:43:34Z"
+          },
+          {
+            "name": "Rehearse service-storefront checkout runtime migration",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-10-03T23:43:34Z",
+            "completed_at": "2026-10-03T23:43:43Z"
+          },
+          {
+            "name": "Rehearse checkout event and refund runtime migration",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-10-03T23:43:43Z",
+            "completed_at": "2026-10-03T23:43:47Z"
+          },
+          {
+            "name": "Rehearse provider event operations migration",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12,
+            "started_at": "2026-10-03T23:43:47Z",
+            "completed_at": "2026-10-03T23:43:51Z"
+          },
+          {
+            "name": "Rehearse contextual reputation staging worker migration",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13,
+            "started_at": "2026-10-03T23:43:51Z",
+            "completed_at": "2026-10-03T23:44:35Z"
+          },
+          {
+            "name": "Rehearse merch reputation migration with synthetic evidence",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 14,
+            "started_at": "2026-10-03T23:44:35Z",
+            "completed_at": "2026-10-03T23:44:41Z"
+          },
+          {
+            "name": "Rehearse service booking checkout runtime migration",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 15,
+            "started_at": "2026-10-03T23:44:41Z",
+            "completed_at": "2026-10-03T23:44:46Z"
+          },
+          {
+            "name": "Rehearse public tentative booking idempotency migration",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-10-03T23:44:46Z",
+            "completed_at": "2026-10-03T23:44:49Z"
+          },
+          {
+            "name": "Rehearse course checkout runtime migration",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-10-03T23:44:49Z",
+            "completed_at": "2026-10-03T23:44:53Z"
+          },
+          {
+            "name": "Rehearse Domo quote and deposit checkout runtime migration",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 18,
+            "started_at": "2026-10-03T23:44:53Z",
+            "completed_at": "2026-10-03T23:44:56Z"
+          },
+          {
+            "name": "Rehearse marketplace customer operations and deposit settlement migration",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-10-03T23:44:56Z",
+            "completed_at": "2026-10-03T23:45:01Z"
+          },
+          {
+            "name": "Rehearse verified experience review migration",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 20,
+            "started_at": "2026-10-03T23:45:01Z",
+            "completed_at": "2026-10-03T23:45:04Z"
+          },
+          {
+            "name": "Create production baseline fixture",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 21,
+            "started_at": "2026-10-03T23:45:04Z",
+            "completed_at": "2026-10-03T23:45:05Z"
+          },
+          {
+            "name": "Verify pristine production preflight",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 22,
+            "started_at": "2026-10-03T23:45:05Z",
+            "completed_at": "2026-10-03T23:45:05Z"
+          },
+          {
+            "name": "Apply the authoritative migration batch twice",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 23,
+            "started_at": "2026-10-03T23:45:05Z",
+            "completed_at": "2026-10-03T23:45:08Z"
+          },
+          {
+            "name": "Verify catalog dry-runs and raw cutover idempotency",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 24,
+            "started_at": "2026-10-03T23:45:08Z",
+            "completed_at": "2026-10-03T23:45:10Z"
+          },
+          {
+            "name": "Verify raw migration idempotency and the release schema contract",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 25,
+            "started_at": "2026-10-03T23:45:10Z",
+            "completed_at": "2026-10-03T23:45:11Z"
+          },
+          {
+            "name": "Reject a changed applied migration",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 26,
+            "started_at": "2026-10-03T23:45:11Z",
+            "completed_at": "2026-10-03T23:45:11Z"
+          },
+          {
+            "name": "Verify artist enrichment migration rollback preserves base profiles",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 27,
+            "started_at": "2026-10-03T23:45:11Z",
+            "completed_at": "2026-10-03T23:45:11Z"
+          },
+          {
+            "name": "Post Setup Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 52,
+            "started_at": "2026-10-03T23:45:11Z",
+            "completed_at": "2026-10-03T23:45:12Z"
+          },
+          {
+            "name": "Post Checkout",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 53,
+            "started_at": "2026-10-03T23:45:12Z",
+            "completed_at": "2026-10-03T23:45:12Z"
+          },
+          {
+            "name": "Stop containers",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 54,
+            "started_at": "2026-10-03T23:45:12Z",
+            "completed_at": "2026-10-03T23:45:12Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 55,
+            "started_at": "2026-10-03T23:45:12Z",
+            "completed_at": "2026-10-03T23:45:12Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/111319051412",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000047183,
+        "runner_name": "GitHub Actions 1000047183",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 111319051421,
+        "run_id": 37162611686,
+        "workflow_name": "Build Image",
+        "head_branch": "main",
+        "run_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/runs/37162611686",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOQPdUrM8AAAAZ6yHsnQ",
+        "head_sha": "f8925e339447cb593f7cce5d86403d1396aaf5a5",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/jobs/111319051421",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/37162611686/job/111319051421",
+        "status": "in_progress",
+        "conclusion": null,
+        "created_at": "2026-10-03T23:42:39Z",
+        "started_at": "2026-10-03T23:42:42Z",
+        "completed_at": null,
+        "name": "required-tests / persona-web-e2e",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-03T23:42:43Z",
+            "completed_at": "2026-10-03T23:42:44Z"
+          },
+          {
+            "name": "Checkout",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-03T23:42:44Z",
+            "completed_at": "2026-10-03T23:42:48Z"
+          },
+          {
+            "name": "Setup Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-03T23:42:48Z",
+            "completed_at": "2026-10-03T23:42:52Z"
+          },
+          {
+            "name": "Install dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-03T23:42:52Z",
+            "completed_at": "2026-10-03T23:43:20Z"
+          },
+          {
+            "name": "Install Playwright browsers",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-03T23:43:20Z",
+            "completed_at": "2026-10-03T23:44:38Z"
+          },
+          {
+            "name": "Run isolated persona web journeys",
+            "status": "in_progress",
+            "conclusion": null,
+            "number": 6,
+            "started_at": "2026-10-03T23:44:38Z",
+            "completed_at": null
+          },
+          {
+            "name": "Upload sanitized browser evidence",
+            "status": "pending",
+            "conclusion": null,
+            "number": 7,
+            "started_at": null,
+            "completed_at": null
+          },
+          {
+            "name": "Post Setup Node",
+            "status": "pending",
+            "conclusion": null,
+            "number": 13,
+            "started_at": null,
+            "completed_at": null
+          },
+          {
+            "name": "Post Checkout",
+            "status": "pending",
+            "conclusion": null,
+            "number": 14,
+            "started_at": null,
+            "completed_at": null
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/111319051421",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000047182,
+        "runner_name": "GitHub Actions 1000047182",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 111319051689,
+        "run_id": 37162611686,
+        "workflow_name": "Build Image",
+        "head_branch": "main",
+        "run_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/runs/37162611686",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOQPdUrM8AAAAZ6yHtqQ",
+        "head_sha": "f8925e339447cb593f7cce5d86403d1396aaf5a5",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/jobs/111319051689",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/37162611686/job/111319051689",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-03T23:42:39Z",
+        "started_at": "2026-10-03T23:42:41Z",
+        "completed_at": "2026-10-03T23:42:44Z",
+        "name": "required-tests / api-contracts",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-03T23:42:42Z",
+            "completed_at": "2026-10-03T23:42:42Z"
+          },
+          {
+            "name": "Require API contract validation when selected",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-03T23:42:42Z",
+            "completed_at": "2026-10-03T23:42:42Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-03T23:42:42Z",
+            "completed_at": "2026-10-03T23:42:42Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/111319051689",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000047184,
+        "runner_name": "GitHub Actions 1000047184",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 111319051918,
+        "run_id": 37162611686,
+        "workflow_name": "Build Image",
+        "head_branch": "main",
+        "run_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/runs/37162611686",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOQPdUrM8AAAAZ6yHujg",
+        "head_sha": "f8925e339447cb593f7cce5d86403d1396aaf5a5",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/jobs/111319051918",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/37162611686/job/111319051918",
+        "status": "completed",
+        "conclusion": "skipped",
+        "created_at": "2026-10-03T23:42:39Z",
+        "started_at": "2026-10-03T23:42:39Z",
+        "completed_at": "2026-10-03T23:42:39Z",
+        "name": "required-tests / api-contract-tests",
+        "steps": [],
+        "check_run_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/111319051918",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": null,
+        "runner_name": null,
+        "runner_group_id": null,
+        "runner_group_name": null
+      },
+      {
+        "id": 111319052024,
+        "run_id": 37162611686,
+        "workflow_name": "Build Image",
+        "head_branch": "main",
+        "run_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/runs/37162611686",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOQPdUrM8AAAAZ6yHu-A",
+        "head_sha": "f8925e339447cb593f7cce5d86403d1396aaf5a5",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/jobs/111319052024",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/37162611686/job/111319052024",
+        "status": "completed",
+        "conclusion": "skipped",
+        "created_at": "2026-10-03T23:42:39Z",
+        "started_at": "2026-10-03T23:42:39Z",
+        "completed_at": "2026-10-03T23:42:39Z",
+        "name": "required-tests / mobile-quality",
+        "steps": [],
+        "check_run_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/111319052024",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": null,
+        "runner_name": null,
+        "runner_group_id": null,
+        "runner_group_name": null
+      },
+      {
+        "id": 111319052299,
+        "run_id": 37162611686,
+        "workflow_name": "Build Image",
+        "head_branch": "main",
+        "run_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/runs/37162611686",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOQPdUrM8AAAAZ6yHwCw",
+        "head_sha": "f8925e339447cb593f7cce5d86403d1396aaf5a5",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/jobs/111319052299",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/37162611686/job/111319052299",
+        "status": "completed",
+        "conclusion": "skipped",
+        "created_at": "2026-10-03T23:42:39Z",
+        "started_at": "2026-10-03T23:42:39Z",
+        "completed_at": "2026-10-03T23:42:39Z",
+        "name": "required-tests / ui-quality",
+        "steps": [],
+        "check_run_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/111319052299",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": null,
+        "runner_name": null,
+        "runner_group_id": null,
+        "runner_group_name": null
+      },
+      {
+        "id": 111319451480,
+        "run_id": 37162611686,
+        "workflow_name": "Build Image",
+        "head_branch": "main",
+        "run_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/runs/37162611686",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOQPdUrM8AAAAZ6ygHWA",
+        "head_sha": "f8925e339447cb593f7cce5d86403d1396aaf5a5",
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/jobs/111319451480",
+        "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/37162611686/job/111319451480",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-03T23:45:15Z",
+        "started_at": "2026-10-03T23:45:18Z",
+        "completed_at": "2026-10-03T23:45:21Z",
+        "name": "required-tests / production-migrations",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-03T23:45:19Z",
+            "completed_at": "2026-10-03T23:45:19Z"
+          },
+          {
+            "name": "Require production migration validation when selected",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-03T23:45:19Z",
+            "completed_at": "2026-10-03T23:45:19Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-03T23:45:19Z",
+            "completed_at": "2026-10-03T23:45:19Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/111319451480",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000047185,
+        "runner_name": "GitHub Actions 1000047185",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      }
+    ]
+  }
+]

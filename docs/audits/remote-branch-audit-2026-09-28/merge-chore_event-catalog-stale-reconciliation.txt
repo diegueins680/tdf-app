@@ -1,0 +1,222 @@
+c294eb96c5b260c5f7c3162e9af9e3bb189f74e2
+100644 cc66f7056fd0596338c09e8be2106454b1596973 1	.github/workflows/ci.yml
+100644 ea539110f32e58b2fbbd4531fe61d10ec9ae3fed 2	.github/workflows/ci.yml
+100644 3dd818a8a6dddd256e0607ca809dab584cf1832e 3	.github/workflows/ci.yml
+100644 1397faeea5f2bad448c1b2f561fd47d1627b9deb 1	.github/workflows/event-operations-formal.yml
+100644 a7419ddf844b1a705dacdd5fc6720de242f0f6fe 2	.github/workflows/event-operations-formal.yml
+100644 b8d1fa24461b5112198827ccd6c81521c3f3f5c5 3	.github/workflows/event-operations-formal.yml
+100644 fb9a557d7dedba0521644133a79fc08108a6ae6c 1	docs/catalog-persistence/catalog-list-decisions.json
+100644 bb31f26f03ef0e7123e1daac544ddf536c1066b4 2	docs/catalog-persistence/catalog-list-decisions.json
+100644 2bbb8a44b6655629dd01e3ded221276e130110ed 3	docs/catalog-persistence/catalog-list-decisions.json
+100644 a67d721fc89fb6a41ceeac4843326c572bc8da27 2	e2e/web/fanhub-onboarding.spec.mjs
+100644 a279048765d9d9e938e5539660e6fe8de4142859 3	e2e/web/fanhub-onboarding.spec.mjs
+100644 b481bd94e3a2d13f2fcb9bf74bc5832b491e6688 2	formal/event-operations/FanHubOnboarding.tla
+100644 633cd5be050975dbd5a61b0caa3aa05d5bb3a52b 3	formal/event-operations/FanHubOnboarding.tla
+100644 af7b86f4969348e5c93cb0f8f3af50729e15b79c 1	formal/event-operations/README.md
+100644 c87d62ff4bca58e8520b15d738a06c9e45076b67 2	formal/event-operations/README.md
+100644 e0f20f5143c8327f23f0c22eb09377b165eb78f3 3	formal/event-operations/README.md
+100644 d151a01c15be9d393fab136bebb48b08e5061958 1	scripts/__tests__/catalog-list-audit.test.mjs
+100644 fc9896928c2802fe73dcc6c7b6e38134e0ce4b94 2	scripts/__tests__/catalog-list-audit.test.mjs
+100644 602183bcdc92998c441aeb267e2430fa4969d0d1 3	scripts/__tests__/catalog-list-audit.test.mjs
+100644 b4aa77ff41ed4687486867ea0350dd450398d93e 1	scripts/__tests__/ci-pipeline.test.mjs
+100644 bd03c94cf43ce93924a8b14229e817abf5673399 2	scripts/__tests__/ci-pipeline.test.mjs
+100644 2a02210d0401ed595db64c8927ece441cdfc7115 3	scripts/__tests__/ci-pipeline.test.mjs
+100644 1a6f094604f3056ff23dd31f370be3a758d37bd5 2	scripts/__tests__/event-operations-pluscal.test.mjs
+100644 93f3278396a0ba690a25d315aaa6db082cb69f3a 3	scripts/__tests__/event-operations-pluscal.test.mjs
+100644 4f0d320604168d24ecd6a45616b211defb261e9b 1	scripts/__tests__/production-release.test.mjs
+100644 5e68bec20089e446c1ac050abaef7338f4844830 2	scripts/__tests__/production-release.test.mjs
+100644 bac58ffbce93a172d985096399b21f1b2536d193 3	scripts/__tests__/production-release.test.mjs
+100644 98976b4e0b83624964f16815a337057bbbfae898 1	scripts/production-migrations.json
+100644 d5ddedc43bece5eebba2313a8637eabc26ef914a 2	scripts/production-migrations.json
+100644 d870009007e107d6df8f07a9a3f63d8e97ff7f52 3	scripts/production-migrations.json
+100755 9176a3c00f3a3baf3277041daa1d671902d5c41f 1	scripts/test-event-operations-foundation-migration.sh
+100755 744b46312654dfb4914b5d447ff97e376336a615 2	scripts/test-event-operations-foundation-migration.sh
+100755 88e2982c999bf5382ea25d1d4a1349bff085f810 3	scripts/test-event-operations-foundation-migration.sh
+100755 dabb03e2e99372e855511b3ea75677cdb2d51941 1	scripts/verify-event-operations-formal.sh
+100755 b1813f761166f3a0d4451c7394f0706d308acb74 2	scripts/verify-event-operations-formal.sh
+100755 14dfb9e695a4cf97ecbd93f56af129f2d8ecb2fb 3	scripts/verify-event-operations-formal.sh
+100644 23a0e64b8d7df64b37ac73c4b5875c86f78cbea1 1	tdf-hq-ui/src/analytics/onboardingProgress.test.ts
+100644 3be46017a690d57abe32ccffce7a944634d1d783 2	tdf-hq-ui/src/analytics/onboardingProgress.test.ts
+100644 0b19e4a60a5d62f366d588db04817eee2cc34b8f 3	tdf-hq-ui/src/analytics/onboardingProgress.test.ts
+100644 f2b3a155c7e7c62577f5d82581336001d508647a 1	tdf-hq-ui/src/analytics/onboardingProgress.ts
+100644 304454fb03740e40bfda852334db3d5c8d419339 2	tdf-hq-ui/src/analytics/onboardingProgress.ts
+100644 f7a41bc64172e993fb459d8f48c19316d46a9e44 3	tdf-hq-ui/src/analytics/onboardingProgress.ts
+100644 9ed268f8adc021538a5a6fd19b1c690af39ea328 1	tdf-hq-ui/src/api/generated/types.ts
+100644 563253816814cb93ae7b66f4160bcd02530e8ef1 2	tdf-hq-ui/src/api/generated/types.ts
+100644 b716b2788801de231c02a9b793c399d8911a08a7 3	tdf-hq-ui/src/api/generated/types.ts
+100644 dc4c5a70af9dbcaf5e6c018f91416f0496c02dd4 1	tdf-hq-ui/src/i18n/locales/en.ts
+100644 665ba22e37572f1f11c123c141a30c3c1d5a5ecf 2	tdf-hq-ui/src/i18n/locales/en.ts
+100644 96fd3236a83a597fd9c6eca20bac085c571b6e0b 3	tdf-hq-ui/src/i18n/locales/en.ts
+100644 1bb8456e9e8a9e41cd24a55e497b09da7bad5bd4 1	tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx
+100644 4fd8715a69b70163139cee17490c3949ca4588fa 2	tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx
+100644 54b224e98c25d0d6da457d6cd54fed8395ba7b84 3	tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx
+100644 6877f1d7aad3586b3ca29014ab1af1dc5315c466 1	tdf-hq-ui/src/pages/ArtistPublicPage.tsx
+100644 50b71f2efec4208557c1f2069cbe2d26b2c5b24a 2	tdf-hq-ui/src/pages/ArtistPublicPage.tsx
+100644 cf0f5010bcd9b1ae4a40decaba785a36a87fb79e 3	tdf-hq-ui/src/pages/ArtistPublicPage.tsx
+100644 4fbabe9888b33ab4ba46212b115ee5f9c6fd5dd5 1	tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx
+100644 0abde5b41c35b95e689e68f16020a7abe10d32d5 2	tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx
+100644 56f0e819a17009e19e16fd5415625163f05a08da 3	tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx
+100644 6d775360ddb7ac02bcdb7b3184dc783eb5fddca5 1	tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx
+100644 247606cb6240ff8176ef8fe08153b32fa64fde70 2	tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx
+100644 24f4e1aa0bb66544d10d3d6a7fe189db8e58201f 3	tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx
+100644 f07216df9e4a0d2b47da18f135db08e3c743fe70 1	tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx
+100644 cc3b753117e8d49935993f4ecffd6b39a033d34d 2	tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx
+100644 9b63d23eaf6f39c294bb4cca93b21c79275a98ba 3	tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx
+100644 83f4245f017e9fa6974061a8f93245c8bbe1b38d 1	tdf-hq-ui/src/pages/FanHubPage.tsx
+100644 cb0f055bf6123211236eadd947ba4405c7fe2635 2	tdf-hq-ui/src/pages/FanHubPage.tsx
+100644 0ff2cba59385ac95c93b6c7c61d093c9c5db5317 3	tdf-hq-ui/src/pages/FanHubPage.tsx
+100644 62f329b3b0be099d7af9d8b37f6c166945887e85 1	tdf-hq-ui/src/pages/LoginPage.test.tsx
+100644 55ac1a7fdd01a28b4310eafbad0ffe153d622790 2	tdf-hq-ui/src/pages/LoginPage.test.tsx
+100644 f4148e02462cd8b461d2c58d91df7d8444eb103d 3	tdf-hq-ui/src/pages/LoginPage.test.tsx
+100644 04af1e632469e572daa1937b575d9855c78ca81b 1	tdf-hq-ui/src/pages/LoginPage.tsx
+100644 73589d70fab54a0a62da23fa51a62ad3f6be633e 2	tdf-hq-ui/src/pages/LoginPage.tsx
+100644 d7bd60f56939aff0c0af8fd8d7a12f228c442f0c 3	tdf-hq-ui/src/pages/LoginPage.tsx
+100644 029421458fac8263609780e46e898b217e68327d 1	tdf-hq-ui/src/routes/AppShell.test.tsx
+100644 658f0ffc134201394f519cd789e54a7ff4707683 2	tdf-hq-ui/src/routes/AppShell.test.tsx
+100644 c35b02e09f08bc555129b78671a9ad53ce152767 3	tdf-hq-ui/src/routes/AppShell.test.tsx
+100644 793a0b333f7e112acf85d12f477f403548b50ba1 1	tdf-hq-ui/src/routes/AppShell.tsx
+100644 38e0861a54eaba57fa2bbdfc355cee05fba47acb 2	tdf-hq-ui/src/routes/AppShell.tsx
+100644 415f6cdc6b8b53a6d78693e990609c523b49ab86 3	tdf-hq-ui/src/routes/AppShell.tsx
+100644 3a5c823dd307e517eaaebd6f6bc840fc89bc2be8 1	tdf-hq-ui/src/session/SessionContext.tsx
+100644 3ac4443cda93e69cc0717062e93f4c6d85ffb9b1 2	tdf-hq-ui/src/session/SessionContext.tsx
+100644 6189a85e31249b8059737c8a7ebf3b9f1f44c299 3	tdf-hq-ui/src/session/SessionContext.tsx
+100644 af90739b670ec8a77982479a681f372bc7a48687 1	tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx
+100644 c2f81b62393d7a24a84e61d65c0740b67bdbc9fd 2	tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx
+100644 105873fce03a8ed2466f2d4613a89a6fd065dd56 3	tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx
+100644 6efc6ac6cfd92bcc2fe177594e5c45d79eec30c5 1	tdf-hq/docs/openapi/api.yaml
+100644 e6bbeea61366ccb3a195ad89dbfc21dfee4bbae2 2	tdf-hq/docs/openapi/api.yaml
+100644 955bfeb69d92dbb1439e17085d607100492565ef 3	tdf-hq/docs/openapi/api.yaml
+100644 541e6502962acc7f52e7eb6880f28c4bb57cbcdb 1	tdf-hq/src/TDF/Auth.hs
+100644 db04bafad38016dbbbb69a90ede63e3f67ca95d0 2	tdf-hq/src/TDF/Auth.hs
+100644 2be35d07ba328a3c5e8de8133b7e930950b973f2 3	tdf-hq/src/TDF/Auth.hs
+100644 9c48e161cb37c50e05e5a680d6af42dac071213d 1	tdf-hq/src/TDF/Server/SocialEventsHandlers.hs
+100644 b58d5de428c0dab6e5289602ba1a1179e10ffce0 2	tdf-hq/src/TDF/Server/SocialEventsHandlers.hs
+100644 1b08ef497856b54adc186eebd83634685be0eff7 3	tdf-hq/src/TDF/Server/SocialEventsHandlers.hs
+100644 6ed7a1ecd19d57e2e84683d52cc05b9e0b7c00f2 1	tdf-hq/test/Spec.hs
+100644 868842b2affe903c954d931450f19ac5e809b99e 2	tdf-hq/test/Spec.hs
+100644 7ed69d0af03d7bc34bad12041a42be2d2a3e4736 3	tdf-hq/test/Spec.hs
+100644 fe03227ca76a6a226b7afc14e31a062c0ab64649 1	tdf-hq/test/TDF/Server/EventResearchSpec.hs
+100644 fbadfad36738ad1bccbb4890094ed095bfddd99e 2	tdf-hq/test/TDF/Server/EventResearchSpec.hs
+100644 85bcf5c1ef5c9e106d525432c13bf84c6850ee93 3	tdf-hq/test/TDF/Server/EventResearchSpec.hs
+100644 d874a4582f2c5878a7a9d923d366988c7ad9bc2d 1	tdf-hq/test/TDF/ServerAdminSpec.hs
+100644 46afa6bdd93bd1a4e12b0c65f8d769f232d63c90 2	tdf-hq/test/TDF/ServerAdminSpec.hs
+100644 17fdd10c2d01bcfb37f72cc53c4c6d2bdb3e6cc1 3	tdf-hq/test/TDF/ServerAdminSpec.hs
+100644 bef765bb6c4f061503ab3de47c75b86498b44b8f 1	tdf-hq/test/TDF/ServerAuthSpec.hs
+100644 2ce1f0d15d01d52b669c14b90936f06dfb6ba7b1 2	tdf-hq/test/TDF/ServerAuthSpec.hs
+100644 b6eb969d1738ec7afc2050fe19ed29fb7cd36975 3	tdf-hq/test/TDF/ServerAuthSpec.hs
+100644 69c775085881ae3775a53e7278e502fad987110f 1	tdf-hq/test/TDF/ServerExtraSpec.hs
+100644 83d095eb926a0083a4bc32c7867a69180a246eff 2	tdf-hq/test/TDF/ServerExtraSpec.hs
+100644 5f79fc0c88d5224e8748ff08fa0cc16378c4774b 3	tdf-hq/test/TDF/ServerExtraSpec.hs
+100644 8fbac9ef27fa199ec0f8a1f5c3c7588dc59b625a 1	tdf-hq/test/TDF/ServerFanClubSpec.hs
+100644 afef47ee2f42e9e499f9d826f86a9203f6a3a1cd 2	tdf-hq/test/TDF/ServerFanClubSpec.hs
+100644 41266c4eb131e601d6a4b63b869a02af95d3cbc1 3	tdf-hq/test/TDF/ServerFanClubSpec.hs
+100644 783e67b7a8fa373e23a2c56cc046d456309eebfb 1	tdf-hq/test/TDF/ServerProposalsSpec.hs
+100644 77cd13b140f3130443c662585ad5a823e5a619c4 2	tdf-hq/test/TDF/ServerProposalsSpec.hs
+100644 dfeb9bfefaf73f533487f6a65a54cebdc7c5c589 3	tdf-hq/test/TDF/ServerProposalsSpec.hs
+100644 d31050b5be512d42da3b2a0f7f441107118140f4 1	tdf-hq/test/TDF/ServerSpec.hs
+100644 0dbc085c7b6b35e501c266a7038ec26c84ee7d98 2	tdf-hq/test/TDF/ServerSpec.hs
+100644 a7d102981b7633cac045e2ed52ef0cf46fe5ad85 3	tdf-hq/test/TDF/ServerSpec.hs
+100644 f1f987d2333bb5b8d6df535c140a24173acf57a1 1	tdf-hq/test/TDF/Social/FollowHandlerSpec.hs
+100644 70053612217cfa0f45288eba60f63480a20d2397 2	tdf-hq/test/TDF/Social/FollowHandlerSpec.hs
+100644 39f0c1645c4df9fd0b6c2b6e7a8eb56c5a8153fb 3	tdf-hq/test/TDF/Social/FollowHandlerSpec.hs
+100644 dcd2fadcbc2eb41a8a84c12286f34e490ad4d4b8 1	tdf-hq/test/TDF/Trials/PublicLeadSpec.hs
+100644 1b8275cb923c93deebce984a5cf3e91b46d396ec 2	tdf-hq/test/TDF/Trials/PublicLeadSpec.hs
+100644 319a7faa4d29e579f7cd8c1de3106737a1a4fa6b 3	tdf-hq/test/TDF/Trials/PublicLeadSpec.hs
+
+Auto-merging .github/workflows/ci.yml
+CONFLICT (content): Merge conflict in .github/workflows/ci.yml
+Auto-merging .github/workflows/event-operations-formal.yml
+CONFLICT (content): Merge conflict in .github/workflows/event-operations-formal.yml
+Auto-merging .gitignore
+Auto-merging docs/catalog-persistence/catalog-list-decisions.json
+CONFLICT (content): Merge conflict in docs/catalog-persistence/catalog-list-decisions.json
+Auto-merging e2e/web/event-rsvp-sharing.spec.mjs
+Auto-merging e2e/web/fanhub-onboarding.spec.mjs
+CONFLICT (add/add): Merge conflict in e2e/web/fanhub-onboarding.spec.mjs
+Auto-merging formal/event-operations/FanHubOnboarding.tla
+CONFLICT (add/add): Merge conflict in formal/event-operations/FanHubOnboarding.tla
+Auto-merging formal/event-operations/README.md
+CONFLICT (content): Merge conflict in formal/event-operations/README.md
+Auto-merging package.json
+Auto-merging scripts/__tests__/catalog-list-audit.test.mjs
+CONFLICT (content): Merge conflict in scripts/__tests__/catalog-list-audit.test.mjs
+Auto-merging scripts/__tests__/ci-change-scope.test.mjs
+Auto-merging scripts/__tests__/ci-pipeline.test.mjs
+CONFLICT (content): Merge conflict in scripts/__tests__/ci-pipeline.test.mjs
+Auto-merging scripts/__tests__/event-operations-pluscal.test.mjs
+CONFLICT (add/add): Merge conflict in scripts/__tests__/event-operations-pluscal.test.mjs
+Auto-merging scripts/__tests__/production-release.test.mjs
+CONFLICT (content): Merge conflict in scripts/__tests__/production-release.test.mjs
+Auto-merging scripts/ci-change-scope.mjs
+Auto-merging scripts/production-migrations.json
+CONFLICT (content): Merge conflict in scripts/production-migrations.json
+Auto-merging scripts/quality-repo.sh
+Auto-merging scripts/test-event-operations-foundation-migration.sh
+CONFLICT (content): Merge conflict in scripts/test-event-operations-foundation-migration.sh
+Auto-merging scripts/verify-event-operations-formal.sh
+CONFLICT (content): Merge conflict in scripts/verify-event-operations-formal.sh
+Auto-merging tdf-hq-ui/src/analytics/onboardingProgress.test.ts
+CONFLICT (content): Merge conflict in tdf-hq-ui/src/analytics/onboardingProgress.test.ts
+Auto-merging tdf-hq-ui/src/analytics/onboardingProgress.ts
+CONFLICT (content): Merge conflict in tdf-hq-ui/src/analytics/onboardingProgress.ts
+Auto-merging tdf-hq-ui/src/api/generated/types.ts
+CONFLICT (content): Merge conflict in tdf-hq-ui/src/api/generated/types.ts
+Auto-merging tdf-hq-ui/src/i18n/locales/en.ts
+CONFLICT (content): Merge conflict in tdf-hq-ui/src/i18n/locales/en.ts
+Auto-merging tdf-hq-ui/src/i18n/locales/es.ts
+Auto-merging tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx
+CONFLICT (content): Merge conflict in tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx
+Auto-merging tdf-hq-ui/src/pages/ArtistPublicPage.tsx
+CONFLICT (content): Merge conflict in tdf-hq-ui/src/pages/ArtistPublicPage.tsx
+Auto-merging tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx
+CONFLICT (content): Merge conflict in tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx
+Auto-merging tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx
+CONFLICT (content): Merge conflict in tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx
+Auto-merging tdf-hq-ui/src/pages/EventLogisticsPage.tsx
+Auto-merging tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx
+CONFLICT (content): Merge conflict in tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx
+Auto-merging tdf-hq-ui/src/pages/FanHubPage.tsx
+CONFLICT (content): Merge conflict in tdf-hq-ui/src/pages/FanHubPage.tsx
+Auto-merging tdf-hq-ui/src/pages/LoginPage.test.tsx
+CONFLICT (content): Merge conflict in tdf-hq-ui/src/pages/LoginPage.test.tsx
+Auto-merging tdf-hq-ui/src/pages/LoginPage.tsx
+CONFLICT (content): Merge conflict in tdf-hq-ui/src/pages/LoginPage.tsx
+Auto-merging tdf-hq-ui/src/routes/AppShell.test.tsx
+CONFLICT (content): Merge conflict in tdf-hq-ui/src/routes/AppShell.test.tsx
+Auto-merging tdf-hq-ui/src/routes/AppShell.tsx
+CONFLICT (content): Merge conflict in tdf-hq-ui/src/routes/AppShell.tsx
+Auto-merging tdf-hq-ui/src/routes/protectedRoutes.tsx
+Auto-merging tdf-hq-ui/src/session/SessionContext.tsx
+CONFLICT (content): Merge conflict in tdf-hq-ui/src/session/SessionContext.tsx
+Auto-merging tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx
+CONFLICT (content): Merge conflict in tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx
+Auto-merging tdf-hq-ui/vite.config.ts
+Auto-merging tdf-hq/docs/openapi/api.yaml
+CONFLICT (content): Merge conflict in tdf-hq/docs/openapi/api.yaml
+Auto-merging tdf-hq/src/TDF/API.hs
+Auto-merging tdf-hq/src/TDF/Auth.hs
+CONFLICT (content): Merge conflict in tdf-hq/src/TDF/Auth.hs
+Auto-merging tdf-hq/src/TDF/Server.hs
+Auto-merging tdf-hq/src/TDF/Server/SocialEventsHandlers.hs
+CONFLICT (content): Merge conflict in tdf-hq/src/TDF/Server/SocialEventsHandlers.hs
+Auto-merging tdf-hq/tdf-hq.cabal
+Auto-merging tdf-hq/test/Spec.hs
+CONFLICT (content): Merge conflict in tdf-hq/test/Spec.hs
+Auto-merging tdf-hq/test/TDF/Server/EventResearchSpec.hs
+CONFLICT (content): Merge conflict in tdf-hq/test/TDF/Server/EventResearchSpec.hs
+Auto-merging tdf-hq/test/TDF/ServerAdminSpec.hs
+CONFLICT (content): Merge conflict in tdf-hq/test/TDF/ServerAdminSpec.hs
+Auto-merging tdf-hq/test/TDF/ServerAuthSpec.hs
+CONFLICT (content): Merge conflict in tdf-hq/test/TDF/ServerAuthSpec.hs
+Auto-merging tdf-hq/test/TDF/ServerExtraSpec.hs
+CONFLICT (content): Merge conflict in tdf-hq/test/TDF/ServerExtraSpec.hs
+Auto-merging tdf-hq/test/TDF/ServerFanClubSpec.hs
+CONFLICT (content): Merge conflict in tdf-hq/test/TDF/ServerFanClubSpec.hs
+Auto-merging tdf-hq/test/TDF/ServerProposalsSpec.hs
+CONFLICT (content): Merge conflict in tdf-hq/test/TDF/ServerProposalsSpec.hs
+Auto-merging tdf-hq/test/TDF/ServerSpec.hs
+CONFLICT (content): Merge conflict in tdf-hq/test/TDF/ServerSpec.hs
+Auto-merging tdf-hq/test/TDF/Social/FollowHandlerSpec.hs
+CONFLICT (content): Merge conflict in tdf-hq/test/TDF/Social/FollowHandlerSpec.hs
+Auto-merging tdf-hq/test/TDF/Trials/PublicLeadSpec.hs
+CONFLICT (content): Merge conflict in tdf-hq/test/TDF/Trials/PublicLeadSpec.hs

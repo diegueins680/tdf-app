@@ -1,0 +1,143 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4046134721",
+      "pull_request_review_id": 5247065070,
+      "id": 4046134721,
+      "node_id": "PRRC_kwDOQPdUrM7xKx3B",
+      "diff_hunk": "@@ -565,6 +565,11 @@\n       \"id\": \"2026-09-18_live_intake_idempotency\",\n       \"path\": \"tdf-hq/sql/2026-09-18_live_intake_idempotency.sql\",\n       \"introducedBy\": \"062143d3cb98befb6a52a987c7d42980f70313f3\"\n+    },\n+    {\n+      \"id\": \"2026-09-18_calendar_runtime_schema\",\n+      \"path\": \"tdf-hq/sql/2026-09-18_calendar_runtime_schema.sql\",\n+      \"introducedBy\": \"49ff02de5ade1b8923f099c22af0bbf57350a078\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "9497be8f4da96159a492c7f290f6b6229095cff2",
+      "original_commit_id": "0e591dbe7845e0c48c3bba20e691aaa902659e26",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Anchor the calendar migration to the release ancestry**\n\nWhen this commit is passed to the guarded backend release command, `resolveReleaseContext` checks every `introducedBy` SHA with `git merge-base --is-ancestor`; `49ff02de...` is a sibling of `152f2c14...` (both have parent `2ce7a1a0...`), not its ancestor. Consequently, `node scripts/production-release.mjs plan --sha 152f2c14071b48512af94edb5332bacf3ce53eb9` aborts with \u201crefusing to omit a registered migration,\u201d so this calendar schema repair cannot be deployed through the required release lane.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T11:04:01Z",
+      "updated_at": "2026-09-18T11:04:01Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/444#discussion_r4046134721",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/444",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4046134721"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/444#discussion_r4046134721"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/444"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4046134721/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 572,
+      "original_line": 572,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 8,
+      "position": 8,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4046465136",
+      "pull_request_review_id": 5247468033,
+      "id": 4046465136,
+      "node_id": "PRRC_kwDOQPdUrM7xMChw",
+      "diff_hunk": "@@ -565,6 +565,11 @@\n       \"id\": \"2026-09-18_live_intake_idempotency\",\n       \"path\": \"tdf-hq/sql/2026-09-18_live_intake_idempotency.sql\",\n       \"introducedBy\": \"062143d3cb98befb6a52a987c7d42980f70313f3\"\n+    },\n+    {\n+      \"id\": \"2026-09-18_calendar_runtime_schema\",\n+      \"path\": \"tdf-hq/sql/2026-09-18_calendar_runtime_schema.sql\",\n+      \"introducedBy\": \"49ff02de5ade1b8923f099c22af0bbf57350a078\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "9497be8f4da96159a492c7f290f6b6229095cff2",
+      "original_commit_id": "0e591dbe7845e0c48c3bba20e691aaa902659e26",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Verified against the actual published PR heads: git merge-base --is-ancestor 49ff02de5ade1b8923f099c22af0bbf57350a078 HEAD exits 0. The normal history includes the schema introduction before manifest registration. The guarded release plan passes for the exact published head (444:9497be8f4;445:563dafa42), including all110 migrations. The temporary review commits cited here are not the release targets. No migration rewrite or squash is used; normal merge ancestry remains required. Actual plan output is retained locally for release preflight; this is planning, not deployment.",
+      "created_at": "2026-09-18T11:54:18Z",
+      "updated_at": "2026-09-18T11:54:18Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/444#discussion_r4046465136",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/444",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4046465136"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/444#discussion_r4046465136"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/444"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4046465136/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 572,
+      "original_line": 572,
+      "side": "RIGHT",
+      "in_reply_to_id": 4046134721,
+      "author_association": "OWNER",
+      "original_position": 8,
+      "position": 8,
+      "subject_type": "line"
+    }
+  ]
+]

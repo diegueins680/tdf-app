@@ -1,0 +1,10 @@
+ .../adr/0129-atomic-canonical-refund-accounting.md |  79 +++++++++
+ .../reports/list-consumer-matrix.csv               |  40 ++---
+ .../reports/static-list-inventory.json             |  54 +++---
+ .../ecuador-payment-platform-audit-2026-09-11.md   |   6 +
+ docs/payments/operator-runbooks.md                 |  10 ++
+ docs/payments/refund-accounting-2026-09-16.md      | 193 +++++++++++++++++++++
+ tdf-hq/src/TDF/Commerce/RefundStore.hs             | 117 ++++++++++---
+ tdf-hq/src/TDF/Commerce/StateMachine.hs            |   4 +-
+ tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs       | 122 ++++++++++++-
+ 9 files changed, 553 insertions(+), 72 deletions(-)

@@ -1,0 +1,1 @@
+a1b92c220691b694e5f53e7deaf4d455ce46bc44 2026-09-14T22:30:29-05:00 continuous-improvement-loop[bot] feat: add scoped canonical task read projection

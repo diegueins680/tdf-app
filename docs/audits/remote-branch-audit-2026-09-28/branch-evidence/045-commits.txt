@@ -1,0 +1,22 @@
+4ff7109a378d640a179601fd0ad88b38f3074526 2026-09-16T15:20:30-05:00 continuous-improvement-loop[bot] docs(payments): record integration PRs and verified hosted web results
+60fe0aea06b9153b953005290ecc8ba9659c04aa 2026-09-16T14:59:13-05:00 continuous-improvement-loop[bot] merge(payments): integrate merchant and refund synchronization repairs safely
+35a92e04b1f3f1a7def3f9c126d19cde3d00b5c3 2026-09-16T13:04:54-05:00 continuous-improvement-loop[bot] docs: regenerate reviewed catalog evidence after main integration
+b24c258c3a5a1469a9c07f2ef1af4077294416ec 2026-09-16T13:02:53-05:00 continuous-improvement-loop[bot] merge: keep payment repairs current with main and mobile contract
+f94efa7b8519322ab1d3c68f39f5d0626b9a71eb 2026-09-16T12:54:43-05:00 continuous-improvement-loop[bot] fix(payments): integrate merchant-bound routing and exact capability tests
+d4bd497df6979f639dcd112e4f60b57f3526b9e0 2026-09-16T12:49:32-05:00 Diego Saa Merge pull request #404 from diegueins680/fix/migration-introduction-ancestry-audit-20260916
+1aeb20381b630ab1509a74d38ad0fc238abda50a 2026-09-16T12:43:58-05:00 continuous-improvement-loop[bot] fix(payments): integrate concurrent regressions with additive refund repair
+e29c1a0dc2cd803754397137b43d125b87f27329 2026-09-16T12:41:54-05:00 diegueins680 fix(payments): bind route approval to the runtime merchant
+43466ad532d83b3bfdb3730f07567d1c45214462 2026-09-16T12:35:26-05:00 Diego Saa fix(access): show requester names in access requests (#405)
+24cac132bd8042b0b5daf0db3fab6ae49193c015 2026-09-16T11:55:42-05:00 continuous-improvement-loop[bot] fix(release): register verified refund synchronization migration
+f965c3d53cbbb3b42f4fb82bf1e373bc0ce2fb6b 2026-09-16T11:53:51-05:00 continuous-improvement-loop[bot] fix(payments): integrate review fixes and synchronize verified refunds
+e24922210d09226bec610a8fe0f1b6f05867e8d7 2026-09-16T11:45:30-05:00 diegueins680 fix(release): identify ancestors containing migration files
+ce802c976f6347c71ce00ac5d0313e5c69aaae3a 2026-09-16T11:43:56-05:00 diegueins680 fix(payments): synchronize refunds and use CI database service
+d866bda09aec5510ecbef29d87ddfc3346cd0c00 2026-09-16T11:15:57-05:00 continuous-improvement-loop[bot] merge: preserve concurrent payment environment repair and runtime tests
+19af56e441e51c2ca9a378b967f07872d4d2c993 2026-09-16T10:19:43-05:00 diegueins680 fix(payments): qualify recurring routes and account evidence
+a27b089beaffdc6fab1938e88ad46e74eee26a63 2026-09-16T00:17:41-05:00 continuous-improvement-loop[bot] fix(payments): retain fail-closed fallback pending resource finality
+4a7a11e01c185a172699f690793af10ab74889a4 2026-09-15T23:52:13-05:00 continuous-improvement-loop[bot] fix(payments): preserve safe decline fallback and environment boundaries
+790b239760206cec0c88e2aae29838fa4b4c3fa6 2026-09-15T23:50:04-05:00 diegueins680 fix(payments): scope transfer configuration and component totals
+c781b0c136f31bd7348b6ef8df93aee1cde0b0ea 2026-09-15T23:16:59-05:00 continuous-improvement-loop[bot] Merge remote-tracking branch 'origin/main' into fix/pr331-review-repair-20260916
+de8a01b007f4f0ea33f7d4c4625229bd8bc02e51 2026-09-15T23:08:36-05:00 continuous-improvement-loop[bot] merge: preserve concurrent payment boundary repair
+8f7c50f8fe23714558e225b25f61607b6c78eb8b 2026-09-15T22:55:01-05:00 continuous-improvement-loop[bot] fix(payments): integrate main and enforce complete payment boundaries
+79715507b5ddf6368145ff6f75244c5f0398a472 2026-09-15T22:50:13-05:00 diegueins680 fix(payments): preserve contact checkout and environment boundaries

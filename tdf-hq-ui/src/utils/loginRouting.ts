@@ -14,6 +14,9 @@ import {
 const LOGIN_ROUTE = '/login';
 const URL_BASE = 'https://tdf.local';
 const PUBLIC_EVENT_RETURN_ROUTE = /^\/eventos\/[1-9]\d{0,18}$/;
+const ARTIST_INVITATION_CAMPAIGNS = new Set([
+  'tu_escena_conectada_piloto',
+]);
 
 export type OnboardingIntent =
   | 'events'
@@ -62,6 +65,16 @@ export function readOnboardingIntent(search: string): OnboardingIntent | null {
   const params = new URLSearchParams(search);
   return normalizeOnboardingIntent(params.get('intent'))
     ?? normalizeOnboardingIntent(params.get('roles'));
+}
+
+export function readArtistInvitation(search: string): string | null {
+  const params = new URLSearchParams(search);
+  if (readOnboardingIntent(search) !== 'artist_profile') return null;
+  if (params.get('utm_source')?.trim().toLowerCase() !== 'instagram') return null;
+  if (params.get('utm_medium')?.trim().toLowerCase() !== 'dm') return null;
+
+  const campaign = params.get('utm_campaign')?.trim().toLowerCase() ?? '';
+  return ARTIST_INVITATION_CAMPAIGNS.has(campaign) ? campaign : null;
 }
 
 const accessRequestPath = (feature: string, action: string) =>

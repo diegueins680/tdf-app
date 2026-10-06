@@ -1,0 +1,12 @@
+{
+  "verified_at": "2026-09-30T01:06:09.603530+00:00",
+  "merge": "de76dc7df247937144e1802c17d1842f983cbe13",
+  "tested_head": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+  "parents": [
+    "7e7106b36e7ac427711c2f64af650527d619f9ce",
+    "cda2c5f7790126f35bd7e09bed35b52b5a0012ef"
+  ],
+  "identical_tree_to_tested_head": true,
+  "source_history_preserved": true,
+  "normal_post_merge_ci": "PR469 initial security failure repaired by merged PR472; final main checks/workflows all passing and recorded in discovery-closure-main-ci.json"
+}

@@ -1,0 +1,381 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 437,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6jqtBt",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq-ui/src/api/courses.ts",
+                "line": 223,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Update the test caller for the mandatory idempotency key**\n\nWhen `src/api/queryValidation.test.ts` invokes `Courses.register` with the existing two-argument call, this change now passes a third `RequestInit` argument containing an undefined header, so the assertion expecting a two-argument `post` call fails. I confirmed this with `npm test -- src/api/queryValidation.test.ts` in `tdf-hq-ui` (13 tests passed, this test failed); update the caller to supply a valid key and assert the new header so the UI test suite can pass.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4044933389",
+                      "createdAt": "2026-09-18T08:05:14Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in e353bf4bb and retained in integrated head acb550945. The API path validation fixture now supplies and asserts the required Idempotency-Key. All 14 queryValidation tests passed locally.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045054318",
+                      "createdAt": "2026-09-18T08:23:14Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwODoyMzoxNFrO8Rqhbg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jrIX8",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": ".github/workflows/ci.yml",
+                "line": 267,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Pass the PostgreSQL service connection to the new test**\n\nIn the `backend-quality` container, PostgreSQL is exposed through the `postgres` service hostname, but this step supplies no database environment variables. `scripts/test-course-identity.sh` consequently defaults `PGHOST` to `127.0.0.1`, while `PGUSER` and `PGPASSWORD` are also unset, so its initial `createdb` cannot connect and every backend CI run that reaches this added step fails. Pass the same `PGHOST`, `PGUSER`, and `PGPASSWORD` values used by the two preceding PostgreSQL tests.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045100156",
+                      "createdAt": "2026-09-18T08:30:16Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in a2e2bf4f5: the course regression step now supplies PGHOST=postgres, PGUSER=postgres, and PGPASSWORD=postgres, matching the existing service-backed test steps.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045497818",
+                      "createdAt": "2026-09-18T09:28:14Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwOToyODoxNFrO8SFl2g=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jrIYB",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq/src/TDF/Server/CourseCheckout.hs",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Unify idempotency across the checkout feature branch**\n\nWhen a retry crosses a change to the production `commerce.courses` flag, the same key is handled by two independent stores: the disabled branch records it in `identity_course_registration_request`, while the enabled branch only checks `course_registration_checkout_runtime`. A fallback registration accepted before enablement can therefore be retried afterward to create a second registration and seat hold; the reverse transition can turn an accepted checkout retry into a duplicate lead and return no checkout details. Check both stores before selecting the branch, or use one route-level idempotency record that preserves the original outcome across flag changes.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045100164",
+                      "createdAt": "2026-09-18T08:30:16Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in a2e2bf4f5: fallback and payable registration now use the same source receipt and transaction lock. Replay returns the original outcome before checking current flags/policy. Ten real PostgreSQL regressions pass, including both flag transitions and a paused fallback request overlapping checkout enablement; one registration, preserved checkout details, and zero payment attempts.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045497935",
+                      "createdAt": "2026-09-18T09:28:15Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwOToyODoxNVrO8SFmTw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jrIYJ",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-18_course_identity_requests.sql",
+                "line": 5,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Align the receipt key constraint with API validation**\n\nPublic registration validates keys with `ServiceStorefront.validateIdempotencyKey`, which accepts every visible ASCII character, but this constraint permits only letters, digits, `_`, and `-`. Thus a valid 16\u2013128 character caller key containing common punctuation such as `.` or `:` passes request validation and then fails this insert with a PostgreSQL constraint exception, producing a server error instead of a registration. Use the same length/visible-ASCII contract in both layers, or reject the narrower character set before entering the transaction.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045100172",
+                      "createdAt": "2026-09-18T08:30:16Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in a2e2bf4f5 without changing the already-exercised migration: both new creation paths reject unsupported punctuation with 400 before their transactions. A regression exercises the punctuation key with checkout both off and on and verifies no new registration. Existing checkout replay remains available through its original path.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045498005",
+                      "createdAt": "2026-09-18T09:28:16Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwOToyODoxNlrO8SFmlQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jsNE6",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/Server.hs",
+                "line": 5895,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Keep unverified contacts out of primary identity fields**\n\nWhen an existing account holder submits a course enquiry\u2014or two legitimate attendees share an email as this change explicitly permits\u2014this creates multiple `Party` rows with the same primary email/phone. Other production flows such as `ensurePartyRecordDb`, `ensurePartyWithAccount`, and `ensurePartyForInquiry` resolve those fields through `selectUniquePartyByPrimaryEmail`/`selectUniquePartyByPrimaryPhone`, which return 409 when more than one row matches; for example, the affected customer can no longer complete public service booking at `createPublicBookingCheckout`'s `ensurePartyRecord` call. Store these unverified course details outside the shared primary identity fields, or exclude source-scoped course contacts from those identity selectors.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045522346",
+                      "createdAt": "2026-09-18T09:31:08Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Addressed by the combined source in #439 (bdd9e24bd): commerce #436 removes email-based guest booking/account adoption; ad inquiries now create an unverified contact inside a source-key transaction and no longer consult unique email/phone selectors; the unused ensurePartyWithAccount helper has been removed. These changes will release together after combined staging validation. Existing contact details stay available to legitimate separate people. PostgreSQL regressions cover shared details and retries for course, marketplace and inquiry paths.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048579005",
+                      "createdAt": "2026-09-18T16:23:15Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxNjoyMzoxNVrO8VBpvQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jsW-t",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 577,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Point the migration introduction at an ancestor**\n\nWhen this commit is passed to the guarded production release, the release is rejected because `9bc040b7...` is not an ancestor of `ccc0a5ae...` (`git merge-base --is-ancestor` exits 1). The check in `scripts/production-release.mjs` explicitly refuses every manifest entry whose `introducedBy` commit is outside the release SHA's ancestry, so this migration cannot be deployed from the reviewed commit; preserve the actual introduction commit in this history or otherwise make the manifest reference a valid introduction ancestor.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045583658",
+                      "createdAt": "2026-09-18T09:39:19Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Verified the actual pushed branch: git merge-base --is-ancestor 9bc040b718db0a297c9766a6c4084e0803765599 ea17b17e5 succeeds. The cited ccc0a5ae revision is not the branch head. The migration SQL and introduction have already been exercised in staging and remain immutable. Current main calendar migration is preserved before the appended course receipt; the guarded release will recheck the actual merged commit.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048579184",
+                      "createdAt": "2026-09-18T16:23:17Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxNjoyMzoxN1rO8VBqcA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6j0CYQ",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/Server.hs",
+                "line": 6684,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Scope confirmation throttling to each registration**\n\nWhen two legitimate attendees register with the same email within 24 hours\u2014a case this change now explicitly permits\u2014this invokes `sendConfirmation` for both, but `courseEmailSentWithinLast24Hours` searches only by recipient email and marks the second confirmation as skipped. The second registration therefore succeeds without receiving its own acknowledgement; include the registration ID in the throttle lookup or otherwise allow one confirmation per distinct registration while still suppressing retries.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048601492",
+                      "createdAt": "2026-09-18T16:26:28Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in fa86b19de. Confirmation lookup now includes the registration ID and registration_confirmation event type, so another attendee using the same email does not suppress this acknowledgement. Accepted request retries still return before sending. Added a PostgreSQL regression that seeds a sent confirmation for one shared-email registration, verifies the other remains eligible, and verifies replay adds no email event. Hosted validation is running; this change will be included in the combined final release.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048655013",
+                      "createdAt": "2026-09-18T16:33:46Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Verified on final 418c0da63 in CI run 35370032379: all required jobs passed, including all 11 course PostgreSQL examples and the new per-registration confirmation/retry regression. The combined release head 98a561a94 also passed CI run 35370036518.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048894897",
+                      "createdAt": "2026-09-18T17:04:16Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxNzowNDoxNlrO8VU7sQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6j0OaW",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 577,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Reference an introduction commit in this SHA's ancestry**\n\nFresh evidence for this exact reviewed SHA: `git merge-base --is-ancestor 9bc040b718db0a297c9766a6c4084e0803765599 7772e0004e3e564ba5588f6f0f5e03254660b2c2` exits 1, and this is the only invalid `introducedBy` among all 111 manifest entries. Because `scripts/production-release.mjs` checks every introduction with that command and rejects exit 1, a guarded release of this commit cannot apply the new receipt migration; point this entry to a valid ancestor that contains the migration.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048676575",
+                      "createdAt": "2026-09-18T16:36:50Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Actual approved head 418c0da63a8a95639866f1e92619e6a00b7640c4 contains 9bc040b718db0a297c9766a6c4084e0803765599 (git merge-base --is-ancestor exits 0). The cited 7772e0004e is not the pushed branch head. The combined source 98a561a94 also passed the actual production-release plan with all 113 introduction checks and matching recovery SQL. Preserve the exercised immutable introduction.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048913668",
+                      "createdAt": "2026-09-18T17:06:19Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxNzowNjoxOVrO8VWFBA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6j0X5U",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 577,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Point the migration entry at an ancestor**\n\nFresh evidence for this exact reviewed SHA: `git merge-base --is-ancestor 9bc040b718db0a297c9766a6c4084e0803765599 9dfe6425bd1043ec96da460c8c88453efffba155` exits 1; `git merge-base -h` confirms this mode tests whether the first commit is an ancestor of the second. `scripts/production-release.mjs` runs that check for every manifest entry and rejects exit 1, so a guarded release of this commit cannot apply the new migration. Reference an ancestor of this SHA that contains the migration.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048736498",
+                      "createdAt": "2026-09-18T16:45:19Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Verified on the actual approved 418c0da63 head: the course introduction is ancestral (exit 0). 9dfe6425bd is not the pushed head. The combined 98a561a94 guarded release plan also succeeds, validating the real introduction rather than a synthetic review revision. No applied migration history is rewritten.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048913903",
+                      "createdAt": "2026-09-18T17:06:20Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxNzowNjoyMFrO8VWF7w=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6j0X5Y",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/Server.hs",
+                "line": 5894,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Keep unverified contacts out of primary identity fields**\n\nFresh evidence in this exact SHA contradicts the earlier resolution: course contacts are still written to `PartyPrimaryEmail`/`PartyPrimaryPhone`, while `ensurePartyWithAccount` and `ensurePartyForInquiry` still call `selectUniquePartyByPrimaryEmail`/`selectUniquePartyByPrimaryPhone`, whose shared selector returns 409 for multiple matches. Because this change deliberately permits separate attendees to share an email, two registrations can therefore make later account creation or ad-inquiry submission fail for that address; store the unverified values outside the primary identity fields or exclude these source-scoped contacts from identity selection.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048736507",
+                      "createdAt": "2026-09-18T16:45:19Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "The dependency is explicit: this PR is released together with #439, not as a standalone production image. Combined approved 98a561a94 removes the unused ensurePartyWithAccount helper and replaces ensurePartyForInquiry with atomic source-key contact/lead creation, without email/phone identity selection or grants. CI35370036518 passed, including nine trial/ad/student PostgreSQL cases for shared details, retries, authorization and transactional failure. No global unique primary email constraint is introduced. This course-only branch intentionally keeps the changes separated for review; final staging and production use the combined source.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048914168",
+                      "createdAt": "2026-09-18T17:06:22Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxNzowNjoyMlrO8VWG-A=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6j0X5e",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/Server.hs",
+                "line": 6684,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Retry confirmations after transient delivery failures**\n\nWhen SMTP delivery fails transiently, `sendConfirmation` catches the exception and records a failed event, but the receipt and registration have already committed; a retry with the same idempotency key resolves that receipt with `created = False`, so this guard permanently skips another delivery attempt. Previously, retrying a pending registration invoked confirmation again, and the existing sent-event check already prevents duplicates. Allow retries when no successful confirmation exists rather than conditioning all delivery on first creation.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048736516",
+                      "createdAt": "2026-09-18T16:45:19Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Keeping automatic delivery limited to the first accepted source operation is intentional. A caught SMTP exception is not proof that the recipient server rejected the message: delivery can succeed before the acknowledgement is lost. Retrying whenever no sent event exists can therefore send duplicates, contrary to the task\u2019s explicit retry invariant. The accepted registration and failed course_email_event remain available in the authorized registration dossier\u2019s email history. Uncertain delivery needs operator review; public request retries must not blindly redispatch. Automatic recovery would need provider idempotency or a proven pre-acceptance failure classification. This limitation is documented rather than claiming delivery succeeded.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048914404",
+                      "createdAt": "2026-09-18T17:06:23Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxNzowNjoyM1rO8VWH5A=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxNjo0NToxOVrOo9F-Xg=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

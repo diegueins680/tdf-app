@@ -1,0 +1,94 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 435,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "de177c8589014dc394cd9af465e43be10ae1f744",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6jqZTF",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "docs/ux-ui-audit/2026-09-17/README.md",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Record Android artifact verification consistently**\n\nWhen this checkpoint is used to determine Android release readiness, it incorrectly lists artifact verification as a next step even though the newly committed `android12-artifact-verification.json` records the source, build, SHA-256, and signature check, and `findings.json` also marks the signed AAB as verified. The upload status is likewise inconsistent (`next step` here versus `in progress` there), so align these records to distinguish completed verification from the actual current upload state and avoid duplicate or skipped release work.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/435#discussion_r4044811994",
+                      "createdAt": "2026-09-18T07:46:17Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Corrected in the published successor checkpoint f2bd37f63. Android12 signed AAB hash/version verification and submissionc41e9287 are completed; Play readback is explicitly internalDRAFT. The next action is final qualified102+104 integration/build, not re-verifying or re-uploading old667. iOS21 VALID/IN_BETA_TESTING and actual publication remain separate. Current README, findings and PR body distinguish these states and preserve the versioned receipts.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/435#discussion_r4045589363",
+                      "createdAt": "2026-09-18T09:40:09Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwOTo0MDowOVrO8SLLcw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6juf6G",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "docs/catalog-persistence/catalog-list-decisions.json",
+                "line": 13158,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Refresh catalog reports for the new mobile candidate**\n\nAfter replacing this decision with `bffc5decb0aa4633b170`, the committed generated reports still expose the removed `faf664611d7ab0aa954d` candidate and its old untranslated `NEW_USER_VISIBLE_TABS` values (`static-list-inventory.json:115080` and `list-consumer-matrix.csv:1119`). Consequently, readers of the published inventory cannot associate the updated mobile catalog with this reviewed decision, and running the documented refresh rewrites those reports; regenerate both catalog reports from the updated submodule and decision file.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/435#discussion_r4046417589",
+                      "createdAt": "2026-09-18T11:46:58Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Regenerated both committed reports from the published90cae070 mobile pin and the reviewed decision file in de177c858. Both strict audit commands pass:1138 candidates across1579 source files,1138 CSV rows. The replacement bffc5decb0aa4633b170 is present in JSON and CSV; removed faf664611d7ab0aa954d is absent. No generated decisions were blindly accepted or source behavior changed.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/435#discussion_r4046509619",
+                      "createdAt": "2026-09-18T11:59:33Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxMTo1OTozM1rO8TDWMw=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxMTo0Njo1OFrOo7n-hg=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

@@ -1,0 +1,345 @@
+- generic [ref=f144e4]:
+  - generic [ref=f144e18]:
+    - generic [ref=f144e21]:
+      - link [ref=f144e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f144e31]
+      - generic [ref=f144e34]:
+        - link [ref=f144e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f144e44]
+        - link [ref=f144e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f144e54]
+        - link [ref=f144e61] [cursor=pointer]:
+          - /url: /direct/t/17846261700449368
+          - generic [ref=f144e64]:
+            - img "Messages" [ref=f144e66]
+            - generic "Direct messaging - 8 new notifications link" [ref=f144e69]: "8"
+        - link [ref=f144e75] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f144e80]
+        - link [ref=f144e87] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f144e92]
+        - link [ref=f144e98] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f144e103]
+        - link [ref=f144e108] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f144e113]
+        - link [ref=f144e120] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f144e125]:
+            - img "tdf.records.label's profile picture" [ref=f144e126]
+      - generic [ref=f144e127]:
+        - link [ref=f144e130] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f144e135]
+        - link [ref=f144e138] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f144e143]
+    - generic [ref=f144e146]:
+      - main [ref=f144e147]:
+        - generic [ref=f144e149]:
+          - generic [ref=f144e150]:
+            - generic [ref=f144e151]:
+              - link [ref=f144e157] [cursor=pointer]:
+                - /url: /losargonautas.ec/
+                - img "losargonautas.ec's profile picture" [ref=f144e158]
+              - generic [ref=f144e159]:
+                - generic [ref=f144e160]:
+                  - generic [ref=f144e161]:
+                    - link [ref=f144e163] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "losargonautas.ec" [level=2] [ref=f144e164]
+                    - button [ref=f144e166] [cursor=pointer]:
+                      - img "Options" [ref=f144e168]
+                  - generic [ref=f144e172]: Los Argonautas
+                  - generic [ref=f144e174]:
+                    - generic [ref=f144e176]:
+                      - generic [ref=f144e177]: "38"
+                      - text: posts
+                    - link "318 followers" [ref=f144e179] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f144e180]:
+                        - generic "318" [ref=f144e181]
+                        - text: followers
+                    - link "62 following" [ref=f144e183] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f144e184]:
+                        - generic [ref=f144e185]: "62"
+                        - text: following
+                - generic [ref=f144e186]:
+                  - generic [ref=f144e187]:
+                    - generic [ref=f144e188]: Musician/band
+                    - button [ref=f144e191] [cursor=pointer]:
+                      - generic [ref=f144e192]: Instrumental / Dub / Soul JamaiquinoQuito, Ecuador 📍 | Audionáutica (2025)Colaboraciones internacionales 🇬🇧🇯🇲🇦🇷🇨🇺🇧🇷🇨🇴
+                    - generic [ref=f144e193]:
+                      - button "Link icon distrokid.com/hyperfollow/losargonautas1/audionutica-2 and 1 more" [ref=f144e194] [cursor=pointer]:
+                        - generic [ref=f144e195]:
+                          - img "Link icon" [ref=f144e197]
+                          - generic [ref=f144e200]: distrokid.com/hyperfollow/losargonautas1/audionutica-2 and 1 more
+                      - link "Threads losargonautas.ec" [ref=f144e202] [cursor=pointer]:
+                        - /url: https://www.threads.com/@losargonautas.ec?xmt=AQG0C8PQd6kuqrFUuruMQD-D-FjPjNg_58m7za5VlHUqH6U
+                        - img "Threads" [ref=f144e204]
+                        - generic [ref=f144e206]: losargonautas.ec
+                  - link "Followed by nicojervistatuajes, lapinata_ec + 9 more" [ref=f144e208] [cursor=pointer]:
+                    - /url: /losargonautas.ec/followers/mutualOnly
+                    - generic [ref=f144e210]:
+                      - generic [ref=f144e212]:
+                        - button [ref=f144e213]:
+                          - link [ref=f144e214]
+                        - button [ref=f144e215]:
+                          - link [ref=f144e216]
+                        - button [ref=f144e217]:
+                          - link [ref=f144e218]
+                      - generic [ref=f144e219]: Followed by nicojervistatuajes, lapinata_ec + 9 more
+            - generic [ref=f144e224]:
+              - button "Following Down chevron icon" [ref=f144e226] [cursor=pointer]:
+                - generic [ref=f144e227]:
+                  - generic [ref=f144e228]: Following
+                  - img "Down chevron icon" [ref=f144e231]
+              - button "Message" [ref=f144e234] [cursor=pointer]
+              - button [ref=f144e236] [cursor=pointer]:
+                - img "Similar accounts" [ref=f144e238]
+            - menu [ref=f144e242]:
+              - list [ref=f144e246]:
+                - listitem [ref=f144e247]
+                - listitem [ref=f144e248]
+                - listitem [ref=f144e249]:
+                  - link "View Argo Worldwide! highlight" [ref=f144e252] [cursor=pointer]:
+                    - /url: /stories/highlights/18320068312233461/
+                    - button "losargonautas.ec's highlight story picture Argo Worldwide!" [ref=f144e253]:
+                      - button [ref=f144e254]:
+                        - img "losargonautas.ec's highlight story picture" [ref=f144e257]
+                      - generic [ref=f144e258]: Argo Worldwide!
+          - generic [ref=f144e261]:
+            - tablist [ref=f144e262]:
+              - link [ref=f144e264] [cursor=pointer]:
+                - /url: /losargonautas.ec/
+                - img "Posts" [ref=f144e266]
+              - link [ref=f144e277] [cursor=pointer]:
+                - /url: /losargonautas.ec/reels/
+                - img "Reels" [ref=f144e279]
+              - link [ref=f144e282] [cursor=pointer]:
+                - /url: /losargonautas.ec/reposts/
+                - img "Reposts" [ref=f144e284]
+              - link [ref=f144e287] [cursor=pointer]:
+                - /url: /losargonautas.ec/tagged/
+                - img "Tagged" [ref=f144e289]
+            - tabpanel
+          - generic [ref=f144e296]:
+            - generic [ref=f144e297]:
+              - link [ref=f144e299] [cursor=pointer]:
+                - /url: /pesospesadosdelreggae/p/Dcd7hUaEUx-/
+                - img "Celebramos estos 3 años como se debía, con vinilos, buena música, y biela. Agradecidos siempre con @djangocerveceria, por abrirnos las puertas de su casa. Gracias de corazón a todos los selectores que fueron parte de esta celebración y, muy especialmente, a @losargonautas.ec por acompañarnos y ponerle fuego a la noche. Gracias a todos los que han sido parte de estos 3 años. ¡Larga vida a Pesos Pesados del Reggae! @bovver_reggae_brigade @mista.riddim @mateo.villalba7 @soundbwoy_selektor @fasimba_hi_fi" [ref=f144e302]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f144e305] [cursor=pointer]:
+                - /url: /losargonautas.ec/p/DcTpuulxRfe/
+                - img "Este sábado 22/8 ¡A partir la pista en este show relámpago sorpresa en @djangocerveceria ! Junto a el seleccionado olímpico de selectores Nos vemos en la barra 🍻🌊⛵️" [ref=f144e308]
+              - link [ref=f144e311] [cursor=pointer]:
+                - /url: /rabiatto_pizzeria/reel/DbozST7hDk4/
+                - 'img "La música en vivo nos junta y celebramos la vida. A quienes siempre están, en cada encuentro que se convierte en un gran recuerdo. 🤍 La noche vibró con la energía de @losargonautas.ec aggronautas y el increíble DJ Set de @nicojervistatuajes , que hicieron de esta una experiencia inolvidable 🎧 Y claro… todo sabe mejor junto a la mejor pizza. ❤️🍕 #Rabiatto #DJSet #PizzaLovers" [ref=f144e314]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f144e316]:
+              - link [ref=f144e318] [cursor=pointer]:
+                - /url: /losargonautas.ec/p/DbMYa1KlJ9e/
+                - img [ref=f144e321]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f144e324] [cursor=pointer]:
+                - /url: /cosas_que_hacen__bum/p/DbI2oKThUyW/
+                - img [ref=f144e327]
+              - link [ref=f144e330] [cursor=pointer]:
+                - /url: /quitoskajazz/reel/DbCLce_DWIT/
+                - 'img "🎺 ¡El ska está de vuelta en la capital! 🔥 La cuenta regresiva comenzó... 🎶 Dale play al video y descubre todo lo que trae Quito Baila Ska 2026. 🤘 ¿Estás listo para vivir la fiesta? #QuitoBailaSka2026 #Ska #Quito #MúsicaEnVivo" [ref=f144e333]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f144e335]:
+              - link [ref=f144e337] [cursor=pointer]:
+                - /url: /losargonautas.ec/reel/Da5eV_kuk89/
+                - img [ref=f144e340]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f144e343] [cursor=pointer]:
+                - /url: /rabiatto_pizzeria/p/DaX6GihOD6A/
+                - img "¡Este jueves celebramos el Cumple del Gabo como se debe! 🔥 buena música, buena pizzas y buenos amigos 🎸 Los Argonautas en vivo 🎧 Nico Jervis como DJ invitado 🎁 Sorteos de tattoo y piercing Además, estaremos receptando donaciones para enviar a Venezuela. ❤️🇻🇪 Cada aporte cuenta y puede hacer la diferencia." [ref=f144e346]
+              - link [ref=f144e349] [cursor=pointer]:
+                - /url: /losargonautas.ec/p/DZFmH0qDgF6/
+                - 'img "Una alegría compartir que Audionautica (2025), nuestro nuevo álbum, aparece reseñado en la edición #92 de Reggae Vibes, reconocida revista francesa especializada en música jamaiquina. La reseña fue publicada en la página 122 dentro de la sección “Chroniques” Reggae-Ska. Gracias a los amigos de Reggae Vibes por escribir sobre nuestro trabajo y a todos quienes escuchan y acompañan este viaje." [ref=f144e352]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f144e354]:
+              - link [ref=f144e356] [cursor=pointer]:
+                - /url: /labrigadadelruido/p/DXXcK4Okgv1/
+                - 'img "Disponible en Youtube y en todas las plataformas de streaming. En este episodio nos vamos directo al corazón de Ecuador Tuvimos el placer de conversar con Juan Báez, guitarrista de la banda Los Argonautas desde Quito, Ecuador 🇪🇨. Hablamos de formacion de la banda, historia, los planes a futuro y todo lo que hay detrás de mantenerse fiel a un sonido con identidad. Además, nos sumergimos en parte de su música con estos temas: 🎶 Poción de Medea 🎶 In the Heat of the Night 🎶 Tema de Orfeo 🎶 Gigantes de Tesalia Si te gusta el ska, la música independiente o simplemente escuchar historias reales de músicos que están dándolo todo, este episodio es para ti. Dale play, súbele volumen y acompáñanos en este viaje 🌎🔥 #ska #podcast #youtube #spotify #losargonautas" [ref=f144e359]'
+              - link [ref=f144e362] [cursor=pointer]:
+                - /url: /radio_bahia/reel/DT0vJddFBjU/
+                - 'img "¿Cómo grabas un vinilo para Francia, con las horas contadas y con apagones de 16 horas en Ecuador? Esta es la odisea de Los Argonautas Ec, quienes fusionando ska y soul vencieron la oscuridad para lanzar \"Audionáutica\" junto a leyendas mundiales. Un viaje mitológico que hoy resuena desde Quito hasta Japón, demostrando que el arte no tiene fronteras. Radio Bahía recomienda esta joya; búscala ya en plataformas y descubre el vellocino de oro del ska jazz. @losargonautas.ec #dub #reggaetonchallenge #reggaemusic #funkmusic #soulmusic #SkaJazz #LosArgonautas #radiobahia #SkaEcuador #VinylCulture #MusicaIndependiente" [ref=f144e365]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f144e368] [cursor=pointer]:
+                - /url: /losargonautas.ec/reel/DTlomXQjrE0/
+                - img "Escucha “Asamblea del Olimpo” un ska tradicional de Los Argonautas grabado en Quito-Ecuador Cuarto corte del lado A de “Audionáutica” 2025 con la participación estelar de Hugo Lobo 🎺 y Ángel Gómez 🎷" [ref=f144e371]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+      - contentinfo [ref=f144e373]:
+        - generic [ref=f144e374]:
+          - generic [ref=f144e376]:
+            - link "Meta" [ref=f144e378] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f144e381] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f144e384] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f144e387] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f144e390] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f144e393] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f144e396] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f144e399] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f144e402] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f144e405] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f144e408] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f144e411] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f144e414] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f144e417] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f144e420] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f144e423] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f144e425]:
+            - generic [ref=f144e426] [cursor=pointer]:
+              - generic [ref=f144e427]:
+                - generic [ref=f144e428]: English
+                - img "Down chevron icon" [ref=f144e431]
+              - combobox "Switch Display Language" [ref=f144e433]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f144e434]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f144e437] [cursor=pointer]:
+              - generic "Messages - 8 new notifications" [ref=f144e438]:
+                - generic [ref=f144e439]:
+                  - generic [ref=f144e441]:
+                    - img "Messages" [ref=f144e442]
+                    - generic "Direct messaging - 8 new notifications link" [ref=f144e445]: "8"
+                  - generic [ref=f144e448]: Messages
+                - generic [ref=f144e449]:
+                  - button [ref=f144e450]:
+                    - img "8 unread chats" [ref=f144e452]
+                  - button "User avatar ..." [ref=f144e457]:
+                    - img "User avatar" [ref=f144e460]
+                  - button "User avatar David Márquez" [ref=f144e462]:
+                    - img "User avatar" [ref=f144e465]
+                  - button "User avatar Limberg Steven Garcia Alava" [ref=f144e467]:
+                    - img "User avatar" [ref=f144e470]
+            - generic [ref=f144e471]:
+              - generic [ref=f144e472]:
+                - generic [ref=f144e473]:
+                  - generic [ref=f144e475]:
+                    - status "Loading..." [ref=f144e477]
+                    - status "Loading..." [ref=f144e479]
+                  - button [active] [ref=f144e481] [cursor=pointer]:
+                    - img "Close" [ref=f144e483]
+                - separator [ref=f144e486]
+              - generic [ref=f144e487]:
+                - generic [ref=f144e488]:
+                  - status "Loading..." [ref=f144e490]
+                  - status "Loading..." [ref=f144e492]
+                - status "Loading..." [ref=f144e495]
+                - generic [ref=f144e496]:
+                  - status "Loading..." [ref=f144e498]
+                  - status "Loading..." [ref=f144e500]
+                - generic [ref=f144e501]:
+                  - status "Loading..." [ref=f144e503]
+                  - status "Loading..." [ref=f144e505]
+                - status "Loading..." [ref=f144e508]
+                - generic [ref=f144e509]:
+                  - status "Loading..." [ref=f144e511]
+                  - status "Loading..." [ref=f144e513]
+                - status "Loading..." [ref=f144e515]

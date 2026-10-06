@@ -1,0 +1,155 @@
+- generic:
+  - generic:
+    - generic:
+      - generic:
+        - link:
+          - /url: "#_r_81_"
+          - text: Skip to content
+      - generic:
+        - complementary [ref=f12e7]:
+          - generic [ref=f12e11]:
+            - navigation [ref=f12e1098]:
+              - generic [ref=f12e13]:
+                - button [ref=f12e1099] [cursor=pointer]:
+                  - generic [ref=f12e16]: Home
+                - button [ref=f12e1100] [cursor=pointer]:
+                  - generic [ref=f12e21]: Space
+                - button [ref=f12e1101] [cursor=pointer]:
+                  - generic [ref=f12e26]: Scheduled
+                - button [ref=f12e1102] [cursor=pointer]:
+                  - generic [ref=f12e32]: Plugins
+                - button [ref=f12e1103] [cursor=pointer]:
+                  - generic [ref=f12e37]: Explore
+              - button [ref=f12e1104] [cursor=pointer]
+            - navigation [ref=f12e1105]:
+              - generic [ref=f12e961]:
+                - generic [ref=f12e962]:
+                  - generic [ref=f12e963]:
+                    - heading [level=1] [ref=f12e1106]: Scheduled
+                    - generic [ref=f12e965]:
+                      - button [ref=f12e1107] [cursor=pointer]
+                      - button [expanded] [ref=f12e1108] [cursor=pointer]
+                  - button [ref=f12e1109] [cursor=pointer]:
+                    - generic [ref=f12e980]: New task
+                - generic [ref=f12e988]:
+                  - generic [ref=f12e989]:
+                    - generic [ref=f12e990]: Upcoming
+                    - button [ref=f12e1110] [cursor=pointer]
+                  - list [ref=f12e1005]:
+                    - listitem [ref=f12e1006]:
+                      - button [ref=f12e1111] [cursor=pointer]:
+                        - generic [ref=f12e1012]:
+                          - generic [ref=f12e1013]: Quito Electronic Event Watch
+                          - generic [ref=f12e1019]: Monitoring
+                        - button [ref=f12e1112]
+                    - listitem [ref=f12e1029]:
+                      - button [ref=f12e1113] [cursor=pointer]:
+                        - generic [ref=f12e1031]: Show more
+          - generic:
+            - separator
+        - text: Ask ChatGPT
+        - generic:
+          - generic:
+            - generic:
+              - main:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - img: 🕗
+                                      - generic:
+                                        - heading [level=1]: Schedule a task
+                                        - paragraph: ChatGPT can take care of ongoing tasks so you don’t have to.
+                                - generic:
+                                  - list:
+                                    - listitem:
+                                      - button:
+                                        - generic:
+                                          - generic: News updates
+                                          - generic: Send me a daily roundup of news on topics I care about.
+                                    - listitem:
+                                      - button:
+                                        - generic:
+                                          - generic: Email monitor
+                                          - generic: Scan my emails and let me know anything that needs my attention
+                                    - listitem:
+                                      - button:
+                                        - generic:
+                                          - generic: Quito electronic event alerts
+                                          - generic: Let me know when a strong house, minimal, or techno event is announced in Quito
+                                    - listitem:
+                                      - button:
+                                        - generic: 😴
+                                        - generic:
+                                          - generic: Sleep coaching
+                                          - generic: Track my sleep quality and help me improve my habits.
+                                    - listitem:
+                                      - button:
+                                        - generic: 🛩
+                                        - generic:
+                                          - generic: Find flights for a trip
+                                          - generic: Find the best deal on flights for an upcoming trip.
+                                    - listitem:
+                                      - button:
+                                        - generic: 🥗
+                                        - generic:
+                                          - generic: Weekly meal plan
+                                          - generic: Plan meals for the week and make a grocery list.
+            - status
+  - status
+  - status
+  - status
+  - dialog [ref=f12e1115]:
+    - generic [ref=f12e1116]:
+      - heading "Schedule a task" [level=2] [ref=f12e1118]
+      - group [ref=f12e1121]:
+        - generic [ref=f12e1122]:
+          - textbox "Instructions…" [ref=f12e1124]:
+            - paragraph: Instructions…
+          - generic [ref=f12e1127]:
+            - generic [ref=f12e1128]:
+              - generic [ref=f12e1129]: Repeat task
+              - switch "Repeat task" [checked] [ref=f12e1133] [cursor=pointer]
+            - generic [ref=f12e1136]:
+              - generic [ref=f12e1137]: Repeat
+              - button "Repeat schedule" [ref=f12e1141] [cursor=pointer]:
+                - generic [ref=f12e1142]: Daily
+            - generic [ref=f12e1145]:
+              - generic [ref=f12e1146]: Time
+              - generic [ref=f12e1150]:
+                - combobox "Time" [active] [ref=f12e1151] [cursor=pointer]: 8:00 AM Ecuador Time
+                - button "Time" [ref=f12e1152] [cursor=pointer]
+            - generic [ref=f12e1155]:
+              - generic [ref=f12e1156]: End repeat
+              - button "End repeat" [ref=f12e1160] [cursor=pointer]:
+                - generic [ref=f12e1161]: Never
+          - generic [ref=f12e1164]:
+            - button [expanded] [ref=f12e1165] [cursor=pointer]
+            - region "Advanced" [ref=f12e1178]:
+              - generic [ref=f12e1180]:
+                - generic [ref=f12e1181]:
+                  - generic [ref=f12e1182]: Time zone
+                  - button "Time zone" [ref=f12e1186] [cursor=pointer]:
+                    - generic [ref=f12e1187]: Ecuador Time
+                - generic [ref=f12e1190]:
+                  - generic [ref=f12e1191]: Start each run in new chat
+                  - switch "Start each run in new chat" [ref=f12e1195] [cursor=pointer]
+                - generic [ref=f12e1198]:
+                  - generic [ref=f12e1199]: Model
+                  - button "Model" [ref=f12e1203] [cursor=pointer]:
+                    - generic [ref=f12e1204]: GPT-6.1 Sol
+                - generic [ref=f12e1208]:
+                  - generic [ref=f12e1209]: Effort
+                  - button "Reasoning" [ref=f12e1213] [cursor=pointer]:
+                    - generic [ref=f12e1214]: Light
+      - generic [ref=f12e1170]:
+        - button "Cancel" [ref=f12e1171] [cursor=pointer]
+        - button "Create" [disabled] [ref=f12e1173]
+    - button "Close dialog" [ref=f12e1174] [cursor=pointer]

@@ -250,8 +250,8 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 
 | Provider | URL | Events |
 |----------|-----|--------|
-| Stripe | `https://tdf-hq.fly.dev/social-events/stripe/webhook` | `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded` |
-| PayPal | `https://tdf-hq.fly.dev/services/storefront/paypal/webhook` | `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.DENIED` |
+| Stripe | `https://api.tdfrecords.net/social-events/stripe/webhook` | `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded` |
+| PayPal | `https://api.tdfrecords.net/services/storefront/paypal/webhook` | `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.DENIED` |
 | Datafast | Redirect-based (no webhook needed) | N/A |
 
 ---

@@ -1,0 +1,442 @@
+- generic [active] [ref=e1]:
+  - link "Saltar al contenido principal" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - link "Saltar al contenido principal" [ref=e5] [cursor=pointer]:
+        - /url: "#main-content"
+      - navigation "Navegación de la aplicación" [ref=e6]:
+        - generic [ref=e7]:
+          - generic [ref=e8]: MENÚ
+          - generic [ref=e10]:
+            - textbox "Buscar sección" [ref=e14]:
+              - /placeholder: Buscar sección (/)
+            - group
+        - list [ref=e15]:
+          - listitem [ref=e16]:
+            - generic [ref=e17]:
+              - generic [ref=e18]: CREAR
+              - button "Mostrar CREAR" [ref=e23] [cursor=pointer]
+          - listitem [ref=e26]:
+            - generic [ref=e27]:
+              - generic [ref=e28]: GENTE
+              - button "Mostrar GENTE" [ref=e33] [cursor=pointer]
+          - listitem [ref=e36]:
+            - generic [ref=e37]:
+              - generic [ref=e38]: SELLO
+              - button "Mostrar SELLO" [ref=e43] [cursor=pointer]
+          - listitem [ref=e46]:
+            - generic [ref=e47]:
+              - generic [ref=e48]: OPERAR
+              - button "Mostrar OPERAR" [ref=e54] [cursor=pointer]
+          - listitem [ref=e57]:
+            - generic [ref=e58]:
+              - generic [ref=e59]: ADMIN
+              - button "Ocultar ADMIN" [expanded] [ref=e67] [cursor=pointer]
+            - list [ref=e73]:
+              - listitem [ref=e74]:
+                - link "Inscripciones de cursos" [ref=e75] [cursor=pointer]:
+                  - /url: /configuracion/inscripciones-curso
+              - listitem [ref=e80]:
+                - link "Cursos" [ref=e81] [cursor=pointer]:
+                  - /url: /configuracion/cursos
+              - listitem [ref=e86]:
+                - link "Actividad" [ref=e87] [cursor=pointer]:
+                  - /url: /configuracion/actividad
+              - listitem [ref=e92]:
+                - link "Logs" [ref=e93] [cursor=pointer]:
+                  - /url: /configuracion/logs
+              - listitem [ref=e98]:
+                - link "Estado sistema" [ref=e99] [cursor=pointer]:
+                  - /url: /configuracion/estado
+              - listitem [ref=e104]:
+                - link "Diagnósticos" [ref=e105] [cursor=pointer]:
+                  - /url: /admin/diagnosticos
+              - listitem [ref=e110]:
+                - link "Eventos de pago" [ref=e111] [cursor=pointer]:
+                  - /url: /admin/commerce/provider-events
+              - listitem [ref=e116]:
+                - link "Brain y RAG" [ref=e117] [cursor=pointer]:
+                  - /url: /configuracion/brain
+              - listitem [ref=e122]:
+                - link "Usuarios admin" [ref=e123] [cursor=pointer]:
+                  - /url: /configuracion/usuarios-admin
+              - listitem [ref=e128]:
+                - link "Catálogos" [ref=e129] [cursor=pointer]:
+                  - /url: /configuracion/catalogos
+              - listitem [ref=e134]:
+                - link "Roles y permisos" [ref=e135] [cursor=pointer]:
+                  - /url: /configuracion/roles-permisos
+              - listitem [ref=e140]:
+                - link "Calendario Google" [ref=e141] [cursor=pointer]:
+                  - /url: /configuracion/integraciones/calendario
+              - listitem [ref=e146]:
+                - link "CMS" [ref=e147] [cursor=pointer]:
+                  - /url: /configuracion/cms
+              - listitem [ref=e152]:
+                - link "Campañas automáticas" [ref=e153] [cursor=pointer]:
+                  - /url: /configuracion/campanas-automaticas
+              - listitem [ref=e158]:
+                - link "Fuentes de videos" [ref=e159] [cursor=pointer]:
+                  - /url: /configuracion/fuentes-videos
+              - listitem [ref=e164]:
+                - link "WhatsApp consentimiento" [ref=e165] [cursor=pointer]:
+                  - /url: /configuracion/whatsapp-consentimiento
+              - listitem [ref=e170]:
+                - link "Opciones UX" [ref=e171] [cursor=pointer]:
+                  - /url: /configuracion/opciones-ux
+              - listitem [ref=e176]:
+                - link "Preferencias" [ref=e177] [cursor=pointer]:
+                  - /url: /configuracion/preferencias
+          - listitem [ref=e182]:
+            - generic [ref=e183]:
+              - generic [ref=e184]: HERRAMIENTAS
+              - button "Mostrar HERRAMIENTAS" [ref=e189] [cursor=pointer]
+          - listitem [ref=e192]:
+            - generic [ref=e193]:
+              - generic [ref=e194]: AYUDA
+              - button "Mostrar AYUDA" [ref=e199] [cursor=pointer]
+      - generic [ref=e202]:
+        - banner [ref=e203]:
+          - generic [ref=e204]:
+            - button "Ocultar menú lateral" [ref=e205] [cursor=pointer]
+            - link "Ir al inicio" [ref=e208] [cursor=pointer]:
+              - /url: /inicio
+              - img "TDF Records logo"
+            - button "Buscar sección" [ref=e210] [cursor=pointer]:
+              - generic [ref=e215]: ⌘K
+            - generic [ref=e216]:
+              - button "Creación rápida" [ref=e217] [cursor=pointer]:
+                - generic [ref=e221]: Crear
+              - button "Notificaciones" [ref=e222] [cursor=pointer]:
+                - generic [ref=e223]: "0"
+              - button "Abrir menú de sesión" [ref=e226] [cursor=pointer]:
+                - generic [ref=e227]: D
+        - status [ref=e228]:
+          - progressbar "Cargando datos" [ref=e229]
+        - main [ref=e231]:
+          - generic [ref=e232]:
+            - navigation "Migas de pan" [ref=e233]:
+              - list [ref=e234]:
+                - listitem [ref=e235]:
+                  - link "Usuarios admin" [ref=e236] [cursor=pointer]:
+                    - /url: /configuracion/usuarios-admin
+                - listitem [ref=e237]: /
+                - listitem [ref=e238]:
+                  - paragraph [ref=e239]: Roles y permisos
+            - generic [ref=e241]:
+              - generic [ref=e242]:
+                - heading "Roles y permisos" [level=5] [ref=e243]
+                - paragraph [ref=e244]: "Vista compacta: estado aparecerá cuando aporte contexto."
+              - generic [ref=e245]:
+                - table [ref=e247]:
+                  - rowgroup [ref=e248]:
+                    - row [ref=e249]:
+                      - columnheader "Usuario" [ref=e250]
+                      - columnheader "Contacto" [ref=e251]
+                      - columnheader "Roles editables" [ref=e252]
+                  - rowgroup [ref=e253]:
+                    - row [ref=e254]:
+                      - cell "Diego Saa ID 1" [ref=e255]:
+                        - generic [ref=e256]:
+                          - paragraph [ref=e257]: Diego Saa
+                          - generic [ref=e258]: ID 1
+                      - cell [ref=e259]:
+                        - paragraph [ref=e260]: info@tdfrecords.net
+                      - cell [ref=e261]:
+                        - button "Editar roles de Diego Saa (ID 1)" [ref=e262] [cursor=pointer]:
+                          - generic [ref=e264]:
+                            - generic [ref=e265]: Administrador
+                            - generic [ref=e267]: Cliente
+                            - generic [ref=e269]: Fan
+                    - row [ref=e271]:
+                      - cell [ref=e272]:
+                        - paragraph [ref=e274]: Front Desk Manager
+                      - cell [ref=e275]:
+                        - paragraph [ref=e276]: Sin email ni teléfono
+                      - cell [ref=e277]:
+                        - button "Editar roles de Front Desk Manager" [ref=e278] [cursor=pointer]:
+                          - generic [ref=e279]: Gerente
+                    - row [ref=e283]:
+                      - cell [ref=e284]:
+                        - paragraph [ref=e286]: Reception
+                      - cell [ref=e287]:
+                        - paragraph [ref=e288]: Sin email ni teléfono
+                      - cell [ref=e289]:
+                        - button "Editar roles de Reception" [ref=e290] [cursor=pointer]:
+                          - generic [ref=e291]: Recepción
+                    - row [ref=e295]:
+                      - cell [ref=e296]:
+                        - paragraph [ref=e298]: Accounting
+                      - cell [ref=e299]:
+                        - paragraph [ref=e300]: Sin email ni teléfono
+                      - cell [ref=e301]:
+                        - button "Editar roles de Accounting" [ref=e302] [cursor=pointer]:
+                          - generic [ref=e303]: Contabilidad
+                    - row [ref=e307]:
+                      - cell [ref=e308]:
+                        - paragraph [ref=e310]: Scheduling
+                      - cell [ref=e311]:
+                        - paragraph [ref=e312]: Sin email ni teléfono
+                      - cell [ref=e313]:
+                        - button "Editar roles de Scheduling" [ref=e314] [cursor=pointer]:
+                          - generic [ref=e315]: Ingeniero
+                    - row [ref=e319]:
+                      - cell [ref=e320]:
+                        - paragraph [ref=e322]: Packages
+                      - cell [ref=e323]:
+                        - paragraph [ref=e324]: Sin email ni teléfono
+                      - cell [ref=e325]:
+                        - button "Editar roles de Packages" [ref=e326] [cursor=pointer]:
+                          - generic [ref=e327]: Cliente
+                    - row [ref=e331]:
+                      - cell [ref=e332]:
+                        - paragraph [ref=e334]: Carlos De smedt
+                      - cell [ref=e335]:
+                        - paragraph [ref=e336]: wikicarlos@gmail.com · 0993946996
+                      - cell [ref=e337]:
+                        - button "Editar roles de Carlos De smedt" [ref=e338] [cursor=pointer]:
+                          - generic [ref=e340]:
+                            - generic [ref=e341]: Cliente
+                            - generic [ref=e343]: Fan
+                    - row [ref=e345]:
+                      - cell "Julián Saa ID 8" [ref=e346]:
+                        - generic [ref=e347]:
+                          - paragraph [ref=e348]: Julián Saa
+                          - generic [ref=e349]: ID 8
+                      - cell [ref=e350]:
+                        - paragraph [ref=e351]: diego.saa@fcaq.k12.ec · Nefi1966
+                      - cell [ref=e352]:
+                        - button "Editar roles de Julián Saa (ID 8)" [ref=e353] [cursor=pointer]:
+                          - generic [ref=e355]:
+                            - generic [ref=e356]: Cliente
+                            - generic [ref=e358]: Fan
+                    - row [ref=e360]:
+                      - cell "Julián Saa ID 9" [ref=e361]:
+                        - generic [ref=e362]:
+                          - paragraph [ref=e363]: Julián Saa
+                          - generic [ref=e364]: ID 9
+                      - cell [ref=e365]:
+                        - paragraph [ref=e366]: diego.saa@tdf.com · Nefi1966
+                      - cell [ref=e367]:
+                        - button "Editar roles de Julián Saa (ID 9)" [ref=e368] [cursor=pointer]:
+                          - generic [ref=e370]:
+                            - generic [ref=e371]: Cliente
+                            - generic [ref=e373]: Fan
+                    - row [ref=e375]:
+                      - cell "Diego Saa ID 10" [ref=e376]:
+                        - generic [ref=e377]:
+                          - paragraph [ref=e378]: Diego Saa
+                          - generic [ref=e379]: ID 10
+                      - cell [ref=e380]:
+                        - paragraph [ref=e381]: diego@tdfrecords.net
+                      - cell [ref=e382]:
+                        - button "Editar roles de Diego Saa (ID 10)" [ref=e383] [cursor=pointer]:
+                          - generic [ref=e385]:
+                            - generic [ref=e386]: Cliente
+                            - generic [ref=e388]: Ingeniero
+                            - generic [ref=e390]: Fan
+                    - row [ref=e392]:
+                      - cell [ref=e393]:
+                        - paragraph [ref=e395]: Luis Alejandro Freire Díaz
+                      - cell [ref=e396]:
+                        - paragraph [ref=e397]: lfrocker94@gmail.com · +0995451310
+                      - cell [ref=e398]:
+                        - button "Editar roles de Luis Alejandro Freire Díaz" [ref=e399] [cursor=pointer]:
+                          - generic [ref=e401]:
+                            - generic [ref=e402]: Cliente
+                            - generic [ref=e404]: Fan
+                            - generic [ref=e406]: Estudiante
+                    - row [ref=e408]:
+                      - cell [ref=e409]:
+                        - paragraph [ref=e411]: Otro man
+                      - cell [ref=e412]:
+                        - paragraph [ref=e413]: cuco.saa@gmail.com · +0984755301
+                      - cell [ref=e414]:
+                        - button "Editar roles de Otro man" [ref=e415] [cursor=pointer]:
+                          - generic [ref=e417]:
+                            - generic [ref=e418]: Artista
+                            - generic [ref=e420]: Cliente
+                            - generic [ref=e422]: Fan
+                            - generic [ref=e424]: +1 rol
+                    - row [ref=e426]:
+                      - cell [ref=e427]:
+                        - paragraph [ref=e429]: Karla Daniela Medranda Jimenez
+                      - cell [ref=e430]:
+                        - paragraph [ref=e431]: danielakarla121@gmail.com · +593939949759
+                      - cell [ref=e432]:
+                        - button "Editar roles de Karla Daniela Medranda Jimenez" [ref=e433] [cursor=pointer]:
+                          - generic [ref=e435]:
+                            - generic [ref=e436]: Cliente
+                            - generic [ref=e438]: Fan
+                    - row [ref=e440]:
+                      - cell [ref=e441]:
+                        - paragraph [ref=e443]: Fernando Conrado
+                      - cell [ref=e444]:
+                        - paragraph [ref=e445]: kruzkuadrada@gmail.com
+                      - cell [ref=e446]:
+                        - button "Editar roles de Fernando Conrado" [ref=e447] [cursor=pointer]:
+                          - generic [ref=e449]:
+                            - generic [ref=e450]: Cliente
+                            - generic [ref=e452]: Fan
+                            - generic [ref=e454]: Estudiante
+                    - row [ref=e456]:
+                      - cell [ref=e457]:
+                        - paragraph [ref=e459]: Zahid Rodríguez
+                      - cell [ref=e460]:
+                        - paragraph [ref=e461]: estebanzahid0@gmail.com · +0960239333
+                      - cell [ref=e462]:
+                        - button "Editar roles de Zahid Rodríguez" [ref=e463] [cursor=pointer]:
+                          - generic [ref=e465]:
+                            - generic [ref=e466]: Cliente
+                            - generic [ref=e468]: Fan
+                    - row [ref=e470]:
+                      - cell [ref=e471]:
+                        - paragraph [ref=e473]: Luis Pomagualli
+                      - cell [ref=e474]:
+                        - paragraph [ref=e475]: luispomaguallipolicia@gmail.com · +0960848496
+                      - cell [ref=e476]:
+                        - button "Editar roles de Luis Pomagualli" [ref=e477] [cursor=pointer]:
+                          - generic [ref=e479]:
+                            - generic [ref=e480]: Cliente
+                            - generic [ref=e482]: Fan
+                    - row [ref=e484]:
+                      - cell "Claudia Palma ID 17" [ref=e485]:
+                        - generic [ref=e486]:
+                          - paragraph [ref=e487]: Claudia Palma
+                          - generic [ref=e488]: ID 17
+                      - cell [ref=e489]:
+                        - paragraph [ref=e490]: unaclaudiapalma@gmail.com · +593984505231
+                      - cell [ref=e491]:
+                        - button "Editar roles de Claudia Palma (ID 17)" [ref=e492] [cursor=pointer]:
+                          - generic [ref=e494]:
+                            - generic [ref=e495]: A&R
+                            - generic [ref=e497]: Cliente
+                            - generic [ref=e499]: Fan
+                            - generic [ref=e501]: +3 roles
+                    - row [ref=e503]:
+                      - cell "Claudia Palma ID 18" [ref=e504]:
+                        - generic [ref=e505]:
+                          - paragraph [ref=e506]: Claudia Palma
+                          - generic [ref=e507]: ID 18
+                      - cell [ref=e508]:
+                        - paragraph [ref=e509]: unaclaudiapalma@gmail.com · +593984505231
+                      - cell [ref=e510]:
+                        - button "Editar roles de Claudia Palma (ID 18)" [ref=e511] [cursor=pointer]:
+                          - generic [ref=e513]:
+                            - generic [ref=e514]: A&R
+                            - generic [ref=e516]: Cliente
+                            - generic [ref=e518]: Fan
+                            - generic [ref=e520]: +3 roles
+                    - row [ref=e522]:
+                      - cell "Emanuele Pilo-Pais ID 19" [ref=e523]:
+                        - generic [ref=e524]:
+                          - paragraph [ref=e525]: Emanuele Pilo-Pais
+                          - generic [ref=e526]: ID 19
+                      - cell [ref=e527]:
+                        - paragraph [ref=e528]: interfacerandom@gmail.com · +593988384849
+                      - cell [ref=e529]:
+                        - button "Editar roles de Emanuele Pilo-Pais (ID 19)" [ref=e530] [cursor=pointer]:
+                          - generic [ref=e532]:
+                            - generic [ref=e533]: A&R
+                            - generic [ref=e535]: Artista
+                            - generic [ref=e537]: Artista (histórico)
+                            - generic [ref=e539]: +5 roles
+                    - row [ref=e541]:
+                      - cell "Juan Ledesma ID 20" [ref=e542]:
+                        - generic [ref=e543]:
+                          - paragraph [ref=e544]: Juan Ledesma
+                          - generic [ref=e545]: ID 20
+                      - cell [ref=e546]:
+                        - paragraph [ref=e547]: juan.ledesma@tdfrecords.com
+                      - cell [ref=e548]:
+                        - button "Editar roles de Juan Ledesma (ID 20)" [ref=e549] [cursor=pointer]:
+                          - generic [ref=e551]:
+                            - generic [ref=e552]: Administrador
+                            - generic [ref=e554]: Artista
+                            - generic [ref=e556]: Artista (histórico)
+                            - generic [ref=e558]: +5 roles
+                    - row [ref=e560]:
+                      - cell "Emanuele Pilo-Pais ID 21" [ref=e561]:
+                        - generic [ref=e562]:
+                          - paragraph [ref=e563]: Emanuele Pilo-Pais
+                          - generic [ref=e564]: ID 21
+                      - cell [ref=e565]:
+                        - paragraph [ref=e566]: interfacerandom@gmail.com · +593988384849
+                      - cell [ref=e567]:
+                        - button "Editar roles de Emanuele Pilo-Pais (ID 21)" [ref=e568] [cursor=pointer]:
+                          - generic [ref=e570]:
+                            - generic [ref=e571]: A&R
+                            - generic [ref=e573]: Artista
+                            - generic [ref=e575]: Artista (histórico)
+                            - generic [ref=e577]: +5 roles
+                    - row [ref=e579]:
+                      - cell "Esteban Muñoz ID 22" [ref=e580]:
+                        - generic [ref=e581]:
+                          - paragraph [ref=e582]: Esteban Muñoz
+                          - generic [ref=e583]: ID 22
+                      - cell [ref=e584]:
+                        - paragraph [ref=e585]: mixandlivesound@gmail.com
+                      - cell [ref=e586]:
+                        - button "Editar roles de Esteban Muñoz (ID 22)" [ref=e587] [cursor=pointer]:
+                          - generic [ref=e589]:
+                            - generic [ref=e590]: Contabilidad
+                            - generic [ref=e592]: Cliente
+                            - generic [ref=e594]: Ingeniero
+                            - generic [ref=e596]: +4 roles
+                    - row [ref=e598]:
+                      - cell "Fabricio Alomía ID 23" [ref=e599]:
+                        - generic [ref=e600]:
+                          - paragraph [ref=e601]: Fabricio Alomía
+                          - generic [ref=e602]: ID 23
+                      - cell [ref=e603]:
+                        - paragraph [ref=e604]: fabro.sounds@gmail.com
+                      - cell [ref=e605]:
+                        - button "Editar roles de Fabricio Alomía (ID 23)" [ref=e606] [cursor=pointer]:
+                          - generic [ref=e608]:
+                            - generic [ref=e609]: Artista
+                            - generic [ref=e611]: Artista (histórico)
+                            - generic [ref=e613]: Cliente
+                            - generic [ref=e615]: +4 roles
+                    - row [ref=e617]:
+                      - cell [ref=e618]:
+                        - paragraph [ref=e620]: Domo Pululahua
+                      - cell [ref=e621]:
+                        - paragraph [ref=e622]: domopululahua@gmail.com
+                      - cell [ref=e623]:
+                        - button "Editar roles de Domo Pululahua" [ref=e624] [cursor=pointer]:
+                          - generic [ref=e626]:
+                            - generic [ref=e627]: Cliente
+                            - generic [ref=e629]: Fan
+                    - row [ref=e631]:
+                      - cell [ref=e632]:
+                        - paragraph [ref=e634]: Esteban Coba
+                      - cell [ref=e635]:
+                        - paragraph [ref=e636]: estebancoba.c@gmail.com
+                      - cell [ref=e637]:
+                        - button "Editar roles de Esteban Coba" [ref=e638] [cursor=pointer]:
+                          - generic [ref=e640]:
+                            - generic [ref=e641]: Cliente
+                            - generic [ref=e643]: Fan
+                - generic [ref=e647]:
+                  - paragraph [ref=e648]: Por página
+                  - generic [ref=e649]:
+                    - combobox "Por página 25" [ref=e650] [cursor=pointer]: "25"
+                    - textbox: "25"
+                  - paragraph [ref=e651]: 1–25 de 120 usuarios
+                  - generic [ref=e652]:
+                    - button "Ir a la página anterior" [disabled]
+                    - button "Ir a la página siguiente" [ref=e653] [cursor=pointer]
+    - generic "Control de radio":
+      - generic [ref=e656]:
+        - button "Reproducir radio" [ref=e657] [cursor=pointer]
+        - generic "Saltar al anterior" [ref=e660]:
+          - button "Saltar a la estación anterior" [disabled]
+        - generic "Saltar al siguiente" [ref=e661]:
+          - button "Saltar a la siguiente estación" [disabled]
+        - button "Silenciar radio" [ref=e662] [cursor=pointer]
+        - button "Ocultar barra de radio" [ref=e665] [cursor=pointer]
+        - button "Expandir radio" [ref=e668] [cursor=pointer]
+        - generic [ref=e671]:
+          - generic [ref=e672]: "En pausa: Sin emisoras disponibles"
+          - text: Radio

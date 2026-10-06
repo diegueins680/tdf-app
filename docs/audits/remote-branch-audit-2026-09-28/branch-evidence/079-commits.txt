@@ -1,0 +1,9 @@
+547490105d12e0581b6ca5fddc135f127abedf07 2026-09-16T15:16:23-05:00 continuous-improvement-loop[bot] [CF-Pages-Skip] Record completed fan subscription client and migration CI
+23953d3f69555fbc5800b2618b8d22cee7f17d52 2026-09-16T15:11:08-05:00 continuous-improvement-loop[bot] [CF-Pages-Skip] Record fan subscription verification and remaining privacy boundaries
+179b6d9431c0e7791b90249d355c6febe7750e87 2026-09-16T12:43:50-05:00 continuous-improvement-loop[bot] [CF-Pages-Skip] Record passing legacy writer formal CI
+cbf5e930c25e04e94d54388175109ba61f2f1613 2026-09-16T12:41:37-05:00 continuous-improvement-loop[bot] [CF-Pages-Skip] Record relationship CI and legacy write handoff
+c87592193889c143ec2ab055c261924693554434 2026-09-16T11:34:34-05:00 continuous-improvement-loop[bot] [CF-Pages-Skip] Record passing relationship formal and persistence CI
+faf9ae14c42b4a0752d19f418a4beb6c4f4527e6 2026-09-16T11:33:08-05:00 continuous-improvement-loop[bot] [CF-Pages-Skip] Record completed parent CI and relationship PR handoff
+0af92261189d6158f0ed8720f7386e5577bad045 2026-09-15T23:40:21-05:00 continuous-improvement-loop[bot] [CF-Pages-Skip] Record profile PR results and remaining identity gaps
+029dd538271de472df2fb0a5b6127c808c35924f 2026-09-15T23:25:52-05:00 continuous-improvement-loop[bot] [CF-Pages-Skip] Record matching parent TypeScript diagnostics
+2d2b7a6618369850a7f90d3f6af3a5d4abeaa1d8 2026-09-15T23:00:43-05:00 continuous-improvement-loop[bot] [CF-Pages-Skip] docs(social): record DM and chat verification with remaining gates

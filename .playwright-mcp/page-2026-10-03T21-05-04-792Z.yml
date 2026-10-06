@@ -1,0 +1,220 @@
+- generic [ref=f39e1]:
+  - generic:
+    - generic:
+      - generic:
+        - generic [ref=f39e9]:
+          - generic [ref=f39e12]:
+            - link [ref=f39e456] [cursor=pointer]:
+              - /url: /
+            - generic [ref=f39e25]:
+              - link [ref=f39e458] [cursor=pointer]:
+                - /url: /
+              - link [ref=f39e460] [cursor=pointer]:
+                - /url: /reels/
+              - link [ref=f39e462] [cursor=pointer]:
+                - /url: /direct/inbox/
+                - generic [ref=f39e53]: "4"
+              - link [ref=f39e465] [cursor=pointer]:
+                - /url: /explore/
+              - link [ref=f39e467] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f39e469] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f39e471] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f39e473] [cursor=pointer]:
+                - /url: /tdf.records.label/
+                - link [ref=f39e474]
+            - generic [ref=f39e118]:
+              - link [ref=f39e476] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f39e478] [cursor=pointer]:
+                - /url: "#"
+          - generic [ref=f39e137]:
+            - main [ref=f39e138]:
+              - generic [ref=f39e140]:
+                - generic [ref=f39e141]:
+                  - generic [ref=f39e142]:
+                    - link [ref=f39e480] [cursor=pointer]:
+                      - /url: /felipe.cornejo.bermeo/
+                    - generic [ref=f39e150]:
+                      - generic [ref=f39e151]:
+                        - generic [ref=f39e152]:
+                          - link [ref=f39e482] [cursor=pointer]:
+                            - /url: "#"
+                            - heading [level=2] [ref=f39e483]:
+                              - generic [ref=f39e156]: felipe.cornejo.bermeo
+                          - button [ref=f39e484] [cursor=pointer]
+                        - generic [ref=f39e163]: Felipe Cornejo
+                        - generic [ref=f39e165]:
+                          - generic [ref=f39e167]:
+                            - generic [ref=f39e168]: "133"
+                            - text: posts
+                          - link [ref=f39e486] [cursor=pointer]:
+                            - /url: "#"
+                            - generic [ref=f39e171]:
+                              - generic [ref=f39e487]: 1,301
+                              - text: followers
+                          - link [ref=f39e488] [cursor=pointer]:
+                            - /url: "#"
+                            - generic [ref=f39e175]:
+                              - generic [ref=f39e176]: 2,474
+                              - text: following
+                      - generic [ref=f39e177]:
+                        - generic [ref=f39e178]:
+                          - button [ref=f39e489] [cursor=pointer]:
+                            - generic [ref=f39e181]:
+                              - text: contrabajista y compositor Ecuatoriano felipecornejo1996@gmail.com
+                              - link [ref=f39e490]:
+                                - /url: /felipecornejotrios/
+                                - text: "@felipecornejotrios"
+                              - link [ref=f39e491]:
+                                - /url: /cartet___/
+                                - text: "@cartet___"
+                          - link [ref=f39e493] [cursor=pointer]:
+                            - /url: https://l.instagram.com/?u=https%3A%2F%2Flinktr.ee%2Ffelipecornejomusic%3Futm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio%26fbclid%3DPAZXh0bgNhZW0CMTEAcGRvZgJzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAafUR8IrrBrVcwbjbolDggpzyACthOglcN-UMkfaCB1oAuRESh8FW7SZ5M_0rA_aem_P9arC0G6L0ZxCSap4iOG_Q&e=AUDuftyrGxjdSEXrm40o268baPBnBveUGPCac1zliVYidF5FHaKzQ_zLrhMnvZs1ZrCkYvixLdqjSlSWmUX1Q-k9xDX7X6yzt38lCWFqunhAjtvjuS-11OgLJ6b2WrgdtI1qI8yYijso
+                            - generic [ref=f39e192]: linktr.ee/felipecornejomusic
+                        - link [ref=f39e494] [cursor=pointer]:
+                          - /url: /felipe.cornejo.bermeo/followers/mutualOnly
+                          - generic [ref=f39e195]:
+                            - generic [ref=f39e197]:
+                              - button [ref=f39e198]:
+                                - link [ref=f39e199]
+                              - button [ref=f39e452]:
+                                - link [ref=f39e453]
+                              - button [ref=f39e454]:
+                                - link [ref=f39e455]
+                            - generic [ref=f39e204]: Followed by diegocarvajalmusica, h8a.stella + 25 more
+                  - generic [ref=f39e209]:
+                    - button [ref=f39e495] [cursor=pointer]:
+                      - generic [ref=f39e212]: Follow
+                    - button [ref=f39e496] [cursor=pointer]: Message
+                    - button [ref=f39e497] [cursor=pointer]
+                  - menu [ref=f39e223]:
+                    - list [ref=f39e227]:
+                      - listitem [ref=f39e228]
+                      - listitem [ref=f39e229]
+                      - listitem [ref=f39e230]:
+                        - link [ref=f39e499] [cursor=pointer]:
+                          - /url: /stories/highlights/18183326734335758/
+                          - button [ref=f39e500]:
+                            - button [ref=f39e501]
+                            - generic [ref=f39e239]: Destacada
+                - tablist [ref=f39e243]:
+                  - link [ref=f39e503] [cursor=pointer]:
+                    - /url: /felipe.cornejo.bermeo/
+                  - link [ref=f39e505] [cursor=pointer]:
+                    - /url: /felipe.cornejo.bermeo/reels/
+                  - link [ref=f39e507] [cursor=pointer]:
+                    - /url: /felipe.cornejo.bermeo/reposts/
+                  - link [ref=f39e509] [cursor=pointer]:
+                    - /url: /felipe.cornejo.bermeo/tagged/
+                - generic [ref=f39e277]:
+                  - generic [ref=f39e278]:
+                    - link [ref=f39e511] [cursor=pointer]:
+                      - /url: /goparallel.uio/reel/Dd_1Fd5BZmZ/
+                    - link [ref=f39e513] [cursor=pointer]:
+                      - /url: /catpotjazz/reel/Dd6kI_QBsbw/
+                    - link [ref=f39e515] [cursor=pointer]:
+                      - /url: /anankemicroclimas/p/Ddkf1f4M4c_/
+                  - generic [ref=f39e297]:
+                    - link [ref=f39e517] [cursor=pointer]:
+                      - /url: /felipe.cornejo.bermeo/p/DdMWu5-Dq93/
+                    - link [ref=f39e519] [cursor=pointer]:
+                      - /url: /franlaurito/reel/DcthFSfCYaj/
+                    - link [ref=f39e521] [cursor=pointer]:
+                      - /url: /dani.c.music/p/DcFpyqSHIDZ/
+                  - generic [ref=f39e316]:
+                    - link [ref=f39e522] [cursor=pointer]:
+                      - /url: /rojelioelrojorojas/p/Da3Jk04ERRM/
+                    - link [ref=f39e524] [cursor=pointer]:
+                      - /url: /kihnscheme/reel/DajWBYCNLnM/
+                    - link [ref=f39e526] [cursor=pointer]:
+                      - /url: /felipe.cornejo.bermeo/p/DYOERJ4upsd/
+                  - generic [ref=f39e335]:
+                    - link [ref=f39e528] [cursor=pointer]:
+                      - /url: /ave_y_pez/reel/DXZwUPEka9z/
+                    - link [ref=f39e530] [cursor=pointer]:
+                      - /url: /walt.szy.drdetroit/reel/DWwFwsIjtU5/
+                    - link [ref=f39e532] [cursor=pointer]:
+                      - /url: /walt.szy.drdetroit/p/DWT2iDTFpf-/
+            - contentinfo [ref=f39e354]:
+              - generic [ref=f39e355]:
+                - generic [ref=f39e357]:
+                  - link [ref=f39e534] [cursor=pointer]:
+                    - /url: https://about.meta.com/
+                    - generic [ref=f39e360]: Meta
+                  - link [ref=f39e535] [cursor=pointer]:
+                    - /url: https://about.instagram.com/
+                    - generic [ref=f39e363]: About
+                  - link [ref=f39e536] [cursor=pointer]:
+                    - /url: https://about.instagram.com/blog/
+                    - generic [ref=f39e366]: Blog
+                  - link [ref=f39e537] [cursor=pointer]:
+                    - /url: https://about.instagram.com/about-us/careers
+                    - generic [ref=f39e369]: Jobs
+                  - link [ref=f39e538] [cursor=pointer]:
+                    - /url: https://help.instagram.com/
+                    - generic [ref=f39e372]: Help
+                  - link [ref=f39e539] [cursor=pointer]:
+                    - /url: https://developers.facebook.com/docs/instagram
+                    - generic [ref=f39e375]: API
+                  - link [ref=f39e540] [cursor=pointer]:
+                    - /url: /legal/privacy/
+                    - generic [ref=f39e378]: Privacy
+                  - link [ref=f39e541] [cursor=pointer]:
+                    - /url: /legal/terms/
+                    - generic [ref=f39e381]: Terms
+                  - link [ref=f39e542] [cursor=pointer]:
+                    - /url: /explore/locations/
+                    - generic [ref=f39e384]: Locations
+                  - link [ref=f39e543] [cursor=pointer]:
+                    - /url: /popular/
+                    - generic [ref=f39e387]: Popular
+                  - link [ref=f39e544] [cursor=pointer]:
+                    - /url: /web/lite/
+                    - generic [ref=f39e390]: Instagram Lite
+                  - link [ref=f39e545] [cursor=pointer]:
+                    - /url: https://www.meta.ai/?utm_source=foa_web_footer
+                    - generic [ref=f39e393]: Meta AI
+                  - link [ref=f39e546] [cursor=pointer]:
+                    - /url: https://muse.ai/
+                    - generic [ref=f39e396]: Muse
+                  - link [ref=f39e547] [cursor=pointer]:
+                    - /url: https://www.threads.com/
+                    - generic [ref=f39e399]: Threads
+                  - link [ref=f39e548] [cursor=pointer]:
+                    - /url: https://www.facebook.com/help/instagram/261704639352628
+                    - generic [ref=f39e402]: Contact Uploading & Non-Users
+                  - link [ref=f39e549] [cursor=pointer]:
+                    - /url: /accounts/meta_verified/?entrypoint=web_footer
+                    - generic [ref=f39e405]: Meta Verified
+                - generic [ref=f39e406]:
+                  - generic [ref=f39e407] [cursor=pointer]:
+                    - generic [ref=f39e408]: English
+                    - combobox [ref=f39e551]
+                  - generic [ref=f39e415]: © 2026 Instagram from Meta
+        - button [ref=f39e418] [cursor=pointer]:
+          - generic "Messages - 4 new notifications" [ref=f39e419]:
+            - generic [ref=f39e420]:
+              - generic [ref=f39e422]:
+                - img "Messages" [ref=f39e423]
+                - generic "Direct messaging - 4 new notifications link" [ref=f39e426]: "4"
+              - generic [ref=f39e429]: Messages
+            - generic [ref=f39e430]:
+              - button [ref=f39e431]:
+                - img "4 unread chats" [ref=f39e433]
+              - button "User avatar Juren" [ref=f39e438]:
+                - img "User avatar" [ref=f39e441]
+              - button "User avatar Eduardo ED" [ref=f39e443]:
+                - img "User avatar" [ref=f39e446]
+              - button "User avatar ༒ 𖦹" [ref=f39e448]:
+                - img "User avatar" [ref=f39e451]
+  - dialog [ref=f39e558]:
+    - generic [ref=f39e563]:
+      - generic [ref=f39e564]:
+        - heading "Messaging felipe.cornejo.bermeo" [active] [level=3] [ref=f39e567]
+        - generic [ref=f39e568]: Partnership messages are more likely to get a response because they have a dedicated place in felipe.cornejo.bermeo's inbox.
+      - generic [ref=f39e570]:
+        - button "Send prioritized message" [ref=f39e571] [cursor=pointer]
+        - button "Send message request" [ref=f39e572] [cursor=pointer]

@@ -1,0 +1,465 @@
+- generic [ref=f27e4]:
+  - generic [ref=f27e2195]:
+    - generic [ref=f27e2198]:
+      - link [ref=f27e2203] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f27e2208]
+      - generic [ref=f27e2211]:
+        - link [ref=f27e2216] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f27e2221]
+        - link [ref=f27e2226] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f27e2231]
+        - link [ref=f27e2238] [cursor=pointer]:
+          - /url: /direct/t/17842323425540112
+          - generic [ref=f27e2241]:
+            - img "Messages" [ref=f27e2243]
+            - generic "Direct messaging - 8 new notifications link" [ref=f27e2246]: "8"
+        - link [ref=f27e2252] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f27e2257]
+        - link [ref=f27e2264] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f27e2269]
+        - link [ref=f27e2275] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f27e2280]
+        - link [ref=f27e2285] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f27e2290]
+        - link [ref=f27e2297] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f27e2302]:
+            - img "tdf.records.label's profile picture" [ref=f27e2303]
+      - generic [ref=f27e2304]:
+        - link [ref=f27e2307] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f27e2312]
+        - link [ref=f27e2315] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f27e2320]
+    - generic [ref=f27e2323]:
+      - main [ref=f27e2324]:
+        - generic [ref=f27e2326]:
+          - generic [ref=f27e2327]:
+            - generic [ref=f27e2328]:
+              - link [ref=f27e2334] [cursor=pointer]:
+                - /url: /fusionimperium/
+                - img "fusionimperium's profile picture" [ref=f27e2335]
+              - generic [ref=f27e2336]:
+                - generic [ref=f27e2337]:
+                  - generic [ref=f27e2338]:
+                    - link [ref=f27e2340] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "fusionimperium" [level=2] [ref=f27e2341]
+                    - button [ref=f27e2343] [cursor=pointer]:
+                      - img "Options" [ref=f27e2345]
+                  - generic [ref=f27e2349]: Fusion Imperium
+                  - generic [ref=f27e2351]:
+                    - generic [ref=f27e2353]:
+                      - generic [ref=f27e2354]: "18"
+                      - text: posts
+                    - link "79 followers" [ref=f27e2356] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f27e2357]:
+                        - generic "79" [ref=f27e2358]
+                        - text: followers
+                    - link "117 following" [ref=f27e2360] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f27e2361]:
+                        - generic [ref=f27e2362]: "117"
+                        - text: following
+                - generic [ref=f27e2363]:
+                  - generic [ref=f27e2364]:
+                    - generic [ref=f27e2365]: Musician/band
+                    - button "Bridging the gap between crushing heavy metal instrumentation and high-energy industrial electronic production." [ref=f27e2368] [cursor=pointer]
+                  - link "Followed by davidedrums.drummer" [ref=f27e2369] [cursor=pointer]:
+                    - /url: /fusionimperium/followers/mutualOnly
+                    - generic [ref=f27e2371]:
+                      - button [ref=f27e2374]:
+                        - link [ref=f27e2375]
+                      - generic [ref=f27e2376]: Followed by davidedrums.drummer
+            - generic [ref=f27e2381]:
+              - button "Follow Back" [ref=f27e2383] [cursor=pointer]
+              - button "Message" [ref=f27e2387] [cursor=pointer]
+              - button [ref=f27e2389] [cursor=pointer]:
+                - img "Similar accounts" [ref=f27e2391]
+            - menu [ref=f27e2395]:
+              - generic [ref=f27e2397]:
+                - list [ref=f27e2399]:
+                  - listitem [ref=f27e2400]
+                  - listitem [ref=f27e2401]
+                  - listitem [ref=f27e2402]:
+                    - link "View B.T.S. highlight" [ref=f27e2405] [cursor=pointer]:
+                      - /url: /stories/highlights/18088423676300263/
+                      - button "fusionimperium's highlight story picture B.T.S." [ref=f27e2406]:
+                        - button [ref=f27e2407]:
+                          - img "fusionimperium's highlight story picture" [ref=f27e2410]
+                        - generic [ref=f27e2411]: B.T.S.
+                  - listitem [ref=f27e2414]:
+                    - link "View P.R. highlight" [ref=f27e2417] [cursor=pointer]:
+                      - /url: /stories/highlights/18352764025171024/
+                      - button "fusionimperium's highlight story picture P.R." [ref=f27e2418]:
+                        - button [ref=f27e2419]:
+                          - img "fusionimperium's highlight story picture" [ref=f27e2422]
+                        - generic [ref=f27e2423]: P.R.
+                  - listitem [ref=f27e2426]:
+                    - link "View Fusion Imperium highlight" [ref=f27e2429] [cursor=pointer]:
+                      - /url: /stories/highlights/18103926340746153/
+                      - button "fusionimperium's highlight story picture Fusion Imperium" [ref=f27e2430]:
+                        - button [ref=f27e2431]:
+                          - img "fusionimperium's highlight story picture" [ref=f27e2434]
+                        - generic [ref=f27e2435]: Fusion Imperium
+                  - listitem [ref=f27e2438]:
+                    - link "View Bandsintown highlight" [ref=f27e2441] [cursor=pointer]:
+                      - /url: /stories/highlights/17954799957250709/
+                      - button "fusionimperium's highlight story picture Bandsintown" [ref=f27e2442]:
+                        - button [ref=f27e2443]:
+                          - img "fusionimperium's highlight story picture" [ref=f27e2446]
+                        - generic [ref=f27e2447]: Bandsintown
+                  - listitem [ref=f27e2450]:
+                    - link "View Announcements highlight" [ref=f27e2453] [cursor=pointer]:
+                      - /url: /stories/highlights/18439723975130220/
+                      - button "fusionimperium's highlight story picture Announcements" [ref=f27e2454]:
+                        - button [ref=f27e2455]:
+                          - img "fusionimperium's highlight story picture" [ref=f27e2458]
+                        - generic [ref=f27e2459]: Announcements
+                  - listitem [ref=f27e2462]:
+                    - link "View NIK highlight" [ref=f27e2465] [cursor=pointer]:
+                      - /url: /stories/highlights/18134118400544540/
+                      - button "fusionimperium's highlight story picture NIK" [ref=f27e2466]:
+                        - button [ref=f27e2467]:
+                          - img "fusionimperium's highlight story picture" [ref=f27e2470]
+                        - generic [ref=f27e2471]: NIK
+                  - listitem [ref=f27e2474]:
+                    - link "View QuếLong Lê highlight" [ref=f27e2477] [cursor=pointer]:
+                      - /url: /stories/highlights/18131857681655465/
+                      - button "fusionimperium's highlight story picture QuếLong Lê" [ref=f27e2478]:
+                        - button [ref=f27e2479]:
+                          - img "fusionimperium's highlight story picture" [ref=f27e2482]
+                        - generic [ref=f27e2483]: QuếLong Lê
+                  - listitem [ref=f27e2486]:
+                    - link "View Davidedrums highlight" [ref=f27e2489] [cursor=pointer]:
+                      - /url: /stories/highlights/18200458654347184/
+                      - button "fusionimperium's highlight story picture Davidedrums" [ref=f27e2490]:
+                        - button [ref=f27e2491]:
+                          - img "fusionimperium's highlight story picture" [ref=f27e2494]
+                        - generic [ref=f27e2495]: Davidedrums
+                  - listitem [ref=f27e2498]:
+                    - link "View Rob Carr highlight" [ref=f27e2501] [cursor=pointer]:
+                      - /url: /stories/highlights/18619090498046463/
+                      - button "fusionimperium's highlight story picture Rob Carr" [ref=f27e2502]:
+                        - button [ref=f27e2503]:
+                          - img "fusionimperium's highlight story picture" [ref=f27e2506]
+                        - generic [ref=f27e2507]: Rob Carr
+                  - listitem [ref=f27e2510]:
+                    - link "View Music highlight" [ref=f27e2513] [cursor=pointer]:
+                      - /url: /stories/highlights/17998203833808409/
+                      - button "fusionimperium's highlight story picture Music" [ref=f27e2514]:
+                        - button [ref=f27e2515]:
+                          - img "fusionimperium's highlight story picture" [ref=f27e2518]
+                        - generic [ref=f27e2519]: Music
+                - button "Next" [ref=f27e2522] [cursor=pointer]
+          - generic [ref=f27e2524]:
+            - tablist [ref=f27e2525]:
+              - link [ref=f27e2527] [cursor=pointer]:
+                - /url: /fusionimperium/
+                - img "Posts" [ref=f27e2529]
+              - link [ref=f27e2540] [cursor=pointer]:
+                - /url: /fusionimperium/reels/
+                - img "Reels" [ref=f27e2542]
+              - link [ref=f27e2545] [cursor=pointer]:
+                - /url: /fusionimperium/tagged/
+                - img "Tagged" [ref=f27e2547]
+            - tabpanel
+          - generic [ref=f27e2554]:
+            - generic [ref=f27e2555]:
+              - link [ref=f27e2557] [cursor=pointer]:
+                - /url: /fusionimperium/p/DdicKrLJhpY/
+                - img [ref=f27e2560]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - 'link "🚨FOR IMMEDIATE RELEASE‼️🚨 Introducing Fusion Imperium: Calgary’s Newest Industrial Dance Metal Act CALGARY, AB — Calgary’s heavy music landscape welcomes a formidable new addition with the official launch of Fusion Imperium. Bridging the gap between crushing heavy metal instrumentation and high-energy industrial electronic production, the project delivers a driving, precise, and authoritative sonic profile. Backed by technical precision and aggressive synth arrangements, Fusion Imperium is currently preparing a slate of major project updates and live performance dates for the region. Follow on IG @fusionimperium . . . . #fusionimperium #industrial #dancemetal #electronic #edmmusic Pinned post icon 2 0" [ref=f27e2563] [cursor=pointer]':
+                - /url: /davidepromotions/reel/DcWTLiYv67e/
+                - 'img "🚨FOR IMMEDIATE RELEASE‼️🚨 Introducing Fusion Imperium: Calgary’s Newest Industrial Dance Metal Act CALGARY, AB — Calgary’s heavy music landscape welcomes a formidable new addition with the official launch of Fusion Imperium. Bridging the gap between crushing heavy metal instrumentation and high-energy industrial electronic production, the project delivers a driving, precise, and authoritative sonic profile. Backed by technical precision and aggressive synth arrangements, Fusion Imperium is currently preparing a slate of major project updates and live performance dates for the region. Follow on IG @fusionimperium . . . . #fusionimperium #industrial #dancemetal #electronic #edmmusic" [ref=f27e2566]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+                - list [ref=f27e2570]:
+                  - listitem [ref=f27e2571]:
+                    - generic [ref=f27e2572]: "2"
+                  - listitem [ref=f27e2574]:
+                    - generic [ref=f27e2575]: "0"
+              - link [ref=f27e2578] [cursor=pointer]:
+                - /url: /guadalupe.jerrett/reel/DcvP7E3ORHA/
+                - 'img "Introducing Fusion Imperium: Calgary’s Newest Industrial Dance Metal Act CALGARY, AB — Calgary’s heavy music landscape welcomes a formidable new addition with the official launch of Fusion Imperium. Bridging the gap between crushing heavy metal instrumentation and high-energy industrial electronic production, the project delivers a driving, precise, and authoritative sonic profile. Backed by technical precision and aggressive synth arrangements, Fusion Imperium is currently preparing a slate of major project updates and live performance dates for the region. The band is; NiK S. - Vocals, Guitars David E. Drums - Drums Rob Carr - Guitars Quelong Lee - Keyboards Follow on IG @fusionimperium . . . . #fusionimperium #industrial #dancemetal #electronic #edmmusic" [ref=f27e2581]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+            - generic [ref=f27e2583]:
+              - link [ref=f27e2585] [cursor=pointer]:
+                - /url: /fusionimperium/reel/DdcAwQRpmSc/
+                - 'img "✅Follow @fusionimperium and stay tuned for future announcements!! #industrialmusic #dancemetal #yycmusic #yycband #yycnow" [ref=f27e2588]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f27e2591] [cursor=pointer]:
+                - /url: /fusionimperium/p/DdViOjJp_T9/
+                - 'img "Nick Sully - Vocals & Guitars 🎤🎸 Biography: Nick Sully, also known as I Armada, is a Calgary-based Canadian vocalist, guitarist, songwriter, and co-founder of Fusion Imperium. Nick began his musical journey with academic and choral vocal training before picking up the guitar at 14. Over the years, he expanded into songwriting, bass, recording, and home-studio production, developing a sound influenced by industrial metal, electronic music, and ambient soundscapes. His style centres around melodic clean vocals, heavy machine-tight riffs, deep bass, electronic textures, and atmospheric arrangements. His major influences include Rammstein, Emigrate, Bi-2, Otto Dix, and Devin Townsend. 👉 Follow Nick on IG @iarmada.official . . . . . #vocalist #guitarist #songwriter #industrialmusic #dancemetal" [ref=f27e2594]'
+              - link [ref=f27e2597] [cursor=pointer]:
+                - /url: /fusionimperium/p/DdHOwk2JOOu/
+            - generic [ref=f27e2601]:
+              - link [ref=f27e2603] [cursor=pointer]:
+                - /url: /fusionimperium/p/Dc94C_5pJpt/
+                - 'img "David Espinel - Drums 🥁 Biography: David Espinel, professionally known as Davidedrums (or David E. Drums), is an independent Canadian drummer, bandleader, and music entrepreneur based out of Calgary, Alberta. He is best known within the local Canadian music circuit for founding several independent projects, offering drum instruction, and working as a talent scout. Throughout his career, David has anchored several hard rock, alternative, and metal outfits. He has also performed live drum duties for local projects like Pervelum, Juliez Andrewz, and The Zip-tones to name a few. Beyond active performing, Espinel runs an independent educational and talent framework. 👉Follow David on IG @davidedrums.drummer . . . . . #drummer #drumplayer #drums #industrialmusic #dancemetal" [ref=f27e2606]'
+              - link [ref=f27e2609] [cursor=pointer]:
+                - /url: /fusionimperium/p/Dcyd48jJ3pl/
+                - 'img "Rob Carr - Guitars 🎸 Biography: Rob grew up playing acoustic guitar and learning the blues, laying the foundation to his love of rock ’n’ roll and heavy metal. Over the years, he added synth to the mix and discovered a passion for dance, bringing together guitars, keyboards, rhythm, and movement. “My style is all about big riffs, screaming synths, and driving beats.” 👉 Follow Rob on IG @rippin_rob . . . . . #guitarists #guitarplayer #guitar #industrialmusic #dancemetal" [ref=f27e2612]'
+              - link [ref=f27e2615] [cursor=pointer]:
+                - /url: /davidedrums.drummer/reel/DcnOVa6hVN2/
+                - img "Photo shoot day with my bandmates from @fusionimperium Many thanks to @guadalupe.jerrett for the awesome photos!!" [ref=f27e2618]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f27e2620]:
+              - link [ref=f27e2622] [cursor=pointer]:
+                - /url: /fusionimperium/reel/DcSvwPXp9Ee/
+                - 'img "🚨FOR IMMEDIATE RELEASE‼️🚨 Introducing Fusion Imperium: Calgary’s Newest Industrial Dance Metal Act CALGARY, AB — Calgary’s heavy music landscape welcomes a formidable new addition with the official launch of Fusion Imperium. Bridging the gap between crushing heavy metal instrumentation and high-energy industrial electronic production, the project delivers a driving, precise, and authoritative sonic profile. Backed by technical precision and aggressive synth arrangements, Fusion Imperium is currently preparing a slate of major project updates and live performance dates for the region. . . . . #fusionimperium #industrial #dancemetal #electronic #edmmusic" [ref=f27e2625]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f27e2628] [cursor=pointer]:
+                - /url: /fusionimperium/p/DaXDmngJo0z/
+                - 'img "Check out the new logo!! The band is: @iarmada.official - Guitar/Vox @davidedrums.drummer - Drums @rippin_rob - Guitars @quelongpiano - Keyboards Stay tuned for future announcements!!" [ref=f27e2631]'
+              - link [ref=f27e2634] [cursor=pointer]:
+                - /url: /fusionimperium/p/DX7q70QyMTV/
+                - 'img "Founders of Fusion Imperium Nick S. @iarmada.official and David E. @davidedrums.drummer stay tuned for future announcements!! . . . . . #fusionimperium #dancemetal #industrial #yycmusic #yycband" [ref=f27e2637]'
+      - contentinfo [ref=f27e2639]:
+        - generic [ref=f27e2640]:
+          - generic [ref=f27e2642]:
+            - link "Meta" [ref=f27e2644] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f27e2647] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f27e2650] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f27e2653] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f27e2656] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f27e2659] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f27e2662] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f27e2665] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f27e2668] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f27e2671] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f27e2674] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f27e2677] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f27e2680] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f27e2683] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f27e2686] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f27e2689] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f27e2691]:
+            - generic [ref=f27e2692] [cursor=pointer]:
+              - generic [ref=f27e2693]:
+                - generic [ref=f27e2694]: English
+                - img "Down chevron icon" [ref=f27e2697]
+              - combobox "Switch Display Language" [ref=f27e2699]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f27e2700]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f27e1457] [cursor=pointer]:
+              - generic "Messages - 8 new notifications" [ref=f27e1458]:
+                - generic [ref=f27e1459]:
+                  - generic [ref=f27e1461]:
+                    - img "Messages" [ref=f27e1462]
+                    - generic "Direct messaging - 8 new notifications link" [ref=f27e1465]: "8"
+                  - generic [ref=f27e1468]: Messages
+                - generic [ref=f27e1469]:
+                  - button [ref=f27e1470]:
+                    - img "8 unread chats" [ref=f27e1472]
+                  - button "User avatar ..." [ref=f27e1477]:
+                    - img "User avatar" [ref=f27e1480]
+                  - button "User avatar David Márquez" [ref=f27e1482]:
+                    - img "User avatar" [ref=f27e1485]
+                  - button "User avatar Limberg Steven Garcia Alava" [ref=f27e1487]:
+                    - img "User avatar" [ref=f27e1490]
+            - generic [ref=f27e1491]:
+              - generic [ref=f27e1493]:
+                - generic [ref=f27e1494]:
+                  - button [ref=f27e1496] [cursor=pointer]:
+                    - img "Go back" [ref=f27e1498]
+                  - link "Open the profile page of _juaco.dls_" [ref=f27e1501] [cursor=pointer]:
+                    - /url: /_juaco.dls_/
+                    - generic [ref=f27e1502]:
+                      - img "user-profile-picture" [ref=f27e1505]
+                      - heading "Juaco Davalos" [level=2] [ref=f27e1509]
+                  - generic [ref=f27e1511]:
+                    - button [ref=f27e1512] [cursor=pointer]:
+                      - img "Expand" [ref=f27e1514]
+                    - button [ref=f27e1516] [cursor=pointer]:
+                      - img "Close" [ref=f27e1518]
+                - separator [ref=f27e1521]
+              - generic "Juaco Davalos" [ref=f27e1522]:
+                - generic [ref=f27e1524]:
+                  - generic [ref=f27e1528]:
+                    - generic [ref=f27e1529]:
+                      - img "user-profile-picture" [ref=f27e1533]
+                      - generic [ref=f27e1534]:
+                        - heading "Juaco Davalos" [level=2] [ref=f27e1537]
+                        - generic [ref=f27e1539]: _juaco.dls_ · Instagram
+                        - link "View profile" [ref=f27e1542] [cursor=pointer]:
+                          - /url: /_juaco.dls_/
+                    - generic [ref=f27e1543]:
+                      - generic [ref=f27e1546]:
+                        - generic [ref=f27e1547]: Mon 6:10 AM
+                        - group [ref=f27e1550]:
+                          - generic [ref=f27e1552]:
+                            - link "Open the profile page of _juaco.dls_" [ref=f27e1555] [cursor=pointer]:
+                              - /url: /_juaco.dls_
+                              - img "user-profile-picture" [ref=f27e1558]
+                            - generic [ref=f27e1560]:
+                              - article "Quiero más información ?" [ref=f27e1561]
+                              - generic [ref=f27e1565]:
+                                - group "Message actions":
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - button "React to message from _juaco.dls_":
+                                          - generic:
+                                            - img "React to message from _juaco.dls_"
+                                    - generic:
+                                      - generic:
+                                        - button "Reply to message from _juaco.dls_":
+                                          - generic:
+                                            - img "Reply to message from _juaco.dls_"
+                                    - generic:
+                                      - generic:
+                                        - button "See more options for message from _juaco.dls_":
+                                          - generic:
+                                            - img "See more options for message from _juaco.dls_"
+                      - article [ref=f27e1568]:
+                        - generic [ref=f27e1570]:
+                          - text: Juaco Davalos replied to an ad.
+                          - link "View ad" [ref=f27e1571] [cursor=pointer]:
+                            - /url: https://www.instagram.com/p/DL58rbRgiys/
+                      - generic [ref=f27e1574]:
+                        - generic [ref=f27e1575]: Mon 10:40 PM
+                        - group [ref=f27e1578]:
+                          - generic [ref=f27e1580]:
+                            - link "Open the profile page of _juaco.dls_" [ref=f27e1583] [cursor=pointer]:
+                              - /url: /_juaco.dls_
+                              - img "user-profile-picture" [ref=f27e1586]
+                            - generic [ref=f27e1588]:
+                              - article "¿Puedes contarme algo más sobre tu anuncio?" [ref=f27e1589]
+                              - generic [ref=f27e1593]:
+                                - group "Message actions":
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - button "React to message from _juaco.dls_":
+                                          - generic:
+                                            - img "React to message from _juaco.dls_"
+                                    - generic:
+                                      - generic:
+                                        - button "Reply to message from _juaco.dls_":
+                                          - generic:
+                                            - img "Reply to message from _juaco.dls_"
+                                    - generic:
+                                      - generic:
+                                        - button "See more options for message from _juaco.dls_":
+                                          - generic:
+                                            - img "See more options for message from _juaco.dls_"
+                      - article [ref=f27e1596]:
+                        - generic [ref=f27e1598]:
+                          - text: Juaco Davalos replied to an ad.
+                          - link "View ad" [ref=f27e1599] [cursor=pointer]:
+                            - /url: https://www.instagram.com/p/DL57XEtgmwh/
+                  - generic [ref=f27e1608]:
+                    - button [ref=f27e1611] [cursor=pointer]:
+                      - img "Choose an emoji" [ref=f27e1613]
+                    - generic [ref=f27e1615]:
+                      - textbox [ref=f27e1616]:
+                        - paragraph [ref=f27e1617]
+                      - generic: Message...
+                    - generic [ref=f27e1618]:
+                      - button [ref=f27e1619] [cursor=pointer]:
+                        - img "Voice Clip" [ref=f27e1621]
+                      - button [ref=f27e1624] [cursor=pointer]:
+                        - img "Add Photo or Video" [ref=f27e1626]
+                      - button [ref=f27e1631] [cursor=pointer]:
+                        - img "Choose a GIF or sticker" [ref=f27e1633]

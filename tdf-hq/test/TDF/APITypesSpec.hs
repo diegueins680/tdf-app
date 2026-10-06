@@ -805,8 +805,8 @@ spec = do
                         _ ->
                             expectationFailure ("Expected a single decoded course session, got: " <> show sessionsVal)
                     case syllabusVal of
-                        [Courses.CourseSyllabusIn titleVal topicsVal orderVal] -> do
-                            titleVal `shouldBe` "Intro"
+                        [Courses.CourseSyllabusIn syllabusTitleVal topicsVal orderVal] -> do
+                            syllabusTitleVal `shouldBe` "Intro"
                             topicsVal `shouldBe` ["Ableton"]
                             orderVal `shouldBe` Just 1
                         _ ->
@@ -3330,8 +3330,8 @@ spec = do
     isRightUnit _ = False
 
     withRight :: String -> Either String a -> (a -> Expectation) -> Expectation
-    withRight context decoded onRight =
+    withRight failureContext decoded onRight =
         either
-            (\err -> expectationFailure (context <> ", got: " <> err))
+            (\err -> expectationFailure (failureContext <> ", got: " <> err))
             onRight
             decoded

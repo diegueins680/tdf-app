@@ -1,0 +1,23 @@
+{
+  "root479": {
+    "mergedBy": "another writer",
+    "head": "e95681145f640bda15dacd7b1c273429e2842fb4",
+    "main": "5efd7ff31d55c1eb5b66b2f7710ea4ef87328727",
+    "tree": "61af6ec384082485ca97c7ad9e3724b960da8137",
+    "sameTree": true,
+    "normalParentsPreserved": true,
+    "guardedAttempt": "stopped before mutation because already merged",
+    "postMerge": "backend/image job37259505669 still running at last observation"
+  },
+  "mobile131": {
+    "mergedBy": "another writer",
+    "head": "147ec8bc4ad4150eaab1ad410aa1803822075697",
+    "main": "7a1fca3696dada4263c70716c70b763e492807cc",
+    "payment76AncestorVerified": true
+  },
+  "localServices": {
+    "postgres55474": "stopped; data retained",
+    "Metro8097": "stopped; status passed before cleanup",
+    "Vite5199": "stopped"
+  }
+}

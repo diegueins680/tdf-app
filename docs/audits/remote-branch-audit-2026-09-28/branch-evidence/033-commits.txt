@@ -1,0 +1,4 @@
+86a8ce38cd131bfcb1b3e3035fd9a3e3aea1d503 2026-09-14T22:04:13-05:00 continuous-improvement-loop[bot] docs(payments): record signed identity rollout limits and test evidence
+f93a70f1e3740685dceb70e757caead562dbd7d6 2026-09-14T21:47:31-05:00 continuous-improvement-loop[bot] test(payments): avoid shadowing the Hspec setup hook
+93ae918b76a54db4700f0331aa8b8bcf568b7deb 2026-09-14T21:30:18-05:00 continuous-improvement-loop[bot] test(payments): cover reordered and escaped signed notification fields
+9c1002424e61176db5f1dc9ecb614fe8a8ee13c4 2026-09-14T21:21:10-05:00 continuous-improvement-loop[bot] fix(payments): derive PlaceToPay inbox identity from signed evidence

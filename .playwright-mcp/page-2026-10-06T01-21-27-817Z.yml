@@ -1,0 +1,170 @@
+- generic [ref=e9]:
+  - generic [ref=e12]:
+    - link [ref=e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=e22]
+    - generic [ref=e25]:
+      - link [ref=e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=e35]
+      - link [ref=e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=e45]
+      - link [ref=e52] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - generic [ref=e55]:
+          - img "Messages" [ref=e57]
+          - generic "Direct messaging - 4 new notifications link" [ref=e59]: "4"
+      - link [ref=e65] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=e70]
+      - link [ref=e78] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=e83]
+      - link [ref=e91] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=e96]
+      - link [ref=e101] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=e106]
+      - link [ref=e113] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=e118]:
+          - img "tdf.records.label's profile picture" [ref=e119]
+    - generic [ref=e120]:
+      - link [ref=e123] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=e128]
+      - link [ref=e131] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=e136]
+  - main [ref=e140]:
+    - generic [ref=e145]:
+      - navigation "Thread list" [ref=e146]:
+        - generic [ref=e147]:
+          - generic [ref=e148]:
+            - button [ref=e149] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=e151]
+              - img "Verified" [ref=e154]
+              - img "Down chevron icon" [ref=e157]
+            - generic [ref=e160]:
+              - button [ref=e161] [cursor=pointer]:
+                - img "More options" [ref=e163]
+              - button [ref=e167] [cursor=pointer]:
+                - img "New message" [ref=e169]
+          - tablist [ref=e174]:
+            - tab "Primary" [selected] [ref=e175] [cursor=pointer]
+            - tab "General" [ref=e178] [cursor=pointer]
+            - tab "From ads" [ref=e181] [cursor=pointer]
+            - tab "Requests" [ref=e185] [cursor=pointer]
+          - generic [ref=e191]:
+            - img "Search" [ref=e193]
+            - textbox "Search" [ref=e196]
+          - generic [ref=e197]:
+            - generic [ref=e199]:
+              - list [ref=e201]:
+                - listitem [ref=e202]
+                - listitem [ref=e203]:
+                  - button "What's on your mind? Your note" [ref=e205] [cursor=pointer]:
+                    - generic [ref=e206]:
+                      - generic [ref=e207]: What's on your mind?
+                      - generic [ref=e213]:
+                        - link [ref=e215]
+                        - generic [ref=e216]: Your note
+                - listitem [ref=e218]:
+                  - button "Este 24 de octubre taller introducción a la Síntesis Modular en @andesbrewing elemental.zoser's profile picture Elemental Zoser Sound Studio" [ref=e221] [cursor=pointer]:
+                    - generic [ref=e222]:
+                      - generic [ref=e230]:
+                        - text: Este 24 de octubre taller introducción a la Síntesis Modular en
+                        - link "@andesbrewing" [ref=e231]:
+                          - /url: /andesbrewing/
+                      - generic [ref=e232]:
+                        - link [ref=e234]:
+                          - img "elemental.zoser's profile picture" [ref=e235]
+                        - generic [ref=e236]: Elemental Zoser Sound Studio
+                - listitem [ref=e239]:
+                  - button "De vuelta al rancho reemus___'s profile picture REEMUS" [ref=e242] [cursor=pointer]:
+                    - generic [ref=e243]:
+                      - generic [ref=e244]: De vuelta al rancho
+                      - generic [ref=e251]:
+                        - link [ref=e253]:
+                          - img "reemus___'s profile picture" [ref=e254]
+                        - generic [ref=e255]: REEMUS
+                - listitem [ref=e258]:
+                  - button "Entradas Funk Tribu DM 📩 natiqdati's profile picture Natali Quintero" [ref=e261] [cursor=pointer]:
+                    - generic [ref=e262]:
+                      - generic [ref=e263]: Entradas Funk Tribu DM 📩
+                      - generic [ref=e270]:
+                        - link [ref=e272]:
+                          - img "natiqdati's profile picture" [ref=e273]
+                        - generic [ref=e274]: Natali Quintero
+                - listitem [ref=e277]:
+                  - button "New Home 🩵 planblu.ec's profile picture MODA SUSTENTABLE" [ref=e280] [cursor=pointer]:
+                    - generic [ref=e281]:
+                      - generic [ref=e282]: New Home 🩵
+                      - generic [ref=e289]:
+                        - link [ref=e291]:
+                          - img "planblu.ec's profile picture" [ref=e292]
+                        - generic [ref=e293]: MODA SUSTENTABLE
+                - listitem [ref=e296]:
+                  - button "Escuché ARKABUZ en Guayaquil?? fede.idrovo's profile picture Fede Ib" [ref=e299] [cursor=pointer]:
+                    - generic [ref=e300]:
+                      - generic [ref=e301]: Escuché ARKABUZ en Guayaquil??
+                      - generic [ref=e308]:
+                        - link [ref=e310]:
+                          - img "fede.idrovo's profile picture" [ref=e311]
+                        - generic [ref=e312]: Fede Ib
+                - listitem [ref=e315]:
+                  - button "No me da la fe para creerle al 🐇 jofiel.arch.music's profile picture Jofiel.arch.music" [ref=e318] [cursor=pointer]:
+                    - generic [ref=e319]:
+                      - generic [ref=e320]: No me da la fe para creerle al 🐇
+                      - generic [ref=e327]:
+                        - link [ref=e329]:
+                          - img "jofiel.arch.music's profile picture" [ref=e330]
+                        - generic [ref=e331]: Jofiel.arch.music
+                - listitem [ref=e334]:
+                  - button "Entrada a funk tribu back $55 anajusegovia's profile picture Ana Julia" [ref=e337] [cursor=pointer]:
+                    - generic [ref=e338]:
+                      - generic [ref=e339]: Entrada a funk tribu back $55
+                      - generic [ref=e346]:
+                        - link [ref=e348]:
+                          - img "anajusegovia's profile picture" [ref=e349]
+                        - generic [ref=e350]: Ana Julia
+                - listitem [ref=e353]:
+                  - button "🏔️ green.house_music's profile picture Green House Music | Sello Discográfico" [ref=e356] [cursor=pointer]:
+                    - generic [ref=e357]:
+                      - generic [ref=e358]: 🏔️
+                      - generic [ref=e365]:
+                        - link [ref=e367]:
+                          - img "green.house_music's profile picture" [ref=e368]
+                        - generic [ref=e369]: Green House Music | Sello Discográfico
+              - button "Next" [ref=e372] [cursor=pointer]
+            - generic [ref=e376]:
+              - button [ref=e377] [cursor=pointer]:
+                - generic [ref=e379]:
+                  - status "Loading..." [ref=e382]
+                  - generic [ref=e385]:
+                    - status "Loading..." [ref=e387]
+                    - status "Loading..." [ref=e389]
+              - button [ref=e390] [cursor=pointer]:
+                - generic [ref=e392]:
+                  - status "Loading..." [ref=e395]
+                  - generic [ref=e398]:
+                    - status "Loading..." [ref=e400]
+                    - status "Loading..." [ref=e402]
+              - button [ref=e403] [cursor=pointer]:
+                - generic [ref=e405]:
+                  - status "Loading..." [ref=e408]
+                  - generic [ref=e411]:
+                    - status "Loading..." [ref=e413]
+                    - status "Loading..." [ref=e415]
+              - button [ref=e416] [cursor=pointer]:
+                - generic [ref=e418]:
+                  - status "Loading..." [ref=e421]
+                  - generic [ref=e424]:
+                    - status "Loading..." [ref=e426]
+                    - status "Loading..." [ref=e428]
+      - generic [ref=e432]:
+        - heading "Your messages" [level=2] [ref=e439]
+        - generic [ref=e440]: Send a message to start a chat.
+        - button "Send message" [ref=e444] [cursor=pointer]

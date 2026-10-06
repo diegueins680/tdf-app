@@ -1,0 +1,20 @@
+ docs/event-operations/README.md                    |   2 +
+ docs/event-operations/delivery-plan.md             |  12 +-
+ .../pr-15-web-onboarding-integration.md            | 133 +++++++++++++++++++++
+ docs/event-operations/traceability-matrix.md       |   1 +
+ .../web-onboarding-integration-contract.md         |  51 ++++++++
+ formal/event-operations/README.md                  |   8 ++
+ formal/event-operations/WebOnboardingRecovery.cfg  |   4 +
+ formal/event-operations/WebOnboardingRecovery.tla  |  41 +++++++
+ .../WebOnboardingRecoveryOverlap.cfg               |   4 +
+ .../WebOnboardingRecoveryReceipt.cfg               |   4 +
+ .../WebOnboardingRecoveryStale.cfg                 |   4 +
+ scripts/verify-event-operations-formal.sh          |   4 +
+ tdf-hq-ui/src/pages/LoginPage.test.tsx             |  58 +++++++--
+ tdf-hq-ui/src/pages/LoginPage.tsx                  |   3 -
+ tdf-hq-ui/src/routes/AppShell.test.tsx             |  23 +---
+ tdf-hq-ui/src/routes/AppShell.tsx                  |   7 +-
+ .../session/SessionContext.reconciliation.test.tsx | 131 +++++++++++++++++++-
+ tdf-hq-ui/src/session/SessionContext.tsx           |  41 ++++---
+ .../session/SessionProvider.personalData.test.tsx  |   5 +
+ 19 files changed, 478 insertions(+), 58 deletions(-)

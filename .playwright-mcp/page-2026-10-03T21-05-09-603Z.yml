@@ -1,0 +1,340 @@
+- generic [ref=f39e4]:
+  - generic [ref=f39e9]:
+    - generic [ref=f39e12]:
+      - link [ref=f39e573] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f39e574]
+      - generic [ref=f39e25]:
+        - link [ref=f39e575] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f39e576]
+        - link [ref=f39e577] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f39e578]
+        - link [ref=f39e579] [cursor=pointer]:
+          - /url: /direct/t/17843942942565765
+          - generic [ref=f39e55]:
+            - img "Messages" [ref=f39e580]
+            - generic "Direct messaging - 4 new notifications link" [ref=f39e581]: "4"
+        - link [ref=f39e582] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f39e583]
+        - link [ref=f39e584] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f39e585]
+        - link [ref=f39e586] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f39e587]
+        - link [ref=f39e588] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f39e589]
+        - link [ref=f39e590] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f39e591]:
+            - img "tdf.records.label's profile picture" [ref=f39e592]
+      - generic [ref=f39e118]:
+        - link [ref=f39e593] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f39e594]
+        - link [ref=f39e595] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f39e596]
+    - generic [ref=f39e137]:
+      - main [ref=f39e138]:
+        - generic [ref=f39e140]:
+          - generic [ref=f39e141]:
+            - generic [ref=f39e142]:
+              - link [ref=f39e597] [cursor=pointer]:
+                - /url: /felipe.cornejo.bermeo/
+                - img "felipe.cornejo.bermeo's profile picture" [ref=f39e598]
+              - generic [ref=f39e150]:
+                - generic [ref=f39e151]:
+                  - generic [ref=f39e152]:
+                    - link [ref=f39e599] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "felipe.cornejo.bermeo" [level=2] [ref=f39e600]
+                    - button [ref=f39e601] [cursor=pointer]:
+                      - img "Options" [ref=f39e602]
+                  - generic [ref=f39e163]: Felipe Cornejo
+                  - generic [ref=f39e165]:
+                    - generic [ref=f39e167]:
+                      - generic [ref=f39e168]: "133"
+                      - text: posts
+                    - link "1,301 followers" [ref=f39e603] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f39e171]:
+                        - generic "1,301" [ref=f39e604]
+                        - text: followers
+                    - link "2,474 following" [ref=f39e605] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f39e175]:
+                        - generic [ref=f39e176]: 2,474
+                        - text: following
+                - generic [ref=f39e177]:
+                  - generic [ref=f39e178]:
+                    - button [ref=f39e606] [cursor=pointer]:
+                      - generic [ref=f39e181]:
+                        - text: contrabajista y compositor Ecuatorianofelipecornejo1996@gmail.com
+                        - link "@felipecornejotrios" [ref=f39e607]:
+                          - /url: /felipecornejotrios/
+                        - link "@cartet___" [ref=f39e608]:
+                          - /url: /cartet___/
+                    - generic [ref=f39e185]:
+                      - img "Link icon" [ref=f39e609]
+                      - link "linktr.ee/felipecornejomusic" [ref=f39e610] [cursor=pointer]:
+                        - /url: https://l.instagram.com/?u=https%3A%2F%2Flinktr.ee%2Ffelipecornejomusic%3Futm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio%26fbclid%3DPAZXh0bgNhZW0CMTEAcGRvZgJzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAafUR8IrrBrVcwbjbolDggpzyACthOglcN-UMkfaCB1oAuRESh8FW7SZ5M_0rA_aem_P9arC0G6L0ZxCSap4iOG_Q&e=AUDuftyrGxjdSEXrm40o268baPBnBveUGPCac1zliVYidF5FHaKzQ_zLrhMnvZs1ZrCkYvixLdqjSlSWmUX1Q-k9xDX7X6yzt38lCWFqunhAjtvjuS-11OgLJ6b2WrgdtI1qI8yYijso
+                  - link "Followed by diegocarvajalmusica, h8a.stella + 25 more" [ref=f39e611] [cursor=pointer]:
+                    - /url: /felipe.cornejo.bermeo/followers/mutualOnly
+                    - generic [ref=f39e195]:
+                      - generic [ref=f39e197]:
+                        - button [ref=f39e198]:
+                          - link [ref=f39e199]
+                        - button [ref=f39e452]:
+                          - link [ref=f39e453]
+                        - button [ref=f39e454]:
+                          - link [ref=f39e455]
+                      - generic [ref=f39e204]: Followed by diegocarvajalmusica, h8a.stella + 25 more
+            - generic [ref=f39e209]:
+              - button "Follow" [ref=f39e612] [cursor=pointer]
+              - button "Message" [ref=f39e613] [cursor=pointer]
+              - button [ref=f39e614] [cursor=pointer]:
+                - img "Similar accounts" [ref=f39e615]
+            - menu [ref=f39e223]:
+              - list [ref=f39e227]:
+                - listitem [ref=f39e228]
+                - listitem [ref=f39e229]
+                - listitem [ref=f39e230]:
+                  - link "View Destacada highlight" [ref=f39e616] [cursor=pointer]:
+                    - /url: /stories/highlights/18183326734335758/
+                    - button "felipe.cornejo.bermeo's highlight story picture Destacada" [ref=f39e617]:
+                      - button [ref=f39e618]:
+                        - img "felipe.cornejo.bermeo's highlight story picture" [ref=f39e619]
+                      - generic [ref=f39e239]: Destacada
+          - generic [ref=f39e242]:
+            - tablist [ref=f39e243]:
+              - link [ref=f39e620] [cursor=pointer]:
+                - /url: /felipe.cornejo.bermeo/
+                - img "Posts" [ref=f39e621]
+              - link [ref=f39e622] [cursor=pointer]:
+                - /url: /felipe.cornejo.bermeo/reels/
+                - img "Reels" [ref=f39e623]
+              - link [ref=f39e624] [cursor=pointer]:
+                - /url: /felipe.cornejo.bermeo/reposts/
+                - img "Reposts" [ref=f39e625]
+              - link [ref=f39e626] [cursor=pointer]:
+                - /url: /felipe.cornejo.bermeo/tagged/
+                - img "Tagged" [ref=f39e627]
+            - tabpanel
+          - generic [ref=f39e277]:
+            - generic [ref=f39e278]:
+              - link [ref=f39e628] [cursor=pointer]:
+                - /url: /goparallel.uio/reel/Dd_1Fd5BZmZ/
+                - 'img "¡Jazz en Parallel Mercado Lab! 🎶 ¡Disfruta un concierto único junto CATPOT. 🍕 Opcional Menú exclusivo al horno de leña. 🗓️ Jueves 8 de octubre del 2026 🕖 19h30 🍹 Incluye bebida de bienvenida Cover: $13 Valor incluye impuestos. Música en vivo y exquisita gastronomía se unen para una experiencia inolvidable. Cupos limitados.🎶 ¡Reserva hoy!" [ref=f39e629]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f39e630] [cursor=pointer]:
+                - /url: /catpotjazz/reel/Dd6kI_QBsbw/
+                - img "¡No puedes perderte de nuestro gran regreso! 🐈✨ Este 8 de octubre a las 20h00 en el @goquitohotel 📍" [ref=f39e631]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f39e632] [cursor=pointer]:
+                - /url: /anankemicroclimas/p/Ddkf1f4M4c_/
+                - 'img "El #jazz se toma la ciudad y el Ananké también 🤩❤️🌋 - Este #miércoles 23 en la Gonzalez Suárez Felipe Cornejo, Fran Laurito e Ignacio Navarro nos presentan un repertorio de jazz tradicional y contemporáneo. Tres de los músicos más representativos de escena quiteña en un trio sin batería, lo que abre un abanico de posibilidades y texturas muy interesantes. Un trío imperdible !!! - A las 20h30 en la Gonzalez Suárez - - - - #jazzlife #jazzenlagz #jazzenvivo" [ref=f39e633]'
+            - generic [ref=f39e297]:
+              - link [ref=f39e634] [cursor=pointer]:
+                - /url: /felipe.cornejo.bermeo/p/DdMWu5-Dq93/
+                - 'img "For Carla es una canción dedicada a la compositora estadounidense Carla Bley. La melodía de la canción surgió como un eco de su composición Lawns. Esta versión fue interpretada por @ssomi1105 en junio del 2025 en Maastricht, Holanda. Gracias @paulateranospina por la hermosa portada. For Carla está disponible en todas las plataformas! 🎧 ---------- For Carla is a song dedicated to the North American composer Carla Bley. The melody is an echo of her song Lawns. This version was recorded by Seonghee Stella Lee, during June 2025 in Maastricht, NL. Thank you Paula Terán Ospina for the beautiful cover art. For Carla is available in all platforms! 🎧 #jazz #carlabley #piano" [ref=f39e635]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f39e636] [cursor=pointer]:
+                - /url: /franlaurito/reel/DcthFSfCYaj/
+                - img "⚡ Alerta de video +30 segundos Este jueves a duo en el @goquitohotel // Lawns (Carla Bley)" [ref=f39e637]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f39e638] [cursor=pointer]:
+                - /url: /dani.c.music/p/DcFpyqSHIDZ/
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f39e316]:
+              - link [ref=f39e639] [cursor=pointer]:
+                - /url: /rojelioelrojorojas/p/Da3Jk04ERRM/
+                - img "Mañana vamos a tocar un lindo repertorio con nuestra música y un par de covers bonitos a duo con @felipe.cornejo.bermeo en @florestapizza 🍕🔥✨ Ven! 💯 7:30pm $6" [ref=f39e640]
+              - link [ref=f39e641] [cursor=pointer]:
+                - /url: /kihnscheme/reel/DajWBYCNLnM/
+                - 'img "KihnCorn, - donde se vive y celebra música contemporanea - sonidos de la iglesia - sonidos andinos - sonidos electronicos - sonidos esmeraldeños Y todo empacado en arreglos detallados y \"elegantes\"! 100% artesanal IA 0% KihnCorn - where we live and celebrate contemporary music - \"churchy\"/organ vibes - indigenous flute sounds - electronic music - wooden sounds And everything \"uncovered\" in sophisticated and \"elegant\" arrangements! 100% hand-made 0% AI #ai #no #music #world #peace" [ref=f39e642]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f39e643] [cursor=pointer]:
+                - /url: /felipe.cornejo.bermeo/p/DYOERJ4upsd/
+                - img "Tengo dos cupos para clases privadas de música. Si están interesados cuéntenme :)" [ref=f39e644]
+            - generic [ref=f39e335]:
+              - link [ref=f39e645] [cursor=pointer]:
+                - /url: /ave_y_pez/reel/DXZwUPEka9z/
+                - 'img "Éste sábado 25, Ave&Pez en el @quitojazzclub 20:30hs Tocamos a sexteto: Gilberto Rivero, Saxo tenor Isasha Luna, flauta Andrés Viteri, Piano, composiciones Julian Velasco, vibráfono Felipe Cornejo, Contrabajo Kevin De la Torre, Batería En el reel esta soleando el gran Mickael Blanchard, sobre los cambios de un tema que compuse y que tocaremos el sábado Invitadisimxs" [ref=f39e646]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f39e647] [cursor=pointer]:
+                - /url: /walt.szy.drdetroit/reel/DWwFwsIjtU5/
+                - img "Quito Jazz Club 3/4/26 Tributo a Horace Sliver Cape Verdean Blues!" [ref=f39e648]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f39e649] [cursor=pointer]:
+                - /url: /walt.szy.drdetroit/p/DWT2iDTFpf-/
+                - 'img "Homenaje de Horace Silver 3 de abril en Quito Jazz Club Michael Blanchard: Tenor Sax Ignacio Navarro: Piano Roberto Morales: Drums Felipe Conejo: Bass" [ref=f39e650]'
+      - contentinfo [ref=f39e354]:
+        - generic [ref=f39e355]:
+          - generic [ref=f39e357]:
+            - link "Meta" [ref=f39e651] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f39e652] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f39e653] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f39e654] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f39e655] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f39e656] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f39e657] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f39e658] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f39e659] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f39e660] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f39e661] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f39e662] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f39e663] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f39e664] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f39e665] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f39e666] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f39e406]:
+            - generic [ref=f39e407] [cursor=pointer]:
+              - generic [ref=f39e408]:
+                - generic [ref=f39e409]: English
+                - img "Down chevron icon" [ref=f39e667]
+              - combobox "Switch Display Language" [ref=f39e668]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f39e415]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f39e418] [cursor=pointer]:
+              - generic "Messages - 4 new notifications" [ref=f39e419]:
+                - generic [ref=f39e420]:
+                  - generic [ref=f39e422]:
+                    - img "Messages" [ref=f39e423]
+                    - generic "Direct messaging - 4 new notifications link" [ref=f39e426]: "4"
+                  - generic [ref=f39e429]: Messages
+                - generic [ref=f39e430]:
+                  - button [ref=f39e431]:
+                    - img "4 unread chats" [ref=f39e433]
+                  - button "User avatar Juren" [ref=f39e438]:
+                    - img "User avatar" [ref=f39e441]
+                  - button "User avatar Eduardo ED" [ref=f39e443]:
+                    - img "User avatar" [ref=f39e446]
+                  - button "User avatar ༒ 𖦹" [ref=f39e448]:
+                    - img "User avatar" [ref=f39e451]
+            - generic [ref=f39e669]:
+              - generic [ref=f39e670]:
+                - generic [ref=f39e671]:
+                  - generic [ref=f39e673]:
+                    - status "Loading..." [ref=f39e675]
+                    - status "Loading..." [ref=f39e677]
+                  - button [active] [ref=f39e679] [cursor=pointer]:
+                    - img "Close" [ref=f39e681]
+                - separator [ref=f39e684]
+              - generic [ref=f39e685]:
+                - generic [ref=f39e686]:
+                  - status "Loading..." [ref=f39e688]
+                  - status "Loading..." [ref=f39e690]
+                - status "Loading..." [ref=f39e693]
+                - generic [ref=f39e694]:
+                  - status "Loading..." [ref=f39e696]
+                  - status "Loading..." [ref=f39e698]
+                - generic [ref=f39e699]:
+                  - status "Loading..." [ref=f39e701]
+                  - status "Loading..." [ref=f39e703]
+                - status "Loading..." [ref=f39e706]
+                - generic [ref=f39e707]:
+                  - status "Loading..." [ref=f39e709]
+                  - status "Loading..." [ref=f39e711]
+                - status "Loading..." [ref=f39e713]

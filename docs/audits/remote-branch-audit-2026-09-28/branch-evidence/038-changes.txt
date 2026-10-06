@@ -1,0 +1,20 @@
+ docs/adr/0125-read-only-reconciliation-evidence.md | 107 ++++++++++
+ .../catalog-list-decisions.json                    |  30 +++
+ .../closed-checkout-approval-2026-09-15.md         |   5 +-
+ .../ecuador-payment-platform-audit-2026-09-11.md   |   7 +
+ docs/payments/operator-runbooks.md                 |   8 +
+ .../payments/reconciliation-evidence-2026-09-15.md | 222 +++++++++++++++++++++
+ .../payment-query-report-contract.test.mjs         |  57 ++++++
+ tdf-hq-ui/src/api/commerceOperations.test.ts       |  12 ++
+ tdf-hq-ui/src/api/commerceOperations.ts            |  19 ++
+ tdf-hq-ui/src/api/generated/types.ts               | 120 +++++++++++
+ .../payments/ReconciliationEvidencePanel.test.tsx  | 142 +++++++++++++
+ .../payments/ReconciliationEvidencePanel.tsx       | 169 ++++++++++++++++
+ .../src/pages/CommerceProviderEventsPage.test.tsx  |   4 +
+ tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx |   2 +
+ tdf-hq/docs/openapi/api.yaml                       |  95 +++++++++
+ tdf-hq/src/TDF/API/CommerceOperations.hs           |  43 ++++
+ tdf-hq/src/TDF/Server/CommerceOperations.hs        | 122 +++++++++++
+ tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs      | 182 ++++++++++++++++-
+ tdf-mobile                                         |   2 +-
+ 19 files changed, 1344 insertions(+), 4 deletions(-)

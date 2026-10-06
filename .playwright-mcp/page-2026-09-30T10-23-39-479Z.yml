@@ -1,0 +1,391 @@
+- generic [ref=f69e4]:
+  - generic [ref=f69e18]:
+    - generic [ref=f69e21]:
+      - link [ref=f69e664] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f69e665]
+      - generic [ref=f69e34]:
+        - link [ref=f69e666] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f69e667]
+        - link [ref=f69e668] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f69e669]
+        - link [ref=f69e670] [cursor=pointer]:
+          - /url: /direct/t/119737296080282
+          - generic [ref=f69e64]:
+            - img "Messages" [ref=f69e671]
+            - generic "Direct messaging - 8 new notifications link" [ref=f69e672]: "8"
+        - link [ref=f69e673] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f69e674]
+        - link [ref=f69e675] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f69e676]
+        - link [ref=f69e677] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f69e678]
+        - link [ref=f69e679] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f69e680]
+        - link [ref=f69e681] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f69e682]:
+            - img "tdf.records.label's profile picture" [ref=f69e683]
+      - generic [ref=f69e127]:
+        - link [ref=f69e684] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f69e685]
+        - link [ref=f69e686] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f69e687]
+    - generic [ref=f69e146]:
+      - main [ref=f69e147]:
+        - generic [ref=f69e149]:
+          - generic [ref=f69e150]:
+            - generic [ref=f69e151]:
+              - generic [ref=f69e155]:
+                - button [ref=f69e688] [cursor=pointer]:
+                  - generic [ref=f69e166]:
+                    - text: Mañana Live con
+                    - link "@elblogdemicha" [ref=f69e689]:
+                      - /url: /elblogdemicha/
+                    - text: hagan sus preguntas 💛🎶
+                - button [ref=f69e690] [cursor=pointer]:
+                  - link [ref=f69e691]:
+                    - img "solcordovamusic's profile picture" [ref=f69e692]
+              - generic [ref=f69e175]:
+                - generic [ref=f69e176]:
+                  - generic [ref=f69e177]:
+                    - link [ref=f69e693] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "solcordovamusic" [level=2] [ref=f69e694]
+                    - button [ref=f69e695] [cursor=pointer]:
+                      - img "Options" [ref=f69e696]
+                  - generic [ref=f69e188]: Sol Córdova 🌞
+                  - generic [ref=f69e190]:
+                    - generic [ref=f69e192]:
+                      - generic [ref=f69e193]: "601"
+                      - text: posts
+                    - link "6,078 followers" [ref=f69e697] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f69e196]:
+                        - generic "6,078" [ref=f69e698]
+                        - text: followers
+                    - link "4,407 following" [ref=f69e699] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f69e200]:
+                        - generic [ref=f69e201]: 4,407
+                        - text: following
+                - generic [ref=f69e202]:
+                  - generic [ref=f69e203]:
+                    - generic [ref=f69e204]: Musician/band
+                    - button [ref=f69e700] [cursor=pointer]:
+                      - generic [ref=f69e208]: Voz, raíz y modernidad 🇪🇨 🇨🇱Meditación Sonora
+                    - button "Link icon linktr.ee/solcordovamusic and 1 more" [ref=f69e701] [cursor=pointer]:
+                      - generic [ref=f69e211]:
+                        - img "Link icon" [ref=f69e702]
+                        - generic [ref=f69e216]: linktr.ee/solcordovamusic and 1 more
+                  - link "Followed by isa.saenz_, pluterasrecords + 90 more" [ref=f69e703] [cursor=pointer]:
+                    - /url: /solcordovamusic/followers/mutualOnly
+                    - generic [ref=f69e219]:
+                      - generic [ref=f69e221]:
+                        - button [ref=f69e222]:
+                          - link [ref=f69e223]
+                        - button [ref=f69e224]:
+                          - link [ref=f69e225]
+                        - button [ref=f69e226]:
+                          - link [ref=f69e227]
+                      - generic [ref=f69e228]: Followed by isa.saenz_, pluterasrecords + 90 more
+            - generic [ref=f69e233]:
+              - button "Following Down chevron icon" [ref=f69e704] [cursor=pointer]:
+                - generic [ref=f69e236]:
+                  - generic [ref=f69e237]: Following
+                  - img "Down chevron icon" [ref=f69e705]
+              - button "Message" [ref=f69e706] [cursor=pointer]
+              - button [ref=f69e707] [cursor=pointer]:
+                - img "Similar accounts" [ref=f69e708]
+            - menu [ref=f69e251]:
+              - list [ref=f69e255]:
+                - listitem [ref=f69e256]
+                - listitem [ref=f69e257]
+                - listitem [ref=f69e258]:
+                  - link "View Meditación highlight" [ref=f69e709] [cursor=pointer]:
+                    - /url: /stories/highlights/18128148292662594/
+                    - button "solcordovamusic's highlight story picture Meditación" [ref=f69e710]:
+                      - button [ref=f69e711]:
+                        - img "solcordovamusic's highlight story picture" [ref=f69e712]
+                      - generic [ref=f69e267]: Meditación
+                - listitem [ref=f69e270]:
+                  - link "View Shows highlight" [ref=f69e713] [cursor=pointer]:
+                    - /url: /stories/highlights/17882857788265003/
+                    - button "solcordovamusic's highlight story picture Shows" [ref=f69e714]:
+                      - button [ref=f69e715]:
+                        - img "solcordovamusic's highlight story picture" [ref=f69e716]
+                      - generic [ref=f69e279]: Shows
+                - listitem [ref=f69e282]:
+                  - link "View PutumayoWorldMu highlight" [ref=f69e717] [cursor=pointer]:
+                    - /url: /stories/highlights/18054706085642277/
+                    - button "solcordovamusic's highlight story picture PutumayoWorldMu" [ref=f69e718]:
+                      - button [ref=f69e719]:
+                        - img "solcordovamusic's highlight story picture" [ref=f69e720]
+                      - generic [ref=f69e291]: PutumayoWorldMu
+                - listitem [ref=f69e294]:
+                  - link "View Surupa EP highlight" [ref=f69e721] [cursor=pointer]:
+                    - /url: /stories/highlights/18424664104109884/
+                    - button "solcordovamusic's highlight story picture Surupa EP" [ref=f69e722]:
+                      - button [ref=f69e723]:
+                        - img "solcordovamusic's highlight story picture" [ref=f69e724]
+                      - generic [ref=f69e303]: Surupa EP
+                - listitem [ref=f69e306]:
+                  - link "View Singles highlight" [ref=f69e725] [cursor=pointer]:
+                    - /url: /stories/highlights/17981497583877333/
+                    - button "solcordovamusic's highlight story picture Singles" [ref=f69e726]:
+                      - button [ref=f69e727]:
+                        - img "solcordovamusic's highlight story picture" [ref=f69e728]
+                      - generic [ref=f69e315]: Singles
+          - generic [ref=f69e318]:
+            - tablist [ref=f69e319]:
+              - link [ref=f69e729] [cursor=pointer]:
+                - /url: /solcordovamusic/
+                - img "Posts" [ref=f69e730]
+              - link [ref=f69e731] [cursor=pointer]:
+                - /url: /solcordovamusic/reels/
+                - img "Reels" [ref=f69e732]
+              - link [ref=f69e733] [cursor=pointer]:
+                - /url: /solcordovamusic/reposts/
+                - img "Reposts" [ref=f69e734]
+              - link [ref=f69e735] [cursor=pointer]:
+                - /url: /solcordovamusic/tagged/
+                - img "Tagged" [ref=f69e736]
+            - tabpanel
+          - generic [ref=f69e353]:
+            - generic [ref=f69e354]:
+              - link [ref=f69e737] [cursor=pointer]:
+                - /url: /solcordovamusic/reel/DdJ56t7xTid/
+                - 'img "Me he pasado el último año componiendo y produciendo cancioncitas, cumpliendo de alguna manera el deseo de hacer mis propias producciones con mis pocos recursos, pero también entendiendo ese sonido auténtico. Algunas de estas canciones verán la luz otras no. Pero ya quiero comenzar a compartirles fragmentos y amores de lo que voy construyendo 🌳 #mujerproductora #womenproducers #singersongwriter #quitoecuador" [ref=f69e738]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f69e739] [cursor=pointer]:
+                - /url: /axha.musica/reel/DaDmp10Ri51/
+                - 'img "“MADRE CUMBIA” - Link en bio Ya disponible en todas las plataformas Letra (poema): @xavi.vinueza Producción: @axha.no.existe Voces, melodías y arreglo vocal: @solcordovamusic Mezcla y máster: @gabosarria96 Video: @pifrecuency Δ" [ref=f69e740]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f69e741] [cursor=pointer]:
+                - /url: /solcordovamusic/reel/DXha88mkQWp/
+                - 'img "Hace tiempo le pedí ayuda a @inticuri para traducir el Eterno Sol 🌞 al Kichwa y sigo muy agradecida. Como instructora de kundalini yoga en esos años había encontrado versiones en muchos idiomas, y además cantaba mantras en sánscrito y Gurmukhi. Me pareció hermoso y necesario crear una versión en Kichwa como una promesa de reconexión con nuestra raíz. Esta canción también ha sido un puente entre la identidad artística y la espiritual con @devjot_medicinemusic , haciendo que todo mi ser musical se unifique. Pronto se encontrará nuevamente esta versión en plataformas digitales. #medicinemusic #kichwa #womaninmusic #mantra #eternosol" [ref=f69e742]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+            - generic [ref=f69e373]:
+              - link [ref=f69e743] [cursor=pointer]:
+                - /url: /ananau_botanique/p/Dd20ghxkSHR/
+                - 'img "Se acerca el día y los sentimientos se alborotan!! No les voy a mentir... A veces pienso: y si nadie llega? Pero estamos organizando este espacio y este evento con tanta dedicación y cariño que tengo la esperanza de verles por montones aquí este finde! Gracias a todos quienes se han sumado y se siguen sumando para hacer de esta inauguración algo tan especial! Deje su deseo de buena suerte en los comentarios ✨✨✨" [ref=f69e744]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f69e745] [cursor=pointer]:
+                - /url: /solcordovamusic/reel/Dd2eR7PR6-_/
+                - 'img "“Canta, canta, canta…” Mi mantra de vida y la llama que se mantiene encendida a pesar de todo. #singer #canta #vocalcoach" [ref=f69e746]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f69e747] [cursor=pointer]:
+                - /url: /pifrecuency/reel/Ddt8IIgRuhx/
+                - 'img "Este pasado domingo salió “Regalito”, una hermosa canción inédita de @solcordovamusic , y la tercera Live Session de Pi Frecuency Prods! Vayan a verla en Youtube! Link en la bio e historias destacadas! Voz, guitarra y composición: Sol Córdova Cámara y color: @cristobalpinamusic Producción: Pi Frecuency Prods Pronto saldrán nuevas, así que atentxs! #livesession #originalmusic #folk #folkore #tonada" [ref=f69e748]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f69e392]:
+              - link [ref=f69e749] [cursor=pointer]:
+                - /url: /solcordovamusic/reel/DdozlJrxGMW/
+                - 'img "Ya está disponible en YouTube esta sesión orgánica y con sonido natural que hicimos junto a @pifrecuency 🎶✨ ¡Vayan a escucharla y me cuentan qué sintieron! #livesessions #singersongwriter #quitoecuador #santiagodechile #folklorechileno" [ref=f69e750]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f69e751] [cursor=pointer]:
+                - /url: /solcordovamusic/p/Ddh6OhwEXkK/
+                - 'img "Hay un proceso muy íntimo y profundo detrás de la escritura de una canción. Un proceso en donde las emociones se transforman en palabras, ritmo, armonía y melodía. Yo partí mi vida musical realizando ese proceso acompañada de una guitarra. A pesar de que la guitarra no se transformó en mi instrumento principal, cada vez que me siento alienada o que pierdo el camino, siempre vuelvo a esa raíz. Como dice mi mami: volver a empezar de cero una vez más, porque uno empieza de cero mil veces en la vida. Y en uno de esos empezar de cero, compuse esta canción, “Regalito”, que es una canción bebé, una canción nueva, y que tuve la oportunidad de grabarla en las sesiones orgánicas, crudas, @pifrecuency ✨ Así que, si quieren ir a conocer el resultado de este proceso, vayan a YouTube y disfruten de la canción.🎧 #cantautoraecuatoriana #livesession #ecuador" [ref=f69e752]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f69e753] [cursor=pointer]:
+                - /url: /pifrecuency/p/DdcUr4Fn9jm/
+                - 'img "Este domingo ya sale una nueva sesión en vivo de Pi Frecuency Prods! Esta vez con el estreno de una hermosa canción inédita de @solcordovamusic !! No se la pueden perder! Pronto se vienen nuevas Live Sessions! #folklore #songwriter #livesession #originalmusic #folk" [ref=f69e754]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f69e411]:
+              - link [ref=f69e755] [cursor=pointer]:
+                - /url: /solcordovamusic/p/DdSb6CQka6_/
+                - 'img "Les comparto algunos momentos de este camino gestionando mi proyecto independiente, con poco presupuesto, mucha fe e ideas poco convencionales. A veces, preguntándome si vale la pena intentar llegar al mundo con mis canciones; a veces teniendo la convicción de que lo vale, a veces a punto de abortar misión. Lo cierto es que, pase lo que pase, he seguido el llamado y he hecho todo lo que está en mis manos, lo demás ya depende un poco de la suerte o del destino. De todas formas, la vida es un poco así ¿no? Gracias por quienes siempre están sosteniendo y resonando, porque ahí es cuando el canto tiene sentido. #elcantotienesentido #singersongwriter #cantautora #quitoecuador🇪🇨♥️" [ref=f69e756]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f69e757] [cursor=pointer]:
+                - /url: /solcordovamusic/reel/Dc33oivRyxF/
+                - 'img "Quería saber si luego de tanto dolor, volvería a sentirme bien y a brillar. El Tarot lo confirmó, yo lo canté y luego dibujé mis propias cartas. ¿Acaso la creatividad tiene límites? ¿Acaso el arte no ayuda a sanar? 💔❤️‍🩹💛 Este vídeo fue durante mi show en el @islavivagalapagos 2025 🎶 #tarotenvivo #tarot #musicaytarot #cantautora #solcordovamusic" [ref=f69e758]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f69e759] [cursor=pointer]:
+                - /url: /solcordovamusic/reel/DcyvIRARUyc/
+                - 'img "22 años haciendo canciones, es hora de buscar caminitos nuevos en este “Camino al cantar” #newsong #cumbia #singersongwriter" [ref=f69e760]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+      - contentinfo [ref=f69e430]:
+        - generic [ref=f69e431]:
+          - generic [ref=f69e433]:
+            - link "Meta" [ref=f69e761] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f69e762] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f69e763] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f69e764] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f69e765] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f69e766] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f69e767] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f69e768] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f69e769] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f69e770] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f69e771] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f69e772] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f69e773] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f69e774] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f69e775] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f69e776] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f69e482]:
+            - generic [ref=f69e483] [cursor=pointer]:
+              - generic [ref=f69e484]:
+                - generic [ref=f69e485]: English
+                - img "Down chevron icon" [ref=f69e777]
+              - combobox "Switch Display Language" [ref=f69e778]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f69e491]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f69e494] [cursor=pointer]:
+              - generic "Messages - 8 new notifications" [ref=f69e495]:
+                - generic [ref=f69e496]:
+                  - generic [ref=f69e498]:
+                    - img "Messages" [ref=f69e499]
+                    - generic "Direct messaging - 8 new notifications link" [ref=f69e502]: "8"
+                  - generic [ref=f69e505]: Messages
+                - generic [ref=f69e506]:
+                  - button [ref=f69e507]:
+                    - img "8 unread chats" [ref=f69e509]
+                  - button "User avatar ..." [ref=f69e514]:
+                    - img "User avatar" [ref=f69e517]
+                  - button "User avatar David Márquez" [ref=f69e519]:
+                    - img "User avatar" [ref=f69e522]
+                  - button "User avatar Limberg Steven Garcia Alava" [ref=f69e524]:
+                    - img "User avatar" [ref=f69e527]
+            - generic [ref=f69e779]:
+              - generic [ref=f69e780]:
+                - generic [ref=f69e781]:
+                  - generic [ref=f69e783]:
+                    - status "Loading..." [ref=f69e785]
+                    - status "Loading..." [ref=f69e787]
+                  - button [active] [ref=f69e789] [cursor=pointer]:
+                    - img "Close" [ref=f69e791]
+                - separator [ref=f69e794]
+              - generic [ref=f69e795]:
+                - generic [ref=f69e796]:
+                  - status "Loading..." [ref=f69e798]
+                  - status "Loading..." [ref=f69e800]
+                - status "Loading..." [ref=f69e803]
+                - generic [ref=f69e804]:
+                  - status "Loading..." [ref=f69e806]
+                  - status "Loading..." [ref=f69e808]
+                - generic [ref=f69e809]:
+                  - status "Loading..." [ref=f69e811]
+                  - status "Loading..." [ref=f69e813]
+                - status "Loading..." [ref=f69e816]
+                - generic [ref=f69e817]:
+                  - status "Loading..." [ref=f69e819]
+                  - status "Loading..." [ref=f69e821]
+                - status "Loading..." [ref=f69e823]

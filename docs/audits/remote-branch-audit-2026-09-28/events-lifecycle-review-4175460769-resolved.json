@@ -1,0 +1,33 @@
+{
+  "data": {
+    "repository": {
+      "pullRequest": {
+        "headRefOid": "34ca75d3d92d2a6def22e63ddd47baa96edca878",
+        "state": "OPEN",
+        "reviewThreads": {
+          "nodes": [
+            {
+              "id": "PRRT_kwDOQPdUrM6nx9wW",
+              "isResolved": true
+            },
+            {
+              "id": "PRRT_kwDOQPdUrM6nx9wa",
+              "isResolved": true
+            },
+            {
+              "id": "PRRT_kwDOQPdUrM6otLR2",
+              "isResolved": true
+            },
+            {
+              "id": "PRRT_kwDOQPdUrM6otLR4",
+              "isResolved": true
+            }
+          ],
+          "pageInfo": {
+            "hasNextPage": false
+          }
+        }
+      }
+    }
+  }
+}

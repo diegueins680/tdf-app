@@ -1,0 +1,9 @@
+ .../0118-signed-payment-notification-identity.md   | 126 +++++++++++
+ .../ecuador-payment-platform-audit-2026-09-11.md   |   7 +
+ docs/payments/notification-identity-2026-09-14.md  | 126 +++++++++++
+ .../notification-minimization-2026-09-14.md        |   6 +
+ docs/payments/operator-runbooks.md                 |  14 +-
+ tdf-hq/src/TDF/Commerce/ProviderEventStore.hs      |  74 ++++++-
+ tdf-hq/src/TDF/Server/ProviderExecution.hs         |  10 +-
+ tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs      | 232 ++++++++++++++++++++-
+ 8 files changed, 576 insertions(+), 19 deletions(-)

@@ -95,7 +95,7 @@ Página objetivo implementada:
 
 - Ruta canónica: `https://tdf-app.pages.dev/domo-del-pululahua`
 - Ruta alterna con redirección: `https://tdf-app.pages.dev/venues/domo-del-pululahua`
-- API usada para ingreso de reservas: `POST https://tdf-hq.fly.dev/bookings/public`
+- API usada para ingreso de reservas: `POST https://api.tdfrecords.net/bookings/public`
 - La lógica de cotización está actualmente en el cliente, por lo que la página pública funciona contra el API desplegado sin requerir un release de backend.
 
 La herramienta de cotización estima:

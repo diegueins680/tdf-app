@@ -1,0 +1,1 @@
+f2f01194090a241777c451d06cb0848af7aa759a 2026-09-16T13:29:33-05:00 continuous-improvement-loop[bot] feat(events): validate captured task completion client

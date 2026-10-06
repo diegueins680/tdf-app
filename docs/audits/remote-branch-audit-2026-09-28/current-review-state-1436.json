@@ -1,0 +1,251 @@
+{
+  "tdf-app/463": {
+    "state": "OPEN",
+    "isDraft": false,
+    "headRefOid": "697bd58b5ea1c8134be490cce588b65e9a08dad8",
+    "baseRefName": "fix/event-confirmed-end-20260920",
+    "reviewDecision": "APPROVED",
+    "mergeStateStatus": "DIRTY",
+    "reviews": {
+      "nodes": [
+        {
+          "author": {
+            "login": "chatgpt-codex-connector"
+          },
+          "state": "COMMENTED",
+          "commit": {
+            "oid": "6ba185a697b3b6b6983ebb48e0ab6454f716cf23"
+          }
+        },
+        {
+          "author": {
+            "login": "tdfrecords"
+          },
+          "state": "DISMISSED",
+          "commit": {
+            "oid": "6ba185a697b3b6b6983ebb48e0ab6454f716cf23"
+          }
+        },
+        {
+          "author": {
+            "login": "diegueins680"
+          },
+          "state": "COMMENTED",
+          "commit": {
+            "oid": "697bd58b5ea1c8134be490cce588b65e9a08dad8"
+          }
+        },
+        {
+          "author": {
+            "login": "diegueins680"
+          },
+          "state": "COMMENTED",
+          "commit": {
+            "oid": "697bd58b5ea1c8134be490cce588b65e9a08dad8"
+          }
+        },
+        {
+          "author": {
+            "login": "tdfrecords"
+          },
+          "state": "APPROVED",
+          "commit": {
+            "oid": "697bd58b5ea1c8134be490cce588b65e9a08dad8"
+          }
+        },
+        {
+          "author": {
+            "login": "chatgpt-codex-connector"
+          },
+          "state": "COMMENTED",
+          "commit": {
+            "oid": "697bd58b5ea1c8134be490cce588b65e9a08dad8"
+          }
+        }
+      ]
+    },
+    "reviewThreads": {
+      "nodes": [
+        {
+          "id": "PRRT_kwDOQPdUrM6mht0D",
+          "isResolved": true,
+          "comments": {
+            "nodes": [
+              {
+                "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Anchor the migration to an ancestor of this release**\n\nFor release SHA `7e78303ac3ea0c9ce025d7ea4edab5d03d81b8fa`, `441dfcc968559f829e84c89751f008657566138c` is not an ancestor (`git merge-base --is-ancestor` returns false). The guarded release path in `scripts/production-release.mjs` checks every `introducedBy` commit and explicitly refuses such a release, so planning or deploying this exact commit will fail before applying the migration. Record an introduction commit that is actually in this release's ancestry.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                "url": "https://github.com/diegueins680/tdf-app/pull/463#discussion_r4118319007"
+              },
+              {
+                "body": "Verified on 697bd58b5ea1c8134be490cce588b65e9a08dad8: introduction commit 441dfcc968559f829e84c89751f008657566138c is in the current release ancestry. All 115 registered introduction commits pass git merge-base --is-ancestor, and all 82 production-release tests pass. The earlier review snapshot is superseded by the existing normal commits; no ancestry guard or manifest entry was weakened. Native-stack automatic rebasing has not been invoked.",
+                "url": "https://github.com/diegueins680/tdf-app/pull/463#discussion_r4122956570"
+              }
+            ]
+          }
+        },
+        {
+          "id": "PRRT_kwDOQPdUrM6mht0E",
+          "isResolved": true,
+          "comments": {
+            "nodes": [
+              {
+                "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Include discovery events in the pilot status count**\n\nThis function makes structured imports consume the same 20-item allowance as research candidates, but `loadPilotDTO` in `TDF.Server.EventResearch` still computes `erPilotActiveCandidates` solely from `event_research_candidate`. For example, with 19 candidates and one imported event, `GET /social-events/event-research/pilot` reports 19 of 20 while the next candidate is rejected by this trigger. Clients following the documented preflight therefore receive a misleading capacity value; derive the status count from the shared identities (or expose a separate shared count).\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                "url": "https://github.com/diegueins680/tdf-app/pull/463#discussion_r4118319013"
+              },
+              {
+                "body": "Fixed in 697bd58b5ea1c8134be490cce588b65e9a08dad8. The pilot-status endpoint and PostgreSQL import preflight now call the same canonical-identity count used by the database capacity guard. The real PostgreSQL regression exercises mixed candidates/imports, linked-event deduplication, duplicate source references and suppression (20 \u2192 20 \u2192 19 \u2192 20), with fixture changes rolled back. Mixed-writer races, authority/revocation and rollback/reapplication still pass; all 28 focused examples and the actual handler/dependency compilation pass. The existing response field is retained for compatibility.",
+                "url": "https://github.com/diegueins680/tdf-app/pull/463#discussion_r4122957722"
+              }
+            ]
+          }
+        },
+        {
+          "id": "PRRT_kwDOQPdUrM6mtRZC",
+          "isResolved": false,
+          "comments": {
+            "nodes": [
+              {
+                "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Abort reconciliation when the source is disabled**\n\nWhen an administrator disables a source after its fetch begins, this new check makes each per-event sync fail, but `syncOne` catches those failures and `runDiscoverySource` still reaches the success branch in `Cron.hs:617-626`, where it calls `reconcileProviderEvents` and `markSourceSuccess`. The stale response can therefore increment `missing_runs`, potentially hide an event that had already missed one run, and record the disabled source as successful; propagate this failure or recheck/lock source enablement around reconciliation and the success update.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                "url": "https://github.com/diegueins680/tdf-app/pull/463#discussion_r4122983604"
+              }
+            ]
+          }
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "tdf-app/464": {
+    "state": "OPEN",
+    "isDraft": false,
+    "headRefOid": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+    "baseRefName": "codex/event-ingestion-boundaries-20260927",
+    "reviewDecision": "APPROVED",
+    "mergeStateStatus": "UNKNOWN",
+    "reviews": {
+      "nodes": [
+        {
+          "author": {
+            "login": "chatgpt-codex-connector"
+          },
+          "state": "COMMENTED",
+          "commit": {
+            "oid": "5068a0d2d5e1c4888e57cf5b56f0365cb0a718d6"
+          }
+        },
+        {
+          "author": {
+            "login": "chatgpt-codex-connector"
+          },
+          "state": "COMMENTED",
+          "commit": {
+            "oid": "96135ee09b31845bd14565f5b457e07a44606bef"
+          }
+        },
+        {
+          "author": {
+            "login": "tdfrecords"
+          },
+          "state": "APPROVED",
+          "commit": {
+            "oid": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7"
+          }
+        }
+      ]
+    },
+    "reviewThreads": {
+      "nodes": [
+        {
+          "id": "PRRT_kwDOQPdUrM6mhy9e",
+          "isResolved": false,
+          "comments": {
+            "nodes": [
+              {
+                "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Permit the ownership marker in stored event metadata**\n\nEvery new or refreshed imported event now receives `_discoveryOwned`, but `EventMetadataDTO` still rejects every key except `ticketUrl`, `imageUrl`, `isPublic`, `currency`, and `budgetCents` (`SocialEventsHandlers.hs:1594-1623`). As soon as an event is imported or refreshed, `publicUpcomingEventRow` silently omits it because metadata decoding fails, while administrative read/update and finance paths using `decodeStoredEventMetadata` return errors. Store this evidence separately or update all metadata decoders and writers to accept and preserve the internal marker.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                "url": "https://github.com/diegueins680/tdf-app/pull/464#discussion_r4118352786"
+              }
+            ]
+          }
+        },
+        {
+          "id": "PRRT_kwDOQPdUrM6mh2J2",
+          "isResolved": false,
+          "comments": {
+            "nodes": [
+              {
+                "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Preserve editorial metadata during source reconciliation**\n\nWhen an editor changes `ticketUrl` or sets `isPublic` to false, this ownership logic initially preserves the change, but every successful cron refresh immediately calls `reconcileProviderEvents` (`Cron.hs:617-624`), whose `refreshCanonicalVisibility` unconditionally rewrites both fields from provider references (`EventDiscovery.hs:2000-2007`). Consequently, a legacy imported event that an administrator hides can be republished on the next successful source run, and an editorial ticket URL is replaced despite being removed from `nextOwned`; make reconciliation honor/update the ownership snapshot rather than bypassing it.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                "url": "https://github.com/diegueins680/tdf-app/pull/464#discussion_r4118372645"
+              }
+            ]
+          }
+        }
+      ],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "tdf-app/465": {
+    "state": "OPEN",
+    "isDraft": true,
+    "headRefOid": "afd86265f90378000cb3b5723f3406ced9793bbc",
+    "baseRefName": "main",
+    "reviewDecision": "APPROVED",
+    "mergeStateStatus": "UNKNOWN",
+    "reviews": {
+      "nodes": [
+        {
+          "author": {
+            "login": "tdfrecords"
+          },
+          "state": "DISMISSED",
+          "commit": {
+            "oid": "c8d50c9f6f274adeda87874e9d152212389ef9d9"
+          }
+        },
+        {
+          "author": {
+            "login": "tdfrecords"
+          },
+          "state": "DISMISSED",
+          "commit": {
+            "oid": "a28e1858341bbf87b4c6080144bf38e9aedfc4d2"
+          }
+        },
+        {
+          "author": {
+            "login": "tdfrecords"
+          },
+          "state": "APPROVED",
+          "commit": {
+            "oid": "afd86265f90378000cb3b5723f3406ced9793bbc"
+          }
+        }
+      ]
+    },
+    "reviewThreads": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  },
+  "TDF-mobile/115": {
+    "state": "OPEN",
+    "isDraft": false,
+    "headRefOid": "2ec145f17d76938ef7a8c042c949e2ad64222c41",
+    "baseRefName": "main",
+    "reviewDecision": null,
+    "mergeStateStatus": "CLEAN",
+    "reviews": {
+      "nodes": []
+    },
+    "reviewThreads": {
+      "nodes": [],
+      "pageInfo": {
+        "hasNextPage": false
+      }
+    }
+  }
+}

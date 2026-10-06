@@ -1,0 +1,2836 @@
+{
+  "pr465": {
+    "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/465",
+    "id": 4663721102,
+    "node_id": "PR_kwDOQPdUrM8AAAABFfq8jg",
+    "html_url": "https://github.com/diegueins680/tdf-app/pull/465",
+    "diff_url": "https://github.com/diegueins680/tdf-app/pull/465.diff",
+    "patch_url": "https://github.com/diegueins680/tdf-app/pull/465.patch",
+    "issue_url": "https://api.github.com/repos/diegueins680/tdf-app/issues/465",
+    "number": 465,
+    "state": "open",
+    "locked": false,
+    "title": "Consolidate event operations against current integrity and authentication guards",
+    "user": {
+      "login": "diegueins680",
+      "id": 2753581,
+      "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+      "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/diegueins680",
+      "html_url": "https://github.com/diegueins680",
+      "followers_url": "https://api.github.com/users/diegueins680/followers",
+      "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+      "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+      "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+      "repos_url": "https://api.github.com/users/diegueins680/repos",
+      "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "The event delivery chain conflicted with current main, and its older adapter overwrote stronger deletion, dependency-approval and RACI guards. This consolidation preserves the source histories through #417 plus the additional #339 successor, while retaining current integrity, authenticated-session revocation, source identity and migration ancestry.\n\nMain `49f1f0ec087067d17f62d91df1b616eb053eb894` is normally merged into this branch. The web publication-selection behavior and event follow flow coexist; generated API clients reproduce exactly. Mobile companion [TDF-mobile#115](https://github.com/diegueins680/TDF-mobile/pull/115) is pinned at `ede1f2a0ccf75f3794c7892f291e1751b279d19e`, which preserves both previous mobile histories. It still needs independent review and integration.\n\nThe latest repair makes successful follow/unfollow writes refresh shared viewer and artist caches even after navigation. Navigation and analytics effects remain bound to their original profile/session lifetime. The logistics task CTA is deferred while adapter migrations are outside the production manifest and `event.operations.api` is disabled. The direct task route and isolated enabled-adapter validation remain intact. Two historical catalog successor mappings now point to the current reviewed sources; original decision payloads, previous successor IDs, source provenance and all regression assertions are preserved.\n\nValidation actually executed:\n- Current merged application: complete Stack build; freshly built Hspec executable passed 3,576 examples with zero failures and six existing separate-runner cases pending in that executable. The unchanged production-auth HTTP harness passed 107 cases against an isolated native PostgreSQL16 database, which was removed afterward.\n- Current merged UI: 241 suites / 2,648 tests, production build and initial bundle budget passed. After the latest follow/link repair: 27 focused UI tests, including delayed follow/unfollow completion and all existing logout/session/navigation guards, passed; zero-warning lint and typecheck passed.\n- Five unchanged catalog regression tests, the full 1,170-candidate no-unreviewed/no-stale gate, regenerated specification inventory, 83 release tests, 32 CI contract tests, repository quality and the unchanged dependency-security gate passed. Security-policy success does not mean zero dependency findings.\n- Hosted validation on the preceding `23ff8f588` head passed complete-schema, PostgreSQL task/API/RACI suites and generated API contracts. Local Docker was unresponsive; no local Docker rehearsal pass is claimed for this integration. The native PostgreSQL HTTP result is separate evidence.\n- Earlier event implementation validation includes eight isolated runtime suites, eight real RACI desktop/phone browser cases and formal negative controls, retained in the audit record. These are historical results, not substitutes for the new head's CI.\n\nMerge gates: all prescribed checks must pass on the current head; obtain fresh independent approval, integrate the approved mobile companion, and recheck head/base/threads/compatibility. No source PR is superseded until this replacement actually merges. No deployment, feature activation, branch deletion, force push or administrator bypass is authorized by this implementation.\n",
+    "created_at": "2026-09-28T12:35:05Z",
+    "updated_at": "2026-10-01T02:53:04Z",
+    "closed_at": null,
+    "merged_at": null,
+    "merge_commit_sha": null,
+    "assignees": [],
+    "requested_reviewers": [],
+    "requested_teams": [],
+    "labels": [],
+    "milestone": null,
+    "draft": false,
+    "commits_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/465/commits",
+    "review_comments_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/465/comments",
+    "review_comment_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments{/number}",
+    "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/issues/465/comments",
+    "statuses_url": "https://api.github.com/repos/diegueins680/tdf-app/statuses/5c9bb3b5daf82fa438fe9f0dd1b796afd699d0a6",
+    "head": {
+      "label": "diegueins680:audit/event-stack-consolidation-20260928",
+      "ref": "audit/event-stack-consolidation-20260928",
+      "sha": "5c9bb3b5daf82fa438fe9f0dd1b796afd699d0a6",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "repo": {
+        "id": 1089950892,
+        "node_id": "R_kgDOQPdUrA",
+        "name": "tdf-app",
+        "full_name": "diegueins680/tdf-app",
+        "private": false,
+        "owner": {
+          "login": "diegueins680",
+          "id": 2753581,
+          "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+          "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/diegueins680",
+          "html_url": "https://github.com/diegueins680",
+          "followers_url": "https://api.github.com/users/diegueins680/followers",
+          "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+          "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+          "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+          "repos_url": "https://api.github.com/users/diegueins680/repos",
+          "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/diegueins680/tdf-app",
+        "description": "TDF Records - CRM, Scheduling, Packages & Invoicing Platform",
+        "fork": false,
+        "url": "https://api.github.com/repos/diegueins680/tdf-app",
+        "forks_url": "https://api.github.com/repos/diegueins680/tdf-app/forks",
+        "keys_url": "https://api.github.com/repos/diegueins680/tdf-app/keys{/key_id}",
+        "collaborators_url": "https://api.github.com/repos/diegueins680/tdf-app/collaborators{/collaborator}",
+        "teams_url": "https://api.github.com/repos/diegueins680/tdf-app/teams",
+        "hooks_url": "https://api.github.com/repos/diegueins680/tdf-app/hooks",
+        "issue_events_url": "https://api.github.com/repos/diegueins680/tdf-app/issues/events{/number}",
+        "events_url": "https://api.github.com/repos/diegueins680/tdf-app/events",
+        "assignees_url": "https://api.github.com/repos/diegueins680/tdf-app/assignees{/user}",
+        "branches_url": "https://api.github.com/repos/diegueins680/tdf-app/branches{/branch}",
+        "tags_url": "https://api.github.com/repos/diegueins680/tdf-app/tags",
+        "blobs_url": "https://api.github.com/repos/diegueins680/tdf-app/git/blobs{/sha}",
+        "git_tags_url": "https://api.github.com/repos/diegueins680/tdf-app/git/tags{/sha}",
+        "git_refs_url": "https://api.github.com/repos/diegueins680/tdf-app/git/refs{/sha}",
+        "trees_url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees{/sha}",
+        "statuses_url": "https://api.github.com/repos/diegueins680/tdf-app/statuses/{sha}",
+        "languages_url": "https://api.github.com/repos/diegueins680/tdf-app/languages",
+        "stargazers_url": "https://api.github.com/repos/diegueins680/tdf-app/stargazers",
+        "contributors_url": "https://api.github.com/repos/diegueins680/tdf-app/contributors",
+        "subscribers_url": "https://api.github.com/repos/diegueins680/tdf-app/subscribers",
+        "subscription_url": "https://api.github.com/repos/diegueins680/tdf-app/subscription",
+        "commits_url": "https://api.github.com/repos/diegueins680/tdf-app/commits{/sha}",
+        "git_commits_url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits{/sha}",
+        "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/comments{/number}",
+        "issue_comment_url": "https://api.github.com/repos/diegueins680/tdf-app/issues/comments{/number}",
+        "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/{+path}",
+        "compare_url": "https://api.github.com/repos/diegueins680/tdf-app/compare/{base}...{head}",
+        "merges_url": "https://api.github.com/repos/diegueins680/tdf-app/merges",
+        "archive_url": "https://api.github.com/repos/diegueins680/tdf-app/{archive_format}{/ref}",
+        "downloads_url": "https://api.github.com/repos/diegueins680/tdf-app/downloads",
+        "issues_url": "https://api.github.com/repos/diegueins680/tdf-app/issues{/number}",
+        "pulls_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls{/number}",
+        "milestones_url": "https://api.github.com/repos/diegueins680/tdf-app/milestones{/number}",
+        "notifications_url": "https://api.github.com/repos/diegueins680/tdf-app/notifications{?since,all,participating}",
+        "labels_url": "https://api.github.com/repos/diegueins680/tdf-app/labels{/name}",
+        "releases_url": "https://api.github.com/repos/diegueins680/tdf-app/releases{/id}",
+        "deployments_url": "https://api.github.com/repos/diegueins680/tdf-app/deployments",
+        "created_at": "2025-11-05T03:09:19Z",
+        "updated_at": "2026-10-03T23:42:19Z",
+        "pushed_at": "2026-10-03T23:42:13Z",
+        "git_url": "git://github.com/diegueins680/tdf-app.git",
+        "ssh_url": "git@github.com:diegueins680/tdf-app.git",
+        "clone_url": "https://github.com/diegueins680/tdf-app.git",
+        "svn_url": "https://github.com/diegueins680/tdf-app",
+        "homepage": "https://tdf-app-tdf-hq-ui.vercel.app",
+        "size": 319986,
+        "stargazers_count": 2,
+        "watchers_count": 2,
+        "language": "TypeScript",
+        "has_issues": true,
+        "has_projects": true,
+        "has_downloads": false,
+        "has_wiki": true,
+        "has_pages": false,
+        "has_discussions": false,
+        "forks_count": 0,
+        "mirror_url": null,
+        "archived": false,
+        "disabled": false,
+        "open_issues_count": 62,
+        "license": null,
+        "allow_forking": true,
+        "is_template": false,
+        "web_commit_signoff_required": false,
+        "has_pull_requests": true,
+        "pull_request_creation_policy": "all",
+        "topics": [],
+        "visibility": "public",
+        "forks": 0,
+        "open_issues": 62,
+        "watchers": 2,
+        "default_branch": "main"
+      }
+    },
+    "base": {
+      "label": "diegueins680:main",
+      "ref": "main",
+      "sha": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "repo": {
+        "id": 1089950892,
+        "node_id": "R_kgDOQPdUrA",
+        "name": "tdf-app",
+        "full_name": "diegueins680/tdf-app",
+        "private": false,
+        "owner": {
+          "login": "diegueins680",
+          "id": 2753581,
+          "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+          "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/diegueins680",
+          "html_url": "https://github.com/diegueins680",
+          "followers_url": "https://api.github.com/users/diegueins680/followers",
+          "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+          "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+          "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+          "repos_url": "https://api.github.com/users/diegueins680/repos",
+          "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+          "type": "User",
+          "user_view_type": "public",
+          "site_admin": false
+        },
+        "html_url": "https://github.com/diegueins680/tdf-app",
+        "description": "TDF Records - CRM, Scheduling, Packages & Invoicing Platform",
+        "fork": false,
+        "url": "https://api.github.com/repos/diegueins680/tdf-app",
+        "forks_url": "https://api.github.com/repos/diegueins680/tdf-app/forks",
+        "keys_url": "https://api.github.com/repos/diegueins680/tdf-app/keys{/key_id}",
+        "collaborators_url": "https://api.github.com/repos/diegueins680/tdf-app/collaborators{/collaborator}",
+        "teams_url": "https://api.github.com/repos/diegueins680/tdf-app/teams",
+        "hooks_url": "https://api.github.com/repos/diegueins680/tdf-app/hooks",
+        "issue_events_url": "https://api.github.com/repos/diegueins680/tdf-app/issues/events{/number}",
+        "events_url": "https://api.github.com/repos/diegueins680/tdf-app/events",
+        "assignees_url": "https://api.github.com/repos/diegueins680/tdf-app/assignees{/user}",
+        "branches_url": "https://api.github.com/repos/diegueins680/tdf-app/branches{/branch}",
+        "tags_url": "https://api.github.com/repos/diegueins680/tdf-app/tags",
+        "blobs_url": "https://api.github.com/repos/diegueins680/tdf-app/git/blobs{/sha}",
+        "git_tags_url": "https://api.github.com/repos/diegueins680/tdf-app/git/tags{/sha}",
+        "git_refs_url": "https://api.github.com/repos/diegueins680/tdf-app/git/refs{/sha}",
+        "trees_url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees{/sha}",
+        "statuses_url": "https://api.github.com/repos/diegueins680/tdf-app/statuses/{sha}",
+        "languages_url": "https://api.github.com/repos/diegueins680/tdf-app/languages",
+        "stargazers_url": "https://api.github.com/repos/diegueins680/tdf-app/stargazers",
+        "contributors_url": "https://api.github.com/repos/diegueins680/tdf-app/contributors",
+        "subscribers_url": "https://api.github.com/repos/diegueins680/tdf-app/subscribers",
+        "subscription_url": "https://api.github.com/repos/diegueins680/tdf-app/subscription",
+        "commits_url": "https://api.github.com/repos/diegueins680/tdf-app/commits{/sha}",
+        "git_commits_url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits{/sha}",
+        "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/comments{/number}",
+        "issue_comment_url": "https://api.github.com/repos/diegueins680/tdf-app/issues/comments{/number}",
+        "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/{+path}",
+        "compare_url": "https://api.github.com/repos/diegueins680/tdf-app/compare/{base}...{head}",
+        "merges_url": "https://api.github.com/repos/diegueins680/tdf-app/merges",
+        "archive_url": "https://api.github.com/repos/diegueins680/tdf-app/{archive_format}{/ref}",
+        "downloads_url": "https://api.github.com/repos/diegueins680/tdf-app/downloads",
+        "issues_url": "https://api.github.com/repos/diegueins680/tdf-app/issues{/number}",
+        "pulls_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls{/number}",
+        "milestones_url": "https://api.github.com/repos/diegueins680/tdf-app/milestones{/number}",
+        "notifications_url": "https://api.github.com/repos/diegueins680/tdf-app/notifications{?since,all,participating}",
+        "labels_url": "https://api.github.com/repos/diegueins680/tdf-app/labels{/name}",
+        "releases_url": "https://api.github.com/repos/diegueins680/tdf-app/releases{/id}",
+        "deployments_url": "https://api.github.com/repos/diegueins680/tdf-app/deployments",
+        "created_at": "2025-11-05T03:09:19Z",
+        "updated_at": "2026-10-03T23:42:19Z",
+        "pushed_at": "2026-10-03T23:42:13Z",
+        "git_url": "git://github.com/diegueins680/tdf-app.git",
+        "ssh_url": "git@github.com:diegueins680/tdf-app.git",
+        "clone_url": "https://github.com/diegueins680/tdf-app.git",
+        "svn_url": "https://github.com/diegueins680/tdf-app",
+        "homepage": "https://tdf-app-tdf-hq-ui.vercel.app",
+        "size": 319986,
+        "stargazers_count": 2,
+        "watchers_count": 2,
+        "language": "TypeScript",
+        "has_issues": true,
+        "has_projects": true,
+        "has_downloads": false,
+        "has_wiki": true,
+        "has_pages": false,
+        "has_discussions": false,
+        "forks_count": 0,
+        "mirror_url": null,
+        "archived": false,
+        "disabled": false,
+        "open_issues_count": 62,
+        "license": null,
+        "allow_forking": true,
+        "is_template": false,
+        "web_commit_signoff_required": false,
+        "has_pull_requests": true,
+        "pull_request_creation_policy": "all",
+        "topics": [],
+        "visibility": "public",
+        "forks": 0,
+        "open_issues": 62,
+        "watchers": 2,
+        "default_branch": "main"
+      }
+    },
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/465"
+      },
+      "html": {
+        "href": "https://github.com/diegueins680/tdf-app/pull/465"
+      },
+      "issue": {
+        "href": "https://api.github.com/repos/diegueins680/tdf-app/issues/465"
+      },
+      "comments": {
+        "href": "https://api.github.com/repos/diegueins680/tdf-app/issues/465/comments"
+      },
+      "review_comments": {
+        "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/465/comments"
+      },
+      "review_comment": {
+        "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments{/number}"
+      },
+      "commits": {
+        "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/465/commits"
+      },
+      "statuses": {
+        "href": "https://api.github.com/repos/diegueins680/tdf-app/statuses/5c9bb3b5daf82fa438fe9f0dd1b796afd699d0a6"
+      }
+    },
+    "author_association": "OWNER",
+    "auto_merge": null,
+    "assignee": null,
+    "active_lock_reason": null,
+    "merged": false,
+    "mergeable": false,
+    "rebaseable": false,
+    "mergeable_state": "dirty",
+    "merged_by": null,
+    "comments": 3,
+    "review_comments": 4,
+    "maintainer_can_modify": false,
+    "commits": 48,
+    "additions": 26539,
+    "deletions": 3271,
+    "changed_files": 327
+  },
+  "main": {
+    "ref": "refs/heads/main",
+    "node_id": "REF_kwDOQPdUrK9yZWZzL2hlYWRzL21haW4",
+    "url": "https://api.github.com/repos/diegueins680/tdf-app/git/refs/heads/main",
+    "object": {
+      "sha": "f8925e339447cb593f7cce5d86403d1396aaf5a5",
+      "type": "commit",
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/f8925e339447cb593f7cce5d86403d1396aaf5a5"
+    }
+  },
+  "commits465": [
+    {
+      "sha": "b6ba963623861d1e2804b18adb46e6e4f5f5be80",
+      "node_id": "C_kwDOQPdUrNoAKGI2YmE5NjM2MjM4NjFkMWUyODA0YjE4YWRiNDZlNmU0ZjVmNWJlODA",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-14T19:48:30Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-14T19:48:30Z"
+        },
+        "message": "feat(events): add guarded lifecycle API foundation",
+        "tree": {
+          "sha": "f502458db5b21434401056f0fba8f1c16d1bae9c",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/f502458db5b21434401056f0fba8f1c16d1bae9c"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/b6ba963623861d1e2804b18adb46e6e4f5f5be80",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/b6ba963623861d1e2804b18adb46e6e4f5f5be80",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/b6ba963623861d1e2804b18adb46e6e4f5f5be80",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/b6ba963623861d1e2804b18adb46e6e4f5f5be80/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "cde0e806b6a5365e1e9f5b4052b74e38ea1aa232",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/cde0e806b6a5365e1e9f5b4052b74e38ea1aa232",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/cde0e806b6a5365e1e9f5b4052b74e38ea1aa232"
+        }
+      ]
+    },
+    {
+      "sha": "f500b62c453e7da8981bc66138418fa59a586565",
+      "node_id": "C_kwDOQPdUrNoAKGY1MDBiNjJjNDUzZTdkYTg5ODFiYzY2MTM4NDE4ZmE1OWE1ODY1NjU",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-14T20:59:54Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-14T20:59:54Z"
+        },
+        "message": "fix(events): make logistics relation writes atomic",
+        "tree": {
+          "sha": "90ba8245271173f0ee51cef89de0e46c616883c1",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/90ba8245271173f0ee51cef89de0e46c616883c1"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/f500b62c453e7da8981bc66138418fa59a586565",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/f500b62c453e7da8981bc66138418fa59a586565",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/f500b62c453e7da8981bc66138418fa59a586565",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/f500b62c453e7da8981bc66138418fa59a586565/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "b6ba963623861d1e2804b18adb46e6e4f5f5be80",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/b6ba963623861d1e2804b18adb46e6e4f5f5be80",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/b6ba963623861d1e2804b18adb46e6e4f5f5be80"
+        }
+      ]
+    },
+    {
+      "sha": "a6cd9d1892ddafda06eab73a4e71389e802a5f7a",
+      "node_id": "C_kwDOQPdUrNoAKGE2Y2Q5ZDE4OTJkZGFmZGEwNmVhYjczYTRlNzEzODllODAyYTVmN2E",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-14T21:35:55Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-14T21:35:55Z"
+        },
+        "message": "fix(events): validate task invariants at transaction commit",
+        "tree": {
+          "sha": "6feeb5778a4c5ea8badcade71cd3517a42d46116",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/6feeb5778a4c5ea8badcade71cd3517a42d46116"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/a6cd9d1892ddafda06eab73a4e71389e802a5f7a",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/a6cd9d1892ddafda06eab73a4e71389e802a5f7a",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/a6cd9d1892ddafda06eab73a4e71389e802a5f7a",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/a6cd9d1892ddafda06eab73a4e71389e802a5f7a/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "f500b62c453e7da8981bc66138418fa59a586565",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/f500b62c453e7da8981bc66138418fa59a586565",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/f500b62c453e7da8981bc66138418fa59a586565"
+        }
+      ]
+    },
+    {
+      "sha": "35f261097d9e295794f4db7404ae7d9556a8e9d4",
+      "node_id": "C_kwDOQPdUrNoAKDM1ZjI2MTA5N2Q5ZTI5NTc5NGY0ZGI3NDA0YWU3ZDk1NTZhOGU5ZDQ",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-14T21:41:59Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-14T21:41:59Z"
+        },
+        "message": "docs(events): record draft PR chain and activation blockers",
+        "tree": {
+          "sha": "375b33774de2a32ff35e597d73c42a586d2342ba",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/375b33774de2a32ff35e597d73c42a586d2342ba"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/35f261097d9e295794f4db7404ae7d9556a8e9d4",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/35f261097d9e295794f4db7404ae7d9556a8e9d4",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/35f261097d9e295794f4db7404ae7d9556a8e9d4",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/35f261097d9e295794f4db7404ae7d9556a8e9d4/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "a6cd9d1892ddafda06eab73a4e71389e802a5f7a",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/a6cd9d1892ddafda06eab73a4e71389e802a5f7a",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/a6cd9d1892ddafda06eab73a4e71389e802a5f7a"
+        }
+      ]
+    },
+    {
+      "sha": "6b0913bab2b065b327149a6d3a042efecd9e75d7",
+      "node_id": "C_kwDOQPdUrNoAKDZiMDkxM2JhYjJiMDY1YjMyNzE0OWE2ZDNhMDQyZWZlY2Q5ZTc1ZDc",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-14T22:02:01Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-14T22:02:01Z"
+        },
+        "message": "fix(events): reauthorize command replay against current scopes",
+        "tree": {
+          "sha": "091025ecc5fcd7ed0742df861c88320d45c96ce3",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/091025ecc5fcd7ed0742df861c88320d45c96ce3"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/6b0913bab2b065b327149a6d3a042efecd9e75d7",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/6b0913bab2b065b327149a6d3a042efecd9e75d7",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/6b0913bab2b065b327149a6d3a042efecd9e75d7",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/6b0913bab2b065b327149a6d3a042efecd9e75d7/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "35f261097d9e295794f4db7404ae7d9556a8e9d4",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/35f261097d9e295794f4db7404ae7d9556a8e9d4",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/35f261097d9e295794f4db7404ae7d9556a8e9d4"
+        }
+      ]
+    },
+    {
+      "sha": "db81fdbe71d9b8e83d40d279b98c69df3749b316",
+      "node_id": "C_kwDOQPdUrNoAKGRiODFmZGJlNzFkOWI4ZTgzZDQwZDI3OWI5OGM2OWRmMzc0OWIzMTY",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-14T22:34:31Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-14T22:34:31Z"
+        },
+        "message": "fix: authorize coherent event snapshots and redact database errors",
+        "tree": {
+          "sha": "1156e84818651db8c6a3176da4b803b4e909bb5e",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/1156e84818651db8c6a3176da4b803b4e909bb5e"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/db81fdbe71d9b8e83d40d279b98c69df3749b316",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/db81fdbe71d9b8e83d40d279b98c69df3749b316",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/db81fdbe71d9b8e83d40d279b98c69df3749b316",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/db81fdbe71d9b8e83d40d279b98c69df3749b316/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "6b0913bab2b065b327149a6d3a042efecd9e75d7",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/6b0913bab2b065b327149a6d3a042efecd9e75d7",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/6b0913bab2b065b327149a6d3a042efecd9e75d7"
+        }
+      ]
+    },
+    {
+      "sha": "dbe975d3143446c5e7cd9b132b6f994067065e7b",
+      "node_id": "C_kwDOQPdUrNoAKGRiZTk3NWQzMTQzNDQ2YzVlN2NkOWIxMzJiNmY5OTQwNjcwNjVlN2I",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T00:09:47Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T00:09:47Z"
+        },
+        "message": "test: cover event operations authenticated HTTP boundary",
+        "tree": {
+          "sha": "8bc0ed8cfccdad3fa06c8cf676e2b5438fe8f35b",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/8bc0ed8cfccdad3fa06c8cf676e2b5438fe8f35b"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/dbe975d3143446c5e7cd9b132b6f994067065e7b",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/dbe975d3143446c5e7cd9b132b6f994067065e7b",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/dbe975d3143446c5e7cd9b132b6f994067065e7b",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/dbe975d3143446c5e7cd9b132b6f994067065e7b/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "db81fdbe71d9b8e83d40d279b98c69df3749b316",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/db81fdbe71d9b8e83d40d279b98c69df3749b316",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/db81fdbe71d9b8e83d40d279b98c69df3749b316"
+        }
+      ]
+    },
+    {
+      "sha": "892038c7d7ec64082b39917127f67748e6d1dca7",
+      "node_id": "C_kwDOQPdUrNoAKDg5MjAzOGM3ZDdlYzY0MDgyYjM5OTE3MTI3ZjY3NzQ4ZTZkMWRjYTc",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T00:35:41Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T00:35:41Z"
+        },
+        "message": "fix(events): hide unreadable transition target existence",
+        "tree": {
+          "sha": "753c05c005272036567657013576c08cba19f46e",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/753c05c005272036567657013576c08cba19f46e"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/892038c7d7ec64082b39917127f67748e6d1dca7",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/892038c7d7ec64082b39917127f67748e6d1dca7",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/892038c7d7ec64082b39917127f67748e6d1dca7",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/892038c7d7ec64082b39917127f67748e6d1dca7/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "dbe975d3143446c5e7cd9b132b6f994067065e7b",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/dbe975d3143446c5e7cd9b132b6f994067065e7b",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/dbe975d3143446c5e7cd9b132b6f994067065e7b"
+        }
+      ]
+    },
+    {
+      "sha": "3cd978045aa406c55512a6673c2ba5f2983ebc7c",
+      "node_id": "C_kwDOQPdUrNoAKDNjZDk3ODA0NWFhNDA2YzU1NTEyYTY2NzNjMmJhNWYyOTgzZWJjN2M",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T01:14:57Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T01:14:57Z"
+        },
+        "message": "fix(events): fence event transactions with authenticated sessions",
+        "tree": {
+          "sha": "edf507f8bd06eacb4f0976716edd5482102d3a02",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/edf507f8bd06eacb4f0976716edd5482102d3a02"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/3cd978045aa406c55512a6673c2ba5f2983ebc7c",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/3cd978045aa406c55512a6673c2ba5f2983ebc7c",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/3cd978045aa406c55512a6673c2ba5f2983ebc7c",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/3cd978045aa406c55512a6673c2ba5f2983ebc7c/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "892038c7d7ec64082b39917127f67748e6d1dca7",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/892038c7d7ec64082b39917127f67748e6d1dca7",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/892038c7d7ec64082b39917127f67748e6d1dca7"
+        }
+      ]
+    },
+    {
+      "sha": "cf591e1faa975b8023c6c06892fb50a51ba06dff",
+      "node_id": "C_kwDOQPdUrNoAKGNmNTkxZTFmYWE5NzViODAyM2M2YzA2ODkyZmI1MGE1MWJhMDZkZmY",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T01:50:18Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T01:50:18Z"
+        },
+        "message": "test(events): expose full-schema migration blockers",
+        "tree": {
+          "sha": "672a7ba4e2eec5352a6d3cc75bbf16e7b65721b3",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/672a7ba4e2eec5352a6d3cc75bbf16e7b65721b3"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/cf591e1faa975b8023c6c06892fb50a51ba06dff",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/cf591e1faa975b8023c6c06892fb50a51ba06dff",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/cf591e1faa975b8023c6c06892fb50a51ba06dff",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/cf591e1faa975b8023c6c06892fb50a51ba06dff/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "3cd978045aa406c55512a6673c2ba5f2983ebc7c",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/3cd978045aa406c55512a6673c2ba5f2983ebc7c",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/3cd978045aa406c55512a6673c2ba5f2983ebc7c"
+        }
+      ]
+    },
+    {
+      "sha": "192f9578665109e52d28a96c772e3307bdc684e5",
+      "node_id": "C_kwDOQPdUrNoAKDE5MmY5NTc4NjY1MTA5ZTUyZDI4YTk2Yzc3MmUzMzA3YmRjNjg0ZTU",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T02:38:09Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T02:38:09Z"
+        },
+        "message": "fix(migrations): restore canonical event schema dependencies",
+        "tree": {
+          "sha": "529989e8384bcb1d20a2c2e48d023dc6f751396a",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/529989e8384bcb1d20a2c2e48d023dc6f751396a"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/192f9578665109e52d28a96c772e3307bdc684e5",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/192f9578665109e52d28a96c772e3307bdc684e5",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/192f9578665109e52d28a96c772e3307bdc684e5",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/192f9578665109e52d28a96c772e3307bdc684e5/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "cf591e1faa975b8023c6c06892fb50a51ba06dff",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/cf591e1faa975b8023c6c06892fb50a51ba06dff",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/cf591e1faa975b8023c6c06892fb50a51ba06dff"
+        }
+      ]
+    },
+    {
+      "sha": "a1895105c6e15e1f95b4b72fd6218b34a311f6e6",
+      "node_id": "C_kwDOQPdUrNoAKGExODk1MTA1YzZlMTVlMWY5NWI0YjcyZmQ2MjE4YjM0YTMxMWY2ZTY",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T03:03:03Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T03:03:03Z"
+        },
+        "message": "test(merch): verify canonical checkout expiry and CI coverage",
+        "tree": {
+          "sha": "c58b10b0cbb1bd22228c8ab5ee20d00097ea8902",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/c58b10b0cbb1bd22228c8ab5ee20d00097ea8902"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/a1895105c6e15e1f95b4b72fd6218b34a311f6e6",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/a1895105c6e15e1f95b4b72fd6218b34a311f6e6",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/a1895105c6e15e1f95b4b72fd6218b34a311f6e6",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/a1895105c6e15e1f95b4b72fd6218b34a311f6e6/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "192f9578665109e52d28a96c772e3307bdc684e5",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/192f9578665109e52d28a96c772e3307bdc684e5",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/192f9578665109e52d28a96c772e3307bdc684e5"
+        }
+      ]
+    },
+    {
+      "sha": "a1b92c220691b694e5f53e7deaf4d455ce46bc44",
+      "node_id": "C_kwDOQPdUrNoAKGExYjkyYzIyMDY5MWI2OTRlNWY1M2U3ZGVhZjRkNDU1Y2U0NmJjNDQ",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T03:30:29Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T03:30:29Z"
+        },
+        "message": "feat: add scoped canonical task read projection",
+        "tree": {
+          "sha": "9bbd0fc61b9f4b2a4e9253523ff2bee142d3ff2c",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/9bbd0fc61b9f4b2a4e9253523ff2bee142d3ff2c"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/a1b92c220691b694e5f53e7deaf4d455ce46bc44",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/a1b92c220691b694e5f53e7deaf4d455ce46bc44",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/a1b92c220691b694e5f53e7deaf4d455ce46bc44",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/a1b92c220691b694e5f53e7deaf4d455ce46bc44/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "a1895105c6e15e1f95b4b72fd6218b34a311f6e6",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/a1895105c6e15e1f95b4b72fd6218b34a311f6e6",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/a1895105c6e15e1f95b4b72fd6218b34a311f6e6"
+        }
+      ]
+    },
+    {
+      "sha": "881882e15cd1b2400cc2e0452ea50683dea675de",
+      "node_id": "C_kwDOQPdUrNoAKDg4MTg4MmUxNWNkMWIyNDAwY2MyZTA0NTJlYTUwNjgzZGVhNjc1ZGU",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T04:02:43Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T04:02:43Z"
+        },
+        "message": "feat: expose authenticated task RACI read API",
+        "tree": {
+          "sha": "31cbeb56782409c911301674e93b9dfa30ccabab",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/31cbeb56782409c911301674e93b9dfa30ccabab"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/881882e15cd1b2400cc2e0452ea50683dea675de",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/881882e15cd1b2400cc2e0452ea50683dea675de",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/881882e15cd1b2400cc2e0452ea50683dea675de",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/881882e15cd1b2400cc2e0452ea50683dea675de/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "a1b92c220691b694e5f53e7deaf4d455ce46bc44",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/a1b92c220691b694e5f53e7deaf4d455ce46bc44",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/a1b92c220691b694e5f53e7deaf4d455ce46bc44"
+        }
+      ]
+    },
+    {
+      "sha": "827d745629f8cdbaee4429ded3689d3bf520a09d",
+      "node_id": "C_kwDOQPdUrNoAKDgyN2Q3NDU2MjlmOGNkYmFlZTQ0MjlkZWQzNjg5ZDNiZjUyMGEwOWQ",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T04:33:49Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T04:33:49Z"
+        },
+        "message": "fix(web): restore canonical onboarding reconciliation integration",
+        "tree": {
+          "sha": "09b5cf0ea56a406e6cefa6b43359fa8812c24e32",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/09b5cf0ea56a406e6cefa6b43359fa8812c24e32"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/827d745629f8cdbaee4429ded3689d3bf520a09d",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/827d745629f8cdbaee4429ded3689d3bf520a09d",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/827d745629f8cdbaee4429ded3689d3bf520a09d",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/827d745629f8cdbaee4429ded3689d3bf520a09d/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "881882e15cd1b2400cc2e0452ea50683dea675de",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/881882e15cd1b2400cc2e0452ea50683dea675de",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/881882e15cd1b2400cc2e0452ea50683dea675de"
+        }
+      ]
+    },
+    {
+      "sha": "1299f9c63a325e17dff0bfe1f048ff52f7bb8b15",
+      "node_id": "C_kwDOQPdUrNoAKDEyOTlmOWM2M2EzMjVlMTdkZmYwYmZlMWYwNDhmZjUyZjdiYjhiMTU",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T05:37:55Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T05:37:55Z"
+        },
+        "message": "fix(discovery): restore consent-bound artist follow continuity",
+        "tree": {
+          "sha": "db5a44e1cacd1ed21fcadf70aec4440e6828ab69",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/db5a44e1cacd1ed21fcadf70aec4440e6828ab69"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/1299f9c63a325e17dff0bfe1f048ff52f7bb8b15",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/1299f9c63a325e17dff0bfe1f048ff52f7bb8b15",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/1299f9c63a325e17dff0bfe1f048ff52f7bb8b15",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/1299f9c63a325e17dff0bfe1f048ff52f7bb8b15/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "827d745629f8cdbaee4429ded3689d3bf520a09d",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/827d745629f8cdbaee4429ded3689d3bf520a09d",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/827d745629f8cdbaee4429ded3689d3bf520a09d"
+        }
+      ]
+    },
+    {
+      "sha": "ff3cd1676a6db7b6ceef56d44407b0846a4f2071",
+      "node_id": "C_kwDOQPdUrNoAKGZmM2NkMTY3NmE2ZGI3YjZjZWVmNTZkNDQ0MDdiMDg0NmE0ZjIwNzE",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T13:43:08Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T13:43:08Z"
+        },
+        "message": "fix(onboarding): restore account-bound FanHub exit recovery",
+        "tree": {
+          "sha": "af004f89483435bf08aa3392ee846a85115442b3",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/af004f89483435bf08aa3392ee846a85115442b3"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/ff3cd1676a6db7b6ceef56d44407b0846a4f2071",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/ff3cd1676a6db7b6ceef56d44407b0846a4f2071",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/ff3cd1676a6db7b6ceef56d44407b0846a4f2071",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/ff3cd1676a6db7b6ceef56d44407b0846a4f2071/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "1299f9c63a325e17dff0bfe1f048ff52f7bb8b15",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/1299f9c63a325e17dff0bfe1f048ff52f7bb8b15",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/1299f9c63a325e17dff0bfe1f048ff52f7bb8b15"
+        }
+      ]
+    },
+    {
+      "sha": "ec24b70b1b2319a875099cc118db0e68b62a5ed0",
+      "node_id": "C_kwDOQPdUrNoAKGVjMjRiNzBiMWIyMzE5YTg3NTA5OWNjMTE4ZGIwZTY4YjYyYTVlZDA",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T14:27:09Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T14:27:09Z"
+        },
+        "message": "fix(formal): verify exact PlusCal reservation regeneration",
+        "tree": {
+          "sha": "8e3334ebf4df090811a51f164d851de6f0c7787b",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/8e3334ebf4df090811a51f164d851de6f0c7787b"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/ec24b70b1b2319a875099cc118db0e68b62a5ed0",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/ec24b70b1b2319a875099cc118db0e68b62a5ed0",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/ec24b70b1b2319a875099cc118db0e68b62a5ed0",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/ec24b70b1b2319a875099cc118db0e68b62a5ed0/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "ff3cd1676a6db7b6ceef56d44407b0846a4f2071",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/ff3cd1676a6db7b6ceef56d44407b0846a4f2071",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/ff3cd1676a6db7b6ceef56d44407b0846a4f2071"
+        }
+      ]
+    },
+    {
+      "sha": "f03f366de44c8ad09248e9d399caa5994af06d5a",
+      "node_id": "C_kwDOQPdUrNoAKGYwM2YzNjZkZTQ0YzhhZDA5MjQ4ZTlkMzk5Y2FhNTk5NGFmMDZkNWE",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T15:02:27Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T15:02:27Z"
+        },
+        "message": "feat(events): add scoped task RACI read view",
+        "tree": {
+          "sha": "8107324d14f12b750863d119bf7d4eaf01068f90",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/8107324d14f12b750863d119bf7d4eaf01068f90"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/f03f366de44c8ad09248e9d399caa5994af06d5a",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/f03f366de44c8ad09248e9d399caa5994af06d5a",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/f03f366de44c8ad09248e9d399caa5994af06d5a",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/f03f366de44c8ad09248e9d399caa5994af06d5a/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "ec24b70b1b2319a875099cc118db0e68b62a5ed0",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/ec24b70b1b2319a875099cc118db0e68b62a5ed0",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/ec24b70b1b2319a875099cc118db0e68b62a5ed0"
+        }
+      ]
+    },
+    {
+      "sha": "221d1205c9cc2e992f8f36f73d441a3f9c6fda21",
+      "node_id": "C_kwDOQPdUrNoAKDIyMWQxMjA1YzljYzJlOTkyZjhmMzZmNzNkNDQxYTNmOWM2ZmRhMjE",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T15:18:25Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T15:18:25Z"
+        },
+        "message": "test(events): reduce task browser fixture startup overhead",
+        "tree": {
+          "sha": "ca16c3c934e1364174e7075bf3bac50ea49bece8",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/ca16c3c934e1364174e7075bf3bac50ea49bece8"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/221d1205c9cc2e992f8f36f73d441a3f9c6fda21",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/221d1205c9cc2e992f8f36f73d441a3f9c6fda21",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/221d1205c9cc2e992f8f36f73d441a3f9c6fda21",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/221d1205c9cc2e992f8f36f73d441a3f9c6fda21/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "f03f366de44c8ad09248e9d399caa5994af06d5a",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/f03f366de44c8ad09248e9d399caa5994af06d5a",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/f03f366de44c8ad09248e9d399caa5994af06d5a"
+        }
+      ]
+    },
+    {
+      "sha": "3b1ce4d9dbd0efb6d1e354ffd9f58e92a6916320",
+      "node_id": "C_kwDOQPdUrNoAKDNiMWNlNGQ5ZGJkMGVmYjZkMWUzNTRmZmQ5ZjU4ZTkyYTY5MTYzMjA",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T15:59:10Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T15:59:10Z"
+        },
+        "message": "feat(events): track aggregate task revisions under canonical write fence",
+        "tree": {
+          "sha": "93c700b6cff363279db68dc3c3840dc1aef3a58b",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/93c700b6cff363279db68dc3c3840dc1aef3a58b"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/3b1ce4d9dbd0efb6d1e354ffd9f58e92a6916320",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/3b1ce4d9dbd0efb6d1e354ffd9f58e92a6916320",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/3b1ce4d9dbd0efb6d1e354ffd9f58e92a6916320",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/3b1ce4d9dbd0efb6d1e354ffd9f58e92a6916320/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "221d1205c9cc2e992f8f36f73d441a3f9c6fda21",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/221d1205c9cc2e992f8f36f73d441a3f9c6fda21",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/221d1205c9cc2e992f8f36f73d441a3f9c6fda21"
+        }
+      ]
+    },
+    {
+      "sha": "503fd7b651843e9f7cadf4fd15931256bb847ece",
+      "node_id": "C_kwDOQPdUrNoAKDUwM2ZkN2I2NTE4NDNlOWY3Y2FkZjRmZDE1OTMxMjU2YmI4NDdlY2U",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T16:54:07Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T16:54:07Z"
+        },
+        "message": "feat(events): expose coherent task revision reads",
+        "tree": {
+          "sha": "4e812a3774dc3049792c770d44019654a2f587ae",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/4e812a3774dc3049792c770d44019654a2f587ae"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/503fd7b651843e9f7cadf4fd15931256bb847ece",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/503fd7b651843e9f7cadf4fd15931256bb847ece",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/503fd7b651843e9f7cadf4fd15931256bb847ece",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/503fd7b651843e9f7cadf4fd15931256bb847ece/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "3b1ce4d9dbd0efb6d1e354ffd9f58e92a6916320",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/3b1ce4d9dbd0efb6d1e354ffd9f58e92a6916320",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/3b1ce4d9dbd0efb6d1e354ffd9f58e92a6916320"
+        }
+      ]
+    },
+    {
+      "sha": "831e4b93f1798d478c1d46d18da2d48ce25a9188",
+      "node_id": "C_kwDOQPdUrNoAKDgzMWU0YjkzZjE3OThkNDc4YzFkNDZkMThkYTJkNDhjZTI1YTkxODg",
+      "commit": {
+        "author": {
+          "name": "diegueins680",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-09-15T17:01:37Z"
+        },
+        "committer": {
+          "name": "diegueins680",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-09-15T17:01:37Z"
+        },
+        "message": "fix(events): preserve RACI validity in task commit checks",
+        "tree": {
+          "sha": "d620c651609ceab52ab1de29a465e75d2d757eaa",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/d620c651609ceab52ab1de29a465e75d2d757eaa"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/831e4b93f1798d478c1d46d18da2d48ce25a9188",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/831e4b93f1798d478c1d46d18da2d48ce25a9188",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/831e4b93f1798d478c1d46d18da2d48ce25a9188",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/831e4b93f1798d478c1d46d18da2d48ce25a9188/comments",
+      "author": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "committer": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "parents": [
+        {
+          "sha": "35f261097d9e295794f4db7404ae7d9556a8e9d4",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/35f261097d9e295794f4db7404ae7d9556a8e9d4",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/35f261097d9e295794f4db7404ae7d9556a8e9d4"
+        }
+      ]
+    },
+    {
+      "sha": "f6ffb2a27b87ed42d4d49289024d5b8a612b94cf",
+      "node_id": "C_kwDOQPdUrNoAKGY2ZmZiMmEyN2I4N2VkNDJkNGQ0OTI4OTAyNGQ1YjhhNjEyYjk0Y2Y",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T17:28:23Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T17:28:23Z"
+        },
+        "message": "feat(events): add formally checked atomic RACI reassignment",
+        "tree": {
+          "sha": "9ebd7779478756c7e5266af9ac66062c6387bf4e",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/9ebd7779478756c7e5266af9ac66062c6387bf4e"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/f6ffb2a27b87ed42d4d49289024d5b8a612b94cf",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/f6ffb2a27b87ed42d4d49289024d5b8a612b94cf",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/f6ffb2a27b87ed42d4d49289024d5b8a612b94cf",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/f6ffb2a27b87ed42d4d49289024d5b8a612b94cf/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "503fd7b651843e9f7cadf4fd15931256bb847ece",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/503fd7b651843e9f7cadf4fd15931256bb847ece",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/503fd7b651843e9f7cadf4fd15931256bb847ece"
+        }
+      ]
+    },
+    {
+      "sha": "bfd5f17b92d629f578bc02f4aee338ed15843806",
+      "node_id": "C_kwDOQPdUrNoAKGJmZDVmMTdiOTJkNjI5ZjU3OGJjMDJmNGFlZTMzOGVkMTU4NDM4MDY",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T17:53:42Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T17:53:42Z"
+        },
+        "message": "feat(events): expose session-fenced RACI reassignment API",
+        "tree": {
+          "sha": "bb618ea08fa6ca07e8ed5facdc547e353513e86a",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/bb618ea08fa6ca07e8ed5facdc547e353513e86a"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/bfd5f17b92d629f578bc02f4aee338ed15843806",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/bfd5f17b92d629f578bc02f4aee338ed15843806",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/bfd5f17b92d629f578bc02f4aee338ed15843806",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/bfd5f17b92d629f578bc02f4aee338ed15843806/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "f6ffb2a27b87ed42d4d49289024d5b8a612b94cf",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/f6ffb2a27b87ed42d4d49289024d5b8a612b94cf",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/f6ffb2a27b87ed42d4d49289024d5b8a612b94cf"
+        }
+      ]
+    },
+    {
+      "sha": "259becd7b3763e084b54da8749b1e6fde8d9d862",
+      "node_id": "C_kwDOQPdUrNoAKDI1OWJlY2Q3YjM3NjNlMDg0YjU0ZGE4NzQ5YjFlNmZkZThkOWQ4NjI",
+      "commit": {
+        "author": {
+          "name": "diegueins680",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-09-15T19:38:06Z"
+        },
+        "committer": {
+          "name": "diegueins680",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-09-15T19:38:06Z"
+        },
+        "message": "Retain fence deletion and dependency exception guards in successor",
+        "tree": {
+          "sha": "e6e4b7868dd226826e2d25f90b6b9dc7cf5281e9",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/e6e4b7868dd226826e2d25f90b6b9dc7cf5281e9"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/259becd7b3763e084b54da8749b1e6fde8d9d862",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/259becd7b3763e084b54da8749b1e6fde8d9d862",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/259becd7b3763e084b54da8749b1e6fde8d9d862",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/259becd7b3763e084b54da8749b1e6fde8d9d862/comments",
+      "author": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "committer": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "parents": [
+        {
+          "sha": "831e4b93f1798d478c1d46d18da2d48ce25a9188",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/831e4b93f1798d478c1d46d18da2d48ce25a9188",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/831e4b93f1798d478c1d46d18da2d48ce25a9188"
+        }
+      ]
+    },
+    {
+      "sha": "13abde1cba82b7b79c21b6f35e87c91de676366e",
+      "node_id": "C_kwDOQPdUrNoAKDEzYWJkZTFjYmE4MmI3Yjc5YzIxYjZmMzVlODdjOTFkZTY3NjM2NmU",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T19:50:34Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-15T19:50:34Z"
+        },
+        "message": "feat(events): expose authorized RACI editor context",
+        "tree": {
+          "sha": "bca8a55b2dd3f4a70753fccd1a1c5b7a2a3c0789",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/bca8a55b2dd3f4a70753fccd1a1c5b7a2a3c0789"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/13abde1cba82b7b79c21b6f35e87c91de676366e",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/13abde1cba82b7b79c21b6f35e87c91de676366e",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/13abde1cba82b7b79c21b6f35e87c91de676366e",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/13abde1cba82b7b79c21b6f35e87c91de676366e/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "bfd5f17b92d629f578bc02f4aee338ed15843806",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/bfd5f17b92d629f578bc02f4aee338ed15843806",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/bfd5f17b92d629f578bc02f4aee338ed15843806"
+        }
+      ]
+    },
+    {
+      "sha": "061553d085d3106a9c8877ca08ccb3e2420cdd09",
+      "node_id": "C_kwDOQPdUrNoAKDA2MTU1M2QwODVkMzEwNmE5Yzg4NzdjYTA4Y2NiM2UyNDIwY2RkMDk",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-16T02:47:46Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-16T02:47:46Z"
+        },
+        "message": "feat(events): add confirmed scoped RACI web editor",
+        "tree": {
+          "sha": "82b3cf308fd01e1febaba5d76a6a9019a1f290ea",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/82b3cf308fd01e1febaba5d76a6a9019a1f290ea"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/061553d085d3106a9c8877ca08ccb3e2420cdd09",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/061553d085d3106a9c8877ca08ccb3e2420cdd09",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/061553d085d3106a9c8877ca08ccb3e2420cdd09",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/061553d085d3106a9c8877ca08ccb3e2420cdd09/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "13abde1cba82b7b79c21b6f35e87c91de676366e",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/13abde1cba82b7b79c21b6f35e87c91de676366e",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/13abde1cba82b7b79c21b6f35e87c91de676366e"
+        }
+      ]
+    },
+    {
+      "sha": "7cdd712568311975407cf0b7cb2ee2081a0c0414",
+      "node_id": "C_kwDOQPdUrNoAKDdjZGQ3MTI1NjgzMTE5NzU0MDdjZjBiN2NiMmVlMjA4MWEwYzA0MTQ",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-16T04:23:28Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-16T04:23:28Z"
+        },
+        "message": "test(events): verify RACI editor through real auth and PostgreSQL",
+        "tree": {
+          "sha": "ab7574e7d4ed7a648b62249be8c5e08dbc111d97",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/ab7574e7d4ed7a648b62249be8c5e08dbc111d97"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/7cdd712568311975407cf0b7cb2ee2081a0c0414",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/7cdd712568311975407cf0b7cb2ee2081a0c0414",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/7cdd712568311975407cf0b7cb2ee2081a0c0414",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/7cdd712568311975407cf0b7cb2ee2081a0c0414/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "061553d085d3106a9c8877ca08ccb3e2420cdd09",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/061553d085d3106a9c8877ca08ccb3e2420cdd09",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/061553d085d3106a9c8877ca08ccb3e2420cdd09"
+        }
+      ]
+    },
+    {
+      "sha": "5ad2333c2a6ce379579a1cffa2708d56cbb21f5f",
+      "node_id": "C_kwDOQPdUrNoAKDVhZDIzMzNjMmE2Y2UzNzk1NzlhMWNmZmEyNzA4ZDU2Y2JiMjFmNWY",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-16T04:53:04Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-16T04:53:04Z"
+        },
+        "message": "fix(events): restore directory contact continuity and RSVP test contracts",
+        "tree": {
+          "sha": "dfa08fc81b70dcf9a94b8e2bfce414e86d57f557",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/dfa08fc81b70dcf9a94b8e2bfce414e86d57f557"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/5ad2333c2a6ce379579a1cffa2708d56cbb21f5f",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/5ad2333c2a6ce379579a1cffa2708d56cbb21f5f",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/5ad2333c2a6ce379579a1cffa2708d56cbb21f5f",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/5ad2333c2a6ce379579a1cffa2708d56cbb21f5f/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "7cdd712568311975407cf0b7cb2ee2081a0c0414",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/7cdd712568311975407cf0b7cb2ee2081a0c0414",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/7cdd712568311975407cf0b7cb2ee2081a0c0414"
+        }
+      ]
+    },
+    {
+      "sha": "d4e7ed0505a87a03706b765fc304ffa50362b8fb",
+      "node_id": "C_kwDOQPdUrNoAKGQ0ZTdlZDA1MDVhODdhMDM3MDZiNzY1ZmMzMDRmZmE1MDM2MmI4ZmI",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-16T15:18:15Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-16T15:18:15Z"
+        },
+        "message": "fix(ui): preserve lazy validation and initial bundle budget",
+        "tree": {
+          "sha": "b3356dd9c9ec26b53dc16c95530012c324c2dfe6",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/b3356dd9c9ec26b53dc16c95530012c324c2dfe6"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/d4e7ed0505a87a03706b765fc304ffa50362b8fb",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/d4e7ed0505a87a03706b765fc304ffa50362b8fb",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/d4e7ed0505a87a03706b765fc304ffa50362b8fb",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/d4e7ed0505a87a03706b765fc304ffa50362b8fb/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "5ad2333c2a6ce379579a1cffa2708d56cbb21f5f",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/5ad2333c2a6ce379579a1cffa2708d56cbb21f5f",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/5ad2333c2a6ce379579a1cffa2708d56cbb21f5f"
+        }
+      ]
+    },
+    {
+      "sha": "6047377348e901c919d7691b849faab30980b952",
+      "node_id": "C_kwDOQPdUrNoAKDYwNDczNzczNDhlOTAxYzkxOWQ3NjkxYjg0OWZhYWIzMDk4MGI5NTI",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-16T16:31:18Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-16T16:31:18Z"
+        },
+        "message": "test(events): retain actionable RACI accessibility evidence",
+        "tree": {
+          "sha": "ce77cf236130ac8dde21805904e889b5e5f9549b",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/ce77cf236130ac8dde21805904e889b5e5f9549b"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/6047377348e901c919d7691b849faab30980b952",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/6047377348e901c919d7691b849faab30980b952",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/6047377348e901c919d7691b849faab30980b952",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/6047377348e901c919d7691b849faab30980b952/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "d4e7ed0505a87a03706b765fc304ffa50362b8fb",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/d4e7ed0505a87a03706b765fc304ffa50362b8fb",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/d4e7ed0505a87a03706b765fc304ffa50362b8fb"
+        }
+      ]
+    },
+    {
+      "sha": "78bdd4df465d1c7d8a752f9df0ed714ecad2330d",
+      "node_id": "C_kwDOQPdUrNoAKDc4YmRkNGRmNDY1ZDFjN2Q4YTc1MmY5ZGYwZWQ3MTRlY2FkMjMzMGQ",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-16T17:15:16Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-16T17:15:16Z"
+        },
+        "message": "feat(events): add guarded preparation task completion",
+        "tree": {
+          "sha": "62c9deb5857b4aee6a8fdff5f897d75251d50147",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/62c9deb5857b4aee6a8fdff5f897d75251d50147"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/78bdd4df465d1c7d8a752f9df0ed714ecad2330d",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/78bdd4df465d1c7d8a752f9df0ed714ecad2330d",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/78bdd4df465d1c7d8a752f9df0ed714ecad2330d",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/78bdd4df465d1c7d8a752f9df0ed714ecad2330d/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "6047377348e901c919d7691b849faab30980b952",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/6047377348e901c919d7691b849faab30980b952",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/6047377348e901c919d7691b849faab30980b952"
+        }
+      ]
+    },
+    {
+      "sha": "823da0fa801abe3bdb3b7679550f1315ad0946ed",
+      "node_id": "C_kwDOQPdUrNoAKDgyM2RhMGZhODAxYWJlM2JkYjNiNzY3OTU1MGYxMzE1YWQwOTQ2ZWQ",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-16T18:00:32Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-16T18:00:32Z"
+        },
+        "message": "feat(events): expose session-fenced task completion API",
+        "tree": {
+          "sha": "d5514db330b0ea925435a601aa9b3482b7e22a19",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/d5514db330b0ea925435a601aa9b3482b7e22a19"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/823da0fa801abe3bdb3b7679550f1315ad0946ed",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/823da0fa801abe3bdb3b7679550f1315ad0946ed",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/823da0fa801abe3bdb3b7679550f1315ad0946ed",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/823da0fa801abe3bdb3b7679550f1315ad0946ed/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "78bdd4df465d1c7d8a752f9df0ed714ecad2330d",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/78bdd4df465d1c7d8a752f9df0ed714ecad2330d",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/78bdd4df465d1c7d8a752f9df0ed714ecad2330d"
+        }
+      ]
+    },
+    {
+      "sha": "f2f01194090a241777c451d06cb0848af7aa759a",
+      "node_id": "C_kwDOQPdUrNoAKGYyZjAxMTk0MDkwYTI0MTc3N2M0NTFkMDZjYjA4NDhhZjdhYTc1OWE",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-16T18:29:33Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-16T18:29:33Z"
+        },
+        "message": "feat(events): validate captured task completion client",
+        "tree": {
+          "sha": "05d86aca1eadb894aea4a99e901af91adc102b9d",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/05d86aca1eadb894aea4a99e901af91adc102b9d"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/f2f01194090a241777c451d06cb0848af7aa759a",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/f2f01194090a241777c451d06cb0848af7aa759a",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/f2f01194090a241777c451d06cb0848af7aa759a",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/f2f01194090a241777c451d06cb0848af7aa759a/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "823da0fa801abe3bdb3b7679550f1315ad0946ed",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/823da0fa801abe3bdb3b7679550f1315ad0946ed",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/823da0fa801abe3bdb3b7679550f1315ad0946ed"
+        }
+      ]
+    },
+    {
+      "sha": "cbbb3da9f20c2314c73a5114b8c0aa943647054e",
+      "node_id": "C_kwDOQPdUrNoAKGNiYmIzZGE5ZjIwYzIzMTRjNzNhNTExNGI4YzBhYTk0MzY0NzA1NGU",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-16T19:54:54Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-16T19:54:54Z"
+        },
+        "message": "test(events): require settled paint before RACI contrast scan",
+        "tree": {
+          "sha": "6b8be0e3be217edbed6729b647222775144fb7f5",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/6b8be0e3be217edbed6729b647222775144fb7f5"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/cbbb3da9f20c2314c73a5114b8c0aa943647054e",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/cbbb3da9f20c2314c73a5114b8c0aa943647054e",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/cbbb3da9f20c2314c73a5114b8c0aa943647054e",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/cbbb3da9f20c2314c73a5114b8c0aa943647054e/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "f2f01194090a241777c451d06cb0848af7aa759a",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/f2f01194090a241777c451d06cb0848af7aa759a",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/f2f01194090a241777c451d06cb0848af7aa759a"
+        }
+      ]
+    },
+    {
+      "sha": "780891504f7b7f5e5c59416e421aa3081afe6633",
+      "node_id": "C_kwDOQPdUrNoAKDc4MDg5MTUwNGY3YjdmNWU1YzU5NDE2ZTQyMWFhMzA4MWFmZTY2MzM",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-16T20:07:16Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-16T20:07:16Z"
+        },
+        "message": "docs(events): review canonical event catalog fingerprints",
+        "tree": {
+          "sha": "36758085e2da8836f28fa49203fd94533d88946f",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/36758085e2da8836f28fa49203fd94533d88946f"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/780891504f7b7f5e5c59416e421aa3081afe6633",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/780891504f7b7f5e5c59416e421aa3081afe6633",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/780891504f7b7f5e5c59416e421aa3081afe6633",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/780891504f7b7f5e5c59416e421aa3081afe6633/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "cbbb3da9f20c2314c73a5114b8c0aa943647054e",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/cbbb3da9f20c2314c73a5114b8c0aa943647054e",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/cbbb3da9f20c2314c73a5114b8c0aa943647054e"
+        }
+      ]
+    },
+    {
+      "sha": "d5505e2731d395cc2a5859d215e36ffda9e88138",
+      "node_id": "C_kwDOQPdUrNoAKGQ1NTA1ZTI3MzFkMzk1Y2MyYTU4NTlkMjE1ZTM2ZmZkYTllODgxMzg",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-16T20:08:31Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-16T20:08:31Z"
+        },
+        "message": "docs(events): record hosted WebKit paint evidence",
+        "tree": {
+          "sha": "35e42963893ea09f8d67e4bf881a2bd93df1ecbb",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/35e42963893ea09f8d67e4bf881a2bd93df1ecbb"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/d5505e2731d395cc2a5859d215e36ffda9e88138",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/d5505e2731d395cc2a5859d215e36ffda9e88138",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/d5505e2731d395cc2a5859d215e36ffda9e88138",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/d5505e2731d395cc2a5859d215e36ffda9e88138/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "780891504f7b7f5e5c59416e421aa3081afe6633",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/780891504f7b7f5e5c59416e421aa3081afe6633",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/780891504f7b7f5e5c59416e421aa3081afe6633"
+        }
+      ]
+    },
+    {
+      "sha": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+      "node_id": "C_kwDOQPdUrNoAKGVhNzliNDZhZGRlYTY3MDg3Yzg1YzAzZWE2ZjljMjlkNDVjYTE5ZGE",
+      "commit": {
+        "author": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-16T20:26:44Z"
+        },
+        "committer": {
+          "name": "continuous-improvement-loop[bot]",
+          "email": "continuous-improvement-loop[bot]@users.noreply.github.com",
+          "date": "2026-09-16T20:26:44Z"
+        },
+        "message": "docs(events): reconcile stale catalog reviews with source history",
+        "tree": {
+          "sha": "33017c35b897b6726a4147af9bca1ca68025030f",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/33017c35b897b6726a4147af9bca1ca68025030f"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/ea79b46addea67087c85c03ea6f9c29d45ca19da",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/ea79b46addea67087c85c03ea6f9c29d45ca19da",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/ea79b46addea67087c85c03ea6f9c29d45ca19da",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/ea79b46addea67087c85c03ea6f9c29d45ca19da/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "d5505e2731d395cc2a5859d215e36ffda9e88138",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/d5505e2731d395cc2a5859d215e36ffda9e88138",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/d5505e2731d395cc2a5859d215e36ffda9e88138"
+        }
+      ]
+    },
+    {
+      "sha": "1c5ab236cfddf128f5fa48c3e1c058215261ec21",
+      "node_id": "C_kwDOQPdUrNoAKDFjNWFiMjM2Y2ZkZGYxMjhmNWZhNDhjM2UxYzA1ODIxNTI2MWVjMjE",
+      "commit": {
+        "author": {
+          "name": "Diego Saa",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-09-28T03:38:07Z"
+        },
+        "committer": {
+          "name": "Diego Saa",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-09-28T03:38:07Z"
+        },
+        "message": "Integrate event operations stack with current authentication and UX",
+        "tree": {
+          "sha": "ac8caa7bbb8bada2f6be7b6e94db70449d9f24f6",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/ac8caa7bbb8bada2f6be7b6e94db70449d9f24f6"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/1c5ab236cfddf128f5fa48c3e1c058215261ec21",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/1c5ab236cfddf128f5fa48c3e1c058215261ec21",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/1c5ab236cfddf128f5fa48c3e1c058215261ec21",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/1c5ab236cfddf128f5fa48c3e1c058215261ec21/comments",
+      "author": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "committer": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "parents": [
+        {
+          "sha": "cc244b1f86603055997b51379b297baebfd3e7ce",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/cc244b1f86603055997b51379b297baebfd3e7ce",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/cc244b1f86603055997b51379b297baebfd3e7ce"
+        },
+        {
+          "sha": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/ea79b46addea67087c85c03ea6f9c29d45ca19da",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/ea79b46addea67087c85c03ea6f9c29d45ca19da"
+        }
+      ]
+    },
+    {
+      "sha": "6d2570ae04e0aec8e5972c36132c6989452ed03d",
+      "node_id": "C_kwDOQPdUrNoAKDZkMjU3MGFlMDRlMGFlYzhlNTk3MmMzNjEzMmM2OTg5NDUyZWQwM2Q",
+      "commit": {
+        "author": {
+          "name": "Diego Saa",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-09-28T03:38:59Z"
+        },
+        "committer": {
+          "name": "Diego Saa",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-09-28T03:38:59Z"
+        },
+        "message": "Preserve task fence and RACI fixes from parallel successor",
+        "tree": {
+          "sha": "3c6eb01c65330f1f060840322ab975618f04dfb5",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/3c6eb01c65330f1f060840322ab975618f04dfb5"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/6d2570ae04e0aec8e5972c36132c6989452ed03d",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/6d2570ae04e0aec8e5972c36132c6989452ed03d",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/6d2570ae04e0aec8e5972c36132c6989452ed03d",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/6d2570ae04e0aec8e5972c36132c6989452ed03d/comments",
+      "author": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "committer": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "parents": [
+        {
+          "sha": "1c5ab236cfddf128f5fa48c3e1c058215261ec21",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/1c5ab236cfddf128f5fa48c3e1c058215261ec21",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/1c5ab236cfddf128f5fa48c3e1c058215261ec21"
+        },
+        {
+          "sha": "259becd7b3763e084b54da8749b1e6fde8d9d862",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/259becd7b3763e084b54da8749b1e6fde8d9d862",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/259becd7b3763e084b54da8749b1e6fde8d9d862"
+        }
+      ]
+    },
+    {
+      "sha": "c8d50c9f6f274adeda87874e9d152212389ef9d9",
+      "node_id": "C_kwDOQPdUrNoAKGM4ZDUwYzlmNmYyNzRhZGVkYTg3ODc0ZTlkMTUyMjEyMzg5ZWY5ZDk",
+      "commit": {
+        "author": {
+          "name": "diegueins680",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-09-28T04:53:53Z"
+        },
+        "committer": {
+          "name": "diegueins680",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-09-28T04:53:53Z"
+        },
+        "message": "Preserve current event integrity guards and reconcile integration evidence",
+        "tree": {
+          "sha": "73f37e75cf5398db30a372ea573ca0a2323ced0f",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/73f37e75cf5398db30a372ea573ca0a2323ced0f"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/c8d50c9f6f274adeda87874e9d152212389ef9d9",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/c8d50c9f6f274adeda87874e9d152212389ef9d9",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/c8d50c9f6f274adeda87874e9d152212389ef9d9",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/c8d50c9f6f274adeda87874e9d152212389ef9d9/comments",
+      "author": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "committer": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "parents": [
+        {
+          "sha": "6d2570ae04e0aec8e5972c36132c6989452ed03d",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/6d2570ae04e0aec8e5972c36132c6989452ed03d",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/6d2570ae04e0aec8e5972c36132c6989452ed03d"
+        }
+      ]
+    },
+    {
+      "sha": "a28e1858341bbf87b4c6080144bf38e9aedfc4d2",
+      "node_id": "C_kwDOQPdUrNoAKGEyOGUxODU4MzQxYmJmODdiNGM2MDgwMTQ0YmYzOGU5YWVkZmM0ZDI",
+      "commit": {
+        "author": {
+          "name": "diegueins680",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-09-28T12:51:42Z"
+        },
+        "committer": {
+          "name": "diegueins680",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-09-28T12:51:42Z"
+        },
+        "message": "Align event integration fixtures with current RACI and configuration contracts",
+        "tree": {
+          "sha": "0e61f720bc96da79639ad619540a9cf40207a78d",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/0e61f720bc96da79639ad619540a9cf40207a78d"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/a28e1858341bbf87b4c6080144bf38e9aedfc4d2",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/a28e1858341bbf87b4c6080144bf38e9aedfc4d2",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/a28e1858341bbf87b4c6080144bf38e9aedfc4d2",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/a28e1858341bbf87b4c6080144bf38e9aedfc4d2/comments",
+      "author": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "committer": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "parents": [
+        {
+          "sha": "c8d50c9f6f274adeda87874e9d152212389ef9d9",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/c8d50c9f6f274adeda87874e9d152212389ef9d9",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/c8d50c9f6f274adeda87874e9d152212389ef9d9"
+        }
+      ]
+    },
+    {
+      "sha": "45c760012323f85042349aa27051f18a7d1fa06b",
+      "node_id": "C_kwDOQPdUrNoAKDQ1Yzc2MDAxMjMyM2Y4NTA0MjM0OWFhMjcwNTFmMThhN2QxZmEwNmI",
+      "commit": {
+        "author": {
+          "name": "diegueins680",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-09-28T13:15:57Z"
+        },
+        "committer": {
+          "name": "diegueins680",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-09-28T13:15:57Z"
+        },
+        "message": "Exercise real RACI expiry across authenticated HTTP boundaries",
+        "tree": {
+          "sha": "cf5e517bfe95081baad0bec99adb518db10d808d",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/cf5e517bfe95081baad0bec99adb518db10d808d"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/45c760012323f85042349aa27051f18a7d1fa06b",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/45c760012323f85042349aa27051f18a7d1fa06b",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/45c760012323f85042349aa27051f18a7d1fa06b",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/45c760012323f85042349aa27051f18a7d1fa06b/comments",
+      "author": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "committer": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "parents": [
+        {
+          "sha": "a28e1858341bbf87b4c6080144bf38e9aedfc4d2",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/a28e1858341bbf87b4c6080144bf38e9aedfc4d2",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/a28e1858341bbf87b4c6080144bf38e9aedfc4d2"
+        }
+      ]
+    },
+    {
+      "sha": "afd86265f90378000cb3b5723f3406ced9793bbc",
+      "node_id": "C_kwDOQPdUrNoAKGFmZDg2MjY1ZjkwMzc4MDAwY2IzYjU3MjNmMzQwNmNlZDk3OTNiYmM",
+      "commit": {
+        "author": {
+          "name": "diegueins680",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-09-28T13:28:21Z"
+        },
+        "committer": {
+          "name": "diegueins680",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-09-28T13:28:21Z"
+        },
+        "message": "Preserve artist follow resume context and current signup contract",
+        "tree": {
+          "sha": "e54f42df4eab55d8d7aff39a60bce47e24dfc025",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/e54f42df4eab55d8d7aff39a60bce47e24dfc025"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/afd86265f90378000cb3b5723f3406ced9793bbc",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/afd86265f90378000cb3b5723f3406ced9793bbc",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/afd86265f90378000cb3b5723f3406ced9793bbc",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/afd86265f90378000cb3b5723f3406ced9793bbc/comments",
+      "author": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "committer": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "parents": [
+        {
+          "sha": "45c760012323f85042349aa27051f18a7d1fa06b",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/45c760012323f85042349aa27051f18a7d1fa06b",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/45c760012323f85042349aa27051f18a7d1fa06b"
+        }
+      ]
+    },
+    {
+      "sha": "86d4b9bb4dad81771a2e3de4739814c62c206d30",
+      "node_id": "C_kwDOQPdUrNoAKDg2ZDRiOWJiNGRhZDgxNzcxYTJlM2RlNDczOTgxNGM2MmMyMDZkMzA",
+      "commit": {
+        "author": {
+          "name": "diegueins680",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-09-28T18:31:16Z"
+        },
+        "committer": {
+          "name": "diegueins680",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-09-28T18:31:16Z"
+        },
+        "message": "fix: pin mobile release configuration to the current API",
+        "tree": {
+          "sha": "04c035e3681b3ba9f1db5a5b7b427ec85fd4887d",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/04c035e3681b3ba9f1db5a5b7b427ec85fd4887d"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/86d4b9bb4dad81771a2e3de4739814c62c206d30",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/86d4b9bb4dad81771a2e3de4739814c62c206d30",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/86d4b9bb4dad81771a2e3de4739814c62c206d30",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/86d4b9bb4dad81771a2e3de4739814c62c206d30/comments",
+      "author": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "committer": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "parents": [
+        {
+          "sha": "afd86265f90378000cb3b5723f3406ced9793bbc",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/afd86265f90378000cb3b5723f3406ced9793bbc",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/afd86265f90378000cb3b5723f3406ced9793bbc"
+        }
+      ]
+    },
+    {
+      "sha": "23ff8f588bbdefd4d14e0d2a39cc39953d2c114f",
+      "node_id": "C_kwDOQPdUrNoAKDIzZmY4ZjU4OGJiZGVmZDRkMTRlMGQyYTM5Y2MzOTk1M2QyYzExNGY",
+      "commit": {
+        "author": {
+          "name": "diegueins680",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-10-01T02:16:00Z"
+        },
+        "committer": {
+          "name": "diegueins680",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-10-01T02:16:00Z"
+        },
+        "message": "Merge current main into event consolidation and reconcile companion contracts",
+        "tree": {
+          "sha": "9ce092688f4228986b98bcc9dacaa5b1d64675c6",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/9ce092688f4228986b98bcc9dacaa5b1d64675c6"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/23ff8f588bbdefd4d14e0d2a39cc39953d2c114f",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/23ff8f588bbdefd4d14e0d2a39cc39953d2c114f",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/23ff8f588bbdefd4d14e0d2a39cc39953d2c114f",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/23ff8f588bbdefd4d14e0d2a39cc39953d2c114f/comments",
+      "author": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "committer": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "parents": [
+        {
+          "sha": "86d4b9bb4dad81771a2e3de4739814c62c206d30",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/86d4b9bb4dad81771a2e3de4739814c62c206d30",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/86d4b9bb4dad81771a2e3de4739814c62c206d30"
+        },
+        {
+          "sha": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/49f1f0ec087067d17f62d91df1b616eb053eb894",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/49f1f0ec087067d17f62d91df1b616eb053eb894"
+        }
+      ]
+    },
+    {
+      "sha": "5c9bb3b5daf82fa438fe9f0dd1b796afd699d0a6",
+      "node_id": "C_kwDOQPdUrNoAKDVjOWJiM2I1ZGFmODJmYTQzOGZlOWYwZGQxYjc5NmFmZDY5OWQwYTY",
+      "commit": {
+        "author": {
+          "name": "diegueins680",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-10-01T02:35:34Z"
+        },
+        "committer": {
+          "name": "diegueins680",
+          "email": "cuco.saa@gmail.com",
+          "date": "2026-10-01T02:35:34Z"
+        },
+        "message": "Preserve late follow cache updates and defer disabled task entry",
+        "tree": {
+          "sha": "3c076aa46849bf9bfc8b0ec8dd16e146cf51ca0b",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/git/trees/3c076aa46849bf9bfc8b0ec8dd16e146cf51ca0b"
+        },
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/git/commits/5c9bb3b5daf82fa438fe9f0dd1b796afd699d0a6",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/5c9bb3b5daf82fa438fe9f0dd1b796afd699d0a6",
+      "html_url": "https://github.com/diegueins680/tdf-app/commit/5c9bb3b5daf82fa438fe9f0dd1b796afd699d0a6",
+      "comments_url": "https://api.github.com/repos/diegueins680/tdf-app/commits/5c9bb3b5daf82fa438fe9f0dd1b796afd699d0a6/comments",
+      "author": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "committer": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "parents": [
+        {
+          "sha": "23ff8f588bbdefd4d14e0d2a39cc39953d2c114f",
+          "url": "https://api.github.com/repos/diegueins680/tdf-app/commits/23ff8f588bbdefd4d14e0d2a39cc39953d2c114f",
+          "html_url": "https://github.com/diegueins680/tdf-app/commit/23ff8f588bbdefd4d14e0d2a39cc39953d2c114f"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 426,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "72d33c57d5723f1cda413bf8b7858cc361b5a2fb",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6jm2Yc",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 547,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Point the migration at an ancestor of the release**\n\nFor this commit, `git merge-base --is-ancestor ab0a7cc211c0ad1be72fcc60ed3ad324d8227501 a6a6d8ab11beee8b7df23b00d9fcb62cfba489d2` exits 1 because the recorded introduction commit is on an unmerged side history. The guarded release path in `scripts/production-release.mjs` performs this exact ancestry check for every manifest entry and refuses the release when it fails, so this commit and its ordinary descendants cannot be deployed. Register the migration from a commit that is actually in the release ancestry.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/426#discussion_r4043408645",
+                      "createdAt": "2026-09-18T02:52:16Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Verified on the published head caec2a6b2af3986df9f82c635a553287ca992c85: git merge-base --is-ancestor ab0a7cc211c0ad1be72fcc60ed3ad324d8227501 caec2a6b2af3986df9f82c635a553287ca992c85 exits 0. This branch preserves the original introduction commit through merges. The cited a6a6d8ab revision is not the published PR head. The manifest correctly retains ab0a7cc as the migration introduction; the release plan also renders for caec2a6b.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/426#discussion_r4043514048",
+                      "createdAt": "2026-09-18T03:19:29Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwMzoxOToyOVrO8QMgwA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jm81Y",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": ".gitmodules",
+                "line": 5,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Update every mobile bootstrap command before disabling checkout**\n\nWith `update = none`, Git does not populate this submodule unless `--checkout` explicitly overrides the configured procedure, as documented under [`submodule.<name>.update`](https://git-scm.com/docs/gitmodules#Documentation/gitmodules.txt-submoduleltnamegtupdate). Several active onboarding paths still prescribe the now-ineffective command, including `QUICKSTART.md`, `QUICK_START_REFERENCE.md`, `MOBILE_APP.md`, `DOCUMENTATION.md`, `TROUBLESHOOTING.md`, `BEST_PRACTICES.md`, and `tdf-hq/AGENTS.md:41`; users following them after a fresh clone will leave `tdf-mobile` unpopulated. Update those commands to include `--checkout` as part of this behavior change.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/426#discussion_r4043449679",
+                      "createdAt": "2026-09-18T03:02:14Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in fa723c68b: all seven active onboarding documents now use --checkout explicitly, including fresh-clone paths and remote-update troubleshooting. Removed obsolete claims that web deployments require the mobile checkout. Historical session artifacts remain unchanged.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/426#discussion_r4043521161",
+                      "createdAt": "2026-09-18T03:21:18Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwMzoyMToxOFrO8QM8iQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jnZed",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-17_identity_reconciliation.sql",
+                "line": 110,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Treat reviewer and approver columns as identity dependencies**\n\nWhen a candidate appears only as a reviewer or approver, this predicate misses the dependency: for example, `catalog_revision.reviewed_by`/`approved_by` and `catalog_audit_event.reviewer_id`/`approver_id` are Party identifiers in `TDF.Catalog.Models`, while the canonical SQL creates them without Party foreign keys. Such a contact can therefore receive `can_execute=true` and be archived despite retaining audit or approval relationships, contrary to the migration's dependency-safety invariant. Include these reviewer/approver field names (and the corresponding archive-reference guards) in the soft-reference scan.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/426#discussion_r4043628943",
+                      "createdAt": "2026-09-18T03:44:58Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed with a forward migration (021e74750; registered introduction d442013ce), preserving the already-staged original migration checksum. The dependency inventory now covers all 222 model-declared Party references, including the reviewer/approver fields and nonstandard requested_by references; archive guards use the proven model columns. Focused SQL tests passed for all four catalog review/approval fields, insert/update rejection after archival, and avoiding guards on an unrelated external reviewer identifier. The 106-migration batch and two merge/one link rehearsal passed on a network-isolated production restore; selective rollback left all 605 original table hashes unchanged.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/426#discussion_r4043741411",
+                      "createdAt": "2026-09-18T04:12:36Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwNDoxMjozNlrO8QaY4w=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwMzo0NDo1OFrOo52XnQ=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

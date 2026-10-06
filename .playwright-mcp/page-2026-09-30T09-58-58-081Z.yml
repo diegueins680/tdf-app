@@ -1,0 +1,244 @@
+- generic [ref=f3e4]:
+  - generic [ref=f3e9]:
+    - generic [ref=f3e12]:
+      - link [ref=f3e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f3e22]
+      - generic [ref=f3e25]:
+        - link [ref=f3e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f3e35]
+        - link [ref=f3e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f3e45]
+        - link [ref=f3e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - generic [ref=f3e55]:
+            - img "Messages" [ref=f3e57]
+            - generic "Direct messaging - 10 new notifications link" [ref=f3e60]: 9+
+        - link [ref=f3e66] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f3e71]
+        - link [ref=f3e78] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f3e83]
+        - link [ref=f3e89] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f3e94]
+        - link [ref=f3e99] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f3e104]
+        - link [ref=f3e111] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f3e116]:
+            - img "tdf.records.label's profile picture" [ref=f3e117]
+      - generic [ref=f3e118]:
+        - link [ref=f3e121] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f3e126]
+        - link [ref=f3e129] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f3e134]
+    - generic [ref=f3e137]:
+      - main [ref=f3e138]:
+        - generic [ref=f3e140]:
+          - generic [ref=f3e141]:
+            - generic [ref=f3e142]:
+              - generic [ref=f3e146]:
+                - button [ref=f3e149] [cursor=pointer]:
+                  - generic [ref=f3e157]:
+                    - text: Mañana Live con
+                    - link "@elblogdemicha" [ref=f3e158]:
+                      - /url: /elblogdemicha/
+                    - text: hagan sus preguntas 💛🎶
+                - button [ref=f3e162] [cursor=pointer]:
+                  - link [ref=f3e164]:
+                    - img "solcordovamusic's profile picture" [ref=f3e165]
+              - generic [ref=f3e166]:
+                - generic [ref=f3e167]:
+                  - generic [ref=f3e168]:
+                    - link [ref=f3e170] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "solcordovamusic" [level=2] [ref=f3e171]
+                    - button [ref=f3e173] [cursor=pointer]:
+                      - img "Options" [ref=f3e175]
+                  - generic [ref=f3e179]: Sol Córdova 🌞
+                  - generic [ref=f3e181]:
+                    - generic [ref=f3e183]:
+                      - generic [ref=f3e184]: "601"
+                      - text: posts
+                    - link "6,078 followers" [ref=f3e186] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f3e187]:
+                        - generic "6,078" [ref=f3e188]
+                        - text: followers
+                    - link "4,407 following" [ref=f3e190] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f3e191]:
+                        - generic [ref=f3e192]: 4,407
+                        - text: following
+                - generic [ref=f3e193]:
+                  - generic [ref=f3e194]:
+                    - generic [ref=f3e195]: Musician/band
+                    - button [ref=f3e198] [cursor=pointer]:
+                      - generic [ref=f3e199]: Voz, raíz y modernidad 🇪🇨 🇨🇱Meditación Sonora
+                    - button "Link icon linktr.ee/solcordovamusic and 1 more" [ref=f3e201] [cursor=pointer]:
+                      - generic [ref=f3e202]:
+                        - img "Link icon" [ref=f3e204]
+                        - generic [ref=f3e207]: linktr.ee/solcordovamusic and 1 more
+                  - link "Followed by ekekochangobass, midiendocalles.ec + 90 more" [ref=f3e208] [cursor=pointer]:
+                    - /url: /solcordovamusic/followers/mutualOnly
+                    - generic [ref=f3e210]:
+                      - generic [ref=f3e212]:
+                        - button [ref=f3e213]:
+                          - link [ref=f3e214]
+                        - button [ref=f3e215]:
+                          - link [ref=f3e216]
+                        - button [ref=f3e217]:
+                          - link [ref=f3e218]
+                      - generic [ref=f3e219]: Followed by ekekochangobass, midiendocalles.ec + 90 more
+            - generic [ref=f3e224]:
+              - status "Loading..." [ref=f3e226]
+              - status "Loading..." [ref=f3e228]
+            - menu [ref=f3e230]:
+              - generic [ref=f3e232]:
+                - generic [ref=f3e234]:
+                  - status "Loading..." [ref=f3e236]
+                  - status "Loading..." [ref=f3e238]
+                - generic [ref=f3e240]:
+                  - status "Loading..." [ref=f3e242]
+                  - status "Loading..." [ref=f3e244]
+                - generic [ref=f3e246]:
+                  - status "Loading..." [ref=f3e248]
+                  - status "Loading..." [ref=f3e250]
+                - generic [ref=f3e252]:
+                  - status "Loading..." [ref=f3e254]
+                  - status "Loading..." [ref=f3e256]
+                - generic [ref=f3e258]:
+                  - status "Loading..." [ref=f3e260]
+                  - status "Loading..." [ref=f3e262]
+                - generic [ref=f3e264]:
+                  - status "Loading..." [ref=f3e266]
+                  - status "Loading..." [ref=f3e268]
+                - generic [ref=f3e270]:
+                  - status "Loading..." [ref=f3e272]
+                  - status "Loading..." [ref=f3e274]
+          - generic [ref=f3e275]:
+            - tablist [ref=f3e276]:
+              - link [ref=f3e278] [cursor=pointer]:
+                - /url: /solcordovamusic/
+                - img "Posts" [ref=f3e280]
+              - link [ref=f3e291] [cursor=pointer]:
+                - /url: /solcordovamusic/reels/
+                - img "Reels" [ref=f3e293]
+              - link [ref=f3e296] [cursor=pointer]:
+                - /url: /solcordovamusic/reposts/
+                - img "Reposts" [ref=f3e298]
+              - link [ref=f3e301] [cursor=pointer]:
+                - /url: /solcordovamusic/tagged/
+                - img "Tagged" [ref=f3e303]
+            - tabpanel
+          - progressbar [ref=f3e307]:
+            - img "Loading..." [ref=f3e308]
+      - contentinfo [ref=f3e321]:
+        - generic [ref=f3e322]:
+          - generic [ref=f3e324]:
+            - link "Meta" [ref=f3e326] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f3e329] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f3e332] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f3e335] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f3e338] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f3e341] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f3e344] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f3e347] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f3e350] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f3e353] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f3e356] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f3e359] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f3e362] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f3e365] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f3e368] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f3e371] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f3e373]:
+            - generic [ref=f3e374] [cursor=pointer]:
+              - generic [ref=f3e375]:
+                - generic [ref=f3e376]: English
+                - img "Down chevron icon" [ref=f3e379]
+              - combobox "Switch Display Language" [ref=f3e381]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f3e382]: © 2026 Instagram from Meta
+  - button [ref=f3e385] [cursor=pointer]:
+    - generic "Messages - 10 new notifications" [ref=f3e386]:
+      - generic [ref=f3e387]:
+        - generic [ref=f3e389]:
+          - img "Messages" [ref=f3e390]
+          - generic "Direct messaging - 10 new notifications link" [ref=f3e393]: 9+
+        - generic [ref=f3e396]: Messages

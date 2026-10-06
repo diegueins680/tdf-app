@@ -1,0 +1,9 @@
+{
+  "merge": "c4d479c7f3da659368e5bc60464a1a43c99d9b7a",
+  "source_head": "6449b75fe5387fcb1b80e55f4a71602a3fed2403",
+  "source_text_preserved": true,
+  "target_tree_equals_tested_head": true,
+  "original_mobile_pin_ancestor_of_root_pin": true,
+  "post_merge_ci": "passed",
+  "post_merge_ci_evidence": "notification-rescue-main-ci.json"
+}

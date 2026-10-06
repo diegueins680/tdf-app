@@ -1,0 +1,40 @@
+[
+  [
+    {
+      "sha": "f8620c69f647bd6ec3b369118b59f3f602b69ab3",
+      "filename": "docs/automatic-production-migrations.md",
+      "status": "modified",
+      "additions": 6,
+      "deletions": 0,
+      "changes": 6,
+      "blob_url": "https://github.com/diegueins680/tdf-app/blob/a28b94d74a49ebdf71481694bc910ab95298e027/docs%2Fautomatic-production-migrations.md",
+      "raw_url": "https://github.com/diegueins680/tdf-app/raw/a28b94d74a49ebdf71481694bc910ab95298e027/docs%2Fautomatic-production-migrations.md",
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/docs%2Fautomatic-production-migrations.md?ref=a28b94d74a49ebdf71481694bc910ab95298e027",
+      "patch": "@@ -38,6 +38,12 @@ never started. A concurrent runner also exits nonzero instead of executing the\n same batch twice. Fly's rolling strategy and `max_unavailable = 1` preserve one\n serving Machine while the candidate starts.\n \n+The schema verifier requires all four provider webhook/refund gates to exist.\n+It accepts either configured state for PayPal webhook intake, which was enabled\n+by the approved live rollout. It does not enable intake or alter any gate.\n+PayPal refunds and Datafast webhook/refund capabilities must remain disabled.\n+This keeps subsequent releases and restarts compatible with the approved state.\n+\n ## Adding a migration\n \n Applied migration files are byte-for-byte immutable. Never edit an applied SQL"
+    },
+    {
+      "sha": "5cdc460596db6503e585f9c1c6bf644fdd0ebf97",
+      "filename": "scripts/lib/production-release.mjs",
+      "status": "modified",
+      "additions": 5,
+      "deletions": 2,
+      "changes": 7,
+      "blob_url": "https://github.com/diegueins680/tdf-app/blob/a28b94d74a49ebdf71481694bc910ab95298e027/scripts%2Flib%2Fproduction-release.mjs",
+      "raw_url": "https://github.com/diegueins680/tdf-app/raw/a28b94d74a49ebdf71481694bc910ab95298e027/scripts%2Flib%2Fproduction-release.mjs",
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/scripts%2Flib%2Fproduction-release.mjs?ref=a28b94d74a49ebdf71481694bc910ab95298e027",
+      "patch": "@@ -2207,9 +2207,12 @@ BEGIN\n     ) AS expected(flag_key)\n     LEFT JOIN revenue_feature_flag AS flag\n       ON flag.flag_key = expected.flag_key AND flag.environment = 'production'\n-    WHERE flag.flag_key IS NULL OR flag.enabled\n+    -- PayPal webhook intake is an approved production capability. Restarts\n+    -- must preserve its configured state; refunds and Datafast stay staged.\n+    WHERE flag.flag_key IS NULL\n+       OR (flag.enabled AND expected.flag_key <> 'checkout.paypal.webhooks')\n   ) THEN\n-    RAISE EXCEPTION 'Production provider event/refund capability gates must exist disabled';\n+    RAISE EXCEPTION 'Production provider capability gates must exist; refunds and Datafast must remain disabled';\n   END IF;\n \n   IF EXISTS ("
+    },
+    {
+      "sha": "09b2b7583f2460874bf174cc795874fd2af3a5c9",
+      "filename": "scripts/test-automatic-migrations-production-schema.sh",
+      "status": "modified",
+      "additions": 35,
+      "deletions": 0,
+      "changes": 35,
+      "blob_url": "https://github.com/diegueins680/tdf-app/blob/a28b94d74a49ebdf71481694bc910ab95298e027/scripts%2Ftest-automatic-migrations-production-schema.sh",
+      "raw_url": "https://github.com/diegueins680/tdf-app/raw/a28b94d74a49ebdf71481694bc910ab95298e027/scripts%2Ftest-automatic-migrations-production-schema.sh",
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/scripts%2Ftest-automatic-migrations-production-schema.sh?ref=a28b94d74a49ebdf71481694bc910ab95298e027",
+      "patch": "@@ -105,7 +105,42 @@ FROM (\n SQL\n )\"\n \n+# A reviewed rollout may already have enabled PayPal webhook intake. A restart\n+# must preserve that state while continuing to reject absent or unstaged gates.\n+psql \"${database_url}\" -X -v ON_ERROR_STOP=1 -c \\\n+  \"UPDATE revenue_feature_flag SET enabled = TRUE WHERE environment = 'production' AND flag_key = 'checkout.paypal.webhooks';\" >/dev/null\n start_and_verify\n+test \"$(psql \"${database_url}\" -X -qAt -v ON_ERROR_STOP=1 -c \"SELECT enabled FROM revenue_feature_flag WHERE environment = 'production' AND flag_key = 'checkout.paypal.webhooks';\")\" = \"t\"\n+\n+verification_sql=\"$(node \"${repo_root}/scripts/render-production-schema-verification.mjs\")\"\n+assert_gate_rejected() {\n+  local mutation=\"$1\"\n+  local output\n+  if output=\"$(psql \"${database_url}\" -X -v ON_ERROR_STOP=1 2>&1 <<SQL\n+BEGIN;\n+${mutation}\n+${verification_sql}\n+ROLLBACK;\n+SQL\n+)\"; then\n+    echo \"Schema verification unexpectedly accepted: ${mutation}\" >&2\n+    exit 1\n+  fi\n+  if [[ \"${output}\" != *'Production provider capability gates must exist; refunds and Datafast must remain disabled'* ]]; then\n+    echo \"${output}\" >&2\n+    echo \"Schema verification failed for an unexpected reason\" >&2\n+    exit 1\n+  fi\n+}\n+\n+for flag in checkout.paypal.webhooks checkout.paypal.refunds checkout.datafast.webhooks checkout.datafast.refunds; do\n+  assert_gate_rejected \"DELETE FROM revenue_feature_flag WHERE environment = 'production' AND flag_key = '${flag}';\"\n+done\n+for flag in checkout.paypal.refunds checkout.datafast.webhooks checkout.datafast.refunds; do\n+  assert_gate_rejected \"UPDATE revenue_feature_flag SET enabled = TRUE WHERE environment = 'production' AND flag_key = '${flag}';\"\n+done\n+psql \"${database_url}\" -X -v ON_ERROR_STOP=1 -c \\\n+  \"UPDATE revenue_feature_flag SET enabled = FALSE WHERE environment = 'production' AND flag_key = 'checkout.paypal.webhooks';\" >/dev/null\n \n schema_after=\"$(psql \"${database_url}\" -X -qAt -v ON_ERROR_STOP=1 <<'SQL'\n SELECT md5(string_agg(definition, E'\\n' ORDER BY definition))"
+    }
+  ]
+]

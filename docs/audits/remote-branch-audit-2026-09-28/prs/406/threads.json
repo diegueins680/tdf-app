@@ -1,0 +1,264 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 406,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "912f8326ba7a13611cfbad592f6680fe50bdbefc",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6jDail",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 542,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Point the migration introduction at an ancestor**\n\nProduction releases of this exact commit are blocked because `d8fd169c...` is not an ancestor of `83e17588...`. Running `node scripts/production-release.mjs plan --sha 83e17588bb29ce267c9d26a37a33a60e150db98f` exits with \u201cwhich is not an ancestor of release ...; refusing to omit a registered migration,\u201d so the manifest must identify a commit contained in the release history.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4029174459",
+                      "createdAt": "2026-09-16T18:02:02Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQxODowMjowMlrO8ChSuw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jDaiu",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/Profiles/Artist.hs",
+                "line": 80,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Record an audit when completing pending requests**\n\nWhen activation finds an existing pending artist request, this block changes it to `approved` and writes only request history, not the centralized `AuditLog` entry written for every other request transition. This also affects the legacy access-request endpoint: `activateOwnArtistProfile` approves the request first, after which `createArtistAccess` takes its already-approved fast path and skips its own `writeFeatureAccessRequestAudit` call, leaving audit-log consumers unable to observe the automatic approval.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4029174469",
+                      "createdAt": "2026-09-16T18:02:02Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQxODowMjowMlrO8ChSxQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jFVAq",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
+                "line": 204,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Honor claim links before self-activating a profile**\n\nWhen an authenticated Customer follows \u201cReclamar este perfil\u201d from `ArtistPublicPage`, this page receives a non-null `claimArtistId`, but the new session branch calls `activateProfile()`, whose request accepts no target identity. It therefore creates a new empty profile for the viewer and opens that editor instead of claiming the selected existing profile. Branch on `claimArtistId` here and continue through a supported claim flow rather than invoking self-activation.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4029930316",
+                      "createdAt": "2026-09-16T19:24:20Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xNlQxOToyNDoyMFrO8DPbTA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jGxVB",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Preserve the selected claim through Google signup**\n\nWhen a signed-in user follows a claim link and then chooses Google in the signup dialog, this redirects them into a claim URL but `LoginPage.handleGoogleCredential` submits only the ID token and consent fields; `completeGoogleLogin` has no claim parameter, so the returned Customer session is sent to generic `/artista/crear` and the selected existing profile is lost. Fresh evidence beyond the earlier claim-flow comment is that the revised `continueClaim` now explicitly enters this signup-only path while the Google branch still cannot transmit `claimArtistId`.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4030505343",
+                      "createdAt": "2026-09-16T20:32:37Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in ab9630d089386b6d712f88cc828757667359c4ef: a selected claim stays in the supported email-matched claim form. Google signup is hidden for that selection and late callbacks are rejected before login/navigation; ordinary Google signup remains available. The new regression reproduces the callback and asserts that no authentication happens and the claim/dialog remain. Both login/onboarding suites pass (11 tests), plus TypeScript, lint and the production build. Adding a Google account-linking contract is not part of this repair.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4038453871",
+                      "createdAt": "2026-09-17T15:12:01Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xN1QxNToxMjowMVrO8LXqbw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jhevJ",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Support claims from existing signed-in accounts**\n\nWhen a signed-in Customer follows a claim link, this forces them into the new-account signup flow, but that flow cannot accept the email already belonging to their account: `runSignupDb` rejects it via `signupEmailExists` before `resolveParty` processes `claimArtistId` (`tdf-hq/src/TDF/ServerAuth.hs:1830-1835`). Consequently, using the profile-associated email fails as an existing signup, while another email fails claim verification, so the customer still cannot claim the selected profile. Fresh evidence beyond the earlier claim-flow finding is that the new forced logout/signup branch preserves the ID but routes it through this incompatible backend contract; this needs an authenticated claim/merge flow rather than another signup.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4041182614",
+                      "createdAt": "2026-09-17T20:30:06Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "BLOCKED_OR_AMBIGUOUS \u2014 this is a separate, valid concern from the Google callback losing the selection. The current signup contract rejects an existing account email before resolving the selected claim. The latest head `6eb51c4b1362ac115caf6685a90dc83e53161d1b` is approved and all applicable CI has passed, but this concern remains unresolved and the PR must not merge in its current state.\n\nAn authenticated claim needs an explicit identity/ownership contract: whether the account links to the existing artist identity or identities are merged, what verified ownership evidence authorizes it, and how existing artist/account relationships and records are preserved. The existing new-account signup contract is not sufficient authority for a generic Party merge or profile ownership transfer. No such transfer or security exception was added. The smallest next decision is the canonical account-to-artist identity model and its verified ownership rule; then implement and test the authenticated operation and update this route. The earlier claim-preservation repair remains independently tested; it is not claimed to solve authenticated account linking. This thread and branch are retained.\n",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4041209443",
+                      "createdAt": "2026-09-17T20:33:54Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed at e23a0bd936805ccc99fc0f0b3fc50a696036be94. The owner explicitly chose separate account and artist identities with verified management access. Signed-in claims now reuse the existing authenticated directory claim/review/manager flow: resolve the selected artist's public profile, submit ownership evidence, retain the account/session, and grant no access until administrative verification. Approved management appears in Mis perfiles y clasificados; no credentials/history move and no global Artist or commercial permissions are granted.\n\n16 focused UI tests, app TypeScript, changed-file lint, UI build, strict catalog and full repository checks passed. A real PostgreSQL fixture on the complete 104-migration schema verifies pending/mismatched-claim denial, matching reviewed grants, revocation, and separate Party/credential/follower identities. The fixture is wired into the existing directory migration suite. The published head's hosted checks remain pending. Details: docs/artist-management-claims.md.\n",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4042014228",
+                      "createdAt": "2026-09-17T22:39:48Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xN1QyMjozOTo0OFrO8Ow-FA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jkekE",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq-ui/src/components/ArtistClaimPanel.tsx",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Support claims without a public directory twin**\n\nWhen a signed-in user follows the claim link for an unclaimed core artist created after the one-time directory backfill, this lookup returns 404 and the page never renders a claim form: `ensureArtistProfileForParty` still inserts only an `artist_profile` (`TDF/Artists/Enrichment.hs:486-503`), while `publicProfileByParty` requires a matching published `directory_profile` (`TDF/Server/Directory.hs:305-313`). Draft directory twins fail for the same reason. Fresh evidence beyond the earlier signed-in-claim thread is this still-active post-backfill creation path, so the flow needs to materialize/resolve a claimable directory target or provide a core-profile fallback.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4042389907",
+                      "createdAt": "2026-09-17T23:57:09Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 1fe6195a0. Authenticated preparation now reuses a canonical directory twin or creates one private draft for a post-backfill core artist under a transaction-held Party row lock. Drafts stay private; blocked/archived/suspended targets remain unavailable. Only the core public name and opaque target ID are returned; no manager, credential, role, publication or identity transfer is created. The existing reviewed claim/grant flow remains authoritative. Loading errors offer retry. Actual PostgreSQL17 and compiled backend tests passed: eight concurrent requests reuse one target, anonymous denial, private-field non-disclosure, blocked denial, and persisted idempotent claim receipts. TLC safety/liveness passed (49 states), and removing the lock produced the expected uniqueness counterexample. 25 UI tests, typecheck/lint and contract checks passed; exact-head CI is pending. See docs/artist-management-claims.md and the new backend CI fixture.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4042517621",
+                      "createdAt": "2026-09-18T00:15:51Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwMDoxNTo1MVrO8PPsdQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jk0nt",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq/src/TDF/Server/Directory.hs",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Restrict claim targets to artist profiles**\n\nWhen the core artist's Party also owns another directory profile, such as a band profile created by the legacy backfill, this unfiltered lookup can select that newer non-artist row because `directory_profile` permits multiple profiles per `subject_party_id`. The resulting administration claim is then submitted\u2014and may be approved\u2014for the wrong directory resource while the selected artist profile remains unmanaged. Filter source candidates to the artist profile kinds associated with this claim flow before resolving the canonical target.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4042542142",
+                      "createdAt": "2026-09-18T00:19:39Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in7411a2a: source and canonical targets are restricted to artist profiles. Expanded real HTTP/PostgreSQL17 fixture reproduces old200 instead of404 for a blocked artist with a newer band; rebuilt backend and hosted backend-quality job105440820017 pass. ArtistClaimKind TLC safety/liveness and wrong-kind negative control pass. No manager grant or identity transfer.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4042931622",
+                      "createdAt": "2026-09-18T01:26:51Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwMToyNjo1MVrO8Po9pg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jla78",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Fence activation against claim-route changes**\n\nIf an account starts activation on `/artista/crear` and then browser navigation changes the same mounted route to `?claimArtistId=\u2026` before either request completes, `isCurrent()` still returns true because it tracks only the session. The stale activation therefore refreshes the session and navigates to `/mi-artista`, overriding the newly selected claim flow despite the entry guard checking `claimArtistId`; include the route/claim generation in the asynchronous validity check.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4042801092",
+                      "createdAt": "2026-09-18T01:04:01Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in912f8326ba7a13611cfbad592f6680fe50bdbefc. The generation now includes location.key and session identity, including navigation away and back; flight cleanup belongs to its generation. Two regressions fail before the fix at the activation/session-refresh boundaries;13 activation tests, TypeScript and full UI lint pass. ArtistActivation TLC explores15 states, proves current context/persisted authority under documented bounds, and its negative control violates CurrentContext. Full pinned TLC/Alloy runner and23 CI contracts pass. Evidence is versioned under docs/ux-ui-audit/2026-09-17/evidence/artist-route-*; hosted checks are running.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/406#discussion_r4042931843",
+                      "createdAt": "2026-09-18T01:26:53Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwMToyNjo1M1rO8Po-gw=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwMTowNDowMVrOo5Wu_A=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

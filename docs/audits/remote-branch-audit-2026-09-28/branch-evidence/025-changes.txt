@@ -1,0 +1,7 @@
+ .../catalog-list-decisions.json                    |  87 +++----
+ .../event-catalog-retirements.json                 | 273 +++++++++++++++++++++
+ docs/event-operations/README.md                    |   2 +
+ .../catalog-stale-reconciliation-contract.md       |  31 +++
+ .../pr-36-catalog-stale-reconciliation.md          | 109 ++++++++
+ scripts/__tests__/catalog-list-audit.test.mjs      |  72 ++++++
+ 6 files changed, 526 insertions(+), 48 deletions(-)

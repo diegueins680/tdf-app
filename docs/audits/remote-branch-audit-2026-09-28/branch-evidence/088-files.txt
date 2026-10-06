@@ -1,0 +1,7 @@
+A	docs/social/evidence/backend-runtime-result.txt
+A	docs/social/evidence/ci-workflow-regression.txt
+A	docs/social/evidence/reaction-model.txt
+A	docs/social/reaction-repair.md
+A	formal/social/Reaction.cfg
+A	formal/social/Reaction.tla
+M	scripts/social/check-models.sh

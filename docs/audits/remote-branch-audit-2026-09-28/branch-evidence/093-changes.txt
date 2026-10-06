@@ -1,0 +1,9 @@
+ tdf-hq-ui/src/api/accessRequests.ts             |  1 +
+ tdf-hq-ui/src/api/generated/types.ts            |  2 +
+ tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx | 79 ++++++++++++++++++++++++-
+ tdf-hq-ui/src/pages/AccessRequestsPage.tsx      | 11 ++++
+ tdf-hq/docs/openapi/api.yaml                    |  5 ++
+ tdf-hq/src/TDF/DTO.hs                           |  1 +
+ tdf-hq/src/TDF/Server.hs                        |  8 ++-
+ tdf-mobile                                      |  2 +-
+ 8 files changed, 104 insertions(+), 5 deletions(-)

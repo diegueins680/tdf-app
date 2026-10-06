@@ -1,0 +1,7 @@
+ .../catalog-list-decisions.json                    | 144 +++++++++++++++++++++
+ docs/event-operations/README.md                    |   2 +
+ docs/event-operations/catalog-review-contract.md   |  28 ++++
+ docs/event-operations/pr-34-raci-review-paint.md   |  18 +++
+ .../event-operations/pr-35-event-catalog-review.md |  82 ++++++++++++
+ docs/event-operations/traceability-matrix.md       |   2 +-
+ 6 files changed, 275 insertions(+), 1 deletion(-)

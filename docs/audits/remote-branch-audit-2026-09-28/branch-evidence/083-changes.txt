@@ -1,0 +1,10 @@
+ docs/social/database.md                            |  10 +
+ .../evidence/postgres-large-feed-baseline.txt      | 291 ++++++++++++++++++++
+ docs/social/evidence/postgres-large-feed-final.txt | 298 +++++++++++++++++++++
+ docs/social/performance.md                         |  31 ++-
+ docs/social/research.md                            |  12 +
+ scripts/social/feed-benchmark.sql                  |  26 ++
+ scripts/social/read-model-tests.sql                |   8 +
+ scripts/social/test-postgres.sh                    |  41 ++-
+ tdf-hq/sql/2026-09-14_social_v2_read_models.sql    |  80 ++++--
+ 9 files changed, 762 insertions(+), 35 deletions(-)

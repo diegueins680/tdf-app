@@ -1,0 +1,249 @@
+- generic [ref=f24e1]:
+  - generic:
+    - generic:
+      - generic:
+        - generic [ref=f24e7]:
+          - generic [ref=f24e301]:
+            - generic [ref=f24e304]:
+              - link [ref=f24e309] [cursor=pointer]:
+                - /url: /
+              - generic [ref=f24e317]:
+                - link [ref=f24e322] [cursor=pointer]:
+                  - /url: /
+                - link [ref=f24e332] [cursor=pointer]:
+                  - /url: /reels/
+                - link [ref=f24e344] [cursor=pointer]:
+                  - /url: /direct/inbox/
+                  - generic [ref=f24e345]: 9+
+                - link [ref=f24e358] [cursor=pointer]:
+                  - /url: /explore/
+                - link [ref=f24e371] [cursor=pointer]:
+                  - /url: "#"
+                - link [ref=f24e384] [cursor=pointer]:
+                  - /url: "#"
+                - link [ref=f24e394] [cursor=pointer]:
+                  - /url: "#"
+                - link [ref=f24e406] [cursor=pointer]:
+                  - /url: /tdf.records.label/
+                  - link [ref=f24e411]
+              - generic [ref=f24e413]:
+                - link [ref=f24e416] [cursor=pointer]:
+                  - /url: "#"
+                - link [ref=f24e424] [cursor=pointer]:
+                  - /url: "#"
+            - generic [ref=f24e432]:
+              - main [ref=f24e18]:
+                - generic [ref=f24e20]:
+                  - generic [ref=f24e21]:
+                    - generic [ref=f24e22]:
+                      - generic [ref=f24e26]:
+                        - button [ref=f24e433] [cursor=pointer]:
+                          - generic [ref=f24e37]:
+                            - text: Hoy Insta Live con
+                            - link [ref=f24e434]:
+                              - /url: /elblogdemicha/
+                              - text: "@elblogdemicha"
+                            - text: pasen a saludar!
+                        - button [ref=f24e435] [cursor=pointer]:
+                          - link [ref=f24e436]
+                      - generic [ref=f24e46]:
+                        - generic [ref=f24e47]:
+                          - generic [ref=f24e48]:
+                            - link [ref=f24e438] [cursor=pointer]:
+                              - /url: "#"
+                              - heading [level=2] [ref=f24e439]:
+                                - generic [ref=f24e52]: solcordovamusic
+                            - button [ref=f24e440] [cursor=pointer]
+                          - generic [ref=f24e59]: Sol Córdova 🌞
+                          - generic [ref=f24e61]:
+                            - generic [ref=f24e63]:
+                              - generic [ref=f24e64]: "602"
+                              - text: posts
+                            - link [ref=f24e442] [cursor=pointer]:
+                              - /url: "#"
+                              - generic [ref=f24e67]:
+                                - generic [ref=f24e443]: 6,089
+                                - text: followers
+                            - link [ref=f24e444] [cursor=pointer]:
+                              - /url: "#"
+                              - generic [ref=f24e71]:
+                                - generic [ref=f24e72]: 4,409
+                                - text: following
+                        - generic [ref=f24e73]:
+                          - generic [ref=f24e74]:
+                            - generic [ref=f24e75]: Musician/band
+                            - button [ref=f24e445] [cursor=pointer]:
+                              - generic [ref=f24e79]: Voz, raíz y modernidad 🇪🇨 🇨🇱 Meditación Sonora
+                            - button [ref=f24e446] [cursor=pointer]:
+                              - generic [ref=f24e82]: linktr.ee/solcordovamusic and 1 more
+                          - link [ref=f24e448] [cursor=pointer]:
+                            - /url: /solcordovamusic/followers/mutualOnly
+                            - generic [ref=f24e90]:
+                              - generic [ref=f24e92]:
+                                - button [ref=f24e93]:
+                                  - link [ref=f24e94]
+                                - button [ref=f24e95]:
+                                  - link [ref=f24e96]
+                                - button [ref=f24e97]:
+                                  - link [ref=f24e98]
+                              - generic [ref=f24e99]: Followed by semiazas354, elespiritudeladiabla + 90 more
+                    - generic [ref=f24e104]:
+                      - button [ref=f24e449] [cursor=pointer]:
+                        - generic [ref=f24e107]: Following
+                      - button [ref=f24e451] [cursor=pointer]: Message
+                      - button [ref=f24e452] [cursor=pointer]
+                    - menu [ref=f24e122]:
+                      - list [ref=f24e126]:
+                        - listitem [ref=f24e127]
+                        - listitem [ref=f24e128]
+                        - listitem [ref=f24e129]:
+                          - link [ref=f24e454] [cursor=pointer]:
+                            - /url: /stories/highlights/18128148292662594/
+                            - button [ref=f24e455]:
+                              - button [ref=f24e456]
+                              - generic [ref=f24e138]: Meditación
+                        - listitem [ref=f24e141]:
+                          - link [ref=f24e458] [cursor=pointer]:
+                            - /url: /stories/highlights/17882857788265003/
+                            - button [ref=f24e459]:
+                              - button [ref=f24e460]
+                              - generic [ref=f24e150]: Shows
+                        - listitem [ref=f24e153]:
+                          - link [ref=f24e462] [cursor=pointer]:
+                            - /url: /stories/highlights/18054706085642277/
+                            - button [ref=f24e463]:
+                              - button [ref=f24e464]
+                              - generic [ref=f24e162]: PutumayoWorldMu
+                        - listitem [ref=f24e165]:
+                          - link [ref=f24e466] [cursor=pointer]:
+                            - /url: /stories/highlights/18424664104109884/
+                            - button [ref=f24e467]:
+                              - button [ref=f24e468]
+                              - generic [ref=f24e174]: Surupa EP
+                        - listitem [ref=f24e177]:
+                          - link [ref=f24e470] [cursor=pointer]:
+                            - /url: /stories/highlights/17981497583877333/
+                            - button [ref=f24e471]:
+                              - button [ref=f24e472]
+                              - generic [ref=f24e186]: Singles
+                  - tablist [ref=f24e190]:
+                    - link [ref=f24e474] [cursor=pointer]:
+                      - /url: /solcordovamusic/
+                    - link [ref=f24e476] [cursor=pointer]:
+                      - /url: /solcordovamusic/reels/
+                    - link [ref=f24e478] [cursor=pointer]:
+                      - /url: /solcordovamusic/reposts/
+                    - link [ref=f24e480] [cursor=pointer]:
+                      - /url: /solcordovamusic/tagged/
+                  - generic [ref=f24e224]:
+                    - generic [ref=f24e225]:
+                      - link [ref=f24e482] [cursor=pointer]:
+                        - /url: /solcordovamusic/reel/DdJ56t7xTid/
+                      - link [ref=f24e484] [cursor=pointer]:
+                        - /url: /axha.musica/reel/DaDmp10Ri51/
+                      - link [ref=f24e486] [cursor=pointer]:
+                        - /url: /solcordovamusic/reel/DXha88mkQWp/
+                    - generic [ref=f24e244]:
+                      - link [ref=f24e488] [cursor=pointer]:
+                        - /url: /solcordovamusic/reel/Dd7ipTmjt-l/
+                      - link [ref=f24e490] [cursor=pointer]:
+                        - /url: /ananau_botanique/p/Dd20ghxkSHR/
+                      - link [ref=f24e492] [cursor=pointer]:
+                        - /url: /solcordovamusic/reel/Dd2eR7PR6-_/
+                    - generic [ref=f24e263]:
+                      - link [ref=f24e494] [cursor=pointer]:
+                        - /url: /pifrecuency/reel/Ddt8IIgRuhx/
+                      - link [ref=f24e496] [cursor=pointer]:
+                        - /url: /solcordovamusic/reel/DdozlJrxGMW/
+                      - link [ref=f24e498] [cursor=pointer]:
+                        - /url: /solcordovamusic/p/Ddh6OhwEXkK/
+                    - generic [ref=f24e282]:
+                      - link [ref=f24e500] [cursor=pointer]:
+                        - /url: /pifrecuency/p/DdcUr4Fn9jm/
+                      - link [ref=f24e502] [cursor=pointer]:
+                        - /url: /solcordovamusic/p/DdSb6CQka6_/
+                      - link [ref=f24e504] [cursor=pointer]:
+                        - /url: /solcordovamusic/reel/Dc33oivRyxF/
+              - contentinfo [ref=f24e506]:
+                - generic [ref=f24e507]:
+                  - generic [ref=f24e509]:
+                    - link [ref=f24e511] [cursor=pointer]:
+                      - /url: https://about.meta.com/
+                      - generic [ref=f24e512]: Meta
+                    - link [ref=f24e514] [cursor=pointer]:
+                      - /url: https://about.instagram.com/
+                      - generic [ref=f24e515]: About
+                    - link [ref=f24e517] [cursor=pointer]:
+                      - /url: https://about.instagram.com/blog/
+                      - generic [ref=f24e518]: Blog
+                    - link [ref=f24e520] [cursor=pointer]:
+                      - /url: https://about.instagram.com/about-us/careers
+                      - generic [ref=f24e521]: Jobs
+                    - link [ref=f24e523] [cursor=pointer]:
+                      - /url: https://help.instagram.com/
+                      - generic [ref=f24e524]: Help
+                    - link [ref=f24e526] [cursor=pointer]:
+                      - /url: https://developers.facebook.com/docs/instagram
+                      - generic [ref=f24e527]: API
+                    - link [ref=f24e529] [cursor=pointer]:
+                      - /url: /legal/privacy/
+                      - generic [ref=f24e530]: Privacy
+                    - link [ref=f24e532] [cursor=pointer]:
+                      - /url: /legal/terms/
+                      - generic [ref=f24e533]: Terms
+                    - link [ref=f24e535] [cursor=pointer]:
+                      - /url: /explore/locations/
+                      - generic [ref=f24e536]: Locations
+                    - link [ref=f24e538] [cursor=pointer]:
+                      - /url: /popular/
+                      - generic [ref=f24e539]: Popular
+                    - link [ref=f24e541] [cursor=pointer]:
+                      - /url: /web/lite/
+                      - generic [ref=f24e542]: Instagram Lite
+                    - link [ref=f24e544] [cursor=pointer]:
+                      - /url: https://www.meta.ai/?utm_source=foa_web_footer
+                      - generic [ref=f24e545]: Meta AI
+                    - link [ref=f24e547] [cursor=pointer]:
+                      - /url: https://muse.ai/
+                      - generic [ref=f24e548]: Muse
+                    - link [ref=f24e550] [cursor=pointer]:
+                      - /url: https://www.threads.com/
+                      - generic [ref=f24e551]: Threads
+                    - link [ref=f24e553] [cursor=pointer]:
+                      - /url: https://www.facebook.com/help/instagram/261704639352628
+                      - generic [ref=f24e554]: Contact Uploading & Non-Users
+                    - link [ref=f24e556] [cursor=pointer]:
+                      - /url: /accounts/meta_verified/?entrypoint=web_footer
+                      - generic [ref=f24e557]: Meta Verified
+                  - generic [ref=f24e558]:
+                    - generic [ref=f24e559] [cursor=pointer]:
+                      - generic [ref=f24e560]: English
+                      - combobox [ref=f24e566]
+                    - generic [ref=f24e567]: © 2026 Instagram from Meta
+          - button [ref=f24e570] [cursor=pointer]:
+            - tooltip [ref=f24e572]:
+              - generic [ref=f24e573]: "3"
+        - button [ref=f24e581] [cursor=pointer]:
+          - generic "Messages - 9 new notifications" [ref=f24e582]:
+            - generic [ref=f24e583]:
+              - generic [ref=f24e585]:
+                - img "Messages" [ref=f24e586]
+                - generic "Direct messaging - 9 new notifications link" [ref=f24e589]: 9+
+              - generic [ref=f24e592]: Messages
+            - generic [ref=f24e593]:
+              - button [ref=f24e594]:
+                - img "9 unread chats" [ref=f24e596]
+              - button "User avatar Maribel Tipán" [ref=f24e601]:
+                - img "User avatar" [ref=f24e604]
+              - button "User avatar Crackero🦇" [ref=f24e606]:
+                - img "User avatar" [ref=f24e609]
+              - button "User avatar Neil Armas 🎙️" [ref=f24e611]:
+                - img "User avatar" [ref=f24e614]
+  - dialog [ref=f24e621]:
+    - generic [ref=f24e626]:
+      - generic [ref=f24e627]:
+        - heading "Messaging solcordovamusic" [active] [level=3] [ref=f24e630]
+        - generic [ref=f24e631]: Partnership messages are more likely to get a response because they have a dedicated place in solcordovamusic's inbox.
+      - generic [ref=f24e633]:
+        - button "Send prioritized message" [ref=f24e634] [cursor=pointer]
+        - button "Send message request" [ref=f24e635] [cursor=pointer]

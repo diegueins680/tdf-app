@@ -1,0 +1,213 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048980349",
+      "pull_request_review_id": 5250554954,
+      "id": 4048980349,
+      "node_id": "PRRC_kwDOQPdUrM7xVol9",
+      "diff_hunk": "@@ -704,6 +704,20 @@ function previousSha(machine) {\n // deliberate new-account intent. Restoring an earlier binary would re-enable\n // email-only authority even if the additive table itself remains intact.\n const providerIdentityFloor = 'c53b33e7ef868fb7b64f876199ed66be0f617efc';\n+// Older binaries ignore these receipts and can repeat contact creation or grant\n+// access through shared email. Recovery must retain the writer contract even\n+// when the receipt tables happened to be empty during preflight.\n+const intakeIdentityFloor = '02115f7d1b0786f3cdd4287a9466dd22682f603b';\n+const sourceRequestIdentityFloor = '6eab8592744015124b0162ce9e9361f51a04f538';\n+\n+export function requiredIdentityCommit(context) {",
+      "path": "scripts/production-release.mjs",
+      "commit_id": "261bfdfbbdab0520b35725a72b776f160b608dd3",
+      "original_commit_id": "9e4e6f27665f42a26ef987082be39aa87f9f482e",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Allow the final checkout to release the pinned target**\n\nWhen the documented release runs with `--sha 98a561a9...` from this final commit (or its protected-main merge), execution stops before preflight: `assertReleaseCheckout` compares that SHA to HEAD and permits only changes to `scripts/production-release.mjs` or `memory/`, but this commit also changes three identity docs and `scripts/__tests__/provider-rollback.test.mjs`. Consequently the new recovery policy cannot execute from the reviewed final checkout; either those known non-application paths must be allowed or the release target/checkpoint must be arranged so the checkout assertion passes.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T17:13:37Z",
+      "updated_at": "2026-09-18T17:13:38Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/453#discussion_r4048980349",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/453",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048980349"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/453#discussion_r4048980349"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/453"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048980349/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 713,
+      "original_line": 713,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 10,
+      "position": 10,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049646355",
+      "pull_request_review_id": 5251323749,
+      "id": 4049646355,
+      "node_id": "PRRC_kwDOQPdUrM7xYLMT",
+      "diff_hunk": "@@ -704,6 +704,20 @@ function previousSha(machine) {\n // deliberate new-account intent. Restoring an earlier binary would re-enable\n // email-only authority even if the additive table itself remains intact.\n const providerIdentityFloor = 'c53b33e7ef868fb7b64f876199ed66be0f617efc';\n+// Older binaries ignore these receipts and can repeat contact creation or grant\n+// access through shared email. Recovery must retain the writer contract even\n+// when the receipt tables happened to be empty during preflight.\n+const intakeIdentityFloor = '02115f7d1b0786f3cdd4287a9466dd22682f603b';\n+const sourceRequestIdentityFloor = '6eab8592744015124b0162ce9e9361f51a04f538';\n+\n+export function requiredIdentityCommit(context) {",
+      "path": "scripts/production-release.mjs",
+      "commit_id": "261bfdfbbdab0520b35725a72b776f160b608dd3",
+      "original_commit_id": "9e4e6f27665f42a26ef987082be39aa87f9f482e",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Addressed in 7d49563ec: the runbook now pins clean runner-only checkout 9fd718923895f331b505ea8850a0b525be4b8039 after protected-main inclusion, with application target 98a561a9446a1c51e627f6ad5a48737fe5122d85. Its only target-to-HEAD change is scripts/production-release.mjs, satisfying the existing guard. The final docs/test checkout is explicitly unsupported for this pinned target. The guard is not weakened.",
+      "created_at": "2026-09-18T18:39:40Z",
+      "updated_at": "2026-09-18T18:39:40Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/453#discussion_r4049646355",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/453",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049646355"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/453#discussion_r4049646355"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/453"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049646355/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 713,
+      "original_line": 713,
+      "side": "RIGHT",
+      "in_reply_to_id": 4048980349,
+      "author_association": "OWNER",
+      "original_position": 10,
+      "position": 10,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049846846",
+      "pull_request_review_id": 5251559764,
+      "id": 4049846846,
+      "node_id": "PRRC_kwDOQPdUrM7xY8I-",
+      "diff_hunk": "@@ -704,6 +704,20 @@ function previousSha(machine) {\n // deliberate new-account intent. Restoring an earlier binary would re-enable\n // email-only authority even if the additive table itself remains intact.\n const providerIdentityFloor = 'c53b33e7ef868fb7b64f876199ed66be0f617efc';\n+// Older binaries ignore these receipts and can repeat contact creation or grant\n+// access through shared email. Recovery must retain the writer contract even\n+// when the receipt tables happened to be empty during preflight.\n+const intakeIdentityFloor = '02115f7d1b0786f3cdd4287a9466dd22682f603b';\n+const sourceRequestIdentityFloor = '6eab8592744015124b0162ce9e9361f51a04f538';\n+\n+export function requiredIdentityCommit(context) {",
+      "path": "scripts/production-release.mjs",
+      "commit_id": "261bfdfbbdab0520b35725a72b776f160b608dd3",
+      "original_commit_id": "9e4e6f27665f42a26ef987082be39aa87f9f482e",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Final arrangement: candidate 261bfdfbbdab0520b35725a72b776f160b608dd3 includes the runner, current main and reviewed dialog fix. It has its own full Build Image run35382946062. Production will run from a clean checkout of that exact SHA after protected-main incorporation, using verified recovery98a561a9. No older-target checkout exception is now needed. Actual261/recovery98 plan passes all113 migration ancestry and expanded-SQL checks.",
+      "created_at": "2026-09-18T19:05:25Z",
+      "updated_at": "2026-09-18T19:05:25Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/453#discussion_r4049846846",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/453",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049846846"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/453#discussion_r4049846846"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/453"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4049846846/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 713,
+      "original_line": 713,
+      "side": "RIGHT",
+      "in_reply_to_id": 4048980349,
+      "author_association": "OWNER",
+      "original_position": 10,
+      "position": 10,
+      "subject_type": "line"
+    }
+  ]
+]

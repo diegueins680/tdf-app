@@ -1,0 +1,125 @@
+{
+  "headRefOid": "6d00fa1463603bacecbb3210279b09ed88bbba0c",
+  "mergeStateStatus": "BLOCKED",
+  "reviewDecision": "REVIEW_REQUIRED",
+  "reviews": [],
+  "statusCheckRollup": [
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:11:11Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164037291/job/111323189782",
+      "name": "hardcoded-list-audit",
+      "startedAt": "2026-10-04T00:09:04Z",
+      "status": "COMPLETED",
+      "workflowName": "Catalog list authority"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:09:24Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164037263/job/111323190078",
+      "name": "specification-contracts",
+      "startedAt": "2026-10-04T00:09:04Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:09:28Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164037274/job/111323189741",
+      "name": "build",
+      "startedAt": "2026-10-04T00:09:04Z",
+      "status": "COMPLETED",
+      "workflowName": "Run Datadog Synthetic tests"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:11:06Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164037297/job/111323190115",
+      "name": "models-and-postgres",
+      "startedAt": "2026-10-04T00:09:04Z",
+      "status": "COMPLETED",
+      "workflowName": "Social formal and persistence verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:10:04Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164037272/job/111323189776",
+      "name": "postgres-properties",
+      "startedAt": "2026-10-04T00:09:04Z",
+      "status": "COMPLETED",
+      "workflowName": "Universal interaction verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:09:01Z",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164037272/job/111323190543",
+      "name": "native-ios-e2e",
+      "startedAt": "2026-10-04T00:09:02Z",
+      "status": "COMPLETED",
+      "workflowName": "Universal interaction verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:10:58Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164037263/job/111323190156",
+      "name": "verify",
+      "startedAt": "2026-10-04T00:09:05Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:11:06Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164037297/job/111323189987",
+      "name": "social-client",
+      "startedAt": "2026-10-04T00:09:04Z",
+      "status": "COMPLETED",
+      "workflowName": "Social formal and persistence verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:09:48Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164037263/job/111323190151",
+      "name": "postgres-foundation",
+      "startedAt": "2026-10-04T00:09:05Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:11:09Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://dash.cloudflare.com/?to=/c07256e78d05ad9a508d0aee82ac577a/pages/view/tdf-app/55d235d5-b921-4849-a5ba-c62e0da25e75",
+      "name": "Cloudflare Pages",
+      "startedAt": "2026-10-04T00:11:09Z",
+      "status": "COMPLETED",
+      "workflowName": ""
+    },
+    {
+      "__typename": "StatusContext",
+      "context": "Vercel",
+      "startedAt": "2026-10-04T00:10:19Z",
+      "state": "SUCCESS",
+      "targetUrl": "https://vercel.com/diego-saas-projects/tdf-app-tdf-hq-ui/D3hnV2qpY2AUGzjh8o3LBqTqRSLt"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:10:20Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://vercel.com/github",
+      "name": "Vercel Preview Comments",
+      "startedAt": "2026-10-04T00:10:20Z",
+      "status": "COMPLETED",
+      "workflowName": ""
+    }
+  ]
+}

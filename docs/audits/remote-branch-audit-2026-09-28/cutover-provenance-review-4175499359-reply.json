@@ -1,0 +1,70 @@
+{
+  "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4175576459",
+  "pull_request_review_id": 5403640633,
+  "id": 4175576459,
+  "node_id": "PRRC_kwDOQPdUrM744j2L",
+  "diff_hunk": "@@ -0,0 +1,155 @@\n+\"\"\"Read-only access to the existing TDF Hetzner deployment; never log secrets.\"\"\"\n+import json\n+import os\n+from pathlib import Path\n+import re\n+import shlex\n+import subprocess\n+import sys\n+\n+# Dedicated TDF deployment connection established during the 2026-09-28 cutover.\n+# Overrides permit key relocation/host rotation without changing verification.\n+DEFAULT_HOST = 'root@178.105.93.101'\n+DEFAULT_KEY = Path.home() / '.ssh/tdf_hetzner_deploy_20260928'\n+\n+REMOTE = r'''\n+import hashlib, json, os, pathlib, stat, subprocess, sys, urllib.request\n+\n+def capture(args, **kwargs):\n+    result = subprocess.run(args, capture_output=True, text=True, timeout=180, **kwargs)\n+    if result.returncode:\n+        raise RuntimeError('Read-only production command failed')\n+    return result.stdout\n+\n+def inspect(name):\n+    return json.loads(capture(['docker', 'inspect', name]))[0]\n+\n+def binding(container, service):\n+    labels = container['Config'].get('Labels') or {}\n+    if (labels.get('com.docker.compose.project') != 'tdf-production'\n+        or labels.get('com.docker.compose.service') != service\n+        or labels.get('com.docker.compose.project.working_dir') != '/opt/tdf/production'\n+        or not container['State']['Running']):\n+        raise RuntimeError('Unexpected production container identity')\n+\n+def raw_env(path):\n+    return dict(line.split('=', 1) for line in path.read_text().splitlines()\n+                if '=' in line and not line.lstrip().startswith('#'))\n+\n+def main(mode):\n+    api = inspect('tdf-production-api-1')\n+    db = inspect('tdf-production-db-1')\n+    binding(api, 'api')\n+    binding(db, 'db')\n+    mounts = [mount for mount in db.get('Mounts', [])\n+              if mount.get('Destination') == '/var/lib/postgresql/data']\n+    if (len(mounts) != 1 or mounts[0].get('Type') != 'volume'\n+        or mounts[0].get('Name') != 'tdf_production_postgres_data'\n+        or any(mount.get('Destination', '').startswith('/var/lib/postgresql/data/')\n+               for mount in db.get('Mounts', []))):\n+        raise RuntimeError('Database is not using the authoritative production volume')\n+    env = dict(entry.split('=', 1) for entry in api['Config']['Env'])\n+    dbnet = db['NetworkSettings']['Networks'].get('tdf-production_database', {})\n+    apinet = api['NetworkSettings']['Networks'].get('tdf-production_database', {})\n+    if (env.get('DB_HOST') != 'db' or env.get('DB_NAME') != 'tdf_hq'\n+        or env.get('DB_PORT', '5432') != '5432'\n+        or not apinet.get('NetworkID') or apinet.get('NetworkID') != dbnet.get('NetworkID')\n+        or 'db' not in (dbnet.get('Aliases') or [])):\n+        raise RuntimeError('API is not bound to the expected production database')\n+    configured = raw_env(pathlib.Path('/opt/tdf/production/.env')).get('TDF_IMAGE', '')\n+    image = json.loads(capture(['docker', 'image', 'inspect', api['Image']]))[0]\n+    if '@sha256:' not in configured or (api['Config'].get('Image') != configured\n+            and configured not in (image.get('RepoDigests') or [])):\n+        raise RuntimeError('Running API does not match configured immutable image')",
+  "path": "scripts/production_access.py",
+  "commit_id": "762e1ff44c6b2e86fc21630bced3b39d242b1fbb",
+  "original_commit_id": "762e1ff44c6b2e86fc21630bced3b39d242b1fbb",
+  "user": {
+    "login": "diegueins680",
+    "id": 2753581,
+    "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+    "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/diegueins680",
+    "html_url": "https://github.com/diegueins680",
+    "followers_url": "https://api.github.com/users/diegueins680/followers",
+    "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+    "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+    "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+    "repos_url": "https://api.github.com/users/diegueins680/repos",
+    "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+    "type": "User",
+    "user_view_type": "public",
+    "site_admin": false
+  },
+  "body": "Fixed in `ce1a71fe241ccc05b6114088fb36dd919974dc87`. The shared access helper now requires configured POSTGRES_IMAGE to be digest-pinned and match the running database Config.Image or its registry digest before metadata, inventory or credential access. It records configuredDatabaseImage and rejects changes during inventory. Regressions reject missing, mutable, wrong and stale database references across all modes, and accept a matching registry digest distinct from the local image ID. The previous helper fails15 new rejection cases. All11 access,6 catalog and6 mail tests plus the strict1162-candidate catalog gate and inventory check pass. Live SSH currently times out; no current production-image/inventory verification is claimed. The independent interactive-login/upload acceptance thread remains open.",
+  "created_at": "2026-10-04T00:47:17Z",
+  "updated_at": "2026-10-04T00:47:17Z",
+  "html_url": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4175576459",
+  "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468",
+  "_links": {
+    "self": {
+      "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4175576459"
+    },
+    "html": {
+      "href": "https://github.com/diegueins680/tdf-app/pull/468#discussion_r4175576459"
+    },
+    "pull_request": {
+      "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/468"
+    }
+  },
+  "reactions": {
+    "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4175576459/reactions",
+    "total_count": 0,
+    "+1": 0,
+    "-1": 0,
+    "laugh": 0,
+    "hooray": 0,
+    "confused": 0,
+    "heart": 0,
+    "rocket": 0,
+    "eyes": 0
+  },
+  "start_line": null,
+  "original_start_line": 59,
+  "start_side": "RIGHT",
+  "line": null,
+  "original_line": 63,
+  "side": "RIGHT",
+  "in_reply_to_id": 4175499359,
+  "author_association": "OWNER",
+  "original_position": 63,
+  "position": 1,
+  "subject_type": "line"
+}

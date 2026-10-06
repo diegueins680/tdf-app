@@ -1,0 +1,1255 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042084948",
+      "pull_request_review_id": 5242213209,
+      "id": 4042084948,
+      "node_id": "PRRC_kwDOQPdUrM7w7VJU",
+      "diff_hunk": "@@ -34,6 +36,8 @@ export default function ResetPasswordPage() {\n     return (params.get('token') ?? '').trim();\n   });\n   const redirectPath = useMemo(() => readSafeRedirectPath(location.search), [location.search]);\n+  const loginPath = redirectPath ? buildLoginRedirectPath(redirectPath) : '/login';\n+  const recoveryPath = `${loginPath}${loginPath.includes('?') ? '&' : '?'}recover=1`;",
+      "path": "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
+      "commit_id": "f935ba1e65fff7a7eeac7e64c7c764092247ab44",
+      "original_commit_id": "00b9029a807d275cbb0fc6879d2644d3f2709e44",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Carry the redirect into the replacement reset link**\n\nWhen an incomplete link such as `/reset?redirect=%2Ffans` uses this recovery path, the redirect survives only in the current login URL. Submitting the recovery dialog still calls `requestPasswordReset(email)`, whose payload contains only the email, while the backend generates `/reset?token=...` without a redirect; therefore, opening the replacement email and completing the reset sends the user to their default landing page rather than `/fans`. Pass the validated redirect through the reset request and generated email link, or otherwise persist it across the email round trip.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-17T22:54:02Z",
+      "updated_at": "2026-09-17T22:54:02Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4042084948",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042084948"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4042084948"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042084948/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 40,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 27,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042579122",
+      "pull_request_review_id": 5242789123,
+      "id": 4042579122,
+      "node_id": "PRRC_kwDOQPdUrM7w9Nyy",
+      "diff_hunk": "@@ -34,6 +36,8 @@ export default function ResetPasswordPage() {\n     return (params.get('token') ?? '').trim();\n   });\n   const redirectPath = useMemo(() => readSafeRedirectPath(location.search), [location.search]);\n+  const loginPath = redirectPath ? buildLoginRedirectPath(redirectPath) : '/login';\n+  const recoveryPath = `${loginPath}${loginPath.includes('?') ? '&' : '?'}recover=1`;",
+      "path": "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
+      "commit_id": "f935ba1e65fff7a7eeac7e64c7c764092247ab44",
+      "original_commit_id": "00b9029a807d275cbb0fc6879d2644d3f2709e44",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in a4c5e91fe, now integrated in38256cf721d92380c8cfc0b6d19e10bd8703c233. The frontend passes the validated destination as an optional query on /v1/password-reset (body remains {email}); the backend threads it into the real email-link builder, accepts only bounded safe local paths and URL-encodes it. Reset still checks the new session permissions. Hspec executed5 examples and100 generated untrusted destinations, and API/login/routing30 tests passed. Production-bundle ES/EN recovery/browser coverage passes across5 profiles. No SMTP delivery is asserted. Updated canonical web/mobile clients preserve old-client compatibility; deploy backend first.",
+      "created_at": "2026-09-18T00:25:32Z",
+      "updated_at": "2026-09-18T00:25:32Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4042579122",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042579122"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4042579122"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042579122/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 40,
+      "side": "RIGHT",
+      "in_reply_to_id": 4042084948,
+      "author_association": "OWNER",
+      "original_position": 27,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042599613",
+      "pull_request_review_id": 5242813124,
+      "id": 4042599613,
+      "node_id": "PRRC_kwDOQPdUrM7w9Sy9",
+      "diff_hunk": "@@ -525,6 +535,11 @@\n       \"id\": \"2026-09-17_directory_event_privacy_composition\",\n       \"path\": \"tdf-hq/sql/2026-09-17_directory_event_privacy_composition.sql\",\n       \"introducedBy\": \"9ddd014b9d6a897d15608d9d23f4445c4c7118eb\"\n+    },\n+    {\n+      \"id\": \"2026-09-16_artist_self_service\",\n+      \"path\": \"tdf-hq/sql/2026-09-16_artist_self_service.sql\",\n+      \"introducedBy\": \"d8fd169c1bfec56c4f24bab7a49a0d56bbadeb37\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "775934f75c5ea0da089bfc409fbbaf936111bd4f",
+      "original_commit_id": "38256cf721d92380c8cfc0b6d19e10bd8703c233",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Point the migration at an ancestor of this release**\n\nFor this exact commit, `git merge-base --is-ancestor d8fd169c1bfec56c4f24bab7a49a0d56bbadeb37 eb00646d1ee38743f60fa0538696e86f27cfedd5` fails, and running the production release planner aborts with \u201cnot an ancestor of release.\u201d Because `resolveReleaseContext` validates every `introducedBy` before planning or releasing, this commit cannot enter the guarded backend release lane, so the new policy migration will never be applied; anchor the entry to a commit contained in the release ancestry.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T00:28:50Z",
+      "updated_at": "2026-09-18T00:28:50Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4042599613",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042599613"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4042599613"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042599613/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 542,
+      "original_line": 542,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 61,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042612006",
+      "pull_request_review_id": 5242827532,
+      "id": 4042612006,
+      "node_id": "PRRC_kwDOQPdUrM7w9V0m",
+      "diff_hunk": "@@ -525,6 +535,11 @@\n       \"id\": \"2026-09-17_directory_event_privacy_composition\",\n       \"path\": \"tdf-hq/sql/2026-09-17_directory_event_privacy_composition.sql\",\n       \"introducedBy\": \"9ddd014b9d6a897d15608d9d23f4445c4c7118eb\"\n+    },\n+    {\n+      \"id\": \"2026-09-16_artist_self_service\",\n+      \"path\": \"tdf-hq/sql/2026-09-16_artist_self_service.sql\",\n+      \"introducedBy\": \"d8fd169c1bfec56c4f24bab7a49a0d56bbadeb37\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "775934f75c5ea0da089bfc409fbbaf936111bd4f",
+      "original_commit_id": "38256cf721d92380c8cfc0b6d19e10bd8703c233",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Rechecked against the actual published release head38256cf721d92380c8cfc0b6d19e10bd8703c233. The comment references intermediate eb00646, but d8fd169c1bfec56c4f24bab7a49a0d56bbadeb37 IS an ancestor of the current head (git merge-base --is-ancestor exits0), retained through normal dependency merges. node scripts/production-release.mjs plan --sha38256cf721d92380c8cfc0b6d19e10bd8703c233 completed successfully and produced the guarded dry-run plan. No migration or introduction SHA was rewritten. Current CI production-migrations also passed. This historical intermediate-commit issue does not block the current release tree.",
+      "created_at": "2026-09-18T00:30:48Z",
+      "updated_at": "2026-09-18T00:30:48Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4042612006",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042612006"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4042612006"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042612006/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 542,
+      "original_line": 542,
+      "side": "RIGHT",
+      "in_reply_to_id": 4042599613,
+      "author_association": "OWNER",
+      "original_position": 61,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042681843",
+      "pull_request_review_id": 5242909359,
+      "id": 4042681843,
+      "node_id": "PRRC_kwDOQPdUrM7w9m3z",
+      "diff_hunk": "@@ -1184,6 +1185,43 @@ createSavedSearch user idempotency request@SavedSearchCreateRequest\n   runDB $ rawExecute \"INSERT INTO directory_saved_search(id,account_party_id,name,canonical_query,query_hash,alerts_enabled,alert_frequency) VALUES (?,?,?,?::jsonb,encode(digest(?,'sha256'),'hex'),?,?) ON CONFLICT(account_party_id,query_hash) DO UPDATE SET name=EXCLUDED.name,alerts_enabled=EXCLUDED.alerts_enabled,alert_frequency=EXCLUDED.alert_frequency,updated_at=now()\" [toPersistValue savedId,toPersistValue (auPartyId user),PersistText (T.strip name),PersistText queryText,PersistText queryText,PersistBool alertsEnabled,PersistText alertFrequency]\n   jsonOne err500 \"SELECT jsonb_build_object('id',id,'name',name,'canonicalQuery',canonical_query,'alertsEnabled',alerts_enabled,'alertFrequency',alert_frequency) FROM directory_saved_search WHERE account_party_id=? AND query_hash=encode(digest(?,'sha256'),'hex')\" [toPersistValue (auPartyId user),PersistText queryText]\n \n+-- Authenticated, naturally idempotent preparation, not a management grant.\n+-- Serialize on the existing core artist before looking up/inserting the twin.\n+-- Never publish a draft or disclose its private fields to the claimant.\n+prepareArtistClaim :: AuthedUser -> Int64 -> AppM Value\n+prepareArtistClaim _user partyId = do\n+  result <- runDB $ do\n+    artists <- rawSql\n+      \"SELECT party.display_name FROM party JOIN artist_profile artist ON artist.artist_party_id=party.id WHERE party.id=? FOR UPDATE OF party\"\n+      [PersistInt64 partyId] :: SqlPersistT IO [Single Text]\n+    case artists of\n+      [] -> pure Nothing\n+      Single artistName : _ -> do\n+        targets <- rawSql\n+          ( \"SELECT resolved.id::text FROM directory_profile source JOIN directory_profile resolved \"\n+         <> \"ON resolved.id=coalesce(source.canonical_profile_id,source.id) \"\n+         <> \"WHERE source.subject_party_id=? ORDER BY (source.id=resolved.id) DESC,source.updated_at DESC,source.id LIMIT 1\" )",
+      "path": "tdf-hq/src/TDF/Server/Directory.hs",
+      "commit_id": "8c2e5f9dd7753031b77a64e01494c4d243a457b6",
+      "original_commit_id": "8c2e5f9dd7753031b77a64e01494c4d243a457b6",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Restrict prepared claims to artist profiles**\n\nWhen an artist Party also owns another directory profile (for example, a personal, venue, or company profile), this query considers every profile kind and selects whichever direct profile was updated most recently. The submitted administration claim therefore targets that unrelated profile, and `changeClaimStatus` later grants full manager capabilities for that exact ID when approved, potentially exposing its private data while leaving the artist profile unmanaged. Filter both the source and resolved target to the intended artist/band profile kinds, or create a dedicated private artist target when none exists.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T00:42:12Z",
+      "updated_at": "2026-09-18T00:42:12Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4042681843",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042681843"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4042681843"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4042681843/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 1203,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 27,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043185940",
+      "pull_request_review_id": 5243527396,
+      "id": 4043185940,
+      "node_id": "PRRC_kwDOQPdUrM7w_h8U",
+      "diff_hunk": "@@ -1184,6 +1185,43 @@ createSavedSearch user idempotency request@SavedSearchCreateRequest\n   runDB $ rawExecute \"INSERT INTO directory_saved_search(id,account_party_id,name,canonical_query,query_hash,alerts_enabled,alert_frequency) VALUES (?,?,?,?::jsonb,encode(digest(?,'sha256'),'hex'),?,?) ON CONFLICT(account_party_id,query_hash) DO UPDATE SET name=EXCLUDED.name,alerts_enabled=EXCLUDED.alerts_enabled,alert_frequency=EXCLUDED.alert_frequency,updated_at=now()\" [toPersistValue savedId,toPersistValue (auPartyId user),PersistText (T.strip name),PersistText queryText,PersistText queryText,PersistBool alertsEnabled,PersistText alertFrequency]\n   jsonOne err500 \"SELECT jsonb_build_object('id',id,'name',name,'canonicalQuery',canonical_query,'alertsEnabled',alerts_enabled,'alertFrequency',alert_frequency) FROM directory_saved_search WHERE account_party_id=? AND query_hash=encode(digest(?,'sha256'),'hex')\" [toPersistValue (auPartyId user),PersistText queryText]\n \n+-- Authenticated, naturally idempotent preparation, not a management grant.\n+-- Serialize on the existing core artist before looking up/inserting the twin.\n+-- Never publish a draft or disclose its private fields to the claimant.\n+prepareArtistClaim :: AuthedUser -> Int64 -> AppM Value\n+prepareArtistClaim _user partyId = do\n+  result <- runDB $ do\n+    artists <- rawSql\n+      \"SELECT party.display_name FROM party JOIN artist_profile artist ON artist.artist_party_id=party.id WHERE party.id=? FOR UPDATE OF party\"\n+      [PersistInt64 partyId] :: SqlPersistT IO [Single Text]\n+    case artists of\n+      [] -> pure Nothing\n+      Single artistName : _ -> do\n+        targets <- rawSql\n+          ( \"SELECT resolved.id::text FROM directory_profile source JOIN directory_profile resolved \"\n+         <> \"ON resolved.id=coalesce(source.canonical_profile_id,source.id) \"\n+         <> \"WHERE source.subject_party_id=? ORDER BY (source.id=resolved.id) DESC,source.updated_at DESC,source.id LIMIT 1\" )",
+      "path": "tdf-hq/src/TDF/Server/Directory.hs",
+      "commit_id": "8c2e5f9dd7753031b77a64e01494c4d243a457b6",
+      "original_commit_id": "8c2e5f9dd7753031b77a64e01494c4d243a457b6",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Resolved in f935ba1e6 by integrating approved #406 (main db69e053). Source and resolved resource must remain artist-kind; band/person selection would target a different identity. The concurrent bot change 775934f75 is preserved in merge ancestry and its person-only/mixed/canonical-person fixtures are retained, with canonical-kind denial matching the reviewed contract. Actual HTTP/PostgreSQL17 union fixture passes; no management grant, publication, credential creation, or duplicate claim. Evidence: docs/ux-ui-audit/2026-09-17/evidence/artist-claim-kind-union-http.log; handler is byte-identical to reviewed main. ArtistClaimKind TLC plus unsafe negative control documents the boundary.",
+      "created_at": "2026-09-18T02:09:57Z",
+      "updated_at": "2026-09-18T02:09:58Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043185940",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043185940"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043185940"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043185940/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 1203,
+      "side": "RIGHT",
+      "in_reply_to_id": 4042681843,
+      "author_association": "OWNER",
+      "original_position": 27,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043218424",
+      "pull_request_review_id": 5243568222,
+      "id": 4043218424,
+      "node_id": "PRRC_kwDOQPdUrM7w_p34",
+      "diff_hunk": "@@ -28,82 +29,90 @@ export default function LiveSessionPublicPage() {\n   const [codeStatus, setCodeStatus] = useState<'idle' | 'validating' | 'valid' | 'invalid'>('idle');\n   const [validationMessage, setValidationMessage] = useState<string | null>(null);\n   const [lastValidatedCode, setLastValidatedCode] = useState('');\n-  const canUseForm = codeStatus === 'valid';\n+  const canUseForm = codeStatus === 'valid' && accessCode.trim() === lastValidatedCode;\n+  const validationGeneration = useRef(0);\n+  const pendingValidation = useRef<AbortController | null>(null);\n+  const pendingDebounce = useRef<number | null>(null);\n+  const invalidateValidation = useCallback(() => {\n+    validationGeneration.current += 1;\n+    pendingValidation.current?.abort();\n+    if (pendingDebounce.current !== null) window.clearTimeout(pendingDebounce.current);\n+  }, []);\n+  useEffect(() => invalidateValidation, [invalidateValidation]);\n   const [showCode, setShowCode] = useState(false);\n \n   const validateAccessCode = useCallback(async (codeOverride?: string) => {\n     const code = (codeOverride ?? accessCode).trim();\n+    invalidateValidation();\n+    const generation = validationGeneration.current;\n     if (!code) {\n       setValidationMessage('Ingresa un c\u00f3digo v\u00e1lido.');\n       setCodeStatus('invalid');\n       return;\n     }\n     setCodeStatus('validating');\n     setValidationMessage(null);\n+    const controller = new AbortController();\n+    pendingValidation.current = controller;\n+    const timeout = window.setTimeout(() => controller.abort(), 30_000);\n     try {\n-      const base = import.meta.env.VITE_API_BASE ?? '';\n-      if (base) {\n-        const res = await fetch(`${base}/live-sessions/intake/ping`, {\n-          headers: { Authorization: `Bearer ${code}` },\n-        });\n-        if (!res.ok) {\n-          throw new Error('invalid');\n-        }\n+      const res = await fetch(`${resolveApiBase()}/session`, {\n+        headers: { Authorization: `Bearer ${code}` },\n+        signal: controller.signal,\n+      });",
+      "path": "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx",
+      "commit_id": "209b21b07f304d21ab397353653b531646ae72be",
+      "original_commit_id": "f935ba1e65fff7a7eeac7e64c7c764092247ab44",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Validate access codes without ambient session cookies**\n\nWhen this page is served from the API origin and the browser already has a different session cookie, this `fetch` sends both that cookie and the entered bearer code. `extractTokenFromHeaders` rejects differing cookie/bearer credentials, so `/session` returns `null` and a valid invitation code is reported as invalid. This blocks signed-in users who open a code issued for another account; validate the code without ambient cookies or explicitly choose which identity should authorize the intake.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T02:15:23Z",
+      "updated_at": "2026-09-18T02:15:23Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043218424",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043218424"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043218424"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043218424/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 58,
+      "original_start_line": 59,
+      "start_side": "RIGHT",
+      "line": 62,
+      "original_line": 62,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 57,
+      "position": 62,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043218427",
+      "pull_request_review_id": 5243568222,
+      "id": 4043218427,
+      "node_id": "PRRC_kwDOQPdUrM7w_p37",
+      "diff_hunk": "@@ -116,17 +118,14 @@ sendPasswordResetEmail\n   -> Text   -- ^ recipient email\n   -> Text   -- ^ reset token\n   -> Maybe Text -- ^ optional app URL\n+  -> Maybe Text -- ^ optional local return destination\n   -> IO ()\n-sendPasswordResetEmail Nothing _ _ _ _ =\n+sendPasswordResetEmail Nothing _ _ _ _ _ =\n   putStrLn \"[Email] SMTP not configured; skipped password-reset email.\"\n-sendPasswordResetEmail (Just cfg) name email token mAppUrl = do\n+sendPasswordResetEmail (Just cfg) name email token mAppUrl redirect = do\n   let subject   = \"Restablecer tu contrase\u00f1a de TDF Records\"\n       greeting  = if T.null name then \"Hola,\" else \"Hola \" <> name <> \",\"\n-      baseUrl   = resolveAppBase mAppUrl\n-      sanitizedBase =\n-        let trimmed = T.dropWhileEnd (== '/') baseUrl\n-        in if T.null trimmed then baseUrl else trimmed\n-      resetLink = sanitizedBase <> \"/reset?token=\" <> token\n+      resetLink = passwordResetLink mAppUrl token redirect",
+      "path": "tdf-hq/src/TDF/Email.hs",
+      "commit_id": "f935ba1e65fff7a7eeac7e64c7c764092247ab44",
+      "original_commit_id": "f935ba1e65fff7a7eeac7e64c7c764092247ab44",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Carry the selected locale through recovery emails**\n\nWhen an English user opens the recovery email in a new browser, another device, or after clearing storage, the selected locale is lost: this new API path passes only the redirect, the email subject/body remain Spanish, and the generated link contains no locale, so the reset page falls back to Spanish. Thread the account/request locale into the email content and reset URL so the advertised English recovery journey survives the email round trip.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T02:15:23Z",
+      "updated_at": "2026-09-18T02:15:23Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043218427",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043218427"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043218427"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043218427/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 125,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 128,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 36,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043218434",
+      "pull_request_review_id": 5243568222,
+      "id": 4043218434,
+      "node_id": "PRRC_kwDOQPdUrM7w_p4C",
+      "diff_hunk": "@@ -1338,15 +1341,12 @@ export default function LoginPage() {\n                 <Checkbox\n                   checked={termsAccepted}\n                   onChange={(event) => setTermsAccepted(event.target.checked)}\n-                  inputProps={{ 'aria-label': 'Acepto los t\u00e9rminos y la pol\u00edtica de privacidad' }}\n+                  inputProps={{ 'aria-label': t('authEntry.acceptConsent') }}\n                 />\n               )}\n               label={(\n                 <Typography variant=\"body2\">\n-                  Acepto los{' '}\n-                  <Link href=\"/account/terms.html\" target=\"_blank\" rel=\"noreferrer\">t\u00e9rminos de la cuenta</Link>\n-                  {' '}y la{' '}\n-                  <Link href=\"/account/privacy.html\" target=\"_blank\" rel=\"noreferrer\">pol\u00edtica de privacidad de la cuenta</Link>.\n+                  <Trans i18nKey=\"authEntry.consentText\" components={{ terms: <Link href={i18n.resolvedLanguage?.startsWith('en') ? '/account/terms.html' : '/account/terms-es.html'} target=\"_blank\" rel=\"noreferrer\" />, privacy: <Link href={i18n.resolvedLanguage?.startsWith('en') ? '/account/privacy.html' : '/account/privacy-es.html'} target=\"_blank\" rel=\"noreferrer\" /> }} />",
+      "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
+      "commit_id": "f935ba1e65fff7a7eeac7e64c7c764092247ab44",
+      "original_commit_id": "f935ba1e65fff7a7eeac7e64c7c764092247ab44",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Route fallback locales to matching policy pages**\n\nFor persisted `fr`, `de`, or `pt` locales, `authEntry` has no locale-specific catalog and therefore falls back to English, but this condition sends every non-English locale to the Spanish terms and privacy pages. Those supported users see an English consent sentence whose links unexpectedly open Spanish legal text; select Spanish only for an `es` locale and otherwise use the English policy until matching translations exist.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T02:15:23Z",
+      "updated_at": "2026-09-18T02:15:23Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043218434",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043218434"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043218434"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043218434/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 1349,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 610,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043486101",
+      "pull_request_review_id": 5243882461,
+      "id": 4043486101,
+      "node_id": "PRRC_kwDOQPdUrM7xArOV",
+      "diff_hunk": "@@ -28,82 +29,90 @@ export default function LiveSessionPublicPage() {\n   const [codeStatus, setCodeStatus] = useState<'idle' | 'validating' | 'valid' | 'invalid'>('idle');\n   const [validationMessage, setValidationMessage] = useState<string | null>(null);\n   const [lastValidatedCode, setLastValidatedCode] = useState('');\n-  const canUseForm = codeStatus === 'valid';\n+  const canUseForm = codeStatus === 'valid' && accessCode.trim() === lastValidatedCode;\n+  const validationGeneration = useRef(0);\n+  const pendingValidation = useRef<AbortController | null>(null);\n+  const pendingDebounce = useRef<number | null>(null);\n+  const invalidateValidation = useCallback(() => {\n+    validationGeneration.current += 1;\n+    pendingValidation.current?.abort();\n+    if (pendingDebounce.current !== null) window.clearTimeout(pendingDebounce.current);\n+  }, []);\n+  useEffect(() => invalidateValidation, [invalidateValidation]);\n   const [showCode, setShowCode] = useState(false);\n \n   const validateAccessCode = useCallback(async (codeOverride?: string) => {\n     const code = (codeOverride ?? accessCode).trim();\n+    invalidateValidation();\n+    const generation = validationGeneration.current;\n     if (!code) {\n       setValidationMessage('Ingresa un c\u00f3digo v\u00e1lido.');\n       setCodeStatus('invalid');\n       return;\n     }\n     setCodeStatus('validating');\n     setValidationMessage(null);\n+    const controller = new AbortController();\n+    pendingValidation.current = controller;\n+    const timeout = window.setTimeout(() => controller.abort(), 30_000);\n     try {\n-      const base = import.meta.env.VITE_API_BASE ?? '';\n-      if (base) {\n-        const res = await fetch(`${base}/live-sessions/intake/ping`, {\n-          headers: { Authorization: `Bearer ${code}` },\n-        });\n-        if (!res.ok) {\n-          throw new Error('invalid');\n-        }\n+      const res = await fetch(`${resolveApiBase()}/session`, {\n+        headers: { Authorization: `Bearer ${code}` },\n+        signal: controller.signal,\n+      });",
+      "path": "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx",
+      "commit_id": "209b21b07f304d21ab397353653b531646ae72be",
+      "original_commit_id": "f935ba1e65fff7a7eeac7e64c7c764092247ab44",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Addressed in 6479e0350: validation and submission use the verified Bearer with credentials omitted; no global/transient session mutation or public CRM prewrites. Drafts are scoped to verified party and public/internal form; stale/ABA receipts are fenced. Actual browser plus isolated PostgreSQL17 persisted the intake under the code account while another cookie account remained unchanged. Component regressions and TLC safety/liveness with negative controls pass; see audit evidence/review-browser.json and live-intake-authority-formal.log.",
+      "created_at": "2026-09-18T03:11:57Z",
+      "updated_at": "2026-09-18T03:11:57Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043486101",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043486101"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043486101"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043486101/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 58,
+      "original_start_line": 59,
+      "start_side": "RIGHT",
+      "line": 62,
+      "original_line": 62,
+      "side": "RIGHT",
+      "in_reply_to_id": 4043218424,
+      "author_association": "OWNER",
+      "original_position": 57,
+      "position": 62,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043487208",
+      "pull_request_review_id": 5243883741,
+      "id": 4043487208,
+      "node_id": "PRRC_kwDOQPdUrM7xArfo",
+      "diff_hunk": "@@ -116,17 +118,14 @@ sendPasswordResetEmail\n   -> Text   -- ^ recipient email\n   -> Text   -- ^ reset token\n   -> Maybe Text -- ^ optional app URL\n+  -> Maybe Text -- ^ optional local return destination\n   -> IO ()\n-sendPasswordResetEmail Nothing _ _ _ _ =\n+sendPasswordResetEmail Nothing _ _ _ _ _ =\n   putStrLn \"[Email] SMTP not configured; skipped password-reset email.\"\n-sendPasswordResetEmail (Just cfg) name email token mAppUrl = do\n+sendPasswordResetEmail (Just cfg) name email token mAppUrl redirect = do\n   let subject   = \"Restablecer tu contrase\u00f1a de TDF Records\"\n       greeting  = if T.null name then \"Hola,\" else \"Hola \" <> name <> \",\"\n-      baseUrl   = resolveAppBase mAppUrl\n-      sanitizedBase =\n-        let trimmed = T.dropWhileEnd (== '/') baseUrl\n-        in if T.null trimmed then baseUrl else trimmed\n-      resetLink = sanitizedBase <> \"/reset?token=\" <> token\n+      resetLink = passwordResetLink mAppUrl token redirect",
+      "path": "tdf-hq/src/TDF/Email.hs",
+      "commit_id": "f935ba1e65fff7a7eeac7e64c7c764092247ab44",
+      "original_commit_id": "f935ba1e65fff7a7eeac7e64c7c764092247ab44",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Addressed in 6479e0350 and merged mobile PR94. Backward-compatible optional locale query controls Spanish/English email subject, text, HTML language, CTA and lang in the safe reset link. Fresh-browser and previously-Spanish storage cases pass in Chromium, Firefox and WebKit; backend8 examples/100 QuickCheck and mobile461 tests pass. Existing callers without locale retain legacy Spanish behavior.",
+      "created_at": "2026-09-18T03:12:18Z",
+      "updated_at": "2026-09-18T03:12:18Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043487208",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043487208"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043487208"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043487208/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 125,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 128,
+      "side": "RIGHT",
+      "in_reply_to_id": 4043218427,
+      "author_association": "OWNER",
+      "original_position": 36,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043487274",
+      "pull_request_review_id": 5243883820,
+      "id": 4043487274,
+      "node_id": "PRRC_kwDOQPdUrM7xArgq",
+      "diff_hunk": "@@ -1338,15 +1341,12 @@ export default function LoginPage() {\n                 <Checkbox\n                   checked={termsAccepted}\n                   onChange={(event) => setTermsAccepted(event.target.checked)}\n-                  inputProps={{ 'aria-label': 'Acepto los t\u00e9rminos y la pol\u00edtica de privacidad' }}\n+                  inputProps={{ 'aria-label': t('authEntry.acceptConsent') }}\n                 />\n               )}\n               label={(\n                 <Typography variant=\"body2\">\n-                  Acepto los{' '}\n-                  <Link href=\"/account/terms.html\" target=\"_blank\" rel=\"noreferrer\">t\u00e9rminos de la cuenta</Link>\n-                  {' '}y la{' '}\n-                  <Link href=\"/account/privacy.html\" target=\"_blank\" rel=\"noreferrer\">pol\u00edtica de privacidad de la cuenta</Link>.\n+                  <Trans i18nKey=\"authEntry.consentText\" components={{ terms: <Link href={i18n.resolvedLanguage?.startsWith('en') ? '/account/terms.html' : '/account/terms-es.html'} target=\"_blank\" rel=\"noreferrer\" />, privacy: <Link href={i18n.resolvedLanguage?.startsWith('en') ? '/account/privacy.html' : '/account/privacy-es.html'} target=\"_blank\" rel=\"noreferrer\" /> }} />",
+      "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
+      "commit_id": "f935ba1e65fff7a7eeac7e64c7c764092247ab44",
+      "original_commit_id": "f935ba1e65fff7a7eeac7e64c7c764092247ab44",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Addressed in 6479e0350. Spanish policy links are selected only for es; the English originals are used for en/fr/de/pt to match the existing web auth fallback. Five locale component regressions pass; policy versions and access to original documents are preserved.",
+      "created_at": "2026-09-18T03:12:19Z",
+      "updated_at": "2026-09-18T03:12:19Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043487274",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043487274"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043487274"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043487274/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 1349,
+      "side": "RIGHT",
+      "in_reply_to_id": 4043218434,
+      "author_association": "OWNER",
+      "original_position": 610,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043520228",
+      "pull_request_review_id": 5243920493,
+      "id": 4043520228,
+      "node_id": "PRRC_kwDOQPdUrM7xAzjk",
+      "diff_hunk": "@@ -404,8 +402,8 @@ export default function LoginPage() {\n       navigate(targetPath, { replace: true });\n     } catch (error) {\n       captureGrowthEvent(analytics, 'login_failed', { route: '/login', method: 'password' });\n-      const message = error instanceof Error ? error.message : 'No se pudo iniciar sesi\u00f3n.';\n-      setFormError(message.trim() === '' ? 'No se pudo iniciar sesi\u00f3n.' : message);\n+      const message = error instanceof Error ? error.message : t('authEntry.loginError');\n+      setFormError(message.trim() === '' ? t('authEntry.loginError') : message);",
+      "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
+      "commit_id": "3def67665969602b1d1f66b0e51375865cf7f1b7",
+      "original_commit_id": "6479e0350915271e2b89ad579e393f805fd6fc1c",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Localize propagated login failures**\n\nWhen English is selected and a password login fails before receiving an HTTP response, this branch renders `error.message` verbatim, but `authFetch` produces the hard-coded Spanish network and timeout messages from `src/api/auth.ts`; an empty 401 response also falls back to Spanish `Credenciales inv\u00e1lidas`. Consequently, the newly translated English login journey switches back to Spanish on common failure paths. Map these transport/fallback errors to localized keys instead of displaying the API message directly.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T03:21:03Z",
+      "updated_at": "2026-09-18T03:21:03Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043520228",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043520228"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043520228"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043520228/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 405,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 406,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 116,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043572724",
+      "pull_request_review_id": 5243981505,
+      "id": 4043572724,
+      "node_id": "PRRC_kwDOQPdUrM7xBAX0",
+      "diff_hunk": "@@ -333,11 +375,14 @@ sendMailWithLogging cfg toAddr _subject mail = do\n       BS.putStrLn (TE.encodeUtf8 (\"[Email] Sent registration email to \" <> T.pack toEmail))\n \n buildMail :: EmailConfig -> Address -> Text -> Text -> Text -> [Text] -> Maybe Text -> Mime.Mail\n-buildMail cfg toAddr subject preheader greeting bodyLines mCtaUrl =\n+buildMail = buildMailLocalized \"es\" \"Ver detalles del curso\"",
+      "path": "tdf-hq/src/TDF/Email.hs",
+      "commit_id": "3def67665969602b1d1f66b0e51375865cf7f1b7",
+      "original_commit_id": "3def67665969602b1d1f66b0e51375865cf7f1b7",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Restore a generic CTA for non-course transactional emails**\n\nFor recipients whose client displays the plain-text MIME part, this default now labels every `buildMail` link as \u201cVer detalles del curso.\u201d The same helper is used by account-created, marketplace-order, engineer-booking, ticket-confirmation, ticket-transfer, waitlist, and test emails, so those messages now present an unrelated course CTA before their actual account, order, booking, or ticket URL; keep the default label generic and supply the course-specific label only from the course senders.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T03:30:37Z",
+      "updated_at": "2026-09-18T03:30:37Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043572724",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043572724"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043572724"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043572724/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 378,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 116,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043604518",
+      "pull_request_review_id": 5244016595,
+      "id": 4043604518,
+      "node_id": "PRRC_kwDOQPdUrM7xBIIm",
+      "diff_hunk": "@@ -404,8 +402,8 @@ export default function LoginPage() {\n       navigate(targetPath, { replace: true });\n     } catch (error) {\n       captureGrowthEvent(analytics, 'login_failed', { route: '/login', method: 'password' });\n-      const message = error instanceof Error ? error.message : 'No se pudo iniciar sesi\u00f3n.';\n-      setFormError(message.trim() === '' ? 'No se pudo iniciar sesi\u00f3n.' : message);\n+      const message = error instanceof Error ? error.message : t('authEntry.loginError');\n+      setFormError(message.trim() === '' ? t('authEntry.loginError') : message);",
+      "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
+      "commit_id": "3def67665969602b1d1f66b0e51375865cf7f1b7",
+      "original_commit_id": "6479e0350915271e2b89ad579e393f805fd6fc1c",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in aa31d5ccf: auth transport/status errors carry stable codes translated by login, Google and signup views. 27 focused tests and 25 production-bundle browser cases pass across five profiles/three engines, including network rejection and empty 401 in ES/EN with preserved input/destination. Timeout code exercised by the actual API unit with fake time; TypeScript/lint pass.",
+      "created_at": "2026-09-18T03:38:57Z",
+      "updated_at": "2026-09-18T03:38:57Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043604518",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043604518"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043604518"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043604518/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 405,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 406,
+      "side": "RIGHT",
+      "in_reply_to_id": 4043520228,
+      "author_association": "OWNER",
+      "original_position": 116,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043604639",
+      "pull_request_review_id": 5244016749,
+      "id": 4043604639,
+      "node_id": "PRRC_kwDOQPdUrM7xBIKf",
+      "diff_hunk": "@@ -333,11 +375,14 @@ sendMailWithLogging cfg toAddr _subject mail = do\n       BS.putStrLn (TE.encodeUtf8 (\"[Email] Sent registration email to \" <> T.pack toEmail))\n \n buildMail :: EmailConfig -> Address -> Text -> Text -> Text -> [Text] -> Maybe Text -> Mime.Mail\n-buildMail cfg toAddr subject preheader greeting bodyLines mCtaUrl =\n+buildMail = buildMailLocalized \"es\" \"Ver detalles del curso\"",
+      "path": "tdf-hq/src/TDF/Email.hs",
+      "commit_id": "3def67665969602b1d1f66b0e51375865cf7f1b7",
+      "original_commit_id": "3def67665969602b1d1f66b0e51375865cf7f1b7",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in aa31d5ccf: shared default is Ver detalles again; only the two course senders explicitly use Ver detalles del curso. Password reset retains its localized dedicated CTA. Stack/GHC9.10.3 rebuilt Email.hs and existing reset Hspec/QuickCheck regression passed (8 examples/100 generated). No real SMTP delivery claimed. Introduced regression tracked as UX-260917-029.",
+      "created_at": "2026-09-18T03:39:00Z",
+      "updated_at": "2026-09-18T03:39:00Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043604639",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043604639"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043604639"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043604639/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 378,
+      "side": "RIGHT",
+      "in_reply_to_id": 4043572724,
+      "author_association": "OWNER",
+      "original_position": 116,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043619890",
+      "pull_request_review_id": 5244033172,
+      "id": 4043619890,
+      "node_id": "PRRC_kwDOQPdUrM7xBL4y",
+      "diff_hunk": "@@ -151,7 +155,7 @@ export default function ResetPasswordPage() {\n         message:\n           error instanceof Error && error.message.trim() !== ''\n             ? error.message\n-            : 'No pudimos restablecer la contrase\u00f1a.',\n+            : t('authEntry.resetError'),",
+      "path": "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
+      "commit_id": "3b0db9250e4c45c303158f94c3491c57df507c5a",
+      "original_commit_id": "aa31d5ccfa6316aa2e23f3ac1399f9e6ffd5b0e5",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Localize reset-confirmation transport errors**\n\nWhen a user follows an English `lang=en` recovery link and the confirmation request times out or fails offline, `authFetch` supplies an `AuthRequestError` whose message is still the hard-coded Spanish network/timeout text. This branch always prefers that nonempty `error.message`, so the translated fallback is bypassed and the English reset journey switches to Spanish. Map the structured auth error through the locale-aware error helper before displaying it.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T03:43:07Z",
+      "updated_at": "2026-09-18T03:43:07Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043619890",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043619890"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043619890"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043619890/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 156,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 158,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 79,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043680351",
+      "pull_request_review_id": 5244102811,
+      "id": 4043680351,
+      "node_id": "PRRC_kwDOQPdUrM7xBapf",
+      "diff_hunk": "@@ -151,7 +155,7 @@ export default function ResetPasswordPage() {\n         message:\n           error instanceof Error && error.message.trim() !== ''\n             ? error.message\n-            : 'No pudimos restablecer la contrase\u00f1a.',\n+            : t('authEntry.resetError'),",
+      "path": "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
+      "commit_id": "3b0db9250e4c45c303158f94c3491c57df507c5a",
+      "original_commit_id": "aa31d5ccfa6316aa2e23f3ac1399f9e6ffd5b0e5",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 209b21b07: reset confirmation now presents structured transport failures through the same locale-aware authErrorMessage helper as login and reset requests. Added browser scenarios for offline reset confirmation in Spanish and English; both passed on an isolated Chromium server. Existing helper tests also passed (3 tests), including timeout translation.",
+      "created_at": "2026-09-18T03:58:30Z",
+      "updated_at": "2026-09-18T03:58:30Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043680351",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043680351"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043680351"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/422"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043680351/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 156,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 158,
+      "side": "RIGHT",
+      "in_reply_to_id": 4043619890,
+      "author_association": "OWNER",
+      "original_position": 79,
+      "position": 1,
+      "subject_type": "line"
+    }
+  ]
+]

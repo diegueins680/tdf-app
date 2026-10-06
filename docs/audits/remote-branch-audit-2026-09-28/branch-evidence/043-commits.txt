@@ -1,0 +1,7 @@
+66fa88e90c80866e0090761addfabd9f1e817cc2 2026-09-16T11:26:49-05:00 continuous-improvement-loop[bot] docs(payments): record atomic refund accounting evidence and rollout gates
+6723bd8436e33d36c604cfba376a2d90f912436e 2026-09-16T11:18:21-05:00 continuous-improvement-loop[bot] test(payments): property-check canonical refunds across Int64 balances
+0d8dc52655f1eb5b485cae500f476ed5188a2a7d 2026-09-16T10:19:43-05:00 continuous-improvement-loop[bot] fix(payments): atomically advance canonical refund accounting
+cd2044abf47ea9ca1cb7e98c5c89ccefbba59a70 2026-09-16T10:07:41-05:00 continuous-improvement-loop[bot] test(payments): bind refund history checks to canonical event names
+ab02c8b1f0748c482642f06565e8775c5b3d2377 2026-09-16T10:06:19-05:00 continuous-improvement-loop[bot] test(payments): expose refund intent drift and atomicity gaps
+a3be3fc12a96c3992daba95b3f0d5df1a9d3ed3d 2026-09-16T10:03:39-05:00 continuous-improvement-loop[bot] Merge remote-tracking branch 'origin/main' into codex/payment-refund-reconciliation-20260916
+7eafd3f479817f267ba0de6592c3e16ea920f4ae 2026-09-15T23:01:27-05:00 Diego Saa Merge pull request #392 from diegueins680/fix/redact-stripe-webhook-example-20260916

@@ -1,0 +1,5 @@
+{
+  "initial_preservation_assertion": "Expected one new reviewed decision but normal merge also retained the independently reviewed d880b17bae6c922ecfce ownership protocol decision. Corrected validation to verify both exact main decisions; no implementation removed.",
+  "initial_catalog_regressions": "3 of 5 failed: migration successor still referenced old159-entry fingerprint and pinned mobile source checkout was absent in the new worktree. Updated only both successor mappings preserving originals; initialized exact existing mobile gitlink. All five unchanged tests subsequently pass.",
+  "specification_help_probe": "--help is unsupported; command exited1 showing usage. Generated and checked inventory with prescribed interface."
+}

@@ -1,0 +1,102 @@
+- generic [ref=e9]:
+  - generic [ref=e12]:
+    - link [ref=e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=e22]
+    - generic [ref=e25]:
+      - link [ref=e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=e35]
+      - link [ref=e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=e45]
+      - link [ref=e52] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - generic [ref=e55]:
+          - img "Messages" [ref=e57]
+          - generic "Direct messaging - 9 new notifications link" [ref=e59]: 9+
+      - link [ref=e65] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=e70]
+      - link [ref=e77] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=e82]
+      - link [ref=e90] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=e95]
+      - link [ref=e100] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=e105]
+      - link [ref=e112] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=e117]:
+          - img "tdf.records.label's profile picture" [ref=e118]
+    - generic [ref=e119]:
+      - link [ref=e122] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=e127]
+      - link [ref=e130] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=e135]
+  - main [ref=e139]:
+    - generic [ref=e144]:
+      - navigation "Thread list" [ref=e145]:
+        - generic [ref=e146]:
+          - generic [ref=e147]:
+            - button [ref=e148] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=e150]
+              - img "Verified" [ref=e153]
+              - img "Down chevron icon" [ref=e156]
+            - generic [ref=e159]:
+              - button [ref=e160] [cursor=pointer]:
+                - img "More options" [ref=e162]
+              - button [ref=e166] [cursor=pointer]:
+                - img "New message" [ref=e168]
+          - tablist [ref=e173]:
+            - tab "Primary" [selected] [ref=e174] [cursor=pointer]
+            - tab "General" [ref=e177] [cursor=pointer]
+            - tab "From ads" [ref=e180] [cursor=pointer]
+            - tab "Requests" [ref=e184] [cursor=pointer]
+          - generic [ref=e190]:
+            - img "Search" [ref=e192]
+            - textbox "Search" [ref=e195]
+          - generic [ref=e196]:
+            - generic [ref=e198]:
+              - generic [ref=e201]:
+                - status "Loading..." [ref=e202]
+                - status "Loading..." [ref=e203]
+              - generic [ref=e206]:
+                - status "Loading..." [ref=e207]
+                - status "Loading..." [ref=e208]
+              - generic [ref=e211]:
+                - status "Loading..." [ref=e212]
+                - status "Loading..." [ref=e213]
+            - generic [ref=e216]:
+              - button [ref=e217] [cursor=pointer]:
+                - generic [ref=e219]:
+                  - status "Loading..." [ref=e222]
+                  - generic [ref=e225]:
+                    - status "Loading..." [ref=e227]
+                    - status "Loading..." [ref=e229]
+              - button [ref=e230] [cursor=pointer]:
+                - generic [ref=e232]:
+                  - status "Loading..." [ref=e235]
+                  - generic [ref=e238]:
+                    - status "Loading..." [ref=e240]
+                    - status "Loading..." [ref=e242]
+              - button [ref=e243] [cursor=pointer]:
+                - generic [ref=e245]:
+                  - status "Loading..." [ref=e248]
+                  - generic [ref=e251]:
+                    - status "Loading..." [ref=e253]
+                    - status "Loading..." [ref=e255]
+              - button [ref=e256] [cursor=pointer]:
+                - generic [ref=e258]:
+                  - status "Loading..." [ref=e261]
+                  - generic [ref=e264]:
+                    - status "Loading..." [ref=e266]
+                    - status "Loading..." [ref=e268]
+      - generic [ref=e272]:
+        - heading "Your messages" [level=2] [ref=e279]
+        - generic [ref=e280]: Send a message to start a chat.
+        - button "Send message" [ref=e284] [cursor=pointer]

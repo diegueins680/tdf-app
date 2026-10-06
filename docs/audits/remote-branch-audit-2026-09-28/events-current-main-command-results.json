@@ -1,0 +1,8 @@
+{
+  "Stack build --test --no-run-tests --jobs 2": 0,
+  "fresh Stack-built full Hspec executable": 0,
+  "full UI Jest": 0,
+  "UI production build": 0,
+  "native PostgreSQL HTTP runner": 0,
+  "unchanged audit-ci": 0
+}

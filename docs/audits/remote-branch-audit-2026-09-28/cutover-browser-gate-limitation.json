@@ -1,0 +1,7 @@
+{
+  "time": "2026-10-01T02:10:50.335092+00:00",
+  "result": "BLOCKED",
+  "tool": "playwright_visible/browser_tabs",
+  "observed": "Listing returned only about:blank; opening an audit-owned canonical login tab failed with Transport closed. No actual Google login or upload performed.",
+  "existing_browser_sessions_modified": false
+}

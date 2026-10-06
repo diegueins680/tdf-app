@@ -1,0 +1,287 @@
+{
+  "sha": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+  "job": "https://github.com/diegueins680/tdf-app/actions/runs/37157250949/job/111303133841",
+  "conclusion": "success",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-10-03T22:05:56Z",
+      "completed_at": "2026-10-03T22:05:57Z"
+    },
+    {
+      "name": "Initialize containers",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-10-03T22:05:57Z",
+      "completed_at": "2026-10-03T22:06:35Z"
+    },
+    {
+      "name": "Checkout",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-10-03T22:06:35Z",
+      "completed_at": "2026-10-03T22:06:40Z"
+    },
+    {
+      "name": "Install native build dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-10-03T22:06:40Z",
+      "completed_at": "2026-10-03T22:06:47Z"
+    },
+    {
+      "name": "Restore immutable Stack dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5,
+      "started_at": "2026-10-03T22:06:47Z",
+      "completed_at": "2026-10-03T22:07:07Z"
+    },
+    {
+      "name": "Restore incremental backend objects",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6,
+      "started_at": "2026-10-03T22:07:07Z",
+      "completed_at": "2026-10-03T22:07:16Z"
+    },
+    {
+      "name": "Build and test backend once",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7,
+      "started_at": "2026-10-03T22:07:16Z",
+      "completed_at": "2026-10-03T22:17:11Z"
+    },
+    {
+      "name": "Verify artist self-service transactions and migration",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8,
+      "started_at": "2026-10-03T22:17:11Z",
+      "completed_at": "2026-10-03T22:17:14Z"
+    },
+    {
+      "name": "Verify social session revocation and model-derived HTTP fixtures",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9,
+      "started_at": "2026-10-03T22:17:14Z",
+      "completed_at": "2026-10-03T22:19:57Z"
+    },
+    {
+      "name": "Verify authenticated artist merch HTTP runtime",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10,
+      "started_at": "2026-10-03T22:19:57Z",
+      "completed_at": "2026-10-03T22:20:00Z"
+    },
+    {
+      "name": "Verify provider identity authentication and concurrent linking",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 11,
+      "started_at": "2026-10-03T22:20:00Z",
+      "completed_at": "2026-10-03T22:20:03Z"
+    },
+    {
+      "name": "Verify atomic Live Session identity intake",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 12,
+      "started_at": "2026-10-03T22:20:03Z",
+      "completed_at": "2026-10-03T22:20:06Z"
+    },
+    {
+      "name": "Verify source-scoped course contacts and registration retries",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 13,
+      "started_at": "2026-10-03T22:20:06Z",
+      "completed_at": "2026-10-03T22:20:12Z"
+    },
+    {
+      "name": "Verify trial enquiries and actor-scoped student creation",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 14,
+      "started_at": "2026-10-03T22:20:12Z",
+      "completed_at": "2026-10-03T22:20:19Z"
+    },
+    {
+      "name": "Verify marketplace contact identity and evidence retries",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 15,
+      "started_at": "2026-10-03T22:20:19Z",
+      "completed_at": "2026-10-03T22:20:25Z"
+    },
+    {
+      "name": "Verify reversible identity reconciliation",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 16,
+      "started_at": "2026-10-03T22:20:25Z",
+      "completed_at": "2026-10-03T22:20:26Z"
+    },
+    {
+      "name": "Verify resumable video ingestion and migration invariants",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 17,
+      "started_at": "2026-10-03T22:20:26Z",
+      "completed_at": "2026-10-03T22:21:19Z"
+    },
+    {
+      "name": "Verify shared event pilot and publication boundaries",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 18,
+      "started_at": "2026-10-03T22:21:19Z",
+      "completed_at": "2026-10-03T22:21:25Z"
+    },
+    {
+      "name": "Verify automatic migrations against the production schema",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 19,
+      "started_at": "2026-10-03T22:21:25Z",
+      "completed_at": "2026-10-03T22:21:34Z"
+    },
+    {
+      "name": "Verify contact HTTP concurrency, authorization, archival and rollback",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 20,
+      "started_at": "2026-10-03T22:21:34Z",
+      "completed_at": "2026-10-03T22:21:36Z"
+    },
+    {
+      "name": "Verify artist claim preparation concurrency and privacy",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 21,
+      "started_at": "2026-10-03T22:21:36Z",
+      "completed_at": "2026-10-03T22:21:38Z"
+    },
+    {
+      "name": "Verify public catalog persistence contract and database round trips",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 22,
+      "started_at": "2026-10-03T22:21:38Z",
+      "completed_at": "2026-10-03T22:21:39Z"
+    },
+    {
+      "name": "Verify calendar runtime schema and admin HTTP contract",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 23,
+      "started_at": "2026-10-03T22:21:39Z",
+      "completed_at": "2026-10-03T22:21:41Z"
+    },
+    {
+      "name": "Verify navigation first-visit concurrency and account isolation",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 24,
+      "started_at": "2026-10-03T22:21:41Z",
+      "completed_at": "2026-10-03T22:21:45Z"
+    },
+    {
+      "name": "Verify paused experiment authority and concurrent HTTP persistence",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 25,
+      "started_at": "2026-10-03T22:21:45Z",
+      "completed_at": "2026-10-03T22:21:48Z"
+    },
+    {
+      "name": "Exercise public booking HTTP idempotency and resource conflicts",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 26,
+      "started_at": "2026-10-03T22:21:48Z",
+      "completed_at": "2026-10-03T22:21:59Z"
+    },
+    {
+      "name": "Verify universal interactions through real HTTP sessions",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 27,
+      "started_at": "2026-10-03T22:21:59Z",
+      "completed_at": "2026-10-03T22:22:13Z"
+    },
+    {
+      "name": "Upload tested backend executable",
+      "status": "completed",
+      "conclusion": "skipped",
+      "number": 28,
+      "started_at": "2026-10-03T22:22:13Z",
+      "completed_at": "2026-10-03T22:22:13Z"
+    },
+    {
+      "name": "Post Restore incremental backend objects",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 53,
+      "started_at": "2026-10-03T22:22:13Z",
+      "completed_at": "2026-10-03T22:22:13Z"
+    },
+    {
+      "name": "Post Restore immutable Stack dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 54,
+      "started_at": "2026-10-03T22:22:13Z",
+      "completed_at": "2026-10-03T22:22:13Z"
+    },
+    {
+      "name": "Post Checkout",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 55,
+      "started_at": "2026-10-03T22:22:13Z",
+      "completed_at": "2026-10-03T22:22:14Z"
+    },
+    {
+      "name": "Stop containers",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 56,
+      "started_at": "2026-10-03T22:22:14Z",
+      "completed_at": "2026-10-03T22:22:16Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 57,
+      "started_at": "2026-10-03T22:22:16Z",
+      "completed_at": "2026-10-03T22:22:16Z"
+    }
+  ],
+  "result_lines": [
+    "backend-quality\tBuild and test backend once\t2026-10-03T22:17:10.5059578Z ^[[33m3553 examples, 0 failures, 6 pending^[[0m",
+    "backend-quality\tBuild and test backend once\t2026-10-03T22:17:10.8510117Z   validates internal ownership in the actual PostgreSQL visibility predicate [^[[32m\u2714^[[0m]",
+    "backend-quality\tBuild and test backend once\t2026-10-03T22:17:10.8513002Z ^[[32m1 example, 0 failures^[[0m",
+    "backend-quality\tBuild and test backend once\t2026-10-03T22:17:11.0558596Z ^[[32m15 examples, 0 failures^[[0m",
+    "backend-quality\tBuild and test backend once\t2026-10-03T22:17:11.8695538Z ^[[32m1 example, 0 failures^[[0m",
+    "backend-quality\tVerify artist self-service transactions and migration\t2026-10-03T22:17:14.3358032Z ^[[32m9 examples, 0 failures^[[0m",
+    "backend-quality\tVerify social session revocation and model-derived HTTP fixtures\t2026-10-03T22:19:57.1422405Z ^[[32m1141 examples, 0 failures^[[0m",
+    "backend-quality\tVerify authenticated artist merch HTTP runtime\t2026-10-03T22:20:00.3212533Z ^[[32m1 example, 0 failures^[[0m",
+    "backend-quality\tVerify provider identity authentication and concurrent linking\t2026-10-03T22:20:02.6272751Z ^[[32m8 examples, 0 failures^[[0m",
+    "backend-quality\tVerify atomic Live Session identity intake\t2026-10-03T22:20:06.2636613Z ^[[32m11 examples, 0 failures^[[0m",
+    "backend-quality\tVerify source-scoped course contacts and registration retries\t2026-10-03T22:20:12.7911906Z ^[[32m11 examples, 0 failures^[[0m",
+    "backend-quality\tVerify trial enquiries and actor-scoped student creation\t2026-10-03T22:20:19.2153440Z ^[[32m9 examples, 0 failures^[[0m",
+    "backend-quality\tVerify marketplace contact identity and evidence retries\t2026-10-03T22:20:25.3783560Z ^[[32m4 examples, 0 failures^[[0m"
+  ],
+  "log": "editorial-hosted-backend-4100a04c.log"
+}

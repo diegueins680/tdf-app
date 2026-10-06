@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-09-28T19:18:09.915349+00:00",
+  "action": "installed_current_readonly_mail_monitor",
+  "files": [
+    {
+      "path": "/Users/diegosaa/GitHub/tdf-app/tmp/mail-deliverability/production_access.py",
+      "sha256": "63ac7637eac3b2eb8619e5dfffd4e9a6500f9d99910b2e7986ceb46abd30d2b2"
+    },
+    {
+      "path": "/Users/diegosaa/GitHub/tdf-app/tmp/mail-deliverability/monitor.py",
+      "sha256": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a"
+    }
+  ],
+  "launchagent_unchanged": true,
+  "prior_monitor_sha256": "d83d882cd85d5d5489ba4bbed035e991490bfdf87ae22d5567ae93a9816cbaa5"
+}

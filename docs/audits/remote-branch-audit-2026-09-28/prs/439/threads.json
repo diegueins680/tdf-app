@@ -1,0 +1,218 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 439,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "d7ebacbff0f0e35dbd57238a8afa6f11e86cdb0e",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6jroTe",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq-ui/src/pages/TeacherPortalPage.tsx",
+                "line": 597,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Block teacher dialog dismissal while creation is pending**\n\nWhen a teacher dismisses the student dialog with Escape, a backdrop click, or Cancel during an in-flight create, this pending ref is never consulted: the existing `Dialog.onClose` and Cancel handlers still close it unconditionally. The request can therefore complete after its form disappears, and an ambiguous failure can leave the teacher unsure whether the student was created. Wire this state into both dismissal paths as the other updated student dialogs do.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/439#discussion_r4045297973",
+                      "createdAt": "2026-09-18T08:59:54Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in c7ea468a2 (included in current eb555e299). Teacher dialog Escape, backdrop and Cancel all consult the synchronous pending ref; submission also guards double clicks. The three rendered StudentCreationDialogs regression cases passed, covering pending dismissal for TeacherPortal, Classes and TrialLessons.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/439#discussion_r4045606351",
+                      "createdAt": "2026-09-18T09:42:42Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwOTo0Mjo0MlrO8SMNzw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jroTj",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq-ui/src/pages/ClassesPage.tsx",
+                "line": 223,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Reset the request key when abandoning a failed student form**\n\nWhen the server commits a student but the browser receives an ambiguous network failure, the key is retained as intended; however, after the user cancels and opens a fresh student dialog, the form fields are cleared while this ref is not. Submitting the new student's details then reuses the accepted key and receives 409 indefinitely, with no UI path to start a new operation short of reloading the page. Clear the key only when the user explicitly abandons the failed form/opens a new operation; the same lifecycle appears in the other updated student dialogs.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/439#discussion_r4045297979",
+                      "createdAt": "2026-09-18T08:59:54Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in c7ea468a2 (included in current eb555e299). All three student forms preserve the key after an ambiguous failure and edits. Closing requires explicit abandonment confirmation warning that the earlier request may have persisted; declining preserves the form/key, while confirming resets mutation state and rotates the next operation. Three rendered lifecycle regressions passed, including failed response, edited retry, declined abandonment and a fresh key after confirmed abandonment.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/439#discussion_r4045606476",
+                      "createdAt": "2026-09-18T09:42:43Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwOTo0Mjo0M1rO8SMOTA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jsNw7",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 582,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Record an ancestral migration introduction commit**\n\nWhen this revision is passed to the production release runner, the rollout is rejected before applying migrations: `8a83c8cfb84296b21ccd5c4fecbcc35f1ebd95e7` is not an ancestor of `b62c9a85254bbce8735169b4f84a86d5c2a26381` (`git merge-base --is-ancestor` exits 1), while `scripts/production-release.mjs` explicitly requires every `introducedBy` commit to be an ancestor of the release SHA. Point this entry at a commit that is actually in the release ancestry (for example, a follow-up commit can reference this reviewed commit) so production deployments are not blocked.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/439#discussion_r4045526431",
+                      "createdAt": "2026-09-18T09:31:38Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Checked against the actual pushed branch: 8a83c8cfb84296b21ccd5c4fecbcc35f1ebd95e7 is an ancestor of eb555e299a4710ea6666c0aa9a99242fa83784fd (git merge-base --is-ancestor exits 0). b62c9a85254bbce8735169b4f84a86d5c2a26381 is not this branch head. The migration has already passed staging application, replay, backup restoration and private ACL verification, so its established introduction and SQL remain immutable. The guarded release will revalidate ancestry on the actual merged release commit.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/439#discussion_r4045606607",
+                      "createdAt": "2026-09-18T09:42:45Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwOTo0Mjo0NVrO8SMOzw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jse1j",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 577,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Point the course migration at release ancestry**\n\nWhen this revision is passed to the production release runner, rollout remains blocked even after fixing the already-flagged trial entry: `git merge-base --is-ancestor 9bc040b718db0a297c9766a6c4084e0803765599 09d2ddf84b7a17d186124d509753aef1fa9758d6` exits 1, and `scripts/production-release.mjs` rejects any `introducedBy` commit outside the release SHA's ancestry. Replace this course migration's introduction SHA with an ancestral commit as well.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/439#discussion_r4045632346",
+                      "createdAt": "2026-09-18T09:46:33Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Verified git merge-base --is-ancestor 9bc040b718db0a297c9766a6c4084e0803765599 bdd9e24bd succeeds. The cited 09d2ddf84b revision is not this pushed head. Both course and trial introductions remain ancestral and unchanged; the new ad inquiry introduction is 948036699. The resolved manifest preserves the full approved main prefix and appends these three identity entries. Release ancestry is validated again by the existing guarded lane.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/439#discussion_r4048579361",
+                      "createdAt": "2026-09-18T16:23:18Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxNjoyMzoxOFrO8VBrIQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jse1o",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/Trials/Server.hs",
+                "line": 1349,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Allow unchanged shared emails during student edits**\n\nWhen two students are created with the same email\u2014a case this new unconditional insert explicitly supports\u2014editing either student through `TeacherPortalPage` fails even if only their name or phone changed. The edit form always includes the existing nonblank email, while `ensureEmailAvailableForParty` rejects it whenever any other party has that address, so these newly valid shared-email students become uneditable through the UI. Treat an email equal to the student's current normalized email as unchanged, or omit unchanged email values from the patch.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/439#discussion_r4045632351",
+                      "createdAt": "2026-09-18T09:46:33Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in a3aa63b25, included in bdd9e24bd. Student updates treat the existing shared email as unchanged while retaining school/ownership checks and the existing conflict policy for a changed email. Added a PostgreSQL regression through the actual student update handler covering successful name edit, unauthorized access, and changed-email conflict. Hosted CI on the newly integrated head must pass before release.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/439#discussion_r4048567830",
+                      "createdAt": "2026-09-18T16:21:40Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxNjoyMTo0MFrO8VA-Fg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6j0Y1L",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 587,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Point the ad migration at release ancestry**\n\nFor the exact reviewed SHA, `git merge-base --is-ancestor 948036699799dae2cffd45bde073fb8b02cbbbca 0a2ef8a2efc717300edd86803f38fdf2161c21b0` exits 1; `git merge-base -h` defines this mode as testing whether the first commit is an ancestor of the second, and `scripts/production-release.mjs` rejects every manifest entry that fails that check. A production release of this revision is therefore blocked before applying the new ad migration; record an introduction commit that belongs to the release ancestry.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/439#discussion_r4048742353",
+                      "createdAt": "2026-09-18T16:46:11Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "The actual reviewed/pushed head is 98a561a9446a1c51e627f6ad5a48737fe5122d85; git merge-base --is-ancestor 948036699799dae2cffd45bde073fb8b02cbbbca 98a561a9446a1c51e627f6ad5a48737fe5122d85 exits 0. The existing production-release plan command also exited 0 for this exact target with compatible recovery bdd9e24bd, validating all 113 introduction commits and identical recovery SQL. The cited 0a2ef8a revision is not this branch head. The exercised migration introduction is preserved. CI35370036518 passed on the exact pushed head.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/439#discussion_r4048897766",
+                      "createdAt": "2026-09-18T17:04:35Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxNzowNDozNVrO8VVG5g=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxNjo0NjoxMVrOo9GNSw=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

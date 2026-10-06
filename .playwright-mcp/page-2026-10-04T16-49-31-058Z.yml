@@ -1,0 +1,361 @@
+- generic [ref=f6e4]:
+  - generic [ref=f6e240]:
+    - generic [ref=f6e243]:
+      - link [ref=f6e248] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f6e253]
+      - generic [ref=f6e256]:
+        - link [ref=f6e261] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f6e266]
+        - link [ref=f6e271] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f6e276]
+        - link [ref=f6e283] [cursor=pointer]:
+          - /url: /direct/t/17845492872235622
+          - generic [ref=f6e286]:
+            - img "Messages" [ref=f6e288]
+            - generic "Direct messaging - 6 new notifications link" [ref=f6e291]: "6"
+        - link [ref=f6e297] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f6e302]
+        - link [ref=f6e309] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f6e314]
+        - link [ref=f6e320] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f6e325]
+        - link [ref=f6e330] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f6e335]
+        - link [ref=f6e342] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f6e347]:
+            - img "tdf.records.label's profile picture" [ref=f6e348]
+      - generic [ref=f6e349]:
+        - link [ref=f6e352] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f6e357]
+        - link [ref=f6e360] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f6e365]
+    - generic [ref=f6e368]:
+      - main [ref=f6e18]:
+        - generic [ref=f6e20]:
+          - generic [ref=f6e21]:
+            - generic [ref=f6e22]:
+              - link [ref=f6e28] [cursor=pointer]:
+                - /url: /elbloque_oficial/
+                - img "elbloque_oficial's profile picture" [ref=f6e29]
+              - generic [ref=f6e30]:
+                - generic [ref=f6e31]:
+                  - generic [ref=f6e32]:
+                    - link [ref=f6e34] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "elbloque_oficial" [level=2] [ref=f6e35]
+                    - button [ref=f6e37] [cursor=pointer]:
+                      - img "Options" [ref=f6e39]
+                  - generic [ref=f6e43]: El Bloque
+                  - generic [ref=f6e45]:
+                    - generic [ref=f6e47]:
+                      - generic [ref=f6e48]: "42"
+                      - text: posts
+                    - link "1,127 followers" [ref=f6e50] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f6e51]:
+                        - generic "1,127" [ref=f6e52]
+                        - text: followers
+                    - link "185 following" [ref=f6e54] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f6e55]:
+                        - generic [ref=f6e56]: "185"
+                        - text: following
+                - generic [ref=f6e57]:
+                  - generic [ref=f6e58]:
+                    - generic [ref=f6e59]:
+                      - button [ref=f6e60] [cursor=pointer]:
+                        - generic [ref=f6e61]:
+                          - text: Rap Sudamericano
+                          - link "@jeanpaulgortaire" [ref=f6e62]:
+                            - /url: /jeanpaulgortaire/
+                          - link "@dj_zyborg" [ref=f6e63]:
+                            - /url: /dj_zyborg/
+                          - text: https://linktr.ee/elbloque_oficialhttps://www.youtube
+                      - generic [ref=f6e64]:
+                        - text: ...
+                        - button "more" [ref=f6e65] [cursor=pointer]
+                    - button "Link icon youtu.be/o4U3RiBoa2k?si=l20l2UM18iMa7Pjy and 1 more" [ref=f6e68] [cursor=pointer]:
+                      - generic [ref=f6e69]:
+                        - img "Link icon" [ref=f6e71]
+                        - generic [ref=f6e74]: youtu.be/o4U3RiBoa2k?si=l20l2UM18iMa7Pjy and 1 more
+                  - link "Followed by luis_cdvg, josemicrofono_djmic + 34 more" [ref=f6e75] [cursor=pointer]:
+                    - /url: /elbloque_oficial/followers/mutualOnly
+                    - generic [ref=f6e77]:
+                      - generic [ref=f6e79]:
+                        - button [ref=f6e80]:
+                          - link [ref=f6e81]
+                        - button [ref=f6e82]:
+                          - link [ref=f6e83]
+                        - button [ref=f6e84]:
+                          - link [ref=f6e85]
+                      - generic [ref=f6e86]: Followed by luis_cdvg, josemicrofono_djmic + 34 more
+            - generic [ref=f6e91]:
+              - button "Following Down chevron icon" [ref=f6e93] [cursor=pointer]:
+                - generic [ref=f6e94]:
+                  - generic [ref=f6e95]: Following
+                  - img "Down chevron icon" [ref=f6e98]
+              - button "Message" [ref=f6e101] [cursor=pointer]
+              - button [ref=f6e103] [cursor=pointer]:
+                - img "Similar accounts" [ref=f6e105]
+            - menu [ref=f6e109]:
+              - list [ref=f6e113]:
+                - listitem [ref=f6e114]
+                - listitem [ref=f6e115]
+                - listitem [ref=f6e116]:
+                  - link "View Destacada highlight" [ref=f6e119] [cursor=pointer]:
+                    - /url: /stories/highlights/18183417895355162/
+                    - button "elbloque_oficial's highlight story picture Destacada" [ref=f6e120]:
+                      - button [ref=f6e121]:
+                        - img "elbloque_oficial's highlight story picture" [ref=f6e124]
+                      - generic [ref=f6e125]: Destacada
+          - generic [ref=f6e128]:
+            - tablist [ref=f6e129]:
+              - link [ref=f6e131] [cursor=pointer]:
+                - /url: /elbloque_oficial/
+                - img "Posts" [ref=f6e133]
+              - link [ref=f6e144] [cursor=pointer]:
+                - /url: /elbloque_oficial/reels/
+                - img "Reels" [ref=f6e146]
+              - link [ref=f6e149] [cursor=pointer]:
+                - /url: /elbloque_oficial/reposts/
+                - img "Reposts" [ref=f6e151]
+              - link [ref=f6e154] [cursor=pointer]:
+                - /url: /elbloque_oficial/tagged/
+                - img "Tagged" [ref=f6e156]
+            - tabpanel
+          - generic [ref=f6e163]:
+            - generic [ref=f6e164]:
+              - link [ref=f6e166] [cursor=pointer]:
+                - /url: /apu.wasi.cultura/p/DbvgoXbO2U9/
+                - 'img "👹 Te invitamos al ❌Nigredo Fest 2❌ Inauguración de la Muestra gráfica de nuestros artistas, con una demostración de pintada en vivo colectiva🤟 . Concierto y sorpresas👻🔥 . Exponen🖌️ @salomielart @dead_goat_tattoo @ton_offre @maggcamps @stickers.raros @nigredo.hex @arriamiss . En escena con invitados de lujo🎤 @elbloque_oficial @satanylostiputinis @psicoardillas @piscinazobanda @bombshell.rnr @kateryna.romero @inmunethrash @kuerva_negra . Nos vemos pronto 🤟 . 🗓️Fecha: 21 de agosto 📍Lugar: Apuwasi Reina Victoria y Niña 🕖Hora: 5pm . ✨Cover: $7 💥Preventa 2x1 > hasta 15 agosto ➡️ 0987579304 . . #apuwasi #nigredo" [ref=f6e169]'
+              - link [ref=f6e172] [cursor=pointer]:
+                - /url: /420posterpipeshop/reel/DYyEixsRg5r/
+                - img "¿Quieres descuentos exclusivos en 420 Poster & Pipe? 💨 1️⃣ Sigue a @420PosterAndPipe 2️⃣ Comparte este reel en tu historia ETIQUETANDO @420👀 3️⃣ Y recibe tu código de descuento por mensaje interno🔥🔥🔥 La cultura se mueve 🌿💨" [ref=f6e175]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f6e178] [cursor=pointer]:
+                - /url: /jeanpaulgortaire/reel/DYdXeq0Nkl8/
+                - 'img "❤️‍🔥Marmotin❤️‍🔥un mensaje al infinito!! Te amamos y te recordamos profeshor❤️‍🩹 #rip #marmota #rap #quitomafia #elbloque" [ref=f6e181]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f6e183]:
+              - link [ref=f6e185] [cursor=pointer]:
+                - /url: /elbloque_oficial/reel/DXXmfizgXHz/
+                - img "Hoy es un día especial 🌿 Nos alegra anunciarles que **@420posterpipeshop ** es nuestro nuevo auspiciante oficial 💨 Atentos que se viene sorpresas… 👀 Feliz 420 💨💨💨💨" [ref=f6e188]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f6e191] [cursor=pointer]:
+                - /url: /jeanpaulgortaire/reel/DWP-bZbjpS-/
+                - img "Del Rap atletas... Ensayando con el sampler de mi abuelo Fausto👴🏼 @elbloque_oficial @dj_zyborg 📽️@youn___g" [ref=f6e194]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f6e197] [cursor=pointer]:
+                - /url: /sak_mr/p/DWCj-fGlHfP/
+                - 'img "Registro Fotográfico del Show de @elbloque_oficial en el Starfest 2026, Hip Hop Ecuatoriano HP... @jeanpaulgortaire - @dj_zyborg 📸: @sak_mr" [ref=f6e200]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f6e202]:
+              - link [ref=f6e204] [cursor=pointer]:
+                - /url: /sudamericafilms/p/DWCHd6fFkxU/
+                - 'img "@elbloque_oficial rompiendo en el #starfest Energía directa, sin filtros. El público conectado. Ahí es donde el hip hop cobra sentido. Seguimos 🚀. @jeanpaulgortaire @dj_zyborg @rosablanca_producciones 💯 @420posterpipeshop 📸 @difree_freddyjr 🙌 . #HipHopLatino #HipHopEcuador #RapEnVivo #CulturaHipHop" [ref=f6e207]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f6e210] [cursor=pointer]:
+                - /url: /artegloba1/reel/DVyJswsREed/
+                - img "Entrevista @dj_zyborg 7|Marzo| 2018 en un evento en Ambato 🇪🇨👊" [ref=f6e213]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f6e216] [cursor=pointer]:
+                - /url: /davidestrellavega/reel/DVsMx0mNeIM/
+                - 'img "🔥 FALTAN POCOS DÍAS 🔥 El conteo regresivo comenzó… Se viene STAR FEST 2026, el festival de hip hop más grande de Latinoamérica. 📅 14 de marzo – Quito, Ecuador ⚠️ No te pierdas el homenaje especial a MARMOTA ⚠️ Una leyenda que dejó huella en la cultura. ‼️ QUEDAN POCAS ENTRADAS PARA EL SOLD OUT ‼️ 🎤 Line Up Internacional: Akapellah 🇻🇪 Afu-Ra 🇺🇸 Gona 🇻🇪 Arianna Puello 🇪🇸 Akwid 🇺🇸🇲🇽 Charles Ans 🇲🇽 Santa Grifa – El Reghosg 🇲🇽 Mambo Rap 🇨🇱 Norick 🇵🇪 Delinquent Habits 🇺🇸 Especial Guest: Sick Jacken 30 aniversario – Ecuador 🎟 Compra online: www.ticketstar365.com/evento/starfest2026 📍 Puntos físicos autorizados #StarFest2026 #HipHop593 #HipHopEcuadoriano 🔥" [ref=f6e219]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f6e221]:
+              - link [ref=f6e223] [cursor=pointer]:
+                - /url: /giss_aldaz/reel/DVqlRIsjhO1/
+                - img "Les dejo esta entrevista pendiente con el @elbloque_oficial @dj_zyborg @jeanpaulgortaire @star.produccione" [ref=f6e226]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f6e229] [cursor=pointer]:
+                - /url: /cosas_que_hacen__bum/reel/DTQuWZAD9Ov/
+                - 'img "@elbloque_oficial #Marmota #motamix #ElBloque #QM #QuitoMafia" [ref=f6e232]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f6e235] [cursor=pointer]:
+                - /url: /goodflavor7/p/DQdBaAXD-Rj/
+                - 'img "Presentación de @elbloque_oficial en el festival @alfarohiphop en su VI edición 📷: @01_elviis @abadon777_ . . . . . . . ." [ref=f6e238]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+      - contentinfo [ref=f6e369]:
+        - generic [ref=f6e370]:
+          - generic [ref=f6e372]:
+            - link "Meta" [ref=f6e374] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f6e377] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f6e380] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f6e383] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f6e386] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f6e389] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f6e392] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f6e395] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f6e398] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f6e401] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f6e404] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f6e407] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f6e410] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f6e413] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f6e416] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f6e419] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f6e421]:
+            - generic [ref=f6e422] [cursor=pointer]:
+              - generic [ref=f6e423]:
+                - generic [ref=f6e424]: English
+                - img "Down chevron icon" [ref=f6e427]
+              - combobox "Switch Display Language" [ref=f6e429]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f6e430]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f6e433] [cursor=pointer]:
+              - generic "Messages - 6 new notifications" [ref=f6e434]:
+                - generic [ref=f6e435]:
+                  - generic [ref=f6e437]:
+                    - img "Messages" [ref=f6e438]
+                    - generic "Direct messaging - 6 new notifications link" [ref=f6e441]: "6"
+                  - generic [ref=f6e444]: Messages
+                - generic [ref=f6e445]:
+                  - button [ref=f6e446]:
+                    - img "6 unread chats" [ref=f6e448]
+                  - button "User avatar Jonathan Campoverde" [ref=f6e453]:
+                    - img "User avatar" [ref=f6e456]
+                  - button "User avatar Fundación Kunayan" [ref=f6e458]:
+                    - img "User avatar" [ref=f6e461]
+                  - button "User avatar Isaac" [ref=f6e463]:
+                    - img "User avatar" [ref=f6e466]
+            - generic [ref=f6e467]:
+              - generic [ref=f6e468]:
+                - generic [ref=f6e469]:
+                  - generic [ref=f6e471]:
+                    - status "Loading..." [ref=f6e473]
+                    - status "Loading..." [ref=f6e475]
+                  - button [active] [ref=f6e477] [cursor=pointer]:
+                    - img "Close" [ref=f6e479]
+                - separator [ref=f6e482]
+              - generic [ref=f6e483]:
+                - generic [ref=f6e484]:
+                  - status "Loading..." [ref=f6e486]
+                  - status "Loading..." [ref=f6e488]
+                - status "Loading..." [ref=f6e491]
+                - generic [ref=f6e492]:
+                  - status "Loading..." [ref=f6e494]
+                  - status "Loading..." [ref=f6e496]
+                - generic [ref=f6e497]:
+                  - status "Loading..." [ref=f6e499]
+                  - status "Loading..." [ref=f6e501]
+                - status "Loading..." [ref=f6e504]
+                - generic [ref=f6e505]:
+                  - status "Loading..." [ref=f6e507]
+                  - status "Loading..." [ref=f6e509]
+                - status "Loading..." [ref=f6e511]

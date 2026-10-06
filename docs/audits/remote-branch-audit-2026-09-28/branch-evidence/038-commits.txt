@@ -1,0 +1,7 @@
+a64ea1b580faab59e547e3b307f74b0313d58866 2026-09-15T14:09:52-05:00 continuous-improvement-loop[bot] docs(payments): record verified reconciliation draft delivery
+f2898c7418050013b4e304bc53b539e906aa0d0a 2026-09-15T12:43:32-05:00 continuous-improvement-loop[bot] docs(payments): record reconciliation evidence verification and operations
+174847ab441e0cca0724259f989294fdd0ae4095 2026-09-15T12:31:14-05:00 continuous-improvement-loop[bot] docs(payments): record reconciliation filter catalog review
+1130acb99c2b8e750924ff8fb81f2752cbe08383 2026-09-15T12:28:43-05:00 continuous-improvement-loop[bot] chore(api): pin mobile reconciliation evidence contract
+4c32e1304b7b7827e42f8e0d28648473f1bf1590 2026-09-15T12:25:02-05:00 continuous-improvement-loop[bot] feat(payments): add read-only reconciliation evidence admin view
+af97d31927e1ebbf9eaf4ab29049216d29dcbd40 2026-09-15T12:25:02-05:00 continuous-improvement-loop[bot] test(payments): import error headers for reconciliation failures
+59f7ae8b7280e1c41180308d3bb3a66df5f52eff 2026-09-15T12:06:59-05:00 continuous-improvement-loop[bot] feat(payments): expose redacted read-only reconciliation evidence

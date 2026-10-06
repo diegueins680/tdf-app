@@ -1,0 +1,375 @@
+- generic [ref=f30e4]:
+  - generic [ref=f30e18]:
+    - generic [ref=f30e21]:
+      - link [ref=f30e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f30e31]
+      - generic [ref=f30e34]:
+        - link [ref=f30e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f30e44]
+        - link [ref=f30e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f30e54]
+        - link [ref=f30e61] [cursor=pointer]:
+          - /url: /direct/t/115621393161405
+          - generic [ref=f30e64]:
+            - img "Messages" [ref=f30e66]
+            - generic "Direct messaging - 8 new notifications link" [ref=f30e69]: "8"
+        - link [ref=f30e75] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f30e80]
+        - link [ref=f30e87] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f30e92]
+        - link [ref=f30e98] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f30e103]
+        - link [ref=f30e108] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f30e113]
+        - link [ref=f30e120] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f30e125]:
+            - img "tdf.records.label's profile picture" [ref=f30e126]
+      - generic [ref=f30e127]:
+        - link [ref=f30e130] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f30e135]
+        - link [ref=f30e138] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f30e143]
+    - generic [ref=f30e146]:
+      - main [ref=f30e147]:
+        - generic [ref=f30e149]:
+          - generic [ref=f30e150]:
+            - generic [ref=f30e151]:
+              - button [ref=f30e156] [cursor=pointer]:
+                - link [ref=f30e158]:
+                  - img "carlaromanmusica's profile picture" [ref=f30e159]
+              - generic [ref=f30e160]:
+                - generic [ref=f30e161]:
+                  - generic [ref=f30e162]:
+                    - link [ref=f30e164] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "carlaromanmusica" [level=2] [ref=f30e165]
+                    - button [ref=f30e167] [cursor=pointer]:
+                      - img "Options" [ref=f30e169]
+                  - generic [ref=f30e173]: Carla Román
+                  - generic [ref=f30e175]:
+                    - generic [ref=f30e177]:
+                      - generic [ref=f30e178]: "290"
+                      - text: posts
+                    - link "2,701 followers" [ref=f30e180] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f30e181]:
+                        - generic "2,701" [ref=f30e182]
+                        - text: followers
+                    - link "1,853 following" [ref=f30e184] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f30e185]:
+                        - generic [ref=f30e186]: 1,853
+                        - text: following
+                - generic [ref=f30e187]:
+                  - generic [ref=f30e188]:
+                    - generic [ref=f30e189]: Musician/band
+                    - button [ref=f30e192] [cursor=pointer]:
+                      - generic [ref=f30e193]: Dios 🙏🏻 Familia 💕 Cantante 🎶 + Comunicadora Social ✨Escúchame en Spotify “Siento que tu regresas” 🎤
+                    - heading [level=1]
+                    - generic [ref=f30e194]:
+                      - generic [ref=f30e195]:
+                        - img "Link icon" [ref=f30e197]
+                        - link "open.spotify.com/track/3uXytGLrYqVTYoP2JHzGLV?si=zQBhfzaAQzW0zaHUVyu-8g" [ref=f30e201] [cursor=pointer]:
+                          - /url: https://l.instagram.com/?u=https%3A%2F%2Fopen.spotify.com%2Ftrack%2F3uXytGLrYqVTYoP2JHzGLV%3Fsi%3DzQBhfzaAQzW0zaHUVyu-8g%26utm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio%26fbclid%3DPAZXh0bgNhZW0CMTEAcGRvZgJzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAadoCa3Nv3RaJVhzQ-FhGRwEvq4Cc6SSY8dlg8bFCQrYM87kGFS4dYQoToKpAg_aem_685R2YizDPljhB29ih4DzA&e=AUB_Dx9SJkgenEtShf33NlbNTS71GSfyNWoyeEs1mvhWIgqFPt1GSw8OhNy45gYkDoZ27CuT4VLvjezhUv72b-xMl8_XKD7RFbrRKmTW48_eoka0crQH6_4bZ0rF93yMHNSBTtuaWEIt
+                      - link "Threads carlaromanmusica" [ref=f30e204] [cursor=pointer]:
+                        - /url: https://www.threads.com/@carlaromanmusica?xmt=AQG0DZV21plnEPloGeZ1A_p6-Lsx4d7cnSAO68U_D1UzZio
+                        - img "Threads" [ref=f30e206]
+                        - generic [ref=f30e208]: carlaromanmusica
+                  - link "Followed by mauriciosantiana69, israelmarcillo + 2 more" [ref=f30e210] [cursor=pointer]:
+                    - /url: /carlaromanmusica/followers/mutualOnly
+                    - generic [ref=f30e212]:
+                      - generic [ref=f30e214]:
+                        - button [ref=f30e215]:
+                          - link [ref=f30e216]
+                        - button [ref=f30e217]:
+                          - link [ref=f30e218]
+                        - button [ref=f30e219]:
+                          - link [ref=f30e220]
+                      - generic [ref=f30e221]: Followed by mauriciosantiana69, israelmarcillo + 2 more
+            - generic [ref=f30e226]:
+              - button "Following Down chevron icon" [ref=f30e228] [cursor=pointer]:
+                - generic [ref=f30e229]:
+                  - generic [ref=f30e230]: Following
+                  - img "Down chevron icon" [ref=f30e233]
+              - button "Message" [ref=f30e236] [cursor=pointer]
+              - button [ref=f30e238] [cursor=pointer]:
+                - img "Similar accounts" [ref=f30e240]
+            - menu [ref=f30e244]:
+              - list [ref=f30e248]:
+                - listitem [ref=f30e249]
+                - listitem [ref=f30e250]
+                - listitem [ref=f30e251]:
+                  - link "View Europa 2026 ✨ highlight" [ref=f30e254] [cursor=pointer]:
+                    - /url: /stories/highlights/18480070171108968/
+                    - button "carlaromanmusica's highlight story picture Europa 2026 ✨" [ref=f30e255]:
+                      - button [ref=f30e256]:
+                        - img "carlaromanmusica's highlight story picture" [ref=f30e259]
+                      - generic [ref=f30e260]: Europa 2026 ✨
+                - listitem [ref=f30e263]:
+                  - link "View Shows 👩🏻‍🎤 highlight" [ref=f30e266] [cursor=pointer]:
+                    - /url: /stories/highlights/18090660922996294/
+                    - button "carlaromanmusica's highlight story picture Shows 👩🏻‍🎤" [ref=f30e267]:
+                      - button [ref=f30e268]:
+                        - img "carlaromanmusica's highlight story picture" [ref=f30e271]
+                      - generic [ref=f30e272]: Shows 👩🏻‍🎤
+                - listitem [ref=f30e275]:
+                  - link "View Life ✨ highlight" [ref=f30e278] [cursor=pointer]:
+                    - /url: /stories/highlights/17983946833924410/
+                    - button "carlaromanmusica's highlight story picture Life ✨" [ref=f30e279]:
+                      - button [ref=f30e280]:
+                        - img "carlaromanmusica's highlight story picture" [ref=f30e283]
+                      - generic [ref=f30e284]: Life ✨
+                - listitem [ref=f30e287]:
+                  - link "View Music time 🎤🎸🥁🎹 highlight" [ref=f30e290] [cursor=pointer]:
+                    - /url: /stories/highlights/17888484265424318/
+                    - button "carlaromanmusica's highlight story picture Music time 🎤🎸🥁🎹" [ref=f30e291]:
+                      - button [ref=f30e292]:
+                        - img "carlaromanmusica's highlight story picture" [ref=f30e295]
+                      - generic [ref=f30e296]: Music time 🎤🎸🥁🎹
+          - generic [ref=f30e299]:
+            - tablist [ref=f30e300]:
+              - link [ref=f30e302] [cursor=pointer]:
+                - /url: /carlaromanmusica/
+                - img "Posts" [ref=f30e304]
+              - link [ref=f30e315] [cursor=pointer]:
+                - /url: /carlaromanmusica/reels/
+                - img "Reels" [ref=f30e317]
+              - link [ref=f30e320] [cursor=pointer]:
+                - /url: /carlaromanmusica/reposts/
+                - img "Reposts" [ref=f30e322]
+              - link [ref=f30e325] [cursor=pointer]:
+                - /url: /carlaromanmusica/tagged/
+                - img "Tagged" [ref=f30e327]
+            - tabpanel
+          - generic [ref=f30e334]:
+            - generic [ref=f30e335]:
+              - link [ref=f30e337] [cursor=pointer]:
+                - /url: /damiano_ecuador/reel/DUluKDNDJ-k/
+                - 'img "Hoy me visitó mi querida amiga @carlaromanmusica, cantante lojana, y no pude resistir la tentación de pedirle que nos cante una zambita argentina que es bella y muy intensa. Por suerte Carlita fue complaciente, así que les comparto lo que salió de este hermoso encuentro.#musica #sentimientos #recuerdos #amor #desamor #zamba" [ref=f30e340]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f30e343] [cursor=pointer]:
+                - /url: /carlaromanmusica/reel/DQul3NzCQKz/
+                - 'img "“Escríbeme” ❤️ un icónico y reconocido tema en esta versión 🎶🎸. Cantemos juntos 🫶 Guitarra y arreglos: @sadatto #escribeme #musica #ecuador #quito #cover #loja #cantante" [ref=f30e346]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f30e349] [cursor=pointer]:
+                - /url: /carlaromanmusica/reel/DNo3Yg-O4OA/
+                - img "“Ángel de luz”, un tema ecuatoriano en el repertorio; junto a Gala Peruana y Daniel Hernández(Quipus-Perú) 🎶. Siempre orgullosa de nuestra música ✨🇪🇨" [ref=f30e352]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+            - generic [ref=f30e354]:
+              - link [ref=f30e356] [cursor=pointer]:
+                - /url: /carlaromanmusica/reel/Dd2dqycz6f0/
+                - 'img "Empezamos la semana salseros ❤️‍🔥🎶 ¡Con este trend! #porqueteamo #salsaromantica #cantante" [ref=f30e359]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f30e362] [cursor=pointer]:
+                - /url: /carlaromanmusica/p/DdnLdEFOpxq/
+                - img "Fluir y sentir ✨🎙️🎶. Trabajando en lo que se viene 🫶" [ref=f30e365]
+              - link [ref=f30e368] [cursor=pointer]:
+                - /url: /carlaromanmusica/p/Dc_vEEmJtMy/
+                - 'img "Me encantó imaginarme en los 80’s 💕💖 #80strends" [ref=f30e371]'
+            - generic [ref=f30e373]:
+              - link [ref=f30e375] [cursor=pointer]:
+                - /url: /carlaromanmusica/p/Dc41pRTDj2b/
+                - img "V I E R N E S ✨… y el cuerpo lo sabe 🎶🤎🎤" [ref=f30e378]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f30e381] [cursor=pointer]:
+                - /url: /carlaromanmusica/p/DcM1e_aiV3K/
+                - 'img "Con el corazón lleno de recuerdos 🤍 Cada lugar dejó algo en mí, pero sobre todo, cada destino se llevó un pedacito de mí ✨ Un viaje que me regaló momentos, aprendizajes y recuerdos que guardaré para siempre 🌍 🫶 Porque volver a un lugar tb puede ser una nueva forma de descubrirlo… y hay viajes que no solo te llevan a conocer nuevos lugares… te transforman 🤍🩷🖤 #eurotrip" [ref=f30e384]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f30e387] [cursor=pointer]:
+                - /url: /carlaromanmusica/p/DbgC3k8DspL/
+                - img "Buongiorno Italia linda 🇮🇹 ✨❤️" [ref=f30e390]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f30e392]:
+              - link [ref=f30e394] [cursor=pointer]:
+                - /url: /carlaromanmusica/p/DbIxRxeDQAW/
+                - 'img "Un crème brûlée y la felicidad de coleccionar momentos 🙏🏻✨ #paris #eurotrip2026 #familia #graciasdios #disneylandparis" [ref=f30e397]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f30e400] [cursor=pointer]:
+                - /url: /carlaromanmusica/p/Dal-Ih6jiSb/
+                - img "Cada día más cerca de mi 🤍✨🖤" [ref=f30e403]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f30e406] [cursor=pointer]:
+                - /url: /carlaromanmusica/reel/DaNrDErOo4X/
+                - 'img "Hoy más que nunca contigo Ecuador 🇪🇨 💛💙❤️ Te alentaremos hasta el final!!! ✨ #mundialtrend #ecuador🇪🇨 #sisepuede #mundial2026" [ref=f30e409]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+      - contentinfo [ref=f30e411]:
+        - generic [ref=f30e412]:
+          - generic [ref=f30e414]:
+            - link "Meta" [ref=f30e416] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f30e419] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f30e422] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f30e425] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f30e428] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f30e431] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f30e434] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f30e437] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f30e440] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f30e443] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f30e446] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f30e449] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f30e452] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f30e455] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f30e458] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f30e461] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f30e463]:
+            - generic [ref=f30e464] [cursor=pointer]:
+              - generic [ref=f30e465]:
+                - generic [ref=f30e466]: English
+                - img "Down chevron icon" [ref=f30e469]
+              - combobox "Switch Display Language" [ref=f30e471]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f30e472]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f30e475] [cursor=pointer]:
+              - generic "Messages - 8 new notifications" [ref=f30e476]:
+                - generic [ref=f30e477]:
+                  - generic [ref=f30e479]:
+                    - img "Messages" [ref=f30e480]
+                    - generic "Direct messaging - 8 new notifications link" [ref=f30e483]: "8"
+                  - generic [ref=f30e486]: Messages
+                - generic [ref=f30e487]:
+                  - button [ref=f30e488]:
+                    - img "8 unread chats" [ref=f30e490]
+                  - button "User avatar ..." [ref=f30e495]:
+                    - img "User avatar" [ref=f30e498]
+                  - button "User avatar David Márquez" [ref=f30e500]:
+                    - img "User avatar" [ref=f30e503]
+                  - button "User avatar Limberg Steven Garcia Alava" [ref=f30e505]:
+                    - img "User avatar" [ref=f30e508]
+            - generic [ref=f30e509]:
+              - generic [ref=f30e510]:
+                - generic [ref=f30e511]:
+                  - generic [ref=f30e513]:
+                    - status "Loading..." [ref=f30e515]
+                    - status "Loading..." [ref=f30e517]
+                  - button [active] [ref=f30e519] [cursor=pointer]:
+                    - img "Close" [ref=f30e521]
+                - separator [ref=f30e524]
+              - generic [ref=f30e525]:
+                - generic [ref=f30e526]:
+                  - status "Loading..." [ref=f30e528]
+                  - status "Loading..." [ref=f30e530]
+                - status "Loading..." [ref=f30e533]
+                - generic [ref=f30e534]:
+                  - status "Loading..." [ref=f30e536]
+                  - status "Loading..." [ref=f30e538]
+                - generic [ref=f30e539]:
+                  - status "Loading..." [ref=f30e541]
+                  - status "Loading..." [ref=f30e543]
+                - status "Loading..." [ref=f30e546]
+                - generic [ref=f30e547]:
+                  - status "Loading..." [ref=f30e549]
+                  - status "Loading..." [ref=f30e551]
+                - status "Loading..." [ref=f30e553]

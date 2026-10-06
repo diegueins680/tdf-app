@@ -1,0 +1,531 @@
+{
+  "headRefOid": "34ca75d3d92d2a6def22e63ddd47baa96edca878",
+  "mergeStateStatus": "BLOCKED",
+  "reviewDecision": "REVIEW_REQUIRED",
+  "reviews": [
+    {
+      "id": "PRR_kwDOQPdUrM8AAAABPjfoiw",
+      "author": {
+        "login": "tdfrecords"
+      },
+      "authorAssociation": "COLLABORATOR",
+      "body": "",
+      "submittedAt": "2026-09-28T12:46:46Z",
+      "includesCreatedEdit": false,
+      "reactionGroups": [],
+      "state": "DISMISSED",
+      "commit": {
+        "oid": "c8d50c9f6f274adeda87874e9d152212389ef9d9"
+      }
+    },
+    {
+      "id": "PRR_kwDOQPdUrM8AAAABPjzR0w",
+      "author": {
+        "login": "tdfrecords"
+      },
+      "authorAssociation": "COLLABORATOR",
+      "body": "",
+      "submittedAt": "2026-09-28T13:14:39Z",
+      "includesCreatedEdit": false,
+      "reactionGroups": [],
+      "state": "DISMISSED",
+      "commit": {
+        "oid": "a28e1858341bbf87b4c6080144bf38e9aedfc4d2"
+      }
+    },
+    {
+      "id": "PRR_kwDOQPdUrM8AAAABPkAsOg",
+      "author": {
+        "login": "tdfrecords"
+      },
+      "authorAssociation": "COLLABORATOR",
+      "body": "",
+      "submittedAt": "2026-09-28T13:31:54Z",
+      "includesCreatedEdit": false,
+      "reactionGroups": [],
+      "state": "DISMISSED",
+      "commit": {
+        "oid": "afd86265f90378000cb3b5723f3406ced9793bbc"
+      }
+    },
+    {
+      "id": "PRR_kwDOQPdUrM8AAAABPnzjiA",
+      "author": {
+        "login": "tdfrecords"
+      },
+      "authorAssociation": "COLLABORATOR",
+      "body": "",
+      "submittedAt": "2026-09-28T19:01:22Z",
+      "includesCreatedEdit": false,
+      "reactionGroups": [],
+      "state": "DISMISSED",
+      "commit": {
+        "oid": "86d4b9bb4dad81771a2e3de4739814c62c206d30"
+      }
+    },
+    {
+      "id": "PRR_kwDOQPdUrM8AAAABQFQhSg",
+      "author": {
+        "login": "chatgpt-codex-connector"
+      },
+      "authorAssociation": "NONE",
+      "body": "\n### \ud83d\udca1 Codex Review\n\nHere are some automated review suggestions for this pull request.\n\n**Reviewed commit:** `23ff8f588b`\n    \n\n<details> <summary>\u2139\ufe0f About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\".\n\nIf Codex has suggestions, it will comment; otherwise it will react with \ud83d\udc4d.\n\n\n\n\nCodex can also answer questions or update the PR. Try commenting \"@codex address that feedback\".\n            \n</details>",
+      "submittedAt": "2026-10-01T02:22:45Z",
+      "includesCreatedEdit": false,
+      "reactionGroups": [],
+      "state": "COMMENTED",
+      "commit": {
+        "oid": "23ff8f588bbdefd4d14e0d2a39cc39953d2c114f"
+      }
+    },
+    {
+      "id": "PRR_kwDOQPdUrM8AAAABQFR8Zg",
+      "author": {
+        "login": "tdfrecords"
+      },
+      "authorAssociation": "COLLABORATOR",
+      "body": "",
+      "submittedAt": "2026-10-01T02:26:55Z",
+      "includesCreatedEdit": false,
+      "reactionGroups": [],
+      "state": "DISMISSED",
+      "commit": {
+        "oid": "23ff8f588bbdefd4d14e0d2a39cc39953d2c114f"
+      }
+    },
+    {
+      "id": "PRR_kwDOQPdUrM8AAAABQFU16g",
+      "author": {
+        "login": "diegueins680"
+      },
+      "authorAssociation": "OWNER",
+      "body": "",
+      "submittedAt": "2026-10-01T02:35:43Z",
+      "includesCreatedEdit": false,
+      "reactionGroups": [],
+      "state": "COMMENTED",
+      "commit": {
+        "oid": "5c9bb3b5daf82fa438fe9f0dd1b796afd699d0a6"
+      }
+    },
+    {
+      "id": "PRR_kwDOQPdUrM8AAAABQFU3lw",
+      "author": {
+        "login": "diegueins680"
+      },
+      "authorAssociation": "OWNER",
+      "body": "",
+      "submittedAt": "2026-10-01T02:35:48Z",
+      "includesCreatedEdit": false,
+      "reactionGroups": [],
+      "state": "COMMENTED",
+      "commit": {
+        "oid": "5c9bb3b5daf82fa438fe9f0dd1b796afd699d0a6"
+      }
+    },
+    {
+      "id": "PRR_kwDOQPdUrM8AAAABQFa9qw",
+      "author": {
+        "login": "tdfrecords"
+      },
+      "authorAssociation": "COLLABORATOR",
+      "body": "",
+      "submittedAt": "2026-10-01T02:53:04Z",
+      "includesCreatedEdit": false,
+      "reactionGroups": [],
+      "state": "DISMISSED",
+      "commit": {
+        "oid": "5c9bb3b5daf82fa438fe9f0dd1b796afd699d0a6"
+      }
+    },
+    {
+      "id": "PRR_kwDOQPdUrM8AAAABQhMixQ",
+      "author": {
+        "login": "tdfrecords"
+      },
+      "authorAssociation": "COLLABORATOR",
+      "body": "",
+      "submittedAt": "2026-10-03T23:55:38Z",
+      "includesCreatedEdit": false,
+      "reactionGroups": [],
+      "state": "DISMISSED",
+      "commit": {
+        "oid": "08acdfa897832c42ef1582f26ffdd7c23f019b4c"
+      }
+    },
+    {
+      "id": "PRR_kwDOQPdUrM8AAAABQhMzzA",
+      "author": {
+        "login": "chatgpt-codex-connector"
+      },
+      "authorAssociation": "NONE",
+      "body": "\n### \ud83d\udca1 Codex Review\n\nHere are some automated review suggestions for this pull request.\n\n**Reviewed commit:** `08acdfa897`\n    \n\n<details> <summary>\u2139\ufe0f About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\".\n\nIf Codex has suggestions, it will comment; otherwise it will react with \ud83d\udc4d.\n\n\n\n\nCodex can also answer questions or update the PR. Try commenting \"@codex address that feedback\".\n            \n</details>",
+      "submittedAt": "2026-10-03T23:57:31Z",
+      "includesCreatedEdit": false,
+      "reactionGroups": [],
+      "state": "COMMENTED",
+      "commit": {
+        "oid": "08acdfa897832c42ef1582f26ffdd7c23f019b4c"
+      }
+    },
+    {
+      "id": "PRR_kwDOQPdUrM8AAAABQhRBWQ",
+      "author": {
+        "login": "diegueins680"
+      },
+      "authorAssociation": "OWNER",
+      "body": "",
+      "submittedAt": "2026-10-04T00:27:43Z",
+      "includesCreatedEdit": false,
+      "reactionGroups": [],
+      "state": "COMMENTED",
+      "commit": {
+        "oid": "34ca75d3d92d2a6def22e63ddd47baa96edca878"
+      }
+    },
+    {
+      "id": "PRR_kwDOQPdUrM8AAAABQhRCEw",
+      "author": {
+        "login": "diegueins680"
+      },
+      "authorAssociation": "OWNER",
+      "body": "",
+      "submittedAt": "2026-10-04T00:27:49Z",
+      "includesCreatedEdit": false,
+      "reactionGroups": [],
+      "state": "COMMENTED",
+      "commit": {
+        "oid": "34ca75d3d92d2a6def22e63ddd47baa96edca878"
+      }
+    }
+  ],
+  "statusCheckRollup": [
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:27:45Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998144/job/111326002677",
+      "name": "changes",
+      "startedAt": "2026-10-04T00:27:26Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:33:25Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998140/job/111326002618",
+      "name": "build",
+      "startedAt": "2026-10-04T00:27:27Z",
+      "status": "COMPLETED",
+      "workflowName": "CI Safe Install"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:29:25Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998139/job/111326002405",
+      "name": "hardcoded-list-audit",
+      "startedAt": "2026-10-04T00:27:26Z",
+      "status": "COMPLETED",
+      "workflowName": "Catalog list authority"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:33:35Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998149/job/111326002545",
+      "name": "real-raci-browser",
+      "startedAt": "2026-10-04T00:27:26Z",
+      "status": "COMPLETED",
+      "workflowName": "Event RACI real browser integration"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:27:45Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998146/job/111326002858",
+      "name": "specification-contracts",
+      "startedAt": "2026-10-04T00:27:26Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:27:48Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998148/job/111326002550",
+      "name": "build",
+      "startedAt": "2026-10-04T00:27:26Z",
+      "status": "COMPLETED",
+      "workflowName": "Run Datadog Synthetic tests"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:30:00Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998151/job/111326002417",
+      "name": "models-and-postgres",
+      "startedAt": "2026-10-04T00:27:26Z",
+      "status": "COMPLETED",
+      "workflowName": "Social formal and persistence verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:28:23Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998136/job/111326002395",
+      "name": "postgres-properties",
+      "startedAt": "2026-10-04T00:27:25Z",
+      "status": "COMPLETED",
+      "workflowName": "Universal interaction verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:27:23Z",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998136/job/111326003345",
+      "name": "native-ios-e2e",
+      "startedAt": "2026-10-04T00:27:23Z",
+      "status": "COMPLETED",
+      "workflowName": "Universal interaction verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:29:09Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998144/job/111326057246",
+      "name": "repo-quality",
+      "startedAt": "2026-10-04T00:28:06Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:29:46Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998146/job/111326002812",
+      "name": "verify",
+      "startedAt": "2026-10-04T00:27:26Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:29:15Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998151/job/111326002529",
+      "name": "social-client",
+      "startedAt": "2026-10-04T00:27:26Z",
+      "status": "COMPLETED",
+      "workflowName": "Social formal and persistence verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:34:55Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998144/job/111326057183",
+      "name": "ui-quality",
+      "startedAt": "2026-10-04T00:27:58Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:28:07Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998146/job/111326002929",
+      "name": "postgres-foundation",
+      "startedAt": "2026-10-04T00:27:26Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "0001-01-01T00:00:00Z",
+      "conclusion": "",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998144/job/111326057113",
+      "name": "persona-web-e2e",
+      "startedAt": "2026-10-04T00:27:47Z",
+      "status": "IN_PROGRESS",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:28:04Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998146/job/111326002865",
+      "name": "postgres-api",
+      "startedAt": "2026-10-04T00:27:26Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:30:12Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998144/job/111326057130",
+      "name": "mobile-quality",
+      "startedAt": "2026-10-04T00:27:48Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:28:01Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998146/job/111326002849",
+      "name": "postgres-task-commit",
+      "startedAt": "2026-10-04T00:27:26Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "0001-01-01T00:00:00Z",
+      "conclusion": "",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998144/job/111326057194",
+      "name": "backend-quality",
+      "startedAt": "2026-10-04T00:27:59Z",
+      "status": "IN_PROGRESS",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:28:04Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998146/job/111326002960",
+      "name": "postgres-task-read",
+      "startedAt": "2026-10-04T00:27:26Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:29:19Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998144/job/111326057224",
+      "name": "api-contract-tests",
+      "startedAt": "2026-10-04T00:28:04Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:27:57Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998146/job/111326002624",
+      "name": "postgres-task-revision",
+      "startedAt": "2026-10-04T00:27:26Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:31:05Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998144/job/111326057212",
+      "name": "migration-tests",
+      "startedAt": "2026-10-04T00:27:51Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:28:05Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998146/job/111326003006",
+      "name": "postgres-task-revisioned-read",
+      "startedAt": "2026-10-04T00:27:26Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:28:42Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998146/job/111326002835",
+      "name": "postgres-raci-reassignment",
+      "startedAt": "2026-10-04T00:27:26Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:29:24Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998144/job/111326281861",
+      "name": "api-contracts",
+      "startedAt": "2026-10-04T00:29:22Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:28:17Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998146/job/111326002830",
+      "name": "postgres-raci-editor-context",
+      "startedAt": "2026-10-04T00:27:26Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:28:08Z",
+      "conclusion": "FAILURE",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998146/job/111326002813",
+      "name": "postgres-task-completion",
+      "startedAt": "2026-10-04T00:27:26Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:31:11Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998144/job/111326550605",
+      "name": "production-migrations",
+      "startedAt": "2026-10-04T00:31:08Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:27:55Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/diegueins680/tdf-app/actions/runs/37164998146/job/111326002804",
+      "name": "postgres-complete-schema",
+      "startedAt": "2026-10-04T00:27:26Z",
+      "status": "COMPLETED",
+      "workflowName": "Event operations verification"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:29:06Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://dash.cloudflare.com/?to=/c07256e78d05ad9a508d0aee82ac577a/pages/view/tdf-app/107af9f8-1344-4563-9a3a-cb9bcb13019e",
+      "name": "Cloudflare Pages",
+      "startedAt": "2026-10-04T00:29:06Z",
+      "status": "COMPLETED",
+      "workflowName": ""
+    },
+    {
+      "__typename": "StatusContext",
+      "context": "Vercel",
+      "startedAt": "2026-10-04T00:28:36Z",
+      "state": "SUCCESS",
+      "targetUrl": "https://vercel.com/diego-saas-projects/tdf-app-tdf-hq-ui/9x1Qk9PWV9kUPwYxGmv5kyowbkqd"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-04T00:28:37Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://vercel.com/github",
+      "name": "Vercel Preview Comments",
+      "startedAt": "2026-10-04T00:28:37Z",
+      "status": "COMPLETED",
+      "workflowName": ""
+    }
+  ]
+}

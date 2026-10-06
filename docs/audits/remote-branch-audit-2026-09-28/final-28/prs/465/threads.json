@@ -1,0 +1,94 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 465,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "DIRTY",
+          "mergeable": "CONFLICTING",
+          "headRefOid": "5c9bb3b5daf82fa438fe9f0dd1b796afd699d0a6",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6nx9wW",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Hide task links until event operations are enabled**\n\nThis renders the task CTA for every valid logistics activity even though the adapter migrations are deliberately absent from the production manifest and `event.operations.api` defaults to disabled. In that deployment state, clicking the newly exposed button always reaches `requireEventOperationsEnabled`, receives a 404 `feature_disabled`, and leaves the user on the generic task error screen. Gate the link on actual feature availability or defer exposing it until activation.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/465#discussion_r4151212112",
+                      "createdAt": "2026-10-01T02:22:45Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 5c9bb3b5daf82fa438fe9f0dd1b796afd699d0a6. Removed the logistics task CTA while the adapter migrations remain outside the production manifest and event.operations.api defaults disabled. Direct routes and isolated enabled adapter tests remain intact. The activation contract and gap matrix now explicitly defer discoverable links until an authenticated backend availability contract and separately reviewed activation. No flag, migration or security control was enabled.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/465#discussion_r4151272559",
+                      "createdAt": "2026-10-01T02:35:43Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0xMC0wMVQwMjozNTo0M1rO929kbw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6nx9wa",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+                "line": 236,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Refresh follow state after a late successful mutation**\n\nWhen a follow/unfollow request succeeds after the user changes profile or otherwise changes the location key, `isCurrent()` is false and this early return skips every cache invalidation. The server mutation has still committed, but the shared `['fan-follows', viewerId]` query remains stale across the newly rendered profile and even after returning to the original one, so the UI can offer the opposite action until an unrelated refetch occurs. Keep the navigation-specific analytics/resume effects fenced, but invalidate the shared follow data after every successful mutation.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/465#discussion_r4151212117",
+                      "createdAt": "2026-10-01T02:22:45Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 5c9bb3b5daf82fa438fe9f0dd1b796afd699d0a6. Successful follow and unfollow writes now invalidate the original viewer, artist directory and profile cache before the current-navigation guard. Analytics and resume navigation remain fenced. Two delayed-mutation component regressions verify shared data refreshes on the newly rendered profile and the correct action after returning; all five previous logout/session/unmount/navigation suppression cases remain intact. The focused UI run passes 27 tests.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/465#discussion_r4151272970",
+                      "createdAt": "2026-10-01T02:35:48Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0xMC0wMVQwMjozNTo0OFrO929mCg=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0xMC0wMVQwMjoyMjo0NVrOp8fcGg=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

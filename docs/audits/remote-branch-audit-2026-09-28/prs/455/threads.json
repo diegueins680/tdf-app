@@ -1,0 +1,55 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 455,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "6fbae058e23c989599116c629a80fe216505c1e4",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6j3M2L",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq/test/PaymentArithmeticProbe.hs",
+                "line": 2,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Integrate the arithmetic oracle into the Hspec suite**\n\nWhen developers or validation lanes run the documented `stack test` command, this standalone `Main` module is skipped because it is only invoked by the bespoke command in `ci.yml`; consequently, its 400 transition and 512 ledger boundary checks can silently stop running outside that workflow. Convert the probe to an Hspec `*.Spec.hs` module and register it with the existing test suite so the standard backend test command includes this regression coverage.\n\nAGENTS.md reference: [tdf-hq/AGENTS.md:L24-L28](https://github.com/diegueins680/tdf-app/blob/b966595e267c6365830fa5e60abd3e707838ad59/tdf-hq/AGENTS.md#L24-L28)\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/455#discussion_r4049861934",
+                      "createdAt": "2026-09-18T19:07:01Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxOTowNzowMVrO8WP9Lg=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxOTowNzowMVrOo9zNiw=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

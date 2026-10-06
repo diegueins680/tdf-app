@@ -1,0 +1,6 @@
+A	docs/critical-completion-2026-09-16.md
+M	tdf-hq/src/TDF/Commerce/MerchReservationWorker.hs
+M	tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs
+M	tdf-hq/tdf-hq.cabal
+M	tdf-hq/test/Spec.hs
+A	tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs

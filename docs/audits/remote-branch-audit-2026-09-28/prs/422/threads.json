@@ -1,0 +1,311 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 422,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "209b21b07f304d21ab397353653b531646ae72be",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6jjuvI",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Carry the redirect into the replacement reset link**\n\nWhen an incomplete link such as `/reset?redirect=%2Ffans` uses this recovery path, the redirect survives only in the current login URL. Submitting the recovery dialog still calls `requestPasswordReset(email)`, whose payload contains only the email, while the backend generates `/reset?token=...` without a redirect; therefore, opening the replacement email and completing the reset sends the user to their default landing page rather than `/fans`. Pass the validated redirect through the reset request and generated email link, or otherwise persist it across the email round trip.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4042084948",
+                      "createdAt": "2026-09-17T22:54:02Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in a4c5e91fe, now integrated in38256cf721d92380c8cfc0b6d19e10bd8703c233. The frontend passes the validated destination as an optional query on /v1/password-reset (body remains {email}); the backend threads it into the real email-link builder, accepts only bounded safe local paths and URL-encodes it. Reset still checks the new session permissions. Hspec executed5 examples and100 generated untrusted destinations, and API/login/routing30 tests passed. Production-bundle ES/EN recovery/browser coverage passes across5 profiles. No SMTP delivery is asserted. Updated canonical web/mobile clients preserve old-client compatibility; deploy backend first.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4042579122",
+                      "createdAt": "2026-09-18T00:25:32Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwMDoyNTozMlrO8PTcsg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jk9NH",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "scripts/production-migrations.json",
+                "line": 542,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Point the migration at an ancestor of this release**\n\nFor this exact commit, `git merge-base --is-ancestor d8fd169c1bfec56c4f24bab7a49a0d56bbadeb37 eb00646d1ee38743f60fa0538696e86f27cfedd5` fails, and running the production release planner aborts with \u201cnot an ancestor of release.\u201d Because `resolveReleaseContext` validates every `introducedBy` before planning or releasing, this commit cannot enter the guarded backend release lane, so the new policy migration will never be applied; anchor the entry to a commit contained in the release ancestry.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4042599613",
+                      "createdAt": "2026-09-18T00:28:50Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Rechecked against the actual published release head38256cf721d92380c8cfc0b6d19e10bd8703c233. The comment references intermediate eb00646, but d8fd169c1bfec56c4f24bab7a49a0d56bbadeb37 IS an ancestor of the current head (git merge-base --is-ancestor exits0), retained through normal dependency merges. node scripts/production-release.mjs plan --sha38256cf721d92380c8cfc0b6d19e10bd8703c233 completed successfully and produced the guarded dry-run plan. No migration or introduction SHA was rewritten. Current CI production-migrations also passed. This historical intermediate-commit issue does not block the current release tree.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4042612006",
+                      "createdAt": "2026-09-18T00:30:48Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwMDozMDo0OFrO8PVdJg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jlJCw",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq/src/TDF/Server/Directory.hs",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Restrict prepared claims to artist profiles**\n\nWhen an artist Party also owns another directory profile (for example, a personal, venue, or company profile), this query considers every profile kind and selects whichever direct profile was updated most recently. The submitted administration claim therefore targets that unrelated profile, and `changeClaimStatus` later grants full manager capabilities for that exact ID when approved, potentially exposing its private data while leaving the artist profile unmanaged. Filter both the source and resolved target to the intended artist/band profile kinds, or create a dedicated private artist target when none exists.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4042681843",
+                      "createdAt": "2026-09-18T00:42:12Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Resolved in f935ba1e6 by integrating approved #406 (main db69e053). Source and resolved resource must remain artist-kind; band/person selection would target a different identity. The concurrent bot change 775934f75 is preserved in merge ancestry and its person-only/mixed/canonical-person fixtures are retained, with canonical-kind denial matching the reviewed contract. Actual HTTP/PostgreSQL17 union fixture passes; no management grant, publication, credential creation, or duplicate claim. Evidence: docs/ux-ui-audit/2026-09-17/evidence/artist-claim-kind-union-http.log; handler is byte-identical to reviewed main. ArtistClaimKind TLC plus unsafe negative control documents the boundary.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043185940",
+                      "createdAt": "2026-09-18T02:09:57Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwMjowOTo1N1rO8P4fFA=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jmY6C",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx",
+                "line": 62,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Validate access codes without ambient session cookies**\n\nWhen this page is served from the API origin and the browser already has a different session cookie, this `fetch` sends both that cookie and the entered bearer code. `extractTokenFromHeaders` rejects differing cookie/bearer credentials, so `/session` returns `null` and a valid invitation code is reported as invalid. This blocks signed-in users who open a code issued for another account; validate the code without ambient cookies or explicitly choose which identity should authorize the intake.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043218424",
+                      "createdAt": "2026-09-18T02:15:23Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Addressed in 6479e0350: validation and submission use the verified Bearer with credentials omitted; no global/transient session mutation or public CRM prewrites. Drafts are scoped to verified party and public/internal form; stale/ABA receipts are fenced. Actual browser plus isolated PostgreSQL17 persisted the intake under the code account while another cookie account remained unchanged. Component regressions and TLC safety/liveness with negative controls pass; see audit evidence/review-browser.json and live-intake-authority-formal.log.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043486101",
+                      "createdAt": "2026-09-18T03:11:57Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwMzoxMTo1N1rO8QKzlQ=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jmY6E",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq/src/TDF/Email.hs",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Carry the selected locale through recovery emails**\n\nWhen an English user opens the recovery email in a new browser, another device, or after clearing storage, the selected locale is lost: this new API path passes only the redirect, the email subject/body remain Spanish, and the generated link contains no locale, so the reset page falls back to Spanish. Thread the account/request locale into the email content and reset URL so the advertised English recovery journey survives the email round trip.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043218427",
+                      "createdAt": "2026-09-18T02:15:23Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Addressed in 6479e0350 and merged mobile PR94. Backward-compatible optional locale query controls Spanish/English email subject, text, HTML language, CTA and lang in the safe reset link. Fresh-browser and previously-Spanish storage cases pass in Chromium, Firefox and WebKit; backend8 examples/100 QuickCheck and mobile461 tests pass. Existing callers without locale retain legacy Spanish behavior.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043487208",
+                      "createdAt": "2026-09-18T03:12:18Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwMzoxMjoxOFrO8QK36A=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jmY6J",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Route fallback locales to matching policy pages**\n\nFor persisted `fr`, `de`, or `pt` locales, `authEntry` has no locale-specific catalog and therefore falls back to English, but this condition sends every non-English locale to the Spanish terms and privacy pages. Those supported users see an English consent sentence whose links unexpectedly open Spanish legal text; select Spanish only for an `es` locale and otherwise use the English policy until matching translations exist.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043218434",
+                      "createdAt": "2026-09-18T02:15:23Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Addressed in 6479e0350. Spanish policy links are selected only for es; the English originals are used for en/fr/de/pt to match the existing web auth fallback. Five locale component regressions pass; policy versions and access to original documents are preserved.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043487274",
+                      "createdAt": "2026-09-18T03:12:19Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwMzoxMjoxOVrO8QK4Kg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jnIJp",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Localize propagated login failures**\n\nWhen English is selected and a password login fails before receiving an HTTP response, this branch renders `error.message` verbatim, but `authFetch` produces the hard-coded Spanish network and timeout messages from `src/api/auth.ts`; an empty 401 response also falls back to Spanish `Credenciales inv\u00e1lidas`. Consequently, the newly translated English login journey switches back to Spanish on common failure paths. Map these transport/fallback errors to localized keys instead of displaying the API message directly.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043520228",
+                      "createdAt": "2026-09-18T03:21:03Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in aa31d5ccf: auth transport/status errors carry stable codes translated by login, Google and signup views. 27 focused tests and 25 production-bundle browser cases pass across five profiles/three engines, including network rejection and empty 401 in ES/EN with preserved input/destination. Timeout code exercised by the actual API unit with fake time; TypeScript/lint pass.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043604518",
+                      "createdAt": "2026-09-18T03:38:57Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwMzozODo1N1rO8QSCJg=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jnQY7",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq/src/TDF/Email.hs",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Restore a generic CTA for non-course transactional emails**\n\nFor recipients whose client displays the plain-text MIME part, this default now labels every `buildMail` link as \u201cVer detalles del curso.\u201d The same helper is used by account-created, marketplace-order, engineer-booking, ticket-confirmation, ticket-transfer, waitlist, and test emails, so those messages now present an unrelated course CTA before their actual account, order, booking, or ticket URL; keep the default label generic and supply the course-specific label only from the course senders.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043572724",
+                      "createdAt": "2026-09-18T03:30:37Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in aa31d5ccf: shared default is Ver detalles again; only the two course senders explicitly use Ver detalles del curso. Password reset retains its localized dedicated CTA. Stack/GHC9.10.3 rebuilt Email.hs and existing reset Hspec/QuickCheck regression passed (8 examples/100 generated). No real SMTP delivery claimed. Introduced regression tracked as UX-260917-029.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043604639",
+                      "createdAt": "2026-09-18T03:39:00Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwMzozOTowMFrO8QSCnw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6jnX5y",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Localize reset-confirmation transport errors**\n\nWhen a user follows an English `lang=en` recovery link and the confirmation request times out or fails offline, `authFetch` supplies an `AuthRequestError` whose message is still the hard-coded Spanish network/timeout text. This branch always prefers that nonempty `error.message`, so the translated fallback is bypassed and the English reset journey switches to Spanish. Map the structured auth error through the locale-aware error helper before displaying it.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043619890",
+                      "createdAt": "2026-09-18T03:43:07Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 209b21b07: reset confirmation now presents structured transport failures through the same locale-aware authErrorMessage helper as login and reset requests. Added browser scenarios for offline reset confirmation in Spanish and English; both passed on an isolated Chromium server. Existing helper tests also passed (3 tests), including timeout translation.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/422#discussion_r4043680351",
+                      "createdAt": "2026-09-18T03:58:30Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwMzo1ODozMFrO8QWqXw=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQwMzo0MzowN1rOo51-cg=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

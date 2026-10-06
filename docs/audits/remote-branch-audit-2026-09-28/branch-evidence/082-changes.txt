@@ -1,0 +1,46 @@
+ .github/workflows/social-verification.yml          |   12 +
+ docs/social/README.md                              |    3 +-
+ docs/social/audit.md                               |   15 +
+ .../evidence/fan-effects-20260916/FanEffects.txt   |   32 +
+ .../fan-effects-20260916/FanEffectsGoverned.txt    |  122 ++
+ .../fan-effects-20260916/FanEffectsLocks.txt       |  146 +++
+ .../fan-effects-20260916/FanEffectsPause.txt       |  170 +++
+ .../fan-effects-20260916/FanEffectsRetry.txt       |  122 ++
+ .../evidence/fan-effects-20260916/catalog.txt      |    3 +
+ .../evidence/fan-effects-20260916/commands.md      |   20 +
+ .../fan-effects-20260916/development-failures.txt  |  117 ++
+ .../fan-effects-20260916/http-and-benchmark.txt    | 1303 ++++++++++++++++++++
+ .../fan-effects-20260916/parent-409-full-ci.json   |    1 +
+ .../fan-effects-20260916/parent-409-pr.json        |    1 +
+ .../fan-effects-20260916/schema-native-pg16.txt    |  234 ++++
+ .../fan-effects-20260916/source-sha256.txt         |   25 +
+ .../fan-effects-20260916/stack-pass-excerpt.txt    |   26 +
+ .../evidence/fan-effects-20260916/ui-eslint.txt    |    0
+ .../evidence/fan-effects-20260916/ui-jest.txt      |   24 +
+ .../evidence/fan-effects-20260916/ui-tsc.txt       |    0
+ docs/social/fan-effects-boundary.md                |  233 ++++
+ docs/social/handoff.md                             |   15 +
+ formal/social/FanEffects.cfg                       |    4 +
+ formal/social/FanEffects.tla                       |   53 +
+ formal/social/FanEffectsGoverned.cfg               |    3 +
+ formal/social/FanEffectsLocks.cfg                  |    3 +
+ formal/social/FanEffectsPause.cfg                  |    3 +
+ formal/social/FanEffectsRetry.cfg                  |    3 +
+ scripts/social/FanEffectsBenchmark.hs              |   69 ++
+ scripts/social/FanEffectsModelCases.hs             |  716 +++++++++++
+ scripts/social/FanEffectsSpec.hs                   |  252 ++++
+ scripts/social/HttpSpec.hs                         |    5 +
+ scripts/social/check-fan-effects-model.sh          |   24 +
+ scripts/social/fan-effects-fixture.sql             |   21 +
+ scripts/social/generate-fan-effects-cases.py       |   43 +
+ scripts/social/schema-compatibility.sql            |    2 +-
+ scripts/social/test-http.sh                        |    2 +
+ scripts/social/test-schema-compatibility.sh        |    3 +
+ tdf-hq-ui/src/pages/FanClubMemberProfilePage.tsx   |   28 +-
+ tdf-hq/sql/2026-09-16_social_v2_fan_effects.sql    |   17 +
+ tdf-hq/src/TDF/API.hs                              |    5 +-
+ tdf-hq/src/TDF/API/FanFollowing.hs                 |    8 +
+ tdf-hq/src/TDF/Server.hs                           |  119 +-
+ tdf-hq/src/TDF/Social/FanEffects.hs                |  155 +++
+ tdf-hq/tdf-hq.cabal                                |    4 +
+ 45 files changed, 4040 insertions(+), 126 deletions(-)

@@ -1,0 +1,13 @@
+ .github/workflows/event-operations-formal.yml      |  33 +++++++
+ docs/event-operations/README.md                    |   1 +
+ docs/event-operations/delivery-plan.md             |   7 ++
+ docs/event-operations/pr-10-schema-rehearsal.md    |  98 ++++++++++++++++++
+ docs/event-operations/traceability-matrix.md       |   1 +
+ package.json                                       |   2 +
+ .../event-operations-schema-rehearsal.test.mjs     |  50 ++++++++++
+ scripts/test-event-operations-schema-rehearsal.sh  | 110 +++++++++++++++++++++
+ .../event_operations_schema_assertions.sql         |  82 +++++++++++++++
+ .../event_operations_schema_reapply_assertions.sql |  30 ++++++
+ ...event_operations_schema_rollback_assertions.sql |  13 +++
+ .../integration/event_operations_schema_seed.sql   |  57 +++++++++++
+ 12 files changed, 484 insertions(+)

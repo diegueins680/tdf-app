@@ -1,0 +1,560 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043429865",
+      "pull_request_review_id": 5243817688,
+      "id": 4043429865,
+      "node_id": "PRRC_kwDOQPdUrM7xAdfp",
+      "diff_hunk": "@@ -540,6 +540,11 @@\n       \"id\": \"2026-09-16_artist_self_service\",\n       \"path\": \"tdf-hq/sql/2026-09-16_artist_self_service.sql\",\n       \"introducedBy\": \"d8fd169c1bfec56c4f24bab7a49a0d56bbadeb37\"\n+    },\n+    {\n+      \"id\": \"2026-09-18_notification_navigation\",\n+      \"path\": \"tdf-hq/sql/2026-09-18_notification_navigation.sql\",\n+      \"introducedBy\": \"3cf19c64bd60610059af6c26ec40104093be21c5\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "a5a391954ec4152a19e1502c08347edd34624060",
+      "original_commit_id": "9c4549170b61d933db7a2ba3546de1b75e139499",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Anchor the migration to a release ancestor**\n\nWhen releasing this commit, the guarded release loader will reject the manifest before applying any migrations: `3cf19c64bd60610059af6c26ec40104093be21c5` is not an ancestor of `00d6a401c6d2cd43571d795050f8bf5843507163` (`git merge-base --is-ancestor` exits 1), while `scripts/production-release.mjs` explicitly refuses every `introducedBy` value outside the release ancestry. Since the new backend model requires `target_key`, this blocks deployment rather than merely omitting optional history; preserve the introduction commit in this branch's ancestry or register an actual ancestor commit.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T02:57:11Z",
+      "updated_at": "2026-09-18T02:57:11Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/428#discussion_r4043429865",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/428",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043429865"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/428#discussion_r4043429865"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/428"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043429865/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 557,
+      "original_line": 547,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 8,
+      "position": 8,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043429870",
+      "pull_request_review_id": 5243817688,
+      "id": 4043429870,
+      "node_id": "PRRC_kwDOQPdUrM7xAdfu",
+      "diff_hunk": "@@ -160,6 +160,9 @@ jobs:\n       - name: Install mobile dependencies\n         run: npm --prefix tdf-mobile ci\n \n+      - name: Verify shared notification destinations\n+        run: node scripts/generate-notification-navigation.mjs --check",
+      "path": ".github/workflows/ci.yml",
+      "commit_id": "a5a391954ec4152a19e1502c08347edd34624060",
+      "original_commit_id": "9c4549170b61d933db7a2ba3546de1b75e139499",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Run the generator check for source-file changes**\n\nA future PR that changes only `tdf-hq-ui/src/components/notificationTarget.ts` will set the UI scope but not the mobile scope in `scripts/ci-change-scope.mjs`, so this check inside `mobile-quality` is skipped even though that UI file is the generator's declared source of truth. The committed mobile copy can therefore drift unnoticed; run this check in an always/repo/UI job or classify changes to the source and generator script as mobile changes.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T02:57:11Z",
+      "updated_at": "2026-09-18T02:57:11Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/428#discussion_r4043429870",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/428",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043429870"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/428#discussion_r4043429870"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/428"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043429870/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 168,
+      "original_start_line": 163,
+      "start_side": "RIGHT",
+      "line": 169,
+      "original_line": 164,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 5,
+      "position": 5,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043572238",
+      "pull_request_review_id": 5243980814,
+      "id": 4043572238,
+      "node_id": "PRRC_kwDOQPdUrM7xBAQO",
+      "diff_hunk": "@@ -540,6 +540,11 @@\n       \"id\": \"2026-09-16_artist_self_service\",\n       \"path\": \"tdf-hq/sql/2026-09-16_artist_self_service.sql\",\n       \"introducedBy\": \"d8fd169c1bfec56c4f24bab7a49a0d56bbadeb37\"\n+    },\n+    {\n+      \"id\": \"2026-09-18_notification_navigation\",\n+      \"path\": \"tdf-hq/sql/2026-09-18_notification_navigation.sql\",\n+      \"introducedBy\": \"3cf19c64bd60610059af6c26ec40104093be21c5\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "a5a391954ec4152a19e1502c08347edd34624060",
+      "original_commit_id": "9c4549170b61d933db7a2ba3546de1b75e139499",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Verified against the actual PR branch: git merge-base --is-ancestor 3cf19c64bd60610059af6c26ec40104093be21c5 6df4f24b0ab5282ccd93f4838dc3c5957b7d2ab2 exits 0. The guarded production release plan also passes on this exact head (and passed on previously reviewed 875f5a9). The cited 00d6a401 is not this PR head. The original migration introduction commit is preserved by normal merge ancestry; the PR explicitly requires a normal merge for release. No migration registration change is necessary.",
+      "created_at": "2026-09-18T03:30:30Z",
+      "updated_at": "2026-09-18T03:30:30Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/428#discussion_r4043572238",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/428",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043572238"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/428#discussion_r4043572238"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/428"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043572238/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 557,
+      "original_line": 547,
+      "side": "RIGHT",
+      "in_reply_to_id": 4043429865,
+      "author_association": "OWNER",
+      "original_position": 8,
+      "position": 8,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043572395",
+      "pull_request_review_id": 5243980995,
+      "id": 4043572395,
+      "node_id": "PRRC_kwDOQPdUrM7xBASr",
+      "diff_hunk": "@@ -160,6 +160,9 @@ jobs:\n       - name: Install mobile dependencies\n         run: npm --prefix tdf-mobile ci\n \n+      - name: Verify shared notification destinations\n+        run: node scripts/generate-notification-navigation.mjs --check",
+      "path": ".github/workflows/ci.yml",
+      "commit_id": "a5a391954ec4152a19e1502c08347edd34624060",
+      "original_commit_id": "9c4549170b61d933db7a2ba3546de1b75e139499",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 6df4f24b0ab5282ccd93f4838dc3c5957b7d2ab2. Changes to either the canonical web notification resolver or its generator now select mobile-quality, which checks generated destination parity. Two regression cases verify each source-only diff selects that gate without unnecessary backend compilation. All 25 CI pipeline tests pass, and the current generator --check passes.",
+      "created_at": "2026-09-18T03:30:31Z",
+      "updated_at": "2026-09-18T03:30:32Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/428#discussion_r4043572395",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/428",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043572395"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/428#discussion_r4043572395"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/428"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043572395/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 168,
+      "original_start_line": 163,
+      "start_side": "RIGHT",
+      "line": 169,
+      "original_line": 164,
+      "side": "RIGHT",
+      "in_reply_to_id": 4043429870,
+      "author_association": "OWNER",
+      "original_position": 5,
+      "position": 5,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043588978",
+      "pull_request_review_id": 5243999526,
+      "id": 4043588978,
+      "node_id": "PRRC_kwDOQPdUrM7xBEVy",
+      "diff_hunk": "@@ -1445,3 +1446,23 @@ validateContactContext user senderProfileIdValue targetProfileIdValue kind ident\n     rows <- jsonRows \"SELECT to_jsonb(TRUE) FROM directory_invitation WHERE id=? AND status IN ('accepted','conversation_open') AND ((sender_profile_id=? AND target_profile_id=?) OR (sender_profile_id=? AND target_profile_id=?))\" [toPersistValue identifier,toPersistValue senderProfileIdValue,toPersistValue targetProfileIdValue,toPersistValue targetProfileIdValue,toPersistValue senderProfileIdValue]\n     when (null rows) (throwError err404 {errBody=\"invitation contact context is not accepted or does not match the participants\"})\n   _ -> throwError err400 {errBody=\"unsupported contact context\"}\n+\n+-- Read-only notification destinations recheck the underlying resource scope.\n+-- Never accept a URL or disclose whether an inaccessible record exists.\n+notificationContext :: AuthedUser -> Text -> UUID.UUID -> AppM Value\n+notificationContext user kind ident = case kind of\n+  \"application\" -> do\n+    role <- applicationParticipantRole user ident\n+    unless (role == \"author\") $ throwError err404\n+    jsonOne err404\n+      \"SELECT jsonb_build_object('id',a.id,'classifiedId',a.classified_id,'authorProfileId',c.author_profile_id,'title',c.title,'status',a.status,'message',a.message,'submittedAt',a.submitted_at,'applicantProfile',jsonb_build_object('id',p.id,'name',p.public_name,'slug',p.slug)) FROM classified_application a JOIN classified c ON c.id=a.classified_id JOIN directory_profile p ON p.id=a.applicant_profile_id WHERE a.id=?\"\n+      [toPersistValue ident]\n+  \"invitation\" -> invitationSummary user ident\n+  \"review\" -> do\n+    visible <- jsonRows \"SELECT to_jsonb(TRUE) FROM directory_review r JOIN directory_profile subject ON subject.id=r.subject_profile_id JOIN directory_profile_manager m ON m.profile_id=coalesce(subject.canonical_profile_id,subject.id) WHERE r.id=? AND r.status='published' AND m.account_party_id=? AND m.active AND m.can_manage\" [toPersistValue ident,toPersistValue (auPartyId user)]\n+    when (null visible) $ throwError err404\n+    jsonOne err404 reviewSummarySql [toPersistValue ident]\n+  \"alert\" -> jsonOne err404\n+    \"SELECT jsonb_build_object('id',d.id,'searchName',s.name,'resultType',doc.entity_kind,'resultId',doc.entity_id,'slug',doc.slug,'title',doc.title) FROM directory_alert_delivery d JOIN directory_saved_search s ON s.id=d.saved_search_id LEFT JOIN directory_profile original ON d.result_kind='profile' AND original.id::text=d.result_id JOIN directory_public_search_document doc ON doc.entity_kind=d.result_kind AND doc.entity_id=coalesce(original.canonical_profile_id::text,d.result_id) WHERE d.id=? AND s.account_party_id=? AND doc.source_status='published' AND doc.visibility='public' AND doc.moderation_status='allowed' AND (doc.expires_at IS NULL OR doc.expires_at>now()) AND (doc.entity_kind<>'event' OR NOT EXISTS (SELECT 1 FROM external_event_ref ref WHERE ref.event_id::text=doc.entity_id AND lower(trim(ref.source_status))=?))\"",
+      "path": "tdf-hq/src/TDF/Server/Directory.hs",
+      "commit_id": "6df4f24b0ab5282ccd93f4838dc3c5957b7d2ab2",
+      "original_commit_id": "6df4f24b0ab5282ccd93f4838dc3c5957b7d2ab2",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Filter alert lookups only on projected columns**\n\nWhen any `directory_alert` notification resolves, this query references `doc.source_status`, `doc.visibility`, and `doc.moderation_status`, but `directory_public_search_document` does not project those columns; it already applies those predicates internally in `tdf-hq/sql/2026-09-09_music_directory_suppressed_event_privacy.sql:52-90`. PostgreSQL therefore raises `undefined_column`, causing every saved-search alert destination to return a server error instead of the intended result. Remove these redundant predicates or join the base search-document table explicitly.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T03:34:52Z",
+      "updated_at": "2026-09-18T03:34:52Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/428#discussion_r4043588978",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/428",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043588978"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/428#discussion_r4043588978"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/428"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043588978/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 1466,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 81,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043660135",
+      "pull_request_review_id": 5244079052,
+      "id": 4043660135,
+      "node_id": "PRRC_kwDOQPdUrM7xBVtn",
+      "diff_hunk": "@@ -1445,3 +1446,23 @@ validateContactContext user senderProfileIdValue targetProfileIdValue kind ident\n     rows <- jsonRows \"SELECT to_jsonb(TRUE) FROM directory_invitation WHERE id=? AND status IN ('accepted','conversation_open') AND ((sender_profile_id=? AND target_profile_id=?) OR (sender_profile_id=? AND target_profile_id=?))\" [toPersistValue identifier,toPersistValue senderProfileIdValue,toPersistValue targetProfileIdValue,toPersistValue targetProfileIdValue,toPersistValue senderProfileIdValue]\n     when (null rows) (throwError err404 {errBody=\"invitation contact context is not accepted or does not match the participants\"})\n   _ -> throwError err400 {errBody=\"unsupported contact context\"}\n+\n+-- Read-only notification destinations recheck the underlying resource scope.\n+-- Never accept a URL or disclose whether an inaccessible record exists.\n+notificationContext :: AuthedUser -> Text -> UUID.UUID -> AppM Value\n+notificationContext user kind ident = case kind of\n+  \"application\" -> do\n+    role <- applicationParticipantRole user ident\n+    unless (role == \"author\") $ throwError err404\n+    jsonOne err404\n+      \"SELECT jsonb_build_object('id',a.id,'classifiedId',a.classified_id,'authorProfileId',c.author_profile_id,'title',c.title,'status',a.status,'message',a.message,'submittedAt',a.submitted_at,'applicantProfile',jsonb_build_object('id',p.id,'name',p.public_name,'slug',p.slug)) FROM classified_application a JOIN classified c ON c.id=a.classified_id JOIN directory_profile p ON p.id=a.applicant_profile_id WHERE a.id=?\"\n+      [toPersistValue ident]\n+  \"invitation\" -> invitationSummary user ident\n+  \"review\" -> do\n+    visible <- jsonRows \"SELECT to_jsonb(TRUE) FROM directory_review r JOIN directory_profile subject ON subject.id=r.subject_profile_id JOIN directory_profile_manager m ON m.profile_id=coalesce(subject.canonical_profile_id,subject.id) WHERE r.id=? AND r.status='published' AND m.account_party_id=? AND m.active AND m.can_manage\" [toPersistValue ident,toPersistValue (auPartyId user)]\n+    when (null visible) $ throwError err404\n+    jsonOne err404 reviewSummarySql [toPersistValue ident]\n+  \"alert\" -> jsonOne err404\n+    \"SELECT jsonb_build_object('id',d.id,'searchName',s.name,'resultType',doc.entity_kind,'resultId',doc.entity_id,'slug',doc.slug,'title',doc.title) FROM directory_alert_delivery d JOIN directory_saved_search s ON s.id=d.saved_search_id LEFT JOIN directory_profile original ON d.result_kind='profile' AND original.id::text=d.result_id JOIN directory_public_search_document doc ON doc.entity_kind=d.result_kind AND doc.entity_id=coalesce(original.canonical_profile_id::text,d.result_id) WHERE d.id=? AND s.account_party_id=? AND doc.source_status='published' AND doc.visibility='public' AND doc.moderation_status='allowed' AND (doc.expires_at IS NULL OR doc.expires_at>now()) AND (doc.entity_kind<>'event' OR NOT EXISTS (SELECT 1 FROM external_event_ref ref WHERE ref.event_id::text=doc.entity_id AND lower(trim(ref.source_status))=?))\"",
+      "path": "tdf-hq/src/TDF/Server/Directory.hs",
+      "commit_id": "6df4f24b0ab5282ccd93f4838dc3c5957b7d2ab2",
+      "original_commit_id": "6df4f24b0ab5282ccd93f4838dc3c5957b7d2ab2",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 876d879c7. The alert lookup now relies on the public view for publication/visibility/moderation filtering and uses only projected columns. PostgreSQL runs the exact handler SQL and verifies owned exact results, foreign owners, missing targets, canonical profiles, private/draft/blocked/expired/deleted results and live event suppression. Against the complete isolated production-shaped schema, the old query reproduces undefined_column and the corrected query prepares successfully in a read-only transaction. The migration regression and new lookup cases all pass.",
+      "created_at": "2026-09-18T03:53:01Z",
+      "updated_at": "2026-09-18T03:53:01Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/428#discussion_r4043660135",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/428",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043660135"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/428#discussion_r4043660135"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/428"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043660135/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 1466,
+      "side": "RIGHT",
+      "in_reply_to_id": 4043588978,
+      "author_association": "OWNER",
+      "original_position": 81,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043892922",
+      "pull_request_review_id": 5244355021,
+      "id": 4043892922,
+      "node_id": "PRRC_kwDOQPdUrM7xCOi6",
+      "diff_hunk": "@@ -550,6 +550,11 @@\n       \"id\": \"2026-09-18_identity_review_dependencies\",\n       \"path\": \"tdf-hq/sql/2026-09-18_identity_review_dependencies.sql\",\n       \"introducedBy\": \"d442013ce79b2afefdda6a203500cf2a58532ca7\"\n+    },\n+    {\n+      \"id\": \"2026-09-18_notification_navigation\",\n+      \"path\": \"tdf-hq/sql/2026-09-18_notification_navigation.sql\",\n+      \"introducedBy\": \"3cf19c64bd60610059af6c26ec40104093be21c5\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "a5a391954ec4152a19e1502c08347edd34624060",
+      "original_commit_id": "542f2838481af0414b71df46e6e99863dd5f223d",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Anchor the migration to this commit's ancestry**\n\nFor the exact reviewed commit, fresh evidence makes the earlier concern applicable: `git merge-base --is-ancestor 3cf19c64bd60610059af6c26ec40104093be21c5 42b12cddcdd3d39cb65eaa0303ddb08ab5813c2b` exits 1. The release loader in `scripts/production-release.mjs` checks every `introducedBy` value this way and rejects non-ancestors, so this squashed commit cannot enter the guarded deployment lane and the required `target_key` migration will not run; register an ancestor of this release commit (normally this commit itself) before releasing.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T04:48:32Z",
+      "updated_at": "2026-09-18T04:48:32Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/428#discussion_r4043892922",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/428",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043892922"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/428#discussion_r4043892922"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/428"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043892922/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 557,
+      "original_line": 557,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 8,
+      "position": 8,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043929568",
+      "pull_request_review_id": 5244397740,
+      "id": 4043929568,
+      "node_id": "PRRC_kwDOQPdUrM7xCXfg",
+      "diff_hunk": "@@ -550,6 +550,11 @@\n       \"id\": \"2026-09-18_identity_review_dependencies\",\n       \"path\": \"tdf-hq/sql/2026-09-18_identity_review_dependencies.sql\",\n       \"introducedBy\": \"d442013ce79b2afefdda6a203500cf2a58532ca7\"\n+    },\n+    {\n+      \"id\": \"2026-09-18_notification_navigation\",\n+      \"path\": \"tdf-hq/sql/2026-09-18_notification_navigation.sql\",\n+      \"introducedBy\": \"3cf19c64bd60610059af6c26ec40104093be21c5\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "a5a391954ec4152a19e1502c08347edd34624060",
+      "original_commit_id": "542f2838481af0414b71df46e6e99863dd5f223d",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Verified against the actual PR head a5a391954ec4152a19e1502c08347edd34624060: git merge-base --is-ancestor 3cf19c64bd60610059af6c26ec40104093be21c5 a5a391954ec4152a19e1502c08347edd34624060 exits 0. The guarded production-release plan for that full SHA also exits 0 and includes all 107 migrations. This branch retained normal merge ancestry through authentication and identity integration; no squash was performed. The cited 42b12cdd commit is not this PR head. We will use a normal merge and repeat the exact merged-SHA plan before deployment, preserving the introduction ancestor. No ancestry check is disabled or bypassed.\n",
+      "created_at": "2026-09-18T04:57:27Z",
+      "updated_at": "2026-09-18T04:57:27Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/428#discussion_r4043929568",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/428",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043929568"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/428#discussion_r4043929568"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/428"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043929568/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 557,
+      "original_line": 557,
+      "side": "RIGHT",
+      "in_reply_to_id": 4043892922,
+      "author_association": "OWNER",
+      "original_position": 8,
+      "position": 8,
+      "subject_type": "line"
+    }
+  ]
+]

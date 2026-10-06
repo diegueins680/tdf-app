@@ -1,0 +1,46 @@
+[
+  {
+    "branch": "audit/ux-ui-complete-20260917",
+    "sha": "ba3eb5e2d28e3ff75fcf7c5c51136cc7d7543331",
+    "protected": false,
+    "pr": 421,
+    "url": "https://github.com/diegueins680/tdf-app/pull/421",
+    "base": "main",
+    "state": "open",
+    "draft": true,
+    "purpose": "fix(onboarding): preserve entry during storage denial and service startup",
+    "merge_commit": "37851d6539264d55f0fe5ac75147e17fcfbc085b",
+    "main_snapshot": "5c84736ff5727502a77413b24f6a4ccc55a89274",
+    "comparison": {
+      "exit": 0,
+      "output": "0\t6",
+      "error": ""
+    },
+    "classification": "KEEP_UNMERGED",
+    "action": "Preserved concurrent branch; no mutation by this audit.",
+    "evidence_prefix": "/private/tmp/tdf-branch-audit-20260917/concurrent-pr-421",
+    "rationale": "New concurrent work, draft/readiness/acceptance verification belongs to its ongoing delivery; preserve without overwriting. Captured current metadata and checks."
+  },
+  {
+    "branch": "fix/directory-privacy-migration-order-20260917",
+    "sha": "c7643f0ba07f330995415c4848194938536d51ae",
+    "protected": false,
+    "pr": 419,
+    "url": "https://github.com/diegueins680/tdf-app/pull/419",
+    "base": "main",
+    "state": "closed",
+    "draft": false,
+    "purpose": "fix(directory): preserve both privacy boundaries across migration histories",
+    "merge_commit": "9f0da14de84919f8fba391fa752b7df7412a600d",
+    "main_snapshot": "5c84736ff5727502a77413b24f6a4ccc55a89274",
+    "comparison": {
+      "exit": 0,
+      "output": "2\t0",
+      "error": ""
+    },
+    "classification": "ALREADY_MERGED",
+    "action": "Preserved concurrent branch; no mutation by this audit.",
+    "evidence_prefix": "/private/tmp/tdf-branch-audit-20260917/concurrent-pr-419",
+    "rationale": "Merged by another actor, retained for operational/recovery dependencies."
+  }
+]

@@ -1,0 +1,6 @@
+M	docs/catalog-persistence/catalog-list-decisions.json
+A	tdf-hq-ui/src/features/releases/ReleaseArtwork.test.tsx
+A	tdf-hq-ui/src/features/releases/ReleaseArtwork.tsx
+A	tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts
+A	tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts
+M	tdf-hq-ui/src/pages/LabelReleasesPage.tsx

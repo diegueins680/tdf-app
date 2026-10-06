@@ -1,0 +1,433 @@
+- generic [ref=f3e4]:
+  - generic [ref=f3e18]:
+    - generic [ref=f3e21]:
+      - link [ref=f3e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f3e31]
+      - generic [ref=f3e34]:
+        - link [ref=f3e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f3e44]
+        - link [ref=f3e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f3e54]
+        - link [ref=f3e61] [cursor=pointer]:
+          - /url: /direct/t/120859582637786
+          - generic [ref=f3e64]:
+            - img "Messages" [ref=f3e66]
+            - generic "Direct messaging - 9 new notifications link" [ref=f3e69]: 9+
+        - link [ref=f3e75] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f3e80]
+        - link [ref=f3e88] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f3e93]
+        - link [ref=f3e101] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f3e106]
+        - link [ref=f3e111] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f3e116]
+        - link [ref=f3e123] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f3e128]:
+            - img "tdf.records.label's profile picture" [ref=f3e129]
+      - generic [ref=f3e130]:
+        - link [ref=f3e133] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f3e138]
+        - link [ref=f3e141] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f3e146]
+    - generic [ref=f3e149]:
+      - main [ref=f3e150]:
+        - generic [ref=f3e152]:
+          - generic [ref=f3e153]:
+            - generic [ref=f3e154]:
+              - button [ref=f3e159] [cursor=pointer]:
+                - link [ref=f3e161]:
+                  - img "neilarmasmusic's profile picture" [ref=f3e162]
+              - generic [ref=f3e163]:
+                - generic [ref=f3e164]:
+                  - generic [ref=f3e165]:
+                    - link [ref=f3e167] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "neilarmasmusic" [level=2] [ref=f3e168]
+                    - button [ref=f3e170] [cursor=pointer]:
+                      - img "Options" [ref=f3e172]
+                  - generic [ref=f3e176]: Neil Armas 🎙️
+                  - generic [ref=f3e178]:
+                    - generic [ref=f3e180]:
+                      - generic [ref=f3e181]: 1,035
+                      - text: posts
+                    - link "5,810 followers" [ref=f3e183] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f3e184]:
+                        - generic "5,810" [ref=f3e185]
+                        - text: followers
+                    - link "946 following" [ref=f3e187] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f3e188]:
+                        - generic [ref=f3e189]: "946"
+                        - text: following
+                - generic [ref=f3e190]:
+                  - generic [ref=f3e191]:
+                    - generic [ref=f3e192]: Digital creator
+                    - generic [ref=f3e194]:
+                      - button "🎤Le canto al amor que no se cuenta en voz alta 🌖En cada show hay algo que solo se vive una vez 📍Ecuador suena fuerte" [ref=f3e195] [cursor=pointer]
+                      - generic [ref=f3e197]:
+                        - text: ...
+                        - button "more" [ref=f3e198] [cursor=pointer]
+                    - generic [ref=f3e200]:
+                      - generic [ref=f3e201]:
+                        - img "Link icon" [ref=f3e203]
+                        - link "bit.ly/m/linksneilarmas" [ref=f3e207] [cursor=pointer]:
+                          - /url: https://l.instagram.com/?u=https%3A%2F%2Fbit.ly%2Fm%2Flinksneilarmas%3Futm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio%26fbclid%3DPAZXh0bgNhZW0CMTEAcGRvZgJzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAafp0u2eRgI-gJp2ZxZu5-Nwownbt4f4-y9jd99kI8SZDFgz-CUfL8pHkZk3rQ_aem_KXHviZB0lpAC0EnLlMTxuA&e=AUBl_KWZuaFM5l2b57KDzRD4NNtDAvi67oAVlwTztDiCkQK9oSOm1O7vE9dMsLahXeOYVv0xxPIrSc1QEXc2R54YL3UMIjAb0yR2j4aZb2rpwqczg6NLCPdg72v2lBA8U3HMTMowF1La
+                      - link "Threads neilarmasmusic" [ref=f3e210] [cursor=pointer]:
+                        - /url: https://www.threads.com/@neilarmasmusic?xmt=AQG0RmftQdWfKwD32IlbZHuaHWIojwT1BmLduyOtIouNEB8
+                        - img "Threads" [ref=f3e212]
+                        - generic [ref=f3e214]: neilarmasmusic
+                  - link "Followed by kevsantosksb, carlaromanmusica + 4 more" [ref=f3e216] [cursor=pointer]:
+                    - /url: /neilarmasmusic/followers/mutualOnly
+                    - generic [ref=f3e218]:
+                      - generic [ref=f3e220]:
+                        - button [ref=f3e221]:
+                          - link [ref=f3e222]
+                        - button [ref=f3e223]:
+                          - link [ref=f3e224]
+                        - button [ref=f3e225]:
+                          - link [ref=f3e226]
+                      - generic [ref=f3e227]: Followed by kevsantosksb, carlaromanmusica + 4 more
+            - generic [ref=f3e232]:
+              - button "Follow" [ref=f3e234] [cursor=pointer]
+              - button "Message" [ref=f3e238] [cursor=pointer]
+              - button [ref=f3e240] [cursor=pointer]:
+                - img "Similar accounts" [ref=f3e242]
+            - menu [ref=f3e246]:
+              - list [ref=f3e250]:
+                - listitem [ref=f3e251]
+                - listitem [ref=f3e252]
+                - listitem [ref=f3e253]:
+                  - link "View La banda highlight" [ref=f3e256] [cursor=pointer]:
+                    - /url: /stories/highlights/18202132588323161/
+                    - button "neilarmasmusic's highlight story picture La banda" [ref=f3e257]:
+                      - button [ref=f3e258]:
+                        - img "neilarmasmusic's highlight story picture" [ref=f3e261]
+                      - generic [ref=f3e262]: La banda
+                - listitem [ref=f3e265]:
+                  - link "View Mis canciones highlight" [ref=f3e268] [cursor=pointer]:
+                    - /url: /stories/highlights/17846686485652387/
+                    - button "neilarmasmusic's highlight story picture Mis canciones" [ref=f3e269]:
+                      - button [ref=f3e270]:
+                        - img "neilarmasmusic's highlight story picture" [ref=f3e273]
+                      - generic [ref=f3e274]: Mis canciones
+                - listitem [ref=f3e277]:
+                  - link "View Solista highlight" [ref=f3e280] [cursor=pointer]:
+                    - /url: /stories/highlights/18431480098118877/
+                    - button "neilarmasmusic's highlight story picture Solista" [ref=f3e281]:
+                      - button [ref=f3e282]:
+                        - img "neilarmasmusic's highlight story picture" [ref=f3e285]
+                      - generic [ref=f3e286]: Solista
+                - listitem [ref=f3e289]:
+                  - link "View Gym highlight" [ref=f3e292] [cursor=pointer]:
+                    - /url: /stories/highlights/18049722092463643/
+                    - button "neilarmasmusic's highlight story picture Gym" [ref=f3e293]:
+                      - button [ref=f3e294]:
+                        - img "neilarmasmusic's highlight story picture" [ref=f3e297]
+                      - generic [ref=f3e298]: Gym
+                - listitem [ref=f3e301]:
+                  - 'link "View #TributoMelendi highlight" [ref=f3e304] [cursor=pointer]':
+                    - /url: /stories/highlights/18077477668031568/
+                    - 'button "neilarmasmusic''s highlight story picture #TributoMelendi" [ref=f3e305]':
+                      - button [ref=f3e306]:
+                        - img "neilarmasmusic's highlight story picture" [ref=f3e309]
+                      - generic [ref=f3e310]: "#TributoMelendi"
+          - generic [ref=f3e313]:
+            - tablist [ref=f3e314]:
+              - link [ref=f3e316] [cursor=pointer]:
+                - /url: /neilarmasmusic/
+                - img "Posts" [ref=f3e318]
+              - link [ref=f3e329] [cursor=pointer]:
+                - /url: /neilarmasmusic/reels/
+                - img "Reels" [ref=f3e331]
+              - link [ref=f3e334] [cursor=pointer]:
+                - /url: /neilarmasmusic/reposts/
+                - img "Reposts" [ref=f3e336]
+              - link [ref=f3e339] [cursor=pointer]:
+                - /url: /neilarmasmusic/tagged/
+                - img "Tagged" [ref=f3e341]
+            - tabpanel
+          - generic [ref=f3e348]:
+            - generic [ref=f3e349]:
+              - link [ref=f3e351] [cursor=pointer]:
+                - /url: /neilarmasmusic/p/Ddow8c2hnqw/
+                - 'img "Esta historia también se construye con ustedes. ❤️ Si eres de los que aman la música, persiguen sus sueños y luchan por lo que quieren; de los que dedican canciones para decir lo que a veces no pueden explicar con palabras y, por supuesto, escuchan música de despecho sin estar despechados 😂❤️‍🩹… bienvenido al club. Por aquí compartimos canciones, conciertos, calles, viajes, backstage y todo lo que pasa mientras seguimos haciendo realidad esta historia. Sé parte del camino. 📱 Instagram · TikTok · Facebook: @neilarmasmusic 🎧 YouTube · Spotify: Neil Armas Nos vemos por aquí. ❤️ Solo hice un cambio que me #neilarmasec #musicaenvivo🎶 #musicosenquito #fyp #musicosenecuador" [ref=f3e354]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f3e357] [cursor=pointer]:
+                - /url: /neilarmasmusic/p/DdowNCmBbCk/
+                - img "Mi música está hecha para sentir. ❤️‍🩹 Para enamorarte, extrañar, recordar, bailar, sanar… y hasta escuchar música de despecho sin estar despechado. 😂 Porque las emociones no se esconden, se viven. 🎧 Escúchame en Spotify, YouTube, Apple Music y Amazon Music. Y este 24.09 llega Siento, una nueva canción para seguir sintiendo juntos 🎧" [ref=f3e360]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+              - link [ref=f3e363] [cursor=pointer]:
+                - /url: /neilarmasmusic/p/DdotvENTdTI/
+                - img "Llevo mi música a tus eventos. 🎤✨ Cantamos, bailamos, reímos y hacemos de cada show una experiencia de concierto para disfrutar juntos. El repertorio se adapta a tus gustos musicales, al tipo de evento y, sobre todo, a las ganas que tengamos de pasarla bien. ❤️ 🎉 Matrimonios, cumpleaños, eventos corporativos y celebraciones privadas. 📍 Shows en Quito y todo el Ecuador. 📲 Escríbeme y organizamos nuestro siguiente evento 🔥" [ref=f3e366]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Pinned post icon"
+            - generic [ref=f3e368]:
+              - link [ref=f3e370] [cursor=pointer]:
+                - /url: /neilarmasmusic/p/Dd2UI6doDzx/
+                - 'img "Escuchen música de artistas ecuatorianos 🇪🇨🔥 Quedo atento a sus comentarios 👀 #sientoneilarmas #fyp #marketing #parati #musicosenquito" [ref=f3e373]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f3e376] [cursor=pointer]:
+                - /url: /neilarmasmusic/reel/Ddujfivh04e/
+                - 'img "Te toma un minuto apoyar a un artista ecuatoriano 🇪🇨❤️ #sientoneilarmas #artistaecuatoriano #musicosenquito #fyp #viral" [ref=f3e379]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f3e382] [cursor=pointer]:
+                - /url: /neilarmasmusic/reel/DdsRmSyhgHZ/
+                - 'img "Con esta canción celebro todas las veces que pude rendirme y no lo hice, por las veces que no pude grabarla, las veces que cambié los arreglos, las veces que me desvíe mi atención en cosas menos importantes,las veces que no supe que sentía y lo hice canción para seguir adelante 🫶🏻 Siento es una prueba más de todo lo que amo hacer música, ahora ya es de ustedes ❤️ #sientoneilarmas #lanzamiento #fyp #musicosenquito #músicalatina" [ref=f3e385]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f3e387]:
+              - link [ref=f3e389] [cursor=pointer]:
+                - /url: /neilarmasmusic/reel/DdpWS19hxU_/
+                - 'img "Contando las horas 🕣 estoy nervioso 🥺 #sientoneilarmas #cuentaregresiva #lanzamiento #fyp #despechados" [ref=f3e392]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f3e395] [cursor=pointer]:
+                - /url: /neilarmasmusic/p/DdmNVTUh2zY/
+                - 'img "Esta canción realmente representa para mí las veces que no me rendí por internar terminarla, cada cosa que pasó, cada intento que no se dio, cada cambio que se hizo, pero nunca me rendí hasta poder compartirla con ustedes ❤️ Este jueves 24 de septiembre “Siento” ya será de ustedes también 🔥 ¿Desde dónde están esperando esta canción ? ❤️ #sientoneilarmas #lanzamiento #fyp #portada #músicalatina" [ref=f3e398]'
+              - link [ref=f3e401] [cursor=pointer]:
+                - /url: /neilarmasmusic/reel/Ddh5YGOBZd1/
+                - img "Salir a grabar contenido, encontrarse frente a frente con la gente y poder apoyar a las artistas ecuatorianos han sido de las mejores experiencias que he vivido en mi carrera ❤️🇪🇨 Gracias a la gente que me dijo que si quería escuchar mi nueva canción 🎧 Siento estará disponible este 24 de septiembre en todas las plataformas digitales 🫶🏻" [ref=f3e404]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f3e406]:
+              - link [ref=f3e408] [cursor=pointer]:
+                - /url: /neilarmasmusic/reel/DdcumIFhe7x/
+                - 'img "Un día como artista independiente en el estudio 🎧 #sientoneilarmas #musicosenquito #fyp #viral #enelestudio" [ref=f3e411]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f3e414] [cursor=pointer]:
+                - /url: /neilarmasmusic/reel/DdcDb_hhjH-/
+                - 'img "En este grupo solo gente que escucha música para ❤️ #sientoneilarmas #frases #despechados #tribu #fyp" [ref=f3e417]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f3e420] [cursor=pointer]:
+                - /url: /neilarmasmusic/reel/DdaFOXZhXX_/
+                - 'img "La espera terminó ! 🔥 24.09.26 #sientoneilarmas #007 #parodia #lanzamiento #uio" [ref=f3e423]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+      - contentinfo [ref=f3e425]:
+        - generic [ref=f3e426]:
+          - generic [ref=f3e428]:
+            - link "Meta" [ref=f3e430] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f3e433] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f3e436] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f3e439] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f3e442] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f3e445] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f3e448] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f3e451] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f3e454] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f3e457] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f3e460] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f3e463] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f3e466] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f3e469] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f3e472] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f3e475] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f3e477]:
+            - generic [ref=f3e478] [cursor=pointer]:
+              - generic [ref=f3e479]:
+                - generic [ref=f3e480]: English
+                - img "Down chevron icon" [ref=f3e483]
+              - combobox "Switch Display Language" [ref=f3e485]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f3e486]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f3e500] [cursor=pointer]:
+              - generic "Messages - 9 new notifications" [ref=f3e501]:
+                - generic [ref=f3e502]:
+                  - generic [ref=f3e504]:
+                    - img "Messages" [ref=f3e505]
+                    - generic "Direct messaging - 9 new notifications link" [ref=f3e508]: 9+
+                  - generic [ref=f3e511]: Messages
+                - generic [ref=f3e512]:
+                  - button [ref=f3e513]:
+                    - img "9 unread chats" [ref=f3e515]
+                  - button "User avatar Blue Records" [ref=f3e520]:
+                    - img "User avatar" [ref=f3e523]
+                  - button "User avatar Maribel Tipán" [ref=f3e525]:
+                    - img "User avatar" [ref=f3e528]
+                  - button "User avatar Crackero🦇" [ref=f3e530]:
+                    - img "User avatar" [ref=f3e533]
+            - generic [ref=f3e579]:
+              - generic [ref=f3e581]:
+                - generic [ref=f3e582]:
+                  - button [ref=f3e584] [cursor=pointer]:
+                    - img "Go back" [ref=f3e586]
+                  - link "Open the profile page of neilarmasmusic" [ref=f3e589] [cursor=pointer]:
+                    - /url: /neilarmasmusic/
+                    - generic [ref=f3e590]:
+                      - img "user-profile-picture" [ref=f3e593]
+                      - heading "Neil Armas 🎙️" [level=2] [ref=f3e597]
+                  - generic [ref=f3e599]:
+                    - button [ref=f3e600] [cursor=pointer]:
+                      - img "Expand" [ref=f3e602]
+                    - button [ref=f3e604] [cursor=pointer]:
+                      - img "Close" [ref=f3e606]
+                - separator [ref=f3e609]
+              - generic "Neil Armas 🎙️" [ref=f3e610]:
+                - generic [ref=f3e612]:
+                  - generic [ref=f3e616]:
+                    - generic [ref=f3e617]:
+                      - img "user-profile-picture" [ref=f3e621]
+                      - generic [ref=f3e622]:
+                        - heading "Neil Armas 🎙️" [level=2] [ref=f3e625]
+                        - generic [ref=f3e627]: neilarmasmusic · Instagram
+                        - link "View profile" [ref=f3e630] [cursor=pointer]:
+                          - /url: /neilarmasmusic/
+                    - generic [ref=f3e678]:
+                      - generic [ref=f3e679]: 4:11 AM
+                      - group [ref=f3e682]:
+                        - generic [ref=f3e685]:
+                          - article [ref=f3e686]:
+                            - generic [ref=f3e688]:
+                              - generic [ref=f3e691]:
+                                - text: Hola, Neil
+                                - img "👋" [ref=f3e693]
+                                - text: "Vimos tu lanzamiento «Siento» y tu consulta en el reel de TDF. Tu escena necesita un espacio propio: estamos invitando a quienes hacen música en Quito a encontrarse en TDF. Puedes empezar tu perfil de artista, reunir los enlaces de tu música y explorar a otros proyectos de la escena."
+                                - link "https://tdf-app.pages.dev/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a" [ref=f3e695] [cursor=pointer]:
+                                  - /url: https://tdf-app.pages.dev/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a
+                                - text: "Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                              - link "TDF Records" [ref=f3e696] [cursor=pointer]:
+                                - /url: https://tdf-app.pages.dev/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_a
+                          - generic [ref=f3e701]:
+                            - group "Message actions":
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - button "React to message from tdf.records.label":
+                                      - generic:
+                                        - img "React to message from tdf.records.label"
+                                - generic:
+                                  - generic:
+                                    - button "Reply to message from tdf.records.label":
+                                      - generic:
+                                        - img "Reply to message from tdf.records.label"
+                                - generic:
+                                  - generic:
+                                    - button "See more options for message from tdf.records.label":
+                                      - generic:
+                                        - img "See more options for message from tdf.records.label"
+                  - generic [ref=f3e640]:
+                    - button [ref=f3e643] [cursor=pointer]:
+                      - img "Choose an emoji" [ref=f3e645]
+                    - generic [ref=f3e647]:
+                      - textbox [active] [ref=f3e648]:
+                        - paragraph [ref=f3e702]
+                      - generic: Message...
+                    - generic [ref=f3e650]:
+                      - button [ref=f3e703] [cursor=pointer]:
+                        - img "Voice Clip" [ref=f3e705]
+                      - button [ref=f3e708] [cursor=pointer]:
+                        - img "Add Photo or Video" [ref=f3e710]
+                      - button [ref=f3e715] [cursor=pointer]:
+                        - img "Choose a GIF or sticker" [ref=f3e717]

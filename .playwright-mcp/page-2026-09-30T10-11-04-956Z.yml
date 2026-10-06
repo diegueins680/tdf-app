@@ -1,0 +1,359 @@
+- generic [ref=f33e4]:
+  - generic [ref=f33e1556]:
+    - generic [ref=f33e1559]:
+      - link [ref=f33e1564] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f33e1569]
+      - generic [ref=f33e1572]:
+        - link [ref=f33e1577] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f33e1582]
+        - link [ref=f33e1587] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f33e1592]
+        - link [ref=f33e1599] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - generic [ref=f33e1602]:
+            - img "Messages" [ref=f33e1604]
+            - generic "Direct messaging - 8 new notifications link" [ref=f33e1607]: "8"
+        - link [ref=f33e1613] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f33e1618]
+        - link [ref=f33e1625] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f33e1630]
+        - link [ref=f33e1636] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f33e1641]
+        - link [ref=f33e1646] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f33e1651]
+        - link [ref=f33e1658] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f33e1663]:
+            - img "tdf.records.label's profile picture" [ref=f33e1664]
+      - generic [ref=f33e1665]:
+        - link [ref=f33e1668] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f33e1673]
+        - link [ref=f33e1676] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f33e1681]
+    - generic [ref=f33e1684]:
+      - main [ref=f33e1685]:
+        - generic [ref=f33e1687]:
+          - generic [ref=f33e1688]:
+            - generic [ref=f33e1689]:
+              - link [ref=f33e1695] [cursor=pointer]:
+                - /url: /josuegranizo/
+                - img "josuegranizo's profile picture" [ref=f33e1696]
+              - generic [ref=f33e1697]:
+                - generic [ref=f33e1698]:
+                  - generic [ref=f33e1699]:
+                    - link [ref=f33e1701] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "josuegranizo" [level=2] [ref=f33e1702]
+                    - button [ref=f33e1704] [cursor=pointer]:
+                      - img "Options" [ref=f33e1706]
+                  - generic [ref=f33e1710]: Josue Granizo Vallejo | Productor Musical
+                  - generic [ref=f33e1712]:
+                    - generic [ref=f33e1714]:
+                      - generic [ref=f33e1715]: "115"
+                      - text: posts
+                    - link "1,545 followers" [ref=f33e1717] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f33e1718]:
+                        - generic "1,545" [ref=f33e1719]
+                        - text: followers
+                    - link "1,106 following" [ref=f33e1721] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f33e1722]:
+                        - generic [ref=f33e1723]: 1,106
+                        - text: following
+                - generic [ref=f33e1724]:
+                  - generic [ref=f33e1725]:
+                    - generic [ref=f33e1726]: Music Producer
+                    - generic [ref=f33e1728]:
+                      - button [ref=f33e1729] [cursor=pointer]:
+                        - generic [ref=f33e1730]:
+                          - text: Músico / Productor / Siervo 🇪🇨Tec. Sonido y AcústicaPankino Estudio
+                          - link "#pankinoestudio" [ref=f33e1731]:
+                            - /url: /explore/tags/pankinoestudio/
+                          - text: "#"
+                      - generic [ref=f33e1732]:
+                        - text: ...
+                        - button "more" [ref=f33e1733] [cursor=pointer]
+                    - generic [ref=f33e1735]:
+                      - button "Link icon linkfly.to/40324lg05OU and 1 more" [ref=f33e1736] [cursor=pointer]:
+                        - generic [ref=f33e1737]:
+                          - img "Link icon" [ref=f33e1739]
+                          - generic [ref=f33e1742]: linkfly.to/40324lg05OU and 1 more
+                      - link "Threads josuegranizo" [ref=f33e1744] [cursor=pointer]:
+                        - /url: https://www.threads.com/@josuegranizo?xmt=AQG0aopLXzeARGbiae_nYksoOYqvlii802JLnBoqWaxxuTw
+                        - img "Threads" [ref=f33e1746]
+                        - generic [ref=f33e1748]: josuegranizo
+                  - link "Followed by chilvanakin, carlos.estrada_sax + 2 more" [ref=f33e1750] [cursor=pointer]:
+                    - /url: /josuegranizo/followers/mutualOnly
+                    - generic [ref=f33e1752]:
+                      - generic [ref=f33e1754]:
+                        - button [ref=f33e1755]:
+                          - link [ref=f33e1756]
+                        - button [ref=f33e1757]:
+                          - link [ref=f33e1758]
+                        - button [ref=f33e1759]:
+                          - link [ref=f33e1760]
+                      - generic [ref=f33e1761]: Followed by chilvanakin, carlos.estrada_sax + 2 more
+            - generic [ref=f33e1766]:
+              - button "Follow Back" [ref=f33e1768] [cursor=pointer]
+              - button "Message" [ref=f33e1772] [cursor=pointer]
+              - button [ref=f33e1774] [cursor=pointer]:
+                - img "Similar accounts" [ref=f33e1776]
+            - menu [ref=f33e1780]:
+              - list [ref=f33e1784]:
+                - listitem [ref=f33e1785]
+                - listitem [ref=f33e1786]
+                - listitem [ref=f33e1787]:
+                  - link "View Sonido highlight" [ref=f33e1790] [cursor=pointer]:
+                    - /url: /stories/highlights/18034743946860417/
+                    - button "josuegranizo's highlight story picture Sonido" [ref=f33e1791]:
+                      - button [ref=f33e1792]:
+                        - img "josuegranizo's highlight story picture" [ref=f33e1795]
+                      - generic [ref=f33e1796]: Sonido
+                - listitem [ref=f33e1799]:
+                  - link "View Studio Time highlight" [ref=f33e1802] [cursor=pointer]:
+                    - /url: /stories/highlights/17924149091779182/
+                    - button "josuegranizo's highlight story picture Studio Time" [ref=f33e1803]:
+                      - button [ref=f33e1804]:
+                        - img "josuegranizo's highlight story picture" [ref=f33e1807]
+                      - generic [ref=f33e1808]: Studio Time
+                - listitem [ref=f33e1811]:
+                  - link "View Colab highlight" [ref=f33e1814] [cursor=pointer]:
+                    - /url: /stories/highlights/17885729246960829/
+                    - button "josuegranizo's highlight story picture Colab" [ref=f33e1815]:
+                      - button [ref=f33e1816]:
+                        - img "josuegranizo's highlight story picture" [ref=f33e1819]
+                      - generic [ref=f33e1820]: Colab
+                - listitem [ref=f33e1823]:
+                  - link "View Hacks highlight" [ref=f33e1826] [cursor=pointer]:
+                    - /url: /stories/highlights/18042171808708347/
+                    - button "josuegranizo's highlight story picture Hacks" [ref=f33e1827]:
+                      - button [ref=f33e1828]:
+                        - img "josuegranizo's highlight story picture" [ref=f33e1831]
+                      - generic [ref=f33e1832]: Hacks
+                - listitem [ref=f33e1835]:
+                  - link "View Music life highlight" [ref=f33e1838] [cursor=pointer]:
+                    - /url: /stories/highlights/18125735188340799/
+                    - button "josuegranizo's highlight story picture Music life" [ref=f33e1839]:
+                      - button [ref=f33e1840]:
+                        - img "josuegranizo's highlight story picture" [ref=f33e1843]
+                      - generic [ref=f33e1844]: Music life
+          - generic [ref=f33e1847]:
+            - tablist [ref=f33e1848]:
+              - link [ref=f33e1850] [cursor=pointer]:
+                - /url: /josuegranizo/
+                - img "Posts" [ref=f33e1852]
+              - link [ref=f33e1863] [cursor=pointer]:
+                - /url: /josuegranizo/reels/
+                - img "Reels" [ref=f33e1865]
+              - link [ref=f33e1868] [cursor=pointer]:
+                - /url: /josuegranizo/reposts/
+                - img "Reposts" [ref=f33e1870]
+              - link [ref=f33e1873] [cursor=pointer]:
+                - /url: /josuegranizo/tagged/
+                - img "Tagged" [ref=f33e1875]
+            - tabpanel
+          - generic [ref=f33e1882]:
+            - generic [ref=f33e1883]:
+              - link [ref=f33e1885] [cursor=pointer]:
+                - /url: /robertoveramusic/reel/DcH0vfKtqxJ/
+                - 'img "Una mirada al proceso de grabación de baterías para “Ven pa acá”, tema de @pablo.music18 que próximamente estará disponible junto a su videoclip. Grabado en mi estudio junto a @josuegranizo , productor de la sesión. 🥁🎙️ El audio que acompaña este Reel es una mezcla sin procesamiento de las baterías grabadas durante la sesión. Muy pronto podrán escuchar el resultado completo. 🎶 #drums #DrumRecording #RecordingSession #BehindTheScenes#" [ref=f33e1888]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f33e1891] [cursor=pointer]:
+                - /url: /iglesiaverboecuador/p/DY0jd1whkvK/
+              - link [ref=f33e1896] [cursor=pointer]:
+                - /url: /dolrockec/p/DXm_I6vloWP/
+                - img "Acústico - EN SU AMOR Estudio Pankino 🎵" [ref=f33e1899]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f33e1901]:
+              - link [ref=f33e1903] [cursor=pointer]:
+                - /url: /josuegranizo/reel/DS2dFBVDYY-/
+                - 'img "Holyday Freebie @uaudio #plugingratis #freebie" [ref=f33e1906]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f33e1909] [cursor=pointer]:
+                - /url: /josuegranizo/reel/DSAhqcmjSro/
+                - 'img "Modos Propios y AMROC #homestudio #acustica" [ref=f33e1912]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f33e1915] [cursor=pointer]:
+                - /url: /josuegranizo/reel/DR5UnzhErNN/
+                - 'img "Aislamiento vs Acondicionamiento #acustica #homestudio" [ref=f33e1918]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f33e1920]:
+              - link [ref=f33e1922] [cursor=pointer]:
+                - /url: /josuegranizo/reel/DP14_0tkq_o/
+                - 'img "Reverberación #acustica #homestudio #audio" [ref=f33e1925]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f33e1928] [cursor=pointer]:
+                - /url: /josuegranizo/reel/DPxk-FgDFw5/
+                - 'img "Oversampling explicado #audio #produccionmusical #audiodigital" [ref=f33e1931]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f33e1934] [cursor=pointer]:
+                - /url: /josuegranizo/reel/DPnDmiAjB8b/
+                - 'img "Sample Rate #audio #produccionmusical #audiodigital digital" [ref=f33e1937]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f33e1939]:
+              - link [ref=f33e1941] [cursor=pointer]:
+                - /url: /josuegranizo/reel/DPk2kFzjU5Z/
+                - 'img "Conexiones Balanceadas va Desbalanceadas #audio #sonidoenvivo #sonidoprofesional" [ref=f33e1944]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f33e1947] [cursor=pointer]:
+                - /url: /josuegranizo/reel/DPVcv3BjbGk/
+                - 'img "Showtime 64'' Tube Amp GRATIS por tiempo limitado! #plugingratis #uaudio" [ref=f33e1950]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f33e1953] [cursor=pointer]:
+                - /url: /josuegranizo/reel/DPCRtc4CTGR/
+                - 'img "Como mejorar la acústica de tu Home Studio #homestudio #acustica #produccionmusical" [ref=f33e1956]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+      - contentinfo [ref=f33e1958]:
+        - generic [ref=f33e1959]:
+          - generic [ref=f33e1961]:
+            - link "Meta" [ref=f33e1963] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f33e1966] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f33e1969] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f33e1972] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f33e1975] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f33e1978] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f33e1981] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f33e1984] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f33e1987] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f33e1990] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f33e1993] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f33e1996] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f33e1999] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f33e2002] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f33e2005] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f33e2008] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f33e2010]:
+            - generic [ref=f33e2011] [cursor=pointer]:
+              - generic [ref=f33e2012]:
+                - generic [ref=f33e2013]: English
+                - img "Down chevron icon" [ref=f33e2016]
+              - combobox "Switch Display Language" [ref=f33e2018]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f33e2019]: © 2026 Instagram from Meta
+  - button [ref=f33e534] [cursor=pointer]:
+    - generic "Messages - 8 new notifications" [ref=f33e535]:
+      - generic [ref=f33e536]:
+        - generic [ref=f33e538]:
+          - img "Messages" [ref=f33e539]
+          - generic "Direct messaging - 8 new notifications link" [ref=f33e542]: "8"
+        - generic [ref=f33e545]: Messages
+      - generic [ref=f33e546]:
+        - button [ref=f33e547]:
+          - img "8 unread chats" [ref=f33e549]
+        - button "User avatar ..." [ref=f33e554]:
+          - img "User avatar" [ref=f33e557]
+        - button "User avatar David Márquez" [ref=f33e559]:
+          - img "User avatar" [ref=f33e562]
+        - button "User avatar Limberg Steven Garcia Alava" [ref=f33e564]:
+          - img "User avatar" [ref=f33e567]

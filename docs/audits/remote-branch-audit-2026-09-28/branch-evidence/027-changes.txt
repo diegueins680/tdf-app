@@ -1,0 +1,15 @@
+ .github/workflows/ci.yml                           |   8 ++
+ docs/Event_Discovery_Cron.md                       |  58 ++++++---
+ .../catalog-list-decisions.json                    |   8 +-
+ formal/system/inventory.json                       |   8 +-
+ scripts/lib/production-release.mjs                 |   9 ++
+ scripts/production-migrations.json                 |   5 +
+ scripts/test-event-ingestion-boundaries.sh         |  46 ++++++++
+ tdf-hq/docs/Event_Research_Ingestion.md            |   2 +-
+ .../sql/2026-09-27_event_ingestion_boundaries.sql  | 130 +++++++++++++++++++++
+ ...6-09-27_event_ingestion_boundaries_rollback.sql |  59 ++++++++++
+ tdf-hq/src/TDF/Cron.hs                             |  42 +++----
+ tdf-hq/src/TDF/Services/EventDiscovery.hs          |  56 ++++++++-
+ tdf-hq/test/TDF/Services/EventDiscoverySpec.hs     |  28 +++++
+ tdf-hq/test/sql/event_ingestion_boundaries.sql     |  59 ++++++++++
+ 14 files changed, 467 insertions(+), 51 deletions(-)

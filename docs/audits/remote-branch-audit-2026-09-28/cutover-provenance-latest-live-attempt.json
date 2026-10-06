@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-10-04T01:16:25.659720+00:00",
+  "exit_code": 0,
+  "stderr": "",
+  "metadata": {
+    "provider": "hetzner",
+    "project": "tdf-production",
+    "apiContainer": "1058ea212e6ed8f4f11d8e5b1c1496c77beeb5a84f4b0583a27b5640d5689831",
+    "databaseContainer": "6d0014d3523119a2efa66d578391e9d0c2557fd81b4e035765f0efe0a9dc1bff",
+    "apiImage": "sha256:38e6264b82db2d81a5b51c3a78740b6a305538b4cdae8d53ced067ccbb1e8fe0",
+    "configuredImage": "diegueins680/tdf-hq@sha256:38e6264b82db2d81a5b51c3a78740b6a305538b4cdae8d53ced067ccbb1e8fe0",
+    "databaseImage": "sha256:3e8b3adfd27b5707128f60956f62a793c3c9326ea8cfaf0eab7adccb5d700b21",
+    "configuredDatabaseImage": "pgvector/pgvector@sha256:3e8b3adfd27b5707128f60956f62a793c3c9326ea8cfaf0eab7adccb5d700b21",
+    "database": "tdf_hq",
+    "databaseVolume": "tdf_production_postgres_data",
+    "sshServerAddress": "178.105.93.101",
+    "health": {
+      "db": "ok",
+      "status": "ok"
+    },
+    "version": {
+      "buildTime": "2026-09-30T10:36:07Z",
+      "commit": "645f56fcc44f81609fbfd0e03d683b40376ce77a",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    }
+  }
+}

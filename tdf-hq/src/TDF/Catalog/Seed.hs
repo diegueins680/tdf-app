@@ -427,6 +427,7 @@ seedSecurityRegistry = do
       [ ("00000000-0000-4000-8000-000000000301", "account.signup.customer", "account-signup", "customer", "Cliente al crear cuenta", "Customer on account signup", False)
       , ("00000000-0000-4000-8000-000000000302", "account.google.customer", "google-account-create", "customer", "Cliente con cuenta Google", "Customer on Google account creation", True)
       , ("00000000-0000-4000-8000-000000000303", "artist.verified-claim.artist", "verified-artist-claim", "artist", "Artista por reclamo verificado", "Artist on verified profile claim", True)
+      , ("00000000-0000-4000-8000-000000000311", "artist.invitation.artist", "artist-invitation-redeemed", "artist", "Artista por invitación de campaña", "Artist from campaign invitation", False)
       , ("00000000-0000-4000-8000-000000000304", "account.generated.customer", "generated-account-create", "customer", "Cliente por cuenta generada", "Customer on generated account creation", False)
       , ("00000000-0000-4000-8000-000000000305", "course.registration.student", "course-registration", "student", "Estudiante por registro de curso", "Student on course registration", False)
       , ("00000000-0000-4000-8000-000000000306", "trial.inquiry.student", "trial-inquiry", "student", "Estudiante por consulta de clase", "Student on lesson inquiry", False)

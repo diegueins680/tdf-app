@@ -1,0 +1,213 @@
+- generic [active] [ref=e1]:
+  - link "Saltar al contenido principal" [ref=e342] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e343]:
+    - link "Saltar al contenido principal" [ref=e344] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=e345]:
+      - generic [ref=e347]:
+        - generic [ref=e348]:
+          - link "Ir a TDF" [ref=e349] [cursor=pointer]:
+            - /url: /tdf
+            - img "TDF Records logo"
+          - navigation "Navegación principal" [ref=e350]:
+            - link "Buscar" [ref=e351] [cursor=pointer]:
+              - /url: /buscar
+            - link "TDF" [ref=e352] [cursor=pointer]:
+              - /url: /tdf
+            - link "TDF Mobile" [ref=e353] [cursor=pointer]:
+              - /url: /app
+            - link "Servicios" [ref=e354] [cursor=pointer]:
+              - /url: /comercio
+            - link "Comunidad" [ref=e355] [cursor=pointer]:
+              - /url: /fans
+            - link "Tienda" [ref=e356] [cursor=pointer]:
+              - /url: /marketplace
+            - link "Domo" [ref=e357] [cursor=pointer]:
+              - /url: /domo-del-pululahua
+            - link "Reservar" [ref=e358] [cursor=pointer]:
+              - /url: /reservar
+            - link "DJ Booth" [ref=e359] [cursor=pointer]:
+              - /url: /dj-booth
+            - link "Lanzamientos" [ref=e360] [cursor=pointer]:
+              - /url: /records
+        - generic [ref=e361]:
+          - link "Ingresar" [ref=e362] [cursor=pointer]:
+            - /url: /login?redirect=%2Fbuscar%3FcityId%3D24000000-0000-4000-8000-000000000002
+          - button "Más opciones" [ref=e363] [cursor=pointer]
+    - main [ref=e366]:
+      - generic [ref=e367]:
+        - generic [ref=e370]:
+          - generic [ref=e371]: Ecuador · Quito · Latinoamérica
+          - heading "Encuentra a la gente y las oportunidades que hacen música" [level=1] [ref=e373]
+          - heading "Profesionales, artistas, bandas, venues, eventos, servicios y clasificados, primero por ciudad y cercanía." [level=6] [ref=e374]
+          - generic [ref=e376]:
+            - generic [ref=e378]:
+              - generic: ¿Qué necesitas?
+              - generic [ref=e379]:
+                - combobox "¿Qué necesitas?" [ref=e380]
+                - group:
+                  - generic: ¿Qué necesitas?
+            - generic [ref=e381]:
+              - generic [ref=e382]: Ciudad
+              - generic [ref=e383]:
+                - combobox "Ciudad" [ref=e384] [cursor=pointer]: Quito
+                - textbox: 24000000-0000-4000-8000-000000000002
+                - group:
+                  - generic: Ciudad
+            - button [ref=e385] [cursor=pointer]
+          - generic [ref=e389]:
+            - button [ref=e390] [cursor=pointer]
+            - generic [ref=e394]: Solo con tu permiso. Las ubicaciones privadas nunca se muestran.
+        - generic [ref=e396]:
+          - generic [ref=e398]:
+            - generic [ref=e399]:
+              - generic: Profesión
+              - generic [ref=e400]:
+                - combobox "Profesión" [ref=e401] [cursor=pointer]
+                - textbox
+                - group:
+                  - generic: Profesión
+            - generic [ref=e402]:
+              - generic: Servicio
+              - generic [ref=e403]:
+                - combobox "Servicio" [ref=e404] [cursor=pointer]
+                - textbox
+                - group:
+                  - generic: Servicio
+            - generic [ref=e405]:
+              - generic: Instrumento
+              - generic [ref=e406]:
+                - combobox "Instrumento" [ref=e407] [cursor=pointer]
+                - textbox
+                - group:
+                  - generic: Instrumento
+            - generic [ref=e408]:
+              - generic: Género
+              - generic [ref=e409]:
+                - combobox "Género" [ref=e410] [cursor=pointer]
+                - textbox
+                - group:
+                  - generic: Género
+            - generic [ref=e411] [cursor=pointer]:
+              - checkbox "Remoto" [ref=e414]
+              - generic [ref=e417]: Remoto
+            - generic [ref=e418] [cursor=pointer]:
+              - checkbox "Disponible" [ref=e421]
+              - generic [ref=e424]: Disponible
+            - button "Limpiar filtros" [ref=e425] [cursor=pointer]
+          - generic [ref=e426]:
+            - tablist "Tipos de resultado" [ref=e430]:
+              - tab "Todo (3)" [selected] [ref=e431] [cursor=pointer]
+              - tab "Perfiles (3)" [ref=e432] [cursor=pointer]
+              - tab "Clasificados" [ref=e433] [cursor=pointer]
+              - tab "Eventos" [ref=e434] [cursor=pointer]
+              - tab "Venues" [ref=e435] [cursor=pointer]
+            - group "Vista de resultados" [ref=e437]:
+              - button "Lista" [pressed] [ref=e438] [cursor=pointer]
+              - button "Cuadrícula" [ref=e441] [cursor=pointer]
+              - button "Mapa" [ref=e444] [cursor=pointer]
+          - heading "Resultados orgánicos · 3" [level=2] [ref=e447]
+          - generic [ref=e448]:
+            - generic [ref=e449]:
+              - img "Foto de Diego Saá" [ref=e450]
+              - generic [ref=e451]:
+                - generic [ref=e452]:
+                  - generic [ref=e454]:
+                    - generic [ref=e455]: Perfiles
+                    - heading "Diego Saá" [level=2] [ref=e458]
+                    - paragraph [ref=e459]: Instrumentista · Bajo
+                  - paragraph [ref=e460]: Diego Saá es bajista e instrumentista en Quito, disponible para proyectos, grabaciones y presentaciones en vivo.
+                  - generic [ref=e461]:
+                    - generic [ref=e462]: Quito, EC
+                    - generic [ref=e464]: Ubicación aproximada
+                - generic [ref=e466]:
+                  - link "Ver detalle" [ref=e467] [cursor=pointer]:
+                    - /url: /directorio/diego-saa-bajista
+                  - button [ref=e468] [cursor=pointer]
+                  - link [ref=e472] [cursor=pointer]:
+                    - /url: /login?redirect=%2Fdirectorio%2Fdiego-saa-bajista
+            - generic [ref=e476]:
+              - img "Imagen de referencia de Domo del Pululahua" [ref=e477]
+              - generic [ref=e478]:
+                - generic [ref=e479]:
+                  - generic [ref=e481]:
+                    - generic [ref=e482]: Perfiles
+                    - heading "Domo del Pululahua" [level=2] [ref=e485]
+                  - paragraph [ref=e486]: Domo del Pululahua es un venue y espacio para conciertos, sesiones, celebraciones y eventos cerca de Quito.
+                  - generic [ref=e487]:
+                    - generic [ref=e488]: Quito, EC
+                    - generic [ref=e490]: Ubicación aproximada
+                - generic [ref=e492]:
+                  - link "Ver detalle" [ref=e493] [cursor=pointer]:
+                    - /url: /directorio/domo-del-pululahua
+                  - button [ref=e494] [cursor=pointer]
+                  - link [ref=e498] [cursor=pointer]:
+                    - /url: /login?redirect=%2Fdirectorio%2Fdomo-del-pululahua
+            - generic [ref=e502]:
+              - img "Imagen de referencia de TDF Records" [ref=e503]
+              - generic [ref=e504]:
+                - generic [ref=e505]:
+                  - generic [ref=e507]:
+                    - generic [ref=e508]: Perfiles
+                    - heading "TDF Records" [level=2] [ref=e511]
+                  - paragraph [ref=e512]: TDF Records es un estudio de grabación en Quito para artistas, bandas y proyectos musicales.
+                  - generic [ref=e513]:
+                    - generic [ref=e514]: Quito, EC
+                    - generic [ref=e516]: Ubicación aproximada
+                - generic [ref=e518]:
+                  - link "Ver detalle" [ref=e519] [cursor=pointer]:
+                    - /url: /directorio/tdf-records-estudio
+                  - button [ref=e520] [cursor=pointer]
+                  - link [ref=e524] [cursor=pointer]:
+                    - /url: /login?redirect=%2Fdirectorio%2Ftdf-records-estudio
+    - contentinfo [ref=e528]:
+      - generic [ref=e529]:
+        - complementary "TDF Mobile" [ref=e530]:
+          - link "TDF Mobile / Testers" [ref=e533] [cursor=pointer]:
+            - /url: /app?surface=footer
+        - generic [ref=e534]:
+          - generic [ref=e535]:
+            - heading "TDF Records" [level=6] [ref=e536]
+            - paragraph [ref=e537]: Si te atoras, te dejamos una salida clara desde esta página para que sigas avanzando.
+            - generic [ref=e538]:
+              - link "Crear cuenta" [ref=e539] [cursor=pointer]:
+                - /url: /login?signup=1&redirect=/fans
+              - link "WhatsApp" [ref=e540] [cursor=pointer]:
+                - /url: https://wa.me/593984755301?text=Hola%20quiero%20reservar%20un%20servicio%20en%20TDF%20Records
+          - navigation "Explorar TDF" [ref=e541]:
+            - generic [ref=e542]: Explorar
+            - generic [ref=e543]:
+              - link "Buscar" [ref=e544] [cursor=pointer]:
+                - /url: /buscar
+              - link "TDF" [ref=e545] [cursor=pointer]:
+                - /url: /tdf
+              - link "TDF Mobile" [ref=e546] [cursor=pointer]:
+                - /url: /app
+              - link "Servicios" [ref=e547] [cursor=pointer]:
+                - /url: /comercio
+              - link "Comunidad" [ref=e548] [cursor=pointer]:
+                - /url: /fans
+              - link "Tienda" [ref=e549] [cursor=pointer]:
+                - /url: /marketplace
+              - link "Domo" [ref=e550] [cursor=pointer]:
+                - /url: /domo-del-pululahua
+              - link "Reservar" [ref=e551] [cursor=pointer]:
+                - /url: /reservar
+              - link "DJ Booth" [ref=e552] [cursor=pointer]:
+                - /url: /dj-booth
+              - link "Lanzamientos" [ref=e553] [cursor=pointer]:
+                - /url: /records
+              - link "Sugerencias" [ref=e554] [cursor=pointer]:
+                - /url: /feedback
+              - link "Donar" [ref=e555] [cursor=pointer]:
+                - /url: /donar
+          - generic [ref=e556]:
+            - generic [ref=e557]: Gestión de mensajes
+            - generic [ref=e558]:
+              - link "Consentimiento WhatsApp" [ref=e559] [cursor=pointer]:
+                - /url: /whatsapp/consentimiento
+              - link "Confirmación WhatsApp" [ref=e560] [cursor=pointer]:
+                - /url: /whatsapp/ok
+          - link "Ir a login" [ref=e562] [cursor=pointer]:
+            - /url: /login?redirect=%2Fbuscar%3FcityId%3D24000000-0000-4000-8000-000000000002

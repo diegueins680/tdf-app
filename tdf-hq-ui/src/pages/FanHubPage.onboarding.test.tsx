@@ -70,6 +70,9 @@ jest.unstable_mockModule('../api/admin', () => ({
 }));
 
 jest.unstable_mockModule('../api/drive', () => ({ uploadToDrive: jest.fn() }));
+jest.unstable_mockModule('../api/musicReleases', () => ({
+  musicReleases: { listPublic: jest.fn(async () => []) },
+}));
 jest.unstable_mockModule('../hooks/useCmsContent', () => ({
   useCmsContent: () => ({ data: undefined }),
 }));

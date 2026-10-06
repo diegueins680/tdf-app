@@ -1,0 +1,8 @@
+{
+  "captured_at": "2026-10-04T01:46:41.616272+00:00",
+  "tool": "mcp__playwright_visible__browser_tabs",
+  "action": "list",
+  "result": "Browser is already in use for /Users/diegosaa/.codex/browser-profiles/tdf-instagram, use --isolated to run multiple instances of the same browser",
+  "acceptance_executed": false,
+  "existing_browser_preserved": true
+}

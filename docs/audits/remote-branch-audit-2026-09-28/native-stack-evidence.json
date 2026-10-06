@@ -1,0 +1,366 @@
+{
+  "docs": "https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/merging-stacked-pull-requests",
+  "members": [
+    {
+      "pr": 338,
+      "head": "f500b62c453e7da8981bc66138418fa59a586565",
+      "base": "feat/event-operations-api-foundation",
+      "stack": {
+        "id": 1126674,
+        "number": 361,
+        "base": {
+          "ref": "main",
+          "sha": "d6244296925e20ccb6b2261290204415201843f3"
+        },
+        "size": 11,
+        "position": 3
+      }
+    },
+    {
+      "pr": 331,
+      "head": "e9c81a2a3977ab1f69c92e82805bdeff6550ea03",
+      "base": "main",
+      "stack": {
+        "id": 1111322,
+        "number": 335,
+        "base": {
+          "ref": "main",
+          "sha": "d4bd497df6979f639dcd112e4f60b57f3526b9e0"
+        },
+        "size": 11,
+        "position": 1
+      }
+    },
+    {
+      "pr": 353,
+      "head": "86a8ce38cd131bfcb1b3e3035fd9a3e3aea1d503",
+      "base": "codex/payment-http-boundary-20260914",
+      "stack": {
+        "id": 1111322,
+        "number": 335,
+        "base": {
+          "ref": "main",
+          "sha": "d4bd497df6979f639dcd112e4f60b57f3526b9e0"
+        },
+        "size": 11,
+        "position": 8
+      }
+    },
+    {
+      "pr": 337,
+      "head": "b6ba963623861d1e2804b18adb46e6e4f5f5be80",
+      "base": "main",
+      "stack": {
+        "id": 1126674,
+        "number": 361,
+        "base": {
+          "ref": "main",
+          "sha": "d6244296925e20ccb6b2261290204415201843f3"
+        },
+        "size": 11,
+        "position": 2
+      }
+    },
+    {
+      "pr": 339,
+      "head": "259becd7b3763e084b54da8749b1e6fde8d9d862",
+      "base": "feat/event-logistics-transaction-hardening",
+      "stack": {
+        "id": 1126674,
+        "number": 361,
+        "base": {
+          "ref": "main",
+          "sha": "d6244296925e20ccb6b2261290204415201843f3"
+        },
+        "size": 11,
+        "position": 4
+      }
+    },
+    {
+      "pr": 363,
+      "head": "139a45102c4b715cc8762b5653d0a2db061b167c",
+      "base": "codex/payment-reconciliation-atomicity-20260914",
+      "stack": {
+        "id": 1111322,
+        "number": 335,
+        "base": {
+          "ref": "main",
+          "sha": "d4bd497df6979f639dcd112e4f60b57f3526b9e0"
+        },
+        "size": 11,
+        "position": 10
+      }
+    },
+    {
+      "pr": 463,
+      "head": "6ba185a697b3b6b6983ebb48e0ab6454f716cf23",
+      "base": "fix/event-confirmed-end-20260920",
+      "stack": {
+        "id": 1511588,
+        "number": 466,
+        "base": {
+          "ref": "main",
+          "sha": "cc244b1f86603055997b51379b297baebfd3e7ce"
+        },
+        "size": 3,
+        "position": 2
+      }
+    },
+    {
+      "pr": 464,
+      "head": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+      "base": "codex/event-ingestion-boundaries-20260927",
+      "stack": {
+        "id": 1511588,
+        "number": 466,
+        "base": {
+          "ref": "main",
+          "sha": "cc244b1f86603055997b51379b297baebfd3e7ce"
+        },
+        "size": 3,
+        "position": 3
+      }
+    },
+    {
+      "pr": 346,
+      "head": "892038c7d7ec64082b39917127f67748e6d1dca7",
+      "base": "test/event-operations-http-boundary",
+      "stack": {
+        "id": 1126674,
+        "number": 361,
+        "base": {
+          "ref": "main",
+          "sha": "d6244296925e20ccb6b2261290204415201843f3"
+        },
+        "size": 11,
+        "position": 8
+      }
+    },
+    {
+      "pr": 341,
+      "head": "6b0913bab2b065b327149a6d3a042efecd9e75d7",
+      "base": "feat/event-task-commit-invariants",
+      "stack": {
+        "id": 1126674,
+        "number": 361,
+        "base": {
+          "ref": "main",
+          "sha": "d6244296925e20ccb6b2261290204415201843f3"
+        },
+        "size": 11,
+        "position": 5
+      }
+    },
+    {
+      "pr": 348,
+      "head": "3cd978045aa406c55512a6673c2ba5f2983ebc7c",
+      "base": "fix/event-command-existence-privacy",
+      "stack": {
+        "id": 1126674,
+        "number": 361,
+        "base": {
+          "ref": "main",
+          "sha": "d6244296925e20ccb6b2261290204415201843f3"
+        },
+        "size": 11,
+        "position": 9
+      }
+    },
+    {
+      "pr": 371,
+      "head": "4ccaaa190c4ae6b1d041d8eabd7eed8fd5327c5e",
+      "base": "codex/payment-reconciliation-worker-20260915",
+      "stack": {
+        "id": 1111322,
+        "number": 335,
+        "base": {
+          "ref": "main",
+          "sha": "d4bd497df6979f639dcd112e4f60b57f3526b9e0"
+        },
+        "size": 11,
+        "position": 11
+      }
+    },
+    {
+      "pr": 349,
+      "head": "cf591e1faa975b8023c6c06892fb50a51ba06dff",
+      "base": "fix/event-session-transaction-fence",
+      "stack": {
+        "id": 1126674,
+        "number": 361,
+        "base": {
+          "ref": "main",
+          "sha": "d6244296925e20ccb6b2261290204415201843f3"
+        },
+        "size": 11,
+        "position": 10
+      }
+    },
+    {
+      "pr": 340,
+      "head": "b8c0e38cdd365e7f977d5cf15f93c164ebfc2149",
+      "base": "codex/payment-checkout-surfaces-20260914",
+      "stack": {
+        "id": 1111322,
+        "number": 335,
+        "base": {
+          "ref": "main",
+          "sha": "d4bd497df6979f639dcd112e4f60b57f3526b9e0"
+        },
+        "size": 11,
+        "position": 4
+      }
+    },
+    {
+      "pr": 347,
+      "head": "6bd0c9316f1816ccfc1873363787a99f33ff72e0",
+      "base": "codex/payment-terminal-recovery-20260914",
+      "stack": {
+        "id": 1111322,
+        "number": 335,
+        "base": {
+          "ref": "main",
+          "sha": "d4bd497df6979f639dcd112e4f60b57f3526b9e0"
+        },
+        "size": 11,
+        "position": 6
+      }
+    },
+    {
+      "pr": 350,
+      "head": "aac15a69e9bc2e6de01652282d9da4012a0af067",
+      "base": "codex/payment-notification-minimization-20260914",
+      "stack": {
+        "id": 1111322,
+        "number": 335,
+        "base": {
+          "ref": "main",
+          "sha": "d4bd497df6979f639dcd112e4f60b57f3526b9e0"
+        },
+        "size": 11,
+        "position": 7
+      }
+    },
+    {
+      "pr": 332,
+      "head": "536964de601c5e031835781b3af07ff797cd249e",
+      "base": "codex/payment-platform-20260911",
+      "stack": {
+        "id": 1111322,
+        "number": 335,
+        "base": {
+          "ref": "main",
+          "sha": "d4bd497df6979f639dcd112e4f60b57f3526b9e0"
+        },
+        "size": 11,
+        "position": 2
+      }
+    },
+    {
+      "pr": 351,
+      "head": "192f9578665109e52d28a96c772e3307bdc684e5",
+      "base": "test/event-operations-schema-rehearsal",
+      "stack": {
+        "id": 1126674,
+        "number": 361,
+        "base": {
+          "ref": "main",
+          "sha": "d6244296925e20ccb6b2261290204415201843f3"
+        },
+        "size": 11,
+        "position": 11
+      }
+    },
+    {
+      "pr": 358,
+      "head": "a5ba14f0be4e4f6da1df666b31dd6ae343afedab",
+      "base": "codex/payment-notification-identity-20260914",
+      "stack": {
+        "id": 1111322,
+        "number": 335,
+        "base": {
+          "ref": "main",
+          "sha": "d4bd497df6979f639dcd112e4f60b57f3526b9e0"
+        },
+        "size": 11,
+        "position": 9
+      }
+    },
+    {
+      "pr": 334,
+      "head": "70823741bd33ed713cb2e703f812a884ad8ba1e7",
+      "base": "codex/payment-provider-execution-20260913",
+      "stack": {
+        "id": 1111322,
+        "number": 335,
+        "base": {
+          "ref": "main",
+          "sha": "d4bd497df6979f639dcd112e4f60b57f3526b9e0"
+        },
+        "size": 11,
+        "position": 3
+      }
+    },
+    {
+      "pr": 460,
+      "head": "648f2d6dc69080d4438ae2a25309497012ded2d1",
+      "base": "main",
+      "stack": {
+        "id": 1511588,
+        "number": 466,
+        "base": {
+          "ref": "main",
+          "sha": "cc244b1f86603055997b51379b297baebfd3e7ce"
+        },
+        "size": 3,
+        "position": 1
+      }
+    },
+    {
+      "pr": 342,
+      "head": "db81fdbe71d9b8e83d40d279b98c69df3749b316",
+      "base": "fix/event-command-replay-authorization",
+      "stack": {
+        "id": 1126674,
+        "number": 361,
+        "base": {
+          "ref": "main",
+          "sha": "d6244296925e20ccb6b2261290204415201843f3"
+        },
+        "size": 11,
+        "position": 6
+      }
+    },
+    {
+      "pr": 345,
+      "head": "dbe975d3143446c5e7cd9b132b6f994067065e7b",
+      "base": "fix/event-snapshot-privacy-boundary",
+      "stack": {
+        "id": 1126674,
+        "number": 361,
+        "base": {
+          "ref": "main",
+          "sha": "d6244296925e20ccb6b2261290204415201843f3"
+        },
+        "size": 11,
+        "position": 7
+      }
+    },
+    {
+      "pr": 343,
+      "head": "c263a499cc760ce7f97fe7833211f4d7de7494ea",
+      "base": "codex/payment-reconciliation-safety-20260914",
+      "stack": {
+        "id": 1111322,
+        "number": 335,
+        "base": {
+          "ref": "main",
+          "sha": "d4bd497df6979f639dcd112e4f60b57f3526b9e0"
+        },
+        "size": 11,
+        "position": 5
+      }
+    }
+  ],
+  "constraint": "Partial native-stack merges automatically rebase remaining branches, conflicting with user no-history-rewrite rule; regular PR460 merge rejected, async never invoked."
+}

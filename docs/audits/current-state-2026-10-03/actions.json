@@ -1,0 +1,2559 @@
+[
+  {
+    "repo": "tdf-app",
+    "branch": "audit/event-discovery-integration-20260928",
+    "sha": "cda2c5f7790126f35bd7e09bed35b52b5a0012ef",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873537+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/formal-system-20260918",
+    "sha": "6fbae058e23c989599116c629a80fe216505c1e4",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873588+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/ip-address-security-20260930",
+    "sha": "d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873598+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/provider-recovery-artifact-20260918",
+    "sha": "f1ff05e6f591cb87ef71a9b66c5abeefa4c40095",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873604+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/social-boundaries-integration-20260917",
+    "sha": "c55932de5c2c27dcd526e4f306fefda8c3671877",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873611+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/ux-calendar-authoritative-state-20260918",
+    "sha": "563dafa4240933ed7d615ad61cb3d38f000ada22",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873615+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/ux-calendar-runtime-schema-20260918",
+    "sha": "9497be8f4da96159a492c7f290f6b6229095cff2",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873622+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/ux-directory-entry-20260918",
+    "sha": "c7124f906ad88e2237dad6cb89ba62a2616501d5",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873627+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/ux-directory-language-20260918",
+    "sha": "d073042dfef08a9a97c21d18dc5dafe9726e522d",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873630+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/ux-experiment-contract-20260918",
+    "sha": "2ae5e779b1b92e746a45590bd0171b7099458776",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873638+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/ux-marketplace-storage-20260918",
+    "sha": "585003b6e7d011ea8c00ce0f56980ef7faa0ff8e",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873642+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/ux-native-release-20260918",
+    "sha": "33efe613f45a0a14208795591d5972a9e538e9a4",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873648+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/ux-native-tab-release-20260918",
+    "sha": "de177c8589014dc394cd9af465e43be10ae1f744",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873653+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/ux-navigation-concurrency-20260918",
+    "sha": "9213b1334aca9b34f377790ed992b869185483c8",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873657+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/ux-operational-20260918",
+    "sha": "2fb19e8635e5a46e0d31093ed2e9b40dc9bf7b91",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873663+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/ux-provider-rollback-guard-20260918",
+    "sha": "35172083af75f9c7530624173d82819252e25d1a",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873668+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/ux-public-data-latency-20260918",
+    "sha": "1d4143f7809f416317d858ad4161580c1dd125e1",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873673+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/ux-public-loading-labels-20260918",
+    "sha": "1aa708a00e870b17e0d32576b2247fb9a1156719",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873681+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/ux-public-text-reflow-20260918",
+    "sha": "f92b9947d12a3701aff9f38c9abcc77656e01413",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873685+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/ux-release-integration-20260918",
+    "sha": "23d5388320583f0c756f6426516649c69b6b118e",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873693+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/ux-remaining-coverage-20260918",
+    "sha": "dabb773a25d56b567c95ee14a06216b40588fe04",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873701+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/ux-remaining-storage-boundaries-20260918",
+    "sha": "dd9633c1de19568b0f4096d85b9f452f06c1ef1b",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873705+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/ux-static-policy-accessibility-20260918",
+    "sha": "8f19726548c57df47ad2666def486a13d66fdf38",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873712+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/ux-ui-complete-20260917",
+    "sha": "19d8dc830b65b58ccbeb274a41710c6cc95a0d51",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873716+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/portable-backend-release-20260928",
+    "sha": "3e241ecd8f1631c9e0ac3964ecc0b7600caebc93",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873725+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/video-event-ingestion-20260925",
+    "sha": "b0713647b2232a77eb021e4428ed541a196de62b",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873728+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "docs/interaction-qualification-20260930",
+    "sha": "09893a13471d023e255059e74d5a734ed4a43bad",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873732+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/artist-self-service-20260916",
+    "sha": "912f8326ba7a13611cfbad592f6680fe50bdbefc",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873735+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/event-operations-formal-foundation",
+    "sha": "00f796e74da9e9ec9417ead93980b8a8e71d5fcc",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873745+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/identity-commerce-prevention-20260918",
+    "sha": "23311f29279b691cf2e80c445fb345f9cbfc57f5",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873755+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/identity-consolidation-20260917",
+    "sha": "72d33c57d5723f1cda413bf8b7858cc361b5a2fb",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873762+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/identity-intake-prevention-20260918",
+    "sha": "02115f7d1b0786f3cdd4287a9466dd22682f603b",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873767+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/identity-registration-prevention-20260918",
+    "sha": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873771+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/identity-source-prevention-20260918",
+    "sha": "da0b02d90b57c4f78ce8f20df0bb9345edf824a1",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873774+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/identity-trials-prevention-20260918",
+    "sha": "d7ebacbff0f0e35dbd57238a8afa6f11e86cdb0e",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873781+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/records-youtube-provider-20260918",
+    "sha": "c79041b10e86872c0a4ea3c7d16e6eab53e7a877",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873789+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/social-api-client-20260915",
+    "sha": "0bac512baed505f7f035f44c022fc0b64405b9e7",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873796+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/social-authority-20260914",
+    "sha": "c671a5acbe1403ba89d1d70db165b2b327b6cdec",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873800+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/social-chat-cache-isolation-20260915",
+    "sha": "fd94ed7163fe8afe80f559a664a55576e781aa51",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873811+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/social-chat-verification-20260915",
+    "sha": "547490105d12e0581b6ca5fddc135f127abedf07",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873820+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/social-dm-api-boundary-20260915",
+    "sha": "44a1c7bededf0ba4b54068d482667ac24299f8e4",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873824+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/social-dm-write-boundary-20260915",
+    "sha": "e03ce193c2e9c6788fad5f1360aef1088006616f",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873830+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/social-fanclub-effects-20260916",
+    "sha": "daf6c5a680b81928c2e2c66df98063328e6d5e9c",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873837+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/social-feed-filtering-20260915",
+    "sha": "6a6d9e02c22eee213cf56787d9de9e4252721fed",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873842+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/social-formal-audit-20260914",
+    "sha": "0cb8d2e15ac024682933485ed122c34826f2ba6f",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873850+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/social-legacy-write-boundary-20260916",
+    "sha": "7e601607f60b2987e502c4a14db821bbf37df296",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873859+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/social-profile-read-boundary-20260915",
+    "sha": "7c452efcbc7b45e797b7ebd590dfffccf0fc9751",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873865+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/social-query-budget-20260914",
+    "sha": "f52b1f8b906d5bf61774dfaf6b6173233b0d2172",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873872+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/social-reaction-repair-20260915",
+    "sha": "24590a40787d81a1681cd14a46f2f0ab7cac5632",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873902+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/social-relationship-read-boundary-20260915",
+    "sha": "8b2d1557a5e72e0346af1fd43dc7cf36033da067",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873924+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/social-schema-compatibility-20260915",
+    "sha": "3606fb5c2215e00b1f3661abdf9e969231ac3b36",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873940+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/social-token-boundary-20260915",
+    "sha": "2be39150f626dcd5181951532a8ebe25a3ce3fa4",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873949+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/universal-interactions-20260928",
+    "sha": "fd87416e99af3176d107178832f238ef00003be5",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873955+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/auth-locale-20260917",
+    "sha": "209b21b07f304d21ab397353653b531646ae72be",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873963+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/ci-green-baseline-20260912",
+    "sha": "5bceb329f034cdfadf077f8f2889aa50bd402c7c",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.873968+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/ci-messaging-readonly-20260915",
+    "sha": "75c096bea71dbf58f92852fca3ab140116e6697f",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.874017+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/directory-privacy-migration-order-20260917",
+    "sha": "c7643f0ba07f330995415c4848194938536d51ae",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.874028+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/disable-unverified-service-escrow-20260920",
+    "sha": "989d0663cc249bcee74331604561628d3435c961",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.874032+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/event-confirmed-end-20260920",
+    "sha": "648f2d6dc69080d4438ae2a25309497012ded2d1",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.874070+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/event-discovery-schedule-20260918",
+    "sha": "f4223a98d82bebfd5b15147795379a6c8cf58fb6",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.874084+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/fanhub-audit-20260917",
+    "sha": "36f254d14b62efc10268df5545a15bfe157cb0a3",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.874094+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/identity-request-recovery-20260918",
+    "sha": "261bfdfbbdab0520b35725a72b776f160b608dd3",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.874101+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/interaction-deletion-focus-20260930",
+    "sha": "4731a35742b4939236bc08f43c5ea2780820caee",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.874106+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/interaction-release-dompurify-20261001",
+    "sha": "6a830cf74b1c9ff81fdce9814d73435ce05d0b27",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.874112+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/mail-delivery-observability-20260918",
+    "sha": "ab9bbacc9da845b6bfe70ac3fda2ace44f17c918",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.874116+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/mail-smtp-log-flush-20260918",
+    "sha": "592916f2a7fbcd740409acda42e69d1a6bfb128a",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.874126+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/migration-introduction-ancestry-audit-20260916",
+    "sha": "e24922210d09226bec610a8fe0f1b6f05867e8d7",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.874131+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/notification-navigation-20260917",
+    "sha": "a5a391954ec4152a19e1502c08347edd34624060",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.874141+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/records-thumbnails-ingestion-20260918",
+    "sha": "697a5c748332a7179d3a3e7f7bbfd7d5323579b9",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.874147+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/recovery-dialog-navigation-20260918",
+    "sha": "65cc350a68bf293720bed21afb771d75ab8fbea7",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.874153+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/redact-stripe-webhook-example-20260916",
+    "sha": "2455951713967642de9b429c5a790ceec6cb1fa2",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.874157+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/social-stack-integration-20260916",
+    "sha": "5fcd17c926a70073c8ef3eda33904e1b207859ee",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.874163+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "release/identity-compatible-recovery-20260918",
+    "sha": "bdd9e24bddaaa96e2da72d75041b1e1b20236e04",
+    "action": "deleted fully-main-contained ref",
+    "main": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+    "timestamp": "2026-10-03T23:38:13.874171+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "agent/event-discovery",
+    "sha": "7225a65bc9599bcd5791d0dd730904d66c7f536f",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.463152+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "aria/exp-single-feature-onboarding-v1-posthog-spec",
+    "sha": "b1b146cd5647d37ca3d50b5c33b5f60b02b96f72",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.463333+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "codex/mobile-publishing-audit-docs",
+    "sha": "868d8a0186695e3be209a2b53043d34d752cb278",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.463356+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "codex/platform-internationalization",
+    "sha": "75c1fbb9a61ca80549ede8c7908d013f2a8f4c83",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.463375+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "codex/studio-internship-audit",
+    "sha": "dac57203f81c66b2ef6cf015daf00d5773fc304b",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.463412+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "codex/verified-review-system",
+    "sha": "ba02fa87771056eeef7a01d52fa650bd6d2b635b",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.463425+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "continuous-improvement-loop/dirty/codex/mobile-publishing-audit-docs/dirty-worktree-2026-04-08t01-06-07",
+    "sha": "30d5bfb17194f738175a8ceb6c4a3f0d9741878c",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.463697+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "continuous-improvement-loop/dirty/codex/mobile-publishing-audit-docs/dirty-worktree-2026-04-08t04-17-54-676z",
+    "sha": "f5e20346aa1a45f8ddfb3beba80653e0d1ce7719",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.463728+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "continuous-improvement-loop/dirty/codex/mobile-publishing-audit-docs/dirty-worktree-2026-04-09t02-48-24-674z",
+    "sha": "9d4933f328b86c9bc7b65af6fd5621ae947f6db2",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.463806+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "continuous-improvement-loop/dirty/codex/mobile-publishing-audit-docs/dirty-worktree-2026-04-09t04-09-14-529z",
+    "sha": "ecf194e0a72d5d5c49379643f2ec832578a93a8f",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.463825+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "continuous-improvement-loop/dirty/codex/mobile-publishing-audit-docs/dirty-worktree-2026-04-09t10-35-01-023z",
+    "sha": "d9f11cb60b8e13cc5e12997a3df6ebadf855496e",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.463840+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "continuous-improvement-loop/dirty/continuous-improvement-loop/dirty/codex/mobile-publishing-audit-docs/dirty-worktree-2026-04-09t10-35-01-023z/dirty-worktree-2026-04-09t10-35-20-150z",
+    "sha": "e4c2473495c43ea19969fbaf3341cb8a4943256c",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.463851+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "continuous-improvement-loop/dirty/continuous-improvement-loop/dirty/codex/mobile-publishing-audit-docs/dirty-worktree-2026-04-09t10-35-01-023z/dirty-worktree-2026-04-09t12-02-57-802z",
+    "sha": "663a3034d29535a4e21d260d31a4da71b1f81518",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.463867+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "continuous-improvement-loop/dirty/continuous-improvement-loop/dirty/codex/mobile-publishing-audit-docs/dirty-worktree-2026-04-09t10-35-01-023z/dirty-worktree-2026-04-09t12-07-19-778z",
+    "sha": "bf91d6af9eb513b968c0d994fc5b5aac98726b7d",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.463877+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "continuous-improvement-loop/dirty/continuous-improvement-loop/dirty/codex/mobile-publishing-audit-docs/dirty-worktree-2026-04-09t10-35-01-023z/dirty-worktree-2026-04-09t12-12-39-289z",
+    "sha": "230ae09dfca3f8df904b89bc53c61e7e8b443842",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.463884+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "feat/ab-experiment-infrastructure",
+    "sha": "51565eaba134bcbb6578aee6dff622041bda6884",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.463914+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "feat/artist-enrichment-registry-20260807",
+    "sha": "4d270a23788ac8f007e25c7fe72bbf440822e413",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.463922+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "feat/contextual-reputation",
+    "sha": "9dfaca7d9252db5a35214f0c3305d85869cf56cd",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.463955+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "feat/stripe-paymentsheet",
+    "sha": "80697ecaca03072ba6f130cb655c5677b8aaacb7",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.463966+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "feat/unified-revenue-platform-20260813",
+    "sha": "14e3c0a3b25e3546031e9c7157603bee3f1a4356",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.463979+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "feat-admin-operations-control-center",
+    "sha": "0505314db01a3c70f1006a5a1b6e574d78bebf36",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.463989+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "fix/access-request-requester-name-20260916",
+    "sha": "bd918826fae055b51f96870fcf297920b78a2376",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.464030+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "fix/ci-green-baseline-20260912",
+    "sha": "790e03e1fb19083a92c2828a8b77ba1016fd53e4",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.464041+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "fix/event-end-optional-20260817",
+    "sha": "28f8837f8abf1574749e0faec669de3fb3a6813b",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.464051+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "test/interaction-native-fixtures-20260928",
+    "sha": "371fc64784212b14d74909d46791b9b4e24a4ae0",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.464061+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "ui/redesign-tab-bar",
+    "sha": "fa42e31fd6df563e2c34a7a2954a2417ebc7ca59",
+    "action": "deleted fully-main-contained ref",
+    "main": "12a472ecb68e9a9c0bcba81baf0fafa551d59253",
+    "timestamp": "2026-10-03T23:38:37.464068+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "pr": 115,
+    "action": "merged with normal merge after exact-head tdfrecords approval",
+    "source": "ede1f2a0ccf75f3794c7892f291e1751b279d19e"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/editorial-ownership-repair-20261003",
+    "sha": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.556808+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/event-stack-consolidation-20260928",
+    "sha": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557440+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/notification-history-rescue-20261003",
+    "sha": "6d00fa1463603bacecbb3210279b09ed88bbba0c",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557459+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "chore/event-catalog-stale-reconciliation",
+    "sha": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557467+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "chore/event-operations-catalog-review",
+    "sha": "d5505e2731d395cc2a5859d215e36ffda9e88138",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557473+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/event-ingestion-boundaries-20260927",
+    "sha": "a125a347cacb8d941a515171e2a81d4c92f2c2d2",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557483+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/event-ingestion-editorial-20260928",
+    "sha": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557489+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/event-logistics-transaction-hardening",
+    "sha": "f500b62c453e7da8981bc66138418fa59a586565",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557500+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/event-operations-api-foundation",
+    "sha": "b6ba963623861d1e2804b18adb46e6e4f5f5be80",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557505+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/event-raci-editor-context",
+    "sha": "13abde1cba82b7b79c21b6f35e87c91de676366e",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557588+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/event-raci-reassignment-api",
+    "sha": "bfd5f17b92d629f578bc02f4aee338ed15843806",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557600+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/event-raci-reassignment-command",
+    "sha": "f6ffb2a27b87ed42d4d49289024d5b8a612b94cf",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557604+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/event-raci-web-editor",
+    "sha": "061553d085d3106a9c8877ca08ccb3e2420cdd09",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557607+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/event-task-aggregate-revision",
+    "sha": "3b1ce4d9dbd0efb6d1e354ffd9f58e92a6916320",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557610+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/event-task-commit-invariants",
+    "sha": "259becd7b3763e084b54da8749b1e6fde8d9d862",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557613+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/event-task-completion-api",
+    "sha": "823da0fa801abe3bdb3b7679550f1315ad0946ed",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557615+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/event-task-completion-client",
+    "sha": "f2f01194090a241777c451d06cb0848af7aa759a",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557621+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/event-task-completion-command",
+    "sha": "78bdd4df465d1c7d8a752f9df0ed714ecad2330d",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557624+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/event-task-raci-view",
+    "sha": "f03f366de44c8ad09248e9d399caa5994af06d5a",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557627+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/event-task-read-api",
+    "sha": "881882e15cd1b2400cc2e0452ea50683dea675de",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557632+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/event-task-read-projection",
+    "sha": "a1b92c220691b694e5f53e7deaf4d455ce46bc44",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557640+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/event-task-revisioned-read",
+    "sha": "503fd7b651843e9f7cadf4fd15931256bb847ece",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557645+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/artist-follow-onboarding-continuity",
+    "sha": "1299f9c63a325e17dff0bfe1f048ff52f7bb8b15",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557648+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/event-command-existence-privacy",
+    "sha": "892038c7d7ec64082b39917127f67748e6d1dca7",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557651+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/event-command-replay-authorization",
+    "sha": "6b0913bab2b065b327149a6d3a042efecd9e75d7",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557654+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/event-raci-review-contrast",
+    "sha": "cbbb3da9f20c2314c73a5114b8c0aa943647054e",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557657+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/event-schema-migration-dependencies",
+    "sha": "192f9578665109e52d28a96c772e3307bdc684e5",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557659+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/event-session-transaction-fence",
+    "sha": "3cd978045aa406c55512a6673c2ba5f2983ebc7c",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557666+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/event-snapshot-privacy-boundary",
+    "sha": "db81fdbe71d9b8e83d40d279b98c69df3749b316",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557669+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/event-ui-lazy-validation",
+    "sha": "d4e7ed0505a87a03706b765fc304ffa50362b8fb",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557673+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/fanhub-authoritative-onboarding",
+    "sha": "ff3cd1676a6db7b6ceef56d44407b0846a4f2071",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557676+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/reservation-pluscal-integrity",
+    "sha": "ec24b70b1b2319a875099cc118db0e68b62a5ed0",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557679+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/web-onboarding-reconciliation-integration",
+    "sha": "827d745629f8cdbaee4429ded3689d3bf520a09d",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557682+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "test/event-operations-http-boundary",
+    "sha": "dbe975d3143446c5e7cd9b132b6f994067065e7b",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557685+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "test/event-operations-schema-rehearsal",
+    "sha": "cf591e1faa975b8023c6c06892fb50a51ba06dff",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557687+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "test/event-raci-accessibility-evidence",
+    "sha": "6047377348e901c919d7691b849faab30980b952",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557690+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "test/event-raci-full-stack",
+    "sha": "7cdd712568311975407cf0b7cb2ee2081a0c0414",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557693+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "test/event-rsvp-ci-contracts",
+    "sha": "5ad2333c2a6ce379579a1cffa2708d56cbb21f5f",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557696+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "test/event-task-browser-startup",
+    "sha": "221d1205c9cc2e992f8f36f73d441a3f9c6fda21",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557698+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "test/merch-expiry-checkout-contract",
+    "sha": "a1895105c6e15e1f95b4b72fd6218b34a311f6e6",
+    "action": "deleted fully-main-contained ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "timestamp": "2026-10-04T04:35:31.557701+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/critical-completion-20260916",
+    "sha": "d24e025b8bf8c90ce373fab277ebe869eaf0fce5",
+    "action": "deleted fully patch-equivalent ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "evidence": "orphan-patch-evidence-current.json"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "docs/critical-completion-closeout-20260917",
+    "sha": "9523a4816b4668581eb7232212cc53398bd844ac",
+    "action": "deleted fully patch-equivalent ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "evidence": "orphan-patch-evidence-current.json"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/access-request-requester-name-20260916",
+    "sha": "efb09219be25941af574eaac4ec5d2e7e3a421b2",
+    "action": "deleted fully patch-equivalent ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "evidence": "orphan-patch-evidence-current.json"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/instagram-checkpoint-metadata-20260916",
+    "sha": "40034a31e32ca7d1dbbf6dae67efda8eef982586",
+    "action": "deleted fully patch-equivalent ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "evidence": "orphan-patch-evidence-current.json"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/preserve-enabled-paypal-webhooks-20260916",
+    "sha": "a28b94d74a49ebdf71481694bc910ab95298e027",
+    "action": "deleted fully patch-equivalent ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "evidence": "orphan-patch-evidence-current.json"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/access-request-name-production-20260916",
+    "sha": "954e995f1cd08f363afe2b0e34ccf02dcd80ea8c",
+    "action": "deleted semantically superseded ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "evidence": "orphan-semantic-evidence.json"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/notification-mobile-release-pin-20260918",
+    "sha": "6449b75fe5387fcb1b80e55f4a71602a3fed2403",
+    "action": "deleted semantically superseded ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "evidence": "orphan-semantic-evidence.json"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/release-artwork-20260915",
+    "sha": "760763642ae9641b19ef0adfb317f4243ff30a25",
+    "action": "deleted semantically superseded ref",
+    "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+    "evidence": "orphan-semantic-evidence.json"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/provider-reviewed-release-tooling-20260918",
+    "sha": "fcc03784895f08761483e1e7a844d6e6e95b443e",
+    "action": "deleted semantically superseded ref",
+    "successor": "PR438 / 35172083af75f9c7530624173d82819252e25d1a",
+    "evidence": "Only unique commit changes scripts/production-release.mjs; exact blob equals approved PR438 head, ancestor of current main. Current main adds stricter identity and disabled escrow rollback checks. Expected-SHA lease deletion succeeded.",
+    "timestamp": "2026-10-04T06:16:44.712391+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "fix/onboarding-root-contract-20260910",
+    "sha": "84f5c663b2c4f020c17b2441bb92996e0b5a46b1",
+    "action": "deleted generated-contract superseded ref",
+    "successor": 88,
+    "main": "2f140b2f864e64feeb86d2f1fffc2cdfd490486b",
+    "evidence": "All added/changed TypeScript AST property signatures match merged canonical generated client; no removed properties or other files. See mobile-generated-semantic-comparison.json.",
+    "timestamp": "2026-10-04T07:02:52.489520+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "fix/payment-component-environment-20260916",
+    "sha": "3cfe24ea71b977ad99c94cc488f68d1a9b7eaa65",
+    "action": "deleted generated-contract superseded ref",
+    "successor": 88,
+    "main": "2f140b2f864e64feeb86d2f1fffc2cdfd490486b",
+    "evidence": "All added/changed TypeScript AST property signatures match merged canonical generated client; no removed properties or other files. See mobile-generated-semantic-comparison.json.",
+    "timestamp": "2026-10-04T07:02:52.490137+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "fix/payment-intent-environment-20260916",
+    "sha": "3d4ef4088fea2e49f9e0b23d997bb075e6df40c1",
+    "action": "deleted generated-contract superseded ref",
+    "successor": 88,
+    "main": "2f140b2f864e64feeb86d2f1fffc2cdfd490486b",
+    "evidence": "All added/changed TypeScript AST property signatures match merged canonical generated client; no removed properties or other files. See mobile-generated-semantic-comparison.json.",
+    "timestamp": "2026-10-04T07:02:52.490176+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "fix/payment-main-client-integration-20260916",
+    "sha": "c62ec903586a9f0833e079cdc3297c444174d275",
+    "action": "deleted generated-contract superseded ref",
+    "successor": 88,
+    "main": "2f140b2f864e64feeb86d2f1fffc2cdfd490486b",
+    "evidence": "All added/changed TypeScript AST property signatures match merged canonical generated client; no removed properties or other files. See mobile-generated-semantic-comparison.json.",
+    "timestamp": "2026-10-04T07:02:52.490182+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "fix/pr331-social-mobile-integration-20260916",
+    "sha": "3ac7232a057f194d941df4a7c1f097843aa6361d",
+    "action": "deleted generated-contract superseded ref",
+    "successor": 88,
+    "main": "2f140b2f864e64feeb86d2f1fffc2cdfd490486b",
+    "evidence": "All added/changed TypeScript AST property signatures match merged canonical generated client; no removed properties or other files. See mobile-generated-semantic-comparison.json.",
+    "timestamp": "2026-10-04T07:02:52.490189+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "pr": 88,
+    "sha": "b3ae7a522866f55e6ebc8d315cae5f5eb767bb14",
+    "main": "2f140b2f864e64feeb86d2f1fffc2cdfd490486b",
+    "action": "merged with normal merge after exact-head tdfrecords approval",
+    "timestamp": "2026-10-04T07:08:35.337472+00:00",
+    "evidence": "Exact approved tree equals merge; post-merge Mobile Validate 37183709852 and Datadog 37183709808 passed."
+  },
+  {
+    "repo": "tdf-mobile",
+    "pr": 85,
+    "sha": "b9222df77d0a187cca4359278704362ec17fb3af",
+    "action": "observed automatic source integration",
+    "state": "MERGED",
+    "successor": 88,
+    "timestamp": "2026-10-04T07:08:35.337472+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "pr": 83,
+    "sha": "337d46f25a8b7c7c688aa3657ffb599ecb4c47c7",
+    "action": "observed automatic source integration",
+    "state": "MERGED",
+    "successor": 88,
+    "timestamp": "2026-10-04T07:08:35.337472+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "pr": 82,
+    "sha": "33720ef45b0565005c4b54b0e0c106cc93831613",
+    "action": "observed automatic source integration",
+    "state": "MERGED",
+    "successor": 88,
+    "timestamp": "2026-10-04T07:08:35.337472+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "pr": 81,
+    "sha": "d84fc3196202f2ac2468f78816b3c98fb4a22144",
+    "action": "observed automatic source integration",
+    "state": "MERGED",
+    "successor": 88,
+    "timestamp": "2026-10-04T07:08:35.337472+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "pr": 79,
+    "sha": "9c86c459081b32b47579b9c95c8514029225ad75",
+    "action": "observed automatic source integration",
+    "state": "MERGED",
+    "successor": 88,
+    "timestamp": "2026-10-04T07:08:35.337472+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "pr": 78,
+    "sha": "90a08f56fcd8df08dac2effd9253bceeb2c3e9a8",
+    "action": "observed automatic source integration",
+    "state": "MERGED",
+    "successor": 88,
+    "timestamp": "2026-10-04T07:08:35.337472+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "pr": 76,
+    "sha": "cd3f664663f328a47341914524a2af130ae0d3ec",
+    "main": "d2fd9399126e3b456c310497fb7d9edba09f981d",
+    "action": "merged with normal merge after exact-head tdfrecords approval",
+    "timestamp": "2026-10-04T14:25:45.810003+00:00",
+    "evidence": "Approved head and merge trees identical; post-merge Validate and Datadog success."
+  },
+  {
+    "repo": "tdf-app",
+    "pr": 414,
+    "sha": "e2d180a8c8fcfb588f86e357b852fc0496dac8cb",
+    "action": "merged after independent approval and all current-head gates",
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-04T23:57:33.005631+00:00",
+    "evidence": "payment-414-premerge-proof.json; identical merged tree and all166 migration ancestors verified; post-merge gates pending"
+  },
+  {
+    "repo": "tdf-app",
+    "pr": 332,
+    "sha": "536964de601c5e031835781b3af07ff797cd249e",
+    "action": "closed as superseded",
+    "successor": 414,
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T00:42:43.212664+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "pr": 334,
+    "sha": "70823741bd33ed713cb2e703f812a884ad8ba1e7",
+    "action": "closed as superseded",
+    "successor": 414,
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T00:42:46.721077+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "pr": 340,
+    "sha": "b8c0e38cdd365e7f977d5cf15f93c164ebfc2149",
+    "action": "closed as superseded",
+    "successor": 414,
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T00:42:49.925878+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "pr": 343,
+    "sha": "c263a499cc760ce7f97fe7833211f4d7de7494ea",
+    "action": "closed as superseded",
+    "successor": 414,
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T00:42:53.480756+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "pr": 344,
+    "sha": "0081b6b03bd58716090c57d936f31a364e944522",
+    "action": "closed as superseded",
+    "successor": 414,
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T00:42:57.269213+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "pr": 347,
+    "sha": "6bd0c9316f1816ccfc1873363787a99f33ff72e0",
+    "action": "closed as superseded",
+    "successor": 414,
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T00:43:00.858050+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "pr": 350,
+    "sha": "aac15a69e9bc2e6de01652282d9da4012a0af067",
+    "action": "closed as superseded",
+    "successor": 414,
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T00:43:03.884102+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "pr": 353,
+    "sha": "86a8ce38cd131bfcb1b3e3035fd9a3e3aea1d503",
+    "action": "closed as superseded",
+    "successor": 414,
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T00:43:07.311387+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "pr": 358,
+    "sha": "a5ba14f0be4e4f6da1df666b31dd6ae343afedab",
+    "action": "closed as superseded",
+    "successor": 414,
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T00:43:10.432690+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "pr": 363,
+    "sha": "139a45102c4b715cc8762b5653d0a2db061b167c",
+    "action": "closed as superseded",
+    "successor": 414,
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T00:43:14.581726+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "pr": 371,
+    "sha": "4ccaaa190c4ae6b1d041d8eabd7eed8fd5327c5e",
+    "action": "closed as superseded",
+    "successor": 414,
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T00:43:17.880534+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "pr": 374,
+    "sha": "c19c4f5d87abdb5a9b3e935e79af2238fdb99c43",
+    "action": "closed as superseded",
+    "successor": 414,
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T00:43:21.650615+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "pr": 378,
+    "sha": "c8ef56f404dc12f5311635214549221a7090ea70",
+    "action": "closed as superseded",
+    "successor": 414,
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T00:43:26.544906+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "pr": 380,
+    "sha": "9d0d84dbb4e5afafbfda7f0074421246926fd98d",
+    "action": "closed as superseded",
+    "successor": 414,
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T00:43:30.372385+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "pr": 385,
+    "sha": "a64ea1b580faab59e547e3b307f74b0313d58866",
+    "action": "closed as superseded",
+    "successor": 414,
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T00:43:33.582526+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "pr": 389,
+    "sha": "824e1e9aeaa99d399c31bc5755c4967c03cb17fc",
+    "action": "closed as superseded",
+    "successor": 414,
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T00:43:38.651711+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "pr": 393,
+    "sha": "ed064a7549f93bdd9239c5781706400c6fad5aa7",
+    "action": "closed as superseded",
+    "successor": 414,
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T00:43:42.953789+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "pr": 396,
+    "sha": "20566eab9e99685983beac359f2462386e59f8f7",
+    "action": "closed as superseded",
+    "successor": 414,
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T00:43:47.179254+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "pr": 401,
+    "sha": "66fa88e90c80866e0090761addfabd9f1e817cc2",
+    "action": "closed as superseded",
+    "successor": 414,
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T00:43:51.397449+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "pr": 408,
+    "sha": "365561aecff57e76d38cb0e98217a34f1d642ff4",
+    "action": "closed as superseded",
+    "successor": 414,
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T00:43:54.423985+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/payment-capture-replay-integrity-20260915",
+    "sha": "c8ef56f404dc12f5311635214549221a7090ea70",
+    "action": "deleted fully-main-contained ref",
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T01:49:10.119528+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/payment-checkout-surfaces-20260914",
+    "sha": "70823741bd33ed713cb2e703f812a884ad8ba1e7",
+    "action": "deleted fully-main-contained ref",
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T01:49:10.120103+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/payment-closed-checkout-evidence-20260915",
+    "sha": "9d0d84dbb4e5afafbfda7f0074421246926fd98d",
+    "action": "deleted fully-main-contained ref",
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T01:49:10.120111+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/payment-held-refund-query-20260916",
+    "sha": "365561aecff57e76d38cb0e98217a34f1d642ff4",
+    "action": "deleted fully-main-contained ref",
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T01:49:10.120120+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/payment-http-boundary-20260914",
+    "sha": "aac15a69e9bc2e6de01652282d9da4012a0af067",
+    "action": "deleted fully-main-contained ref",
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T01:49:10.120128+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/payment-notification-identity-20260914",
+    "sha": "86a8ce38cd131bfcb1b3e3035fd9a3e3aea1d503",
+    "action": "deleted fully-main-contained ref",
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T01:49:10.120135+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/payment-notification-minimization-20260914",
+    "sha": "6bd0c9316f1816ccfc1873363787a99f33ff72e0",
+    "action": "deleted fully-main-contained ref",
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T01:49:10.120140+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/payment-platform-20260911",
+    "sha": "e9c81a2a3977ab1f69c92e82805bdeff6550ea03",
+    "action": "deleted fully-main-contained ref",
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T01:49:10.120146+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/payment-provider-execution-20260913",
+    "sha": "536964de601c5e031835781b3af07ff797cd249e",
+    "action": "deleted fully-main-contained ref",
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T01:49:10.120152+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/payment-reconciliation-atomicity-20260914",
+    "sha": "a5ba14f0be4e4f6da1df666b31dd6ae343afedab",
+    "action": "deleted fully-main-contained ref",
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T01:49:10.120155+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/payment-reconciliation-evidence-view-20260915",
+    "sha": "a64ea1b580faab59e547e3b307f74b0313d58866",
+    "action": "deleted fully-main-contained ref",
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T01:49:10.120159+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/payment-reconciliation-safety-20260914",
+    "sha": "b8c0e38cdd365e7f977d5cf15f93c164ebfc2149",
+    "action": "deleted fully-main-contained ref",
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T01:49:10.120163+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/payment-reconciliation-worker-20260915",
+    "sha": "139a45102c4b715cc8762b5653d0a2db061b167c",
+    "action": "deleted fully-main-contained ref",
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T01:49:10.120168+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/payment-recovery-observability-20260915",
+    "sha": "c19c4f5d87abdb5a9b3e935e79af2238fdb99c43",
+    "action": "deleted fully-main-contained ref",
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T01:49:10.120171+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/payment-refund-execution-safety-20260916",
+    "sha": "20566eab9e99685983beac359f2462386e59f8f7",
+    "action": "deleted fully-main-contained ref",
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T01:49:10.120174+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/payment-refund-reconciliation-20260916",
+    "sha": "66fa88e90c80866e0090761addfabd9f1e817cc2",
+    "action": "deleted fully-main-contained ref",
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T01:49:10.120177+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/payment-stack-integration-20260915",
+    "sha": "824e1e9aeaa99d399c31bc5755c4967c03cb17fc",
+    "action": "deleted fully-main-contained ref",
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T01:49:10.120181+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/payment-stack-integration-20260916",
+    "sha": "e2d180a8c8fcfb588f86e357b852fc0496dac8cb",
+    "action": "deleted fully-main-contained ref",
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T01:49:10.120184+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/payment-staging-qualification-20260914",
+    "sha": "0081b6b03bd58716090c57d936f31a364e944522",
+    "action": "deleted fully-main-contained ref",
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T01:49:10.120189+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/payment-terminal-recovery-20260914",
+    "sha": "c263a499cc760ce7f97fe7833211f4d7de7494ea",
+    "action": "deleted fully-main-contained ref",
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T01:49:10.120193+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/payment-worker-log-safety-20260915",
+    "sha": "ed064a7549f93bdd9239c5781706400c6fad5aa7",
+    "action": "deleted fully-main-contained ref",
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T01:49:10.120197+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/payphone-cancellation-compatibility-20260915",
+    "sha": "4ccaaa190c4ae6b1d041d8eabd7eed8fd5327c5e",
+    "action": "deleted fully-main-contained ref",
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T01:49:10.120200+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/profile-activity-photo-preview-20261004",
+    "sha": "169ad4a55a4da8693ad3151340abd2e83efa0ede",
+    "action": "deleted fully-main-contained ref",
+    "main": "fdac8e76523befee1603f49f6c7cf7d00762931b",
+    "timestamp": "2026-10-05T01:49:10.120207+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "pr": 71,
+    "action": "merged normal merge after current-head independent approval and all gates",
+    "head": "9ee8c2de72e96250f7ac8d6b768179135ab68654",
+    "base": "7a1fca3696dada4263c70716c70b763e492807cc",
+    "sha": "7aaa78dcc7bda19a59e312fdf3316f900fddca4a",
+    "timestamp": "2026-10-05T04:58:09.458927+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/mobile-tester-program-20261004",
+    "sha": "e95681145f640bda15dacd7b1c273429e2842fb4",
+    "main": "5efd7ff31d55c1eb5b66b2f7710ea4ef87328727",
+    "action": "deleted fully-main-contained ref after successful postmerge gates",
+    "timestamp": "2026-10-05T05:04:32.494346+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "release/tdf-shipped-20261004",
+    "sha": "ede1f2a0ccf75f3794c7892f291e1751b279d19e",
+    "main": "7aaa78dcc7bda19a59e312fdf3316f900fddca4a",
+    "action": "deleted fully-main-contained ref after successful postmerge gates",
+    "timestamp": "2026-10-05T05:04:41.884338+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "pr": 129,
+    "action": "merged normal merge into coupled shipped release branch after exact-head approval and all gates",
+    "head": "ff10746207ba5b57428560db64fb255d7417a481",
+    "base": "147ec8bc4ad4150eaab1ad410aa1803822075697",
+    "sha": "29c6fba0d36ef81242e5ce15f5252136004e5de9",
+    "timestamp": "2026-10-05T05:40:34.477382+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "chore/mobile-distribution-verified-20261005",
+    "sha": "9f454de68e6248974402e3bc9f3846150c06e9e1",
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "main": "259148d2af3b511dd7d011534e024014c90dfb15",
+    "evidence": "distribution481-prune-proof.json",
+    "timestamp": "2026-10-05T06:45:23.620038+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/patch-culture-ticketing-20261005",
+    "sha": "2b53bad3705e8a026b9b5443e74c2795fe333e63",
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "main": "f7b3802ba93398ae5cb5fcc365e3123c0cdb9aed",
+    "evidence": "pr480-postmerge-prune-proof.json",
+    "timestamp": "2026-10-05T14:09:14.432318+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/mobile-admitted-testers-20261005",
+    "sha": "85e27516b494a6be6b21769755292fd06c9e933a",
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "main": "f7b3802ba93398ae5cb5fcc365e3123c0cdb9aed",
+    "evidence": "pr483-postmerge-prune-proof.json",
+    "timestamp": "2026-10-05T14:09:20.504586+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "pr": 132,
+    "action": "merged reviewed Datadog integrity fix into shipped release after all current-head gates",
+    "sha": "e3e7ff3b09cca10eb4df311aba7154971d662d55",
+    "head": "d451e224f35fd001973b426df0af302bfb96bdd8",
+    "base": "661c1c604df79e58bbf7e88000c80908e62034d7",
+    "timestamp": "2026-10-05T14:10:44.322354+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "pr": 133,
+    "action": "merged reviewed session isolation and generated contract consolidation into shipped release after all current-head gates",
+    "sha": "925952571c6cb4f80e3103ae3b42955e2da42fce",
+    "head": "245867a216b5081d07722918e05be180f681633d",
+    "base": "e3e7ff3b09cca10eb4df311aba7154971d662d55",
+    "timestamp": "2026-10-05T14:29:46.472347+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "pr": 137,
+    "action": "merged reviewed onboarding, analytics and shipped conformance consolidation into main after all current-head and native gates",
+    "sha": "b702b94e62eabe51c1d0a7b7bdad363244a417ac",
+    "head": "a280e0d53f7cab5410084898c0ae0277c029fe4c",
+    "base": "432b321184a697994a8782f0b396a7b65b785cd7",
+    "timestamp": "2026-10-05T15:28:33.987162+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/event-ticket-order-limits-20261005",
+    "sha": "eaa02dd74cf178ef4122af20d4f3b26e3cf34ae0",
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "main": "cae7a54f3c9a712837e71186b0a6bf564c13180d",
+    "evidence": "pr482-postmerge-prune-proof.json",
+    "timestamp": "2026-10-05T15:51:10.062589+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/ticket-confirmation-delivery-20261005",
+    "sha": "c7fd6f01de57f17210d4cd8b42eafa67eb0faef3",
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "main": "cae7a54f3c9a712837e71186b0a6bf564c13180d",
+    "evidence": "pr484-postmerge-prune-proof.json",
+    "timestamp": "2026-10-05T15:51:15.018225+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "action": "enforced existing always-triggered formal and PostgreSQL verification jobs in main required checks",
+    "previous": [
+      "quality",
+      "api-contracts",
+      "production-migrations"
+    ],
+    "added": [
+      "specification-contracts",
+      "verify",
+      "postgres-foundation",
+      "postgres-api",
+      "postgres-task-commit",
+      "postgres-task-read",
+      "postgres-task-revision",
+      "postgres-task-revisioned-read",
+      "postgres-raci-reassignment",
+      "postgres-raci-editor-context",
+      "postgres-task-completion",
+      "postgres-complete-schema"
+    ],
+    "timestamp": "2026-10-05T16:15:00.535140+00:00",
+    "evidence": "root-formal-required-checks-before.json and root-formal-required-checks-after.json"
+  },
+  {
+    "repo": "tdf-mobile",
+    "pr": 138,
+    "action": "merged complete generated Operations contract preserving consolidated Mobile main after exact-head review and all gates",
+    "sha": "39f4d0e1a97022528c73623a99cff3e15d04f70e",
+    "head": "6297e3f137126350aa485690bf89de19e82d3c25",
+    "base": "b702b94e62eabe51c1d0a7b7bdad363244a417ac",
+    "timestamp": "2026-10-05T16:16:53.156501+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "release/tdf-shipped-20261005",
+    "sha": "925952571c6cb4f80e3103ae3b42955e2da42fce",
+    "main": "39f4d0e1a97022528c73623a99cff3e15d04f70e",
+    "action": "deleted fully-main-contained obsolete protected integration base after postmerge gates; retired only that branch protection",
+    "evidence": "mobile-shipped-base-retirement-proof.json",
+    "timestamp": "2026-10-05T16:22:08.154171+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/event-ticket-metadata-20261005",
+    "sha": "95f0254271221304a51763c68711300e9df8d803",
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "main": "7b801dedb97f034355d4ddfe8f69762a0632a021",
+    "evidence": "pr487-postmerge-prune-proof.json",
+    "timestamp": "2026-10-05T16:59:17.805447+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "action": "added serial main integration admission context; existing strict CI/review policy unchanged",
+    "source": "1ba52431a1f21d3c34ad83909de58fb228dd5e09",
+    "bootstrapPID": 6485,
+    "timestamp": "2026-10-05T17:24:15.953829+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/ticket-analytics-privacy-20261005",
+    "sha": "089927c77ed988681edbd0018e1376ad9a6be7a7",
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "main": "7b801dedb97f034355d4ddfe8f69762a0632a021",
+    "evidence": "pr485-postmerge-prune-proof.json",
+    "timestamp": "2026-10-05T17:30:07.363378+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "pr": 468,
+    "action": "merged normal merge after exact-head approval and all gates",
+    "head": "c4a5f31102c7a5ed55ae86c856a9c40c9f20492e",
+    "base": "7b801dedb97f034355d4ddfe8f69762a0632a021",
+    "sha": "c0a154cd4cbfcd3a5dc5167634be30b7691803cc",
+    "timestamp": "2026-10-05T17:55:41.462719+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "codex/hetzner-cutover-evidence-20260928",
+    "sha": "c4a5f31102c7a5ed55ae86c856a9c40c9f20492e",
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "main": "c0a154cd4cbfcd3a5dc5167634be30b7691803cc",
+    "evidence": "pr468-postmerge-prune-proof.json",
+    "timestamp": "2026-10-05T18:29:51.240863+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "pr": 478,
+    "action": "merged normal merge after exact-head approval and all gates",
+    "head": "91baf3945f2eec39927e2c02396febefc8f4854d",
+    "base": "c0a154cd4cbfcd3a5dc5167634be30b7691803cc",
+    "sha": "5c2e0bb28f062481ceaa625833c356096a43083f",
+    "timestamp": "2026-10-05T21:20:57.437625+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/spec-conformance-20261004",
+    "sha": "91baf3945f2eec39927e2c02396febefc8f4854d",
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "main": "5c2e0bb28f062481ceaa625833c356096a43083f",
+    "successor": "478 -> main",
+    "evidence": "pr478-postmerge-prune-proof.json",
+    "timestamp": "2026-10-05T22:06:38.302804+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/booking-build-repair-20261005",
+    "sha": "b7628e6a54775c2e0b0021b4b09b26f9ec52cdc2",
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "main": "5c2e0bb28f062481ceaa625833c356096a43083f",
+    "successor": "478 -> main",
+    "evidence": "pr478-postmerge-prune-proof.json",
+    "timestamp": "2026-10-05T22:06:38.302804+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/compiled-api-contract-20261005",
+    "sha": "3769b4f14e0f60864780f9eadb267756540aece7",
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "main": "5c2e0bb28f062481ceaa625833c356096a43083f",
+    "successor": "478 -> main",
+    "evidence": "pr478-postmerge-prune-proof.json",
+    "timestamp": "2026-10-05T22:06:38.302804+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "pr": 489,
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "branch": "fix/canonical-api-hostname-20261005",
+    "sha": "c1d74b56de15dde6b3ec49ad169629d689120084",
+    "successor": "489 -> main 26adc806a2de7ebabf8004a2709c2731058bf8a8",
+    "proof": "hostname489-prune-proof.json",
+    "recoveryRef": "refs/tdf-audit/retired/hostname-489-c1d74b56",
+    "timestamp": "2026-10-06T00:20:11.984653+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "docs/patch-culture-activation-evidence-20261005",
+    "sha": "e98452bfc09a07044afe964549a6990fbb81e0ff",
+    "pr": 488,
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "successor": "490 -> main",
+    "main": "3a2ab395c233e16641eb3d574afc941809ac43f1",
+    "evidence": "tax490-postmerge-prune-proof.json",
+    "recoveryBundle": "tax490-retired.bundle",
+    "timestamp": "2026-10-06T01:09:39.747152+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "feat/ticket-inclusive-tax-20261005",
+    "sha": "c9abd4bd88ad34971c488fbca372f6130b5e5252",
+    "pr": 490,
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "successor": "490 -> main",
+    "main": "3a2ab395c233e16641eb3d574afc941809ac43f1",
+    "evidence": "tax490-postmerge-prune-proof.json",
+    "recoveryBundle": "tax490-retired.bundle",
+    "timestamp": "2026-10-06T01:09:42.466844+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/ticket-checkout-cors-20261005",
+    "sha": "ba97fa181f8e2edd252fed74af1d90cf127f8bc2",
+    "pr": 494,
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "successor": "490 -> main",
+    "main": "3a2ab395c233e16641eb3d574afc941809ac43f1",
+    "evidence": "tax490-postmerge-prune-proof.json",
+    "recoveryBundle": "tax490-retired.bundle",
+    "timestamp": "2026-10-06T01:09:45.584766+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "audit/readiness-contract-20261005",
+    "sha": "dc981fee203b95f3993afb5eebf6b070d4e72aa8",
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "successor": "d5e217a7a877e2bdf5c5cf7c84be96e7ce7d77ff",
+    "evidence": {
+      "ancestry": true,
+      "postMergeRuns": [
+        {
+          "conclusion": "success",
+          "databaseId": 37405553752,
+          "name": "Run Datadog Synthetic tests",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37405553734,
+          "name": "Mobile Validate",
+          "status": "completed"
+        }
+      ],
+      "bundle": "/private/tmp/tdf-current-audit-20261003/mobile-d5-retired.bundle",
+      "openPRs": 0,
+      "protected": false,
+      "expectedSHALease": true
+    },
+    "at": "2026-10-06T03:47:51.429039+00:00"
+  },
+  {
+    "repo": "tdf-mobile",
+    "branch": "release/tdf-shipped-5c2e0bb28",
+    "sha": "0d2b5d15f3ae466a21d5c9f91793c69222755942",
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "successor": "d5e217a7a877e2bdf5c5cf7c84be96e7ce7d77ff",
+    "evidence": {
+      "ancestry": true,
+      "postMergeRuns": [
+        {
+          "conclusion": "success",
+          "databaseId": 37405553752,
+          "name": "Run Datadog Synthetic tests",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37405553734,
+          "name": "Mobile Validate",
+          "status": "completed"
+        }
+      ],
+      "bundle": "/private/tmp/tdf-current-audit-20261003/mobile-d5-retired.bundle",
+      "openPRs": 0,
+      "protected": false,
+      "expectedSHALease": true
+    },
+    "at": "2026-10-06T03:47:54.510778+00:00"
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "chore/mobile-analytics-rollout-20261005",
+    "sha": "559f8fe63ca023f61675997330a6706b4f4277c0",
+    "pr": 486,
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "successor": "d084416ac7458ae984bbc2512d4e6dda149a6aa8",
+    "at": "2026-10-06T03:53:00.571047+00:00",
+    "evidence": {
+      "sourceTreeEqualsMerge": true,
+      "mergeContainedInMain": "5dc869c7b5b31b52a39ee0dbdacb00a861020cdd",
+      "postMergeRuns": [
+        {
+          "conclusion": "success",
+          "databaseId": 37404262613,
+          "name": "Build Image",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37404262342,
+          "name": "Social formal and persistence verification",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37404262319,
+          "name": "CI Safe Install",
+          "status": "completed"
+        },
+        {
+          "conclusion": "cancelled",
+          "databaseId": 37404262323,
+          "name": "Main integration admission",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37404262312,
+          "name": "Run Datadog Synthetic tests",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37404262300,
+          "name": "Universal interaction verification",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37404262361,
+          "name": "Catalog list authority",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37404262248,
+          "name": "Event operations verification",
+          "status": "completed"
+        }
+      ],
+      "bundle": "/private/tmp/tdf-current-audit-20261003/privacy486-retired.bundle",
+      "noOpenHeadOrBaseDependency": true,
+      "expectedSHALease": true,
+      "metadataAdmissionCancelled": true
+    }
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/consolidated-reviewfix-20261005",
+    "sha": "a30f8560194b818aa30790048df22c10ac649cc4",
+    "pr": null,
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "successor": "5dc869c7b5b31b52a39ee0dbdacb00a861020cdd",
+    "at": "2026-10-06T04:11:32.940839+00:00",
+    "evidence": {
+      "ancestry": true,
+      "verifiedMergeTree": "4f5b8e318c1513a6e30e1fd13edd9730d9e5e8ef",
+      "postMergeRuns": [
+        {
+          "conclusion": "success",
+          "databaseId": 37408038248,
+          "name": "Universal interaction verification",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038151,
+          "name": "Main integration admission",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038145,
+          "name": "Run Datadog Synthetic tests",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038144,
+          "name": "Catalog list authority",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038124,
+          "name": "Social formal and persistence verification",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038206,
+          "name": "CI Safe Install",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038149,
+          "name": "Event operations verification",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038343,
+          "name": "Build Image",
+          "status": "completed"
+        }
+      ],
+      "bundle": "/private/tmp/tdf-current-audit-20261003/invoice491-retired.bundle",
+      "noOpenHeadOrBaseDependency": true,
+      "expectedSHALease": true,
+      "main": "24d8ba45d246c6e7431deb9b510e352265821a56"
+    }
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/physical-runner-20261005",
+    "sha": "5252d3f1907ac5085ed9bec82cc0e81e5ef4b677",
+    "pr": null,
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "successor": "5dc869c7b5b31b52a39ee0dbdacb00a861020cdd",
+    "at": "2026-10-06T04:11:36.013307+00:00",
+    "evidence": {
+      "ancestry": true,
+      "verifiedMergeTree": "4f5b8e318c1513a6e30e1fd13edd9730d9e5e8ef",
+      "postMergeRuns": [
+        {
+          "conclusion": "success",
+          "databaseId": 37408038248,
+          "name": "Universal interaction verification",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038151,
+          "name": "Main integration admission",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038145,
+          "name": "Run Datadog Synthetic tests",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038144,
+          "name": "Catalog list authority",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038124,
+          "name": "Social formal and persistence verification",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038206,
+          "name": "CI Safe Install",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038149,
+          "name": "Event operations verification",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038343,
+          "name": "Build Image",
+          "status": "completed"
+        }
+      ],
+      "bundle": "/private/tmp/tdf-current-audit-20261003/invoice491-retired.bundle",
+      "noOpenHeadOrBaseDependency": true,
+      "expectedSHALease": true,
+      "main": "24d8ba45d246c6e7431deb9b510e352265821a56"
+    }
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/receipt-conformance-20261005",
+    "sha": "4f5b8e318c1513a6e30e1fd13edd9730d9e5e8ef",
+    "pr": 491,
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "successor": "5dc869c7b5b31b52a39ee0dbdacb00a861020cdd",
+    "at": "2026-10-06T04:11:39.049123+00:00",
+    "evidence": {
+      "ancestry": true,
+      "verifiedMergeTree": "4f5b8e318c1513a6e30e1fd13edd9730d9e5e8ef",
+      "postMergeRuns": [
+        {
+          "conclusion": "success",
+          "databaseId": 37408038248,
+          "name": "Universal interaction verification",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038151,
+          "name": "Main integration admission",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038145,
+          "name": "Run Datadog Synthetic tests",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038144,
+          "name": "Catalog list authority",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038124,
+          "name": "Social formal and persistence verification",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038206,
+          "name": "CI Safe Install",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038149,
+          "name": "Event operations verification",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038343,
+          "name": "Build Image",
+          "status": "completed"
+        }
+      ],
+      "bundle": "/private/tmp/tdf-current-audit-20261003/invoice491-retired.bundle",
+      "noOpenHeadOrBaseDependency": true,
+      "expectedSHALease": true,
+      "main": "24d8ba45d246c6e7431deb9b510e352265821a56"
+    }
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/recovery-envelope-20261005",
+    "sha": "cb5bf0dc6fd018fd7c6a664b2ddca5ac91df5886",
+    "pr": null,
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "successor": "5dc869c7b5b31b52a39ee0dbdacb00a861020cdd",
+    "at": "2026-10-06T04:11:42.109782+00:00",
+    "evidence": {
+      "ancestry": true,
+      "verifiedMergeTree": "4f5b8e318c1513a6e30e1fd13edd9730d9e5e8ef",
+      "postMergeRuns": [
+        {
+          "conclusion": "success",
+          "databaseId": 37408038248,
+          "name": "Universal interaction verification",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038151,
+          "name": "Main integration admission",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038145,
+          "name": "Run Datadog Synthetic tests",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038144,
+          "name": "Catalog list authority",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038124,
+          "name": "Social formal and persistence verification",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038206,
+          "name": "CI Safe Install",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038149,
+          "name": "Event operations verification",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038343,
+          "name": "Build Image",
+          "status": "completed"
+        }
+      ],
+      "bundle": "/private/tmp/tdf-current-audit-20261003/invoice491-retired.bundle",
+      "noOpenHeadOrBaseDependency": true,
+      "expectedSHALease": true,
+      "main": "24d8ba45d246c6e7431deb9b510e352265821a56"
+    }
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/recovery-journal-20261005",
+    "sha": "2331887262cfa0df66e355bc03c3860bc046ef7d",
+    "pr": null,
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "successor": "5dc869c7b5b31b52a39ee0dbdacb00a861020cdd",
+    "at": "2026-10-06T04:11:45.183672+00:00",
+    "evidence": {
+      "ancestry": true,
+      "verifiedMergeTree": "4f5b8e318c1513a6e30e1fd13edd9730d9e5e8ef",
+      "postMergeRuns": [
+        {
+          "conclusion": "success",
+          "databaseId": 37408038248,
+          "name": "Universal interaction verification",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038151,
+          "name": "Main integration admission",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038145,
+          "name": "Run Datadog Synthetic tests",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038144,
+          "name": "Catalog list authority",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038124,
+          "name": "Social formal and persistence verification",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038206,
+          "name": "CI Safe Install",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038149,
+          "name": "Event operations verification",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038343,
+          "name": "Build Image",
+          "status": "completed"
+        }
+      ],
+      "bundle": "/private/tmp/tdf-current-audit-20261003/invoice491-retired.bundle",
+      "noOpenHeadOrBaseDependency": true,
+      "expectedSHALease": true,
+      "main": "24d8ba45d246c6e7431deb9b510e352265821a56"
+    }
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "audit/recovery-package-20261005",
+    "sha": "e502a9e9b120221bbf699a461b34bc30a901a362",
+    "pr": null,
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "successor": "5dc869c7b5b31b52a39ee0dbdacb00a861020cdd",
+    "at": "2026-10-06T04:11:48.125000+00:00",
+    "evidence": {
+      "ancestry": true,
+      "verifiedMergeTree": "4f5b8e318c1513a6e30e1fd13edd9730d9e5e8ef",
+      "postMergeRuns": [
+        {
+          "conclusion": "success",
+          "databaseId": 37408038248,
+          "name": "Universal interaction verification",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038151,
+          "name": "Main integration admission",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038145,
+          "name": "Run Datadog Synthetic tests",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038144,
+          "name": "Catalog list authority",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038124,
+          "name": "Social formal and persistence verification",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038206,
+          "name": "CI Safe Install",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038149,
+          "name": "Event operations verification",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37408038343,
+          "name": "Build Image",
+          "status": "completed"
+        }
+      ],
+      "bundle": "/private/tmp/tdf-current-audit-20261003/invoice491-retired.bundle",
+      "noOpenHeadOrBaseDependency": true,
+      "expectedSHALease": true,
+      "main": "24d8ba45d246c6e7431deb9b510e352265821a56"
+    }
+  },
+  {
+    "repo": "tdf-app",
+    "branch": "fix/label-assets-error-state-20261005",
+    "sha": "fee1f1159ca6b6cc82827253787187b267b208ac",
+    "pr": 492,
+    "action": "deleted fully-main-contained ref after verified merge tree and postmerge gates",
+    "successor": "24d8ba45d246c6e7431deb9b510e352265821a56",
+    "at": "2026-10-06T04:19:51.179125+00:00",
+    "evidence": {
+      "sourceTreeEqualsMerge": true,
+      "postMergeRuns": [
+        {
+          "conclusion": "success",
+          "databaseId": 37412216212,
+          "name": "Social formal and persistence verification",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37412216017,
+          "name": "Run Datadog Synthetic tests",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37412215937,
+          "name": "Main integration admission",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37412215954,
+          "name": "Universal interaction verification",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37412216016,
+          "name": "Catalog list authority",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37412215933,
+          "name": "CI Safe Install",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "databaseId": 37412216008,
+          "name": "Event operations verification",
+          "status": "completed"
+        }
+      ],
+      "raciCompletedAfterExternalMerge": {
+        "conclusion": "success",
+        "headSha": "fee1f1159ca6b6cc82827253787187b267b208ac",
+        "status": "completed"
+      },
+      "bundle": "/private/tmp/tdf-current-audit-20261003/inventory492-retired.bundle",
+      "noOpenHeadOrBaseDependency": true,
+      "expectedSHALease": true,
+      "webDeployment": "f648db00-161c-412a-bb2a-bdf6dd16268b",
+      "uiOnlyNoNewImageExpected": true
+    }
+  }
+]

@@ -1,0 +1,1 @@
+192f9578665109e52d28a96c772e3307bdc684e5 2026-09-14T21:38:09-05:00 continuous-improvement-loop[bot] fix(migrations): restore canonical event schema dependencies

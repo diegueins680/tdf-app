@@ -1,0 +1,1116 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043575905",
+      "pull_request_review_id": 5243985634,
+      "id": 4043575905,
+      "node_id": "PRRC_kwDOQPdUrM7xBBJh",
+      "diff_hunk": "@@ -35,7 +35,8 @@ import {\n   normalizeCheckoutQuantity,\n } from './StripeCheckoutModal.logic';\n \n-const stripePromise = loadStripe(import.meta.env?.VITE_STRIPE_PUBLISHABLE_KEY ?? '');\n+const stripeKey = import.meta.env?.VITE_STRIPE_PUBLISHABLE_KEY?.trim();\n+const stripePromise = stripeKey ? loadStripe(stripeKey) : Promise.resolve(null);",
+      "path": "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+      "commit_id": "8b6fcb407d0d96e6543a368d887e5a66d24a772f",
+      "original_commit_id": "c801066e4b3b4ebc3d95d73fcce4756fced82451",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Block checkout when the Stripe key is absent**\n\nWhen the frontend publishable key is absent but the backend Stripe secrets are configured, this resolved-null promise is still passed to `Elements` after `createPaymentIntent` has created a pending order and reserved ticket inventory. `CheckoutForm` then permanently disables its Pay button because `useStripe()` returns null, while the ticket-purchase button remains available in `SocialEventsPage`, so customers can consume availability without any way to complete payment or see a configuration error. Gate the checkout before creating the payment intent or render an actionable unavailable state instead of entering the payment step.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T03:31:16Z",
+      "updated_at": "2026-09-18T03:31:16Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043575905",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043575905"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043575905"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043575905/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 39,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 6,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043575910",
+      "pull_request_review_id": 5243985634,
+      "id": 4043575910,
+      "node_id": "PRRC_kwDOQPdUrM7xBBJm",
+      "diff_hunk": "@@ -169,7 +169,7 @@ export default function UserActivityPage() {\n \n       {(activityQuery.isLoading || hasActivity) && (\n         <Paper>\n-          <TableContainer>\n+          <TableContainer tabIndex={0} role=\"region\" aria-label=\"Actividad de usuarios\">",
+      "path": "tdf-hq-ui/src/pages/UserActivityPage.tsx",
+      "commit_id": "8b6fcb407d0d96e6543a368d887e5a66d24a772f",
+      "original_commit_id": "c801066e4b3b4ebc3d95d73fcce4756fced82451",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Give the activity regions distinct accessible names**\n\nWhen activity exists, this summary container and the recent-activity container at line 232 are both exposed as regions named \u201cActividad de usuarios.\u201d Screen-reader region navigation therefore presents two indistinguishable destinations even though the enclosed tables are separately named; label this region as the per-user summary and the other as recent activity.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T03:31:16Z",
+      "updated_at": "2026-09-18T03:31:16Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043575910",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043575910"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043575910"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043575910/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 172,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 5,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043629015",
+      "pull_request_review_id": 5244044064,
+      "id": 4043629015,
+      "node_id": "PRRC_kwDOQPdUrM7xBOHX",
+      "diff_hunk": "@@ -448,7 +448,7 @@ function LegacySocialPage() {\n                   ) : shareQrError ? (\n                     <Typography variant=\"caption\" color=\"error\">{shareQrError}</Typography>\n                   ) : (\n-                    <CircularProgress size={20} />\n+                    <CircularProgress size={20} aria-label=\"Cargando conexiones\" />",
+      "path": "tdf-hq-ui/src/pages/SocialPage.tsx",
+      "commit_id": "8b6fcb407d0d96e6543a368d887e5a66d24a772f",
+      "original_commit_id": "815fe9c3f44a67cdde1de0f5948edce0071e3c8a",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Label each concurrent loading operation distinctly**\n\nOn the initial social-page render, QR generation and the suggestions/network queries can all be pending simultaneously, but the three progress bars at lines 451, 565, and 624 are all named \u201cCargando conexiones.\u201d The indicator here is actually generating the contact QR, and reusing the same name makes the concurrent statuses indistinguishable to screen-reader users; give each operation a specific label.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T03:44:59Z",
+      "updated_at": "2026-09-18T03:44:59Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043629015",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043629015"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043629015"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043629015/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 451,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 5,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043629021",
+      "pull_request_review_id": 5244044064,
+      "id": 4043629021,
+      "node_id": "PRRC_kwDOQPdUrM7xBOHd",
+      "diff_hunk": "@@ -198,7 +198,7 @@ export default function KanbanPage() {\n           <Typography variant=\"body2\" color=\"text.secondary\">\n             {t('pipelines.keyboardHelp')}\n           </Typography>\n-          <Stack direction=\"row\" gap={2} sx={{ overflowX: 'auto', pb: 2 }}>\n+          <Stack role=\"region\" aria-label={t('pipelines.workflowTabs')} tabIndex={0} direction=\"row\" gap={2} sx={{ overflowX: 'auto', pb: 2 }}>",
+      "path": "tdf-hq-ui/src/pages/KanbanPage.tsx",
+      "commit_id": "8b6fcb407d0d96e6543a368d887e5a66d24a772f",
+      "original_commit_id": "815fe9c3f44a67cdde1de0f5948edce0071e3c8a",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Give the board region a distinct accessible name**\n\nWhen the Kanban stages are loaded, this scrollable board and the workflow selector at line 174 both use `pipelines.workflowTabs` as their accessible name. Assistive-technology users therefore hear \u201cAvailable project workflows\u201d for both the tab list and the separate board region, obscuring which target contains the draggable columns; use a board-specific localized label here.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T03:44:59Z",
+      "updated_at": "2026-09-18T03:44:59Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043629021",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043629021"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043629021"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043629021/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 201,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 5,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043680608",
+      "pull_request_review_id": 5244103074,
+      "id": 4043680608,
+      "node_id": "PRRC_kwDOQPdUrM7xBatg",
+      "diff_hunk": "@@ -910,6 +910,7 @@ const openDialogForRange = (start: Date, end: Date) => {\n             nowIndicator\n             timeZone={zone}\n             locale={locale}\n+            buttonIcons={false}",
+      "path": "tdf-hq-ui/src/pages/BookingsPage.tsx",
+      "commit_id": "2fb19e8635e5a46e0d31093ed2e9b40dc9bf7b91",
+      "original_commit_id": "3d5e87aee428cb4e28df1ff05f4261923717394c",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Register FullCalendar locales before showing text controls**\n\nFor the default Spanish locale\u2014and likewise the supported French, German, and Portuguese locales\u2014no FullCalendar locale bundle is registered anywhere in the UI, so `locale={locale}` falls back to English. Setting `buttonIcons={false}` therefore replaces the language-neutral navigation arrows with visible English labels such as \u201cprev\u201d, \u201cnext\u201d, \u201ctoday\u201d, \u201cmonth\u201d, \u201cweek\u201d, and \u201cday\u201d on this otherwise Spanish page. Register the relevant FullCalendar locales or provide localized `buttonText` values before disabling the icons.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T03:58:34Z",
+      "updated_at": "2026-09-18T03:58:34Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043680608",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043680608"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043680608"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043680608/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 918,
+      "original_line": 913,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 4,
+      "position": 17,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043779486",
+      "pull_request_review_id": 5244224474,
+      "id": 4043779486,
+      "node_id": "PRRC_kwDOQPdUrM7xBy2e",
+      "diff_hunk": "@@ -244,7 +244,7 @@ export default function UserActivityPage() {\n                     {activityQuery.isLoading && (\n                       <TableRow>\n                         <TableCell colSpan={5} align=\"center\">\n-                          <CircularProgress size={24} />\n+                          <CircularProgress size={24} aria-label=\"Cargando actividad\" />",
+      "path": "tdf-hq-ui/src/pages/UserActivityPage.tsx",
+      "commit_id": "8b6fcb407d0d96e6543a368d887e5a66d24a772f",
+      "original_commit_id": "8b6fcb407d0d96e6543a368d887e5a66d24a772f",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Distinguish the two activity loading statuses**\n\nDuring the initial `activityQuery.isLoading` state, this progress bar and the one at line 186 are rendered simultaneously with the same accessible name, so screen-reader progress-bar navigation exposes two indistinguishable statuses for different tables. Give each indicator a table-specific name (summary versus recent activity), or expose only one loading status.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T04:22:11Z",
+      "updated_at": "2026-09-18T04:22:11Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043779486",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043779486"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043779486"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043779486/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 247,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 32,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043959762",
+      "pull_request_review_id": 5244431725,
+      "id": 4043959762,
+      "node_id": "PRRC_kwDOQPdUrM7xCe3S",
+      "diff_hunk": "@@ -35,7 +35,8 @@ import {\n   normalizeCheckoutQuantity,\n } from './StripeCheckoutModal.logic';\n \n-const stripePromise = loadStripe(import.meta.env?.VITE_STRIPE_PUBLISHABLE_KEY ?? '');\n+const stripeKey = import.meta.env?.VITE_STRIPE_PUBLISHABLE_KEY?.trim();\n+const stripePromise = stripeKey ? loadStripe(stripeKey) : Promise.resolve(null);",
+      "path": "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+      "commit_id": "8b6fcb407d0d96e6543a368d887e5a66d24a772f",
+      "original_commit_id": "c801066e4b3b4ebc3d95d73fcce4756fced82451",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 60d754aab977f2d1967937214a0435c6617df3ac. Readiness now resolves before createPaymentIntent. Missing/failed SDK retains buyer input and creates no intent; single-flight and generation fences cover cancellation, unmount, event/tier changes and session changes. 17 component/logic tests pass, TLC221distinct states plus3named negative controls pass. 10 ES/EN browser cases in5profiles/3engines pass with0intents; ordinary retry/cancel clicks also cover the radio layer correction.",
+      "created_at": "2026-09-18T05:04:27Z",
+      "updated_at": "2026-09-18T05:04:27Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043959762",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043959762"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043959762"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043959762/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 39,
+      "side": "RIGHT",
+      "in_reply_to_id": 4043575905,
+      "author_association": "OWNER",
+      "original_position": 6,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043959957",
+      "pull_request_review_id": 5244431940,
+      "id": 4043959957,
+      "node_id": "PRRC_kwDOQPdUrM7xCe6V",
+      "diff_hunk": "@@ -169,7 +169,7 @@ export default function UserActivityPage() {\n \n       {(activityQuery.isLoading || hasActivity) && (\n         <Paper>\n-          <TableContainer>\n+          <TableContainer tabIndex={0} role=\"region\" aria-label=\"Actividad de usuarios\">",
+      "path": "tdf-hq-ui/src/pages/UserActivityPage.tsx",
+      "commit_id": "8b6fcb407d0d96e6543a368d887e5a66d24a772f",
+      "original_commit_id": "c801066e4b3b4ebc3d95d73fcce4756fced82451",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 60d754aab977f2d1967937214a0435c6617df3ac. Summary and recent activity now have distinct localized region names. Six ES/EN browser checks across calendar/board/activity pass; evidence/operational-labels-es-en.json.",
+      "created_at": "2026-09-18T05:04:30Z",
+      "updated_at": "2026-09-18T05:04:30Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043959957",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043959957"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043959957"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043959957/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 172,
+      "side": "RIGHT",
+      "in_reply_to_id": 4043575910,
+      "author_association": "OWNER",
+      "original_position": 5,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043960130",
+      "pull_request_review_id": 5244432141,
+      "id": 4043960130,
+      "node_id": "PRRC_kwDOQPdUrM7xCe9C",
+      "diff_hunk": "@@ -448,7 +448,7 @@ function LegacySocialPage() {\n                   ) : shareQrError ? (\n                     <Typography variant=\"caption\" color=\"error\">{shareQrError}</Typography>\n                   ) : (\n-                    <CircularProgress size={20} />\n+                    <CircularProgress size={20} aria-label=\"Cargando conexiones\" />",
+      "path": "tdf-hq-ui/src/pages/SocialPage.tsx",
+      "commit_id": "8b6fcb407d0d96e6543a368d887e5a66d24a772f",
+      "original_commit_id": "815fe9c3f44a67cdde1de0f5948edce0071e3c8a",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 60d754aab977f2d1967937214a0435c6617df3ac. QR generation, suggested connections and social-network loading each now have a distinct ES/EN purpose-specific name. Build/typecheck/lint pass; operational arrival checks remain documented separately from all-state manual screen-reader coverage.",
+      "created_at": "2026-09-18T05:04:33Z",
+      "updated_at": "2026-09-18T05:04:33Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043960130",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043960130"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043960130"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043960130/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 451,
+      "side": "RIGHT",
+      "in_reply_to_id": 4043629015,
+      "author_association": "OWNER",
+      "original_position": 5,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043960275",
+      "pull_request_review_id": 5244432318,
+      "id": 4043960275,
+      "node_id": "PRRC_kwDOQPdUrM7xCe_T",
+      "diff_hunk": "@@ -198,7 +198,7 @@ export default function KanbanPage() {\n           <Typography variant=\"body2\" color=\"text.secondary\">\n             {t('pipelines.keyboardHelp')}\n           </Typography>\n-          <Stack direction=\"row\" gap={2} sx={{ overflowX: 'auto', pb: 2 }}>\n+          <Stack role=\"region\" aria-label={t('pipelines.workflowTabs')} tabIndex={0} direction=\"row\" gap={2} sx={{ overflowX: 'auto', pb: 2 }}>",
+      "path": "tdf-hq-ui/src/pages/KanbanPage.tsx",
+      "commit_id": "8b6fcb407d0d96e6543a368d887e5a66d24a772f",
+      "original_commit_id": "815fe9c3f44a67cdde1de0f5948edce0071e3c8a",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 60d754aab977f2d1967937214a0435c6617df3ac. The board region now uses its own Project board / Tablero de proyectos label; workflow tabs retain their existing name. Actual isolated browser check passes in ES/EN.",
+      "created_at": "2026-09-18T05:04:36Z",
+      "updated_at": "2026-09-18T05:04:36Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043960275",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043960275"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043960275"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043960275/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 201,
+      "side": "RIGHT",
+      "in_reply_to_id": 4043629021,
+      "author_association": "OWNER",
+      "original_position": 5,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043960406",
+      "pull_request_review_id": 5244432463,
+      "id": 4043960406,
+      "node_id": "PRRC_kwDOQPdUrM7xCfBW",
+      "diff_hunk": "@@ -910,6 +910,7 @@ const openDialogForRange = (start: Date, end: Date) => {\n             nowIndicator\n             timeZone={zone}\n             locale={locale}\n+            buttonIcons={false}",
+      "path": "tdf-hq-ui/src/pages/BookingsPage.tsx",
+      "commit_id": "2fb19e8635e5a46e0d31093ed2e9b40dc9bf7b91",
+      "original_commit_id": "3d5e87aee428cb4e28df1ff05f4261923717394c",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 60d754aab977f2d1967937214a0435c6617df3ac. FullCalendar now receives imported es/fr/de/pt locale definitions. Compiled-bundle browser checks show Spanish Ant/Sig/Hoy/Mes/Semana/D\u00eda and English prev/next/today/month/week/day.",
+      "created_at": "2026-09-18T05:04:38Z",
+      "updated_at": "2026-09-18T05:04:38Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043960406",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043960406"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043960406"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043960406/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 918,
+      "original_line": 913,
+      "side": "RIGHT",
+      "in_reply_to_id": 4043680608,
+      "author_association": "OWNER",
+      "original_position": 4,
+      "position": 17,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043960566",
+      "pull_request_review_id": 5244432635,
+      "id": 4043960566,
+      "node_id": "PRRC_kwDOQPdUrM7xCfD2",
+      "diff_hunk": "@@ -244,7 +244,7 @@ export default function UserActivityPage() {\n                     {activityQuery.isLoading && (\n                       <TableRow>\n                         <TableCell colSpan={5} align=\"center\">\n-                          <CircularProgress size={24} />\n+                          <CircularProgress size={24} aria-label=\"Cargando actividad\" />",
+      "path": "tdf-hq-ui/src/pages/UserActivityPage.tsx",
+      "commit_id": "8b6fcb407d0d96e6543a368d887e5a66d24a772f",
+      "original_commit_id": "8b6fcb407d0d96e6543a368d887e5a66d24a772f",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 60d754aab977f2d1967937214a0435c6617df3ac. Both concurrent activity progress indicators now use distinct localized labels: summary by user versus recent activity. Four delayed-response ES/EN checks pass, including directory profile loading; evidence/operational-loading-es-en.json.",
+      "created_at": "2026-09-18T05:04:41Z",
+      "updated_at": "2026-09-18T05:04:41Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043960566",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043960566"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043960566"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043960566/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 247,
+      "side": "RIGHT",
+      "in_reply_to_id": 4043779486,
+      "author_association": "OWNER",
+      "original_position": 32,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043967244",
+      "pull_request_review_id": 5244440548,
+      "id": 4043967244,
+      "node_id": "PRRC_kwDOQPdUrM7xCgsM",
+      "diff_hunk": "@@ -472,7 +503,6 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier,\n         {state.activeStep === CHECKOUT_STEP_BUYER_DETAILS && (\n           <>\n             <Button\n-              disabled={state.loading}\n               onClick={handleClose}",
+      "path": "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+      "commit_id": "2fb19e8635e5a46e0d31093ed2e9b40dc9bf7b91",
+      "original_commit_id": "60d754aab977f2d1967937214a0435c6617df3ac",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Prevent cancellation after the reservation request starts**\n\nWhen Stripe readiness has completed but `createPaymentIntent` is still pending, the newly enabled Cancel button calls `handleClose`, unmounting this component and invalidating the attempt without aborting or compensating for the API request. If the server completes the request, `SocialEventsHandlers.hs` creates a pending order and increments `EventTicketTierQuantitySold`, while the response is discarded and the buyer never receives the payment form; repeated slow-request cancellations can therefore consume ticket availability. Keep cancellation limited to the pre-request readiness phase, or cancel/release any reservation that completes after closure.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T05:06:23Z",
+      "updated_at": "2026-09-18T05:06:23Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043967244",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043967244"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4043967244"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4043967244/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 530,
+      "original_start_line": 505,
+      "start_side": "RIGHT",
+      "line": 531,
+      "original_line": 506,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 142,
+      "position": 214,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044051593",
+      "pull_request_review_id": 5244535129,
+      "id": 4044051593,
+      "node_id": "PRRC_kwDOQPdUrM7xC1SJ",
+      "diff_hunk": "@@ -472,7 +503,6 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier,\n         {state.activeStep === CHECKOUT_STEP_BUYER_DETAILS && (\n           <>\n             <Button\n-              disabled={state.loading}\n               onClick={handleClose}",
+      "path": "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+      "commit_id": "2fb19e8635e5a46e0d31093ed2e9b40dc9bf7b91",
+      "original_commit_id": "60d754aab977f2d1967937214a0435c6617df3ac",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Addressed in a8b40ef4f. Confirmed the slow-reservation regression against60d754aab; the new test failed before the fix. Cancellation remains allowed during SDK readiness, but a synchronous reservationPending ref now prevents button, Escape and backdrop closure once createPaymentIntent is dispatched. Visible Cancel is disabled for that phase; success reaches payment and failure restores cancellation/input.19 component/logic tests and10 production-bundle ES/EN browser cases pass. TLC CheckoutCancellation splits request dispatch/response:5distinct states, safety and conditional liveness pass; removing the guard yields the named abandoned-reservation counterexample. Full pinned TLC/Alloy runner passes. Bounds explicitly exclude external unmount/navigation, account changes after dispatch and ambiguous transport failure; no claim of general server inventory recovery.",
+      "created_at": "2026-09-18T05:26:42Z",
+      "updated_at": "2026-09-18T05:26:42Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4044051593",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044051593"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4044051593"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044051593/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 530,
+      "original_start_line": 505,
+      "start_side": "RIGHT",
+      "line": 531,
+      "original_line": 506,
+      "side": "RIGHT",
+      "in_reply_to_id": 4043967244,
+      "author_association": "OWNER",
+      "original_position": 142,
+      "position": 214,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044062576",
+      "pull_request_review_id": 5244547635,
+      "id": 4044062576,
+      "node_id": "PRRC_kwDOQPdUrM7xC39w",
+      "diff_hunk": "@@ -329,7 +370,9 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier,\n     restoreFocusAfterClose();\n   };\n \n+  const renderAttempt = buyerAttempt.current;\n   const handlePaymentSuccess = (orderId: string) => {\n+    if (renderAttempt !== buyerAttempt.current) return;",
+      "path": "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+      "commit_id": "2fb19e8635e5a46e0d31093ed2e9b40dc9bf7b91",
+      "original_commit_id": "a8b40ef4fe6993ffe0d1c6c9517227ba0b2b8ed2",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Preserve successful payments after dialog dismissal**\n\nIf the buyer presses Escape or clicks the backdrop while `stripe.confirmPayment()` is pending, the dialog remains dismissible because `reservationPending` only covers the earlier intent request; `handleClose` then increments `buyerAttempt`, so this check discards a later successful payment. The page's `onSuccess` callback consequently never invalidates ticket/order queries or displays confirmation, leaving a charged buyer likely to retry. Either prevent dismissal while payment confirmation is pending or continue delivering the successful completion callback.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T05:28:56Z",
+      "updated_at": "2026-09-18T05:28:56Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4044062576",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044062576"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4044062576"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044062576/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 385,
+      "original_line": 375,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 137,
+      "position": 186,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044169699",
+      "pull_request_review_id": 5244669435,
+      "id": 4044169699,
+      "node_id": "PRRC_kwDOQPdUrM7xDSHj",
+      "diff_hunk": "@@ -329,7 +370,9 @@ export function StripeCheckoutModal({ open, onClose, eventId, eventTitle, tier,\n     restoreFocusAfterClose();\n   };\n \n+  const renderAttempt = buyerAttempt.current;\n   const handlePaymentSuccess = (orderId: string) => {\n+    if (renderAttempt !== buyerAttempt.current) return;",
+      "path": "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+      "commit_id": "2fb19e8635e5a46e0d31093ed2e9b40dc9bf7b91",
+      "original_commit_id": "a8b40ef4fe6993ffe0d1c6c9517227ba0b2b8ed2",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Addressed in bdab8530a, integrated with current main4b0bc6ed7 as2fb19e863. The dialog now guards elements.submit and confirmPayment with paymentPending; the child also synchronously rejects duplicate submits before processing state renders. The delayed-success regression failed on a8b40ef4f and passes after the fix: Escape/backdrop cannot close, the order callback is delivered exactly once, and provider rejection restores dismissal without success.21 component/logic tests pass. CheckoutCancellation now models payment confirmation with NoLostPayment and conditional PaymentSettles; the unsafe-payment configuration yields its named counterexample. Complete pinned TLC/Alloy runner passes. Integrated TypeScript/production build365216gzip bytes passes; no real charge or blanket background-recovery claim.",
+      "created_at": "2026-09-18T05:52:29Z",
+      "updated_at": "2026-09-18T05:52:30Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4044169699",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044169699"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/429#discussion_r4044169699"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/429"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044169699/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 385,
+      "original_line": 375,
+      "side": "RIGHT",
+      "in_reply_to_id": 4044062576,
+      "author_association": "OWNER",
+      "original_position": 137,
+      "position": 186,
+      "subject_type": "line"
+    }
+  ]
+]

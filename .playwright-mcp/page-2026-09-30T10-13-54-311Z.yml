@@ -1,0 +1,240 @@
+- generic [ref=f45e4]:
+  - generic [ref=f45e9]:
+    - generic [ref=f45e12]:
+      - link [ref=f45e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f45e22]
+      - generic [ref=f45e25]:
+        - link [ref=f45e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f45e35]
+        - link [ref=f45e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f45e45]
+        - link [ref=f45e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - generic [ref=f45e55]:
+            - img "Messages" [ref=f45e57]
+            - generic "Direct messaging - 8 new notifications link" [ref=f45e60]: "8"
+        - link [ref=f45e66] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f45e71]
+        - link [ref=f45e78] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f45e83]
+        - link [ref=f45e89] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f45e94]
+        - link [ref=f45e99] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f45e104]
+        - link [ref=f45e111] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f45e116]:
+            - img "tdf.records.label's profile picture" [ref=f45e117]
+      - generic [ref=f45e118]:
+        - link [ref=f45e121] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f45e126]
+        - link [ref=f45e129] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f45e134]
+    - generic [ref=f45e137]:
+      - main [ref=f45e138]:
+        - generic [ref=f45e140]:
+          - generic [ref=f45e141]:
+            - generic [ref=f45e142]:
+              - link [ref=f45e148] [cursor=pointer]:
+                - /url: /angsh.music/
+                - img "angsh.music's profile picture" [ref=f45e149]
+              - generic [ref=f45e150]:
+                - generic [ref=f45e151]:
+                  - generic [ref=f45e152]:
+                    - link [ref=f45e154] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "angsh.music" [level=2] [ref=f45e155]
+                    - button [ref=f45e157] [cursor=pointer]:
+                      - img "Options" [ref=f45e159]
+                  - generic [ref=f45e163]: Angsh
+                  - generic [ref=f45e165]:
+                    - generic [ref=f45e167]:
+                      - generic [ref=f45e168]: "491"
+                      - text: posts
+                    - link "910 followers" [ref=f45e170] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f45e171]:
+                        - generic "910" [ref=f45e172]
+                        - text: followers
+                    - link "2,621 following" [ref=f45e174] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f45e175]:
+                        - generic [ref=f45e176]: 2,621
+                        - text: following
+                - generic [ref=f45e177]:
+                  - generic [ref=f45e178]:
+                    - generic [ref=f45e179]: Musician/band
+                    - link "Threads angsh.music" [ref=f45e183] [cursor=pointer]:
+                      - /url: https://www.threads.com/@angsh.music?xmt=AQG0mj8YHyLaGrcOAnkRf4mwAb9Ri9A3LBXzsnMF0MbNAJA
+                      - img "Threads" [ref=f45e185]
+                      - generic [ref=f45e187]: angsh.music
+                  - link "Followed by carloscarrillotoro, hno613613 + 18 more" [ref=f45e189] [cursor=pointer]:
+                    - /url: /angsh.music/followers/mutualOnly
+                    - generic [ref=f45e191]:
+                      - generic [ref=f45e193]:
+                        - button [ref=f45e194]:
+                          - link [ref=f45e195]
+                        - button [ref=f45e196]:
+                          - link [ref=f45e197]
+                        - button [ref=f45e198]:
+                          - link [ref=f45e199]
+                      - generic [ref=f45e200]: Followed by carloscarrillotoro, hno613613 + 18 more
+            - generic [ref=f45e205]:
+              - button "Following Down chevron icon" [ref=f45e207] [cursor=pointer]:
+                - generic [ref=f45e208]:
+                  - generic [ref=f45e209]: Following
+                  - img "Down chevron icon" [ref=f45e212]
+              - button "Message" [ref=f45e215] [cursor=pointer]
+              - button [ref=f45e217] [cursor=pointer]:
+                - img "Similar accounts" [ref=f45e219]
+            - menu [ref=f45e223]:
+              - generic [ref=f45e225]:
+                - generic [ref=f45e227]:
+                  - status "Loading..." [ref=f45e229]
+                  - status "Loading..." [ref=f45e231]
+                - generic [ref=f45e233]:
+                  - status "Loading..." [ref=f45e235]
+                  - status "Loading..." [ref=f45e237]
+                - generic [ref=f45e239]:
+                  - status "Loading..." [ref=f45e241]
+                  - status "Loading..." [ref=f45e243]
+                - generic [ref=f45e245]:
+                  - status "Loading..." [ref=f45e247]
+                  - status "Loading..." [ref=f45e249]
+                - generic [ref=f45e251]:
+                  - status "Loading..." [ref=f45e253]
+                  - status "Loading..." [ref=f45e255]
+                - generic [ref=f45e257]:
+                  - status "Loading..." [ref=f45e259]
+                  - status "Loading..." [ref=f45e261]
+                - generic [ref=f45e263]:
+                  - status "Loading..." [ref=f45e265]
+                  - status "Loading..." [ref=f45e267]
+          - generic [ref=f45e268]:
+            - tablist [ref=f45e269]:
+              - link [ref=f45e271] [cursor=pointer]:
+                - /url: /angsh.music/
+                - img "Posts" [ref=f45e273]
+              - link [ref=f45e284] [cursor=pointer]:
+                - /url: /angsh.music/reels/
+                - img "Reels" [ref=f45e286]
+              - link [ref=f45e289] [cursor=pointer]:
+                - /url: /angsh.music/reposts/
+                - img "Reposts" [ref=f45e291]
+              - link [ref=f45e294] [cursor=pointer]:
+                - /url: /angsh.music/tagged/
+                - img "Tagged" [ref=f45e296]
+            - tabpanel
+          - progressbar [ref=f45e300]:
+            - img "Loading..." [ref=f45e301]
+      - contentinfo [ref=f45e314]:
+        - generic [ref=f45e315]:
+          - generic [ref=f45e317]:
+            - link "Meta" [ref=f45e319] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f45e322] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f45e325] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f45e328] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f45e331] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f45e334] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f45e337] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f45e340] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f45e343] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f45e346] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f45e349] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f45e352] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f45e355] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f45e358] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f45e361] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f45e364] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f45e366]:
+            - generic [ref=f45e367] [cursor=pointer]:
+              - generic [ref=f45e368]:
+                - generic [ref=f45e369]: English
+                - img "Down chevron icon" [ref=f45e372]
+              - combobox "Switch Display Language" [ref=f45e374]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f45e375]: © 2026 Instagram from Meta
+  - button [ref=f45e378] [cursor=pointer]:
+    - generic "Messages - 8 new notifications" [ref=f45e379]:
+      - generic [ref=f45e380]:
+        - generic [ref=f45e382]:
+          - img "Messages" [ref=f45e383]
+          - generic "Direct messaging - 8 new notifications link" [ref=f45e386]: "8"
+        - generic [ref=f45e389]: Messages

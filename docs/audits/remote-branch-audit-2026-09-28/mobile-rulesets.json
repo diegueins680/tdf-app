@@ -1,0 +1,23 @@
+[
+  [
+    {
+      "id": 9414797,
+      "name": "Rlz",
+      "target": "branch",
+      "source_type": "Repository",
+      "source": "diegueins680/TDF-mobile",
+      "enforcement": "active",
+      "node_id": "RRS_lACqUmVwb3NpdG9yec5Ak1IkzgCPqI0",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/TDF-mobile/rulesets/9414797"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/TDF-mobile/rules/9414797"
+        }
+      },
+      "created_at": "2025-11-03T17:48:15.638+01:00",
+      "updated_at": "2025-11-03T17:48:15.697+01:00"
+    }
+  ]
+]

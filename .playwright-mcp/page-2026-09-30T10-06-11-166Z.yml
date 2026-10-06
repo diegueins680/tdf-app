@@ -1,0 +1,460 @@
+- generic [ref=f27e4]:
+  - generic [ref=f27e1640]:
+    - generic [ref=f27e1643]:
+      - link [ref=f27e1648] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f27e1653]
+      - generic [ref=f27e1656]:
+        - link [ref=f27e1661] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f27e1666]
+        - link [ref=f27e1671] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f27e1676]
+        - link [ref=f27e1683] [cursor=pointer]:
+          - /url: /direct/t/17842323425540112
+          - generic [ref=f27e1686]:
+            - img "Messages" [ref=f27e1688]
+            - generic "Direct messaging - 8 new notifications link" [ref=f27e1691]: "8"
+        - link [ref=f27e1697] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f27e1702]
+        - link [ref=f27e1709] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f27e1714]
+        - link [ref=f27e1720] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f27e1725]
+        - link [ref=f27e1730] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f27e1735]
+        - link [ref=f27e1742] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f27e1747]:
+            - img "tdf.records.label's profile picture" [ref=f27e1748]
+      - generic [ref=f27e1749]:
+        - link [ref=f27e1752] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f27e1757]
+        - link [ref=f27e1760] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f27e1765]
+    - generic [ref=f27e1768]:
+      - main [ref=f27e1769]:
+        - generic [ref=f27e1771]:
+          - generic [ref=f27e1772]:
+            - generic [ref=f27e1773]:
+              - link [ref=f27e1779] [cursor=pointer]:
+                - /url: /dirkwalls_/
+                - img "dirkwalls_'s profile picture" [ref=f27e1780]
+              - generic [ref=f27e1781]:
+                - generic [ref=f27e1782]:
+                  - generic [ref=f27e1783]:
+                    - link [ref=f27e1785] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "dirkwalls_" [level=2] [ref=f27e1786]
+                    - button [ref=f27e1788] [cursor=pointer]:
+                      - img "Options" [ref=f27e1790]
+                  - generic [ref=f27e1794]: Dirc Paredes 🐢
+                  - generic [ref=f27e1796]:
+                    - generic [ref=f27e1798]:
+                      - generic [ref=f27e1799]: "62"
+                      - text: posts
+                    - link "2,892 followers" [ref=f27e1801] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f27e1802]:
+                        - generic "2,892" [ref=f27e1803]
+                        - text: followers
+                    - link "3,026 following" [ref=f27e1805] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f27e1806]:
+                        - generic [ref=f27e1807]: 3,026
+                        - text: following
+                - generic [ref=f27e1808]:
+                  - generic [ref=f27e1809]:
+                    - button [ref=f27e1811] [cursor=pointer]:
+                      - generic [ref=f27e1812]:
+                        - text: Guía Nacional del Ecuador | GalápagosCo-founder
+                        - link "@lavastudioec" [ref=f27e1813]:
+                          - /url: /lavastudioec/
+                        - text: Naturaleza • Experiencias • Turismo responsable 🐢
+                    - link "Threads dirkwalls_" [ref=f27e1816] [cursor=pointer]:
+                      - /url: https://www.threads.com/@dirkwalls_?xmt=AQG0uqPby-S8odt53WkC25CQLE1BFAQ_tFIj3gqHmjF0wcw
+                      - img "Threads" [ref=f27e1818]
+                      - generic [ref=f27e1820]: dirkwalls_
+                  - link "Followed by domo.pululahua and july_aby" [ref=f27e1822] [cursor=pointer]:
+                    - /url: /dirkwalls_/followers/mutualOnly
+                    - generic [ref=f27e1824]:
+                      - generic [ref=f27e1826]:
+                        - button [ref=f27e1827]:
+                          - link [ref=f27e1828]
+                        - button [ref=f27e1829]:
+                          - link [ref=f27e1830]
+                      - generic [ref=f27e1831]: Followed by domo.pululahua and july_aby
+            - button "Follow Back" [ref=f27e1838] [cursor=pointer]
+          - separator [ref=f27e1841]
+          - generic [ref=f27e1850]:
+            - generic [ref=f27e1851]: This profile is private
+            - generic [ref=f27e1853]: Follow to see their photos and videos.
+          - generic [ref=f27e1854]:
+            - generic [ref=f27e1855]:
+              - heading "Suggested for you" [level=4] [ref=f27e1857]
+              - link "See all" [ref=f27e1858] [cursor=pointer]:
+                - /url: /dirkwalls_/
+            - generic [ref=f27e1861]:
+              - list [ref=f27e1863]:
+                - listitem [ref=f27e1864]
+                - listitem [ref=f27e1865]:
+                  - generic [ref=f27e1867]:
+                    - button "Dismiss ninanpacha's profile picture ninanpacha NinanPacha" [ref=f27e1868] [cursor=pointer]:
+                      - button "Dismiss" [ref=f27e1870]
+                      - generic [ref=f27e1873]:
+                        - link [ref=f27e1875]:
+                          - /url: /ninanpacha/
+                          - img "ninanpacha's profile picture" [ref=f27e1876]
+                        - link "ninanpacha" [ref=f27e1880]:
+                          - /url: /ninanpacha/
+                        - generic [ref=f27e1883]: NinanPacha
+                    - button "Follow" [ref=f27e1888] [cursor=pointer]
+                - listitem [ref=f27e1889]:
+                  - generic [ref=f27e1891]:
+                    - button "Dismiss rcricardocabrera's profile picture rcricardocabrera Ricardo Cabrera Zambrano" [ref=f27e1892] [cursor=pointer]:
+                      - button "Dismiss" [ref=f27e1894]
+                      - generic [ref=f27e1897]:
+                        - link [ref=f27e1899]:
+                          - /url: /rcricardocabrera/
+                          - img "rcricardocabrera's profile picture" [ref=f27e1900]
+                        - link "rcricardocabrera" [ref=f27e1904]:
+                          - /url: /rcricardocabrera/
+                        - generic [ref=f27e1907]: Ricardo Cabrera Zambrano
+                    - button "Follow" [ref=f27e1912] [cursor=pointer]
+                - listitem [ref=f27e1913]:
+                  - generic [ref=f27e1915]:
+                    - button "Dismiss consuelolbw's profile picture consuelolbw Consuelo LBw" [ref=f27e1916] [cursor=pointer]:
+                      - button "Dismiss" [ref=f27e1918]
+                      - generic [ref=f27e1921]:
+                        - link [ref=f27e1923]:
+                          - /url: /consuelolbw/
+                          - img "consuelolbw's profile picture" [ref=f27e1924]
+                        - link "consuelolbw" [ref=f27e1928]:
+                          - /url: /consuelolbw/
+                        - generic [ref=f27e1931]: Consuelo LBw
+                    - button "Follow" [ref=f27e1936] [cursor=pointer]
+                - listitem [ref=f27e1937]:
+                  - generic [ref=f27e1939]:
+                    - button "Dismiss fusionimperium's profile picture fusionimperium Fusion Imperium" [ref=f27e1940] [cursor=pointer]:
+                      - button "Dismiss" [ref=f27e1942]
+                      - generic [ref=f27e1945]:
+                        - link [ref=f27e1947]:
+                          - /url: /fusionimperium/
+                          - img "fusionimperium's profile picture" [ref=f27e1948]
+                        - link "fusionimperium" [ref=f27e1952]:
+                          - /url: /fusionimperium/
+                        - generic [ref=f27e1955]: Fusion Imperium
+                    - button "Follow" [ref=f27e1960] [cursor=pointer]
+                - listitem [ref=f27e1961]:
+                  - generic [ref=f27e1963]:
+                    - button "Dismiss mantequillapresenta's profile picture mantequillapresenta MNNT | Mxntxquxlla" [ref=f27e1964] [cursor=pointer]:
+                      - button "Dismiss" [ref=f27e1966]
+                      - generic [ref=f27e1969]:
+                        - link [ref=f27e1971]:
+                          - /url: /mantequillapresenta/
+                          - img "mantequillapresenta's profile picture" [ref=f27e1972]
+                        - link "mantequillapresenta" [ref=f27e1976]:
+                          - /url: /mantequillapresenta/
+                        - generic [ref=f27e1979]: MNNT | Mxntxquxlla
+                    - button "Follow" [ref=f27e1984] [cursor=pointer]
+                - listitem [ref=f27e1985]:
+                  - generic [ref=f27e1987]:
+                    - button "Dismiss michiga.ps's profile picture michiga.ps Michael Chimarro Garcia" [ref=f27e1988] [cursor=pointer]:
+                      - button "Dismiss" [ref=f27e1990]
+                      - generic [ref=f27e1993]:
+                        - link [ref=f27e1995]:
+                          - /url: /michiga.ps/
+                          - img "michiga.ps's profile picture" [ref=f27e1996]
+                        - link "michiga.ps" [ref=f27e2000]:
+                          - /url: /michiga.ps/
+                        - generic [ref=f27e2003]: Michael Chimarro Garcia
+                    - button "Follow" [ref=f27e2008] [cursor=pointer]
+                - listitem [ref=f27e2009]:
+                  - generic [ref=f27e2011]:
+                    - button "Dismiss notlad7's profile picture notlad7 Gabriel Castro" [ref=f27e2012] [cursor=pointer]:
+                      - button "Dismiss" [ref=f27e2014]
+                      - generic [ref=f27e2017]:
+                        - link [ref=f27e2019]:
+                          - /url: /notlad7/
+                          - img "notlad7's profile picture" [ref=f27e2020]
+                        - link "notlad7" [ref=f27e2024]:
+                          - /url: /notlad7/
+                        - generic [ref=f27e2027]: Gabriel Castro
+                    - button "Follow" [ref=f27e2032] [cursor=pointer]
+                - listitem [ref=f27e2033]:
+                  - generic [ref=f27e2035]:
+                    - button "Dismiss dorian99272018's profile picture dorian99272018 Dorian Wilfrido Cordova Pupiales" [ref=f27e2036] [cursor=pointer]:
+                      - button "Dismiss" [ref=f27e2038]
+                      - generic [ref=f27e2041]:
+                        - link [ref=f27e2043]:
+                          - /url: /dorian99272018/
+                          - img "dorian99272018's profile picture" [ref=f27e2044]
+                        - link "dorian99272018" [ref=f27e2048]:
+                          - /url: /dorian99272018/
+                        - generic [ref=f27e2051]: Dorian Wilfrido Cordova Pupiales
+                    - button "Follow" [ref=f27e2056] [cursor=pointer]
+                - listitem [ref=f27e2057]:
+                  - generic [ref=f27e2059]:
+                    - button "Dismiss _pholsen's profile picture _pholsen Kadir Cem Yılmaz" [ref=f27e2060] [cursor=pointer]:
+                      - button "Dismiss" [ref=f27e2062]
+                      - generic [ref=f27e2065]:
+                        - link [ref=f27e2067]:
+                          - /url: /_pholsen/
+                          - img "_pholsen's profile picture" [ref=f27e2068]
+                        - link "_pholsen" [ref=f27e2072]:
+                          - /url: /_pholsen/
+                        - generic [ref=f27e2075]: Kadir Cem Yılmaz
+                    - button "Follow" [ref=f27e2080] [cursor=pointer]
+                - listitem [ref=f27e2081]:
+                  - generic [ref=f27e2083]:
+                    - button "Dismiss tifonmol's profile picture tifonmol Sebastian Ruiz" [ref=f27e2084] [cursor=pointer]:
+                      - button "Dismiss" [ref=f27e2086]
+                      - generic [ref=f27e2089]:
+                        - link [ref=f27e2091]:
+                          - /url: /tifonmol/
+                          - img "tifonmol's profile picture" [ref=f27e2092]
+                        - link "tifonmol" [ref=f27e2096]:
+                          - /url: /tifonmol/
+                        - generic [ref=f27e2099]: Sebastian Ruiz
+                    - button "Follow" [ref=f27e2104] [cursor=pointer]
+                - listitem [ref=f27e2105]:
+                  - generic [ref=f27e2107]:
+                    - button "Dismiss alexandravillamar2's profile picture alexandravillamar2 Alexandra Villamar" [ref=f27e2108] [cursor=pointer]:
+                      - button "Dismiss" [ref=f27e2110]
+                      - generic [ref=f27e2113]:
+                        - link [ref=f27e2115]:
+                          - /url: /alexandravillamar2/
+                          - img "alexandravillamar2's profile picture" [ref=f27e2116]
+                        - link "alexandravillamar2" [ref=f27e2120]:
+                          - /url: /alexandravillamar2/
+                        - generic [ref=f27e2123]: Alexandra Villamar
+                    - button "Follow" [ref=f27e2128] [cursor=pointer]
+              - button "Next" [ref=f27e2129] [cursor=pointer]
+      - contentinfo [ref=f27e2131]:
+        - generic [ref=f27e2132]:
+          - generic [ref=f27e2134]:
+            - link "Meta" [ref=f27e2136] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f27e2139] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f27e2142] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f27e2145] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f27e2148] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f27e2151] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f27e2154] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f27e2157] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f27e2160] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f27e2163] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f27e2166] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f27e2169] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f27e2172] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f27e2175] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f27e2178] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f27e2181] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f27e2183]:
+            - generic [ref=f27e2184] [cursor=pointer]:
+              - generic [ref=f27e2185]:
+                - generic [ref=f27e2186]: English
+                - img "Down chevron icon" [ref=f27e2189]
+              - combobox "Switch Display Language" [ref=f27e2191]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f27e2192]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f27e1457] [cursor=pointer]:
+              - generic "Messages - 8 new notifications" [ref=f27e1458]:
+                - generic [ref=f27e1459]:
+                  - generic [ref=f27e1461]:
+                    - img "Messages" [ref=f27e1462]
+                    - generic "Direct messaging - 8 new notifications link" [ref=f27e1465]: "8"
+                  - generic [ref=f27e1468]: Messages
+                - generic [ref=f27e1469]:
+                  - button [ref=f27e1470]:
+                    - img "8 unread chats" [ref=f27e1472]
+                  - button "User avatar ..." [ref=f27e1477]:
+                    - img "User avatar" [ref=f27e1480]
+                  - button "User avatar David Márquez" [ref=f27e1482]:
+                    - img "User avatar" [ref=f27e1485]
+                  - button "User avatar Limberg Steven Garcia Alava" [ref=f27e1487]:
+                    - img "User avatar" [ref=f27e1490]
+            - generic [ref=f27e1491]:
+              - generic [ref=f27e1493]:
+                - generic [ref=f27e1494]:
+                  - button [ref=f27e1496] [cursor=pointer]:
+                    - img "Go back" [ref=f27e1498]
+                  - link "Open the profile page of _juaco.dls_" [ref=f27e1501] [cursor=pointer]:
+                    - /url: /_juaco.dls_/
+                    - generic [ref=f27e1502]:
+                      - img "user-profile-picture" [ref=f27e1505]
+                      - heading "Juaco Davalos" [level=2] [ref=f27e1509]
+                  - generic [ref=f27e1511]:
+                    - button [ref=f27e1512] [cursor=pointer]:
+                      - img "Expand" [ref=f27e1514]
+                    - button [ref=f27e1516] [cursor=pointer]:
+                      - img "Close" [ref=f27e1518]
+                - separator [ref=f27e1521]
+              - generic "Juaco Davalos" [ref=f27e1522]:
+                - generic [ref=f27e1524]:
+                  - generic [ref=f27e1528]:
+                    - generic [ref=f27e1529]:
+                      - img "user-profile-picture" [ref=f27e1533]
+                      - generic [ref=f27e1534]:
+                        - heading "Juaco Davalos" [level=2] [ref=f27e1537]
+                        - generic [ref=f27e1539]: _juaco.dls_ · Instagram
+                        - link "View profile" [ref=f27e1542] [cursor=pointer]:
+                          - /url: /_juaco.dls_/
+                    - generic [ref=f27e1543]:
+                      - generic [ref=f27e1546]:
+                        - generic [ref=f27e1547]: Mon 6:10 AM
+                        - group [ref=f27e1550]:
+                          - generic [ref=f27e1552]:
+                            - link "Open the profile page of _juaco.dls_" [ref=f27e1555] [cursor=pointer]:
+                              - /url: /_juaco.dls_
+                              - img "user-profile-picture" [ref=f27e1558]
+                            - generic [ref=f27e1560]:
+                              - article "Quiero más información ?" [ref=f27e1561]
+                              - generic [ref=f27e1565]:
+                                - group "Message actions":
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - button "React to message from _juaco.dls_":
+                                          - generic:
+                                            - img "React to message from _juaco.dls_"
+                                    - generic:
+                                      - generic:
+                                        - button "Reply to message from _juaco.dls_":
+                                          - generic:
+                                            - img "Reply to message from _juaco.dls_"
+                                    - generic:
+                                      - generic:
+                                        - button "See more options for message from _juaco.dls_":
+                                          - generic:
+                                            - img "See more options for message from _juaco.dls_"
+                      - article [ref=f27e1568]:
+                        - generic [ref=f27e1570]:
+                          - text: Juaco Davalos replied to an ad.
+                          - link "View ad" [ref=f27e1571] [cursor=pointer]:
+                            - /url: https://www.instagram.com/p/DL58rbRgiys/
+                      - generic [ref=f27e1574]:
+                        - generic [ref=f27e1575]: Mon 10:40 PM
+                        - group [ref=f27e1578]:
+                          - generic [ref=f27e1580]:
+                            - link "Open the profile page of _juaco.dls_" [ref=f27e1583] [cursor=pointer]:
+                              - /url: /_juaco.dls_
+                              - img "user-profile-picture" [ref=f27e1586]
+                            - generic [ref=f27e1588]:
+                              - article "¿Puedes contarme algo más sobre tu anuncio?" [ref=f27e1589]
+                              - generic [ref=f27e1593]:
+                                - group "Message actions":
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - button "React to message from _juaco.dls_":
+                                          - generic:
+                                            - img "React to message from _juaco.dls_"
+                                    - generic:
+                                      - generic:
+                                        - button "Reply to message from _juaco.dls_":
+                                          - generic:
+                                            - img "Reply to message from _juaco.dls_"
+                                    - generic:
+                                      - generic:
+                                        - button "See more options for message from _juaco.dls_":
+                                          - generic:
+                                            - img "See more options for message from _juaco.dls_"
+                      - article [ref=f27e1596]:
+                        - generic [ref=f27e1598]:
+                          - text: Juaco Davalos replied to an ad.
+                          - link "View ad" [ref=f27e1599] [cursor=pointer]:
+                            - /url: https://www.instagram.com/p/DL57XEtgmwh/
+                  - generic [ref=f27e1608]:
+                    - button [ref=f27e1611] [cursor=pointer]:
+                      - img "Choose an emoji" [ref=f27e1613]
+                    - generic [ref=f27e1615]:
+                      - textbox [ref=f27e1616]:
+                        - paragraph [ref=f27e1617]
+                      - generic: Message...
+                    - generic [ref=f27e1618]:
+                      - button [ref=f27e1619] [cursor=pointer]:
+                        - img "Voice Clip" [ref=f27e1621]
+                      - button [ref=f27e1624] [cursor=pointer]:
+                        - img "Add Photo or Video" [ref=f27e1626]
+                      - button [ref=f27e1631] [cursor=pointer]:
+                        - img "Choose a GIF or sticker" [ref=f27e1633]

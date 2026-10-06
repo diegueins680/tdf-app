@@ -9,10 +9,12 @@ dependencies:
   - aeson
   - base >= 4.7 && < 5
   - base64-bytestring
+  - base16-bytestring
   - bcrypt
   - bytestring
   - conduit
   - containers
+  - crypton
   - directory
   - entropy
   - file-embed
@@ -26,6 +28,7 @@ dependencies:
   - JuicyPixels
   - mime-mail
   - monad-logger
+  - memory
   - mtl
   - path-pieces
   - persistent
@@ -45,6 +48,7 @@ dependencies:
   - smtp-mail
   - template-haskell
   - text
+  - temporary
   - time
   - transformers
   - unordered-containers
@@ -54,6 +58,7 @@ dependencies:
   - wai
   - wai-cors
   - warp
+  - xml
 
 extra-source-files:
   - sql/2025-11-16_leads_whatsapp.sql
@@ -83,6 +88,17 @@ library:
     - TDF.Cors
     - TDF.FeatureRegistry
     - TDF.ModelsExtra
+    - TDF.MusicRelease.Domain
+    - TDF.MusicRelease.ContentValidation
+    - TDF.MusicRelease.DDEX.ERN432
+    - TDF.MusicRelease.Storage.S3
+    - TDF.API.MusicRelease
+    - TDF.Server.MusicRelease
+    - TDF.Server.MusicReleaseAssets
+    - TDF.Server.MusicReleaseCommerce
+    - TDF.Server.MusicReleaseCatalog
+    - TDF.Server.MusicReleaseDDEX
+    - TDF.Server.MusicReleaseUpload
     - TDF.Seed
     - TDF.Services.EventLogisticsRoutes
     - TDF.SocialEventLifecycle
@@ -100,3 +116,9 @@ executables:
       - warp
       - wai
       - wai-cors
+  tdf-ddex-render:
+    main: MusicDdexRenderMain.hs
+    source-dirs: app
+    dependencies:
+      - tdf-hq
+      - postgresql-simple

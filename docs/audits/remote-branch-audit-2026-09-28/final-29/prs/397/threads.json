@@ -1,0 +1,31 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 397,
+          "reviewDecision": null,
+          "mergeStateStatus": "DIRTY",
+          "mergeable": "CONFLICTING",
+          "headRefOid": "7c452efcbc7b45e797b7ebd590dfffccf0fc9751",
+          "baseRefName": "feat/social-dm-api-boundary-20260915",
+          "isDraft": true,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          }
+        }
+      }
+    }
+  }
+]

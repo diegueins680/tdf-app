@@ -1,0 +1,78 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 463,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "BLOCKED",
+          "mergeable": "MERGEABLE",
+          "headRefOid": "6ba185a697b3b6b6983ebb48e0ab6454f716cf23",
+          "baseRefName": "fix/event-confirmed-end-20260920",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6mht0D",
+                "isResolved": false,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 597,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Anchor the migration to an ancestor of this release**\n\nFor release SHA `7e78303ac3ea0c9ce025d7ea4edab5d03d81b8fa`, `441dfcc968559f829e84c89751f008657566138c` is not an ancestor (`git merge-base --is-ancestor` returns false). The guarded release path in `scripts/production-release.mjs` checks every `introducedBy` commit and explicitly refuses such a release, so planning or deploying this exact commit will fail before applying the migration. Record an introduction commit that is actually in this release's ancestry.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/463#discussion_r4118319007",
+                      "createdAt": "2026-09-28T03:29:34Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQwMzoyOTozNFrO9XiPnw=="
+                  }
+                }
+              },
+              {
+                "id": "PRRT_kwDOQPdUrM6mht0E",
+                "isResolved": false,
+                "isOutdated": false,
+                "path": "tdf-hq/sql/2026-09-27_event_ingestion_boundaries.sql",
+                "line": 68,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Include discovery events in the pilot status count**\n\nThis function makes structured imports consume the same 20-item allowance as research candidates, but `loadPilotDTO` in `TDF.Server.EventResearch` still computes `erPilotActiveCandidates` solely from `event_research_candidate`. For example, with 19 candidates and one imported event, `GET /social-events/event-research/pilot` reports 19 of 20 while the next candidate is rejected by this trigger. Clients following the documented preflight therefore receive a misleading capacity value; derive the status count from the shared identities (or expose a separate shared count).\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/463#discussion_r4118319013",
+                      "createdAt": "2026-09-28T03:29:34Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQwMzoyOTozNFrO9XiPpQ=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yOFQwMzoyOTozNFrOpobdBA=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

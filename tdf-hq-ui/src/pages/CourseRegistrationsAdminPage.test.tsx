@@ -13,6 +13,10 @@ import type {
 } from '../api/courses';
 import { formatTimestampForDisplay } from '../utils/dateTime';
 
+// This suite contains large provider-title matrices that repeatedly render and
+// unmount the page. Keep a per-test budget that remains stable under full-suite load.
+jest.setTimeout(15_000);
+
 const listCohortsMock = jest.fn<() => Promise<CourseCohortOptionDTO[]>>();
 const listRegistrationsMock = jest.fn<
   (params?: { slug?: string; status?: string; limit?: number }) => Promise<CourseRegistrationDTO[]>

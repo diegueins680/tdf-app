@@ -1,0 +1,76 @@
+{
+  "started": "2026-09-28T16:41:30.575265+00:00",
+  "before": "Filesystem      Size    Used   Avail Capacity iused ifree %iused  Mounted on\n/dev/disk1s2   932Gi   885Gi   1.5Gi   100%    8.4M   16M   35%   /System/Volumes/Data\n",
+  "removed": [
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/d77349f55c2be1c0",
+      "kib": 219516,
+      "active_process_reference": false,
+      "package": {
+        "wrangler": "^4.119.0"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/249ca9fcd30c476a",
+      "kib": 195136,
+      "active_process_reference": false,
+      "package": {
+        "expo": "^55.0.24"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/e25a38a8cc65d08e",
+      "kib": 126888,
+      "active_process_reference": false,
+      "package": {
+        "eas-cli": "^18.13.0"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/c5e9bca3acff8f7b",
+      "kib": 315992,
+      "active_process_reference": false,
+      "package": {
+        "vercel": "^59.11.7"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/69f9afb961c37556",
+      "kib": 297836,
+      "active_process_reference": false,
+      "package": {
+        "vercel": "^59.1.4"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/bcc018885adf43c0",
+      "kib": 302232,
+      "active_process_reference": false,
+      "package": {
+        "expo": "^54.0.23"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/32026684e21afda6",
+      "kib": 245444,
+      "active_process_reference": false,
+      "package": {
+        "wrangler": "^4.122.0"
+      }
+    },
+    {
+      "directory": "/Users/diegosaa/.npm/_npx/6bc7bae5c2059953",
+      "kib": 144980,
+      "active_process_reference": false,
+      "package": {
+        "eas-cli": "^20.2.0"
+      }
+    }
+  ],
+  "preserved": [],
+  "completed": "2026-09-28T16:44:11.227896+00:00",
+  "audit_and_all_original_worktrees_preserved": true,
+  "active_browser_cache_preserved": true,
+  "after": "Filesystem      Size    Used   Avail Capacity iused ifree %iused  Mounted on\n/dev/disk1s2   932Gi   883Gi   3.3Gi   100%    8.3M   34M   19%   /System/Volumes/Data\n",
+  "removed_kib": 1848024
+}

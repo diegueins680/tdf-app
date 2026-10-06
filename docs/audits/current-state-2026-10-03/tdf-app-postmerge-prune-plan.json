@@ -1,0 +1,306 @@
+{
+  "main": "b07f67c3ebe2022d5f70e94578944b6401616696",
+  "branchesBefore": 73,
+  "openPRs": [
+    {
+      "baseRefName": "main",
+      "headRefName": "codex/hetzner-cutover-evidence-20260928",
+      "headRefOid": "ce1a71fe241ccc05b6114088fb36dd919974dc87",
+      "number": 468
+    },
+    {
+      "baseRefName": "codex/payment-held-refund-query-20260916",
+      "headRefName": "codex/payment-stack-integration-20260916",
+      "headRefOid": "4ff7109a378d640a179601fd0ad88b38f3074526",
+      "number": 414
+    },
+    {
+      "baseRefName": "codex/payment-refund-reconciliation-20260916",
+      "headRefName": "codex/payment-held-refund-query-20260916",
+      "headRefOid": "365561aecff57e76d38cb0e98217a34f1d642ff4",
+      "number": 408
+    },
+    {
+      "baseRefName": "codex/payment-refund-execution-safety-20260916",
+      "headRefName": "codex/payment-refund-reconciliation-20260916",
+      "headRefOid": "66fa88e90c80866e0090761addfabd9f1e817cc2",
+      "number": 401
+    },
+    {
+      "baseRefName": "codex/payment-worker-log-safety-20260915",
+      "headRefName": "codex/payment-refund-execution-safety-20260916",
+      "headRefOid": "20566eab9e99685983beac359f2462386e59f8f7",
+      "number": 396
+    },
+    {
+      "baseRefName": "codex/payment-stack-integration-20260915",
+      "headRefName": "codex/payment-worker-log-safety-20260915",
+      "headRefOid": "ed064a7549f93bdd9239c5781706400c6fad5aa7",
+      "number": 393
+    },
+    {
+      "baseRefName": "codex/payment-reconciliation-evidence-view-20260915",
+      "headRefName": "codex/payment-stack-integration-20260915",
+      "headRefOid": "824e1e9aeaa99d399c31bc5755c4967c03cb17fc",
+      "number": 389
+    },
+    {
+      "baseRefName": "codex/payment-closed-checkout-evidence-20260915",
+      "headRefName": "codex/payment-reconciliation-evidence-view-20260915",
+      "headRefOid": "a64ea1b580faab59e547e3b307f74b0313d58866",
+      "number": 385
+    },
+    {
+      "baseRefName": "codex/payment-capture-replay-integrity-20260915",
+      "headRefName": "codex/payment-closed-checkout-evidence-20260915",
+      "headRefOid": "9d0d84dbb4e5afafbfda7f0074421246926fd98d",
+      "number": 380
+    },
+    {
+      "baseRefName": "codex/payment-recovery-observability-20260915",
+      "headRefName": "codex/payment-capture-replay-integrity-20260915",
+      "headRefOid": "c8ef56f404dc12f5311635214549221a7090ea70",
+      "number": 378
+    },
+    {
+      "baseRefName": "codex/payphone-cancellation-compatibility-20260915",
+      "headRefName": "codex/payment-recovery-observability-20260915",
+      "headRefOid": "c19c4f5d87abdb5a9b3e935e79af2238fdb99c43",
+      "number": 374
+    },
+    {
+      "baseRefName": "codex/payment-reconciliation-worker-20260915",
+      "headRefName": "codex/payphone-cancellation-compatibility-20260915",
+      "headRefOid": "4ccaaa190c4ae6b1d041d8eabd7eed8fd5327c5e",
+      "number": 371
+    },
+    {
+      "baseRefName": "codex/payment-reconciliation-atomicity-20260914",
+      "headRefName": "codex/payment-reconciliation-worker-20260915",
+      "headRefOid": "139a45102c4b715cc8762b5653d0a2db061b167c",
+      "number": 363
+    },
+    {
+      "baseRefName": "codex/payment-notification-identity-20260914",
+      "headRefName": "codex/payment-reconciliation-atomicity-20260914",
+      "headRefOid": "a5ba14f0be4e4f6da1df666b31dd6ae343afedab",
+      "number": 358
+    },
+    {
+      "baseRefName": "codex/payment-http-boundary-20260914",
+      "headRefName": "codex/payment-notification-identity-20260914",
+      "headRefOid": "86a8ce38cd131bfcb1b3e3035fd9a3e3aea1d503",
+      "number": 353
+    },
+    {
+      "baseRefName": "codex/payment-notification-minimization-20260914",
+      "headRefName": "codex/payment-http-boundary-20260914",
+      "headRefOid": "aac15a69e9bc2e6de01652282d9da4012a0af067",
+      "number": 350
+    },
+    {
+      "baseRefName": "codex/payment-terminal-recovery-20260914",
+      "headRefName": "codex/payment-notification-minimization-20260914",
+      "headRefOid": "6bd0c9316f1816ccfc1873363787a99f33ff72e0",
+      "number": 347
+    },
+    {
+      "baseRefName": "codex/payment-terminal-recovery-20260914",
+      "headRefName": "codex/payment-staging-qualification-20260914",
+      "headRefOid": "0081b6b03bd58716090c57d936f31a364e944522",
+      "number": 344
+    },
+    {
+      "baseRefName": "codex/payment-reconciliation-safety-20260914",
+      "headRefName": "codex/payment-terminal-recovery-20260914",
+      "headRefOid": "c263a499cc760ce7f97fe7833211f4d7de7494ea",
+      "number": 343
+    },
+    {
+      "baseRefName": "codex/payment-checkout-surfaces-20260914",
+      "headRefName": "codex/payment-reconciliation-safety-20260914",
+      "headRefOid": "b8c0e38cdd365e7f977d5cf15f93c164ebfc2149",
+      "number": 340
+    },
+    {
+      "baseRefName": "codex/payment-provider-execution-20260913",
+      "headRefName": "codex/payment-checkout-surfaces-20260914",
+      "headRefOid": "70823741bd33ed713cb2e703f812a884ad8ba1e7",
+      "number": 334
+    },
+    {
+      "baseRefName": "codex/payment-platform-20260911",
+      "headRefName": "codex/payment-provider-execution-20260913",
+      "headRefOid": "536964de601c5e031835781b3af07ff797cd249e",
+      "number": 332
+    },
+    {
+      "baseRefName": "main",
+      "headRefName": "codex/payment-platform-20260911",
+      "headRefOid": "e9c81a2a3977ab1f69c92e82805bdeff6550ea03",
+      "number": 331
+    }
+  ],
+  "candidates": [
+    {
+      "branch": "audit/editorial-ownership-repair-20261003",
+      "sha": "4100a04c0de9496e7bf9cd6d656602dee1d8e277"
+    },
+    {
+      "branch": "audit/event-stack-consolidation-20260928",
+      "sha": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b"
+    },
+    {
+      "branch": "audit/notification-history-rescue-20261003",
+      "sha": "6d00fa1463603bacecbb3210279b09ed88bbba0c"
+    },
+    {
+      "branch": "chore/event-catalog-stale-reconciliation",
+      "sha": "ea79b46addea67087c85c03ea6f9c29d45ca19da"
+    },
+    {
+      "branch": "chore/event-operations-catalog-review",
+      "sha": "d5505e2731d395cc2a5859d215e36ffda9e88138"
+    },
+    {
+      "branch": "codex/event-ingestion-boundaries-20260927",
+      "sha": "a125a347cacb8d941a515171e2a81d4c92f2c2d2"
+    },
+    {
+      "branch": "codex/event-ingestion-editorial-20260928",
+      "sha": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7"
+    },
+    {
+      "branch": "feat/event-logistics-transaction-hardening",
+      "sha": "f500b62c453e7da8981bc66138418fa59a586565"
+    },
+    {
+      "branch": "feat/event-operations-api-foundation",
+      "sha": "b6ba963623861d1e2804b18adb46e6e4f5f5be80"
+    },
+    {
+      "branch": "feat/event-raci-editor-context",
+      "sha": "13abde1cba82b7b79c21b6f35e87c91de676366e"
+    },
+    {
+      "branch": "feat/event-raci-reassignment-api",
+      "sha": "bfd5f17b92d629f578bc02f4aee338ed15843806"
+    },
+    {
+      "branch": "feat/event-raci-reassignment-command",
+      "sha": "f6ffb2a27b87ed42d4d49289024d5b8a612b94cf"
+    },
+    {
+      "branch": "feat/event-raci-web-editor",
+      "sha": "061553d085d3106a9c8877ca08ccb3e2420cdd09"
+    },
+    {
+      "branch": "feat/event-task-aggregate-revision",
+      "sha": "3b1ce4d9dbd0efb6d1e354ffd9f58e92a6916320"
+    },
+    {
+      "branch": "feat/event-task-commit-invariants",
+      "sha": "259becd7b3763e084b54da8749b1e6fde8d9d862"
+    },
+    {
+      "branch": "feat/event-task-completion-api",
+      "sha": "823da0fa801abe3bdb3b7679550f1315ad0946ed"
+    },
+    {
+      "branch": "feat/event-task-completion-client",
+      "sha": "f2f01194090a241777c451d06cb0848af7aa759a"
+    },
+    {
+      "branch": "feat/event-task-completion-command",
+      "sha": "78bdd4df465d1c7d8a752f9df0ed714ecad2330d"
+    },
+    {
+      "branch": "feat/event-task-raci-view",
+      "sha": "f03f366de44c8ad09248e9d399caa5994af06d5a"
+    },
+    {
+      "branch": "feat/event-task-read-api",
+      "sha": "881882e15cd1b2400cc2e0452ea50683dea675de"
+    },
+    {
+      "branch": "feat/event-task-read-projection",
+      "sha": "a1b92c220691b694e5f53e7deaf4d455ce46bc44"
+    },
+    {
+      "branch": "feat/event-task-revisioned-read",
+      "sha": "503fd7b651843e9f7cadf4fd15931256bb847ece"
+    },
+    {
+      "branch": "fix/artist-follow-onboarding-continuity",
+      "sha": "1299f9c63a325e17dff0bfe1f048ff52f7bb8b15"
+    },
+    {
+      "branch": "fix/event-command-existence-privacy",
+      "sha": "892038c7d7ec64082b39917127f67748e6d1dca7"
+    },
+    {
+      "branch": "fix/event-command-replay-authorization",
+      "sha": "6b0913bab2b065b327149a6d3a042efecd9e75d7"
+    },
+    {
+      "branch": "fix/event-raci-review-contrast",
+      "sha": "cbbb3da9f20c2314c73a5114b8c0aa943647054e"
+    },
+    {
+      "branch": "fix/event-schema-migration-dependencies",
+      "sha": "192f9578665109e52d28a96c772e3307bdc684e5"
+    },
+    {
+      "branch": "fix/event-session-transaction-fence",
+      "sha": "3cd978045aa406c55512a6673c2ba5f2983ebc7c"
+    },
+    {
+      "branch": "fix/event-snapshot-privacy-boundary",
+      "sha": "db81fdbe71d9b8e83d40d279b98c69df3749b316"
+    },
+    {
+      "branch": "fix/event-ui-lazy-validation",
+      "sha": "d4e7ed0505a87a03706b765fc304ffa50362b8fb"
+    },
+    {
+      "branch": "fix/fanhub-authoritative-onboarding",
+      "sha": "ff3cd1676a6db7b6ceef56d44407b0846a4f2071"
+    },
+    {
+      "branch": "fix/reservation-pluscal-integrity",
+      "sha": "ec24b70b1b2319a875099cc118db0e68b62a5ed0"
+    },
+    {
+      "branch": "fix/web-onboarding-reconciliation-integration",
+      "sha": "827d745629f8cdbaee4429ded3689d3bf520a09d"
+    },
+    {
+      "branch": "test/event-operations-http-boundary",
+      "sha": "dbe975d3143446c5e7cd9b132b6f994067065e7b"
+    },
+    {
+      "branch": "test/event-operations-schema-rehearsal",
+      "sha": "cf591e1faa975b8023c6c06892fb50a51ba06dff"
+    },
+    {
+      "branch": "test/event-raci-accessibility-evidence",
+      "sha": "6047377348e901c919d7691b849faab30980b952"
+    },
+    {
+      "branch": "test/event-raci-full-stack",
+      "sha": "7cdd712568311975407cf0b7cb2ee2081a0c0414"
+    },
+    {
+      "branch": "test/event-rsvp-ci-contracts",
+      "sha": "5ad2333c2a6ce379579a1cffa2708d56cbb21f5f"
+    },
+    {
+      "branch": "test/event-task-browser-startup",
+      "sha": "221d1205c9cc2e992f8f36f73d441a3f9c6fda21"
+    },
+    {
+      "branch": "test/merch-expiry-checkout-contract",
+      "sha": "a1895105c6e15e1f95b4b72fd6218b34a311f6e6"
+    }
+  ]
+}

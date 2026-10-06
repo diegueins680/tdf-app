@@ -1,0 +1,14 @@
+ .github/workflows/event-raci-browser.yml           |  77 ++++++++++
+ .gitignore                                         |   1 +
+ docs/event-operations/gap-matrix.md                |   8 +
+ docs/event-operations/pr-27-raci-real-browser.md   | 123 +++++++++++++++
+ .../raci-browser-integration-contract.md           |  30 ++++
+ docs/event-operations/traceability-matrix.md       |   1 +
+ e2e/integration/event-raci-browser.spec.mjs        | 170 +++++++++++++++++++++
+ playwright.event-raci-browser.config.mjs           |  16 ++
+ .../__tests__/event-raci-browser-runner.test.mjs   |  81 ++++++++++
+ scripts/run-event-raci-browser.mjs                 |  37 +++++
+ scripts/test-event-raci-browser.sh                 |  74 +++++++++
+ tdf-hq/test/EventRaciBrowserMain.hs                |  49 ++++++
+ .../integration/event_raci_browser_fixture.sql     |  41 +++++
+ 13 files changed, 708 insertions(+)

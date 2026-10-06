@@ -1,0 +1,1603 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044933389",
+      "pull_request_review_id": 5245601098,
+      "id": 4044933389,
+      "node_id": "PRRC_kwDOQPdUrM7xGMkN",
+      "diff_hunk": "@@ -216,13 +216,11 @@ export const Courses = {\n   upsert: (payload: CourseUpsert) => post<CourseMetadata>('/admin/courses', payload),\n   listCohorts: () => get<CourseCohortOptionDTO[]>('/admin/courses/cohorts'),\n   getMetadata: (slug: string) => get<CourseMetadata>(courseBase(normalizeCourseSlug(slug))),\n-  register: (slug: string, payload: CourseRegistrationRequest, idempotencyKey?: string) => {\n+  register: (slug: string, payload: CourseRegistrationRequest, idempotencyKey: string) => {\n     const path = `${courseBase(normalizeCourseSlug(slug))}/registrations`;\n-    return idempotencyKey\n-      ? post<CourseCheckoutResponse>(path, payload, {\n-        headers: { 'Idempotency-Key': idempotencyKey },\n-      })\n-      : post<CourseCheckoutResponse>(path, payload);\n+    return post<CourseCheckoutResponse>(path, payload, {\n+      headers: { 'Idempotency-Key': idempotencyKey },\n+    });",
+      "path": "tdf-hq-ui/src/api/courses.ts",
+      "commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "original_commit_id": "d8f5ff64a0f51c9bcfb393e24b9816b481fea438",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Update the test caller for the mandatory idempotency key**\n\nWhen `src/api/queryValidation.test.ts` invokes `Courses.register` with the existing two-argument call, this change now passes a third `RequestInit` argument containing an undefined header, so the assertion expecting a two-argument `post` call fails. I confirmed this with `npm test -- src/api/queryValidation.test.ts` in `tdf-hq-ui` (13 tests passed, this test failed); update the caller to supply a valid key and assert the new header so the UI test suite can pass.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T08:05:14Z",
+      "updated_at": "2026-09-18T08:05:14Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4044933389",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044933389"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4044933389"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044933389/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 221,
+      "original_start_line": 221,
+      "start_side": "RIGHT",
+      "line": 223,
+      "original_line": 223,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 14,
+      "position": 14,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045054318",
+      "pull_request_review_id": 5245749715,
+      "id": 4045054318,
+      "node_id": "PRRC_kwDOQPdUrM7xGqFu",
+      "diff_hunk": "@@ -216,13 +216,11 @@ export const Courses = {\n   upsert: (payload: CourseUpsert) => post<CourseMetadata>('/admin/courses', payload),\n   listCohorts: () => get<CourseCohortOptionDTO[]>('/admin/courses/cohorts'),\n   getMetadata: (slug: string) => get<CourseMetadata>(courseBase(normalizeCourseSlug(slug))),\n-  register: (slug: string, payload: CourseRegistrationRequest, idempotencyKey?: string) => {\n+  register: (slug: string, payload: CourseRegistrationRequest, idempotencyKey: string) => {\n     const path = `${courseBase(normalizeCourseSlug(slug))}/registrations`;\n-    return idempotencyKey\n-      ? post<CourseCheckoutResponse>(path, payload, {\n-        headers: { 'Idempotency-Key': idempotencyKey },\n-      })\n-      : post<CourseCheckoutResponse>(path, payload);\n+    return post<CourseCheckoutResponse>(path, payload, {\n+      headers: { 'Idempotency-Key': idempotencyKey },\n+    });",
+      "path": "tdf-hq-ui/src/api/courses.ts",
+      "commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "original_commit_id": "d8f5ff64a0f51c9bcfb393e24b9816b481fea438",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in e353bf4bb and retained in integrated head acb550945. The API path validation fixture now supplies and asserts the required Idempotency-Key. All 14 queryValidation tests passed locally.",
+      "created_at": "2026-09-18T08:23:14Z",
+      "updated_at": "2026-09-18T08:23:14Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045054318",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045054318"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045054318"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045054318/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 221,
+      "original_start_line": 221,
+      "start_side": "RIGHT",
+      "line": 223,
+      "original_line": 223,
+      "side": "RIGHT",
+      "in_reply_to_id": 4044933389,
+      "author_association": "OWNER",
+      "original_position": 14,
+      "position": 14,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045100156",
+      "pull_request_review_id": 5245804437,
+      "id": 4045100156,
+      "node_id": "PRRC_kwDOQPdUrM7xG1R8",
+      "diff_hunk": "@@ -259,6 +259,9 @@ jobs:\n           PGPASSWORD: postgres\n         run: sh scripts/test-live-intake-identity.sh\n \n+      - name: Verify source-scoped course contacts and registration retries\n+        run: sh scripts/test-course-identity.sh",
+      "path": ".github/workflows/ci.yml",
+      "commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "original_commit_id": "7fee866ecbbf07cd5fe68e44ec0806038d779ff6",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Pass the PostgreSQL service connection to the new test**\n\nIn the `backend-quality` container, PostgreSQL is exposed through the `postgres` service hostname, but this step supplies no database environment variables. `scripts/test-course-identity.sh` consequently defaults `PGHOST` to `127.0.0.1`, while `PGUSER` and `PGPASSWORD` are also unset, so its initial `createdb` cannot connect and every backend CI run that reaches this added step fails. Pass the same `PGHOST`, `PGUSER`, and `PGPASSWORD` values used by the two preceding PostgreSQL tests.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T08:30:16Z",
+      "updated_at": "2026-09-18T08:30:16Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045100156",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045100156"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045100156"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045100156/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 262,
+      "original_start_line": 262,
+      "start_side": "RIGHT",
+      "line": 267,
+      "original_line": 263,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 5,
+      "position": 9,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045100164",
+      "pull_request_review_id": 5245804437,
+      "id": 4045100164,
+      "node_id": "PRRC_kwDOQPdUrM7xG1SE",
+      "diff_hunk": "@@ -266,7 +266,7 @@ createCourseCheckoutRegistration legacyRegistration rawSlug mIdempotency request\n     Checkout.domainEnabledForEnvironment checkoutEnvironment \"courses\"\n   if not domainEnabled\n     then courseCheckoutUnavailableResponse slugVal\n-      <$> legacyRegistration rawSlug request\n+      <$> legacyRegistration rawSlug mIdempotency request",
+      "path": "tdf-hq/src/TDF/Server/CourseCheckout.hs",
+      "commit_id": "a2a29a186011c2865427bf8c036ff17ff6713162",
+      "original_commit_id": "7fee866ecbbf07cd5fe68e44ec0806038d779ff6",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Unify idempotency across the checkout feature branch**\n\nWhen a retry crosses a change to the production `commerce.courses` flag, the same key is handled by two independent stores: the disabled branch records it in `identity_course_registration_request`, while the enabled branch only checks `course_registration_checkout_runtime`. A fallback registration accepted before enablement can therefore be retried afterward to create a second registration and seat hold; the reverse transition can turn an accepted checkout retry into a duplicate lead and return no checkout details. Check both stores before selecting the branch, or use one route-level idempotency record that preserves the original outcome across flag changes.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T08:30:16Z",
+      "updated_at": "2026-09-18T08:30:16Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045100164",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045100164"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045100164"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045100164/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 267,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 269,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 14,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045100172",
+      "pull_request_review_id": 5245804437,
+      "id": 4045100172,
+      "node_id": "PRRC_kwDOQPdUrM7xG1SM",
+      "diff_hunk": "@@ -0,0 +1,11 @@\n+-- Source-operation identity for legacy/non-payable registrations. Contact data\n+-- never selects an account or another person's registration.\n+CREATE TABLE IF NOT EXISTS identity_course_registration_request (\n+  request_scope text NOT NULL,\n+  request_key text NOT NULL CHECK (request_key ~ '^[A-Za-z0-9_-]{16,128}$'),",
+      "path": "tdf-hq/sql/2026-09-18_course_identity_requests.sql",
+      "commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "original_commit_id": "7fee866ecbbf07cd5fe68e44ec0806038d779ff6",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Align the receipt key constraint with API validation**\n\nPublic registration validates keys with `ServiceStorefront.validateIdempotencyKey`, which accepts every visible ASCII character, but this constraint permits only letters, digits, `_`, and `-`. Thus a valid 16\u2013128 character caller key containing common punctuation such as `.` or `:` passes request validation and then fails this insert with a PostgreSQL constraint exception, producing a server error instead of a registration. Use the same length/visible-ASCII contract in both layers, or reject the narrower character set before entering the transaction.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T08:30:16Z",
+      "updated_at": "2026-09-18T08:30:16Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045100172",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045100172"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045100172"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045100172/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 5,
+      "original_line": 5,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 5,
+      "position": 5,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045497818",
+      "pull_request_review_id": 5246294104,
+      "id": 4045497818,
+      "node_id": "PRRC_kwDOQPdUrM7xIWXa",
+      "diff_hunk": "@@ -259,6 +259,9 @@ jobs:\n           PGPASSWORD: postgres\n         run: sh scripts/test-live-intake-identity.sh\n \n+      - name: Verify source-scoped course contacts and registration retries\n+        run: sh scripts/test-course-identity.sh",
+      "path": ".github/workflows/ci.yml",
+      "commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "original_commit_id": "7fee866ecbbf07cd5fe68e44ec0806038d779ff6",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in a2e2bf4f5: the course regression step now supplies PGHOST=postgres, PGUSER=postgres, and PGPASSWORD=postgres, matching the existing service-backed test steps.",
+      "created_at": "2026-09-18T09:28:14Z",
+      "updated_at": "2026-09-18T09:28:14Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045497818",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045497818"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045497818"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045497818/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 262,
+      "original_start_line": 262,
+      "start_side": "RIGHT",
+      "line": 267,
+      "original_line": 263,
+      "side": "RIGHT",
+      "in_reply_to_id": 4045100156,
+      "author_association": "OWNER",
+      "original_position": 5,
+      "position": 9,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045497935",
+      "pull_request_review_id": 5246294233,
+      "id": 4045497935,
+      "node_id": "PRRC_kwDOQPdUrM7xIWZP",
+      "diff_hunk": "@@ -266,7 +266,7 @@ createCourseCheckoutRegistration legacyRegistration rawSlug mIdempotency request\n     Checkout.domainEnabledForEnvironment checkoutEnvironment \"courses\"\n   if not domainEnabled\n     then courseCheckoutUnavailableResponse slugVal\n-      <$> legacyRegistration rawSlug request\n+      <$> legacyRegistration rawSlug mIdempotency request",
+      "path": "tdf-hq/src/TDF/Server/CourseCheckout.hs",
+      "commit_id": "a2a29a186011c2865427bf8c036ff17ff6713162",
+      "original_commit_id": "7fee866ecbbf07cd5fe68e44ec0806038d779ff6",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in a2e2bf4f5: fallback and payable registration now use the same source receipt and transaction lock. Replay returns the original outcome before checking current flags/policy. Ten real PostgreSQL regressions pass, including both flag transitions and a paused fallback request overlapping checkout enablement; one registration, preserved checkout details, and zero payment attempts.",
+      "created_at": "2026-09-18T09:28:15Z",
+      "updated_at": "2026-09-18T09:28:15Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045497935",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045497935"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045497935"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045497935/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 267,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 269,
+      "side": "RIGHT",
+      "in_reply_to_id": 4045100164,
+      "author_association": "OWNER",
+      "original_position": 14,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045498005",
+      "pull_request_review_id": 5246294291,
+      "id": 4045498005,
+      "node_id": "PRRC_kwDOQPdUrM7xIWaV",
+      "diff_hunk": "@@ -0,0 +1,11 @@\n+-- Source-operation identity for legacy/non-payable registrations. Contact data\n+-- never selects an account or another person's registration.\n+CREATE TABLE IF NOT EXISTS identity_course_registration_request (\n+  request_scope text NOT NULL,\n+  request_key text NOT NULL CHECK (request_key ~ '^[A-Za-z0-9_-]{16,128}$'),",
+      "path": "tdf-hq/sql/2026-09-18_course_identity_requests.sql",
+      "commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "original_commit_id": "7fee866ecbbf07cd5fe68e44ec0806038d779ff6",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in a2e2bf4f5 without changing the already-exercised migration: both new creation paths reject unsupported punctuation with 400 before their transactions. A regression exercises the punctuation key with checkout both off and on and verifies no new registration. Existing checkout replay remains available through its original path.",
+      "created_at": "2026-09-18T09:28:16Z",
+      "updated_at": "2026-09-18T09:28:16Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045498005",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045498005"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045498005"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045498005/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 5,
+      "original_line": 5,
+      "side": "RIGHT",
+      "in_reply_to_id": 4045100172,
+      "author_association": "OWNER",
+      "original_position": 5,
+      "position": 5,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045522346",
+      "pull_request_review_id": 5246325448,
+      "id": 4045522346,
+      "node_id": "PRRC_kwDOQPdUrM7xIcWq",
+      "diff_hunk": "@@ -5888,95 +5889,54 @@ ensurePartyForCourseRegistrationDb\n   -> SqlPersistT IO (Either ServerError PartyId)\n ensurePartyForCourseRegistrationDb mName mEmail mPhone now = do\n   let display = fromMaybe \"Alumno / cliente\" (cleanOptional mName <|> mEmail <|> mPhone)\n-  mExistingResult <- case mEmail of\n-    Just addr -> selectUniquePartyByPrimaryEmail addr\n-    Nothing -> case mPhone of\n-      Just phone -> selectUniquePartyByPrimaryPhone phone\n-      Nothing -> pure (Right Nothing)\n-  case mExistingResult of\n-    Left err -> pure (Left err)\n-    Right mExisting -> fmap Right $ do\n-      pid <- case mExisting of\n-        Just (Entity partyId party) -> do\n-          let updates = catMaybes\n-                [ if isJust (partyPrimaryEmail party) || isNothing mEmail\n-                    then Nothing\n-                    else Just (PartyPrimaryEmail =. mEmail)\n-                , if isJust (partyPrimaryPhone party) || isNothing mPhone\n-                    then Nothing\n-                    else Just (PartyPrimaryPhone =. mPhone)\n-                , if isJust (partyWhatsapp party) || isNothing mPhone\n-                    then Nothing\n-                    else Just (PartyWhatsapp =. mPhone)\n-                , if T.null (M.partyDisplayName party)\n-                    then Just (PartyDisplayName =. display)\n-                    else Nothing\n-                ]\n-          unless (null updates) $\n-            update partyId updates\n-          pure partyId\n-        Nothing -> insert Party\n-          { partyLegalName = Nothing\n-          , partyDisplayName = display\n-          , partyIsOrg = False\n-          , partyTaxId = Nothing\n-          , partyPrimaryEmail = mEmail\n-          , partyPrimaryPhone = mPhone\n-          , partyWhatsapp = mPhone\n-          , partyInstagram = Nothing\n-          , partyEmergencyContact = Nothing\n-          , partyNotes = Nothing\n-          , partyStripeCustomerId = Nothing\n-          , partyCountryCode = Nothing\n-          , partyCountryId = Nothing\n-          , partyCreatedAt = now\n-          }\n-      ensureCourseRegistrationPartyRoles pid now\n-      pure pid\n+  Right <$> insert Party\n+    { partyLegalName = Nothing\n+    , partyDisplayName = display\n+    , partyIsOrg = False\n+    , partyTaxId = Nothing\n+    , partyPrimaryEmail = mEmail\n+    , partyPrimaryPhone = mPhone\n+    , partyWhatsapp = mPhone",
+      "path": "tdf-hq/src/TDF/Server.hs",
+      "commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "original_commit_id": "55b3a55a68f4b6272509bedea91603e245b88004",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Keep unverified contacts out of primary identity fields**\n\nWhen an existing account holder submits a course enquiry\u2014or two legitimate attendees share an email as this change explicitly permits\u2014this creates multiple `Party` rows with the same primary email/phone. Other production flows such as `ensurePartyRecordDb`, `ensurePartyWithAccount`, and `ensurePartyForInquiry` resolve those fields through `selectUniquePartyByPrimaryEmail`/`selectUniquePartyByPrimaryPhone`, which return 409 when more than one row matches; for example, the affected customer can no longer complete public service booking at `createPublicBookingCheckout`'s `ensurePartyRecord` call. Store these unverified course details outside the shared primary identity fields, or exclude source-scoped course contacts from those identity selectors.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T09:31:08Z",
+      "updated_at": "2026-09-18T09:31:08Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045522346",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045522346"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045522346"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045522346/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 5893,
+      "original_start_line": 5897,
+      "start_side": "RIGHT",
+      "line": 5895,
+      "original_line": 5899,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 66,
+      "position": 66,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045583658",
+      "pull_request_review_id": 5246407959,
+      "id": 4045583658,
+      "node_id": "PRRC_kwDOQPdUrM7xIrUq",
+      "diff_hunk": "@@ -565,6 +565,11 @@\n       \"id\": \"2026-09-18_live_intake_idempotency\",\n       \"path\": \"tdf-hq/sql/2026-09-18_live_intake_idempotency.sql\",\n       \"introducedBy\": \"062143d3cb98befb6a52a987c7d42980f70313f3\"\n+    },\n+    {\n+      \"id\": \"2026-09-18_course_identity_requests\",\n+      \"path\": \"tdf-hq/sql/2026-09-18_course_identity_requests.sql\",\n+      \"introducedBy\": \"9bc040b718db0a297c9766a6c4084e0803765599\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "original_commit_id": "65584e8c0378daac9853f812804a02a30005047c",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Point the migration introduction at an ancestor**\n\nWhen this commit is passed to the guarded production release, the release is rejected because `9bc040b7...` is not an ancestor of `ccc0a5ae...` (`git merge-base --is-ancestor` exits 1). The check in `scripts/production-release.mjs` explicitly refuses every manifest entry whose `introducedBy` commit is outside the release SHA's ancestry, so this migration cannot be deployed from the reviewed commit; preserve the actual introduction commit in this history or otherwise make the manifest reference a valid introduction ancestor.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T09:39:19Z",
+      "updated_at": "2026-09-18T09:39:19Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045583658",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045583658"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4045583658"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045583658/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 577,
+      "original_line": 572,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 8,
+      "position": 8,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048579005",
+      "pull_request_review_id": 5250087579,
+      "id": 4048579005,
+      "node_id": "PRRC_kwDOQPdUrM7xUGm9",
+      "diff_hunk": "@@ -5888,95 +5889,54 @@ ensurePartyForCourseRegistrationDb\n   -> SqlPersistT IO (Either ServerError PartyId)\n ensurePartyForCourseRegistrationDb mName mEmail mPhone now = do\n   let display = fromMaybe \"Alumno / cliente\" (cleanOptional mName <|> mEmail <|> mPhone)\n-  mExistingResult <- case mEmail of\n-    Just addr -> selectUniquePartyByPrimaryEmail addr\n-    Nothing -> case mPhone of\n-      Just phone -> selectUniquePartyByPrimaryPhone phone\n-      Nothing -> pure (Right Nothing)\n-  case mExistingResult of\n-    Left err -> pure (Left err)\n-    Right mExisting -> fmap Right $ do\n-      pid <- case mExisting of\n-        Just (Entity partyId party) -> do\n-          let updates = catMaybes\n-                [ if isJust (partyPrimaryEmail party) || isNothing mEmail\n-                    then Nothing\n-                    else Just (PartyPrimaryEmail =. mEmail)\n-                , if isJust (partyPrimaryPhone party) || isNothing mPhone\n-                    then Nothing\n-                    else Just (PartyPrimaryPhone =. mPhone)\n-                , if isJust (partyWhatsapp party) || isNothing mPhone\n-                    then Nothing\n-                    else Just (PartyWhatsapp =. mPhone)\n-                , if T.null (M.partyDisplayName party)\n-                    then Just (PartyDisplayName =. display)\n-                    else Nothing\n-                ]\n-          unless (null updates) $\n-            update partyId updates\n-          pure partyId\n-        Nothing -> insert Party\n-          { partyLegalName = Nothing\n-          , partyDisplayName = display\n-          , partyIsOrg = False\n-          , partyTaxId = Nothing\n-          , partyPrimaryEmail = mEmail\n-          , partyPrimaryPhone = mPhone\n-          , partyWhatsapp = mPhone\n-          , partyInstagram = Nothing\n-          , partyEmergencyContact = Nothing\n-          , partyNotes = Nothing\n-          , partyStripeCustomerId = Nothing\n-          , partyCountryCode = Nothing\n-          , partyCountryId = Nothing\n-          , partyCreatedAt = now\n-          }\n-      ensureCourseRegistrationPartyRoles pid now\n-      pure pid\n+  Right <$> insert Party\n+    { partyLegalName = Nothing\n+    , partyDisplayName = display\n+    , partyIsOrg = False\n+    , partyTaxId = Nothing\n+    , partyPrimaryEmail = mEmail\n+    , partyPrimaryPhone = mPhone\n+    , partyWhatsapp = mPhone",
+      "path": "tdf-hq/src/TDF/Server.hs",
+      "commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "original_commit_id": "55b3a55a68f4b6272509bedea91603e245b88004",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Addressed by the combined source in #439 (bdd9e24bd): commerce #436 removes email-based guest booking/account adoption; ad inquiries now create an unverified contact inside a source-key transaction and no longer consult unique email/phone selectors; the unused ensurePartyWithAccount helper has been removed. These changes will release together after combined staging validation. Existing contact details stay available to legitimate separate people. PostgreSQL regressions cover shared details and retries for course, marketplace and inquiry paths.",
+      "created_at": "2026-09-18T16:23:15Z",
+      "updated_at": "2026-09-18T16:23:16Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048579005",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048579005"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048579005"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048579005/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 5893,
+      "original_start_line": 5897,
+      "start_side": "RIGHT",
+      "line": 5895,
+      "original_line": 5899,
+      "side": "RIGHT",
+      "in_reply_to_id": 4045522346,
+      "author_association": "OWNER",
+      "original_position": 66,
+      "position": 66,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048579184",
+      "pull_request_review_id": 5250087773,
+      "id": 4048579184,
+      "node_id": "PRRC_kwDOQPdUrM7xUGpw",
+      "diff_hunk": "@@ -565,6 +565,11 @@\n       \"id\": \"2026-09-18_live_intake_idempotency\",\n       \"path\": \"tdf-hq/sql/2026-09-18_live_intake_idempotency.sql\",\n       \"introducedBy\": \"062143d3cb98befb6a52a987c7d42980f70313f3\"\n+    },\n+    {\n+      \"id\": \"2026-09-18_course_identity_requests\",\n+      \"path\": \"tdf-hq/sql/2026-09-18_course_identity_requests.sql\",\n+      \"introducedBy\": \"9bc040b718db0a297c9766a6c4084e0803765599\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "original_commit_id": "65584e8c0378daac9853f812804a02a30005047c",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Verified the actual pushed branch: git merge-base --is-ancestor 9bc040b718db0a297c9766a6c4084e0803765599 ea17b17e5 succeeds. The cited ccc0a5ae revision is not the branch head. The migration SQL and introduction have already been exercised in staging and remain immutable. Current main calendar migration is preserved before the appended course receipt; the guarded release will recheck the actual merged commit.",
+      "created_at": "2026-09-18T16:23:17Z",
+      "updated_at": "2026-09-18T16:23:17Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048579184",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048579184"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048579184"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048579184/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 577,
+      "original_line": 572,
+      "side": "RIGHT",
+      "in_reply_to_id": 4045583658,
+      "author_association": "OWNER",
+      "original_position": 8,
+      "position": 8,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048601492",
+      "pull_request_review_id": 5250113304,
+      "id": 4048601492,
+      "node_id": "PRRC_kwDOQPdUrM7xUMGU",
+      "diff_hunk": "@@ -6658,67 +6625,62 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do\n     throwBadRequest \"nombre requerido\"\n   when (sourceClean == \"landing\" && isNothing normalizedEmail) $\n     throwBadRequest \"email requerido\"\n-  existingResult <- runDB $ findExistingRegistration slugVal normalizedEmail phoneClean\n-  existing <- either throwError pure existingResult\n-  either throwError pure $\n-    validateCourseRegistrationSeatAvailability\n-      metaRemaining\n-      (ME.courseRegistrationStatus . entityVal <$> existing)\n-  (mPartyId, mNewUser) <- ensureCourseRegistrationParty nameClean normalizedEmail phoneClean now\n-  case existing of\n-    -- Update in-place only when the existing row is still pending; otherwise create a fresh row.\n-    Just (Entity regId reg) | isPendingCourseRegistrationStatus (ME.courseRegistrationStatus reg) -> do\n-      let resolvedPartyId = ME.courseRegistrationPartyId reg <|> mPartyId\n-      runDB $ update regId\n-        [ ME.CourseRegistrationFullName =. (nameClean <|> ME.courseRegistrationFullName reg)\n-        , ME.CourseRegistrationEmail =. (normalizedEmail <|> ME.courseRegistrationEmail reg)\n-        , ME.CourseRegistrationPhoneE164 =. (phoneClean <|> ME.courseRegistrationPhoneE164 reg)\n-        , ME.CourseRegistrationPartyId =. resolvedPartyId\n-        , ME.CourseRegistrationSource =. sourceClean\n-        , ME.CourseRegistrationStatus =. pendingStatus\n-        , ME.CourseRegistrationHowHeard =. (howHeardClean <|> ME.courseRegistrationHowHeard reg)\n-        , ME.CourseRegistrationUtmSource =. (utmSourceVal <|> ME.courseRegistrationUtmSource reg)\n-        , ME.CourseRegistrationUtmMedium =. (utmMediumVal <|> ME.courseRegistrationUtmMedium reg)\n-        , ME.CourseRegistrationUtmCampaign =. (utmCampaignVal <|> ME.courseRegistrationUtmCampaign reg)\n-        , ME.CourseRegistrationUtmContent =. (utmContentVal <|> ME.courseRegistrationUtmContent reg)\n-        , ME.CourseRegistrationUpdatedAt =. now\n-        ]\n-      sendConfirmation slugVal regId metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser\n-      pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }\n-    _ -> do\n-      regId <- runDB $ insert ME.CourseRegistration\n-        { ME.courseRegistrationCourseSlug = slugVal\n-        , ME.courseRegistrationPartyId = mPartyId\n-        , ME.courseRegistrationFullName = nameClean\n-        , ME.courseRegistrationEmail = normalizedEmail\n-        , ME.courseRegistrationPhoneE164 = phoneClean\n-        , ME.courseRegistrationSource = sourceClean\n-        , ME.courseRegistrationStatus = pendingStatus\n-        , ME.courseRegistrationAdminNotes = Nothing\n-        , ME.courseRegistrationHowHeard = howHeardClean\n-        , ME.courseRegistrationUtmSource = utmSourceVal\n-        , ME.courseRegistrationUtmMedium = utmMediumVal\n-        , ME.courseRegistrationUtmCampaign = utmCampaignVal\n-        , ME.courseRegistrationUtmContent = utmContentVal\n-        , ME.courseRegistrationStripePaymentIntentId = Nothing\n-        , ME.courseRegistrationStripeSubscriptionId = Nothing\n-        , ME.courseRegistrationSubscriptionStatus = Nothing\n-        , ME.courseRegistrationCreatedAt = now\n-        , ME.courseRegistrationUpdatedAt = now\n-        }\n-      void $ runDB $ insertCourseRegistrationFollowUp\n-        regId\n-        mPartyId\n-        Nothing\n-        \"registration\"\n-        (Just \"Inscripci\u00f3n recibida\")\n-        (\"Nueva inscripci\u00f3n capturada desde \" <> sourceClean <> \".\")\n-        Nothing\n-        Nothing\n-        Nothing\n-        now\n-      sendConfirmation slugVal regId metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser\n-      pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }\n+  let requestScope = namespace <> \":\" <> slugVal\n+      requestBody = TE.decodeUtf8 (BL.toStrict (encode payload))\n+  (regId, savedStatus, created) <- runDB $ do\n+    _ <- rawSql \"SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended(?,0))\"\n+      [PersistText (requestScope <> \":\" <> requestKey)] :: SqlPersistT IO [Single Int64]\n+    previous <- rawSql \"SELECT receipt.registration_id, receipt.request_payload=?::jsonb, registration.status FROM identity_course_registration_request receipt JOIN course_registration registration ON registration.id=receipt.registration_id WHERE receipt.request_scope=? AND receipt.request_key=?\"\n+      [PersistText requestBody, PersistText requestScope, PersistText requestKey]\n+    case previous of\n+      [(Single existingId, Single True, Single existingStatus)] -> pure (toSqlKey existingId, existingStatus, False)\n+      [(_, Single False, _)] -> liftIO $ throwIO err409 { errBody = \"This registration changed after an earlier send. Review the saved registration before starting another submission.\" }\n+      [] -> do\n+          when (namespace == \"public-course\") $ do\n+            existingCheckout <- rawSql \"SELECT registration_id FROM course_registration_checkout_runtime WHERE create_idempotency_key=?\"\n+              [PersistText requestKey] :: SqlPersistT IO [Single Int64]\n+            unless (null existingCheckout) $ liftIO $ throwIO err409 { errBody = \"A checkout already exists for this request. Retry to load its saved result.\" }\n+          either (liftIO . throwIO) pure $ validateCourseRegistrationSeatAvailability metaRemaining Nothing\n+          partyResult <- ensurePartyForCourseRegistrationDb nameClean normalizedEmail phoneClean now\n+          partyId <- either (liftIO . throwIO) pure partyResult\n+          let mPartyId = Just partyId\n+          regId <- insert ME.CourseRegistration\n+            { ME.courseRegistrationCourseSlug = slugVal\n+            , ME.courseRegistrationPartyId = mPartyId\n+            , ME.courseRegistrationFullName = nameClean\n+            , ME.courseRegistrationEmail = normalizedEmail\n+            , ME.courseRegistrationPhoneE164 = phoneClean\n+            , ME.courseRegistrationSource = sourceClean\n+            , ME.courseRegistrationStatus = pendingStatus\n+            , ME.courseRegistrationAdminNotes = Nothing\n+            , ME.courseRegistrationHowHeard = howHeardClean\n+            , ME.courseRegistrationUtmSource = utmSourceVal\n+            , ME.courseRegistrationUtmMedium = utmMediumVal\n+            , ME.courseRegistrationUtmCampaign = utmCampaignVal\n+            , ME.courseRegistrationUtmContent = utmContentVal\n+            , ME.courseRegistrationStripePaymentIntentId = Nothing\n+            , ME.courseRegistrationStripeSubscriptionId = Nothing\n+            , ME.courseRegistrationSubscriptionStatus = Nothing\n+            , ME.courseRegistrationCreatedAt = now\n+            , ME.courseRegistrationUpdatedAt = now\n+            }\n+          void $ insertCourseRegistrationFollowUp\n+            regId\n+            mPartyId\n+            Nothing\n+            \"registration\"\n+            (Just \"Inscripci\u00f3n recibida\")\n+            (\"Nueva inscripci\u00f3n capturada desde \" <> sourceClean <> \".\")\n+            Nothing\n+            Nothing\n+            Nothing\n+            now\n+          rawExecute \"INSERT INTO identity_course_registration_request(request_scope,request_key,request_payload,registration_id) VALUES (?,?,?::jsonb,?)\"\n+            [PersistText requestScope, PersistText requestKey, PersistText requestBody, toPersistValue regId]\n+          pure (regId, pendingStatus, True)\n+      _ -> liftIO $ throwIO err500 { errBody = \"Could not resolve registration request\" }\n+  when created $ sendConfirmation slugVal regId metaTitle metaLanding metaSessions nameClean normalizedEmail Nothing",
+      "path": "tdf-hq/src/TDF/Server.hs",
+      "commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "original_commit_id": "ea17b17e51ed834320c3b101320cd491918b162b",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Scope confirmation throttling to each registration**\n\nWhen two legitimate attendees register with the same email within 24 hours\u2014a case this change now explicitly permits\u2014this invokes `sendConfirmation` for both, but `courseEmailSentWithinLast24Hours` searches only by recipient email and marks the second confirmation as skipped. The second registration therefore succeeds without receiving its own acknowledgement; include the registration ID in the throttle lookup or otherwise allow one confirmation per distinct registration while still suppressing retries.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T16:26:28Z",
+      "updated_at": "2026-09-18T16:26:28Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048601492",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048601492"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048601492"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048601492/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 6684,
+      "original_line": 6682,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 275,
+      "position": 294,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048655013",
+      "pull_request_review_id": 5250177255,
+      "id": 4048655013,
+      "node_id": "PRRC_kwDOQPdUrM7xUZKl",
+      "diff_hunk": "@@ -6658,67 +6625,62 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do\n     throwBadRequest \"nombre requerido\"\n   when (sourceClean == \"landing\" && isNothing normalizedEmail) $\n     throwBadRequest \"email requerido\"\n-  existingResult <- runDB $ findExistingRegistration slugVal normalizedEmail phoneClean\n-  existing <- either throwError pure existingResult\n-  either throwError pure $\n-    validateCourseRegistrationSeatAvailability\n-      metaRemaining\n-      (ME.courseRegistrationStatus . entityVal <$> existing)\n-  (mPartyId, mNewUser) <- ensureCourseRegistrationParty nameClean normalizedEmail phoneClean now\n-  case existing of\n-    -- Update in-place only when the existing row is still pending; otherwise create a fresh row.\n-    Just (Entity regId reg) | isPendingCourseRegistrationStatus (ME.courseRegistrationStatus reg) -> do\n-      let resolvedPartyId = ME.courseRegistrationPartyId reg <|> mPartyId\n-      runDB $ update regId\n-        [ ME.CourseRegistrationFullName =. (nameClean <|> ME.courseRegistrationFullName reg)\n-        , ME.CourseRegistrationEmail =. (normalizedEmail <|> ME.courseRegistrationEmail reg)\n-        , ME.CourseRegistrationPhoneE164 =. (phoneClean <|> ME.courseRegistrationPhoneE164 reg)\n-        , ME.CourseRegistrationPartyId =. resolvedPartyId\n-        , ME.CourseRegistrationSource =. sourceClean\n-        , ME.CourseRegistrationStatus =. pendingStatus\n-        , ME.CourseRegistrationHowHeard =. (howHeardClean <|> ME.courseRegistrationHowHeard reg)\n-        , ME.CourseRegistrationUtmSource =. (utmSourceVal <|> ME.courseRegistrationUtmSource reg)\n-        , ME.CourseRegistrationUtmMedium =. (utmMediumVal <|> ME.courseRegistrationUtmMedium reg)\n-        , ME.CourseRegistrationUtmCampaign =. (utmCampaignVal <|> ME.courseRegistrationUtmCampaign reg)\n-        , ME.CourseRegistrationUtmContent =. (utmContentVal <|> ME.courseRegistrationUtmContent reg)\n-        , ME.CourseRegistrationUpdatedAt =. now\n-        ]\n-      sendConfirmation slugVal regId metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser\n-      pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }\n-    _ -> do\n-      regId <- runDB $ insert ME.CourseRegistration\n-        { ME.courseRegistrationCourseSlug = slugVal\n-        , ME.courseRegistrationPartyId = mPartyId\n-        , ME.courseRegistrationFullName = nameClean\n-        , ME.courseRegistrationEmail = normalizedEmail\n-        , ME.courseRegistrationPhoneE164 = phoneClean\n-        , ME.courseRegistrationSource = sourceClean\n-        , ME.courseRegistrationStatus = pendingStatus\n-        , ME.courseRegistrationAdminNotes = Nothing\n-        , ME.courseRegistrationHowHeard = howHeardClean\n-        , ME.courseRegistrationUtmSource = utmSourceVal\n-        , ME.courseRegistrationUtmMedium = utmMediumVal\n-        , ME.courseRegistrationUtmCampaign = utmCampaignVal\n-        , ME.courseRegistrationUtmContent = utmContentVal\n-        , ME.courseRegistrationStripePaymentIntentId = Nothing\n-        , ME.courseRegistrationStripeSubscriptionId = Nothing\n-        , ME.courseRegistrationSubscriptionStatus = Nothing\n-        , ME.courseRegistrationCreatedAt = now\n-        , ME.courseRegistrationUpdatedAt = now\n-        }\n-      void $ runDB $ insertCourseRegistrationFollowUp\n-        regId\n-        mPartyId\n-        Nothing\n-        \"registration\"\n-        (Just \"Inscripci\u00f3n recibida\")\n-        (\"Nueva inscripci\u00f3n capturada desde \" <> sourceClean <> \".\")\n-        Nothing\n-        Nothing\n-        Nothing\n-        now\n-      sendConfirmation slugVal regId metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser\n-      pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }\n+  let requestScope = namespace <> \":\" <> slugVal\n+      requestBody = TE.decodeUtf8 (BL.toStrict (encode payload))\n+  (regId, savedStatus, created) <- runDB $ do\n+    _ <- rawSql \"SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended(?,0))\"\n+      [PersistText (requestScope <> \":\" <> requestKey)] :: SqlPersistT IO [Single Int64]\n+    previous <- rawSql \"SELECT receipt.registration_id, receipt.request_payload=?::jsonb, registration.status FROM identity_course_registration_request receipt JOIN course_registration registration ON registration.id=receipt.registration_id WHERE receipt.request_scope=? AND receipt.request_key=?\"\n+      [PersistText requestBody, PersistText requestScope, PersistText requestKey]\n+    case previous of\n+      [(Single existingId, Single True, Single existingStatus)] -> pure (toSqlKey existingId, existingStatus, False)\n+      [(_, Single False, _)] -> liftIO $ throwIO err409 { errBody = \"This registration changed after an earlier send. Review the saved registration before starting another submission.\" }\n+      [] -> do\n+          when (namespace == \"public-course\") $ do\n+            existingCheckout <- rawSql \"SELECT registration_id FROM course_registration_checkout_runtime WHERE create_idempotency_key=?\"\n+              [PersistText requestKey] :: SqlPersistT IO [Single Int64]\n+            unless (null existingCheckout) $ liftIO $ throwIO err409 { errBody = \"A checkout already exists for this request. Retry to load its saved result.\" }\n+          either (liftIO . throwIO) pure $ validateCourseRegistrationSeatAvailability metaRemaining Nothing\n+          partyResult <- ensurePartyForCourseRegistrationDb nameClean normalizedEmail phoneClean now\n+          partyId <- either (liftIO . throwIO) pure partyResult\n+          let mPartyId = Just partyId\n+          regId <- insert ME.CourseRegistration\n+            { ME.courseRegistrationCourseSlug = slugVal\n+            , ME.courseRegistrationPartyId = mPartyId\n+            , ME.courseRegistrationFullName = nameClean\n+            , ME.courseRegistrationEmail = normalizedEmail\n+            , ME.courseRegistrationPhoneE164 = phoneClean\n+            , ME.courseRegistrationSource = sourceClean\n+            , ME.courseRegistrationStatus = pendingStatus\n+            , ME.courseRegistrationAdminNotes = Nothing\n+            , ME.courseRegistrationHowHeard = howHeardClean\n+            , ME.courseRegistrationUtmSource = utmSourceVal\n+            , ME.courseRegistrationUtmMedium = utmMediumVal\n+            , ME.courseRegistrationUtmCampaign = utmCampaignVal\n+            , ME.courseRegistrationUtmContent = utmContentVal\n+            , ME.courseRegistrationStripePaymentIntentId = Nothing\n+            , ME.courseRegistrationStripeSubscriptionId = Nothing\n+            , ME.courseRegistrationSubscriptionStatus = Nothing\n+            , ME.courseRegistrationCreatedAt = now\n+            , ME.courseRegistrationUpdatedAt = now\n+            }\n+          void $ insertCourseRegistrationFollowUp\n+            regId\n+            mPartyId\n+            Nothing\n+            \"registration\"\n+            (Just \"Inscripci\u00f3n recibida\")\n+            (\"Nueva inscripci\u00f3n capturada desde \" <> sourceClean <> \".\")\n+            Nothing\n+            Nothing\n+            Nothing\n+            now\n+          rawExecute \"INSERT INTO identity_course_registration_request(request_scope,request_key,request_payload,registration_id) VALUES (?,?,?::jsonb,?)\"\n+            [PersistText requestScope, PersistText requestKey, PersistText requestBody, toPersistValue regId]\n+          pure (regId, pendingStatus, True)\n+      _ -> liftIO $ throwIO err500 { errBody = \"Could not resolve registration request\" }\n+  when created $ sendConfirmation slugVal regId metaTitle metaLanding metaSessions nameClean normalizedEmail Nothing",
+      "path": "tdf-hq/src/TDF/Server.hs",
+      "commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "original_commit_id": "ea17b17e51ed834320c3b101320cd491918b162b",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in fa86b19de. Confirmation lookup now includes the registration ID and registration_confirmation event type, so another attendee using the same email does not suppress this acknowledgement. Accepted request retries still return before sending. Added a PostgreSQL regression that seeds a sent confirmation for one shared-email registration, verifies the other remains eligible, and verifies replay adds no email event. Hosted validation is running; this change will be included in the combined final release.",
+      "created_at": "2026-09-18T16:33:46Z",
+      "updated_at": "2026-09-18T16:33:47Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048655013",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048655013"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048655013"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048655013/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 6684,
+      "original_line": 6682,
+      "side": "RIGHT",
+      "in_reply_to_id": 4048601492,
+      "author_association": "OWNER",
+      "original_position": 275,
+      "position": 294,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048676575",
+      "pull_request_review_id": 5250202295,
+      "id": 4048676575,
+      "node_id": "PRRC_kwDOQPdUrM7xUebf",
+      "diff_hunk": "@@ -570,6 +570,11 @@\n       \"id\": \"2026-09-18_calendar_runtime_schema\",\n       \"path\": \"tdf-hq/sql/2026-09-18_calendar_runtime_schema.sql\",\n       \"introducedBy\": \"49ff02de5ade1b8923f099c22af0bbf57350a078\"\n+    },\n+    {\n+      \"id\": \"2026-09-18_course_identity_requests\",\n+      \"path\": \"tdf-hq/sql/2026-09-18_course_identity_requests.sql\",\n+      \"introducedBy\": \"9bc040b718db0a297c9766a6c4084e0803765599\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "original_commit_id": "fa86b19de8727a705447d99aa9c9f52dce1d13db",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Reference an introduction commit in this SHA's ancestry**\n\nFresh evidence for this exact reviewed SHA: `git merge-base --is-ancestor 9bc040b718db0a297c9766a6c4084e0803765599 7772e0004e3e564ba5588f6f0f5e03254660b2c2` exits 1, and this is the only invalid `introducedBy` among all 111 manifest entries. Because `scripts/production-release.mjs` checks every introduction with that command and rejects exit 1, a guarded release of this commit cannot apply the new receipt migration; point this entry to a valid ancestor that contains the migration.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T16:36:50Z",
+      "updated_at": "2026-09-18T16:36:50Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048676575",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048676575"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048676575"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048676575/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 577,
+      "original_line": 577,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 8,
+      "position": 8,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048736498",
+      "pull_request_review_id": 5250271971,
+      "id": 4048736498,
+      "node_id": "PRRC_kwDOQPdUrM7xUtDy",
+      "diff_hunk": "@@ -570,6 +570,11 @@\n       \"id\": \"2026-09-18_calendar_runtime_schema\",\n       \"path\": \"tdf-hq/sql/2026-09-18_calendar_runtime_schema.sql\",\n       \"introducedBy\": \"49ff02de5ade1b8923f099c22af0bbf57350a078\"\n+    },\n+    {\n+      \"id\": \"2026-09-18_course_identity_requests\",\n+      \"path\": \"tdf-hq/sql/2026-09-18_course_identity_requests.sql\",\n+      \"introducedBy\": \"9bc040b718db0a297c9766a6c4084e0803765599\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "original_commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Point the migration entry at an ancestor**\n\nFresh evidence for this exact reviewed SHA: `git merge-base --is-ancestor 9bc040b718db0a297c9766a6c4084e0803765599 9dfe6425bd1043ec96da460c8c88453efffba155` exits 1; `git merge-base -h` confirms this mode tests whether the first commit is an ancestor of the second. `scripts/production-release.mjs` runs that check for every manifest entry and rejects exit 1, so a guarded release of this commit cannot apply the new migration. Reference an ancestor of this SHA that contains the migration.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T16:45:19Z",
+      "updated_at": "2026-09-18T16:45:20Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048736498",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048736498"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048736498"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048736498/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 577,
+      "original_line": 577,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 8,
+      "position": 8,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048736507",
+      "pull_request_review_id": 5250271971,
+      "id": 4048736507,
+      "node_id": "PRRC_kwDOQPdUrM7xUtD7",
+      "diff_hunk": "@@ -5884,95 +5885,54 @@ ensurePartyForCourseRegistrationDb\n   -> SqlPersistT IO (Either ServerError PartyId)\n ensurePartyForCourseRegistrationDb mName mEmail mPhone now = do\n   let display = fromMaybe \"Alumno / cliente\" (cleanOptional mName <|> mEmail <|> mPhone)\n-  mExistingResult <- case mEmail of\n-    Just addr -> selectUniquePartyByPrimaryEmail addr\n-    Nothing -> case mPhone of\n-      Just phone -> selectUniquePartyByPrimaryPhone phone\n-      Nothing -> pure (Right Nothing)\n-  case mExistingResult of\n-    Left err -> pure (Left err)\n-    Right mExisting -> fmap Right $ do\n-      pid <- case mExisting of\n-        Just (Entity partyId party) -> do\n-          let updates = catMaybes\n-                [ if isJust (partyPrimaryEmail party) || isNothing mEmail\n-                    then Nothing\n-                    else Just (PartyPrimaryEmail =. mEmail)\n-                , if isJust (partyPrimaryPhone party) || isNothing mPhone\n-                    then Nothing\n-                    else Just (PartyPrimaryPhone =. mPhone)\n-                , if isJust (partyWhatsapp party) || isNothing mPhone\n-                    then Nothing\n-                    else Just (PartyWhatsapp =. mPhone)\n-                , if T.null (M.partyDisplayName party)\n-                    then Just (PartyDisplayName =. display)\n-                    else Nothing\n-                ]\n-          unless (null updates) $\n-            update partyId updates\n-          pure partyId\n-        Nothing -> insert Party\n-          { partyLegalName = Nothing\n-          , partyDisplayName = display\n-          , partyIsOrg = False\n-          , partyTaxId = Nothing\n-          , partyPrimaryEmail = mEmail\n-          , partyPrimaryPhone = mPhone\n-          , partyWhatsapp = mPhone\n-          , partyInstagram = Nothing\n-          , partyEmergencyContact = Nothing\n-          , partyNotes = Nothing\n-          , partyStripeCustomerId = Nothing\n-          , partyCountryCode = Nothing\n-          , partyCountryId = Nothing\n-          , partyCreatedAt = now\n-          }\n-      ensureCourseRegistrationPartyRoles pid now\n-      pure pid\n+  Right <$> insert Party\n+    { partyLegalName = Nothing\n+    , partyDisplayName = display\n+    , partyIsOrg = False\n+    , partyTaxId = Nothing\n+    , partyPrimaryEmail = mEmail\n+    , partyPrimaryPhone = mPhone",
+      "path": "tdf-hq/src/TDF/Server.hs",
+      "commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "original_commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Keep unverified contacts out of primary identity fields**\n\nFresh evidence in this exact SHA contradicts the earlier resolution: course contacts are still written to `PartyPrimaryEmail`/`PartyPrimaryPhone`, while `ensurePartyWithAccount` and `ensurePartyForInquiry` still call `selectUniquePartyByPrimaryEmail`/`selectUniquePartyByPrimaryPhone`, whose shared selector returns 409 for multiple matches. Because this change deliberately permits separate attendees to share an email, two registrations can therefore make later account creation or ad-inquiry submission fail for that address; store the unverified values outside the primary identity fields or exclude these source-scoped contacts from identity selection.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T16:45:19Z",
+      "updated_at": "2026-09-18T16:45:20Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048736507",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048736507"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048736507"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048736507/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 5893,
+      "original_start_line": 5893,
+      "start_side": "RIGHT",
+      "line": 5894,
+      "original_line": 5894,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 65,
+      "position": 65,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048736516",
+      "pull_request_review_id": 5250271971,
+      "id": 4048736516,
+      "node_id": "PRRC_kwDOQPdUrM7xUtEE",
+      "diff_hunk": "@@ -6658,67 +6627,62 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do\n     throwBadRequest \"nombre requerido\"\n   when (sourceClean == \"landing\" && isNothing normalizedEmail) $\n     throwBadRequest \"email requerido\"\n-  existingResult <- runDB $ findExistingRegistration slugVal normalizedEmail phoneClean\n-  existing <- either throwError pure existingResult\n-  either throwError pure $\n-    validateCourseRegistrationSeatAvailability\n-      metaRemaining\n-      (ME.courseRegistrationStatus . entityVal <$> existing)\n-  (mPartyId, mNewUser) <- ensureCourseRegistrationParty nameClean normalizedEmail phoneClean now\n-  case existing of\n-    -- Update in-place only when the existing row is still pending; otherwise create a fresh row.\n-    Just (Entity regId reg) | isPendingCourseRegistrationStatus (ME.courseRegistrationStatus reg) -> do\n-      let resolvedPartyId = ME.courseRegistrationPartyId reg <|> mPartyId\n-      runDB $ update regId\n-        [ ME.CourseRegistrationFullName =. (nameClean <|> ME.courseRegistrationFullName reg)\n-        , ME.CourseRegistrationEmail =. (normalizedEmail <|> ME.courseRegistrationEmail reg)\n-        , ME.CourseRegistrationPhoneE164 =. (phoneClean <|> ME.courseRegistrationPhoneE164 reg)\n-        , ME.CourseRegistrationPartyId =. resolvedPartyId\n-        , ME.CourseRegistrationSource =. sourceClean\n-        , ME.CourseRegistrationStatus =. pendingStatus\n-        , ME.CourseRegistrationHowHeard =. (howHeardClean <|> ME.courseRegistrationHowHeard reg)\n-        , ME.CourseRegistrationUtmSource =. (utmSourceVal <|> ME.courseRegistrationUtmSource reg)\n-        , ME.CourseRegistrationUtmMedium =. (utmMediumVal <|> ME.courseRegistrationUtmMedium reg)\n-        , ME.CourseRegistrationUtmCampaign =. (utmCampaignVal <|> ME.courseRegistrationUtmCampaign reg)\n-        , ME.CourseRegistrationUtmContent =. (utmContentVal <|> ME.courseRegistrationUtmContent reg)\n-        , ME.CourseRegistrationUpdatedAt =. now\n-        ]\n-      sendConfirmation slugVal regId metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser\n-      pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }\n-    _ -> do\n-      regId <- runDB $ insert ME.CourseRegistration\n-        { ME.courseRegistrationCourseSlug = slugVal\n-        , ME.courseRegistrationPartyId = mPartyId\n-        , ME.courseRegistrationFullName = nameClean\n-        , ME.courseRegistrationEmail = normalizedEmail\n-        , ME.courseRegistrationPhoneE164 = phoneClean\n-        , ME.courseRegistrationSource = sourceClean\n-        , ME.courseRegistrationStatus = pendingStatus\n-        , ME.courseRegistrationAdminNotes = Nothing\n-        , ME.courseRegistrationHowHeard = howHeardClean\n-        , ME.courseRegistrationUtmSource = utmSourceVal\n-        , ME.courseRegistrationUtmMedium = utmMediumVal\n-        , ME.courseRegistrationUtmCampaign = utmCampaignVal\n-        , ME.courseRegistrationUtmContent = utmContentVal\n-        , ME.courseRegistrationStripePaymentIntentId = Nothing\n-        , ME.courseRegistrationStripeSubscriptionId = Nothing\n-        , ME.courseRegistrationSubscriptionStatus = Nothing\n-        , ME.courseRegistrationCreatedAt = now\n-        , ME.courseRegistrationUpdatedAt = now\n-        }\n-      void $ runDB $ insertCourseRegistrationFollowUp\n-        regId\n-        mPartyId\n-        Nothing\n-        \"registration\"\n-        (Just \"Inscripci\u00f3n recibida\")\n-        (\"Nueva inscripci\u00f3n capturada desde \" <> sourceClean <> \".\")\n-        Nothing\n-        Nothing\n-        Nothing\n-        now\n-      sendConfirmation slugVal regId metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser\n-      pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }\n+  let requestScope = namespace <> \":\" <> slugVal\n+      requestBody = TE.decodeUtf8 (BL.toStrict (encode payload))\n+  (regId, savedStatus, created) <- runDB $ do\n+    _ <- rawSql \"SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended(?,0))\"\n+      [PersistText (requestScope <> \":\" <> requestKey)] :: SqlPersistT IO [Single Int64]\n+    previous <- rawSql \"SELECT receipt.registration_id, receipt.request_payload=?::jsonb, registration.status FROM identity_course_registration_request receipt JOIN course_registration registration ON registration.id=receipt.registration_id WHERE receipt.request_scope=? AND receipt.request_key=?\"\n+      [PersistText requestBody, PersistText requestScope, PersistText requestKey]\n+    case previous of\n+      [(Single existingId, Single True, Single existingStatus)] -> pure (toSqlKey existingId, existingStatus, False)\n+      [(_, Single False, _)] -> liftIO $ throwIO err409 { errBody = \"This registration changed after an earlier send. Review the saved registration before starting another submission.\" }\n+      [] -> do\n+          when (namespace == \"public-course\") $ do\n+            existingCheckout <- rawSql \"SELECT registration_id FROM course_registration_checkout_runtime WHERE create_idempotency_key=?\"\n+              [PersistText requestKey] :: SqlPersistT IO [Single Int64]\n+            unless (null existingCheckout) $ liftIO $ throwIO err409 { errBody = \"A checkout already exists for this request. Retry to load its saved result.\" }\n+          either (liftIO . throwIO) pure $ validateCourseRegistrationSeatAvailability metaRemaining Nothing\n+          partyResult <- ensurePartyForCourseRegistrationDb nameClean normalizedEmail phoneClean now\n+          partyId <- either (liftIO . throwIO) pure partyResult\n+          let mPartyId = Just partyId\n+          regId <- insert ME.CourseRegistration\n+            { ME.courseRegistrationCourseSlug = slugVal\n+            , ME.courseRegistrationPartyId = mPartyId\n+            , ME.courseRegistrationFullName = nameClean\n+            , ME.courseRegistrationEmail = normalizedEmail\n+            , ME.courseRegistrationPhoneE164 = phoneClean\n+            , ME.courseRegistrationSource = sourceClean\n+            , ME.courseRegistrationStatus = pendingStatus\n+            , ME.courseRegistrationAdminNotes = Nothing\n+            , ME.courseRegistrationHowHeard = howHeardClean\n+            , ME.courseRegistrationUtmSource = utmSourceVal\n+            , ME.courseRegistrationUtmMedium = utmMediumVal\n+            , ME.courseRegistrationUtmCampaign = utmCampaignVal\n+            , ME.courseRegistrationUtmContent = utmContentVal\n+            , ME.courseRegistrationStripePaymentIntentId = Nothing\n+            , ME.courseRegistrationStripeSubscriptionId = Nothing\n+            , ME.courseRegistrationSubscriptionStatus = Nothing\n+            , ME.courseRegistrationCreatedAt = now\n+            , ME.courseRegistrationUpdatedAt = now\n+            }\n+          void $ insertCourseRegistrationFollowUp\n+            regId\n+            mPartyId\n+            Nothing\n+            \"registration\"\n+            (Just \"Inscripci\u00f3n recibida\")\n+            (\"Nueva inscripci\u00f3n capturada desde \" <> sourceClean <> \".\")\n+            Nothing\n+            Nothing\n+            Nothing\n+            now\n+          rawExecute \"INSERT INTO identity_course_registration_request(request_scope,request_key,request_payload,registration_id) VALUES (?,?,?::jsonb,?)\"\n+            [PersistText requestScope, PersistText requestKey, PersistText requestBody, toPersistValue regId]\n+          pure (regId, pendingStatus, True)\n+      _ -> liftIO $ throwIO err500 { errBody = \"Could not resolve registration request\" }\n+  when created $ sendConfirmation slugVal regId metaTitle metaLanding metaSessions nameClean normalizedEmail Nothing",
+      "path": "tdf-hq/src/TDF/Server.hs",
+      "commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "original_commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Retry confirmations after transient delivery failures**\n\nWhen SMTP delivery fails transiently, `sendConfirmation` catches the exception and records a failed event, but the receipt and registration have already committed; a retry with the same idempotency key resolves that receipt with `created = False`, so this guard permanently skips another delivery attempt. Previously, retrying a pending registration invoked confirmation again, and the existing sent-event check already prevents duplicates. Allow retries when no successful confirmation exists rather than conditioning all delivery on first creation.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T16:45:19Z",
+      "updated_at": "2026-09-18T16:45:20Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048736516",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048736516"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048736516"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048736516/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 6684,
+      "original_line": 6684,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 294,
+      "position": 294,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048894897",
+      "pull_request_review_id": 5250456257,
+      "id": 4048894897,
+      "node_id": "PRRC_kwDOQPdUrM7xVTux",
+      "diff_hunk": "@@ -6658,67 +6625,62 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do\n     throwBadRequest \"nombre requerido\"\n   when (sourceClean == \"landing\" && isNothing normalizedEmail) $\n     throwBadRequest \"email requerido\"\n-  existingResult <- runDB $ findExistingRegistration slugVal normalizedEmail phoneClean\n-  existing <- either throwError pure existingResult\n-  either throwError pure $\n-    validateCourseRegistrationSeatAvailability\n-      metaRemaining\n-      (ME.courseRegistrationStatus . entityVal <$> existing)\n-  (mPartyId, mNewUser) <- ensureCourseRegistrationParty nameClean normalizedEmail phoneClean now\n-  case existing of\n-    -- Update in-place only when the existing row is still pending; otherwise create a fresh row.\n-    Just (Entity regId reg) | isPendingCourseRegistrationStatus (ME.courseRegistrationStatus reg) -> do\n-      let resolvedPartyId = ME.courseRegistrationPartyId reg <|> mPartyId\n-      runDB $ update regId\n-        [ ME.CourseRegistrationFullName =. (nameClean <|> ME.courseRegistrationFullName reg)\n-        , ME.CourseRegistrationEmail =. (normalizedEmail <|> ME.courseRegistrationEmail reg)\n-        , ME.CourseRegistrationPhoneE164 =. (phoneClean <|> ME.courseRegistrationPhoneE164 reg)\n-        , ME.CourseRegistrationPartyId =. resolvedPartyId\n-        , ME.CourseRegistrationSource =. sourceClean\n-        , ME.CourseRegistrationStatus =. pendingStatus\n-        , ME.CourseRegistrationHowHeard =. (howHeardClean <|> ME.courseRegistrationHowHeard reg)\n-        , ME.CourseRegistrationUtmSource =. (utmSourceVal <|> ME.courseRegistrationUtmSource reg)\n-        , ME.CourseRegistrationUtmMedium =. (utmMediumVal <|> ME.courseRegistrationUtmMedium reg)\n-        , ME.CourseRegistrationUtmCampaign =. (utmCampaignVal <|> ME.courseRegistrationUtmCampaign reg)\n-        , ME.CourseRegistrationUtmContent =. (utmContentVal <|> ME.courseRegistrationUtmContent reg)\n-        , ME.CourseRegistrationUpdatedAt =. now\n-        ]\n-      sendConfirmation slugVal regId metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser\n-      pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }\n-    _ -> do\n-      regId <- runDB $ insert ME.CourseRegistration\n-        { ME.courseRegistrationCourseSlug = slugVal\n-        , ME.courseRegistrationPartyId = mPartyId\n-        , ME.courseRegistrationFullName = nameClean\n-        , ME.courseRegistrationEmail = normalizedEmail\n-        , ME.courseRegistrationPhoneE164 = phoneClean\n-        , ME.courseRegistrationSource = sourceClean\n-        , ME.courseRegistrationStatus = pendingStatus\n-        , ME.courseRegistrationAdminNotes = Nothing\n-        , ME.courseRegistrationHowHeard = howHeardClean\n-        , ME.courseRegistrationUtmSource = utmSourceVal\n-        , ME.courseRegistrationUtmMedium = utmMediumVal\n-        , ME.courseRegistrationUtmCampaign = utmCampaignVal\n-        , ME.courseRegistrationUtmContent = utmContentVal\n-        , ME.courseRegistrationStripePaymentIntentId = Nothing\n-        , ME.courseRegistrationStripeSubscriptionId = Nothing\n-        , ME.courseRegistrationSubscriptionStatus = Nothing\n-        , ME.courseRegistrationCreatedAt = now\n-        , ME.courseRegistrationUpdatedAt = now\n-        }\n-      void $ runDB $ insertCourseRegistrationFollowUp\n-        regId\n-        mPartyId\n-        Nothing\n-        \"registration\"\n-        (Just \"Inscripci\u00f3n recibida\")\n-        (\"Nueva inscripci\u00f3n capturada desde \" <> sourceClean <> \".\")\n-        Nothing\n-        Nothing\n-        Nothing\n-        now\n-      sendConfirmation slugVal regId metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser\n-      pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }\n+  let requestScope = namespace <> \":\" <> slugVal\n+      requestBody = TE.decodeUtf8 (BL.toStrict (encode payload))\n+  (regId, savedStatus, created) <- runDB $ do\n+    _ <- rawSql \"SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended(?,0))\"\n+      [PersistText (requestScope <> \":\" <> requestKey)] :: SqlPersistT IO [Single Int64]\n+    previous <- rawSql \"SELECT receipt.registration_id, receipt.request_payload=?::jsonb, registration.status FROM identity_course_registration_request receipt JOIN course_registration registration ON registration.id=receipt.registration_id WHERE receipt.request_scope=? AND receipt.request_key=?\"\n+      [PersistText requestBody, PersistText requestScope, PersistText requestKey]\n+    case previous of\n+      [(Single existingId, Single True, Single existingStatus)] -> pure (toSqlKey existingId, existingStatus, False)\n+      [(_, Single False, _)] -> liftIO $ throwIO err409 { errBody = \"This registration changed after an earlier send. Review the saved registration before starting another submission.\" }\n+      [] -> do\n+          when (namespace == \"public-course\") $ do\n+            existingCheckout <- rawSql \"SELECT registration_id FROM course_registration_checkout_runtime WHERE create_idempotency_key=?\"\n+              [PersistText requestKey] :: SqlPersistT IO [Single Int64]\n+            unless (null existingCheckout) $ liftIO $ throwIO err409 { errBody = \"A checkout already exists for this request. Retry to load its saved result.\" }\n+          either (liftIO . throwIO) pure $ validateCourseRegistrationSeatAvailability metaRemaining Nothing\n+          partyResult <- ensurePartyForCourseRegistrationDb nameClean normalizedEmail phoneClean now\n+          partyId <- either (liftIO . throwIO) pure partyResult\n+          let mPartyId = Just partyId\n+          regId <- insert ME.CourseRegistration\n+            { ME.courseRegistrationCourseSlug = slugVal\n+            , ME.courseRegistrationPartyId = mPartyId\n+            , ME.courseRegistrationFullName = nameClean\n+            , ME.courseRegistrationEmail = normalizedEmail\n+            , ME.courseRegistrationPhoneE164 = phoneClean\n+            , ME.courseRegistrationSource = sourceClean\n+            , ME.courseRegistrationStatus = pendingStatus\n+            , ME.courseRegistrationAdminNotes = Nothing\n+            , ME.courseRegistrationHowHeard = howHeardClean\n+            , ME.courseRegistrationUtmSource = utmSourceVal\n+            , ME.courseRegistrationUtmMedium = utmMediumVal\n+            , ME.courseRegistrationUtmCampaign = utmCampaignVal\n+            , ME.courseRegistrationUtmContent = utmContentVal\n+            , ME.courseRegistrationStripePaymentIntentId = Nothing\n+            , ME.courseRegistrationStripeSubscriptionId = Nothing\n+            , ME.courseRegistrationSubscriptionStatus = Nothing\n+            , ME.courseRegistrationCreatedAt = now\n+            , ME.courseRegistrationUpdatedAt = now\n+            }\n+          void $ insertCourseRegistrationFollowUp\n+            regId\n+            mPartyId\n+            Nothing\n+            \"registration\"\n+            (Just \"Inscripci\u00f3n recibida\")\n+            (\"Nueva inscripci\u00f3n capturada desde \" <> sourceClean <> \".\")\n+            Nothing\n+            Nothing\n+            Nothing\n+            now\n+          rawExecute \"INSERT INTO identity_course_registration_request(request_scope,request_key,request_payload,registration_id) VALUES (?,?,?::jsonb,?)\"\n+            [PersistText requestScope, PersistText requestKey, PersistText requestBody, toPersistValue regId]\n+          pure (regId, pendingStatus, True)\n+      _ -> liftIO $ throwIO err500 { errBody = \"Could not resolve registration request\" }\n+  when created $ sendConfirmation slugVal regId metaTitle metaLanding metaSessions nameClean normalizedEmail Nothing",
+      "path": "tdf-hq/src/TDF/Server.hs",
+      "commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "original_commit_id": "ea17b17e51ed834320c3b101320cd491918b162b",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Verified on final 418c0da63 in CI run 35370032379: all required jobs passed, including all 11 course PostgreSQL examples and the new per-registration confirmation/retry regression. The combined release head 98a561a94 also passed CI run 35370036518.",
+      "created_at": "2026-09-18T17:04:16Z",
+      "updated_at": "2026-09-18T17:04:16Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048894897",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048894897"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048894897"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048894897/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 6684,
+      "original_line": 6682,
+      "side": "RIGHT",
+      "in_reply_to_id": 4048601492,
+      "author_association": "OWNER",
+      "original_position": 275,
+      "position": 294,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048913668",
+      "pull_request_review_id": 5250478677,
+      "id": 4048913668,
+      "node_id": "PRRC_kwDOQPdUrM7xVYUE",
+      "diff_hunk": "@@ -570,6 +570,11 @@\n       \"id\": \"2026-09-18_calendar_runtime_schema\",\n       \"path\": \"tdf-hq/sql/2026-09-18_calendar_runtime_schema.sql\",\n       \"introducedBy\": \"49ff02de5ade1b8923f099c22af0bbf57350a078\"\n+    },\n+    {\n+      \"id\": \"2026-09-18_course_identity_requests\",\n+      \"path\": \"tdf-hq/sql/2026-09-18_course_identity_requests.sql\",\n+      \"introducedBy\": \"9bc040b718db0a297c9766a6c4084e0803765599\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "original_commit_id": "fa86b19de8727a705447d99aa9c9f52dce1d13db",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Actual approved head 418c0da63a8a95639866f1e92619e6a00b7640c4 contains 9bc040b718db0a297c9766a6c4084e0803765599 (git merge-base --is-ancestor exits 0). The cited 7772e0004e is not the pushed branch head. The combined source 98a561a94 also passed the actual production-release plan with all 113 introduction checks and matching recovery SQL. Preserve the exercised immutable introduction.",
+      "created_at": "2026-09-18T17:06:19Z",
+      "updated_at": "2026-09-18T17:06:19Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048913668",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048913668"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048913668"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048913668/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 577,
+      "original_line": 577,
+      "side": "RIGHT",
+      "in_reply_to_id": 4048676575,
+      "author_association": "OWNER",
+      "original_position": 8,
+      "position": 8,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048913903",
+      "pull_request_review_id": 5250478982,
+      "id": 4048913903,
+      "node_id": "PRRC_kwDOQPdUrM7xVYXv",
+      "diff_hunk": "@@ -570,6 +570,11 @@\n       \"id\": \"2026-09-18_calendar_runtime_schema\",\n       \"path\": \"tdf-hq/sql/2026-09-18_calendar_runtime_schema.sql\",\n       \"introducedBy\": \"49ff02de5ade1b8923f099c22af0bbf57350a078\"\n+    },\n+    {\n+      \"id\": \"2026-09-18_course_identity_requests\",\n+      \"path\": \"tdf-hq/sql/2026-09-18_course_identity_requests.sql\",\n+      \"introducedBy\": \"9bc040b718db0a297c9766a6c4084e0803765599\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "original_commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Verified on the actual approved 418c0da63 head: the course introduction is ancestral (exit 0). 9dfe6425bd is not the pushed head. The combined 98a561a94 guarded release plan also succeeds, validating the real introduction rather than a synthetic review revision. No applied migration history is rewritten.",
+      "created_at": "2026-09-18T17:06:20Z",
+      "updated_at": "2026-09-18T17:06:21Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048913903",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048913903"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048913903"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048913903/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 577,
+      "original_line": 577,
+      "side": "RIGHT",
+      "in_reply_to_id": 4048736498,
+      "author_association": "OWNER",
+      "original_position": 8,
+      "position": 8,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048914168",
+      "pull_request_review_id": 5250479315,
+      "id": 4048914168,
+      "node_id": "PRRC_kwDOQPdUrM7xVYb4",
+      "diff_hunk": "@@ -5884,95 +5885,54 @@ ensurePartyForCourseRegistrationDb\n   -> SqlPersistT IO (Either ServerError PartyId)\n ensurePartyForCourseRegistrationDb mName mEmail mPhone now = do\n   let display = fromMaybe \"Alumno / cliente\" (cleanOptional mName <|> mEmail <|> mPhone)\n-  mExistingResult <- case mEmail of\n-    Just addr -> selectUniquePartyByPrimaryEmail addr\n-    Nothing -> case mPhone of\n-      Just phone -> selectUniquePartyByPrimaryPhone phone\n-      Nothing -> pure (Right Nothing)\n-  case mExistingResult of\n-    Left err -> pure (Left err)\n-    Right mExisting -> fmap Right $ do\n-      pid <- case mExisting of\n-        Just (Entity partyId party) -> do\n-          let updates = catMaybes\n-                [ if isJust (partyPrimaryEmail party) || isNothing mEmail\n-                    then Nothing\n-                    else Just (PartyPrimaryEmail =. mEmail)\n-                , if isJust (partyPrimaryPhone party) || isNothing mPhone\n-                    then Nothing\n-                    else Just (PartyPrimaryPhone =. mPhone)\n-                , if isJust (partyWhatsapp party) || isNothing mPhone\n-                    then Nothing\n-                    else Just (PartyWhatsapp =. mPhone)\n-                , if T.null (M.partyDisplayName party)\n-                    then Just (PartyDisplayName =. display)\n-                    else Nothing\n-                ]\n-          unless (null updates) $\n-            update partyId updates\n-          pure partyId\n-        Nothing -> insert Party\n-          { partyLegalName = Nothing\n-          , partyDisplayName = display\n-          , partyIsOrg = False\n-          , partyTaxId = Nothing\n-          , partyPrimaryEmail = mEmail\n-          , partyPrimaryPhone = mPhone\n-          , partyWhatsapp = mPhone\n-          , partyInstagram = Nothing\n-          , partyEmergencyContact = Nothing\n-          , partyNotes = Nothing\n-          , partyStripeCustomerId = Nothing\n-          , partyCountryCode = Nothing\n-          , partyCountryId = Nothing\n-          , partyCreatedAt = now\n-          }\n-      ensureCourseRegistrationPartyRoles pid now\n-      pure pid\n+  Right <$> insert Party\n+    { partyLegalName = Nothing\n+    , partyDisplayName = display\n+    , partyIsOrg = False\n+    , partyTaxId = Nothing\n+    , partyPrimaryEmail = mEmail\n+    , partyPrimaryPhone = mPhone",
+      "path": "tdf-hq/src/TDF/Server.hs",
+      "commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "original_commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "The dependency is explicit: this PR is released together with #439, not as a standalone production image. Combined approved 98a561a94 removes the unused ensurePartyWithAccount helper and replaces ensurePartyForInquiry with atomic source-key contact/lead creation, without email/phone identity selection or grants. CI35370036518 passed, including nine trial/ad/student PostgreSQL cases for shared details, retries, authorization and transactional failure. No global unique primary email constraint is introduced. This course-only branch intentionally keeps the changes separated for review; final staging and production use the combined source.",
+      "created_at": "2026-09-18T17:06:22Z",
+      "updated_at": "2026-09-18T17:06:22Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048914168",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048914168"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048914168"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048914168/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 5893,
+      "original_start_line": 5893,
+      "start_side": "RIGHT",
+      "line": 5894,
+      "original_line": 5894,
+      "side": "RIGHT",
+      "in_reply_to_id": 4048736507,
+      "author_association": "OWNER",
+      "original_position": 65,
+      "position": 65,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048914404",
+      "pull_request_review_id": 5250479619,
+      "id": 4048914404,
+      "node_id": "PRRC_kwDOQPdUrM7xVYfk",
+      "diff_hunk": "@@ -6658,67 +6627,62 @@ createOrUpdateRegistration rawSlug CourseRegistrationRequest{..} = do\n     throwBadRequest \"nombre requerido\"\n   when (sourceClean == \"landing\" && isNothing normalizedEmail) $\n     throwBadRequest \"email requerido\"\n-  existingResult <- runDB $ findExistingRegistration slugVal normalizedEmail phoneClean\n-  existing <- either throwError pure existingResult\n-  either throwError pure $\n-    validateCourseRegistrationSeatAvailability\n-      metaRemaining\n-      (ME.courseRegistrationStatus . entityVal <$> existing)\n-  (mPartyId, mNewUser) <- ensureCourseRegistrationParty nameClean normalizedEmail phoneClean now\n-  case existing of\n-    -- Update in-place only when the existing row is still pending; otherwise create a fresh row.\n-    Just (Entity regId reg) | isPendingCourseRegistrationStatus (ME.courseRegistrationStatus reg) -> do\n-      let resolvedPartyId = ME.courseRegistrationPartyId reg <|> mPartyId\n-      runDB $ update regId\n-        [ ME.CourseRegistrationFullName =. (nameClean <|> ME.courseRegistrationFullName reg)\n-        , ME.CourseRegistrationEmail =. (normalizedEmail <|> ME.courseRegistrationEmail reg)\n-        , ME.CourseRegistrationPhoneE164 =. (phoneClean <|> ME.courseRegistrationPhoneE164 reg)\n-        , ME.CourseRegistrationPartyId =. resolvedPartyId\n-        , ME.CourseRegistrationSource =. sourceClean\n-        , ME.CourseRegistrationStatus =. pendingStatus\n-        , ME.CourseRegistrationHowHeard =. (howHeardClean <|> ME.courseRegistrationHowHeard reg)\n-        , ME.CourseRegistrationUtmSource =. (utmSourceVal <|> ME.courseRegistrationUtmSource reg)\n-        , ME.CourseRegistrationUtmMedium =. (utmMediumVal <|> ME.courseRegistrationUtmMedium reg)\n-        , ME.CourseRegistrationUtmCampaign =. (utmCampaignVal <|> ME.courseRegistrationUtmCampaign reg)\n-        , ME.CourseRegistrationUtmContent =. (utmContentVal <|> ME.courseRegistrationUtmContent reg)\n-        , ME.CourseRegistrationUpdatedAt =. now\n-        ]\n-      sendConfirmation slugVal regId metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser\n-      pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }\n-    _ -> do\n-      regId <- runDB $ insert ME.CourseRegistration\n-        { ME.courseRegistrationCourseSlug = slugVal\n-        , ME.courseRegistrationPartyId = mPartyId\n-        , ME.courseRegistrationFullName = nameClean\n-        , ME.courseRegistrationEmail = normalizedEmail\n-        , ME.courseRegistrationPhoneE164 = phoneClean\n-        , ME.courseRegistrationSource = sourceClean\n-        , ME.courseRegistrationStatus = pendingStatus\n-        , ME.courseRegistrationAdminNotes = Nothing\n-        , ME.courseRegistrationHowHeard = howHeardClean\n-        , ME.courseRegistrationUtmSource = utmSourceVal\n-        , ME.courseRegistrationUtmMedium = utmMediumVal\n-        , ME.courseRegistrationUtmCampaign = utmCampaignVal\n-        , ME.courseRegistrationUtmContent = utmContentVal\n-        , ME.courseRegistrationStripePaymentIntentId = Nothing\n-        , ME.courseRegistrationStripeSubscriptionId = Nothing\n-        , ME.courseRegistrationSubscriptionStatus = Nothing\n-        , ME.courseRegistrationCreatedAt = now\n-        , ME.courseRegistrationUpdatedAt = now\n-        }\n-      void $ runDB $ insertCourseRegistrationFollowUp\n-        regId\n-        mPartyId\n-        Nothing\n-        \"registration\"\n-        (Just \"Inscripci\u00f3n recibida\")\n-        (\"Nueva inscripci\u00f3n capturada desde \" <> sourceClean <> \".\")\n-        Nothing\n-        Nothing\n-        Nothing\n-        now\n-      sendConfirmation slugVal regId metaTitle metaLanding metaSessions nameClean normalizedEmail mNewUser\n-      pure CourseRegistrationResponse { id = fromSqlKey regId, status = pendingStatus }\n+  let requestScope = namespace <> \":\" <> slugVal\n+      requestBody = TE.decodeUtf8 (BL.toStrict (encode payload))\n+  (regId, savedStatus, created) <- runDB $ do\n+    _ <- rawSql \"SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended(?,0))\"\n+      [PersistText (requestScope <> \":\" <> requestKey)] :: SqlPersistT IO [Single Int64]\n+    previous <- rawSql \"SELECT receipt.registration_id, receipt.request_payload=?::jsonb, registration.status FROM identity_course_registration_request receipt JOIN course_registration registration ON registration.id=receipt.registration_id WHERE receipt.request_scope=? AND receipt.request_key=?\"\n+      [PersistText requestBody, PersistText requestScope, PersistText requestKey]\n+    case previous of\n+      [(Single existingId, Single True, Single existingStatus)] -> pure (toSqlKey existingId, existingStatus, False)\n+      [(_, Single False, _)] -> liftIO $ throwIO err409 { errBody = \"This registration changed after an earlier send. Review the saved registration before starting another submission.\" }\n+      [] -> do\n+          when (namespace == \"public-course\") $ do\n+            existingCheckout <- rawSql \"SELECT registration_id FROM course_registration_checkout_runtime WHERE create_idempotency_key=?\"\n+              [PersistText requestKey] :: SqlPersistT IO [Single Int64]\n+            unless (null existingCheckout) $ liftIO $ throwIO err409 { errBody = \"A checkout already exists for this request. Retry to load its saved result.\" }\n+          either (liftIO . throwIO) pure $ validateCourseRegistrationSeatAvailability metaRemaining Nothing\n+          partyResult <- ensurePartyForCourseRegistrationDb nameClean normalizedEmail phoneClean now\n+          partyId <- either (liftIO . throwIO) pure partyResult\n+          let mPartyId = Just partyId\n+          regId <- insert ME.CourseRegistration\n+            { ME.courseRegistrationCourseSlug = slugVal\n+            , ME.courseRegistrationPartyId = mPartyId\n+            , ME.courseRegistrationFullName = nameClean\n+            , ME.courseRegistrationEmail = normalizedEmail\n+            , ME.courseRegistrationPhoneE164 = phoneClean\n+            , ME.courseRegistrationSource = sourceClean\n+            , ME.courseRegistrationStatus = pendingStatus\n+            , ME.courseRegistrationAdminNotes = Nothing\n+            , ME.courseRegistrationHowHeard = howHeardClean\n+            , ME.courseRegistrationUtmSource = utmSourceVal\n+            , ME.courseRegistrationUtmMedium = utmMediumVal\n+            , ME.courseRegistrationUtmCampaign = utmCampaignVal\n+            , ME.courseRegistrationUtmContent = utmContentVal\n+            , ME.courseRegistrationStripePaymentIntentId = Nothing\n+            , ME.courseRegistrationStripeSubscriptionId = Nothing\n+            , ME.courseRegistrationSubscriptionStatus = Nothing\n+            , ME.courseRegistrationCreatedAt = now\n+            , ME.courseRegistrationUpdatedAt = now\n+            }\n+          void $ insertCourseRegistrationFollowUp\n+            regId\n+            mPartyId\n+            Nothing\n+            \"registration\"\n+            (Just \"Inscripci\u00f3n recibida\")\n+            (\"Nueva inscripci\u00f3n capturada desde \" <> sourceClean <> \".\")\n+            Nothing\n+            Nothing\n+            Nothing\n+            now\n+          rawExecute \"INSERT INTO identity_course_registration_request(request_scope,request_key,request_payload,registration_id) VALUES (?,?,?::jsonb,?)\"\n+            [PersistText requestScope, PersistText requestKey, PersistText requestBody, toPersistValue regId]\n+          pure (regId, pendingStatus, True)\n+      _ -> liftIO $ throwIO err500 { errBody = \"Could not resolve registration request\" }\n+  when created $ sendConfirmation slugVal regId metaTitle metaLanding metaSessions nameClean normalizedEmail Nothing",
+      "path": "tdf-hq/src/TDF/Server.hs",
+      "commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "original_commit_id": "418c0da63a8a95639866f1e92619e6a00b7640c4",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Keeping automatic delivery limited to the first accepted source operation is intentional. A caught SMTP exception is not proof that the recipient server rejected the message: delivery can succeed before the acknowledgement is lost. Retrying whenever no sent event exists can therefore send duplicates, contrary to the task\u2019s explicit retry invariant. The accepted registration and failed course_email_event remain available in the authorized registration dossier\u2019s email history. Uncertain delivery needs operator review; public request retries must not blindly redispatch. Automatic recovery would need provider idempotency or a proven pre-acceptance failure classification. This limitation is documented rather than claiming delivery succeeded.",
+      "created_at": "2026-09-18T17:06:23Z",
+      "updated_at": "2026-09-18T17:06:24Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048914404",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048914404"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/437#discussion_r4048914404"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/437"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048914404/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 6684,
+      "original_line": 6684,
+      "side": "RIGHT",
+      "in_reply_to_id": 4048736516,
+      "author_association": "OWNER",
+      "original_position": 294,
+      "position": 294,
+      "subject_type": "line"
+    }
+  ]
+]

@@ -8,6 +8,7 @@ import {
   Box,
   Button,
   Card,
+  CardActionArea,
   CardContent,
   CardMedia,
   Chip,
@@ -68,7 +69,9 @@ import { FanClubPreview } from '../features/fanclubs/FanClubPreview';
 import { Catalogs, type CatalogItem } from '../api/catalogs';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { captureFirstValueOnce } from '../analytics/onboardingProgress';
+import { completeOnboardingProgress, loadOnboardingProgress } from '../api/session';
 import { firstNonEmptyString } from '../utils/stringValues';
+import { musicReleases, type MusicPublicReleaseSummary } from '../api/musicReleases';
 
 const FAN_AVATAR_MAX_BYTES = 10 * 1024 * 1024; // 10 MB; keep in sync with UX copy below
 const ARTIST_CATALOG_INITIAL_ROWS_PER_PAGE: number = 3 * 4;
@@ -90,6 +93,22 @@ function StatPill({ label, value }: { label: string; value: number }) {
       <Typography variant="h6" fontWeight={800}>
         {value}
       </Typography>
+    </Box>
+  );
+}
+
+function CanonicalMusicReleaseCard({ release }: { release: MusicPublicReleaseSummary }) {
+  return (
+    <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
+      <CardActionArea component={RouterLink} to={`/musica/${release.slug}`} sx={{ p: 1.5 }}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography fontWeight={800} noWrap>{release.title}</Typography>
+            <Typography variant="body2" color="text.secondary" noWrap>{release.displayArtist}</Typography>
+          </Box>
+          <Chip label={release.kind.toUpperCase()} size="small" />
+        </Stack>
+      </CardActionArea>
     </Box>
   );
 }
@@ -333,10 +352,50 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const [releaseLinkDraft, setReleaseLinkDraft] = useState<string>('');
   const [releaseUploadToast, setReleaseUploadToast] = useState<string | null>(null);
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
-  const [onboardingVisible, setOnboardingVisible] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    return window.localStorage.getItem('fanhub-onboarding-dismissed') !== '1';
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const activeOnboardingPartyIdRef = useRef(viewerId);
+  activeOnboardingPartyIdRef.current = viewerId;
+  const onboardingQuery = useQuery({
+    queryKey: ['onboarding-progress', viewerId],
+    queryFn: loadOnboardingProgress,
+    enabled: Boolean(viewerId && !isHomeManagerView),
+    retry: false,
   });
+  const completeOnboardingMutation = useMutation({
+    mutationFn: async (partyId: number) => {
+      await completeOnboardingProgress();
+      return partyId;
+    },
+    onSuccess: (partyId) => {
+      if (activeOnboardingPartyIdRef.current === partyId) {
+        setOnboardingDismissed(true);
+      }
+      void qc.invalidateQueries({ queryKey: ['onboarding-progress', partyId] });
+    },
+    onError: (_error, partyId) => {
+      if (activeOnboardingPartyIdRef.current === partyId) {
+        setOnboardingDismissed(false);
+      }
+    },
+  });
+  const managerTipsDismissalKey = viewerId
+    ? `fanhub-manager-tips-dismissed:${viewerId}`
+    : null;
+  const onboardingVisible = !onboardingDismissed && (
+    isHomeManagerView
+      ? Boolean(
+          managerTipsDismissalKey
+            && (typeof window === 'undefined' || window.localStorage.getItem(managerTipsDismissalKey) !== '1'),
+        )
+      : !isAuthenticated || onboardingQuery.data?.eligible === true
+  );
+  const onboardingLoadFailed = isAuthenticated
+    && !isHomeManagerView
+    && onboardingQuery.isError;
+  const onboardingCompletionFailed = isAuthenticated
+    && !isHomeManagerView
+    && completeOnboardingMutation.isError
+    && completeOnboardingMutation.variables === viewerId;
 
   useEffect(() => {
     if (artistProfileQuery.data && session?.partyId) {
@@ -368,11 +427,25 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   }, [session?.partyId]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (!onboardingVisible) {
-      window.localStorage.setItem('fanhub-onboarding-dismissed', '1');
+    setOnboardingDismissed(false);
+  }, [isHomeManagerView, viewerId]);
+
+  const dismissOnboarding = () => {
+    setOnboardingDismissed(true);
+    if (isHomeManagerView && managerTipsDismissalKey) {
+      window.localStorage.setItem(managerTipsDismissalKey, '1');
+      return;
     }
-  }, [onboardingVisible]);
+    if (isAuthenticated && viewerId && onboardingQuery.data?.eligible === true) {
+      completeOnboardingMutation.mutate(viewerId);
+    }
+  };
+
+  const retryOnboardingCompletion = () => {
+    if (!viewerId) return;
+    setOnboardingDismissed(true);
+    completeOnboardingMutation.mutate(viewerId);
+  };
 
   useEffect(() => {
     if (focusArtist && artistSectionRef.current) {
@@ -409,7 +482,12 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
       void qc.invalidateQueries({ queryKey: ['fan-artists'] });
-      captureFirstValueOnce(getAnalyticsClient(), session?.partyId, 'artist_followed');
+      void captureFirstValueOnce(getAnalyticsClient(), session?.partyId, 'artist_followed')
+        .then((newlyCompleted) => {
+          if (!newlyCompleted) return;
+          setOnboardingDismissed(true);
+          void qc.invalidateQueries({ queryKey: ['onboarding-progress', viewerId] });
+        });
     },
   });
 
@@ -454,6 +532,25 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     }
     return [];
   }, [isFan, hasFollows, follows, canManageReleases, artists]);
+  const targetArtistIds = useMemo(
+    () => targetArtists.map((artist) => artist.id).sort((left, right) => left - right),
+    [targetArtists],
+  );
+  const canonicalReleaseFeedQuery = useQuery({
+    queryKey: ['canonical-music-release-feed', targetArtistIds],
+    enabled: canSeeReleaseFeed && targetArtistIds.length > 0,
+    retry: false,
+    queryFn: async () => {
+      const releases = (await Promise.all(
+        targetArtistIds.map((artistId) => musicReleases.listPublic('', artistId)),
+      )).flat();
+      const unique = new Map<string, MusicPublicReleaseSummary>();
+      releases.forEach((release) => unique.set(release.id, release));
+      return [...unique.values()].sort(
+        (left, right) => Date.parse(right.publishedAt) - Date.parse(left.publishedAt),
+      );
+    },
+  });
 
   const streamingFallbacks = useMemo(() => {
     const map = new Map<number, { spotify?: string | null; youtube?: string | null }>();
@@ -800,7 +897,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         {onboardingVisible && (
           <Alert
             severity="info"
-            onClose={() => setOnboardingVisible(false)}
+            onClose={dismissOnboarding}
             icon={<VisibilityIcon />}
           >
             <AlertTitle>{isHomeManagerView ? 'Lo más útil ahora' : 'Primeros pasos'}</AlertTitle>
@@ -869,6 +966,30 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 </Stack>
               </Stack>
             )}
+          </Alert>
+        )}
+        {onboardingLoadFailed && (
+          <Alert
+            severity="warning"
+            action={(
+              <Button color="inherit" size="small" onClick={() => { void onboardingQuery.refetch(); }}>
+                Reintentar
+              </Button>
+            )}
+          >
+            No pudimos cargar tus primeros pasos. No mostraremos información de otra cuenta; revisa tu conexión e inténtalo de nuevo.
+          </Alert>
+        )}
+        {onboardingCompletionFailed && (
+          <Alert
+            severity="error"
+            action={(
+              <Button color="inherit" size="small" onClick={retryOnboardingCompletion}>
+                Reintentar
+              </Button>
+            )}
+          >
+            No pudimos guardar que terminaste estos primeros pasos. Puedes reintentarlo sin perder tu progreso.
           </Alert>
         )}
         {showHubDataAlert && (
@@ -1169,38 +1290,60 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
 
         <Grid container spacing={2}>
           <Grid item xs={12} md={8}>
-            <ReleaseFeed
-              audioFileInputRef={audioFileInputRef}
-              canManageReleases={canManageReleases}
-              canSeeReleaseFeed={canSeeReleaseFeed}
-              enableFanRolePending={enableFanRoleMutation.isPending}
-              feedLimit={feedLimit}
-              hasAuthToken={hasAuthToken}
-              hasFollows={hasFollows}
-              hasReleaseTargets={hasReleaseTargets}
-              isAuthenticated={isAuthenticated}
-              isFan={isFan}
-              isHomeManagerView={isHomeManagerView}
-              loading={releaseFeedQuery.isLoading}
-              loginPath={loginPath}
-              pendingUploadRelease={pendingUploadRelease}
-              releaseAudioMap={releaseAudioMap}
-              releaseFeed={releaseFeed}
-              releaseLinkDraft={releaseLinkDraft}
-              streamingFallbacks={streamingFallbacks}
-              uploadError={uploadError}
-              uploadingReleaseId={uploadingReleaseId}
-              visibleFeed={visibleFeed}
-              onCancelUpload={handleCancelReleaseUpload}
-              onDriveUploadComplete={handleDriveReleaseUploadComplete}
-              onEnableFanRole={() => enableFanRoleMutation.mutate()}
-              onPlayRelease={handlePlayRelease}
-              onReleaseLinkDraftChange={setReleaseLinkDraft}
-              onSaveReleaseLink={handleSaveReleaseLink}
-              onShowLess={() => setFeedLimit(4)}
-              onShowMore={() => setFeedLimit((prev) => Math.min(prev + 4, releaseFeed.length))}
-              onUploadTrigger={handleUploadTrigger}
-            />
+            <Stack spacing={2}>
+              {canSeeReleaseFeed && canonicalReleaseFeedQuery.data && canonicalReleaseFeedQuery.data.length > 0 && (
+                <Card sx={{ p: 3 }} component="section" aria-labelledby="canonical-music-feed-title">
+                  <Stack spacing={1.5}>
+                    <Box>
+                      <Typography id="canonical-music-feed-title" component="h2" variant="h6">
+                        Lanzamientos publicados en TDF
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Música disponible ahora de los artistas de este feed.
+                      </Typography>
+                    </Box>
+                    {canonicalReleaseFeedQuery.data.slice(0, 8).map((release) => (
+                      <CanonicalMusicReleaseCard key={release.id} release={release} />
+                    ))}
+                    <Button component={RouterLink} to="/musica" sx={{ alignSelf: 'flex-start' }}>
+                      Ver catálogo musical
+                    </Button>
+                  </Stack>
+                </Card>
+              )}
+              <ReleaseFeed
+                audioFileInputRef={audioFileInputRef}
+                canManageReleases={canManageReleases}
+                canSeeReleaseFeed={canSeeReleaseFeed}
+                enableFanRolePending={enableFanRoleMutation.isPending}
+                feedLimit={feedLimit}
+                hasAuthToken={hasAuthToken}
+                hasFollows={hasFollows}
+                hasReleaseTargets={hasReleaseTargets}
+                isAuthenticated={isAuthenticated}
+                isFan={isFan}
+                isHomeManagerView={isHomeManagerView}
+                loading={releaseFeedQuery.isLoading}
+                loginPath={loginPath}
+                pendingUploadRelease={pendingUploadRelease}
+                releaseAudioMap={releaseAudioMap}
+                releaseFeed={releaseFeed}
+                releaseLinkDraft={releaseLinkDraft}
+                streamingFallbacks={streamingFallbacks}
+                uploadError={uploadError}
+                uploadingReleaseId={uploadingReleaseId}
+                visibleFeed={visibleFeed}
+                onCancelUpload={handleCancelReleaseUpload}
+                onDriveUploadComplete={handleDriveReleaseUploadComplete}
+                onEnableFanRole={() => enableFanRoleMutation.mutate()}
+                onPlayRelease={handlePlayRelease}
+                onReleaseLinkDraftChange={setReleaseLinkDraft}
+                onSaveReleaseLink={handleSaveReleaseLink}
+                onShowLess={() => setFeedLimit(4)}
+                onShowMore={() => setFeedLimit((prev) => Math.min(prev + 4, releaseFeed.length))}
+                onUploadTrigger={handleUploadTrigger}
+              />
+            </Stack>
           </Grid>
           <Grid item xs={12} md={4}>
             <Stack spacing={2} height="100%">

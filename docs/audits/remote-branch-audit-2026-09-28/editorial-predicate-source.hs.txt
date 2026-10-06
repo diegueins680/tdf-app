@@ -1,0 +1,84 @@
+{-# LANGUAGE OverloadedStrings #-}
+module Main where
+import qualified Data.Text as T
+import qualified Data.Text.IO as TIO
+postgresVisibleImportedMetadataClause :: T.Text -> T.Text
+postgresVisibleImportedMetadataClause metadataColumn =
+    "CASE"
+        <> " WHEN "
+        <> metadataColumn
+        <> " IS NULL OR btrim("
+        <> metadataColumn
+        <> ")='' THEN TRUE"
+        <> " WHEN NOT pg_input_is_valid("
+        <> metadataColumn
+        <> ",'jsonb') THEN FALSE"
+        <> " ELSE jsonb_typeof("
+        <> jsonMetadata
+        <> ")='object'"
+        <> " AND (SELECT count(*) FROM json_each(("
+        <> metadataColumn
+        <> ")::json))=(SELECT count(DISTINCT metadata_field.key) FROM json_each(("
+        <> metadataColumn
+        <> ")::json) AS metadata_field)"
+        <> " AND NOT EXISTS (SELECT 1 FROM jsonb_object_keys("
+        <> jsonMetadata
+        <> ") AS metadata_key WHERE metadata_key"
+        <> " NOT IN ('ticketUrl','imageUrl','isPublic','currency','budgetCents','_discoveryOwned'))"
+        <> " AND (jsonb_typeof("
+        <> jsonMetadata
+        <> "->'_discoveryOwned') IS NULL OR jsonb_typeof("
+        <> jsonMetadata
+        <> "->'_discoveryOwned')='object')"
+        <> postgresOptionalMetadataType jsonMetadata "ticketUrl" "string"
+        <> postgresOptionalMetadataType jsonMetadata "imageUrl" "string"
+        <> postgresOptionalMetadataType jsonMetadata "currency" "string"
+        <> postgresOptionalIntegralMetadataType jsonMetadata "budgetCents"
+        <> " AND (jsonb_typeof("
+        <> jsonMetadata
+        <> "->'isPublic') IS NULL OR jsonb_typeof("
+        <> jsonMetadata
+        <> "->'isPublic')='null' OR "
+        <> jsonMetadata
+        <> "->'isPublic'='true'::jsonb)"
+        <> " END"
+  where
+    jsonMetadata = "(" <> metadataColumn <> ")::jsonb"
+
+postgresOptionalMetadataType :: T.Text -> T.Text -> T.Text -> T.Text
+postgresOptionalMetadataType jsonMetadata fieldName expectedType =
+    " AND (jsonb_typeof("
+        <> jsonMetadata
+        <> "->'"
+        <> fieldName
+        <> "') IS NULL OR jsonb_typeof("
+        <> jsonMetadata
+        <> "->'"
+        <> fieldName
+        <> "') IN ('null','"
+        <> expectedType
+        <> "'))"
+
+postgresOptionalIntegralMetadataType :: T.Text -> T.Text -> T.Text
+postgresOptionalIntegralMetadataType jsonMetadata fieldName =
+    " AND ("
+        <> fieldType
+        <> " IS NULL OR "
+        <> fieldType
+        <> "='null' OR CASE WHEN "
+        <> fieldType
+        <> "='number' THEN "
+        <> numericValue
+        <> "=trunc("
+        <> numericValue
+        <> ") AND "
+        <> numericValue
+        <> " BETWEEN -9223372036854775808 AND 9223372036854775807 ELSE FALSE END)"
+  where
+    fieldValue = jsonMetadata <> "->'" <> fieldName <> "'"
+    fieldType = "jsonb_typeof(" <> fieldValue <> ")"
+    numericValue = "(" <> jsonMetadata <> "->>'" <> fieldName <> "')::numeric"
+
+
+main :: IO ()
+main = TIO.putStrLn ("DO $$ BEGIN ASSERT NOT EXISTS (SELECT 1 FROM (VALUES ('{\"isPublic\":true,\"_discoveryOwned\":{\"title\":\"Source\",\"isPublic\":true}}', true), ('{\"isPublic\":true,\"_discoveryOwned\":{}}', true), ('{\"isPublic\":false,\"_discoveryOwned\":{}}', false), ('{\"isPublic\":true,\"_discoveryOwned\":null}', false), ('{\"isPublic\":true,\"_discoveryOwned\":false}', false), ('{\"isPublic\":true,\"_discoveryOwned\":[]}', false), ('{\"isPublic\":true,\"_discoveryOwned\":{},\"unexpected\":1}', false), ('{\"isPublic\":true,\"_discoveryOwned\":{},\"_discoveryOwned\":{}}', false), ('{\"isPublic\":true,\"budgetCents\":1.5,\"_discoveryOwned\":{}}', false), ('{\"isPublic\":true,\"budgetCents\":9223372036854775807.0,\"_discoveryOwned\":{}}', true)) AS test(metadata,expected) WHERE (" <> postgresVisibleImportedMetadataClause "metadata" <> ") IS DISTINCT FROM expected), 'Ownership metadata visibility mismatch'; END $$; SELECT 'PASS: 10 actual source-derived PostgreSQL predicate cases';")

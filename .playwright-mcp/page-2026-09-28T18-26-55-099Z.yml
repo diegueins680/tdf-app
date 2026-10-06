@@ -1,0 +1,171 @@
+- generic [active] [ref=f1e1]:
+  - generic:
+    - generic:
+      - progressbar
+      - generic: Loading Google Play Console
+  - generic [ref=f1e3]:
+    - banner [ref=f1e4]:
+      - generic [ref=f1e6]:
+        - link [ref=f1e7] [cursor=pointer]:
+          - /url: /console/u/0/developers/7746420275596660022/app-list
+          - button "Google Play Console logo" [ref=f1e8]
+        - generic [ref=f1e9]:
+          - button "Notifications Open notification center" [ref=f1e15]:
+            - img [ref=f1e19]: notifications
+            - generic [ref=f1e20]: Notifications
+          - button [ref=f1e26] [cursor=pointer]:
+            - img "Switch developer accounts" [ref=f1e28]
+    - navigation [ref=f1e34]:
+      - list [ref=f1e35]:
+        - listitem "Home" [ref=f1e38]:
+          - button "Home" [ref=f1e39] [cursor=pointer]:
+            - img [ref=f1e42]: features
+        - listitem "Policy status" [ref=f1e46]:
+          - button "Policy status" [ref=f1e47] [cursor=pointer]:
+            - img [ref=f1e50]: android_security_privacy_safe
+        - listitem "Users and permissions" [ref=f1e54]:
+          - button "Users and permissions" [ref=f1e55] [cursor=pointer]:
+            - img [ref=f1e58]: user_attributes
+        - listitem "Order management" [ref=f1e62]:
+          - button "Order management" [ref=f1e63] [cursor=pointer]:
+            - img [ref=f1e66]: credit_card
+        - listitem "Download reports" [ref=f1e70]:
+          - button "Download reports" [ref=f1e71] [cursor=pointer]:
+            - img [ref=f1e73]: arrow_right
+            - img [ref=f1e76]: download
+        - listitem "Developer account" [ref=f1e80]:
+          - button "Developer account" [ref=f1e81] [cursor=pointer]:
+            - img [ref=f1e84]: badge
+        - listitem "Activity log" [ref=f1e88]:
+          - button "Activity log" [ref=f1e89] [cursor=pointer]:
+            - img [ref=f1e92]: description
+        - listitem "Settings" [ref=f1e96]:
+          - button "Settings" [ref=f1e97] [cursor=pointer]:
+            - img [ref=f1e100]: settings
+        - listitem "Help" [ref=f1e104]:
+          - button "Help" [ref=f1e105] [cursor=pointer]:
+            - img [ref=f1e108]: contact_support
+        - listitem "Android developer verification" [ref=f1e112]:
+          - button "Android developer verification" [ref=f1e113] [cursor=pointer]:
+            - img [ref=f1e116]: app_promotion
+    - generic [ref=f1e119]:
+      - generic [ref=f1e126]:
+        - generic [ref=f1e135]:
+          - heading "TDF Records" [level=1] [ref=f1e141]
+          - generic [ref=f1e148]:
+            - generic [ref=f1e149]: Personal account
+            - img [ref=f1e151]: brightness_1
+            - generic [ref=f1e152]: "Account ID: 7746420275596660022"
+        - generic [ref=f1e159]:
+          - heading "Register any package names or keys that you use to distribute Android apps outside of Google Play" [level=3] [ref=f1e168]
+          - generic [ref=f1e169]: All of your Play apps have been successfully registered to meet Android developer verification requirements. You may have draft apps which couldn't be registered because they don't have an associated package name.
+          - generic [ref=f1e171]:
+            - text: If you distribute apps on Android outside of Google Play, register their package names and signing keys on the Android developer verification page. You should also register any additional keys for your Play apps that you use to sign them outside of Play. Android apps from
+            - link "participating stores" [ref=f1e172] [cursor=pointer]:
+              - /url: https://developer.android.com/developer-verification/guides#locations
+            - text: that are not registered by September 30, 2026 will no longer be installable on
+            - link "certified Android devices" [ref=f1e173] [cursor=pointer]:
+              - /url: https://www.android.com/certified/partners/
+            - text: in
+            - link "select countries" [ref=f1e174] [cursor=pointer]:
+              - /url: https://developer.android.com/developer-verification/guides#locations
+            - text: .
+          - generic [ref=f1e176]:
+            - button "Go to Android developer verification" [ref=f1e177]
+            - button "Dismiss" [ref=f1e181]
+        - generic [ref=f1e189]:
+          - generic [ref=f1e191]:
+            - heading "Pinned apps" [level=2] [ref=f1e195]
+            - button "More information about \"Pinned apps\"" [ref=f1e198] [cursor=pointer]:
+              - img [ref=f1e199]: help
+          - generic [ref=f1e200]: Pin apps here to access them quickly, and view key metrics
+        - generic [ref=f1e204]:
+          - generic [ref=f1e208]:
+            - heading "1 app" [level=2] [ref=f1e213]
+            - link "Create app" [ref=f1e219] [cursor=pointer]:
+              - /url: /console/u/0/developers/7746420275596660022/create-new-app
+          - generic [ref=f1e223]:
+            - generic [ref=f1e224]:
+              - generic [ref=f1e227]:
+                - generic [ref=f1e228]: Filter by
+                - button "Filter by All" [ref=f1e231] [cursor=pointer]:
+                  - generic [ref=f1e232]: All
+                  - img [ref=f1e236]: arrow_drop_down
+              - generic [ref=f1e240]:
+                - search "Search by app or package name":
+                  - generic [ref=f1e242]:
+                    - generic:
+                      - img: search
+                    - generic: Search by app or package name
+                    - textbox "Search by app or package name" [ref=f1e243]
+            - generic [ref=f1e248]:
+              - grid "All apps" [ref=f1e253]:
+                - row [ref=f1e254]:
+                  - columnheader "App" [ref=f1e255] [cursor=pointer]
+                  - columnheader "Installed audience" [ref=f1e256] [cursor=pointer]:
+                    - text: Installed audience
+                    - img [ref=f1e258]: help_outline
+                  - columnheader "App status" [ref=f1e259] [cursor=pointer]
+                  - columnheader "Update status" [ref=f1e260] [cursor=pointer]
+                  - columnheader "Last updated" [ref=f1e261] [cursor=pointer]
+                  - cell [ref=f1e262]
+                  - cell [ref=f1e263]
+                  - cell [ref=f1e264]
+                - row [ref=f1e265]:
+                  - gridcell "TDF com.tdf.records" [ref=f1e266]:
+                    - generic [ref=f1e273]:
+                      - generic [ref=f1e274]: TDF
+                      - generic [ref=f1e277]: com.tdf.records
+                  - gridcell "3" [ref=f1e281]
+                  - gridcell "Closed testing" [ref=f1e286]
+                  - gridcell [ref=f1e291]
+                  - gridcell "Sep 21, 2026" [ref=f1e292]
+                  - gridcell [ref=f1e297]
+                  - gridcell [ref=f1e298]:
+                    - button "Pin TDF" [ref=f1e300] [cursor=pointer]:
+                      - img [ref=f1e304]: keep
+                  - gridcell [ref=f1e305]:
+                    - link "View TDF" [ref=f1e307] [cursor=pointer]:
+                      - /url: /console/u/0/developers/7746420275596660022/app/4972917875418703141/app-dashboard
+                      - img [ref=f1e310]: arrow_right_alt
+              - generic [ref=f1e313]:
+                - generic [ref=f1e314]:
+                  - generic [ref=f1e315]: "Show rows:"
+                  - 'button "Show rows: 10 selected." [ref=f1e318] [cursor=pointer]':
+                    - generic [ref=f1e319]: "10"
+                    - img [ref=f1e321]: arrow_drop_down
+                - generic [ref=f1e322]:
+                  - generic [ref=f1e323]: 1 - 1 of 1
+                  - generic [ref=f1e325]:
+                    - button "Go to the first page" [disabled] [ref=f1e326]:
+                      - generic:
+                        - generic:
+                          - img: first_page
+                    - button "Go to the previous page" [disabled] [ref=f1e327]:
+                      - generic:
+                        - generic:
+                          - img: chevron_left
+                    - button "Go to the next page" [disabled] [ref=f1e328]:
+                      - generic:
+                        - generic:
+                          - img: chevron_right
+                    - button "Go to the last page" [disabled] [ref=f1e329]:
+                      - generic:
+                        - generic:
+                          - img: last_page
+      - generic [ref=f1e334]:
+        - generic [ref=f1e335]:
+          - link "Product updates" [ref=f1e336] [cursor=pointer]:
+            - /url: https://play.google.com/console/about/whats-new/
+          - link "Status dashboard" [ref=f1e337] [cursor=pointer]:
+            - /url: https://status.play.google.com/
+          - link "Help" [ref=f1e338] [cursor=pointer]:
+            - /url: /console/u/0/developers/7746420275596660022/help-and-support
+        - generic [ref=f1e339]:
+          - generic [ref=f1e340]: © 2026 Google
+          - link "Privacy" [ref=f1e341] [cursor=pointer]:
+            - /url: https://www.google.com/policies/privacy/
+          - link "Developer Distribution Agreement" [ref=f1e342] [cursor=pointer]:
+            - /url: https://play.google.com/about/developer-distribution-agreement.html
+          - link "Terms of Service" [ref=f1e343] [cursor=pointer]:
+            - /url: https://play.google.com/about/console/terms-of-service/

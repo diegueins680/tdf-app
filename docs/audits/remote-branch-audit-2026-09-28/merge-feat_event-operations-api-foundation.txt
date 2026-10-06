@@ -1,0 +1,26 @@
+f59067f8d70f2b000642cb474586e5a04a05d176
+100644 1397faeea5f2bad448c1b2f561fd47d1627b9deb 1	.github/workflows/event-operations-formal.yml
+100644 a7419ddf844b1a705dacdd5fc6720de242f0f6fe 2	.github/workflows/event-operations-formal.yml
+100644 295778a6773e5c04988ac9970a38fb83af25714b 3	.github/workflows/event-operations-formal.yml
+100644 9ed268f8adc021538a5a6fd19b1c690af39ea328 1	tdf-hq-ui/src/api/generated/types.ts
+100644 563253816814cb93ae7b66f4160bcd02530e8ef1 2	tdf-hq-ui/src/api/generated/types.ts
+100644 e2a81651ae90a56d43c8ac807019f5ab89797f16 3	tdf-hq-ui/src/api/generated/types.ts
+100644 6efc6ac6cfd92bcc2fe177594e5c45d79eec30c5 1	tdf-hq/docs/openapi/api.yaml
+100644 e6bbeea61366ccb3a195ad89dbfc21dfee4bbae2 2	tdf-hq/docs/openapi/api.yaml
+100644 8f3c1419989622168244e30bebf04501427df6d5 3	tdf-hq/docs/openapi/api.yaml
+100644 6ed7a1ecd19d57e2e84683d52cc05b9e0b7c00f2 1	tdf-hq/test/Spec.hs
+100644 868842b2affe903c954d931450f19ac5e809b99e 2	tdf-hq/test/Spec.hs
+100644 3758fbcb4a395d1ca94511427ef7f179932dc9da 3	tdf-hq/test/Spec.hs
+
+Auto-merging .github/workflows/event-operations-formal.yml
+CONFLICT (content): Merge conflict in .github/workflows/event-operations-formal.yml
+Auto-merging package.json
+Auto-merging tdf-hq-ui/src/api/generated/types.ts
+CONFLICT (content): Merge conflict in tdf-hq-ui/src/api/generated/types.ts
+Auto-merging tdf-hq/docs/openapi/api.yaml
+CONFLICT (content): Merge conflict in tdf-hq/docs/openapi/api.yaml
+Auto-merging tdf-hq/src/TDF/API.hs
+Auto-merging tdf-hq/src/TDF/Server.hs
+Auto-merging tdf-hq/tdf-hq.cabal
+Auto-merging tdf-hq/test/Spec.hs
+CONFLICT (content): Merge conflict in tdf-hq/test/Spec.hs

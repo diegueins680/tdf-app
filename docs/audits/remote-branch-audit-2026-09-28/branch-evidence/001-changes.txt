@@ -1,0 +1,7 @@
+ docs/critical-completion-2026-09-16.md            | 110 +++++++++++++++++
+ tdf-hq/src/TDF/Commerce/MerchReservationWorker.hs |  31 ++---
+ tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs    |  39 ++++---
+ tdf-hq/tdf-hq.cabal                               |   1 +
+ tdf-hq/test/Spec.hs                               |   2 +
+ tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs     | 136 ++++++++++++++++++++++
+ 6 files changed, 285 insertions(+), 34 deletions(-)

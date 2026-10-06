@@ -1,0 +1,1672 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012155638",
+      "pull_request_review_id": 5205760390,
+      "id": 4012155638,
+      "node_id": "PRRC_kwDOQPdUrM7vJKL2",
+      "diff_hunk": "@@ -0,0 +1,74 @@\n+------------------------- MODULE Relationships -------------------------\n+EXTENDS Naturals, FiniteSets, TLC\n+CONSTANTS Actors, MaxVersion, UnsafeCache\n+VARIABLES consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, leaked\n+vars == <<consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, leaked>>\n+Available == alive = Actors /\\ blocked = {}\n+Connected == Available /\\ consent = Actors\n+Permitted == Available /\\ (~private \\/ members = Actors)\n+Init == /\\ consent = {} /\\ blocked = {} /\\ alive = Actors\n+        /\\ members = Actors /\\ private \\in BOOLEAN /\\ version = 0\n+        /\\ cacheConsent = {} /\\ cacheVersion = 0 /\\ pending = {}\n+        /\\ terminal = {} /\\ delivered = {} /\\ leaked = FALSE\n+Request(a) == /\\ Available /\\ a \\notin consent /\\ version < MaxVersion\n+              /\\ consent' = consent \\cup {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, leaked>>\n+Withdraw == /\\ consent # {} /\\ version < MaxVersion\n+            /\\ consent' = {} /\\ version' = version + 1",
+      "path": "formal/social/Relationships.tla",
+      "commit_id": "6e303db394944f1762ebfa6ff00f2fcf6469664c",
+      "original_commit_id": "6e303db394944f1762ebfa6ff00f2fcf6469664c",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Preserve the other principal's consent on withdrawal**\n\nWhen both principals have consented and either one withdraws, this transition clears the entire `consent` set, including the other principal's independently owned intent. That contradicts the policy's two independently owned intents and the S-CONSENT requirement in `docs/social/verification.md`; it also prevents the model from detecting implementations where one user improperly mutates another user's consent. Parameterize `Withdraw` by actor and remove only that actor's intent.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-15T05:12:29Z",
+      "updated_at": "2026-09-15T05:12:29Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012155638",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012155638"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012155638"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012155638/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 20,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 20,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012155649",
+      "pull_request_review_id": 5205760390,
+      "id": 4012155649,
+      "node_id": "PRRC_kwDOQPdUrM7vJKMB",
+      "diff_hunk": "@@ -0,0 +1,74 @@\n+------------------------- MODULE Relationships -------------------------\n+EXTENDS Naturals, FiniteSets, TLC\n+CONSTANTS Actors, MaxVersion, UnsafeCache\n+VARIABLES consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, leaked\n+vars == <<consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, leaked>>\n+Available == alive = Actors /\\ blocked = {}\n+Connected == Available /\\ consent = Actors\n+Permitted == Available /\\ (~private \\/ members = Actors)\n+Init == /\\ consent = {} /\\ blocked = {} /\\ alive = Actors\n+        /\\ members = Actors /\\ private \\in BOOLEAN /\\ version = 0\n+        /\\ cacheConsent = {} /\\ cacheVersion = 0 /\\ pending = {}\n+        /\\ terminal = {} /\\ delivered = {} /\\ leaked = FALSE\n+Request(a) == /\\ Available /\\ a \\notin consent /\\ version < MaxVersion\n+              /\\ consent' = consent \\cup {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, leaked>>\n+Withdraw == /\\ consent # {} /\\ version < MaxVersion\n+            /\\ consent' = {} /\\ version' = version + 1\n+            /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                 cacheVersion, pending, terminal, delivered, leaked>>\n+Block(a) == /\\ a \\notin blocked /\\ version < MaxVersion\n+            /\\ blocked' = blocked \\cup {a} /\\ consent' = {}\n+            /\\ version' = version + 1\n+            /\\ UNCHANGED <<alive, members, private, cacheConsent, cacheVersion,\n+                 pending, terminal, delivered, leaked>>\n+Unblock(a) == /\\ a \\in blocked /\\ version < MaxVersion\n+              /\\ blocked' = blocked \\ {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<consent, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, leaked>>\n+Revoke(a) == /\\ a \\in members /\\ version < MaxVersion\n+             /\\ members' = members \\ {a} /\\ version' = version + 1\n+             /\\ UNCHANGED <<consent, blocked, alive, private, cacheConsent,\n+                  cacheVersion, pending, terminal, delivered, leaked>>\n+Delete(a) == /\\ a \\in alive /\\ version < MaxVersion\n+             /\\ alive' = alive \\ {a} /\\ consent' = {}\n+             /\\ version' = version + 1\n+             /\\ UNCHANGED <<blocked, members, private, cacheConsent,\n+                  cacheVersion, pending, terminal, delivered, leaked>>\n+Privacy == /\\ ~private /\\ version < MaxVersion\n+           /\\ private' = TRUE /\\ version' = version + 1\n+           /\\ UNCHANGED <<consent, blocked, alive, members, cacheConsent,\n+                cacheVersion, pending, terminal, delivered, leaked>>\n+Refresh == /\\ cacheConsent' = consent /\\ cacheVersion' = version\n+           /\\ UNCHANGED <<consent, blocked, alive, members, private, version,\n+                pending, terminal, delivered, leaked>>\n+Read == /\\ leaked' = (leaked \\/\n+              (IF UnsafeCache THEN cacheConsent = Actors /\\ ~Permitted ELSE FALSE))\n+        /\\ UNCHANGED <<consent, blocked, alive, members, private, version,\n+             cacheConsent, cacheVersion, pending, terminal, delivered>>\n+Queue == /\\ Connected /\\ Permitted /\\ version \\notin terminal\n+         /\\ pending' = pending \\cup {version}",
+      "path": "formal/social/Relationships.tla",
+      "commit_id": "6e303db394944f1762ebfa6ff00f2fcf6469664c",
+      "original_commit_id": "6e303db394944f1762ebfa6ff00f2fcf6469664c",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Separate delivery request IDs from relationship revisions**\n\nWhen two distinct messages or notifications are queued without an intervening relationship change, both use the same `version`; after the first finishes, `version \\notin terminal` permanently rejects the second, while retries before completion merely collapse into the same set member. This models one delivery per authorization revision rather than the documented request-identity deduplication, so the S-RETRY result cannot validate that unique commands progress while duplicate commands are suppressed. Track command identity separately and retain `version` only as the authorization revision.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-15T05:12:29Z",
+      "updated_at": "2026-09-15T05:12:29Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012155649",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012155649"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012155649"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012155649/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 52,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 53,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 53,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012641764",
+      "pull_request_review_id": 5206336176,
+      "id": 4012641764,
+      "node_id": "PRRC_kwDOQPdUrM7vLA3k",
+      "diff_hunk": "@@ -0,0 +1,74 @@\n+------------------------- MODULE Relationships -------------------------\n+EXTENDS Naturals, FiniteSets, TLC\n+CONSTANTS Actors, MaxVersion, UnsafeCache\n+VARIABLES consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, leaked\n+vars == <<consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, leaked>>\n+Available == alive = Actors /\\ blocked = {}\n+Connected == Available /\\ consent = Actors\n+Permitted == Available /\\ (~private \\/ members = Actors)\n+Init == /\\ consent = {} /\\ blocked = {} /\\ alive = Actors\n+        /\\ members = Actors /\\ private \\in BOOLEAN /\\ version = 0\n+        /\\ cacheConsent = {} /\\ cacheVersion = 0 /\\ pending = {}\n+        /\\ terminal = {} /\\ delivered = {} /\\ leaked = FALSE\n+Request(a) == /\\ Available /\\ a \\notin consent /\\ version < MaxVersion\n+              /\\ consent' = consent \\cup {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, leaked>>\n+Withdraw == /\\ consent # {} /\\ version < MaxVersion\n+            /\\ consent' = {} /\\ version' = version + 1",
+      "path": "formal/social/Relationships.tla",
+      "commit_id": "6e303db394944f1762ebfa6ff00f2fcf6469664c",
+      "original_commit_id": "6e303db394944f1762ebfa6ff00f2fcf6469664c",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 59def2b71ada073f4e784ed14af3bc3aa0b2a1a0. Withdraw(a) removes only the authenticated actor intent; OwnConsentOnly monitors preservation of the other principal. The corrected model passed 14,987 states and liveness; the new WithdrawalOwnership negative control restores whole-set clearing and specifically violates OwnConsentOnly. Block/deletion retain their separately documented invalidation behavior. scripts/social/check-models.sh passed both positive models and all three expected negative controls. SQL/HTTP refinement remains explicitly outside this foundation.",
+      "created_at": "2026-09-15T06:29:09Z",
+      "updated_at": "2026-09-15T06:29:09Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012641764",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012641764"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012641764"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012641764/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 20,
+      "side": "RIGHT",
+      "in_reply_to_id": 4012155638,
+      "author_association": "OWNER",
+      "original_position": 20,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012642355",
+      "pull_request_review_id": 5206336931,
+      "id": 4012642355,
+      "node_id": "PRRC_kwDOQPdUrM7vLBAz",
+      "diff_hunk": "@@ -0,0 +1,74 @@\n+------------------------- MODULE Relationships -------------------------\n+EXTENDS Naturals, FiniteSets, TLC\n+CONSTANTS Actors, MaxVersion, UnsafeCache\n+VARIABLES consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, leaked\n+vars == <<consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, leaked>>\n+Available == alive = Actors /\\ blocked = {}\n+Connected == Available /\\ consent = Actors\n+Permitted == Available /\\ (~private \\/ members = Actors)\n+Init == /\\ consent = {} /\\ blocked = {} /\\ alive = Actors\n+        /\\ members = Actors /\\ private \\in BOOLEAN /\\ version = 0\n+        /\\ cacheConsent = {} /\\ cacheVersion = 0 /\\ pending = {}\n+        /\\ terminal = {} /\\ delivered = {} /\\ leaked = FALSE\n+Request(a) == /\\ Available /\\ a \\notin consent /\\ version < MaxVersion\n+              /\\ consent' = consent \\cup {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, leaked>>\n+Withdraw == /\\ consent # {} /\\ version < MaxVersion\n+            /\\ consent' = {} /\\ version' = version + 1\n+            /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                 cacheVersion, pending, terminal, delivered, leaked>>\n+Block(a) == /\\ a \\notin blocked /\\ version < MaxVersion\n+            /\\ blocked' = blocked \\cup {a} /\\ consent' = {}\n+            /\\ version' = version + 1\n+            /\\ UNCHANGED <<alive, members, private, cacheConsent, cacheVersion,\n+                 pending, terminal, delivered, leaked>>\n+Unblock(a) == /\\ a \\in blocked /\\ version < MaxVersion\n+              /\\ blocked' = blocked \\ {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<consent, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, leaked>>\n+Revoke(a) == /\\ a \\in members /\\ version < MaxVersion\n+             /\\ members' = members \\ {a} /\\ version' = version + 1\n+             /\\ UNCHANGED <<consent, blocked, alive, private, cacheConsent,\n+                  cacheVersion, pending, terminal, delivered, leaked>>\n+Delete(a) == /\\ a \\in alive /\\ version < MaxVersion\n+             /\\ alive' = alive \\ {a} /\\ consent' = {}\n+             /\\ version' = version + 1\n+             /\\ UNCHANGED <<blocked, members, private, cacheConsent,\n+                  cacheVersion, pending, terminal, delivered, leaked>>\n+Privacy == /\\ ~private /\\ version < MaxVersion\n+           /\\ private' = TRUE /\\ version' = version + 1\n+           /\\ UNCHANGED <<consent, blocked, alive, members, cacheConsent,\n+                cacheVersion, pending, terminal, delivered, leaked>>\n+Refresh == /\\ cacheConsent' = consent /\\ cacheVersion' = version\n+           /\\ UNCHANGED <<consent, blocked, alive, members, private, version,\n+                pending, terminal, delivered, leaked>>\n+Read == /\\ leaked' = (leaked \\/\n+              (IF UnsafeCache THEN cacheConsent = Actors /\\ ~Permitted ELSE FALSE))\n+        /\\ UNCHANGED <<consent, blocked, alive, members, private, version,\n+             cacheConsent, cacheVersion, pending, terminal, delivered>>\n+Queue == /\\ Connected /\\ Permitted /\\ version \\notin terminal\n+         /\\ pending' = pending \\cup {version}",
+      "path": "formal/social/Relationships.tla",
+      "commit_id": "6e303db394944f1762ebfa6ff00f2fcf6469664c",
+      "original_commit_id": "6e303db394944f1762ebfa6ff00f2fcf6469664c",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 59def2b71ada073f4e784ed14af3bc3aa0b2a1a0. Queue/Finish now use independent bounded request IDs and retain the immutable authorization revision per request. Distinct requests are admissible at one revision; pending/terminal IDs suppress duplicate delivery. AtMostOnce and per-request Progress pass. RequestAdmission checks that unique authorized IDs remain queueable; the RequestIdentity mutation reinstates revision-based rejection and produces the expected RequestAdmission violation. Positive Relationships: 55,530 generated / 14,987 distinct states, depth 10. Downstream SQL assertion regeneration is documented as pending.",
+      "created_at": "2026-09-15T06:29:13Z",
+      "updated_at": "2026-09-15T06:29:13Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012642355",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012642355"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012642355"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012642355/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 52,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 53,
+      "side": "RIGHT",
+      "in_reply_to_id": 4012155649,
+      "author_association": "OWNER",
+      "original_position": 53,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012642527",
+      "pull_request_review_id": 5206337156,
+      "id": 4012642527,
+      "node_id": "PRRC_kwDOQPdUrM7vLBDf",
+      "diff_hunk": "@@ -0,0 +1,92 @@\n+# Verification register (in progress)\n+\n+## Formal scope and limits\n+\n+`formal/social/Relationships.tla`: two distinct principals, version bounds 4\n+(positive) and 3 (negative), explicit bilateral consent, unilateral blocks,\n+revocation of club membership, irreversible actor deletion, stale cache, queued\n+requests with separate immutable authorization revisions, idempotent terminal delivery. Operations are atomic database transactions;\n+trusted handlers supply authenticated actor identity. Fair scheduling of Finish(r)\n+and eventual database availability are required for Progress. No external network\n+exactly-once claim. Role grant creation, token rotation, multi-organization\n+impersonation, media/CDN copies and crash recovery of an external delivery are not\n+modeled. These require separate refinement evidence before rollout.\n+\n+`formal/social/Feed.tla`: five monotonically published immutable positions,\n+eligibility removal, descending one-item pages. No duplicate and no skipped eligible\n+item above the returned cursor. It assumes publication order is assigned in commit\n+order; ordinary PostgreSQL sequences alone do **not** establish this assumption.\n+If an implementation uses preallocated IDs or editable dates, it does not refine\n+this model. Eligibility becoming newly allowed after a cursor passes is outside\n+this no-gap guarantee; refresh begins a new traversal.\n+\n+The negative stale-cache configuration must discover AuthoritativeDenial violation:\n+request A, request B, cache consent, block/revoke/delete, read via stale authority.\n+This is a mutation of the model used to validate its ability to detect a defect;\n+it is not evidence that this precise sequence was executed in production.\n+\n+## Traceability and acceptance\n+\n+| Requirement | Property/action | Required implementation mechanism | Current evidence |\n+|---|---|---|---|\n+| S-AUTH | AuthoritativeDenial / Read, Finish | authoritative policy at read/delivery snapshot | TLC: 14,987 distinct states; safety + liveness passed |\n+| S-CONSENT | ConsentIntegrity, OwnConsentOnly / Request, Withdraw(a) | own consent only, unique pair, transactional revoke | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |\n+| S-BLOCK | ConsentIntegrity / Block, Unblock | common row locks with accept/send, no resurrection | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |\n+| S-DELETE | ConsentIntegrity / Delete | tombstone/revision, stale commands rejected | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |\n+| S-RETRY | AtMostOnce, RequestAdmission / Queue(r), Finish(r) | request identity + transaction + terminal dedup | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |\n+| S-PROGRESS | Progress / Finish(r) | bounded retry or terminal rejection; fairness | TLC Progress passed; worker not qualified |\n+| S-FEED | StablePagination / Publish, Page, Hide | immutable commit-ordered cursor and eligibility before LIMIT | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |\n+| S-CLIENT | account isolation/accessibility | scoped query keys, selectors, recovery states | baseline 44 tests passed |\n+\n+Baseline tests/builds are evidence of the starting point only. See timestamped logs;\n+no unrun test, migration, screenshot, CI or performance result is counted as passed.\n+\n+## Performance acceptance (set before measurement)\n+\n+Synthetic PostgreSQL 16, one local container: sparse degree 0/1/5 and hub degree\n+10,000, 100,000 total relationships, page size <=50. Target p95 <=200ms warm DB\n+query time for following/discover, <=300ms mutation outside intentional lock waits,\n+bounded SQL query count independent of page size, zero unauthorized rows/duplicates.\n+Report hardware and distributions; no production SLO claim. Complete-schema\n+migration and rollback must preserve writes created after migration. Storage and\n+cost must be measured/estimated separately; no new-service operating cost assumed.\n+\n+## Executed TLC results before review repair\n+\n+Java 17.0.12; tla2tools-1.7.2.jar SHA256\n+`fa18543e44ed5974a85bd2c60c0dc16620ae117680ea8e693d2691999ed90b22`.\n+Final runs: Relationships 19,377 generated / 14,987 distinct states, depth 12;",
+      "path": "docs/social/verification.md",
+      "commit_id": "59def2b71ada073f4e784ed14af3bc3aa0b2a1a0",
+      "original_commit_id": "59def2b71ada073f4e784ed14af3bc3aa0b2a1a0",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Correct the recorded pre-repair TLC result**\n\nThe committed `evidence/models/Relationships.txt` reports 19,377 generated and **5,060** distinct states, not 14,987, so this verification register does not match the evidence it directs reviewers to. The 14,987 figure belongs to the later repaired run described below; record 5,060 here or commit a matching pre-repair log so the model-checking evidence remains auditable.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-15T06:29:14Z",
+      "updated_at": "2026-09-15T06:29:14Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012642527",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012642527"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012642527"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012642527/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 58,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 58,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012703564",
+      "pull_request_review_id": 5206419170,
+      "id": 4012703564,
+      "node_id": "PRRC_kwDOQPdUrM7vLP9M",
+      "diff_hunk": "@@ -0,0 +1,92 @@\n+# Verification register (in progress)\n+\n+## Formal scope and limits\n+\n+`formal/social/Relationships.tla`: two distinct principals, version bounds 4\n+(positive) and 3 (negative), explicit bilateral consent, unilateral blocks,\n+revocation of club membership, irreversible actor deletion, stale cache, queued\n+requests with separate immutable authorization revisions, idempotent terminal delivery. Operations are atomic database transactions;\n+trusted handlers supply authenticated actor identity. Fair scheduling of Finish(r)\n+and eventual database availability are required for Progress. No external network\n+exactly-once claim. Role grant creation, token rotation, multi-organization\n+impersonation, media/CDN copies and crash recovery of an external delivery are not\n+modeled. These require separate refinement evidence before rollout.\n+\n+`formal/social/Feed.tla`: five monotonically published immutable positions,\n+eligibility removal, descending one-item pages. No duplicate and no skipped eligible\n+item above the returned cursor. It assumes publication order is assigned in commit\n+order; ordinary PostgreSQL sequences alone do **not** establish this assumption.\n+If an implementation uses preallocated IDs or editable dates, it does not refine\n+this model. Eligibility becoming newly allowed after a cursor passes is outside\n+this no-gap guarantee; refresh begins a new traversal.\n+\n+The negative stale-cache configuration must discover AuthoritativeDenial violation:\n+request A, request B, cache consent, block/revoke/delete, read via stale authority.\n+This is a mutation of the model used to validate its ability to detect a defect;\n+it is not evidence that this precise sequence was executed in production.\n+\n+## Traceability and acceptance\n+\n+| Requirement | Property/action | Required implementation mechanism | Current evidence |\n+|---|---|---|---|\n+| S-AUTH | AuthoritativeDenial / Read, Finish | authoritative policy at read/delivery snapshot | TLC: 14,987 distinct states; safety + liveness passed |\n+| S-CONSENT | ConsentIntegrity, OwnConsentOnly / Request, Withdraw(a) | own consent only, unique pair, transactional revoke | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |\n+| S-BLOCK | ConsentIntegrity / Block, Unblock | common row locks with accept/send, no resurrection | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |\n+| S-DELETE | ConsentIntegrity / Delete | tombstone/revision, stale commands rejected | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |\n+| S-RETRY | AtMostOnce, RequestAdmission / Queue(r), Finish(r) | request identity + transaction + terminal dedup | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |\n+| S-PROGRESS | Progress / Finish(r) | bounded retry or terminal rejection; fairness | TLC Progress passed; worker not qualified |\n+| S-FEED | StablePagination / Publish, Page, Hide | immutable commit-ordered cursor and eligibility before LIMIT | TLC model only; SQL/HTTP/legacy refinement is not included in this foundation |\n+| S-CLIENT | account isolation/accessibility | scoped query keys, selectors, recovery states | baseline 44 tests passed |\n+\n+Baseline tests/builds are evidence of the starting point only. See timestamped logs;\n+no unrun test, migration, screenshot, CI or performance result is counted as passed.\n+\n+## Performance acceptance (set before measurement)\n+\n+Synthetic PostgreSQL 16, one local container: sparse degree 0/1/5 and hub degree\n+10,000, 100,000 total relationships, page size <=50. Target p95 <=200ms warm DB\n+query time for following/discover, <=300ms mutation outside intentional lock waits,\n+bounded SQL query count independent of page size, zero unauthorized rows/duplicates.\n+Report hardware and distributions; no production SLO claim. Complete-schema\n+migration and rollback must preserve writes created after migration. Storage and\n+cost must be measured/estimated separately; no new-service operating cost assumed.\n+\n+## Executed TLC results before review repair\n+\n+Java 17.0.12; tla2tools-1.7.2.jar SHA256\n+`fa18543e44ed5974a85bd2c60c0dc16620ae117680ea8e693d2691999ed90b22`.\n+Final runs: Relationships 19,377 generated / 14,987 distinct states, depth 12;",
+      "path": "docs/social/verification.md",
+      "commit_id": "59def2b71ada073f4e784ed14af3bc3aa0b2a1a0",
+      "original_commit_id": "59def2b71ada073f4e784ed14af3bc3aa0b2a1a0",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Corrected in 3434d0fd529eb6c2a6ae1ced3244a732ce73e114. The historical pre-repair section again records 19,377 generated / 5,060 distinct states. The later review-repair section separately records 55,530 / 14,987. Committed the five exact positive/negative TLC logs under docs/social/model-evidence-2026-09-15/ so reviewers can inspect the repaired results directly. No model or test changed for this documentation correction.",
+      "created_at": "2026-09-15T06:37:43Z",
+      "updated_at": "2026-09-15T06:37:43Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012703564",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012703564"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012703564"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012703564/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 58,
+      "side": "RIGHT",
+      "in_reply_to_id": 4012642527,
+      "author_association": "OWNER",
+      "original_position": 58,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012710913",
+      "pull_request_review_id": 5206428452,
+      "id": 4012710913,
+      "node_id": "PRRC_kwDOQPdUrM7vLRwB",
+      "diff_hunk": "@@ -0,0 +1,26 @@\n+---------------------------- MODULE Feed ----------------------------\n+EXTENDS Naturals, FiniteSets, TLC\n+CONSTANT MaxPost\n+VARIABLES published, eligible, cursor, seen, duplicate, gap\n+vars == <<published, eligible, cursor, seen, duplicate, gap>>\n+Init == /\\ published = {} /\\ eligible = {} /\\ cursor = MaxPost + 1\n+        /\\ seen = {} /\\ duplicate = FALSE /\\ gap = FALSE\n+Publish == /\\ published # 1..MaxPost\n+           /\\ LET n == Cardinality(published) + 1 IN\n+                /\\ published' = published \\cup {n} /\\ eligible' = eligible \\cup {n}\n+           /\\ UNCHANGED <<cursor, seen, duplicate, gap>>\n+Hide(p) == /\\ p \\in eligible /\\ eligible' = eligible \\ {p}\n+           /\\ UNCHANGED <<published, cursor, seen, duplicate, gap>>\n+Candidates == {p \\in eligible: p < cursor}",
+      "path": "formal/social/Feed.tla",
+      "commit_id": "3434d0fd529eb6c2a6ae1ced3244a732ce73e114",
+      "original_commit_id": "3434d0fd529eb6c2a6ae1ced3244a732ce73e114",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Track publications that arrive above the active cursor**\n\nIf a page returns post 1 and `Publish` then adds post 2, the cursor remains 1 and `Candidates` permanently excludes post 2; `gap` also stays false because it only examines already-filtered candidates. Thus TLC accepts a traversal that skips an eligible item above the returned cursor, contrary to the guarantee in `docs/social/verification.md`; capture a traversal high-water mark or explicitly model and check concurrent publications.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-15T06:38:42Z",
+      "updated_at": "2026-09-15T06:38:42Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012710913",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012710913"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012710913"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012710913/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 14,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 14,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012710924",
+      "pull_request_review_id": 5206428452,
+      "id": 4012710924,
+      "node_id": "PRRC_kwDOQPdUrM7vLRwM",
+      "diff_hunk": "@@ -0,0 +1,99 @@\n+------------------------- MODULE Relationships -------------------------\n+EXTENDS Naturals, FiniteSets, TLC\n+CONSTANTS Actors, Requests, MaxVersion, UnsafeCache, UnsafeWithdrawal, UnsafeRevisionIdentity\n+VARIABLES consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe\n+vars == <<consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Available == alive = Actors /\\ blocked = {}\n+Connected == Available /\\ consent = Actors\n+Permitted == Available /\\ (~private \\/ members = Actors)\n+Init == /\\ consent = {} /\\ blocked = {} /\\ alive = Actors\n+        /\\ members = Actors /\\ private \\in BOOLEAN /\\ version = 0\n+        /\\ cacheConsent = {} /\\ cacheVersion = 0 /\\ pending = {}\n+        /\\ terminal = {} /\\ delivered = {} /\\ leaked = FALSE\n+        /\\ queuedVersion = [r \\in Requests |-> 0]\n+        /\\ deliveryCount = [r \\in Requests |-> 0]\n+        /\\ consentOwnerSafe = TRUE\n+Request(a) == /\\ Available /\\ a \\notin consent /\\ version < MaxVersion\n+              /\\ consent' = consent \\cup {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Withdraw(a) == /\\ a \\in consent /\\ version < MaxVersion\n+               /\\ consent' = IF UnsafeWithdrawal THEN {} ELSE consent \\ {a}\n+               /\\ version' = version + 1\n+               /\\ consentOwnerSafe' =\n+                    (consentOwnerSafe /\\ consent' \\ {a} = consent \\ {a})\n+               /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                    cacheVersion, pending, terminal, delivered, leaked,\n+                    queuedVersion, deliveryCount>>\n+Block(a) == /\\ a \\notin blocked /\\ version < MaxVersion\n+            /\\ blocked' = blocked \\cup {a} /\\ consent' = {}\n+            /\\ version' = version + 1\n+            /\\ UNCHANGED <<alive, members, private, cacheConsent, cacheVersion,\n+                 pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Unblock(a) == /\\ a \\in blocked /\\ version < MaxVersion\n+              /\\ blocked' = blocked \\ {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<consent, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Revoke(a) == /\\ a \\in members /\\ version < MaxVersion\n+             /\\ members' = members \\ {a} /\\ version' = version + 1\n+             /\\ UNCHANGED <<consent, blocked, alive, private, cacheConsent,\n+                  cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Delete(a) == /\\ a \\in alive /\\ version < MaxVersion\n+             /\\ alive' = alive \\ {a} /\\ consent' = {}\n+             /\\ version' = version + 1\n+             /\\ UNCHANGED <<blocked, members, private, cacheConsent,\n+                  cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Privacy == /\\ ~private /\\ version < MaxVersion\n+           /\\ private' = TRUE /\\ version' = version + 1\n+           /\\ UNCHANGED <<consent, blocked, alive, members, cacheConsent,\n+                cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Refresh == /\\ cacheConsent' = consent /\\ cacheVersion' = version\n+           /\\ UNCHANGED <<consent, blocked, alive, members, private, version,\n+                pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Read == /\\ leaked' = (leaked \\/\n+              (IF UnsafeCache THEN cacheConsent = Actors /\\ ~Permitted ELSE FALSE))",
+      "path": "formal/social/Relationships.tla",
+      "commit_id": "3434d0fd529eb6c2a6ae1ced3244a732ce73e114",
+      "original_commit_id": "3434d0fd529eb6c2a6ae1ced3244a732ce73e114",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Exercise authoritative authorization in the safe read path**\n\nWith the positive configuration's `UnsafeCache = FALSE`, `Read` can only assign `leaked' = leaked`, so `AuthoritativeDenial` passes regardless of the current consent, block, membership, or privacy state. The reported positive S-AUTH result therefore cannot detect a missing or incorrect authoritative read check; model an observable read/grant decision based on live authority rather than making the safe branch false by construction.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-15T06:38:42Z",
+      "updated_at": "2026-09-15T06:38:42Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012710924",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012710924"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012710924"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012710924/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 55,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 56,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 56,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012710934",
+      "pull_request_review_id": 5206428452,
+      "id": 4012710934,
+      "node_id": "PRRC_kwDOQPdUrM7vLRwW",
+      "diff_hunk": "@@ -0,0 +1,99 @@\n+------------------------- MODULE Relationships -------------------------\n+EXTENDS Naturals, FiniteSets, TLC\n+CONSTANTS Actors, Requests, MaxVersion, UnsafeCache, UnsafeWithdrawal, UnsafeRevisionIdentity\n+VARIABLES consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe\n+vars == <<consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Available == alive = Actors /\\ blocked = {}\n+Connected == Available /\\ consent = Actors\n+Permitted == Available /\\ (~private \\/ members = Actors)\n+Init == /\\ consent = {} /\\ blocked = {} /\\ alive = Actors\n+        /\\ members = Actors /\\ private \\in BOOLEAN /\\ version = 0\n+        /\\ cacheConsent = {} /\\ cacheVersion = 0 /\\ pending = {}\n+        /\\ terminal = {} /\\ delivered = {} /\\ leaked = FALSE\n+        /\\ queuedVersion = [r \\in Requests |-> 0]\n+        /\\ deliveryCount = [r \\in Requests |-> 0]\n+        /\\ consentOwnerSafe = TRUE\n+Request(a) == /\\ Available /\\ a \\notin consent /\\ version < MaxVersion\n+              /\\ consent' = consent \\cup {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Withdraw(a) == /\\ a \\in consent /\\ version < MaxVersion\n+               /\\ consent' = IF UnsafeWithdrawal THEN {} ELSE consent \\ {a}\n+               /\\ version' = version + 1\n+               /\\ consentOwnerSafe' =\n+                    (consentOwnerSafe /\\ consent' \\ {a} = consent \\ {a})\n+               /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                    cacheVersion, pending, terminal, delivered, leaked,\n+                    queuedVersion, deliveryCount>>\n+Block(a) == /\\ a \\notin blocked /\\ version < MaxVersion\n+            /\\ blocked' = blocked \\cup {a} /\\ consent' = {}\n+            /\\ version' = version + 1\n+            /\\ UNCHANGED <<alive, members, private, cacheConsent, cacheVersion,\n+                 pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Unblock(a) == /\\ a \\in blocked /\\ version < MaxVersion\n+              /\\ blocked' = blocked \\ {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<consent, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Revoke(a) == /\\ a \\in members /\\ version < MaxVersion\n+             /\\ members' = members \\ {a} /\\ version' = version + 1\n+             /\\ UNCHANGED <<consent, blocked, alive, private, cacheConsent,\n+                  cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Delete(a) == /\\ a \\in alive /\\ version < MaxVersion\n+             /\\ alive' = alive \\ {a} /\\ consent' = {}\n+             /\\ version' = version + 1\n+             /\\ UNCHANGED <<blocked, members, private, cacheConsent,\n+                  cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Privacy == /\\ ~private /\\ version < MaxVersion\n+           /\\ private' = TRUE /\\ version' = version + 1\n+           /\\ UNCHANGED <<consent, blocked, alive, members, cacheConsent,\n+                cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Refresh == /\\ cacheConsent' = consent /\\ cacheVersion' = version\n+           /\\ UNCHANGED <<consent, blocked, alive, members, private, version,\n+                pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Read == /\\ leaked' = (leaked \\/\n+              (IF UnsafeCache THEN cacheConsent = Actors /\\ ~Permitted ELSE FALSE))\n+        /\\ UNCHANGED <<consent, blocked, alive, members, private, version,\n+             cacheConsent, cacheVersion, pending, terminal, delivered,\n+             queuedVersion, deliveryCount, consentOwnerSafe>>\n+Queue(r) == /\\ Connected /\\ Permitted /\\ r \\notin pending \\cup terminal\n+            /\\ IF UnsafeRevisionIdentity\n+                  THEN version \\notin {queuedVersion[t] : t \\in terminal}\n+                  ELSE TRUE\n+            /\\ pending' = pending \\cup {r}",
+      "path": "formal/social/Relationships.tla",
+      "commit_id": "0cb8d2e15ac024682933485ed122c34826f2ba6f",
+      "original_commit_id": "3434d0fd529eb6c2a6ae1ced3244a732ce73e114",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Model request parameters before claiming retry safety**\n\nFor a client that reuses a request ID with a different recipient or payload, `Queue` sees only `r` and disables every reuse once that ID is pending or terminal, making the changed command indistinguishable from a valid retry. This leaves the documented stable-ID-plus-parameter-equality requirement unverified and would not catch an implementation that silently deduplicates conflicting commands; record immutable request parameters and require equality on replay.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-15T06:38:42Z",
+      "updated_at": "2026-09-15T06:38:42Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012710934",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012710934"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4012710934"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4012710934/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 84,
+      "original_start_line": 60,
+      "start_side": "RIGHT",
+      "line": 88,
+      "original_line": 64,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 64,
+      "position": 88,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016642403",
+      "pull_request_review_id": 5211270511,
+      "id": 4016642403,
+      "node_id": "PRRC_kwDOQPdUrM7vaRlj",
+      "diff_hunk": "@@ -0,0 +1,105 @@\n+------------------------- MODULE Relationships -------------------------\n+EXTENDS Naturals, FiniteSets, TLC\n+CONSTANTS Actors, Requests, MaxVersion, UnsafeCache, UnsafeWithdrawal, UnsafeRevisionIdentity\n+VARIABLES consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe\n+vars == <<consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Available == alive = Actors /\\ blocked = {}\n+Connected == Available /\\ consent = Actors\n+Permitted == Available /\\ (~private \\/ members = Actors)\n+Init == /\\ consent = {} /\\ blocked = {} /\\ alive = Actors\n+        /\\ members = Actors /\\ private \\in BOOLEAN /\\ version = 0\n+        /\\ cacheConsent = {} /\\ cacheVersion = 0 /\\ pending = {}\n+        /\\ terminal = {} /\\ delivered = {} /\\ lastRead = [granted |-> FALSE, consent |-> {}, blocked |-> {}, alive |-> Actors, members |-> Actors, private |-> FALSE]\n+        /\\ queuedVersion = [r \\in Requests |-> 0]\n+        /\\ deliveryCount = [r \\in Requests |-> 0]\n+        /\\ consentOwnerSafe = TRUE\n+Request(a) == /\\ Available /\\ a \\notin consent /\\ version < MaxVersion\n+              /\\ consent' = consent \\cup {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Withdraw(a) == /\\ a \\in consent /\\ version < MaxVersion\n+               /\\ consent' = IF UnsafeWithdrawal THEN {} ELSE consent \\ {a}\n+               /\\ version' = version + 1\n+               /\\ consentOwnerSafe' =\n+                    (consentOwnerSafe /\\ consent' \\ {a} = consent \\ {a})\n+               /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                    cacheVersion, pending, terminal, delivered, lastRead,\n+                    queuedVersion, deliveryCount>>\n+Block(a) == /\\ a \\notin blocked /\\ version < MaxVersion\n+            /\\ blocked' = blocked \\cup {a} /\\ consent' = {}\n+            /\\ version' = version + 1\n+            /\\ UNCHANGED <<alive, members, private, cacheConsent, cacheVersion,\n+                 pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Unblock(a) == /\\ a \\in blocked /\\ version < MaxVersion",
+      "path": "formal/social/Relationships.tla",
+      "commit_id": "dabe03ca145ab97d253b61f3c5d8e9ce44fab056",
+      "original_commit_id": "dabe03ca145ab97d253b61f3c5d8e9ce44fab056",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Require a live actor before unblocking**\n\nWhen `a` blocks, is deleted, and the version bound leaves another transition available, `Unblock(a)` remains enabled because it checks only `a \\in blocked`; `Delete(a)` neither clears that entry nor prevents the deleted principal from acting. This contradicts the documented active-owner/authenticated-actor requirement and lets the positive model accept implementations that process unblock commands from deleted principals. Require `a \\in alive` here (and on `Block(a)`, which has the same omission).\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-15T14:21:29Z",
+      "updated_at": "2026-09-15T14:21:29Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016642403",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016642403"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016642403"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016642403/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 35,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 35,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016643636",
+      "pull_request_review_id": 5211272096,
+      "id": 4016643636,
+      "node_id": "PRRC_kwDOQPdUrM7vaR40",
+      "diff_hunk": "@@ -0,0 +1,26 @@\n+---------------------------- MODULE Feed ----------------------------\n+EXTENDS Naturals, FiniteSets, TLC\n+CONSTANT MaxPost\n+VARIABLES published, eligible, cursor, seen, duplicate, gap\n+vars == <<published, eligible, cursor, seen, duplicate, gap>>\n+Init == /\\ published = {} /\\ eligible = {} /\\ cursor = MaxPost + 1\n+        /\\ seen = {} /\\ duplicate = FALSE /\\ gap = FALSE\n+Publish == /\\ published # 1..MaxPost\n+           /\\ LET n == Cardinality(published) + 1 IN\n+                /\\ published' = published \\cup {n} /\\ eligible' = eligible \\cup {n}\n+           /\\ UNCHANGED <<cursor, seen, duplicate, gap>>\n+Hide(p) == /\\ p \\in eligible /\\ eligible' = eligible \\ {p}\n+           /\\ UNCHANGED <<published, cursor, seen, duplicate, gap>>\n+Candidates == {p \\in eligible: p < cursor}",
+      "path": "formal/social/Feed.tla",
+      "commit_id": "3434d0fd529eb6c2a6ae1ced3244a732ce73e114",
+      "original_commit_id": "3434d0fd529eb6c2a6ae1ced3244a732ce73e114",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in dabe03ca145ab97d253b61f3c5d8e9ce44fab056. Start now captures a traversal high-water mark, including an empty traversal; later publications are explicitly deferred to refresh. StablePagination checks every eligible position within that boundary independently of Candidates, and CompleteAtEnd checks full coverage on exhaustion. Feed passed 1,674 distinct states; FeedSkipped specifically violates StablePagination. Committed logs and clarified the future API refinement contract in docs/social/verification.md.",
+      "created_at": "2026-09-15T14:21:36Z",
+      "updated_at": "2026-09-15T14:21:36Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016643636",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016643636"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016643636"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016643636/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 14,
+      "side": "RIGHT",
+      "in_reply_to_id": 4012710913,
+      "author_association": "OWNER",
+      "original_position": 14,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016644304",
+      "pull_request_review_id": 5211273154,
+      "id": 4016644304,
+      "node_id": "PRRC_kwDOQPdUrM7vaSDQ",
+      "diff_hunk": "@@ -0,0 +1,99 @@\n+------------------------- MODULE Relationships -------------------------\n+EXTENDS Naturals, FiniteSets, TLC\n+CONSTANTS Actors, Requests, MaxVersion, UnsafeCache, UnsafeWithdrawal, UnsafeRevisionIdentity\n+VARIABLES consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe\n+vars == <<consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Available == alive = Actors /\\ blocked = {}\n+Connected == Available /\\ consent = Actors\n+Permitted == Available /\\ (~private \\/ members = Actors)\n+Init == /\\ consent = {} /\\ blocked = {} /\\ alive = Actors\n+        /\\ members = Actors /\\ private \\in BOOLEAN /\\ version = 0\n+        /\\ cacheConsent = {} /\\ cacheVersion = 0 /\\ pending = {}\n+        /\\ terminal = {} /\\ delivered = {} /\\ leaked = FALSE\n+        /\\ queuedVersion = [r \\in Requests |-> 0]\n+        /\\ deliveryCount = [r \\in Requests |-> 0]\n+        /\\ consentOwnerSafe = TRUE\n+Request(a) == /\\ Available /\\ a \\notin consent /\\ version < MaxVersion\n+              /\\ consent' = consent \\cup {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Withdraw(a) == /\\ a \\in consent /\\ version < MaxVersion\n+               /\\ consent' = IF UnsafeWithdrawal THEN {} ELSE consent \\ {a}\n+               /\\ version' = version + 1\n+               /\\ consentOwnerSafe' =\n+                    (consentOwnerSafe /\\ consent' \\ {a} = consent \\ {a})\n+               /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                    cacheVersion, pending, terminal, delivered, leaked,\n+                    queuedVersion, deliveryCount>>\n+Block(a) == /\\ a \\notin blocked /\\ version < MaxVersion\n+            /\\ blocked' = blocked \\cup {a} /\\ consent' = {}\n+            /\\ version' = version + 1\n+            /\\ UNCHANGED <<alive, members, private, cacheConsent, cacheVersion,\n+                 pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Unblock(a) == /\\ a \\in blocked /\\ version < MaxVersion\n+              /\\ blocked' = blocked \\ {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<consent, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Revoke(a) == /\\ a \\in members /\\ version < MaxVersion\n+             /\\ members' = members \\ {a} /\\ version' = version + 1\n+             /\\ UNCHANGED <<consent, blocked, alive, private, cacheConsent,\n+                  cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Delete(a) == /\\ a \\in alive /\\ version < MaxVersion\n+             /\\ alive' = alive \\ {a} /\\ consent' = {}\n+             /\\ version' = version + 1\n+             /\\ UNCHANGED <<blocked, members, private, cacheConsent,\n+                  cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Privacy == /\\ ~private /\\ version < MaxVersion\n+           /\\ private' = TRUE /\\ version' = version + 1\n+           /\\ UNCHANGED <<consent, blocked, alive, members, cacheConsent,\n+                cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Refresh == /\\ cacheConsent' = consent /\\ cacheVersion' = version\n+           /\\ UNCHANGED <<consent, blocked, alive, members, private, version,\n+                pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Read == /\\ leaked' = (leaked \\/\n+              (IF UnsafeCache THEN cacheConsent = Actors /\\ ~Permitted ELSE FALSE))",
+      "path": "formal/social/Relationships.tla",
+      "commit_id": "3434d0fd529eb6c2a6ae1ced3244a732ce73e114",
+      "original_commit_id": "3434d0fd529eb6c2a6ae1ced3244a732ce73e114",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in dabe03ca145ab97d253b61f3c5d8e9ce44fab056. Read records an observable grant/denial together with its live authority snapshot. AuthoritativeDenial independently checks consent, blocks, actor liveness, membership and privacy in that snapshot; AuthorizedReadAvailable also catches an always-deny implementation. Relationships passed 102,833 distinct states and Progress; StaleCache specifically fails AuthoritativeDenial. Logs are committed under docs/social/model-evidence-second-review-2026-09-15/.",
+      "created_at": "2026-09-15T14:21:40Z",
+      "updated_at": "2026-09-15T14:21:40Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016644304",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016644304"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016644304"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016644304/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 55,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 56,
+      "side": "RIGHT",
+      "in_reply_to_id": 4012710924,
+      "author_association": "OWNER",
+      "original_position": 56,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016645181",
+      "pull_request_review_id": 5211274300,
+      "id": 4016645181,
+      "node_id": "PRRC_kwDOQPdUrM7vaSQ9",
+      "diff_hunk": "@@ -0,0 +1,99 @@\n+------------------------- MODULE Relationships -------------------------\n+EXTENDS Naturals, FiniteSets, TLC\n+CONSTANTS Actors, Requests, MaxVersion, UnsafeCache, UnsafeWithdrawal, UnsafeRevisionIdentity\n+VARIABLES consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe\n+vars == <<consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Available == alive = Actors /\\ blocked = {}\n+Connected == Available /\\ consent = Actors\n+Permitted == Available /\\ (~private \\/ members = Actors)\n+Init == /\\ consent = {} /\\ blocked = {} /\\ alive = Actors\n+        /\\ members = Actors /\\ private \\in BOOLEAN /\\ version = 0\n+        /\\ cacheConsent = {} /\\ cacheVersion = 0 /\\ pending = {}\n+        /\\ terminal = {} /\\ delivered = {} /\\ leaked = FALSE\n+        /\\ queuedVersion = [r \\in Requests |-> 0]\n+        /\\ deliveryCount = [r \\in Requests |-> 0]\n+        /\\ consentOwnerSafe = TRUE\n+Request(a) == /\\ Available /\\ a \\notin consent /\\ version < MaxVersion\n+              /\\ consent' = consent \\cup {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Withdraw(a) == /\\ a \\in consent /\\ version < MaxVersion\n+               /\\ consent' = IF UnsafeWithdrawal THEN {} ELSE consent \\ {a}\n+               /\\ version' = version + 1\n+               /\\ consentOwnerSafe' =\n+                    (consentOwnerSafe /\\ consent' \\ {a} = consent \\ {a})\n+               /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                    cacheVersion, pending, terminal, delivered, leaked,\n+                    queuedVersion, deliveryCount>>\n+Block(a) == /\\ a \\notin blocked /\\ version < MaxVersion\n+            /\\ blocked' = blocked \\cup {a} /\\ consent' = {}\n+            /\\ version' = version + 1\n+            /\\ UNCHANGED <<alive, members, private, cacheConsent, cacheVersion,\n+                 pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Unblock(a) == /\\ a \\in blocked /\\ version < MaxVersion\n+              /\\ blocked' = blocked \\ {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<consent, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Revoke(a) == /\\ a \\in members /\\ version < MaxVersion\n+             /\\ members' = members \\ {a} /\\ version' = version + 1\n+             /\\ UNCHANGED <<consent, blocked, alive, private, cacheConsent,\n+                  cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Delete(a) == /\\ a \\in alive /\\ version < MaxVersion\n+             /\\ alive' = alive \\ {a} /\\ consent' = {}\n+             /\\ version' = version + 1\n+             /\\ UNCHANGED <<blocked, members, private, cacheConsent,\n+                  cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Privacy == /\\ ~private /\\ version < MaxVersion\n+           /\\ private' = TRUE /\\ version' = version + 1\n+           /\\ UNCHANGED <<consent, blocked, alive, members, cacheConsent,\n+                cacheVersion, pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Refresh == /\\ cacheConsent' = consent /\\ cacheVersion' = version\n+           /\\ UNCHANGED <<consent, blocked, alive, members, private, version,\n+                pending, terminal, delivered, leaked, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Read == /\\ leaked' = (leaked \\/\n+              (IF UnsafeCache THEN cacheConsent = Actors /\\ ~Permitted ELSE FALSE))\n+        /\\ UNCHANGED <<consent, blocked, alive, members, private, version,\n+             cacheConsent, cacheVersion, pending, terminal, delivered,\n+             queuedVersion, deliveryCount, consentOwnerSafe>>\n+Queue(r) == /\\ Connected /\\ Permitted /\\ r \\notin pending \\cup terminal\n+            /\\ IF UnsafeRevisionIdentity\n+                  THEN version \\notin {queuedVersion[t] : t \\in terminal}\n+                  ELSE TRUE\n+            /\\ pending' = pending \\cup {r}",
+      "path": "formal/social/Relationships.tla",
+      "commit_id": "0cb8d2e15ac024682933485ed122c34826f2ba6f",
+      "original_commit_id": "3434d0fd529eb6c2a6ae1ced3244a732ce73e114",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in dabe03ca145ab97d253b61f3c5d8e9ce44fab056. The complementary RequestReplay model binds immutable recipient and payload parameters per ID, accepts equal retries, rejects conflicting reuse while pending or terminal, and verifies one effect per ID. ReplayEquality and BindingImmutable passed over 272 distinct states with two IDs, recipients and payloads; RequestConflict specifically violates ReplayEquality. Documentation distinguishes this protocol model from Relationships and makes SQL/HTTP composition a remaining refinement requirement.",
+      "created_at": "2026-09-15T14:21:45Z",
+      "updated_at": "2026-09-15T14:21:45Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016645181",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016645181"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016645181"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016645181/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 84,
+      "original_start_line": 60,
+      "start_side": "RIGHT",
+      "line": 88,
+      "original_line": 64,
+      "side": "RIGHT",
+      "in_reply_to_id": 4012710934,
+      "author_association": "OWNER",
+      "original_position": 64,
+      "position": 88,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016738298",
+      "pull_request_review_id": 5211399294,
+      "id": 4016738298,
+      "node_id": "PRRC_kwDOQPdUrM7vao_6",
+      "diff_hunk": "@@ -0,0 +1,105 @@\n+------------------------- MODULE Relationships -------------------------\n+EXTENDS Naturals, FiniteSets, TLC\n+CONSTANTS Actors, Requests, MaxVersion, UnsafeCache, UnsafeWithdrawal, UnsafeRevisionIdentity\n+VARIABLES consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe\n+vars == <<consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Available == alive = Actors /\\ blocked = {}\n+Connected == Available /\\ consent = Actors\n+Permitted == Available /\\ (~private \\/ members = Actors)\n+Init == /\\ consent = {} /\\ blocked = {} /\\ alive = Actors\n+        /\\ members = Actors /\\ private \\in BOOLEAN /\\ version = 0\n+        /\\ cacheConsent = {} /\\ cacheVersion = 0 /\\ pending = {}\n+        /\\ terminal = {} /\\ delivered = {} /\\ lastRead = [granted |-> FALSE, consent |-> {}, blocked |-> {}, alive |-> Actors, members |-> Actors, private |-> FALSE]\n+        /\\ queuedVersion = [r \\in Requests |-> 0]\n+        /\\ deliveryCount = [r \\in Requests |-> 0]\n+        /\\ consentOwnerSafe = TRUE\n+Request(a) == /\\ Available /\\ a \\notin consent /\\ version < MaxVersion\n+              /\\ consent' = consent \\cup {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Withdraw(a) == /\\ a \\in consent /\\ version < MaxVersion\n+               /\\ consent' = IF UnsafeWithdrawal THEN {} ELSE consent \\ {a}\n+               /\\ version' = version + 1\n+               /\\ consentOwnerSafe' =\n+                    (consentOwnerSafe /\\ consent' \\ {a} = consent \\ {a})\n+               /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                    cacheVersion, pending, terminal, delivered, lastRead,\n+                    queuedVersion, deliveryCount>>\n+Block(a) == /\\ a \\notin blocked /\\ version < MaxVersion\n+            /\\ blocked' = blocked \\cup {a} /\\ consent' = {}\n+            /\\ version' = version + 1\n+            /\\ UNCHANGED <<alive, members, private, cacheConsent, cacheVersion,\n+                 pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Unblock(a) == /\\ a \\in blocked /\\ version < MaxVersion",
+      "path": "formal/social/Relationships.tla",
+      "commit_id": "dabe03ca145ab97d253b61f3c5d8e9ce44fab056",
+      "original_commit_id": "dabe03ca145ab97d253b61f3c5d8e9ce44fab056",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 3151106f2fb183b05e761ee803b2060e5d916ee6. Both Block(a) and Unblock(a) now require a live actor. InactiveActorCannotMutate checks that neither action is enabled for a deleted principal. The DeletedActor mutant removes the guard and fails exactly that invariant. All three positive configurations and six specific negative controls pass; Relationships explores 101,245 distinct states. Exact logs are committed under docs/social/model-evidence-active-actor-2026-09-15/.",
+      "created_at": "2026-09-15T14:30:53Z",
+      "updated_at": "2026-09-15T14:30:53Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016738298",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016738298"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016738298"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016738298/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 35,
+      "side": "RIGHT",
+      "in_reply_to_id": 4016642403,
+      "author_association": "OWNER",
+      "original_position": 35,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016765688",
+      "pull_request_review_id": 5211430011,
+      "id": 4016765688,
+      "node_id": "PRRC_kwDOQPdUrM7vavr4",
+      "diff_hunk": "@@ -0,0 +1,107 @@\n+------------------------- MODULE Relationships -------------------------\n+EXTENDS Naturals, FiniteSets, TLC\n+CONSTANTS Actors, Requests, MaxVersion, UnsafeCache, UnsafeWithdrawal, UnsafeRevisionIdentity, UnsafeInactiveActor\n+VARIABLES consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe\n+vars == <<consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Available == alive = Actors /\\ blocked = {}\n+Connected == Available /\\ consent = Actors\n+Permitted == Available /\\ (~private \\/ members = Actors)\n+Init == /\\ consent = {} /\\ blocked = {} /\\ alive = Actors\n+        /\\ members = Actors /\\ private \\in BOOLEAN /\\ version = 0\n+        /\\ cacheConsent = {} /\\ cacheVersion = 0 /\\ pending = {}\n+        /\\ terminal = {} /\\ delivered = {} /\\ lastRead = [granted |-> FALSE, consent |-> {}, blocked |-> {}, alive |-> Actors, members |-> Actors, private |-> FALSE]\n+        /\\ queuedVersion = [r \\in Requests |-> 0]\n+        /\\ deliveryCount = [r \\in Requests |-> 0]\n+        /\\ consentOwnerSafe = TRUE\n+Request(a) == /\\ Available /\\ a \\notin consent /\\ version < MaxVersion\n+              /\\ consent' = consent \\cup {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Withdraw(a) == /\\ a \\in consent /\\ version < MaxVersion\n+               /\\ consent' = IF UnsafeWithdrawal THEN {} ELSE consent \\ {a}\n+               /\\ version' = version + 1\n+               /\\ consentOwnerSafe' =\n+                    (consentOwnerSafe /\\ consent' \\ {a} = consent \\ {a})\n+               /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                    cacheVersion, pending, terminal, delivered, lastRead,\n+                    queuedVersion, deliveryCount>>\n+Block(a) == /\\ (UnsafeInactiveActor \\/ a \\in alive) /\\ a \\notin blocked /\\ version < MaxVersion",
+      "path": "formal/social/Relationships.tla",
+      "commit_id": "45aa887ff6d2a3ec877ce3e75469fc7252b316d3",
+      "original_commit_id": "3151106f2fb183b05e761ee803b2060e5d916ee6",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Reject mutations against a deleted relationship target**\n\nThe new live-actor guard checks only `a`, so after `Delete(b)` the surviving principal can still execute `Block(a)` and mutate the tombstoned pair; because the command carries no expected revision, this also represents a delayed pre-deletion command being accepted. This means the model does not validate the stale-command rejection claimed for S-DELETE in `docs/social/verification.md`, or the valid-target rule in `docs/social/policy.md`; require both principals to be live and/or compare the command's expected revision before applying the mutation.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-15T14:33:40Z",
+      "updated_at": "2026-09-15T14:33:40Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016765688",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016765688"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016765688"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016765688/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 30,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 30,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016864173",
+      "pull_request_review_id": 5211547520,
+      "id": 4016864173,
+      "node_id": "PRRC_kwDOQPdUrM7vbHut",
+      "diff_hunk": "@@ -0,0 +1,107 @@\n+------------------------- MODULE Relationships -------------------------\n+EXTENDS Naturals, FiniteSets, TLC\n+CONSTANTS Actors, Requests, MaxVersion, UnsafeCache, UnsafeWithdrawal, UnsafeRevisionIdentity, UnsafeInactiveActor\n+VARIABLES consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe\n+vars == <<consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Available == alive = Actors /\\ blocked = {}\n+Connected == Available /\\ consent = Actors\n+Permitted == Available /\\ (~private \\/ members = Actors)\n+Init == /\\ consent = {} /\\ blocked = {} /\\ alive = Actors\n+        /\\ members = Actors /\\ private \\in BOOLEAN /\\ version = 0\n+        /\\ cacheConsent = {} /\\ cacheVersion = 0 /\\ pending = {}\n+        /\\ terminal = {} /\\ delivered = {} /\\ lastRead = [granted |-> FALSE, consent |-> {}, blocked |-> {}, alive |-> Actors, members |-> Actors, private |-> FALSE]\n+        /\\ queuedVersion = [r \\in Requests |-> 0]\n+        /\\ deliveryCount = [r \\in Requests |-> 0]\n+        /\\ consentOwnerSafe = TRUE\n+Request(a) == /\\ Available /\\ a \\notin consent /\\ version < MaxVersion\n+              /\\ consent' = consent \\cup {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Withdraw(a) == /\\ a \\in consent /\\ version < MaxVersion\n+               /\\ consent' = IF UnsafeWithdrawal THEN {} ELSE consent \\ {a}\n+               /\\ version' = version + 1\n+               /\\ consentOwnerSafe' =\n+                    (consentOwnerSafe /\\ consent' \\ {a} = consent \\ {a})\n+               /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                    cacheVersion, pending, terminal, delivered, lastRead,\n+                    queuedVersion, deliveryCount>>\n+Block(a) == /\\ (UnsafeInactiveActor \\/ a \\in alive) /\\ a \\notin blocked /\\ version < MaxVersion\n+            /\\ blocked' = blocked \\cup {a} /\\ consent' = {}\n+            /\\ version' = version + 1\n+            /\\ UNCHANGED <<alive, members, private, cacheConsent, cacheVersion,\n+                 pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Unblock(a) == /\\ (UnsafeInactiveActor \\/ a \\in alive) /\\ a \\in blocked /\\ version < MaxVersion\n+              /\\ blocked' = blocked \\ {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<consent, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Revoke(a) == /\\ a \\in members /\\ version < MaxVersion\n+             /\\ members' = members \\ {a} /\\ version' = version + 1\n+             /\\ UNCHANGED <<consent, blocked, alive, private, cacheConsent,\n+                  cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Delete(a) == /\\ a \\in alive /\\ version < MaxVersion\n+             /\\ alive' = alive \\ {a} /\\ consent' = {}\n+             /\\ version' = version + 1\n+             /\\ UNCHANGED <<blocked, members, private, cacheConsent,\n+                  cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Privacy == /\\ ~private /\\ version < MaxVersion\n+           /\\ private' = TRUE /\\ version' = version + 1\n+           /\\ UNCHANGED <<consent, blocked, alive, members, cacheConsent,\n+                cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Refresh == /\\ cacheConsent' = consent /\\ cacheVersion' = version\n+           /\\ UNCHANGED <<consent, blocked, alive, members, private, version,\n+                pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Read == /\\ lastRead' =\n+              [granted |-> IF UnsafeCache THEN cacheConsent = Actors ELSE Connected /\\ Permitted,\n+               consent |-> consent, blocked |-> blocked, alive |-> alive,\n+               members |-> members, private |-> private]\n+        /\\ UNCHANGED <<consent, blocked, alive, members, private, version,\n+             cacheConsent, cacheVersion, pending, terminal, delivered,\n+             queuedVersion, deliveryCount, consentOwnerSafe>>\n+Queue(r) == /\\ Connected /\\ Permitted /\\ r \\notin pending \\cup terminal\n+            /\\ IF UnsafeRevisionIdentity\n+                  THEN version \\notin {queuedVersion[t] : t \\in terminal}\n+                  ELSE TRUE\n+            /\\ pending' = pending \\cup {r}\n+            /\\ queuedVersion' = [queuedVersion EXCEPT ![r] = version]\n+            /\\ UNCHANGED <<consent, blocked, alive, members, private, version,\n+                 cacheConsent, cacheVersion, terminal, delivered, lastRead,\n+                 deliveryCount, consentOwnerSafe>>\n+Finish(r) == /\\ r \\in pending /\\ pending' = pending \\ {r}\n+             /\\ terminal' = terminal \\cup {r}\n+             /\\ LET authorized == queuedVersion[r] = version /\\ Connected /\\ Permitted\n+                IN /\\ delivered' = IF authorized THEN delivered \\cup {r} ELSE delivered",
+      "path": "formal/social/Relationships.tla",
+      "commit_id": "dd18f37c22321a5849e65f3e09f5e3b8e7bd1c37",
+      "original_commit_id": "45aa887ff6d2a3ec877ce3e75469fc7252b316d3",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Assert delivery authority independently of Finish**\n\nIf a pending request is revoked, blocked, or deleted before `Finish`, replacing this `authorized` expression with `TRUE` would still pass every configured invariant: `delivered` records no authority snapshot, while `AuthoritativeDenial` examines only `lastRead`. Consequently the S-AUTH result cannot detect an implementation that delivers stale work despite claiming to verify authorization at the delivery boundary; record the delivery-time snapshot and assert independently that every delivered request was authorized.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-15T14:42:47Z",
+      "updated_at": "2026-09-15T14:42:47Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016864173",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016864173"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016864173"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016864173/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 73,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 74,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 74,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016864180",
+      "pull_request_review_id": 5211547520,
+      "id": 4016864180,
+      "node_id": "PRRC_kwDOQPdUrM7vbHu0",
+      "diff_hunk": "@@ -0,0 +1,107 @@\n+------------------------- MODULE Relationships -------------------------\n+EXTENDS Naturals, FiniteSets, TLC\n+CONSTANTS Actors, Requests, MaxVersion, UnsafeCache, UnsafeWithdrawal, UnsafeRevisionIdentity, UnsafeInactiveActor\n+VARIABLES consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe\n+vars == <<consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Available == alive = Actors /\\ blocked = {}\n+Connected == Available /\\ consent = Actors\n+Permitted == Available /\\ (~private \\/ members = Actors)\n+Init == /\\ consent = {} /\\ blocked = {} /\\ alive = Actors\n+        /\\ members = Actors /\\ private \\in BOOLEAN /\\ version = 0\n+        /\\ cacheConsent = {} /\\ cacheVersion = 0 /\\ pending = {}\n+        /\\ terminal = {} /\\ delivered = {} /\\ lastRead = [granted |-> FALSE, consent |-> {}, blocked |-> {}, alive |-> Actors, members |-> Actors, private |-> FALSE]\n+        /\\ queuedVersion = [r \\in Requests |-> 0]\n+        /\\ deliveryCount = [r \\in Requests |-> 0]\n+        /\\ consentOwnerSafe = TRUE\n+Request(a) == /\\ Available /\\ a \\notin consent /\\ version < MaxVersion\n+              /\\ consent' = consent \\cup {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Withdraw(a) == /\\ a \\in consent /\\ version < MaxVersion\n+               /\\ consent' = IF UnsafeWithdrawal THEN {} ELSE consent \\ {a}\n+               /\\ version' = version + 1\n+               /\\ consentOwnerSafe' =\n+                    (consentOwnerSafe /\\ consent' \\ {a} = consent \\ {a})\n+               /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                    cacheVersion, pending, terminal, delivered, lastRead,\n+                    queuedVersion, deliveryCount>>\n+Block(a) == /\\ (UnsafeInactiveActor \\/ a \\in alive) /\\ a \\notin blocked /\\ version < MaxVersion\n+            /\\ blocked' = blocked \\cup {a} /\\ consent' = {}\n+            /\\ version' = version + 1\n+            /\\ UNCHANGED <<alive, members, private, cacheConsent, cacheVersion,\n+                 pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Unblock(a) == /\\ (UnsafeInactiveActor \\/ a \\in alive) /\\ a \\in blocked /\\ version < MaxVersion\n+              /\\ blocked' = blocked \\ {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<consent, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>",
+      "path": "formal/social/Relationships.tla",
+      "commit_id": "45aa887ff6d2a3ec877ce3e75469fc7252b316d3",
+      "original_commit_id": "45aa887ff6d2a3ec877ce3e75469fc7252b316d3",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Check that Unblock cannot restore cleared consent**\n\nAfter both actors consent, `Block(a)` can clear consent and `Unblock(a)` can run at version 4, but no checked property independently verifies that the latter leaves consent empty. A mutant or implementation that restores `Actors` during unblock would satisfy `ConsentIntegrity` because `blocked` is empty afterward, and `OwnConsentOnly` observes only withdrawals, so all positive checks could pass despite violating the documented no-resurrection rule. Preserve pre-unblock consent in observable state or add an action invariant and negative control for this transition.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-15T14:42:47Z",
+      "updated_at": "2026-09-15T14:42:47Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016864180",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016864180"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016864180"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016864180/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 35,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 38,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 38,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016934067",
+      "pull_request_review_id": 5211633175,
+      "id": 4016934067,
+      "node_id": "PRRC_kwDOQPdUrM7vbYyz",
+      "diff_hunk": "@@ -0,0 +1,107 @@\n+------------------------- MODULE Relationships -------------------------\n+EXTENDS Naturals, FiniteSets, TLC\n+CONSTANTS Actors, Requests, MaxVersion, UnsafeCache, UnsafeWithdrawal, UnsafeRevisionIdentity, UnsafeInactiveActor\n+VARIABLES consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe\n+vars == <<consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Available == alive = Actors /\\ blocked = {}\n+Connected == Available /\\ consent = Actors\n+Permitted == Available /\\ (~private \\/ members = Actors)\n+Init == /\\ consent = {} /\\ blocked = {} /\\ alive = Actors\n+        /\\ members = Actors /\\ private \\in BOOLEAN /\\ version = 0\n+        /\\ cacheConsent = {} /\\ cacheVersion = 0 /\\ pending = {}\n+        /\\ terminal = {} /\\ delivered = {} /\\ lastRead = [granted |-> FALSE, consent |-> {}, blocked |-> {}, alive |-> Actors, members |-> Actors, private |-> FALSE]\n+        /\\ queuedVersion = [r \\in Requests |-> 0]\n+        /\\ deliveryCount = [r \\in Requests |-> 0]\n+        /\\ consentOwnerSafe = TRUE\n+Request(a) == /\\ Available /\\ a \\notin consent /\\ version < MaxVersion\n+              /\\ consent' = consent \\cup {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Withdraw(a) == /\\ a \\in consent /\\ version < MaxVersion\n+               /\\ consent' = IF UnsafeWithdrawal THEN {} ELSE consent \\ {a}\n+               /\\ version' = version + 1\n+               /\\ consentOwnerSafe' =\n+                    (consentOwnerSafe /\\ consent' \\ {a} = consent \\ {a})\n+               /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                    cacheVersion, pending, terminal, delivered, lastRead,\n+                    queuedVersion, deliveryCount>>\n+Block(a) == /\\ (UnsafeInactiveActor \\/ a \\in alive) /\\ a \\notin blocked /\\ version < MaxVersion",
+      "path": "formal/social/Relationships.tla",
+      "commit_id": "45aa887ff6d2a3ec877ce3e75469fc7252b316d3",
+      "original_commit_id": "3151106f2fb183b05e761ee803b2060e5d916ee6",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in dd18f37c22321a5849e65f3e09f5e3b8e7bd1c37 (model commit 125df16b7). Block/Unblock require both principals to remain live. Request, Withdraw, Block and Unblock also carry an expected revision and reject every earlier revision. DeletedTargetCannotMutate and StaleRelationshipCommandsDenied independently check these boundaries; the two new mutants fail exactly those invariants. Three positive models and eight negative controls pass; Relationships explores 100,031 distinct states. Exact logs are committed under docs/social/model-evidence-tombstone-2026-09-15/. Concurrent preview configuration 45aa887ff was preserved unchanged via normal merge.",
+      "created_at": "2026-09-15T14:48:57Z",
+      "updated_at": "2026-09-15T14:48:57Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016934067",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016934067"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016934067"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016934067/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 30,
+      "side": "RIGHT",
+      "in_reply_to_id": 4016765688,
+      "author_association": "OWNER",
+      "original_position": 30,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016977040",
+      "pull_request_review_id": 5211683851,
+      "id": 4016977040,
+      "node_id": "PRRC_kwDOQPdUrM7vbjSQ",
+      "diff_hunk": "@@ -0,0 +1,131 @@\n+------------------------- MODULE Relationships -------------------------\n+EXTENDS Naturals, FiniteSets, TLC\n+CONSTANTS Actors, Requests, MaxVersion, UnsafeCache, UnsafeWithdrawal, UnsafeRevisionIdentity, UnsafeInactiveActor,\n+          UnsafeDeletedTarget, UnsafeStaleVersion\n+VARIABLES consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe\n+vars == <<consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+ValidCommandActor(a) == UnsafeInactiveActor \\/\n+                         (IF UnsafeDeletedTarget THEN a \\in alive ELSE alive = Actors)\n+CurrentCommand(expectedVersion) == UnsafeStaleVersion \\/ expectedVersion = version\n+Available == alive = Actors /\\ blocked = {}\n+Connected == Available /\\ consent = Actors\n+Permitted == Available /\\ (~private \\/ members = Actors)\n+Init == /\\ consent = {} /\\ blocked = {} /\\ alive = Actors\n+        /\\ members = Actors /\\ private \\in BOOLEAN /\\ version = 0\n+        /\\ cacheConsent = {} /\\ cacheVersion = 0 /\\ pending = {}\n+        /\\ terminal = {} /\\ delivered = {} /\\ lastRead = [granted |-> FALSE, consent |-> {}, blocked |-> {}, alive |-> Actors, members |-> Actors, private |-> FALSE]\n+        /\\ queuedVersion = [r \\in Requests |-> 0]\n+        /\\ deliveryCount = [r \\in Requests |-> 0]\n+        /\\ consentOwnerSafe = TRUE\n+Request(a, expectedVersion) ==\n+  /\\ CurrentCommand(expectedVersion) /\\ Available\n+  /\\ a \\notin consent /\\ version < MaxVersion\n+  /\\ consent' = consent \\cup {a} /\\ version' = version + 1",
+      "path": "formal/social/Relationships.tla",
+      "commit_id": "dd18f37c22321a5849e65f3e09f5e3b8e7bd1c37",
+      "original_commit_id": "dd18f37c22321a5849e65f3e09f5e3b8e7bd1c37",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Verify Request cannot synthesize the peer's consent**\n\nA unilateral first request that incorrectly sets `consent' = Actors` would still pass every configured invariant: `ConsentIntegrity` only constrains blocked/deleted states, while `consentOwnerSafe` is updated only by `Withdraw`. The positive S-CONSENT result therefore cannot detect the legacy auto-connection behavior this model is intended to exclude. Record that `Request(a)` preserves every intent except `a`'s and add a negative control that attempts to create the peer's consent.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-15T14:53:00Z",
+      "updated_at": "2026-09-15T14:53:00Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016977040",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016977040"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016977040"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016977040/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 25,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 25,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016977050",
+      "pull_request_review_id": 5211683851,
+      "id": 4016977050,
+      "node_id": "PRRC_kwDOQPdUrM7vbjSa",
+      "diff_hunk": "@@ -0,0 +1,131 @@\n+------------------------- MODULE Relationships -------------------------\n+EXTENDS Naturals, FiniteSets, TLC\n+CONSTANTS Actors, Requests, MaxVersion, UnsafeCache, UnsafeWithdrawal, UnsafeRevisionIdentity, UnsafeInactiveActor,\n+          UnsafeDeletedTarget, UnsafeStaleVersion\n+VARIABLES consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe\n+vars == <<consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+ValidCommandActor(a) == UnsafeInactiveActor \\/\n+                         (IF UnsafeDeletedTarget THEN a \\in alive ELSE alive = Actors)\n+CurrentCommand(expectedVersion) == UnsafeStaleVersion \\/ expectedVersion = version\n+Available == alive = Actors /\\ blocked = {}\n+Connected == Available /\\ consent = Actors\n+Permitted == Available /\\ (~private \\/ members = Actors)\n+Init == /\\ consent = {} /\\ blocked = {} /\\ alive = Actors\n+        /\\ members = Actors /\\ private \\in BOOLEAN /\\ version = 0\n+        /\\ cacheConsent = {} /\\ cacheVersion = 0 /\\ pending = {}\n+        /\\ terminal = {} /\\ delivered = {} /\\ lastRead = [granted |-> FALSE, consent |-> {}, blocked |-> {}, alive |-> Actors, members |-> Actors, private |-> FALSE]\n+        /\\ queuedVersion = [r \\in Requests |-> 0]\n+        /\\ deliveryCount = [r \\in Requests |-> 0]\n+        /\\ consentOwnerSafe = TRUE\n+Request(a, expectedVersion) ==\n+  /\\ CurrentCommand(expectedVersion) /\\ Available\n+  /\\ a \\notin consent /\\ version < MaxVersion\n+  /\\ consent' = consent \\cup {a} /\\ version' = version + 1\n+  /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+       cacheVersion, pending, terminal, delivered, lastRead, queuedVersion,\n+       deliveryCount, consentOwnerSafe>>\n+Withdraw(a, expectedVersion) ==\n+  /\\ CurrentCommand(expectedVersion) /\\ alive = Actors\n+  /\\ a \\in consent /\\ version < MaxVersion\n+  /\\ consent' = (IF UnsafeWithdrawal THEN {} ELSE consent \\ {a})\n+  /\\ version' = version + 1\n+  /\\ consentOwnerSafe' = (consentOwnerSafe /\\ consent' \\ {a} = consent \\ {a})\n+  /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+       cacheVersion, pending, terminal, delivered, lastRead,\n+       queuedVersion, deliveryCount>>\n+Block(a, expectedVersion) ==\n+  /\\ CurrentCommand(expectedVersion) /\\ ValidCommandActor(a)\n+  /\\ a \\notin blocked /\\ version < MaxVersion\n+  /\\ blocked' = blocked \\cup {a} /\\ consent' = {}\n+  /\\ version' = version + 1\n+  /\\ UNCHANGED <<alive, members, private, cacheConsent, cacheVersion,\n+       pending, terminal, delivered, lastRead, queuedVersion,\n+       deliveryCount, consentOwnerSafe>>\n+Unblock(a, expectedVersion) ==\n+  /\\ CurrentCommand(expectedVersion) /\\ ValidCommandActor(a)\n+  /\\ a \\in blocked /\\ version < MaxVersion\n+  /\\ blocked' = blocked \\ {a} /\\ version' = version + 1",
+      "path": "formal/social/Relationships.tla",
+      "commit_id": "dd18f37c22321a5849e65f3e09f5e3b8e7bd1c37",
+      "original_commit_id": "dd18f37c22321a5849e65f3e09f5e3b8e7bd1c37",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Preserve the other principal's block on Unblock**\n\nWhen both principals have blocked, an implementation of `Unblock(a)` that clears the entire `blocked` set would satisfy all current invariants because none tracks block ownership. This removes `b`'s independently owned denial and permits subsequent consent requests without `b` ever unblocking, contrary to the directed, owner-controlled block policy in `docs/social/policy.md`. Add an ownership invariant and negative control that ensure unblocking one actor preserves every other block.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-15T14:53:00Z",
+      "updated_at": "2026-09-15T14:53:00Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016977050",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016977050"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4016977050"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4016977050/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 49,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 49,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4017232299",
+      "pull_request_review_id": 5211980713,
+      "id": 4017232299,
+      "node_id": "PRRC_kwDOQPdUrM7vchmr",
+      "diff_hunk": "@@ -0,0 +1,107 @@\n+------------------------- MODULE Relationships -------------------------\n+EXTENDS Naturals, FiniteSets, TLC\n+CONSTANTS Actors, Requests, MaxVersion, UnsafeCache, UnsafeWithdrawal, UnsafeRevisionIdentity, UnsafeInactiveActor\n+VARIABLES consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe\n+vars == <<consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Available == alive = Actors /\\ blocked = {}\n+Connected == Available /\\ consent = Actors\n+Permitted == Available /\\ (~private \\/ members = Actors)\n+Init == /\\ consent = {} /\\ blocked = {} /\\ alive = Actors\n+        /\\ members = Actors /\\ private \\in BOOLEAN /\\ version = 0\n+        /\\ cacheConsent = {} /\\ cacheVersion = 0 /\\ pending = {}\n+        /\\ terminal = {} /\\ delivered = {} /\\ lastRead = [granted |-> FALSE, consent |-> {}, blocked |-> {}, alive |-> Actors, members |-> Actors, private |-> FALSE]\n+        /\\ queuedVersion = [r \\in Requests |-> 0]\n+        /\\ deliveryCount = [r \\in Requests |-> 0]\n+        /\\ consentOwnerSafe = TRUE\n+Request(a) == /\\ Available /\\ a \\notin consent /\\ version < MaxVersion\n+              /\\ consent' = consent \\cup {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Withdraw(a) == /\\ a \\in consent /\\ version < MaxVersion\n+               /\\ consent' = IF UnsafeWithdrawal THEN {} ELSE consent \\ {a}\n+               /\\ version' = version + 1\n+               /\\ consentOwnerSafe' =\n+                    (consentOwnerSafe /\\ consent' \\ {a} = consent \\ {a})\n+               /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                    cacheVersion, pending, terminal, delivered, lastRead,\n+                    queuedVersion, deliveryCount>>\n+Block(a) == /\\ (UnsafeInactiveActor \\/ a \\in alive) /\\ a \\notin blocked /\\ version < MaxVersion\n+            /\\ blocked' = blocked \\cup {a} /\\ consent' = {}\n+            /\\ version' = version + 1\n+            /\\ UNCHANGED <<alive, members, private, cacheConsent, cacheVersion,\n+                 pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Unblock(a) == /\\ (UnsafeInactiveActor \\/ a \\in alive) /\\ a \\in blocked /\\ version < MaxVersion\n+              /\\ blocked' = blocked \\ {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<consent, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Revoke(a) == /\\ a \\in members /\\ version < MaxVersion\n+             /\\ members' = members \\ {a} /\\ version' = version + 1\n+             /\\ UNCHANGED <<consent, blocked, alive, private, cacheConsent,\n+                  cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Delete(a) == /\\ a \\in alive /\\ version < MaxVersion\n+             /\\ alive' = alive \\ {a} /\\ consent' = {}\n+             /\\ version' = version + 1\n+             /\\ UNCHANGED <<blocked, members, private, cacheConsent,\n+                  cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Privacy == /\\ ~private /\\ version < MaxVersion\n+           /\\ private' = TRUE /\\ version' = version + 1\n+           /\\ UNCHANGED <<consent, blocked, alive, members, cacheConsent,\n+                cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Refresh == /\\ cacheConsent' = consent /\\ cacheVersion' = version\n+           /\\ UNCHANGED <<consent, blocked, alive, members, private, version,\n+                pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Read == /\\ lastRead' =\n+              [granted |-> IF UnsafeCache THEN cacheConsent = Actors ELSE Connected /\\ Permitted,\n+               consent |-> consent, blocked |-> blocked, alive |-> alive,\n+               members |-> members, private |-> private]\n+        /\\ UNCHANGED <<consent, blocked, alive, members, private, version,\n+             cacheConsent, cacheVersion, pending, terminal, delivered,\n+             queuedVersion, deliveryCount, consentOwnerSafe>>\n+Queue(r) == /\\ Connected /\\ Permitted /\\ r \\notin pending \\cup terminal\n+            /\\ IF UnsafeRevisionIdentity\n+                  THEN version \\notin {queuedVersion[t] : t \\in terminal}\n+                  ELSE TRUE\n+            /\\ pending' = pending \\cup {r}\n+            /\\ queuedVersion' = [queuedVersion EXCEPT ![r] = version]\n+            /\\ UNCHANGED <<consent, blocked, alive, members, private, version,\n+                 cacheConsent, cacheVersion, terminal, delivered, lastRead,\n+                 deliveryCount, consentOwnerSafe>>\n+Finish(r) == /\\ r \\in pending /\\ pending' = pending \\ {r}\n+             /\\ terminal' = terminal \\cup {r}\n+             /\\ LET authorized == queuedVersion[r] = version /\\ Connected /\\ Permitted\n+                IN /\\ delivered' = IF authorized THEN delivered \\cup {r} ELSE delivered",
+      "path": "formal/social/Relationships.tla",
+      "commit_id": "dd18f37c22321a5849e65f3e09f5e3b8e7bd1c37",
+      "original_commit_id": "45aa887ff6d2a3ec877ce3e75469fc7252b316d3",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 6d5c25c20927f45c7ce80e90d0d5d58b33b206a6. Finish records immutable delivery-time authority and revision evidence per delivered request. DeliveryAuthority independently checks consent, blocks, live principals, membership/privacy and the queued revision. StaleDelivery bypasses the guard and fails exactly DeliveryAuthority. All three positive models and twelve specific negative controls passed. Exact logs are committed under docs/social/model-evidence-independent-guarantees-2026-09-15/.",
+      "created_at": "2026-09-15T15:18:27Z",
+      "updated_at": "2026-09-15T15:18:27Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4017232299",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4017232299"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4017232299"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4017232299/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 73,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 74,
+      "side": "RIGHT",
+      "in_reply_to_id": 4016864173,
+      "author_association": "OWNER",
+      "original_position": 74,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4017233241",
+      "pull_request_review_id": 5211981729,
+      "id": 4017233241,
+      "node_id": "PRRC_kwDOQPdUrM7vch1Z",
+      "diff_hunk": "@@ -0,0 +1,107 @@\n+------------------------- MODULE Relationships -------------------------\n+EXTENDS Naturals, FiniteSets, TLC\n+CONSTANTS Actors, Requests, MaxVersion, UnsafeCache, UnsafeWithdrawal, UnsafeRevisionIdentity, UnsafeInactiveActor\n+VARIABLES consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe\n+vars == <<consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Available == alive = Actors /\\ blocked = {}\n+Connected == Available /\\ consent = Actors\n+Permitted == Available /\\ (~private \\/ members = Actors)\n+Init == /\\ consent = {} /\\ blocked = {} /\\ alive = Actors\n+        /\\ members = Actors /\\ private \\in BOOLEAN /\\ version = 0\n+        /\\ cacheConsent = {} /\\ cacheVersion = 0 /\\ pending = {}\n+        /\\ terminal = {} /\\ delivered = {} /\\ lastRead = [granted |-> FALSE, consent |-> {}, blocked |-> {}, alive |-> Actors, members |-> Actors, private |-> FALSE]\n+        /\\ queuedVersion = [r \\in Requests |-> 0]\n+        /\\ deliveryCount = [r \\in Requests |-> 0]\n+        /\\ consentOwnerSafe = TRUE\n+Request(a) == /\\ Available /\\ a \\notin consent /\\ version < MaxVersion\n+              /\\ consent' = consent \\cup {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Withdraw(a) == /\\ a \\in consent /\\ version < MaxVersion\n+               /\\ consent' = IF UnsafeWithdrawal THEN {} ELSE consent \\ {a}\n+               /\\ version' = version + 1\n+               /\\ consentOwnerSafe' =\n+                    (consentOwnerSafe /\\ consent' \\ {a} = consent \\ {a})\n+               /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+                    cacheVersion, pending, terminal, delivered, lastRead,\n+                    queuedVersion, deliveryCount>>\n+Block(a) == /\\ (UnsafeInactiveActor \\/ a \\in alive) /\\ a \\notin blocked /\\ version < MaxVersion\n+            /\\ blocked' = blocked \\cup {a} /\\ consent' = {}\n+            /\\ version' = version + 1\n+            /\\ UNCHANGED <<alive, members, private, cacheConsent, cacheVersion,\n+                 pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+Unblock(a) == /\\ (UnsafeInactiveActor \\/ a \\in alive) /\\ a \\in blocked /\\ version < MaxVersion\n+              /\\ blocked' = blocked \\ {a} /\\ version' = version + 1\n+              /\\ UNCHANGED <<consent, alive, members, private, cacheConsent,\n+                   cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>",
+      "path": "formal/social/Relationships.tla",
+      "commit_id": "45aa887ff6d2a3ec877ce3e75469fc7252b316d3",
+      "original_commit_id": "45aa887ff6d2a3ec877ce3e75469fc7252b316d3",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 6d5c25c20927f45c7ce80e90d0d5d58b33b206a6. NoConsentResurrection is an action property requiring every Unblock transition to preserve the pre-command consent set. UnblockResurrection restores Actors and fails exactly this property. All three positive models and twelve specific negative controls passed. Exact logs are committed under docs/social/model-evidence-independent-guarantees-2026-09-15/.",
+      "created_at": "2026-09-15T15:18:32Z",
+      "updated_at": "2026-09-15T15:18:32Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4017233241",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4017233241"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4017233241"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4017233241/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 35,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 38,
+      "side": "RIGHT",
+      "in_reply_to_id": 4016864180,
+      "author_association": "OWNER",
+      "original_position": 38,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4017233992",
+      "pull_request_review_id": 5211982750,
+      "id": 4017233992,
+      "node_id": "PRRC_kwDOQPdUrM7vciBI",
+      "diff_hunk": "@@ -0,0 +1,131 @@\n+------------------------- MODULE Relationships -------------------------\n+EXTENDS Naturals, FiniteSets, TLC\n+CONSTANTS Actors, Requests, MaxVersion, UnsafeCache, UnsafeWithdrawal, UnsafeRevisionIdentity, UnsafeInactiveActor,\n+          UnsafeDeletedTarget, UnsafeStaleVersion\n+VARIABLES consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe\n+vars == <<consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+ValidCommandActor(a) == UnsafeInactiveActor \\/\n+                         (IF UnsafeDeletedTarget THEN a \\in alive ELSE alive = Actors)\n+CurrentCommand(expectedVersion) == UnsafeStaleVersion \\/ expectedVersion = version\n+Available == alive = Actors /\\ blocked = {}\n+Connected == Available /\\ consent = Actors\n+Permitted == Available /\\ (~private \\/ members = Actors)\n+Init == /\\ consent = {} /\\ blocked = {} /\\ alive = Actors\n+        /\\ members = Actors /\\ private \\in BOOLEAN /\\ version = 0\n+        /\\ cacheConsent = {} /\\ cacheVersion = 0 /\\ pending = {}\n+        /\\ terminal = {} /\\ delivered = {} /\\ lastRead = [granted |-> FALSE, consent |-> {}, blocked |-> {}, alive |-> Actors, members |-> Actors, private |-> FALSE]\n+        /\\ queuedVersion = [r \\in Requests |-> 0]\n+        /\\ deliveryCount = [r \\in Requests |-> 0]\n+        /\\ consentOwnerSafe = TRUE\n+Request(a, expectedVersion) ==\n+  /\\ CurrentCommand(expectedVersion) /\\ Available\n+  /\\ a \\notin consent /\\ version < MaxVersion\n+  /\\ consent' = consent \\cup {a} /\\ version' = version + 1",
+      "path": "formal/social/Relationships.tla",
+      "commit_id": "dd18f37c22321a5849e65f3e09f5e3b8e7bd1c37",
+      "original_commit_id": "dd18f37c22321a5849e65f3e09f5e3b8e7bd1c37",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 6d5c25c20927f45c7ce80e90d0d5d58b33b206a6. Request now records in consentOwnerSafe that every intent except the authenticated actor is preserved, extending OwnConsentOnly beyond Withdraw. RequestOwnership attempts to synthesize peer consent and fails exactly OwnConsentOnly. All three positive models and twelve specific negative controls passed. Exact logs are committed under docs/social/model-evidence-independent-guarantees-2026-09-15/.",
+      "created_at": "2026-09-15T15:18:36Z",
+      "updated_at": "2026-09-15T15:18:36Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4017233992",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4017233992"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4017233992"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4017233992/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 25,
+      "side": "RIGHT",
+      "in_reply_to_id": 4016977040,
+      "author_association": "OWNER",
+      "original_position": 25,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4017234730",
+      "pull_request_review_id": 5211983647,
+      "id": 4017234730,
+      "node_id": "PRRC_kwDOQPdUrM7vciMq",
+      "diff_hunk": "@@ -0,0 +1,131 @@\n+------------------------- MODULE Relationships -------------------------\n+EXTENDS Naturals, FiniteSets, TLC\n+CONSTANTS Actors, Requests, MaxVersion, UnsafeCache, UnsafeWithdrawal, UnsafeRevisionIdentity, UnsafeInactiveActor,\n+          UnsafeDeletedTarget, UnsafeStaleVersion\n+VARIABLES consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe\n+vars == <<consent, blocked, alive, members, private, version,\n+          cacheConsent, cacheVersion, pending, terminal, delivered, lastRead, queuedVersion, deliveryCount, consentOwnerSafe>>\n+ValidCommandActor(a) == UnsafeInactiveActor \\/\n+                         (IF UnsafeDeletedTarget THEN a \\in alive ELSE alive = Actors)\n+CurrentCommand(expectedVersion) == UnsafeStaleVersion \\/ expectedVersion = version\n+Available == alive = Actors /\\ blocked = {}\n+Connected == Available /\\ consent = Actors\n+Permitted == Available /\\ (~private \\/ members = Actors)\n+Init == /\\ consent = {} /\\ blocked = {} /\\ alive = Actors\n+        /\\ members = Actors /\\ private \\in BOOLEAN /\\ version = 0\n+        /\\ cacheConsent = {} /\\ cacheVersion = 0 /\\ pending = {}\n+        /\\ terminal = {} /\\ delivered = {} /\\ lastRead = [granted |-> FALSE, consent |-> {}, blocked |-> {}, alive |-> Actors, members |-> Actors, private |-> FALSE]\n+        /\\ queuedVersion = [r \\in Requests |-> 0]\n+        /\\ deliveryCount = [r \\in Requests |-> 0]\n+        /\\ consentOwnerSafe = TRUE\n+Request(a, expectedVersion) ==\n+  /\\ CurrentCommand(expectedVersion) /\\ Available\n+  /\\ a \\notin consent /\\ version < MaxVersion\n+  /\\ consent' = consent \\cup {a} /\\ version' = version + 1\n+  /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+       cacheVersion, pending, terminal, delivered, lastRead, queuedVersion,\n+       deliveryCount, consentOwnerSafe>>\n+Withdraw(a, expectedVersion) ==\n+  /\\ CurrentCommand(expectedVersion) /\\ alive = Actors\n+  /\\ a \\in consent /\\ version < MaxVersion\n+  /\\ consent' = (IF UnsafeWithdrawal THEN {} ELSE consent \\ {a})\n+  /\\ version' = version + 1\n+  /\\ consentOwnerSafe' = (consentOwnerSafe /\\ consent' \\ {a} = consent \\ {a})\n+  /\\ UNCHANGED <<blocked, alive, members, private, cacheConsent,\n+       cacheVersion, pending, terminal, delivered, lastRead,\n+       queuedVersion, deliveryCount>>\n+Block(a, expectedVersion) ==\n+  /\\ CurrentCommand(expectedVersion) /\\ ValidCommandActor(a)\n+  /\\ a \\notin blocked /\\ version < MaxVersion\n+  /\\ blocked' = blocked \\cup {a} /\\ consent' = {}\n+  /\\ version' = version + 1\n+  /\\ UNCHANGED <<alive, members, private, cacheConsent, cacheVersion,\n+       pending, terminal, delivered, lastRead, queuedVersion,\n+       deliveryCount, consentOwnerSafe>>\n+Unblock(a, expectedVersion) ==\n+  /\\ CurrentCommand(expectedVersion) /\\ ValidCommandActor(a)\n+  /\\ a \\in blocked /\\ version < MaxVersion\n+  /\\ blocked' = blocked \\ {a} /\\ version' = version + 1",
+      "path": "formal/social/Relationships.tla",
+      "commit_id": "dd18f37c22321a5849e65f3e09f5e3b8e7bd1c37",
+      "original_commit_id": "dd18f37c22321a5849e65f3e09f5e3b8e7bd1c37",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 6d5c25c20927f45c7ce80e90d0d5d58b33b206a6. BlockOwnership is an action property requiring Unblock(a) to preserve blocked minus a. UnblockOwnership clears the entire set and fails exactly BlockOwnership when the other principal independently blocked. All three positive models and twelve specific negative controls passed. Exact logs are committed under docs/social/model-evidence-independent-guarantees-2026-09-15/.",
+      "created_at": "2026-09-15T15:18:40Z",
+      "updated_at": "2026-09-15T15:18:40Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4017234730",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4017234730"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/355#discussion_r4017234730"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/355"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4017234730/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 49,
+      "side": "RIGHT",
+      "in_reply_to_id": 4016977050,
+      "author_association": "OWNER",
+      "original_position": 49,
+      "position": 1,
+      "subject_type": "line"
+    }
+  ]
+]

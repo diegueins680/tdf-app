@@ -1,0 +1,469 @@
+- generic [ref=f12e1]:
+  - link "Saltar al contenido principal" [ref=f12e1931] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=f12e3]:
+    - generic [ref=f12e1490]:
+      - link "Saltar al contenido principal" [ref=f12e1932] [cursor=pointer]:
+        - /url: "#main-content"
+      - navigation "Navegación de la aplicación" [ref=f12e1933]:
+        - generic [ref=f12e1493]:
+          - generic [ref=f12e1494]: MENÚ
+          - generic [ref=f12e1496]:
+            - textbox "Buscar sección" [ref=f12e1934]:
+              - /placeholder: Buscar sección (/)
+            - group
+        - list [ref=f12e1501]:
+          - listitem [ref=f12e1502]:
+            - generic [ref=f12e1503]:
+              - generic [ref=f12e1504]: CREAR
+              - button "Mostrar CREAR" [ref=f12e1935] [cursor=pointer]
+          - listitem [ref=f12e1512]:
+            - generic [ref=f12e1513]:
+              - generic [ref=f12e1514]: GENTE
+              - button "Mostrar GENTE" [ref=f12e1936] [cursor=pointer]
+          - listitem [ref=f12e1522]:
+            - generic [ref=f12e1523]:
+              - generic [ref=f12e1524]: SELLO
+              - button "Ocultar SELLO" [expanded] [ref=f12e1937] [cursor=pointer]
+            - list [ref=f12e1535]:
+              - listitem [ref=f12e1536]:
+                - link "Artistas" [ref=f12e1938] [cursor=pointer]:
+                  - /url: /label/artistas
+              - listitem [ref=f12e1542]:
+                - link "Proyectos" [ref=f12e1939] [cursor=pointer]:
+                  - /url: /label/proyectos
+              - listitem [ref=f12e1548]:
+                - link "Lanzamientos" [ref=f12e1940] [cursor=pointer]:
+                  - /url: /label/releases
+              - listitem [ref=f12e1554]:
+                - link "Activos" [ref=f12e1941] [cursor=pointer]:
+                  - /url: /label/assets
+              - listitem [ref=f12e1560]:
+                - link "Pistas" [ref=f12e1942] [cursor=pointer]:
+                  - /url: /label/tracks
+          - listitem [ref=f12e1566]:
+            - generic [ref=f12e1567]:
+              - generic [ref=f12e1568]: OPERAR
+              - button "Mostrar OPERAR" [ref=f12e1943] [cursor=pointer]
+          - listitem [ref=f12e1577]:
+            - generic [ref=f12e1578]:
+              - generic [ref=f12e1579]: ADMIN
+              - button "Mostrar ADMIN" [ref=f12e1944] [cursor=pointer]
+          - listitem [ref=f12e1590]:
+            - generic [ref=f12e1591]:
+              - generic [ref=f12e1592]: HERRAMIENTAS
+              - button "Mostrar HERRAMIENTAS" [ref=f12e1945] [cursor=pointer]
+          - listitem [ref=f12e1600]:
+            - generic [ref=f12e1601]:
+              - generic [ref=f12e1602]: AYUDA
+              - button "Mostrar AYUDA" [ref=f12e1946] [cursor=pointer]
+      - generic [ref=f12e1610]:
+        - banner [ref=f12e1611]:
+          - generic [ref=f12e1612]:
+            - button "Ocultar menú lateral" [ref=f12e1947] [cursor=pointer]
+            - link "Ir al inicio" [ref=f12e1948] [cursor=pointer]:
+              - /url: /inicio
+              - img "TDF Records logo"
+            - button "Buscar sección" [ref=f12e1949] [cursor=pointer]:
+              - generic [ref=f12e1623]: ⌘K
+            - generic [ref=f12e1624]:
+              - button "Creación rápida" [ref=f12e1950] [cursor=pointer]:
+                - generic [ref=f12e1629]: Crear
+              - button "Notificaciones" [ref=f12e1951] [cursor=pointer]:
+                - generic [ref=f12e1631]: "0"
+              - button "Abrir menú de sesión" [ref=f12e1952] [cursor=pointer]:
+                - generic [ref=f12e1635]: D
+        - status [ref=f12e1636]
+        - main [ref=f12e1040]:
+          - generic [ref=f12e1041]:
+            - navigation "Migas de pan" [ref=f12e1953]:
+              - list [ref=f12e1043]:
+                - listitem [ref=f12e1044]:
+                  - link "Artistas" [ref=f12e1954] [cursor=pointer]:
+                    - /url: /label/artistas
+                - listitem [ref=f12e1046]: /
+                - listitem [ref=f12e1047]:
+                  - link "Lanzamientos" [ref=f12e1955] [cursor=pointer]:
+                    - /url: /label/releases
+                - listitem [ref=f12e1049]: /
+                - listitem [ref=f12e1050]:
+                  - paragraph [ref=f12e1051]: Activos
+            - generic [ref=f12e1052]:
+              - generic [ref=f12e1053]:
+                - generic [ref=f12e1054]:
+                  - text: Label / Assets
+                  - heading "Catálogo de assets y equipo del label" [level=4] [ref=f12e1956]
+                  - paragraph [ref=f12e1056]: Reutiliza el inventario para que marketing, estudio y label tengan una sola lista de equipo, préstamos y QR.
+                - generic [ref=f12e1057]:
+                  - button [ref=f12e1957] [cursor=pointer]
+                  - link "Gestionar categorías" [ref=f12e1958] [cursor=pointer]:
+                    - /url: /configuracion/opciones-ux?category=asset-category
+                  - button [active] [ref=f12e1959] [cursor=pointer]
+              - generic [ref=f12e1068]:
+                - generic [ref=f12e1069]:
+                  - generic [ref=f12e1070]:
+                    - generic [ref=f12e1071]: Buscar assets
+                    - generic [ref=f12e1072]:
+                      - textbox "Buscar assets" [ref=f12e1960]:
+                        - /placeholder: Buscar por nombre, categoría o modelo
+                      - group:
+                        - generic: Buscar assets
+                  - generic [ref=f12e1077]:
+                    - generic [ref=f12e1078]: Categoría
+                    - generic [ref=f12e1079]:
+                      - combobox "Categoría Todas" [ref=f12e1961] [cursor=pointer]: Todas
+                      - textbox: all
+                      - group:
+                        - generic: Categoría
+                - generic [ref=f12e1081]:
+                  - generic [ref=f12e1082]: Estado disponible
+                  - paragraph [ref=f12e1083]: Activos
+                  - generic [ref=f12e1084]: "No hace falta filtrarlo: es el unico estado presente en esta vista."
+                - generic [ref=f12e1085]: Mostrando 61 de 61 assets
+              - generic [ref=f12e1090]:
+                - generic [ref=f12e1091]: Usa el boton de prestamo o devolucion cuando este disponible para registrar movimientos rapidos. QR, historial y mas concentra editar, ver QR, historial y eliminar en una sola entrada por fila.
+                - generic [ref=f12e1092]:
+                  - table [ref=f12e1093]:
+                    - rowgroup [ref=f12e1094]:
+                      - row [ref=f12e1962]:
+                        - columnheader "Asset" [ref=f12e1963]
+                        - columnheader "Categoría" [ref=f12e1964]
+                        - columnheader "Ubicación" [ref=f12e1965]
+                        - columnheader "Movimiento y mas" [ref=f12e1966]
+                    - rowgroup [ref=f12e1100]:
+                      - row [ref=f12e1967]:
+                        - cell "Aguilar ToneHammer Aguilar ToneHammer Aguilar · ToneHammer QR activo" [ref=f12e1968]:
+                          - generic [ref=f12e1103]:
+                            - img "Aguilar ToneHammer" [ref=f12e1969]
+                            - generic [ref=f12e1105]:
+                              - paragraph [ref=f12e1106]: Aguilar ToneHammer
+                              - generic [ref=f12e1107]: Aguilar · ToneHammer
+                              - generic [ref=f12e1108]: QR activo
+                        - cell "di/pre" [ref=f12e1970]
+                        - cell "Oficina" [ref=f12e1971]
+                        - cell [ref=f12e1972]:
+                          - generic [ref=f12e1112]:
+                            - button "Abrir prestamo de Aguilar ToneHammer" [ref=f12e1973] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para Aguilar ToneHammer" [ref=f12e1974] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1975]:
+                        - cell "AKG C414 AKG · C414" [ref=f12e1976]:
+                          - generic [ref=f12e1120]:
+                            - paragraph [ref=f12e1121]: AKG C414
+                            - generic [ref=f12e1122]: AKG · C414
+                        - cell "mic" [ref=f12e1977]
+                        - cell "—" [ref=f12e1978]
+                        - cell [ref=f12e1979]:
+                          - generic [ref=f12e1126]:
+                            - button "Abrir prestamo de AKG C414" [ref=f12e1980] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para AKG C414" [ref=f12e1981] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1982]:
+                        - cell "AKG D112 AKG · D112" [ref=f12e1983]:
+                          - generic [ref=f12e1134]:
+                            - paragraph [ref=f12e1135]: AKG D112
+                            - generic [ref=f12e1136]: AKG · D112
+                        - cell "mic" [ref=f12e1984]
+                        - cell "—" [ref=f12e1985]
+                        - cell [ref=f12e1986]:
+                          - generic [ref=f12e1140]:
+                            - button "Abrir prestamo de AKG D112" [ref=f12e1987] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para AKG D112" [ref=f12e1988] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1989]:
+                        - cell "API 512v API · 512v" [ref=f12e1990]:
+                          - generic [ref=f12e1148]:
+                            - paragraph [ref=f12e1149]: API 512v
+                            - generic [ref=f12e1150]: API · 512v
+                        - cell "pre" [ref=f12e1991]
+                        - cell "—" [ref=f12e1992]
+                        - cell [ref=f12e1993]:
+                          - generic [ref=f12e1154]:
+                            - button "Abrir prestamo de API 512v" [ref=f12e1994] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para API 512v" [ref=f12e1995] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e1996]:
+                        - cell "Avalon 737sp Avalon · VT-737sp" [ref=f12e1997]:
+                          - generic [ref=f12e1162]:
+                            - paragraph [ref=f12e1163]: Avalon 737sp
+                            - generic [ref=f12e1164]: Avalon · VT-737sp
+                        - cell "pre" [ref=f12e1998]
+                        - cell "—" [ref=f12e1999]
+                        - cell [ref=f12e2000]:
+                          - generic [ref=f12e1168]:
+                            - button "Abrir prestamo de Avalon 737sp" [ref=f12e2001] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para Avalon 737sp" [ref=f12e2002] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e2003]:
+                        - cell "BBE Sonic Stomp Mini BBE Sonic Stomp Mini BBE · Sonic Stomp Mini" [ref=f12e2004]:
+                          - generic [ref=f12e1175]:
+                            - img "BBE Sonic Stomp Mini" [ref=f12e2005]
+                            - generic [ref=f12e1177]:
+                              - paragraph [ref=f12e1178]: BBE Sonic Stomp Mini
+                              - generic [ref=f12e1179]: BBE · Sonic Stomp Mini
+                        - cell "fx/pedal" [ref=f12e2006]
+                        - cell "—" [ref=f12e2007]
+                        - cell [ref=f12e2008]:
+                          - generic [ref=f12e1183]:
+                            - button "Abrir prestamo de BBE Sonic Stomp Mini" [ref=f12e2009] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para BBE Sonic Stomp Mini" [ref=f12e2010] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e2011]:
+                        - cell "Boss BF-3 Flanger Boss BF-3 Flanger Boss · BF-3" [ref=f12e2012]:
+                          - generic [ref=f12e1190]:
+                            - img "Boss BF-3 Flanger" [ref=f12e2013]
+                            - generic [ref=f12e1192]:
+                              - paragraph [ref=f12e1193]: Boss BF-3 Flanger
+                              - generic [ref=f12e1194]: Boss · BF-3
+                        - cell "fx/pedal" [ref=f12e2014]
+                        - cell "—" [ref=f12e2015]
+                        - cell [ref=f12e2016]:
+                          - generic [ref=f12e1198]:
+                            - button "Abrir prestamo de Boss BF-3 Flanger" [ref=f12e2017] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para Boss BF-3 Flanger" [ref=f12e2018] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e2019]:
+                        - cell "Boss CH-1 Super Chorus Boss CH-1 Super Chorus Boss · CH-1" [ref=f12e2020]:
+                          - generic [ref=f12e1205]:
+                            - img "Boss CH-1 Super Chorus" [ref=f12e2021]
+                            - generic [ref=f12e1207]:
+                              - paragraph [ref=f12e1208]: Boss CH-1 Super Chorus
+                              - generic [ref=f12e1209]: Boss · CH-1
+                        - cell "fx/pedal" [ref=f12e2022]
+                        - cell "—" [ref=f12e2023]
+                        - cell [ref=f12e2024]:
+                          - generic [ref=f12e1213]:
+                            - button "Abrir prestamo de Boss CH-1 Super Chorus" [ref=f12e2025] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para Boss CH-1 Super Chorus" [ref=f12e2026] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e2027]:
+                        - cell "Boss DD-7 Digital Delay Boss DD-7 Digital Delay Boss · DD-7" [ref=f12e2028]:
+                          - generic [ref=f12e1220]:
+                            - img "Boss DD-7 Digital Delay" [ref=f12e2029]
+                            - generic [ref=f12e1222]:
+                              - paragraph [ref=f12e1223]: Boss DD-7 Digital Delay
+                              - generic [ref=f12e1224]: Boss · DD-7
+                        - cell "fx/pedal" [ref=f12e2030]
+                        - cell "—" [ref=f12e2031]
+                        - cell [ref=f12e2032]:
+                          - generic [ref=f12e1228]:
+                            - button "Abrir prestamo de Boss DD-7 Digital Delay" [ref=f12e2033] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para Boss DD-7 Digital Delay" [ref=f12e2034] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e2035]:
+                        - cell "Boss GEB-7 Bass Equalizer Boss GEB-7 Bass Equalizer Boss · GEB-7" [ref=f12e2036]:
+                          - generic [ref=f12e1235]:
+                            - img "Boss GEB-7 Bass Equalizer" [ref=f12e2037]
+                            - generic [ref=f12e1237]:
+                              - paragraph [ref=f12e1238]: Boss GEB-7 Bass Equalizer
+                              - generic [ref=f12e1239]: Boss · GEB-7
+                        - cell "fx/pedal" [ref=f12e2038]
+                        - cell "—" [ref=f12e2039]
+                        - cell [ref=f12e2040]:
+                          - generic [ref=f12e1243]:
+                            - button "Abrir prestamo de Boss GEB-7 Bass Equalizer" [ref=f12e2041] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para Boss GEB-7 Bass Equalizer" [ref=f12e2042] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e2043]:
+                        - cell "Boss LMB-3 Bass Limiter Enhancer Boss LMB-3 Bass Limiter Enhancer Boss · LMB-3" [ref=f12e2044]:
+                          - generic [ref=f12e1250]:
+                            - img "Boss LMB-3 Bass Limiter Enhancer" [ref=f12e2045]
+                            - generic [ref=f12e1252]:
+                              - paragraph [ref=f12e1253]: Boss LMB-3 Bass Limiter Enhancer
+                              - generic [ref=f12e1254]: Boss · LMB-3
+                        - cell "fx/pedal" [ref=f12e2046]
+                        - cell "—" [ref=f12e2047]
+                        - cell [ref=f12e2048]:
+                          - generic [ref=f12e1258]:
+                            - button "Abrir prestamo de Boss LMB-3 Bass Limiter Enhancer" [ref=f12e2049] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para Boss LMB-3 Bass Limiter Enhancer" [ref=f12e2050] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e2051]:
+                        - cell "Boss OS-2 OverDrive/Distortion Boss OS-2 OverDrive/Distortion Boss · OS-2" [ref=f12e2052]:
+                          - generic [ref=f12e1265]:
+                            - img "Boss OS-2 OverDrive/Distortion" [ref=f12e2053]
+                            - generic [ref=f12e1267]:
+                              - paragraph [ref=f12e1268]: Boss OS-2 OverDrive/Distortion
+                              - generic [ref=f12e1269]: Boss · OS-2
+                        - cell "fx/pedal" [ref=f12e2054]
+                        - cell "—" [ref=f12e2055]
+                        - cell [ref=f12e2056]:
+                          - generic [ref=f12e1273]:
+                            - button "Abrir prestamo de Boss OS-2 OverDrive/Distortion" [ref=f12e2057] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para Boss OS-2 OverDrive/Distortion" [ref=f12e2058] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e2059]:
+                        - cell "Boss RC-20XL Loop Station Boss · RC-20XL" [ref=f12e2060]:
+                          - generic [ref=f12e1281]:
+                            - paragraph [ref=f12e1282]: Boss RC-20XL Loop Station
+                            - generic [ref=f12e1283]: Boss · RC-20XL
+                        - cell "fx/looper" [ref=f12e2061]
+                        - cell "—" [ref=f12e2062]
+                        - cell [ref=f12e2063]:
+                          - generic [ref=f12e1287]:
+                            - button "Abrir prestamo de Boss RC-20XL Loop Station" [ref=f12e2064] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para Boss RC-20XL Loop Station" [ref=f12e2065] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e2066]:
+                        - cell "Burl B4 Burl · B4" [ref=f12e2067]:
+                          - generic [ref=f12e1295]:
+                            - paragraph [ref=f12e1296]: Burl B4
+                            - generic [ref=f12e1297]: Burl · B4
+                        - cell "pre/converter" [ref=f12e2068]
+                        - cell "—" [ref=f12e2069]
+                        - cell [ref=f12e2070]:
+                          - generic [ref=f12e1301]:
+                            - button "Abrir prestamo de Burl B4" [ref=f12e2071] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para Burl B4" [ref=f12e2072] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e2073]:
+                        - cell "Burl BAD8 Burl · BAD8" [ref=f12e2074]:
+                          - generic [ref=f12e1309]:
+                            - paragraph [ref=f12e1310]: Burl BAD8
+                            - generic [ref=f12e1311]: Burl · BAD8
+                        - cell "converter-ad" [ref=f12e2075]
+                        - cell "—" [ref=f12e2076]
+                        - cell [ref=f12e2077]:
+                          - generic [ref=f12e1315]:
+                            - button "Abrir prestamo de Burl BAD8" [ref=f12e2078] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para Burl BAD8" [ref=f12e2079] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e2080]:
+                        - cell "Chandler Limited Little Devil Colored Boost Chandler Limited Little Devil Colored Boost Chandler Limited · Little Devil Boost" [ref=f12e2081]:
+                          - generic [ref=f12e1322]:
+                            - img "Chandler Limited Little Devil Colored Boost" [ref=f12e2082]
+                            - generic [ref=f12e1324]:
+                              - paragraph [ref=f12e1325]: Chandler Limited Little Devil Colored Boost
+                              - generic [ref=f12e1326]: Chandler Limited · Little Devil Boost
+                        - cell "fx/pedal" [ref=f12e2083]
+                        - cell "—" [ref=f12e2084]
+                        - cell [ref=f12e2085]:
+                          - generic [ref=f12e1330]:
+                            - button "Abrir prestamo de Chandler Limited Little Devil Colored Boost" [ref=f12e2086] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para Chandler Limited Little Devil Colored Boost" [ref=f12e2087] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e2088]:
+                        - cell "Chandler Limited REDD.47 Chandler Limited · REDD.47" [ref=f12e2089]:
+                          - generic [ref=f12e1338]:
+                            - paragraph [ref=f12e1339]: Chandler Limited REDD.47
+                            - generic [ref=f12e1340]: Chandler Limited · REDD.47
+                        - cell "pre" [ref=f12e2090]
+                        - cell "—" [ref=f12e2091]
+                        - cell [ref=f12e2092]:
+                          - generic [ref=f12e1344]:
+                            - button "Abrir prestamo de Chandler Limited REDD.47" [ref=f12e2093] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para Chandler Limited REDD.47" [ref=f12e2094] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e2095]:
+                        - cell "CMATMods Signa Drive CMATMods Signa Drive CMATMods · Signa Drive" [ref=f12e2096]:
+                          - generic [ref=f12e1351]:
+                            - img "CMATMods Signa Drive" [ref=f12e2097]
+                            - generic [ref=f12e1353]:
+                              - paragraph [ref=f12e1354]: CMATMods Signa Drive
+                              - generic [ref=f12e1355]: CMATMods · Signa Drive
+                        - cell "fx/pedal" [ref=f12e2098]
+                        - cell "—" [ref=f12e2099]
+                        - cell [ref=f12e2100]:
+                          - generic [ref=f12e1359]:
+                            - button "Abrir prestamo de CMATMods Signa Drive" [ref=f12e2101] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para CMATMods Signa Drive" [ref=f12e2102] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e2103]:
+                        - cell "Custom Spring Reverb Filter Unit Custom Spring Reverb Filter Unit Custom · Spring Filter FX" [ref=f12e2104]:
+                          - generic [ref=f12e1366]:
+                            - img "Custom Spring Reverb Filter Unit" [ref=f12e2105]
+                            - generic [ref=f12e1368]:
+                              - paragraph [ref=f12e1369]: Custom Spring Reverb Filter Unit
+                              - generic [ref=f12e1370]: Custom · Spring Filter FX
+                        - cell "fx/outboard" [ref=f12e2106]
+                        - cell "—" [ref=f12e2107]
+                        - cell [ref=f12e2108]:
+                          - generic [ref=f12e1374]:
+                            - button "Abrir prestamo de Custom Spring Reverb Filter Unit" [ref=f12e2109] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para Custom Spring Reverb Filter Unit" [ref=f12e2110] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e2111]:
+                        - cell "Death By Audio Robot Death By Audio Robot Death By Audio · Robot" [ref=f12e2112]:
+                          - generic [ref=f12e1381]:
+                            - img "Death By Audio Robot" [ref=f12e2113]
+                            - generic [ref=f12e1383]:
+                              - paragraph [ref=f12e1384]: Death By Audio Robot
+                              - generic [ref=f12e1385]: Death By Audio · Robot
+                        - cell "fx/pedal" [ref=f12e2114]
+                        - cell "—" [ref=f12e2115]
+                        - cell [ref=f12e2116]:
+                          - generic [ref=f12e1389]:
+                            - button "Abrir prestamo de Death By Audio Robot" [ref=f12e2117] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para Death By Audio Robot" [ref=f12e2118] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e2119]:
+                        - cell "DOD Meatbox SubSynth DOD Meatbox SubSynth DOD · Meatbox" [ref=f12e2120]:
+                          - generic [ref=f12e1396]:
+                            - img "DOD Meatbox SubSynth" [ref=f12e2121]
+                            - generic [ref=f12e1398]:
+                              - paragraph [ref=f12e1399]: DOD Meatbox SubSynth
+                              - generic [ref=f12e1400]: DOD · Meatbox
+                        - cell "fx/pedal" [ref=f12e2122]
+                        - cell "Oficina" [ref=f12e2123]
+                        - cell [ref=f12e2124]:
+                          - generic [ref=f12e1404]:
+                            - button "Abrir prestamo de DOD Meatbox SubSynth" [ref=f12e2125] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para DOD Meatbox SubSynth" [ref=f12e2126] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e2127]:
+                        - cell "EarthQuaker Devices Disaster Transport SR EarthQuaker Devices Disaster Transport SR EarthQuaker Devices · Disaster Transport SR" [ref=f12e2128]:
+                          - generic [ref=f12e1411]:
+                            - img "EarthQuaker Devices Disaster Transport SR" [ref=f12e2129]
+                            - generic [ref=f12e1413]:
+                              - paragraph [ref=f12e1414]: EarthQuaker Devices Disaster Transport SR
+                              - generic [ref=f12e1415]: EarthQuaker Devices · Disaster Transport SR
+                        - cell "fx/pedal" [ref=f12e2130]
+                        - cell "Oficina" [ref=f12e2131]
+                        - cell [ref=f12e2132]:
+                          - generic [ref=f12e1419]:
+                            - button "Abrir prestamo de EarthQuaker Devices Disaster Transport SR" [ref=f12e2133] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para EarthQuaker Devices Disaster Transport SR" [ref=f12e2134] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e2135]:
+                        - cell "EarthQuaker Devices Plumes EarthQuaker Devices Plumes EarthQuaker Devices · Plumes" [ref=f12e2136]:
+                          - generic [ref=f12e1426]:
+                            - img "EarthQuaker Devices Plumes" [ref=f12e2137]
+                            - generic [ref=f12e1428]:
+                              - paragraph [ref=f12e1429]: EarthQuaker Devices Plumes
+                              - generic [ref=f12e1430]: EarthQuaker Devices · Plumes
+                        - cell "fx/pedal" [ref=f12e2138]
+                        - cell "—" [ref=f12e2139]
+                        - cell [ref=f12e2140]:
+                          - generic [ref=f12e1434]:
+                            - button "Abrir prestamo de EarthQuaker Devices Plumes" [ref=f12e2141] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para EarthQuaker Devices Plumes" [ref=f12e2142] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e2143]:
+                        - cell "Electro-Harmonix Deluxe Bass Big Muff Pi Electro-Harmonix Deluxe Bass Big Muff Pi Electro-Harmonix · Deluxe Bass Big Muff" [ref=f12e2144]:
+                          - generic [ref=f12e1441]:
+                            - img "Electro-Harmonix Deluxe Bass Big Muff Pi" [ref=f12e2145]
+                            - generic [ref=f12e1443]:
+                              - paragraph [ref=f12e1444]: Electro-Harmonix Deluxe Bass Big Muff Pi
+                              - generic [ref=f12e1445]: Electro-Harmonix · Deluxe Bass Big Muff
+                        - cell "fx/pedal" [ref=f12e2146]
+                        - cell "—" [ref=f12e2147]
+                        - cell [ref=f12e2148]:
+                          - generic [ref=f12e1449]:
+                            - button "Abrir prestamo de Electro-Harmonix Deluxe Bass Big Muff Pi" [ref=f12e2149] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para Electro-Harmonix Deluxe Bass Big Muff Pi" [ref=f12e2150] [cursor=pointer]: QR, historial y mas
+                      - row [ref=f12e2151]:
+                        - cell "Electro-Harmonix HOG2 Harmonic Octave Generator Electro-Harmonix HOG2 Harmonic Octave Generator Electro-Harmonix · HOG2" [ref=f12e2152]:
+                          - generic [ref=f12e1456]:
+                            - img "Electro-Harmonix HOG2 Harmonic Octave Generator" [ref=f12e2153]
+                            - generic [ref=f12e1458]:
+                              - paragraph [ref=f12e1459]: Electro-Harmonix HOG2 Harmonic Octave Generator
+                              - generic [ref=f12e1460]: Electro-Harmonix · HOG2
+                        - cell "fx/pedal" [ref=f12e2154]
+                        - cell "—" [ref=f12e2155]
+                        - cell [ref=f12e2156]:
+                          - generic [ref=f12e1464]:
+                            - button "Abrir prestamo de Electro-Harmonix HOG2 Harmonic Octave Generator" [ref=f12e2157] [cursor=pointer]
+                            - button "Abrir QR, historial y mas para Electro-Harmonix HOG2 Harmonic Octave Generator" [ref=f12e2158] [cursor=pointer]: QR, historial y mas
+                  - generic [ref=f12e1471]:
+                    - paragraph [ref=f12e1472]: Por página
+                    - generic [ref=f12e1473]:
+                      - combobox "Por página 25" [ref=f12e2159] [cursor=pointer]: "25"
+                      - textbox: "25"
+                    - paragraph [ref=f12e1475]: 1–25 de 61 assets
+                    - generic [ref=f12e1476]:
+                      - button "Ir a la página anterior" [disabled]
+                      - button "Ir a la página siguiente" [ref=f12e2160] [cursor=pointer]
+          - generic [ref=f12e1481]:
+            - status [ref=f12e1482]:
+              - generic [ref=f12e1485]: "API: online"
+            - button "Abrir ChatKit" [ref=f12e2163] [cursor=pointer]
+    - generic "Control de radio":
+      - generic [ref=f12e1846]:
+        - button "Reproducir radio" [ref=f12e2164] [cursor=pointer]
+        - generic "Saltar al anterior" [ref=f12e2165]:
+          - button "Saltar a la estación anterior" [ref=f12e2166] [cursor=pointer]
+        - generic "Saltar al siguiente" [ref=f12e2167]:
+          - button "Saltar a la siguiente estación" [ref=f12e2168] [cursor=pointer]
+        - button "Silenciar radio" [ref=f12e2169] [cursor=pointer]
+        - button "Ocultar barra de radio" [ref=f12e2170] [cursor=pointer]
+        - button "Expandir radio" [ref=f12e2171] [cursor=pointer]
+        - generic [ref=f12e1867]:
+          - generic [ref=f12e1868]: "En pausa: stream.rcast.net"
+          - text: Live

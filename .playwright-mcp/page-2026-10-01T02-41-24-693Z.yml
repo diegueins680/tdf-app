@@ -1,0 +1,290 @@
+- generic [ref=f30e617]:
+  - generic [ref=f30e620]:
+    - link [ref=f30e625] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f30e630]
+    - generic [ref=f30e633]:
+      - link [ref=f30e638] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f30e643]
+      - link [ref=f30e648] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f30e653]
+      - link [ref=f30e660] [cursor=pointer]:
+        - /url: /direct/t/119181856141526
+        - generic [ref=f30e663]:
+          - img "Messages" [ref=f30e665]
+          - generic "Direct messaging - 7 new notifications link" [ref=f30e667]: "7"
+      - link [ref=f30e673] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f30e678]
+      - link [ref=f30e686] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f30e691]
+      - link [ref=f30e699] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f30e704]
+      - link [ref=f30e709] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f30e714]
+      - link [ref=f30e721] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f30e726]:
+          - img "tdf.records.label's profile picture" [ref=f30e727]
+    - generic [ref=f30e728]:
+      - link [ref=f30e731] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f30e736]
+      - link [ref=f30e739] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f30e744]
+  - main [ref=f30e748]:
+    - generic [ref=f30e753]:
+      - navigation "Thread list" [ref=f30e754]:
+        - generic [ref=f30e755]:
+          - generic [ref=f30e756]:
+            - button [ref=f30e757] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f30e759]
+              - img "Verified" [ref=f30e762]
+              - img "Down chevron icon" [ref=f30e765]
+            - generic [ref=f30e768]:
+              - button [ref=f30e769] [cursor=pointer]:
+                - img "More options" [ref=f30e771]
+              - button [ref=f30e775] [cursor=pointer]:
+                - img "New message" [ref=f30e777]
+          - tablist [ref=f30e782]:
+            - tab "Primary" [selected] [ref=f30e783] [cursor=pointer]
+            - tab "General" [ref=f30e786] [cursor=pointer]
+            - tab "From ads" [ref=f30e789] [cursor=pointer]
+            - tab "Requests" [ref=f30e793] [cursor=pointer]
+          - generic [ref=f30e799]:
+            - img "Search" [ref=f30e801]
+            - textbox "Search" [ref=f30e804]
+          - generic [ref=f30e805]:
+            - generic [ref=f30e807]:
+              - list [ref=f30e809]:
+                - listitem [ref=f30e810]
+                - listitem [ref=f30e811]:
+                  - button "Current obsession... Your note" [ref=f30e813] [cursor=pointer]:
+                    - generic [ref=f30e814]:
+                      - generic [ref=f30e815]: Current obsession...
+                      - generic [ref=f30e821]:
+                        - link [ref=f30e823]
+                        - generic [ref=f30e824]: Your note
+                - listitem [ref=f30e826]:
+                  - button "01-10-26 FULGOR 🎬 verde70oficial's profile picture Verde 70" [ref=f30e829] [cursor=pointer]:
+                    - generic [ref=f30e830]:
+                      - generic [ref=f30e831]: 01-10-26 FULGOR 🎬
+                      - generic [ref=f30e838]:
+                        - link [ref=f30e840]:
+                          - img "verde70oficial's profile picture" [ref=f30e841]
+                        - generic [ref=f30e842]: Verde 70
+                - listitem [ref=f30e845]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Something (Live) George Harrison giann__fer's profile picture Gian" [ref=f30e848] [cursor=pointer]:
+                    - generic [ref=f30e849]:
+                      - generic [ref=f30e855]:
+                        - generic [ref=f30e856]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f30e858]
+                          - generic [ref=f30e862]: Something (Live)
+                        - generic [ref=f30e863]: George Harrison
+                      - generic [ref=f30e864]:
+                        - link [ref=f30e866]:
+                          - img "giann__fer's profile picture" [ref=f30e867]
+                        - generic [ref=f30e868]: Gian
+                - listitem [ref=f30e871]:
+                  - button "Q panico luis_cdvg's profile picture misticbafu" [ref=f30e874] [cursor=pointer]:
+                    - generic [ref=f30e875]:
+                      - generic [ref=f30e876]: Q panico
+                      - generic [ref=f30e883]:
+                        - link [ref=f30e885]:
+                          - img "luis_cdvg's profile picture" [ref=f30e886]
+                        - generic [ref=f30e887]: misticbafu
+                - listitem [ref=f30e890]:
+                  - 'button "Bogotá: mañana Casa Kilele greciaalban''s profile picture GRECIAALBÁN" [ref=f30e893] [cursor=pointer]':
+                    - generic [ref=f30e894]:
+                      - generic [ref=f30e895]: "Bogotá: mañana Casa Kilele"
+                      - generic [ref=f30e902]:
+                        - link [ref=f30e904]:
+                          - img "greciaalban's profile picture" [ref=f30e905]
+                        - generic [ref=f30e906]: GRECIAALBÁN
+                - listitem [ref=f30e909]:
+                  - button "Sì tu novio habla más de fútbol que de conciencia social, para mi estas soltera gary_galactico's profile picture Gary Galáctico" [ref=f30e912] [cursor=pointer]:
+                    - generic [ref=f30e913]:
+                      - generic [ref=f30e914]: Sì tu novio habla más de fútbol que de conciencia social, para mi estas soltera
+                      - generic [ref=f30e921]:
+                        - link [ref=f30e923]:
+                          - img "gary_galactico's profile picture" [ref=f30e924]
+                        - generic [ref=f30e925]: Gary Galáctico
+                - listitem [ref=f30e928]:
+                  - button "Hoy Insta Live con @elblogdemicha pasen a saludar! solcordovamusic's profile picture Sol Córdova 🌞" [ref=f30e931] [cursor=pointer]:
+                    - generic [ref=f30e932]:
+                      - generic [ref=f30e940]:
+                        - text: Hoy Insta Live con
+                        - link "@elblogdemicha" [ref=f30e941]:
+                          - /url: /elblogdemicha/
+                        - text: pasen a saludar!
+                      - generic [ref=f30e942]:
+                        - link [ref=f30e944]:
+                          - img "solcordovamusic's profile picture" [ref=f30e945]
+                        - generic [ref=f30e946]: Sol Córdova 🌞
+                - listitem [ref=f30e949]:
+                  - button "extrañaba el canto de las ranas 🌧️ mar.iadanielaa's profile picture María Daniela" [ref=f30e952] [cursor=pointer]:
+                    - generic [ref=f30e953]:
+                      - generic [ref=f30e954]: extrañaba el canto de las ranas 🌧️
+                      - generic [ref=f30e961]:
+                        - link [ref=f30e963]:
+                          - img "mar.iadanielaa's profile picture" [ref=f30e964]
+                        - generic [ref=f30e965]: María Daniela
+                - listitem [ref=f30e968]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Silence & Secrets (Black Coffee Remix) WhoMadeWho zeretofficial's profile picture Zeret 🧑‍🩰Dj" [ref=f30e971] [cursor=pointer]:
+                    - generic [ref=f30e972]:
+                      - generic [ref=f30e978]:
+                        - generic [ref=f30e979]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f30e981]
+                          - generic [ref=f30e985]: Silence & Secrets (Black Coffee Remix)
+                        - generic [ref=f30e986]: WhoMadeWho
+                      - generic [ref=f30e987]:
+                        - link [ref=f30e989]:
+                          - img "zeretofficial's profile picture" [ref=f30e990]
+                        - generic [ref=f30e991]: Zeret 🧑‍🩰Dj
+              - button "Next" [ref=f30e994] [cursor=pointer]
+            - generic [ref=f30e999]:
+              - 'button "user-profile-picture Rommel Unda You: Hola, Rommel 👋 Vimos tu publicación sobre Ultra y que empezaste a seguir a TDF. Tu escena necesita un espacio propio, también para quienes la sostienen escuchando y estando presentes. En TDF puedes descubrir perfiles y guardar tus artistas favoritos al seguirlos con tu cuenta. Puedes empezar como fan aquí: https://www.tdfrecords.net/login?signup=1&intent=follow_artists&roles=Fan&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=fan_a Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records a few seconds ago" [pressed] [ref=f30e1332] [cursor=pointer]':
+                - generic [ref=f30e1334]:
+                  - img "user-profile-picture" [ref=f30e1338]
+                  - generic [ref=f30e1341]:
+                    - generic [ref=f30e1342]: Rommel Unda
+                    - generic [ref=f30e1348]:
+                      - generic [ref=f30e1349]: "You: Hola, Rommel 👋 Vimos tu publicación sobre Ultra y que empezaste a seguir a TDF. Tu escena necesita un espacio propio, también para quienes la sostienen escuchando y estando presentes. En TDF puedes descubrir perfiles y guardar tus artistas favoritos al seguirlos con tu cuenta. Puedes empezar como fan aquí: https://www.tdfrecords.net/login?signup=1&intent=follow_artists&roles=Fan&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=fan_a Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f30e1351]:
+                        - generic [ref=f30e1352]: ·
+                        - generic "a few seconds ago" [ref=f30e1357]: 1m
+              - 'button "user-profile-picture | QUITO SKA SOCIETY | You: Hola, equipo de Quito Ska Society 👋 Vimos su trabajo alrededor de Ska Ba Boom en Quito. Tu escena necesita un espacio propio; nos interesa escuchar a quienes ya sostienen encuentros para el ska. Les invitamos a explorar los perfiles y lanzamientos de TDF y contarnos qué les serviría para su comunidad. Es una invitación a conversar: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records a few seconds ago" [ref=f30e1003] [cursor=pointer]':
+                - generic [ref=f30e1005]:
+                  - img "user-profile-picture" [ref=f30e1009]
+                  - generic [ref=f30e1012]:
+                    - generic [ref=f30e1013]: "| QUITO SKA SOCIETY |"
+                    - generic [ref=f30e1019]:
+                      - generic [ref=f30e1020]: "You: Hola, equipo de Quito Ska Society 👋 Vimos su trabajo alrededor de Ska Ba Boom en Quito. Tu escena necesita un espacio propio; nos interesa escuchar a quienes ya sostienen encuentros para el ska. Les invitamos a explorar los perfiles y lanzamientos de TDF y contarnos qué les serviría para su comunidad. Es una invitación a conversar: https://www.tdfrecords.net/login?signup=1&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=aliado_a Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f30e1022]:
+                        - generic [ref=f30e1023]: ·
+                        - generic "a few seconds ago" [ref=f30e1028]: 1m
+              - 'button "user-profile-picture Sol Córdova 🌞 You: Hola, Sol 👋 Vimos tu trabajo con Madre Cumbia y «Surupa EP». En TDF reunimos perfiles, artistas y lanzamientos para facilitar el encuentro con quienes escuchan. Puedes empezar tu perfil público con tus enlaces musicales y explorar otros proyectos. Te invitamos a probarlo: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records about a minute ago" [ref=f30e1032] [cursor=pointer]':
+                - generic [ref=f30e1034]:
+                  - img "user-profile-picture" [ref=f30e1038]
+                  - generic [ref=f30e1041]:
+                    - generic [ref=f30e1042]: Sol Córdova 🌞
+                    - generic [ref=f30e1048]:
+                      - generic [ref=f30e1049]: "You: Hola, Sol 👋 Vimos tu trabajo con Madre Cumbia y «Surupa EP». En TDF reunimos perfiles, artistas y lanzamientos para facilitar el encuentro con quienes escuchan. Puedes empezar tu perfil público con tus enlaces musicales y explorar otros proyectos. Te invitamos a probarlo: https://www.tdfrecords.net/login?signup=1&intent=artist_profile&roles=Artista&redirect=%2Fmi-artista&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=artista_b Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f30e1051]:
+                        - generic [ref=f30e1052]: ·
+                        - generic "about a minute ago" [ref=f30e1057]: 1m
+              - button "user-profile-picture Neil Armas 🎙️ 2 new messages 3 minutes ago Unread" [ref=f30e1061] [cursor=pointer]:
+                - generic [ref=f30e1063]:
+                  - img "user-profile-picture" [ref=f30e1067]
+                  - generic [ref=f30e1070]:
+                    - generic [ref=f30e1071]: Neil Armas 🎙️
+                    - generic [ref=f30e1077]:
+                      - generic [ref=f30e1078]: 2 new messages
+                      - generic [ref=f30e1080]:
+                        - generic [ref=f30e1081]: ·
+                        - generic "3 minutes ago" [ref=f30e1086]: 3m
+                  - generic [ref=f30e1087]: Unread
+              - 'button "user-profile-picture 𝔼𝕄𝗠𝔸ℕ𝕌 You: Hola, Emmanu 👋 Vimos tu sesión en el Panecillo con Tapiñados Project. En TDF estamos reuniendo artistas, perfiles y lanzamientos en un mismo lugar. Puedes crear tu cuenta, explorar la comunidad y seguir un proyecto que te interese; el enlace abre la ruta profesional: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_b Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records 3 minutes ago" [ref=f30e1094] [cursor=pointer]':
+                - generic [ref=f30e1096]:
+                  - img "user-profile-picture" [ref=f30e1100]
+                  - generic [ref=f30e1103]:
+                    - generic [ref=f30e1104]: 𝔼𝕄𝗠𝔸ℕ𝕌
+                    - generic [ref=f30e1110]:
+                      - generic [ref=f30e1111]: "You: Hola, Emmanu 👋 Vimos tu sesión en el Panecillo con Tapiñados Project. En TDF estamos reuniendo artistas, perfiles y lanzamientos en un mismo lugar. Puedes crear tu cuenta, explorar la comunidad y seguir un proyecto que te interese; el enlace abre la ruta profesional: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_b Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f30e1113]:
+                        - generic [ref=f30e1114]: ·
+                        - generic "3 minutes ago" [ref=f30e1119]: 3m
+              - 'button "user-profile-picture Alejandro Soria You: Hola, Alejandro 👋 Vimos tu trabajo en Modular Academy y tus sets en Quito. Tu escena necesita un espacio propio: queremos que las conexiones de la pista también tengan continuidad fuera de ella. En TDF puedes explorar perfiles y seguir artistas para volver a su música; este enlace abre el registro con intención profesional: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records 15 minutes ago" [ref=f30e1123] [cursor=pointer]':
+                - generic [ref=f30e1125]:
+                  - img "user-profile-picture" [ref=f30e1129]
+                  - generic [ref=f30e1132]:
+                    - generic [ref=f30e1133]: Alejandro Soria
+                    - generic [ref=f30e1139]:
+                      - generic [ref=f30e1140]: "You: Hola, Alejandro 👋 Vimos tu trabajo en Modular Academy y tus sets en Quito. Tu escena necesita un espacio propio: queremos que las conexiones de la pista también tengan continuidad fuera de ella. En TDF puedes explorar perfiles y seguir artistas para volver a su música; este enlace abre el registro con intención profesional: https://www.tdfrecords.net/login?signup=1&intent=professional_tools&roles=DJ&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=dj_productor_a Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - generic [ref=f30e1142]:
+                        - generic [ref=f30e1143]: ·
+                        - generic "15 minutes ago" [ref=f30e1148]: 15m
+              - button [ref=f30e1206] [cursor=pointer]:
+                - generic [ref=f30e1208]:
+                  - status "Loading..." [ref=f30e1211]
+                  - generic [ref=f30e1214]:
+                    - status "Loading..." [ref=f30e1216]
+                    - status "Loading..." [ref=f30e1218]
+      - generic [ref=f30e1223]:
+        - generic [ref=f30e1227]:
+          - link "Open the profile page of rommel_unda" [ref=f30e1228] [cursor=pointer]:
+            - /url: /rommel_unda/
+            - generic [ref=f30e1229]:
+              - img "user-profile-picture" [ref=f30e1233]
+              - generic [ref=f30e1234]:
+                - heading "Rommel Unda" [level=2] [ref=f30e1236]
+                - generic [ref=f30e1238]: rommel_unda
+          - generic [ref=f30e1242]:
+            - button [ref=f30e1243] [cursor=pointer]:
+              - img "Audio call" [ref=f30e1245]
+            - button [ref=f30e1247] [cursor=pointer]:
+              - img "Video call" [ref=f30e1249]
+            - button [ref=f30e1252] [cursor=pointer]:
+              - img "Conversation information" [ref=f30e1254]
+        - generic [ref=f30e1258]:
+          - generic [ref=f30e1262]:
+            - generic [ref=f30e1263]:
+              - img "user-profile-picture" [ref=f30e1267]
+              - generic [ref=f30e1268]:
+                - heading "Rommel Unda" [level=2] [ref=f30e1271]
+                - generic [ref=f30e1273]: rommel_unda · Instagram
+                - link "View profile" [ref=f30e1276] [cursor=pointer]:
+                  - /url: /rommel_unda/
+            - generic [ref=f30e1360]:
+              - generic [ref=f30e1361]: 4:41 AM
+              - group [ref=f30e1364]:
+                - generic [ref=f30e1367]:
+                  - article [ref=f30e1368]:
+                    - generic [ref=f30e1370]:
+                      - generic [ref=f30e1373]:
+                        - text: Hola, Rommel
+                        - img "👋" [ref=f30e1375]
+                        - text: "Vimos tu publicación sobre Ultra y que empezaste a seguir a TDF. Tu escena necesita un espacio propio, también para quienes la sostienen escuchando y estando presentes. En TDF puedes descubrir perfiles y guardar tus artistas favoritos al seguirlos con tu cuenta. Puedes empezar como fan aquí:"
+                        - link "https://www.tdfrecords.net/login?signup=1&intent=follow_artists&roles=Fan&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=fan_a" [ref=f30e1377] [cursor=pointer]:
+                          - /url: https://www.tdfrecords.net/login?signup=1&intent=follow_artists&roles=Fan&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=fan_a
+                        - text: "Si no te interesa, todo bien: no volvemos a escribirte. — TDF Records"
+                      - link "TDF Records" [ref=f30e1378] [cursor=pointer]:
+                        - /url: https://www.tdfrecords.net/login?signup=1&intent=follow_artists&roles=Fan&redirect=%2Ffans&utm_source=instagram&utm_medium=dm&utm_campaign=tu_escena_conectada_piloto&utm_content=fan_a
+                  - generic [ref=f30e1383]:
+                    - group "Message actions":
+                      - generic:
+                        - generic:
+                          - generic:
+                            - button "React to message from tdf.records.label":
+                              - generic:
+                                - img "React to message from tdf.records.label"
+                        - generic:
+                          - generic:
+                            - button "Reply to message from tdf.records.label":
+                              - generic:
+                                - img "Reply to message from tdf.records.label"
+                        - generic:
+                          - generic:
+                            - button "See more options for message from tdf.records.label":
+                              - generic:
+                                - img "See more options for message from tdf.records.label"
+          - generic [ref=f30e1287]:
+            - button [ref=f30e1290] [cursor=pointer]:
+              - img "Choose an emoji" [ref=f30e1292]
+            - generic [ref=f30e1294]:
+              - textbox [active] [ref=f30e1295]:
+                - paragraph [ref=f30e1384]
+              - generic: Message...
+            - generic [ref=f30e1297]:
+              - button [ref=f30e1385] [cursor=pointer]:
+                - img "Voice Clip" [ref=f30e1387]
+              - button [ref=f30e1390] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=f30e1392]
+              - button [ref=f30e1397] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=f30e1399]

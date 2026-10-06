@@ -1,0 +1,560 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4151212112",
+      "pull_request_review_id": 5374222666,
+      "id": 4151212112,
+      "node_id": "PRRC_kwDOQPdUrM73bnhQ",
+      "diff_hunk": "@@ -644,6 +648,7 @@ export default function EventLogisticsPage() {\n               {activity.eacPlaceId && <Typography variant=\"body2\">Lugar: {placesById.get(activity.eacPlaceId)?.elpLabel ?? activity.eacPlaceId}</Typography>}\n               {activity.eacAssignments.length > 0 && <Typography variant=\"body2\">Responsables: {activity.eacAssignments.map((assignment) => assignment.elaDisplayName ?? assignment.elaExternalName ?? assignment.elaPartyId).filter(Boolean).join(', ')}</Typography>}\n               {activity.eacNotes && <Typography sx={{ whiteSpace: 'pre-wrap' }}>{activity.eacNotes}</Typography>}\n+              {taskHref && <Button component={RouterLink} to={taskHref} size=\"small\">{t('eventTask.open')}</Button>}",
+      "path": "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
+      "commit_id": "23ff8f588bbdefd4d14e0d2a39cc39953d2c114f",
+      "original_commit_id": "23ff8f588bbdefd4d14e0d2a39cc39953d2c114f",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Hide task links until event operations are enabled**\n\nThis renders the task CTA for every valid logistics activity even though the adapter migrations are deliberately absent from the production manifest and `event.operations.api` defaults to disabled. In that deployment state, clicking the newly exposed button always reaches `requireEventOperationsEnabled`, receives a 404 `feature_disabled`, and leaves the user on the generic task error screen. Gate the link on actual feature availability or defer exposing it until activation.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-10-01T02:22:45Z",
+      "updated_at": "2026-10-01T02:22:45Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/465#discussion_r4151212112",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/465",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4151212112"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/465#discussion_r4151212112"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/465"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4151212112/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 651,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 29,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4151212117",
+      "pull_request_review_id": 5374222666,
+      "id": 4151212117,
+      "node_id": "PRRC_kwDOQPdUrM73bnhV",
+      "diff_hunk": "@@ -200,34 +223,58 @@ export default function ArtistPublicPage() {\n   }, [artistId, followsQuery.data]);\n \n   const followMutation = useMutation({\n-    mutationFn: async () => {\n-      if (!artistId) return;\n-      if (isFollowing) {\n-        await Fans.unfollow(artistId);\n+    mutationFn: async (command: FollowCommand) => {\n+      if (!command.isCurrent()) throw new Error('Follow context changed');\n+      if (command.wasFollowing) {\n+        await Fans.unfollow(command.artistId);\n       } else {\n-        await Fans.follow(artistId);\n+        await Fans.follow(command.artistId);\n       }\n     },\n-    onSuccess: () => {\n-      void qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });\n+    onSuccess: (_result, command) => {\n+      if (!command.isCurrent()) return;\n+      void qc.invalidateQueries({ queryKey: ['fan-follows', command.viewerId] });",
+      "path": "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+      "commit_id": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+      "original_commit_id": "23ff8f588bbdefd4d14e0d2a39cc39953d2c114f",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Refresh follow state after a late successful mutation**\n\nWhen a follow/unfollow request succeeds after the user changes profile or otherwise changes the location key, `isCurrent()` is false and this early return skips every cache invalidation. The server mutation has still committed, but the shared `['fan-follows', viewerId]` query remains stale across the newly rendered profile and even after returning to the original one, so the UI can offer the opposite action until an unrelated refetch occurs. Keep the navigation-specific analytics/resume effects fenced, but invalidate the shared follow data after every successful mutation.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-10-01T02:22:45Z",
+      "updated_at": "2026-10-01T02:22:45Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/465#discussion_r4151212117",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/465",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4151212117"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/465#discussion_r4151212117"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/465"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4151212117/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 234,
+      "original_start_line": 234,
+      "start_side": "RIGHT",
+      "line": 236,
+      "original_line": 236,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 119,
+      "position": 119,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4151272559",
+      "pull_request_review_id": 5374293482,
+      "id": 4151272559,
+      "node_id": "PRRC_kwDOQPdUrM73b2Rv",
+      "diff_hunk": "@@ -644,6 +648,7 @@ export default function EventLogisticsPage() {\n               {activity.eacPlaceId && <Typography variant=\"body2\">Lugar: {placesById.get(activity.eacPlaceId)?.elpLabel ?? activity.eacPlaceId}</Typography>}\n               {activity.eacAssignments.length > 0 && <Typography variant=\"body2\">Responsables: {activity.eacAssignments.map((assignment) => assignment.elaDisplayName ?? assignment.elaExternalName ?? assignment.elaPartyId).filter(Boolean).join(', ')}</Typography>}\n               {activity.eacNotes && <Typography sx={{ whiteSpace: 'pre-wrap' }}>{activity.eacNotes}</Typography>}\n+              {taskHref && <Button component={RouterLink} to={taskHref} size=\"small\">{t('eventTask.open')}</Button>}",
+      "path": "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
+      "commit_id": "23ff8f588bbdefd4d14e0d2a39cc39953d2c114f",
+      "original_commit_id": "23ff8f588bbdefd4d14e0d2a39cc39953d2c114f",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 5c9bb3b5daf82fa438fe9f0dd1b796afd699d0a6. Removed the logistics task CTA while the adapter migrations remain outside the production manifest and event.operations.api defaults disabled. Direct routes and isolated enabled adapter tests remain intact. The activation contract and gap matrix now explicitly defer discoverable links until an authenticated backend availability contract and separately reviewed activation. No flag, migration or security control was enabled.",
+      "created_at": "2026-10-01T02:35:43Z",
+      "updated_at": "2026-10-01T02:35:43Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/465#discussion_r4151272559",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/465",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4151272559"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/465#discussion_r4151272559"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/465"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4151272559/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 651,
+      "side": "RIGHT",
+      "in_reply_to_id": 4151212112,
+      "author_association": "OWNER",
+      "original_position": 29,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4151272970",
+      "pull_request_review_id": 5374293911,
+      "id": 4151272970,
+      "node_id": "PRRC_kwDOQPdUrM73b2YK",
+      "diff_hunk": "@@ -200,34 +223,58 @@ export default function ArtistPublicPage() {\n   }, [artistId, followsQuery.data]);\n \n   const followMutation = useMutation({\n-    mutationFn: async () => {\n-      if (!artistId) return;\n-      if (isFollowing) {\n-        await Fans.unfollow(artistId);\n+    mutationFn: async (command: FollowCommand) => {\n+      if (!command.isCurrent()) throw new Error('Follow context changed');\n+      if (command.wasFollowing) {\n+        await Fans.unfollow(command.artistId);\n       } else {\n-        await Fans.follow(artistId);\n+        await Fans.follow(command.artistId);\n       }\n     },\n-    onSuccess: () => {\n-      void qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });\n+    onSuccess: (_result, command) => {\n+      if (!command.isCurrent()) return;\n+      void qc.invalidateQueries({ queryKey: ['fan-follows', command.viewerId] });",
+      "path": "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+      "commit_id": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+      "original_commit_id": "23ff8f588bbdefd4d14e0d2a39cc39953d2c114f",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 5c9bb3b5daf82fa438fe9f0dd1b796afd699d0a6. Successful follow and unfollow writes now invalidate the original viewer, artist directory and profile cache before the current-navigation guard. Analytics and resume navigation remain fenced. Two delayed-mutation component regressions verify shared data refreshes on the newly rendered profile and the correct action after returning; all five previous logout/session/unmount/navigation suppression cases remain intact. The focused UI run passes 27 tests.",
+      "created_at": "2026-10-01T02:35:48Z",
+      "updated_at": "2026-10-01T02:35:48Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/465#discussion_r4151272970",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/465",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4151272970"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/465#discussion_r4151272970"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/465"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4151272970/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 234,
+      "original_start_line": 234,
+      "start_side": "RIGHT",
+      "line": 236,
+      "original_line": 236,
+      "side": "RIGHT",
+      "in_reply_to_id": 4151212117,
+      "author_association": "OWNER",
+      "original_position": 119,
+      "position": 119,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4175460766",
+      "pull_request_review_id": 5403521996,
+      "id": 4175460766,
+      "node_id": "PRRC_kwDOQPdUrM744Hme",
+      "diff_hunk": "@@ -0,0 +1,663 @@\n+BEGIN;\n+\n+SET LOCAL lock_timeout = '10s';\n+SET LOCAL statement_timeout = '10min';\n+\n+-- This unmerged migration is not in the production manifest. Keep authorization\n+-- changes on the command's existing row-lock boundary, without changing business version.\n+ALTER TABLE event_operation_event_state\n+  ADD COLUMN IF NOT EXISTS authorization_version BIGINT NOT NULL DEFAULT 0\n+    CHECK (authorization_version >= 0);\n+\n+CREATE OR REPLACE FUNCTION event_operation_fence_authorization_change()\n+RETURNS trigger\n+LANGUAGE plpgsql\n+SECURITY INVOKER\n+SET search_path = public, pg_temp\n+AS $$\n+DECLARE target_event_id BIGINT;\n+BEGIN\n+  IF TG_OP = 'UPDATE' THEN\n+    IF NEW.id <> OLD.id OR NEW.event_id <> OLD.event_id THEN\n+      RAISE EXCEPTION 'authorization identity/event is immutable; revoke and issue explicitly'\n+        USING ERRCODE = '23514';\n+    END IF;\n+    IF TG_TABLE_NAME = 'event_operation_grant' THEN\n+      IF NEW.grantee_party_id <> OLD.grantee_party_id THEN\n+        RAISE EXCEPTION 'grant recipient is immutable; revoke and issue explicitly' USING ERRCODE = '23514';\n+      END IF;\n+    ELSIF NEW.party_id <> OLD.party_id THEN\n+      RAISE EXCEPTION 'relationship party is immutable; revoke and issue explicitly' USING ERRCODE = '23514';\n+    END IF;\n+  END IF;\n+  target_event_id := CASE WHEN TG_OP = 'DELETE' THEN OLD.event_id ELSE NEW.event_id END;\n+  UPDATE event_operation_event_state\n+    SET authorization_version = authorization_version + 1\n+    WHERE event_id = target_event_id;\n+  IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF;\n+END\n+$$;\n+\n+DROP TRIGGER IF EXISTS event_operation_authorization_fence ON event_operation_grant;\n+CREATE TRIGGER event_operation_authorization_fence\n+BEFORE INSERT OR UPDATE OR DELETE ON event_operation_grant\n+FOR EACH ROW EXECUTE FUNCTION event_operation_fence_authorization_change();\n+DROP TRIGGER IF EXISTS event_operation_authorization_fence ON event_operation_relationship;\n+CREATE TRIGGER event_operation_authorization_fence\n+BEFORE INSERT OR UPDATE OR DELETE ON event_operation_relationship\n+FOR EACH ROW EXECUTE FUNCTION event_operation_fence_authorization_change();\n+\n+CREATE TABLE IF NOT EXISTS event_operation_feature_flag (\n+  feature_code TEXT PRIMARY KEY,\n+  enabled BOOLEAN NOT NULL DEFAULT FALSE,\n+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),\n+  updated_by_party_id BIGINT NULL REFERENCES party(id) ON DELETE SET NULL,\n+  change_reason TEXT NULL,\n+  CONSTRAINT event_operation_feature_flag_code_check CHECK (\n+    feature_code = 'event.operations.api'\n+  ),\n+  CONSTRAINT event_operation_feature_flag_reason_check CHECK (\n+    enabled = FALSE OR NULLIF(btrim(change_reason), '') IS NOT NULL\n+  ),\n+  CONSTRAINT event_operation_feature_flag_actor_check CHECK (\n+    enabled = FALSE OR updated_by_party_id IS NOT NULL\n+  )\n+);\n+\n+INSERT INTO event_operation_feature_flag(feature_code, enabled)\n+VALUES ('event.operations.api', FALSE)\n+ON CONFLICT (feature_code) DO NOTHING;\n+\n+CREATE TABLE IF NOT EXISTS event_operation_feature_flag_history (\n+  id BIGSERIAL PRIMARY KEY,\n+  feature_code TEXT NOT NULL,\n+  enabled BOOLEAN NOT NULL,\n+  changed_at TIMESTAMPTZ NOT NULL DEFAULT now(),\n+  changed_by_party_id BIGINT NULL REFERENCES party(id) ON DELETE SET NULL,\n+  change_reason TEXT NULL,\n+  CONSTRAINT event_operation_feature_flag_history_code_check CHECK (\n+    feature_code = 'event.operations.api'\n+  ),\n+  CONSTRAINT event_operation_feature_flag_history_reason_check CHECK (\n+    enabled = FALSE OR NULLIF(btrim(change_reason), '') IS NOT NULL\n+  ),\n+  CONSTRAINT event_operation_feature_flag_history_actor_check CHECK (\n+    enabled = FALSE OR changed_by_party_id IS NOT NULL\n+  )\n+);\n+\n+CREATE OR REPLACE FUNCTION event_operation_capture_feature_flag_history()\n+RETURNS trigger\n+LANGUAGE plpgsql\n+SECURITY INVOKER\n+SET search_path = public, pg_temp\n+AS $$\n+BEGIN\n+  INSERT INTO event_operation_feature_flag_history(\n+    feature_code, enabled, changed_at, changed_by_party_id, change_reason\n+  ) VALUES (\n+    NEW.feature_code, NEW.enabled, NEW.updated_at,\n+    NEW.updated_by_party_id, NEW.change_reason\n+  );\n+  RETURN NEW;\n+END\n+$$;\n+\n+DROP TRIGGER IF EXISTS event_operation_feature_flag_history_capture\n+  ON event_operation_feature_flag;\n+CREATE TRIGGER event_operation_feature_flag_history_capture\n+AFTER INSERT OR UPDATE OF enabled, updated_at, updated_by_party_id, change_reason\n+ON event_operation_feature_flag\n+FOR EACH ROW EXECUTE FUNCTION event_operation_capture_feature_flag_history();\n+\n+DROP TRIGGER IF EXISTS event_operation_feature_flag_history_immutable\n+  ON event_operation_feature_flag_history;\n+CREATE TRIGGER event_operation_feature_flag_history_immutable\n+BEFORE UPDATE OR DELETE ON event_operation_feature_flag_history\n+FOR EACH ROW EXECUTE FUNCTION event_operation_reject_history_mutation();\n+\n+INSERT INTO event_operation_feature_flag_history(\n+  feature_code, enabled, changed_at, changed_by_party_id, change_reason\n+)\n+SELECT\n+  flag.feature_code, flag.enabled, flag.updated_at,\n+  flag.updated_by_party_id, flag.change_reason\n+FROM event_operation_feature_flag flag\n+WHERE NOT EXISTS (\n+  SELECT 1 FROM event_operation_feature_flag_history history\n+  WHERE history.feature_code = flag.feature_code\n+);\n+\n+CREATE TABLE IF NOT EXISTS event_operation_transition_capability (\n+  from_state TEXT NOT NULL,\n+  to_state TEXT NOT NULL,\n+  write_enabled BOOLEAN NOT NULL DEFAULT FALSE,\n+  rationale TEXT NOT NULL,\n+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),\n+  PRIMARY KEY (from_state, to_state),\n+  FOREIGN KEY (from_state, to_state)\n+    REFERENCES event_operation_lifecycle_transition_policy(from_state, to_state),\n+  CONSTRAINT event_operation_transition_capability_rationale_check CHECK (\n+    NULLIF(btrim(rationale), '') IS NOT NULL\n+  )\n+);\n+\n+INSERT INTO event_operation_transition_capability(\n+  from_state, to_state, write_enabled, rationale\n+)\n+SELECT\n+  policy.from_state,\n+  policy.to_state,\n+  (policy.from_state, policy.to_state) IN (\n+    ('draft', 'planning'),\n+    ('planning', 'pending_approval'),\n+    ('pending_approval', 'planning'),\n+    ('pending_approval', 'approved'),\n+    ('approved', 'planning')\n+  ),\n+  CASE\n+    WHEN (policy.from_state, policy.to_state) IN (\n+      ('draft', 'planning'),\n+      ('planning', 'pending_approval'),\n+      ('pending_approval', 'planning'),\n+      ('pending_approval', 'approved'),\n+      ('approved', 'planning')\n+    ) THEN 'phase-3 planning and independent approval transition has no public, booking, ticket, contract, or financial side effect'\n+    ELSE 'disabled until its synchronous guards and compensating/outbox effects are implemented and tested'\n+  END\n+FROM event_operation_lifecycle_transition_policy policy\n+ON CONFLICT (from_state, to_state) DO NOTHING;\n+\n+CREATE UNIQUE INDEX IF NOT EXISTS event_operation_command_receipt_global_key\n+  ON event_operation_command_receipt(event_id, operation_code, command_id);\n+\n+CREATE OR REPLACE FUNCTION event_operation_actor_capabilities(\n+  target_event_id BIGINT,\n+  target_actor_party_id BIGINT,\n+  evaluated_at TIMESTAMPTZ DEFAULT now()\n+)\n+RETURNS TABLE(scope_code TEXT)\n+LANGUAGE sql\n+STABLE\n+SECURITY INVOKER\n+SET search_path = public, pg_temp\n+AS $$\n+  SELECT owner_scope.scope_code\n+  FROM event_operation_relationship relationship\n+  CROSS JOIN LATERAL unnest(ARRAY[\n+    'event.read', 'event.manage', 'event.publish',\n+    'task.read', 'task.manage', 'booking.manage', 'contract.manage',\n+    'finance.read', 'audit.read'\n+  ]::TEXT[]) AS owner_scope(scope_code)\n+  WHERE relationship.event_id = target_event_id\n+    AND relationship.party_id = target_actor_party_id\n+    AND relationship.relationship_kind IN ('primary_owner', 'co_owner')\n+    AND relationship.revoked_at IS NULL\n+    AND relationship.valid_from <= evaluated_at\n+    AND (relationship.valid_until IS NULL OR relationship.valid_until > evaluated_at)\n+  UNION\n+  SELECT grant_record.scope_code\n+  FROM event_operation_grant grant_record\n+  WHERE grant_record.event_id = target_event_id\n+    AND grant_record.grantee_party_id = target_actor_party_id\n+    AND grant_record.resource_kind = 'event'\n+    AND grant_record.resource_id IS NULL\n+    AND grant_record.revoked_at IS NULL\n+    AND grant_record.valid_from <= evaluated_at\n+    AND (grant_record.valid_until IS NULL OR grant_record.valid_until > evaluated_at)\n+$$;\n+\n+CREATE OR REPLACE FUNCTION event_operation_actor_can_read(\n+  target_event_id BIGINT,\n+  target_actor_party_id BIGINT,\n+  evaluated_at TIMESTAMPTZ DEFAULT now()\n+)\n+RETURNS BOOLEAN\n+LANGUAGE sql\n+STABLE\n+SECURITY INVOKER\n+SET search_path = public, pg_temp\n+AS $$\n+  SELECT EXISTS (\n+    SELECT 1\n+    FROM event_operation_actor_capabilities(\n+      target_event_id, target_actor_party_id, evaluated_at\n+    ) capability\n+    WHERE capability.scope_code IN (\n+      'event.read', 'event.manage', 'event.publish', 'event.approve',\n+      'task.read', 'task.manage', 'booking.manage', 'contract.manage',\n+      'finance.read', 'finance.approve', 'audit.read'\n+    )\n+  )\n+$$;\n+\n+CREATE OR REPLACE FUNCTION event_operation_actor_has_authority(\n+  target_event_id BIGINT,\n+  target_actor_party_id BIGINT,\n+  required_authority_code TEXT,\n+  evaluated_at TIMESTAMPTZ DEFAULT now()\n+)\n+RETURNS BOOLEAN\n+LANGUAGE sql\n+STABLE\n+SECURITY INVOKER\n+SET search_path = public, pg_temp\n+AS $$\n+  SELECT CASE required_authority_code\n+    WHEN 'owner' THEN EXISTS (\n+      SELECT 1 FROM event_operation_actor_capabilities(\n+        target_event_id, target_actor_party_id, evaluated_at\n+      ) capability WHERE capability.scope_code = 'event.manage'\n+    )\n+    WHEN 'event_approver' THEN EXISTS (\n+      SELECT 1 FROM event_operation_actor_capabilities(\n+        target_event_id, target_actor_party_id, evaluated_at\n+      ) capability WHERE capability.scope_code = 'event.approve'\n+    )\n+    WHEN 'finance_approver' THEN EXISTS (\n+      SELECT 1 FROM event_operation_actor_capabilities(\n+        target_event_id, target_actor_party_id, evaluated_at\n+      ) capability WHERE capability.scope_code = 'finance.approve'\n+    )\n+    WHEN 'records_manager' THEN\n+      EXISTS (\n+        SELECT 1 FROM event_operation_actor_capabilities(\n+          target_event_id, target_actor_party_id, evaluated_at\n+        ) capability WHERE capability.scope_code = 'event.manage'\n+      )\n+      AND EXISTS (\n+        SELECT 1 FROM event_operation_actor_capabilities(\n+          target_event_id, target_actor_party_id, evaluated_at\n+        ) capability WHERE capability.scope_code = 'audit.read'\n+      )\n+    ELSE FALSE\n+  END\n+$$;\n+\n+CREATE OR REPLACE FUNCTION event_operation_record_transition_rejection(\n+  target_event_id BIGINT,\n+  target_actor_party_id BIGINT,\n+  target_command_id UUID,\n+  request_hash BYTEA,\n+  requested_expected_version BIGINT,\n+  current_version BIGINT,\n+  current_state TEXT,\n+  error_code TEXT,\n+  error_outcome TEXT,\n+  rejection_reason TEXT,\n+  correlation_reference TEXT\n+)\n+RETURNS JSONB\n+LANGUAGE plpgsql\n+SECURITY INVOKER\n+SET search_path = public, pg_temp\n+AS $$\n+DECLARE\n+  response_payload JSONB;\n+BEGIN\n+  response_payload := jsonb_strip_nulls(jsonb_build_object(\n+    'error', error_code,\n+    'eventId', target_event_id,\n+    'canonicalState', current_state,\n+    'currentVersion', current_version,\n+    'commandId', target_command_id,\n+    'replayed', FALSE\n+  ));\n+\n+  INSERT INTO event_operation_command_receipt(\n+    event_id, actor_party_id, operation_code, command_id, request_sha256,\n+    expected_version, result_version, outcome, response\n+  ) VALUES (\n+    target_event_id, target_actor_party_id, 'event.lifecycle.transition',\n+    target_command_id, request_hash, requested_expected_version, current_version,\n+    error_outcome, response_payload\n+  );\n+\n+  INSERT INTO event_operation_audit_event(\n+    event_id, actor_party_id, actor_reference, operation_code, command_id,\n+    resource_kind, resource_id, outcome, reason, before_state, correlation_id\n+  ) VALUES (\n+    target_event_id, target_actor_party_id,\n+    'party:' || target_actor_party_id::TEXT,\n+    'event.lifecycle.transition', target_command_id,\n+    'event', target_event_id::TEXT, error_outcome, rejection_reason,\n+    CASE WHEN current_state IS NULL THEN NULL ELSE jsonb_build_object(\n+      'canonicalState', current_state, 'version', current_version\n+    ) END,\n+    correlation_reference\n+  );\n+\n+  RETURN response_payload;\n+END\n+$$;\n+\n+CREATE OR REPLACE FUNCTION event_operation_apply_transition(\n+  target_event_id BIGINT,\n+  target_actor_party_id BIGINT,\n+  target_command_id UUID,\n+  requested_expected_version BIGINT,\n+  requested_target_state TEXT,\n+  requested_reason TEXT,\n+  correlation_reference TEXT,\n+  request_sha256_hex TEXT\n+)\n+RETURNS JSONB\n+LANGUAGE plpgsql\n+SECURITY INVOKER\n+SET search_path = public, pg_temp\n+AS $$\n+DECLARE\n+  state_record event_operation_event_state%ROWTYPE;\n+  policy_record event_operation_lifecycle_transition_policy%ROWTYPE;\n+  prior_receipt event_operation_command_receipt%ROWTYPE;\n+  has_prior_receipt BOOLEAN;\n+  request_hash BYTEA;\n+  response_payload JSONB;\n+  review_requester BIGINT;\n+  effective_reason TEXT := NULLIF(btrim(requested_reason), '');\n+  effective_correlation TEXT := COALESCE(\n+    NULLIF(btrim(correlation_reference), ''),\n+    'command:' || target_command_id::TEXT\n+  );\n+BEGIN\n+  IF NOT EXISTS (\n+    SELECT 1 FROM event_operation_feature_flag flag\n+    WHERE flag.feature_code = 'event.operations.api' AND flag.enabled\n+  ) THEN",
+      "path": "tdf-hq/sql/2026-09-14_event_operations_api.sql",
+      "commit_id": "08acdfa897832c42ef1582f26ffdd7c23f019b4c",
+      "original_commit_id": "08acdfa897832c42ef1582f26ffdd7c23f019b4c",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Hold the feature flag lock through lifecycle commands**\n\nWhen an operator disables `event.operations.api` after this unlocked check has passed, the flag update can commit while the transition continues, allowing state, audit, and receipt writes to commit after the kill switch is disabled. Both checks use plain `EXISTS`, so even the later recheck only narrows the race; acquire a shared row lock on the enabled flag and retain it through the transaction, as the snapshot and task command functions do.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-10-03T23:57:31Z",
+      "updated_at": "2026-10-03T23:57:31Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/465#discussion_r4175460766",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/465",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4175460766"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/465#discussion_r4175460766"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/465"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4175460766/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 363,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 366,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 366,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4175460769",
+      "pull_request_review_id": 5403521996,
+      "id": 4175460769,
+      "node_id": "PRRC_kwDOQPdUrM744Hmh",
+      "diff_hunk": "@@ -0,0 +1,232 @@\n+{-# LANGUAGE DataKinds #-}\n+{-# LANGUAGE NamedFieldPuns #-}\n+{-# LANGUAGE OverloadedStrings #-}\n+\n+module TDF.EventOperations.Server\n+  ( eventOperationsServer\n+  , eventOperationDomainError\n+  ) where\n+\n+import Control.Monad (unless)\n+import Control.Monad.Except (catchError)\n+import Control.Monad.IO.Class (liftIO)\n+import Control.Monad.Reader (ReaderT, ask)\n+import Crypto.Hash (Digest, SHA256, hash)\n+import Data.Aeson (Value(..), decodeStrict', encode, fromJSON, object, Result(..), (.=))\n+import qualified Data.Aeson.KeyMap as KeyMap\n+import qualified Data.ByteString.Lazy.Char8 as BL8\n+import Data.Int (Int64)\n+import Data.Text (Text)\n+import qualified Data.Text as T\n+import qualified Data.Text.Encoding as TE\n+import qualified Data.ByteString.Lazy as BL\n+import qualified Data.UUID as UUID\n+import Database.Persist (PersistValue(..))\n+import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool)\n+import Servant\n+\n+import TDF.Auth (AuthedUser(..), withCurrentAuthSession)\n+import TDF.DB (Env(..))\n+import TDF.EventOperations.API (EventOperationsAPI)\n+import TDF.EventOperations.DatabaseBoundary\n+  ( databaseFailureLog, loadSnapshot, loadTask, loadTaskWithRevision, reassignRaci,\n+    loadRaciEditorContext, completeTask, tryDatabaseAction )\n+import qualified TDF.EventOperations.Types as EventOps\n+\n+type EventOperationsM = ReaderT Env Handler\n+\n+eventOperationsServer :: AuthedUser -> ServerT EventOperationsAPI EventOperationsM\n+eventOperationsServer user eventId =\n+       getEventOperationsSnapshot user eventId\n+  :<|> applyEventTransition user eventId\n+  :<|> getEventTask user eventId\n+  :<|> getEventTaskWithRevision user eventId\n+  :<|> reassignEventTaskRaci user eventId\n+  :<|> getRaciEditorContext user eventId\n+  :<|> completeEventTask user eventId\n+\n+completeEventTask :: AuthedUser -> Int64 -> Int64 -> UUID.UUID\n+  -> EventOps.EventTaskCompletionCommand\n+  -> EventOperationsM (Headers '[Header \"Cache-Control\" Text] EventOps.EventTaskCompletionOutcomeDTO)\n+completeEventTask user eventId activityId commandId command =\n+  action `catchError` (\\failure -> throwError failure\n+    { errHeaders = (\"Cache-Control\", \"private, no-store\") : errHeaders failure })\n+  where\n+    action = do\n+      unless (all EventOps.isSafePositiveInteger [eventId, activityId]\n+        && EventOps.validTaskCompletionCommand command) $\n+        throwError (eventOperationDomainError \"invalid_request\")\n+      requireEventOperationsEnabled\n+      result <- runEventOperationsSessionDb user $\n+        completeTask eventId activityId (fromSqlKey (auPartyId user)) commandId command\n+      outcome <- either (throwError . eventOperationDomainError) pure result\n+      pure (addHeader (\"private, no-store\" :: Text) outcome)\n+\n+getRaciEditorContext :: AuthedUser -> Int64 -> Int64 -> Maybe Int64\n+  -> EventOperationsM (Headers '[Header \"Cache-Control\" Text] EventOps.EventRaciEditorContextDTO)\n+getRaciEditorContext user eventId activityId afterPartyId =\n+  action `catchError` (\\failure -> throwError failure\n+    { errHeaders = (\"Cache-Control\", \"private, no-store\") : errHeaders failure })\n+  where\n+    cursor = maybe 0 id afterPartyId\n+    action = do\n+      unless (all EventOps.isSafePositiveInteger [eventId,activityId]\n+        && cursor >= 0 && cursor <= 9007199254740991) $\n+        throwError (eventOperationDomainError \"invalid_request\")\n+      requireEventOperationsEnabled\n+      result <- runEventOperationsSessionDb user $\n+        loadRaciEditorContext eventId activityId (fromSqlKey (auPartyId user)) cursor\n+      context <- maybe (throwError (eventOperationDomainError \"not_found\")) pure result\n+      pure (addHeader (\"private, no-store\" :: Text) context)\n+\n+reassignEventTaskRaci :: AuthedUser -> Int64 -> Int64 -> UUID.UUID\n+  -> EventOps.EventRaciReassignmentCommand\n+  -> EventOperationsM (Headers '[Header \"Cache-Control\" Text] EventOps.EventRaciReassignmentOutcomeDTO)\n+reassignEventTaskRaci user eventId activityId commandId command =\n+  action `catchError` (\\failure -> throwError failure\n+    { errHeaders = (\"Cache-Control\", \"private, no-store\") : errHeaders failure })\n+  where\n+    action = do\n+      unless (all EventOps.isSafePositiveInteger [eventId, activityId]\n+        && EventOps.validRaciReassignmentCommand command) $\n+        throwError (eventOperationDomainError \"invalid_request\")\n+      requireEventOperationsEnabled\n+      result <- runEventOperationsSessionDb user $\n+        reassignRaci eventId activityId (fromSqlKey (auPartyId user)) commandId command\n+      outcome <- either (throwError . eventOperationDomainError) pure result\n+      pure (addHeader (\"private, no-store\" :: Text) outcome)\n+\n+getEventTaskWithRevision :: AuthedUser -> Int64 -> Int64\n+  -> EventOperationsM (Headers '[Header \"Cache-Control\" Text] EventOps.EventOperationTaskWithRevisionDTO)\n+getEventTaskWithRevision user eventId activityId = do\n+  unless (all EventOps.isSafePositiveInteger [eventId, activityId]) $\n+    throwError (eventOperationDomainError \"invalid_request\")\n+  requireEventOperationsEnabled\n+  task <- runEventOperationsSessionDb user $\n+    loadTaskWithRevision eventId activityId (fromSqlKey (auPartyId user))\n+  value <- maybe (throwError (eventOperationDomainError \"not_found\")) pure task\n+  pure (addHeader (\"private, no-store\" :: Text) value)\n+\n+getEventTask\n+  :: AuthedUser -> Int64 -> Int64\n+  -> EventOperationsM (Headers '[Header \"Cache-Control\" Text] EventOps.EventOperationTaskDTO)\n+getEventTask user eventId activityId = do\n+  unless (all EventOps.isSafePositiveInteger [eventId, activityId]) $\n+    throwError (eventOperationDomainError \"invalid_request\")\n+  requireEventOperationsEnabled\n+  task <- runEventOperationsSessionDb user $\n+    loadTask eventId activityId (fromSqlKey (auPartyId user))\n+  value <- maybe (throwError (eventOperationDomainError \"not_found\")) pure task\n+  pure (addHeader (\"private, no-store\" :: Text) value)\n+\n+runEventOperationsDb :: SqlPersistT IO a -> EventOperationsM a\n+runEventOperationsDb action = do\n+  Env{envPool} <- ask\n+  result <- liftIO (tryDatabaseAction (runSqlPool action envPool))\n+  case result of\n+    Right value -> pure value\n+    Left failure -> do\n+      liftIO $ BL8.putStrLn $ encode (databaseFailureLog failure)\n+      throwError err503\n+        { errBody = encode (object [\"code\" .= (\"event_operations_unavailable\" :: Text)])\n+        , errHeaders = [(\"Content-Type\", \"application/json\")]\n+        }\n+\n+requireEventOperationsEnabled :: EventOperationsM ()\n+requireEventOperationsEnabled = do\n+  tableRows <- runEventOperationsDb $ rawSql\n+    \"SELECT to_regclass('public.event_operation_feature_flag') IS NOT NULL\"\n+    [] :: EventOperationsM [Single Bool]\n+  case tableRows of\n+    [Single True] -> pure ()\n+    _ -> throwError (eventOperationDomainError \"feature_disabled\")\n+  enabledRows <- runEventOperationsDb $ rawSql\n+    \"SELECT enabled FROM event_operation_feature_flag WHERE feature_code = 'event.operations.api'\"\n+    [] :: EventOperationsM [Single Bool]\n+  unless (enabledRows == [Single True]) $\n+    throwError (eventOperationDomainError \"feature_disabled\")\n+\n+-- Authentication and event work use separate pool transactions. Recheck the bound session\n+-- and retain its row lock in the SAME transaction as the event snapshot/command/replay.\n+runEventOperationsSessionDb :: AuthedUser -> SqlPersistT IO a -> EventOperationsM a\n+runEventOperationsSessionDb user action = do\n+  result <- runEventOperationsDb (withCurrentAuthSession user action)\n+  maybe (throwError err401 { errBody = \"Invalid or inactive token\" }) pure result\n+\n+getEventOperationsSnapshot\n+  :: AuthedUser\n+  -> Int64\n+  -> EventOperationsM EventOps.EventOperationSnapshotDTO\n+getEventOperationsSnapshot user eventId = do\n+  requireEventOperationsEnabled\n+  snapshot <- runEventOperationsSessionDb user (loadSnapshot eventId actorPartyId)\n+  maybe (throwError (eventOperationDomainError \"not_found\")) pure snapshot\n+  where\n+    actorPartyId = fromSqlKey (auPartyId user)\n+\n+applyEventTransition\n+  :: AuthedUser\n+  -> Int64\n+  -> UUID.UUID\n+  -> EventOps.EventTransitionCommand\n+  -> EventOperationsM EventOps.EventTransitionOutcomeDTO\n+applyEventTransition user eventId commandId command = do\n+  requireEventOperationsEnabled\n+  responseRows <- runEventOperationsSessionDb user $ rawSql\n+    \"SELECT event_operation_apply_transition(?, ?, ?::uuid, ?, ?, ?, ?, ?)::text\"",
+      "path": "tdf-hq/src/TDF/EventOperations/Server.hs",
+      "commit_id": "08acdfa897832c42ef1582f26ffdd7c23f019b4c",
+      "original_commit_id": "08acdfa897832c42ef1582f26ffdd7c23f019b4c",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Validate transition receipts before committing**\n\nIf the SQL function returns a malformed or target-mismatched receipt after staging a transition\u2014such as during a function/schema regression\u2014`runEventOperationsSessionDb` commits before the decoding at lines 186\u2013197 runs. The handler then returns `invalid_database_response`, but the lifecycle change, audit, and receipt are already durable, unlike the newer RACI/completion boundaries that deliberately validate inside `SqlPersistT`; move strict receipt decoding and target/key/version binding into this transaction.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-10-03T23:57:31Z",
+      "updated_at": "2026-10-03T23:57:31Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/465#discussion_r4175460769",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/465",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4175460769"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/465#discussion_r4175460769"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/465"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4175460769/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 175,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 176,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 176,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4175529848",
+      "pull_request_review_id": 5403591001,
+      "id": 4175529848,
+      "node_id": "PRRC_kwDOQPdUrM744Yd4",
+      "diff_hunk": "@@ -0,0 +1,663 @@\n+BEGIN;\n+\n+SET LOCAL lock_timeout = '10s';\n+SET LOCAL statement_timeout = '10min';\n+\n+-- This unmerged migration is not in the production manifest. Keep authorization\n+-- changes on the command's existing row-lock boundary, without changing business version.\n+ALTER TABLE event_operation_event_state\n+  ADD COLUMN IF NOT EXISTS authorization_version BIGINT NOT NULL DEFAULT 0\n+    CHECK (authorization_version >= 0);\n+\n+CREATE OR REPLACE FUNCTION event_operation_fence_authorization_change()\n+RETURNS trigger\n+LANGUAGE plpgsql\n+SECURITY INVOKER\n+SET search_path = public, pg_temp\n+AS $$\n+DECLARE target_event_id BIGINT;\n+BEGIN\n+  IF TG_OP = 'UPDATE' THEN\n+    IF NEW.id <> OLD.id OR NEW.event_id <> OLD.event_id THEN\n+      RAISE EXCEPTION 'authorization identity/event is immutable; revoke and issue explicitly'\n+        USING ERRCODE = '23514';\n+    END IF;\n+    IF TG_TABLE_NAME = 'event_operation_grant' THEN\n+      IF NEW.grantee_party_id <> OLD.grantee_party_id THEN\n+        RAISE EXCEPTION 'grant recipient is immutable; revoke and issue explicitly' USING ERRCODE = '23514';\n+      END IF;\n+    ELSIF NEW.party_id <> OLD.party_id THEN\n+      RAISE EXCEPTION 'relationship party is immutable; revoke and issue explicitly' USING ERRCODE = '23514';\n+    END IF;\n+  END IF;\n+  target_event_id := CASE WHEN TG_OP = 'DELETE' THEN OLD.event_id ELSE NEW.event_id END;\n+  UPDATE event_operation_event_state\n+    SET authorization_version = authorization_version + 1\n+    WHERE event_id = target_event_id;\n+  IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF;\n+END\n+$$;\n+\n+DROP TRIGGER IF EXISTS event_operation_authorization_fence ON event_operation_grant;\n+CREATE TRIGGER event_operation_authorization_fence\n+BEFORE INSERT OR UPDATE OR DELETE ON event_operation_grant\n+FOR EACH ROW EXECUTE FUNCTION event_operation_fence_authorization_change();\n+DROP TRIGGER IF EXISTS event_operation_authorization_fence ON event_operation_relationship;\n+CREATE TRIGGER event_operation_authorization_fence\n+BEFORE INSERT OR UPDATE OR DELETE ON event_operation_relationship\n+FOR EACH ROW EXECUTE FUNCTION event_operation_fence_authorization_change();\n+\n+CREATE TABLE IF NOT EXISTS event_operation_feature_flag (\n+  feature_code TEXT PRIMARY KEY,\n+  enabled BOOLEAN NOT NULL DEFAULT FALSE,\n+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),\n+  updated_by_party_id BIGINT NULL REFERENCES party(id) ON DELETE SET NULL,\n+  change_reason TEXT NULL,\n+  CONSTRAINT event_operation_feature_flag_code_check CHECK (\n+    feature_code = 'event.operations.api'\n+  ),\n+  CONSTRAINT event_operation_feature_flag_reason_check CHECK (\n+    enabled = FALSE OR NULLIF(btrim(change_reason), '') IS NOT NULL\n+  ),\n+  CONSTRAINT event_operation_feature_flag_actor_check CHECK (\n+    enabled = FALSE OR updated_by_party_id IS NOT NULL\n+  )\n+);\n+\n+INSERT INTO event_operation_feature_flag(feature_code, enabled)\n+VALUES ('event.operations.api', FALSE)\n+ON CONFLICT (feature_code) DO NOTHING;\n+\n+CREATE TABLE IF NOT EXISTS event_operation_feature_flag_history (\n+  id BIGSERIAL PRIMARY KEY,\n+  feature_code TEXT NOT NULL,\n+  enabled BOOLEAN NOT NULL,\n+  changed_at TIMESTAMPTZ NOT NULL DEFAULT now(),\n+  changed_by_party_id BIGINT NULL REFERENCES party(id) ON DELETE SET NULL,\n+  change_reason TEXT NULL,\n+  CONSTRAINT event_operation_feature_flag_history_code_check CHECK (\n+    feature_code = 'event.operations.api'\n+  ),\n+  CONSTRAINT event_operation_feature_flag_history_reason_check CHECK (\n+    enabled = FALSE OR NULLIF(btrim(change_reason), '') IS NOT NULL\n+  ),\n+  CONSTRAINT event_operation_feature_flag_history_actor_check CHECK (\n+    enabled = FALSE OR changed_by_party_id IS NOT NULL\n+  )\n+);\n+\n+CREATE OR REPLACE FUNCTION event_operation_capture_feature_flag_history()\n+RETURNS trigger\n+LANGUAGE plpgsql\n+SECURITY INVOKER\n+SET search_path = public, pg_temp\n+AS $$\n+BEGIN\n+  INSERT INTO event_operation_feature_flag_history(\n+    feature_code, enabled, changed_at, changed_by_party_id, change_reason\n+  ) VALUES (\n+    NEW.feature_code, NEW.enabled, NEW.updated_at,\n+    NEW.updated_by_party_id, NEW.change_reason\n+  );\n+  RETURN NEW;\n+END\n+$$;\n+\n+DROP TRIGGER IF EXISTS event_operation_feature_flag_history_capture\n+  ON event_operation_feature_flag;\n+CREATE TRIGGER event_operation_feature_flag_history_capture\n+AFTER INSERT OR UPDATE OF enabled, updated_at, updated_by_party_id, change_reason\n+ON event_operation_feature_flag\n+FOR EACH ROW EXECUTE FUNCTION event_operation_capture_feature_flag_history();\n+\n+DROP TRIGGER IF EXISTS event_operation_feature_flag_history_immutable\n+  ON event_operation_feature_flag_history;\n+CREATE TRIGGER event_operation_feature_flag_history_immutable\n+BEFORE UPDATE OR DELETE ON event_operation_feature_flag_history\n+FOR EACH ROW EXECUTE FUNCTION event_operation_reject_history_mutation();\n+\n+INSERT INTO event_operation_feature_flag_history(\n+  feature_code, enabled, changed_at, changed_by_party_id, change_reason\n+)\n+SELECT\n+  flag.feature_code, flag.enabled, flag.updated_at,\n+  flag.updated_by_party_id, flag.change_reason\n+FROM event_operation_feature_flag flag\n+WHERE NOT EXISTS (\n+  SELECT 1 FROM event_operation_feature_flag_history history\n+  WHERE history.feature_code = flag.feature_code\n+);\n+\n+CREATE TABLE IF NOT EXISTS event_operation_transition_capability (\n+  from_state TEXT NOT NULL,\n+  to_state TEXT NOT NULL,\n+  write_enabled BOOLEAN NOT NULL DEFAULT FALSE,\n+  rationale TEXT NOT NULL,\n+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),\n+  PRIMARY KEY (from_state, to_state),\n+  FOREIGN KEY (from_state, to_state)\n+    REFERENCES event_operation_lifecycle_transition_policy(from_state, to_state),\n+  CONSTRAINT event_operation_transition_capability_rationale_check CHECK (\n+    NULLIF(btrim(rationale), '') IS NOT NULL\n+  )\n+);\n+\n+INSERT INTO event_operation_transition_capability(\n+  from_state, to_state, write_enabled, rationale\n+)\n+SELECT\n+  policy.from_state,\n+  policy.to_state,\n+  (policy.from_state, policy.to_state) IN (\n+    ('draft', 'planning'),\n+    ('planning', 'pending_approval'),\n+    ('pending_approval', 'planning'),\n+    ('pending_approval', 'approved'),\n+    ('approved', 'planning')\n+  ),\n+  CASE\n+    WHEN (policy.from_state, policy.to_state) IN (\n+      ('draft', 'planning'),\n+      ('planning', 'pending_approval'),\n+      ('pending_approval', 'planning'),\n+      ('pending_approval', 'approved'),\n+      ('approved', 'planning')\n+    ) THEN 'phase-3 planning and independent approval transition has no public, booking, ticket, contract, or financial side effect'\n+    ELSE 'disabled until its synchronous guards and compensating/outbox effects are implemented and tested'\n+  END\n+FROM event_operation_lifecycle_transition_policy policy\n+ON CONFLICT (from_state, to_state) DO NOTHING;\n+\n+CREATE UNIQUE INDEX IF NOT EXISTS event_operation_command_receipt_global_key\n+  ON event_operation_command_receipt(event_id, operation_code, command_id);\n+\n+CREATE OR REPLACE FUNCTION event_operation_actor_capabilities(\n+  target_event_id BIGINT,\n+  target_actor_party_id BIGINT,\n+  evaluated_at TIMESTAMPTZ DEFAULT now()\n+)\n+RETURNS TABLE(scope_code TEXT)\n+LANGUAGE sql\n+STABLE\n+SECURITY INVOKER\n+SET search_path = public, pg_temp\n+AS $$\n+  SELECT owner_scope.scope_code\n+  FROM event_operation_relationship relationship\n+  CROSS JOIN LATERAL unnest(ARRAY[\n+    'event.read', 'event.manage', 'event.publish',\n+    'task.read', 'task.manage', 'booking.manage', 'contract.manage',\n+    'finance.read', 'audit.read'\n+  ]::TEXT[]) AS owner_scope(scope_code)\n+  WHERE relationship.event_id = target_event_id\n+    AND relationship.party_id = target_actor_party_id\n+    AND relationship.relationship_kind IN ('primary_owner', 'co_owner')\n+    AND relationship.revoked_at IS NULL\n+    AND relationship.valid_from <= evaluated_at\n+    AND (relationship.valid_until IS NULL OR relationship.valid_until > evaluated_at)\n+  UNION\n+  SELECT grant_record.scope_code\n+  FROM event_operation_grant grant_record\n+  WHERE grant_record.event_id = target_event_id\n+    AND grant_record.grantee_party_id = target_actor_party_id\n+    AND grant_record.resource_kind = 'event'\n+    AND grant_record.resource_id IS NULL\n+    AND grant_record.revoked_at IS NULL\n+    AND grant_record.valid_from <= evaluated_at\n+    AND (grant_record.valid_until IS NULL OR grant_record.valid_until > evaluated_at)\n+$$;\n+\n+CREATE OR REPLACE FUNCTION event_operation_actor_can_read(\n+  target_event_id BIGINT,\n+  target_actor_party_id BIGINT,\n+  evaluated_at TIMESTAMPTZ DEFAULT now()\n+)\n+RETURNS BOOLEAN\n+LANGUAGE sql\n+STABLE\n+SECURITY INVOKER\n+SET search_path = public, pg_temp\n+AS $$\n+  SELECT EXISTS (\n+    SELECT 1\n+    FROM event_operation_actor_capabilities(\n+      target_event_id, target_actor_party_id, evaluated_at\n+    ) capability\n+    WHERE capability.scope_code IN (\n+      'event.read', 'event.manage', 'event.publish', 'event.approve',\n+      'task.read', 'task.manage', 'booking.manage', 'contract.manage',\n+      'finance.read', 'finance.approve', 'audit.read'\n+    )\n+  )\n+$$;\n+\n+CREATE OR REPLACE FUNCTION event_operation_actor_has_authority(\n+  target_event_id BIGINT,\n+  target_actor_party_id BIGINT,\n+  required_authority_code TEXT,\n+  evaluated_at TIMESTAMPTZ DEFAULT now()\n+)\n+RETURNS BOOLEAN\n+LANGUAGE sql\n+STABLE\n+SECURITY INVOKER\n+SET search_path = public, pg_temp\n+AS $$\n+  SELECT CASE required_authority_code\n+    WHEN 'owner' THEN EXISTS (\n+      SELECT 1 FROM event_operation_actor_capabilities(\n+        target_event_id, target_actor_party_id, evaluated_at\n+      ) capability WHERE capability.scope_code = 'event.manage'\n+    )\n+    WHEN 'event_approver' THEN EXISTS (\n+      SELECT 1 FROM event_operation_actor_capabilities(\n+        target_event_id, target_actor_party_id, evaluated_at\n+      ) capability WHERE capability.scope_code = 'event.approve'\n+    )\n+    WHEN 'finance_approver' THEN EXISTS (\n+      SELECT 1 FROM event_operation_actor_capabilities(\n+        target_event_id, target_actor_party_id, evaluated_at\n+      ) capability WHERE capability.scope_code = 'finance.approve'\n+    )\n+    WHEN 'records_manager' THEN\n+      EXISTS (\n+        SELECT 1 FROM event_operation_actor_capabilities(\n+          target_event_id, target_actor_party_id, evaluated_at\n+        ) capability WHERE capability.scope_code = 'event.manage'\n+      )\n+      AND EXISTS (\n+        SELECT 1 FROM event_operation_actor_capabilities(\n+          target_event_id, target_actor_party_id, evaluated_at\n+        ) capability WHERE capability.scope_code = 'audit.read'\n+      )\n+    ELSE FALSE\n+  END\n+$$;\n+\n+CREATE OR REPLACE FUNCTION event_operation_record_transition_rejection(\n+  target_event_id BIGINT,\n+  target_actor_party_id BIGINT,\n+  target_command_id UUID,\n+  request_hash BYTEA,\n+  requested_expected_version BIGINT,\n+  current_version BIGINT,\n+  current_state TEXT,\n+  error_code TEXT,\n+  error_outcome TEXT,\n+  rejection_reason TEXT,\n+  correlation_reference TEXT\n+)\n+RETURNS JSONB\n+LANGUAGE plpgsql\n+SECURITY INVOKER\n+SET search_path = public, pg_temp\n+AS $$\n+DECLARE\n+  response_payload JSONB;\n+BEGIN\n+  response_payload := jsonb_strip_nulls(jsonb_build_object(\n+    'error', error_code,\n+    'eventId', target_event_id,\n+    'canonicalState', current_state,\n+    'currentVersion', current_version,\n+    'commandId', target_command_id,\n+    'replayed', FALSE\n+  ));\n+\n+  INSERT INTO event_operation_command_receipt(\n+    event_id, actor_party_id, operation_code, command_id, request_sha256,\n+    expected_version, result_version, outcome, response\n+  ) VALUES (\n+    target_event_id, target_actor_party_id, 'event.lifecycle.transition',\n+    target_command_id, request_hash, requested_expected_version, current_version,\n+    error_outcome, response_payload\n+  );\n+\n+  INSERT INTO event_operation_audit_event(\n+    event_id, actor_party_id, actor_reference, operation_code, command_id,\n+    resource_kind, resource_id, outcome, reason, before_state, correlation_id\n+  ) VALUES (\n+    target_event_id, target_actor_party_id,\n+    'party:' || target_actor_party_id::TEXT,\n+    'event.lifecycle.transition', target_command_id,\n+    'event', target_event_id::TEXT, error_outcome, rejection_reason,\n+    CASE WHEN current_state IS NULL THEN NULL ELSE jsonb_build_object(\n+      'canonicalState', current_state, 'version', current_version\n+    ) END,\n+    correlation_reference\n+  );\n+\n+  RETURN response_payload;\n+END\n+$$;\n+\n+CREATE OR REPLACE FUNCTION event_operation_apply_transition(\n+  target_event_id BIGINT,\n+  target_actor_party_id BIGINT,\n+  target_command_id UUID,\n+  requested_expected_version BIGINT,\n+  requested_target_state TEXT,\n+  requested_reason TEXT,\n+  correlation_reference TEXT,\n+  request_sha256_hex TEXT\n+)\n+RETURNS JSONB\n+LANGUAGE plpgsql\n+SECURITY INVOKER\n+SET search_path = public, pg_temp\n+AS $$\n+DECLARE\n+  state_record event_operation_event_state%ROWTYPE;\n+  policy_record event_operation_lifecycle_transition_policy%ROWTYPE;\n+  prior_receipt event_operation_command_receipt%ROWTYPE;\n+  has_prior_receipt BOOLEAN;\n+  request_hash BYTEA;\n+  response_payload JSONB;\n+  review_requester BIGINT;\n+  effective_reason TEXT := NULLIF(btrim(requested_reason), '');\n+  effective_correlation TEXT := COALESCE(\n+    NULLIF(btrim(correlation_reference), ''),\n+    'command:' || target_command_id::TEXT\n+  );\n+BEGIN\n+  IF NOT EXISTS (\n+    SELECT 1 FROM event_operation_feature_flag flag\n+    WHERE flag.feature_code = 'event.operations.api' AND flag.enabled\n+  ) THEN",
+      "path": "tdf-hq/sql/2026-09-14_event_operations_api.sql",
+      "commit_id": "08acdfa897832c42ef1582f26ffdd7c23f019b4c",
+      "original_commit_id": "08acdfa897832c42ef1582f26ffdd7c23f019b4c",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in `34ca75d3d92d2a6def22e63ddd47baa96edca878`. The lifecycle function now takes a shared lock on the enabled feature-flag row before the event row and retains it through transaction completion, matching task/snapshot lock order. The native PostgreSQL16 regression reproduces the old command-first race, then verifies both command-first and disable-first orders at READ COMMITTED, REPEATABLE READ and SERIALIZABLE using observed blocking relationships. All existing migration/replay/rollback assertions also pass. This adapter remains outside the 160-entry production manifest, whose SQL files are unchanged. Current-head hosted CI and fresh independent approval remain required.",
+      "created_at": "2026-10-04T00:27:43Z",
+      "updated_at": "2026-10-04T00:27:43Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/465#discussion_r4175529848",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/465",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4175529848"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/465#discussion_r4175529848"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/465"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4175529848/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 363,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 366,
+      "side": "RIGHT",
+      "in_reply_to_id": 4175460766,
+      "author_association": "OWNER",
+      "original_position": 366,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4175530074",
+      "pull_request_review_id": 5403591187,
+      "id": 4175530074,
+      "node_id": "PRRC_kwDOQPdUrM744Yha",
+      "diff_hunk": "@@ -0,0 +1,232 @@\n+{-# LANGUAGE DataKinds #-}\n+{-# LANGUAGE NamedFieldPuns #-}\n+{-# LANGUAGE OverloadedStrings #-}\n+\n+module TDF.EventOperations.Server\n+  ( eventOperationsServer\n+  , eventOperationDomainError\n+  ) where\n+\n+import Control.Monad (unless)\n+import Control.Monad.Except (catchError)\n+import Control.Monad.IO.Class (liftIO)\n+import Control.Monad.Reader (ReaderT, ask)\n+import Crypto.Hash (Digest, SHA256, hash)\n+import Data.Aeson (Value(..), decodeStrict', encode, fromJSON, object, Result(..), (.=))\n+import qualified Data.Aeson.KeyMap as KeyMap\n+import qualified Data.ByteString.Lazy.Char8 as BL8\n+import Data.Int (Int64)\n+import Data.Text (Text)\n+import qualified Data.Text as T\n+import qualified Data.Text.Encoding as TE\n+import qualified Data.ByteString.Lazy as BL\n+import qualified Data.UUID as UUID\n+import Database.Persist (PersistValue(..))\n+import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool)\n+import Servant\n+\n+import TDF.Auth (AuthedUser(..), withCurrentAuthSession)\n+import TDF.DB (Env(..))\n+import TDF.EventOperations.API (EventOperationsAPI)\n+import TDF.EventOperations.DatabaseBoundary\n+  ( databaseFailureLog, loadSnapshot, loadTask, loadTaskWithRevision, reassignRaci,\n+    loadRaciEditorContext, completeTask, tryDatabaseAction )\n+import qualified TDF.EventOperations.Types as EventOps\n+\n+type EventOperationsM = ReaderT Env Handler\n+\n+eventOperationsServer :: AuthedUser -> ServerT EventOperationsAPI EventOperationsM\n+eventOperationsServer user eventId =\n+       getEventOperationsSnapshot user eventId\n+  :<|> applyEventTransition user eventId\n+  :<|> getEventTask user eventId\n+  :<|> getEventTaskWithRevision user eventId\n+  :<|> reassignEventTaskRaci user eventId\n+  :<|> getRaciEditorContext user eventId\n+  :<|> completeEventTask user eventId\n+\n+completeEventTask :: AuthedUser -> Int64 -> Int64 -> UUID.UUID\n+  -> EventOps.EventTaskCompletionCommand\n+  -> EventOperationsM (Headers '[Header \"Cache-Control\" Text] EventOps.EventTaskCompletionOutcomeDTO)\n+completeEventTask user eventId activityId commandId command =\n+  action `catchError` (\\failure -> throwError failure\n+    { errHeaders = (\"Cache-Control\", \"private, no-store\") : errHeaders failure })\n+  where\n+    action = do\n+      unless (all EventOps.isSafePositiveInteger [eventId, activityId]\n+        && EventOps.validTaskCompletionCommand command) $\n+        throwError (eventOperationDomainError \"invalid_request\")\n+      requireEventOperationsEnabled\n+      result <- runEventOperationsSessionDb user $\n+        completeTask eventId activityId (fromSqlKey (auPartyId user)) commandId command\n+      outcome <- either (throwError . eventOperationDomainError) pure result\n+      pure (addHeader (\"private, no-store\" :: Text) outcome)\n+\n+getRaciEditorContext :: AuthedUser -> Int64 -> Int64 -> Maybe Int64\n+  -> EventOperationsM (Headers '[Header \"Cache-Control\" Text] EventOps.EventRaciEditorContextDTO)\n+getRaciEditorContext user eventId activityId afterPartyId =\n+  action `catchError` (\\failure -> throwError failure\n+    { errHeaders = (\"Cache-Control\", \"private, no-store\") : errHeaders failure })\n+  where\n+    cursor = maybe 0 id afterPartyId\n+    action = do\n+      unless (all EventOps.isSafePositiveInteger [eventId,activityId]\n+        && cursor >= 0 && cursor <= 9007199254740991) $\n+        throwError (eventOperationDomainError \"invalid_request\")\n+      requireEventOperationsEnabled\n+      result <- runEventOperationsSessionDb user $\n+        loadRaciEditorContext eventId activityId (fromSqlKey (auPartyId user)) cursor\n+      context <- maybe (throwError (eventOperationDomainError \"not_found\")) pure result\n+      pure (addHeader (\"private, no-store\" :: Text) context)\n+\n+reassignEventTaskRaci :: AuthedUser -> Int64 -> Int64 -> UUID.UUID\n+  -> EventOps.EventRaciReassignmentCommand\n+  -> EventOperationsM (Headers '[Header \"Cache-Control\" Text] EventOps.EventRaciReassignmentOutcomeDTO)\n+reassignEventTaskRaci user eventId activityId commandId command =\n+  action `catchError` (\\failure -> throwError failure\n+    { errHeaders = (\"Cache-Control\", \"private, no-store\") : errHeaders failure })\n+  where\n+    action = do\n+      unless (all EventOps.isSafePositiveInteger [eventId, activityId]\n+        && EventOps.validRaciReassignmentCommand command) $\n+        throwError (eventOperationDomainError \"invalid_request\")\n+      requireEventOperationsEnabled\n+      result <- runEventOperationsSessionDb user $\n+        reassignRaci eventId activityId (fromSqlKey (auPartyId user)) commandId command\n+      outcome <- either (throwError . eventOperationDomainError) pure result\n+      pure (addHeader (\"private, no-store\" :: Text) outcome)\n+\n+getEventTaskWithRevision :: AuthedUser -> Int64 -> Int64\n+  -> EventOperationsM (Headers '[Header \"Cache-Control\" Text] EventOps.EventOperationTaskWithRevisionDTO)\n+getEventTaskWithRevision user eventId activityId = do\n+  unless (all EventOps.isSafePositiveInteger [eventId, activityId]) $\n+    throwError (eventOperationDomainError \"invalid_request\")\n+  requireEventOperationsEnabled\n+  task <- runEventOperationsSessionDb user $\n+    loadTaskWithRevision eventId activityId (fromSqlKey (auPartyId user))\n+  value <- maybe (throwError (eventOperationDomainError \"not_found\")) pure task\n+  pure (addHeader (\"private, no-store\" :: Text) value)\n+\n+getEventTask\n+  :: AuthedUser -> Int64 -> Int64\n+  -> EventOperationsM (Headers '[Header \"Cache-Control\" Text] EventOps.EventOperationTaskDTO)\n+getEventTask user eventId activityId = do\n+  unless (all EventOps.isSafePositiveInteger [eventId, activityId]) $\n+    throwError (eventOperationDomainError \"invalid_request\")\n+  requireEventOperationsEnabled\n+  task <- runEventOperationsSessionDb user $\n+    loadTask eventId activityId (fromSqlKey (auPartyId user))\n+  value <- maybe (throwError (eventOperationDomainError \"not_found\")) pure task\n+  pure (addHeader (\"private, no-store\" :: Text) value)\n+\n+runEventOperationsDb :: SqlPersistT IO a -> EventOperationsM a\n+runEventOperationsDb action = do\n+  Env{envPool} <- ask\n+  result <- liftIO (tryDatabaseAction (runSqlPool action envPool))\n+  case result of\n+    Right value -> pure value\n+    Left failure -> do\n+      liftIO $ BL8.putStrLn $ encode (databaseFailureLog failure)\n+      throwError err503\n+        { errBody = encode (object [\"code\" .= (\"event_operations_unavailable\" :: Text)])\n+        , errHeaders = [(\"Content-Type\", \"application/json\")]\n+        }\n+\n+requireEventOperationsEnabled :: EventOperationsM ()\n+requireEventOperationsEnabled = do\n+  tableRows <- runEventOperationsDb $ rawSql\n+    \"SELECT to_regclass('public.event_operation_feature_flag') IS NOT NULL\"\n+    [] :: EventOperationsM [Single Bool]\n+  case tableRows of\n+    [Single True] -> pure ()\n+    _ -> throwError (eventOperationDomainError \"feature_disabled\")\n+  enabledRows <- runEventOperationsDb $ rawSql\n+    \"SELECT enabled FROM event_operation_feature_flag WHERE feature_code = 'event.operations.api'\"\n+    [] :: EventOperationsM [Single Bool]\n+  unless (enabledRows == [Single True]) $\n+    throwError (eventOperationDomainError \"feature_disabled\")\n+\n+-- Authentication and event work use separate pool transactions. Recheck the bound session\n+-- and retain its row lock in the SAME transaction as the event snapshot/command/replay.\n+runEventOperationsSessionDb :: AuthedUser -> SqlPersistT IO a -> EventOperationsM a\n+runEventOperationsSessionDb user action = do\n+  result <- runEventOperationsDb (withCurrentAuthSession user action)\n+  maybe (throwError err401 { errBody = \"Invalid or inactive token\" }) pure result\n+\n+getEventOperationsSnapshot\n+  :: AuthedUser\n+  -> Int64\n+  -> EventOperationsM EventOps.EventOperationSnapshotDTO\n+getEventOperationsSnapshot user eventId = do\n+  requireEventOperationsEnabled\n+  snapshot <- runEventOperationsSessionDb user (loadSnapshot eventId actorPartyId)\n+  maybe (throwError (eventOperationDomainError \"not_found\")) pure snapshot\n+  where\n+    actorPartyId = fromSqlKey (auPartyId user)\n+\n+applyEventTransition\n+  :: AuthedUser\n+  -> Int64\n+  -> UUID.UUID\n+  -> EventOps.EventTransitionCommand\n+  -> EventOperationsM EventOps.EventTransitionOutcomeDTO\n+applyEventTransition user eventId commandId command = do\n+  requireEventOperationsEnabled\n+  responseRows <- runEventOperationsSessionDb user $ rawSql\n+    \"SELECT event_operation_apply_transition(?, ?, ?::uuid, ?, ?, ?, ?, ?)::text\"",
+      "path": "tdf-hq/src/TDF/EventOperations/Server.hs",
+      "commit_id": "08acdfa897832c42ef1582f26ffdd7c23f019b4c",
+      "original_commit_id": "08acdfa897832c42ef1582f26ffdd7c23f019b4c",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in `34ca75d3d92d2a6def22e63ddd47baa96edca878`. Strict lifecycle receipt decoding now runs inside SqlPersistT under the current-session fence. It binds event, command UUID, target state and exact next version; malformed or foreign results throw a private typed exception before commit. The public invalid_database_response HTTP500 envelope is retained. The actual compiled/authenticated HTTP harness passes110 examples: eight injected corrupt results after real SQL writes leave lifecycle state, transition, audit and receipt rows unchanged; restoring the function permits one successful command and exact replay. Pure cases also cover malformed/cardinality/bound rejection envelopes and version overflow. Current-head hosted CI and fresh independent approval remain required.",
+      "created_at": "2026-10-04T00:27:49Z",
+      "updated_at": "2026-10-04T00:27:49Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/465#discussion_r4175530074",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/465",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4175530074"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/465#discussion_r4175530074"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/465"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4175530074/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 175,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 176,
+      "side": "RIGHT",
+      "in_reply_to_id": 4175460769,
+      "author_association": "OWNER",
+      "original_position": 176,
+      "position": 1,
+      "subject_type": "line"
+    }
+  ]
+]

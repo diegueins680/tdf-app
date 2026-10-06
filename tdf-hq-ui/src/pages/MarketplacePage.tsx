@@ -80,7 +80,7 @@ import {
 
 const API_BASE = (import.meta.env?.VITE_API_BASE && import.meta.env.VITE_API_BASE.trim() !== ''
   ? import.meta.env.VITE_API_BASE
-  : 'https://tdf-hq.fly.dev');
+  : 'https://api.tdfrecords.net');
 const normalizeGoogleDriveUrl = (url: string): string | null => {
   const trimmed = url.trim();
   if (trimmed === '') return null;

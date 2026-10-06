@@ -1,0 +1,25 @@
+ .github/workflows/event-operations-formal.yml      |  12 ++
+ docs/event-operations/README.md                    |   2 +
+ docs/event-operations/delivery-plan.md             |   8 +
+ .../event-operations/pr-13-task-read-projection.md |  95 +++++++++++
+ docs/event-operations/task-read-contract.md        |  55 +++++++
+ docs/event-operations/traceability-matrix.md       |   1 +
+ formal/event-operations/README.md                  |   8 +
+ formal/event-operations/TaskRead.cfg               |   4 +
+ formal/event-operations/TaskRead.tla               |  54 +++++++
+ formal/event-operations/TaskReadEarly.cfg          |   4 +
+ formal/event-operations/TaskReadEvent.cfg          |   4 +
+ formal/event-operations/TaskReadMixed.cfg          |   4 +
+ formal/event-operations/TaskReadScope.cfg          |   4 +
+ formal/event-operations/TaskReadStructure.als      |  57 +++++++
+ package.json                                       |   1 +
+ .../event-operations-schema-rehearsal.test.mjs     |  30 ++++
+ scripts/test-event-operations-schema-rehearsal.sh  |   2 +
+ scripts/test-event-task-read-migration.sh          | 175 +++++++++++++++++++++
+ scripts/verify-event-operations-formal.sh          |  21 +++
+ tdf-hq/sql/2026-09-14_event_task_read.sql          |  95 +++++++++++
+ tdf-hq/sql/2026-09-14_event_task_read_rollback.sql |   6 +
+ .../event_operations_schema_assertions.sql         |  16 ++
+ .../event_operations_schema_reapply_assertions.sql |   3 +
+ .../integration/event_task_read_assertions.sql     | 119 ++++++++++++++
+ 24 files changed, 780 insertions(+)

@@ -40,6 +40,14 @@ describe('notification target routing', () => {
     }))).toBe('/social/eventos/42/logistica');
   });
 
+  it('opens the release workspace for music editorial notifications', () => {
+    expect(notificationTargetPath(notification({
+      nType: 'music_release_changes_requested',
+      nTargetType: 'music_release',
+      nTargetId: 84,
+    }))).toBe('/label/releases');
+  });
+
   it('does not invent destinations for informational notifications', () => {
     expect(notificationTargetPath(notification({ nTargetType: 'artist' }))).toBeNull();
   });

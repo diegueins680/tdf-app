@@ -1,0 +1,300 @@
+{
+  "id": 111330032910,
+  "run_id": 37166338528,
+  "workflow_name": "CI",
+  "head_branch": "audit/event-stack-consolidation-20260928",
+  "run_url": "https://api.github.com/repos/diegueins680/tdf-app/actions/runs/37166338528",
+  "run_attempt": 1,
+  "node_id": "CR_kwDOQPdUrM8AAAAZ68l9Dg",
+  "head_sha": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+  "url": "https://api.github.com/repos/diegueins680/tdf-app/actions/jobs/111330032910",
+  "html_url": "https://github.com/diegueins680/tdf-app/actions/runs/37166338528/job/111330032910",
+  "status": "in_progress",
+  "conclusion": null,
+  "created_at": "2026-10-04T00:54:38Z",
+  "started_at": "2026-10-04T00:54:40Z",
+  "completed_at": null,
+  "name": "backend-quality",
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 1,
+      "started_at": "2026-10-04T00:54:41Z",
+      "completed_at": "2026-10-04T00:54:42Z"
+    },
+    {
+      "name": "Initialize containers",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 2,
+      "started_at": "2026-10-04T00:54:42Z",
+      "completed_at": "2026-10-04T00:55:20Z"
+    },
+    {
+      "name": "Checkout",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 3,
+      "started_at": "2026-10-04T00:55:20Z",
+      "completed_at": "2026-10-04T00:55:27Z"
+    },
+    {
+      "name": "Install native build dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 4,
+      "started_at": "2026-10-04T00:55:27Z",
+      "completed_at": "2026-10-04T00:55:33Z"
+    },
+    {
+      "name": "Restore immutable Stack dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 5,
+      "started_at": "2026-10-04T00:55:33Z",
+      "completed_at": "2026-10-04T00:55:53Z"
+    },
+    {
+      "name": "Restore incremental backend objects",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 6,
+      "started_at": "2026-10-04T00:55:53Z",
+      "completed_at": "2026-10-04T00:56:04Z"
+    },
+    {
+      "name": "Build and test backend once",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 7,
+      "started_at": "2026-10-04T00:56:04Z",
+      "completed_at": "2026-10-04T01:05:56Z"
+    },
+    {
+      "name": "Verify artist self-service transactions and migration",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 8,
+      "started_at": "2026-10-04T01:05:56Z",
+      "completed_at": "2026-10-04T01:05:58Z"
+    },
+    {
+      "name": "Verify social session revocation and model-derived HTTP fixtures",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 9,
+      "started_at": "2026-10-04T01:05:58Z",
+      "completed_at": "2026-10-04T01:08:38Z"
+    },
+    {
+      "name": "Verify event operations HTTP runner safety guards",
+      "status": "completed",
+      "conclusion": "success",
+      "number": 10,
+      "started_at": "2026-10-04T01:08:38Z",
+      "completed_at": "2026-10-04T01:08:38Z"
+    },
+    {
+      "name": "Verify event operations authenticated HTTP boundary",
+      "status": "in_progress",
+      "conclusion": null,
+      "number": 11,
+      "started_at": "2026-10-04T01:08:38Z",
+      "completed_at": null
+    },
+    {
+      "name": "Verify authenticated artist merch HTTP runtime",
+      "status": "pending",
+      "conclusion": null,
+      "number": 12,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "name": "Verify provider identity authentication and concurrent linking",
+      "status": "pending",
+      "conclusion": null,
+      "number": 13,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "name": "Verify atomic Live Session identity intake",
+      "status": "pending",
+      "conclusion": null,
+      "number": 14,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "name": "Verify source-scoped course contacts and registration retries",
+      "status": "pending",
+      "conclusion": null,
+      "number": 15,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "name": "Verify trial enquiries and actor-scoped student creation",
+      "status": "pending",
+      "conclusion": null,
+      "number": 16,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "name": "Verify marketplace contact identity and evidence retries",
+      "status": "pending",
+      "conclusion": null,
+      "number": 17,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "name": "Verify reversible identity reconciliation",
+      "status": "pending",
+      "conclusion": null,
+      "number": 18,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "name": "Verify resumable video ingestion and migration invariants",
+      "status": "pending",
+      "conclusion": null,
+      "number": 19,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "name": "Verify shared event pilot and publication boundaries",
+      "status": "pending",
+      "conclusion": null,
+      "number": 20,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "name": "Verify automatic migrations against the production schema",
+      "status": "pending",
+      "conclusion": null,
+      "number": 21,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "name": "Verify contact HTTP concurrency, authorization, archival and rollback",
+      "status": "pending",
+      "conclusion": null,
+      "number": 22,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "name": "Verify artist claim preparation concurrency and privacy",
+      "status": "pending",
+      "conclusion": null,
+      "number": 23,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "name": "Verify public catalog persistence contract and database round trips",
+      "status": "pending",
+      "conclusion": null,
+      "number": 24,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "name": "Verify calendar runtime schema and admin HTTP contract",
+      "status": "pending",
+      "conclusion": null,
+      "number": 25,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "name": "Verify navigation first-visit concurrency and account isolation",
+      "status": "pending",
+      "conclusion": null,
+      "number": 26,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "name": "Verify paused experiment authority and concurrent HTTP persistence",
+      "status": "pending",
+      "conclusion": null,
+      "number": 27,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "name": "Exercise public booking HTTP idempotency and resource conflicts",
+      "status": "pending",
+      "conclusion": null,
+      "number": 28,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "name": "Verify universal interactions through real HTTP sessions",
+      "status": "pending",
+      "conclusion": null,
+      "number": 29,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "name": "Upload tested backend executable",
+      "status": "pending",
+      "conclusion": null,
+      "number": 30,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "name": "Post Restore incremental backend objects",
+      "status": "pending",
+      "conclusion": null,
+      "number": 57,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "name": "Post Restore immutable Stack dependencies",
+      "status": "pending",
+      "conclusion": null,
+      "number": 58,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "name": "Post Checkout",
+      "status": "pending",
+      "conclusion": null,
+      "number": 59,
+      "started_at": null,
+      "completed_at": null
+    },
+    {
+      "name": "Stop containers",
+      "status": "pending",
+      "conclusion": null,
+      "number": 60,
+      "started_at": null,
+      "completed_at": null
+    }
+  ],
+  "check_run_url": "https://api.github.com/repos/diegueins680/tdf-app/check-runs/111330032910",
+  "labels": [
+    "ubuntu-latest"
+  ],
+  "runner_id": 1000047389,
+  "runner_name": "GitHub Actions 1000047389",
+  "runner_group_id": 0,
+  "runner_group_name": "GitHub Actions"
+}

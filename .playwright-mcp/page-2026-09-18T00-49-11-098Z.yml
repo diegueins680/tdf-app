@@ -1,0 +1,107 @@
+- generic [ref=e9]:
+  - generic [ref=e12]:
+    - link [ref=e17] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=e22]
+    - generic [ref=e25]:
+      - link [ref=e30] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=e35]
+      - link [ref=e40] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=e45]
+      - link [ref=e52] [cursor=pointer]:
+        - /url: /direct/inbox/
+        - generic [ref=e55]:
+          - img "Messages" [ref=e57]
+          - generic "Direct messaging - 2 new notifications link" [ref=e59]: "2"
+      - link [ref=e65] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=e70]
+      - link [ref=e77] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=e82]
+      - link [ref=e88] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=e93]
+      - link [ref=e98] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=e103]
+      - link [ref=e110] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=e115]:
+          - img "tdf.records.label's profile picture" [ref=e116]
+    - generic [ref=e117]:
+      - link [ref=e120] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=e125]
+      - link [ref=e128] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=e133]
+  - main [ref=e137]:
+    - generic [ref=e139]:
+      - navigation "Thread list" [ref=e140]:
+        - generic [ref=e141]:
+          - generic [ref=e142]:
+            - status "Loading..." [ref=e143]
+            - status "Loading..." [ref=e145]
+          - generic [ref=e146]:
+            - status "Loading..." [ref=e148]
+            - generic [ref=e149]:
+              - status "Loading..." [ref=e150]
+              - status "Loading..." [ref=e151]
+          - generic [ref=e152]:
+            - status "Loading..." [ref=e154]
+            - generic [ref=e155]:
+              - status "Loading..." [ref=e156]
+              - status "Loading..." [ref=e157]
+          - generic [ref=e158]:
+            - status "Loading..." [ref=e160]
+            - generic [ref=e161]:
+              - status "Loading..." [ref=e162]
+              - status "Loading..." [ref=e163]
+          - generic [ref=e164]:
+            - status "Loading..." [ref=e166]
+            - generic [ref=e167]:
+              - status "Loading..." [ref=e168]
+              - status "Loading..." [ref=e169]
+          - generic [ref=e170]:
+            - status "Loading..." [ref=e172]
+            - generic [ref=e173]:
+              - status "Loading..." [ref=e174]
+              - status "Loading..." [ref=e175]
+          - generic [ref=e176]:
+            - status "Loading..." [ref=e178]
+            - generic [ref=e179]:
+              - status "Loading..." [ref=e180]
+              - status "Loading..." [ref=e181]
+          - generic [ref=e182]:
+            - status "Loading..." [ref=e184]
+            - generic [ref=e185]:
+              - status "Loading..." [ref=e186]
+              - status "Loading..." [ref=e187]
+          - generic [ref=e188]:
+            - status "Loading..." [ref=e190]
+            - generic [ref=e191]:
+              - status "Loading..." [ref=e192]
+              - status "Loading..." [ref=e193]
+          - generic [ref=e194]:
+            - status "Loading..." [ref=e196]
+            - generic [ref=e197]:
+              - status "Loading..." [ref=e198]
+              - status "Loading..." [ref=e199]
+          - generic [ref=e200]:
+            - status "Loading..." [ref=e202]
+            - generic [ref=e203]:
+              - status "Loading..." [ref=e204]
+              - status "Loading..." [ref=e205]
+          - generic [ref=e206]:
+            - status "Loading..." [ref=e208]
+            - generic [ref=e209]:
+              - status "Loading..." [ref=e210]
+              - status "Loading..." [ref=e211]
+      - generic [ref=e214]:
+        - status "Loading..." [ref=e215]
+        - status "Loading..." [ref=e216]
+        - status "Loading..." [ref=e217]
+        - status "Loading..." [ref=e218]

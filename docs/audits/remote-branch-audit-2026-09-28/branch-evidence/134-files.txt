@@ -1,0 +1,12 @@
+M	.github/workflows/ci.yml
+M	docs/event-operations/README.md
+M	docs/event-operations/delivery-plan.md
+A	docs/event-operations/merch-expiry-test-contract.md
+M	docs/event-operations/pr-11-schema-dependencies.md
+A	docs/event-operations/pr-12-merch-expiry-contract.md
+M	docs/event-operations/traceability-matrix.md
+M	scripts/__tests__/ci-change-scope.test.mjs
+M	scripts/__tests__/ci-pipeline.test.mjs
+M	scripts/ci-change-scope.mjs
+M	scripts/test-artist-merch-storefronts-migration.sh
+A	tdf-hq/test/integration/merch_checkout_expiry_assertions.sql

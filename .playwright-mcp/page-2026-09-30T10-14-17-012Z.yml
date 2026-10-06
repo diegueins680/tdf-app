@@ -1,0 +1,373 @@
+- generic [ref=f45e4]:
+  - generic [ref=f45e9]:
+    - generic [ref=f45e12]:
+      - link [ref=f45e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f45e22]
+      - generic [ref=f45e25]:
+        - link [ref=f45e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f45e35]
+        - link [ref=f45e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f45e45]
+        - link [ref=f45e52] [cursor=pointer]:
+          - /url: /direct/t/116115353113940
+          - generic [ref=f45e55]:
+            - img "Messages" [ref=f45e57]
+            - generic "Direct messaging - 8 new notifications link" [ref=f45e60]: "8"
+        - link [ref=f45e66] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f45e71]
+        - link [ref=f45e78] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f45e83]
+        - link [ref=f45e89] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f45e94]
+        - link [ref=f45e99] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f45e104]
+        - link [ref=f45e111] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f45e116]:
+            - img "tdf.records.label's profile picture" [ref=f45e117]
+      - generic [ref=f45e118]:
+        - link [ref=f45e121] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f45e126]
+        - link [ref=f45e129] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f45e134]
+    - generic [ref=f45e137]:
+      - main [ref=f45e138]:
+        - generic [ref=f45e140]:
+          - generic [ref=f45e141]:
+            - generic [ref=f45e142]:
+              - link [ref=f45e148] [cursor=pointer]:
+                - /url: /angsh.music/
+                - img "angsh.music's profile picture" [ref=f45e149]
+              - generic [ref=f45e150]:
+                - generic [ref=f45e151]:
+                  - generic [ref=f45e152]:
+                    - link [ref=f45e154] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "angsh.music" [level=2] [ref=f45e155]
+                    - button [ref=f45e157] [cursor=pointer]:
+                      - img "Options" [ref=f45e159]
+                  - generic [ref=f45e163]: Angsh
+                  - generic [ref=f45e165]:
+                    - generic [ref=f45e167]:
+                      - generic [ref=f45e168]: "491"
+                      - text: posts
+                    - link "910 followers" [ref=f45e170] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f45e171]:
+                        - generic "910" [ref=f45e172]
+                        - text: followers
+                    - link "2,621 following" [ref=f45e174] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f45e175]:
+                        - generic [ref=f45e176]: 2,621
+                        - text: following
+                - generic [ref=f45e177]:
+                  - generic [ref=f45e178]:
+                    - generic [ref=f45e179]: Musician/band
+                    - link "Threads angsh.music" [ref=f45e183] [cursor=pointer]:
+                      - /url: https://www.threads.com/@angsh.music?xmt=AQG0mj8YHyLaGrcOAnkRf4mwAb9Ri9A3LBXzsnMF0MbNAJA
+                      - img "Threads" [ref=f45e185]
+                      - generic [ref=f45e187]: angsh.music
+                  - link "Followed by carloscarrillotoro, hno613613 + 18 more" [ref=f45e189] [cursor=pointer]:
+                    - /url: /angsh.music/followers/mutualOnly
+                    - generic [ref=f45e191]:
+                      - generic [ref=f45e193]:
+                        - button [ref=f45e390]:
+                          - link [ref=f45e391]
+                        - button [ref=f45e392]:
+                          - link [ref=f45e393]
+                        - button [ref=f45e394]:
+                          - link [ref=f45e395]
+                      - generic [ref=f45e200]: Followed by carloscarrillotoro, hno613613 + 18 more
+            - generic [ref=f45e205]:
+              - button "Following Down chevron icon" [ref=f45e207] [cursor=pointer]:
+                - generic [ref=f45e208]:
+                  - generic [ref=f45e209]: Following
+                  - img "Down chevron icon" [ref=f45e212]
+              - button "Message" [ref=f45e215] [cursor=pointer]
+              - button [ref=f45e217] [cursor=pointer]:
+                - img "Similar accounts" [ref=f45e219]
+            - menu [ref=f45e223]:
+              - generic [ref=f45e397]:
+                - list [ref=f45e399]:
+                  - listitem [ref=f45e400]
+                  - listitem [ref=f45e401]
+                  - listitem [ref=f45e402]:
+                    - link "View fiestuki tuki highlight" [ref=f45e405] [cursor=pointer]:
+                      - /url: /stories/highlights/17853990515926547/
+                      - button "angsh.music's highlight story picture fiestuki tuki" [ref=f45e406]:
+                        - button [ref=f45e407]:
+                          - img "angsh.music's highlight story picture" [ref=f45e410]
+                        - generic [ref=f45e411]: fiestuki tuki
+                  - listitem [ref=f45e414]:
+                    - link "View blondy highlight" [ref=f45e417] [cursor=pointer]:
+                      - /url: /stories/highlights/17854474468234988/
+                      - button "angsh.music's highlight story picture blondy" [ref=f45e418]:
+                        - button [ref=f45e419]:
+                          - img "angsh.music's highlight story picture" [ref=f45e422]
+                        - generic [ref=f45e423]: blondy
+                  - listitem [ref=f45e426]:
+                    - link "View aaauu highlight" [ref=f45e429] [cursor=pointer]:
+                      - /url: /stories/highlights/17926526116061635/
+                      - button "angsh.music's highlight story picture aaauu" [ref=f45e430]:
+                        - button [ref=f45e431]:
+                          - img "angsh.music's highlight story picture" [ref=f45e434]
+                        - generic [ref=f45e435]: aaauu
+                  - listitem [ref=f45e438]:
+                    - link "View viajes cerros... highlight" [ref=f45e441] [cursor=pointer]:
+                      - /url: /stories/highlights/18225406045260113/
+                      - button "angsh.music's highlight story picture viajes cerros..." [ref=f45e442]:
+                        - button [ref=f45e443]:
+                          - img "angsh.music's highlight story picture" [ref=f45e446]
+                        - generic [ref=f45e447]: viajes cerros...
+                  - listitem [ref=f45e450]:
+                    - link "View 💚😌 highlight" [ref=f45e453] [cursor=pointer]:
+                      - /url: /stories/highlights/18034598722831936/
+                      - button "angsh.music's highlight story picture 💚😌" [ref=f45e454]:
+                        - button [ref=f45e455]:
+                          - img "angsh.music's highlight story picture" [ref=f45e458]
+                        - generic [ref=f45e459]: 💚😌
+                  - listitem [ref=f45e462]:
+                    - link "View Historias destac highlight" [ref=f45e465] [cursor=pointer]:
+                      - /url: /stories/highlights/17905923241096189/
+                      - button "angsh.music's highlight story picture Historias destac" [ref=f45e466]:
+                        - button [ref=f45e467]:
+                          - img "angsh.music's highlight story picture" [ref=f45e470]
+                        - generic [ref=f45e471]: Historias destac
+                  - listitem [ref=f45e474]:
+                    - link "View studio time highlight" [ref=f45e477] [cursor=pointer]:
+                      - /url: /stories/highlights/18089322772104983/
+                      - button "angsh.music's highlight story picture studio time" [ref=f45e478]:
+                        - button [ref=f45e479]:
+                          - img "angsh.music's highlight story picture" [ref=f45e482]
+                        - generic [ref=f45e483]: studio time
+                - button "Next" [ref=f45e486] [cursor=pointer]
+          - generic [ref=f45e268]:
+            - tablist [ref=f45e269]:
+              - link [ref=f45e271] [cursor=pointer]:
+                - /url: /angsh.music/
+                - img "Posts" [ref=f45e273]
+              - link [ref=f45e284] [cursor=pointer]:
+                - /url: /angsh.music/reels/
+                - img "Reels" [ref=f45e286]
+              - link [ref=f45e289] [cursor=pointer]:
+                - /url: /angsh.music/reposts/
+                - img "Reposts" [ref=f45e291]
+              - link [ref=f45e294] [cursor=pointer]:
+                - /url: /angsh.music/tagged/
+                - img "Tagged" [ref=f45e296]
+            - tabpanel
+          - generic [ref=f45e492]:
+            - generic [ref=f45e493]:
+              - link [ref=f45e495] [cursor=pointer]:
+                - /url: /milangacorp.ec/p/DceAZnvOEdj/
+                - 'img "THE LAST ELEKTRONIK DANCE ⚡ Hay noches que se sienten diferentes porque sabes que algo está por cambiar. Este viernes 28 de agosto vivimos nuestra última fiesta ELEKTRONIK de la temporada. Una fecha para volver a encontrarnos en la pista, subir el volumen y despedir esta etapa como merece. 🔊🖤 Esta noche también es para ellos: nuestros amigos DJ´s y parte esencial de esta historia, quienes durante todo este tiempo nos hicieron bailar, vibrar y llenar la pista de momentos que quedan. Gracias por creer, por acompañarnos y por ser parte de este proyecto desde la música. 🎧⚡ Y sí… se acerca nuestro cierre de temporada. Pero esa historia merece ser contada bien. Muy pronto les vamos a contar todo. FRIDAY 28.08 THE LAST ELECTRONIK DANCE Una última noche de electrónica… toda la energía." [ref=f45e498]'
+              - link [ref=f45e501] [cursor=pointer]:
+                - /url: /ritual77sound/reel/Da3LE1my1V8/
+                - 'img "Todo gran sonido comienza mucho antes de tocar un botón. Antes de crear, hay que comprender. Antes de ejecutar, hay que desarrollar un criterio. Lo que aprendes hoy será la base de todo lo que crearás mañana. En Ritual Sound creemos que un buen artista no solo domina herramientas: construye fundamentos. 📍Valle de los Chillos | Formación para DJs y productores. #RitualSound #ValleDeLosChillos #DJAcademy #ProducciónMusical #musicaelectronica" [ref=f45e504]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f45e507] [cursor=pointer]:
+                - /url: /happy.house.18/p/DZqvbI3jU_t/
+                - 'img "Estamos de regreso 🙂 Este sábado 20.06 tenemos un sneak peek muy completo , listos para ver a la Tri porque la sonrisa es lo último que nos van a quitar en Happy House ! Abrimos temprano con nuestro side quest : 15:00 Alemania 🇩🇪 vs. Costa de Marfil 🇨🇮 19:00 Ecuador 🇪🇨 vs. Curazao 🇨🇼 Después…. Listening sessions ft. @angsh.music Festejando también una vuelta más al sol de nuestro amigo @luissuan Todo esto acompañado de las mejores hamburguesas, picadas y cerveza artesanal 🍔🍺🍟 En el lugar más feliz del valle 🙂 Happy House #wearehappyhere" [ref=f45e510]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f45e512]:
+              - link [ref=f45e514] [cursor=pointer]:
+                - /url: /happy.house.18/p/DYgDqZvNOiw/
+                - img "La casa más feliz está a punto de volver 🙂 este 23 de mayo tenemos un adelanto de lo que va a ser Happy House en su nueva temporada ! Ven a nuestro test Kitchen y prueba las mejores hamburguesas Smash del valle 🍔 🍟 Aparte de nuestra listening sessions a cargo de 🎵 @angsh.music & @everaldho_ Tenemos video juegos 🎮🕹️ Juegos de mesa ♟️ Y la mejor energía en la casa más feliz del valle 🙂 Ven a ser parte de este adelanto ! * Capacidad limitada * Reserva tu espacio 📩 DM Te esperamos !! 🪩🙂" [ref=f45e517]
+              - link [ref=f45e520] [cursor=pointer]:
+                - /url: /rudless_ec/reel/DXChX4QjhSj/
+                - 'img "EL VALLE SE ACTIVA 🔥 Este 18 de abril vive una noche donde el sonido no se detiene… ⚡ Rap x Rock x Techno ⚡ 🎟️ Preventas disponibles $6,00 💥Día del evento $8,00 📲 Reserva al: 0984842553 ⚠️ Aforo limitado 🚪 Puertas abiertas desde las 18:00 📍 Princesa Toa y Princesa Paccha ( Casa Comunal del parque) 🎤 Rap a cargo de @tomlenin_ & @sebas_salazar.jpg 🎸 Rock psicodélico a cargo de @rokola_ds 🎶 Tributo rock alternativo a cargo de @paradoxlabanda 🥁 Ska / Hardcore Punk a cargo de @rudless_ec 🎧 DJ’s encargados de destruir la noche: @jota.__de @angsh.music @leomartin_cruz96 Una despedida… que se convierte en fiesta." [ref=f45e523]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f45e526] [cursor=pointer]:
+                - /url: /nurbrewery/p/DMDk15gufcG/
+                - img "💎Underground Electronic Sessions💎 Sábado 19 de Julio tenemos el agrado de presentar una edición más de Underground Electronic Sessions, que en esta ocasión en colaboración con @milangacorp.ec 💙 Underground Electronic Sessions presenta a grandes artistas de nuestra increíble escena electrónica nacional, junto a tu cerveza artesanal favorita 🍻 Line Up [A - Z] 🪩 @angsh.music 🪩 @jean_f.sound 🪩 @jotamnml 🪩 @malbo_musik RECUERDA 🧐 * EVENTO PRIVADO con AFORO LIMITADO * FREE COVER (Llega temprano y disfruta de un sunset espectacular)☀️ * Cata y Venta de CERVEZAS NÜR" [ref=f45e529]
+            - generic [ref=f45e531]:
+              - link [ref=f45e533] [cursor=pointer]:
+                - /url: /nurbrewery/p/DL8IC5dPV2p/
+                - img "💎Underground Electronic Sessions💎 Sábado 19 de Julio tenemos el agrado de presentar una edición más de Underground Electronic Sessions, que en esta ocasión en colaboración con @milangacorp.ec 💙 Underground Electronic Sessions presenta a grandes artistas de nuestra increíble escena electrónica nacional, junto a tu cerveza artesanal favorita 🍻 Line Up [A - Z] 🪩 @angsh.music 🪩 @jean_f.sound 🪩 @jotamnml 🪩 @malbo_musik RECUERDA 🧐 * EVENTO PRIVADO con AFORO LIMITADO * FREE COVER (Llega temprano y disfruta de un sunset espectacular)☀️ * Cata y Venta de CERVEZAS NÜR" [ref=f45e536]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f45e539] [cursor=pointer]:
+                - /url: /angsh.music/p/DK0vZcnM6JN/
+                - img "Mañana tendremos está tremenda fiesta junto a @eliassternin1 y @artesanotiter 🤟🏻 estaré pasando algunos tracks para abrir esta gran noche gracias por la confianza ! Evento cargo de @inerti.ec y @soldi__neri de regreso a las canchas! 🎵🖤🤟🏻" [ref=f45e542]
+              - link [ref=f45e545] [cursor=pointer]:
+                - /url: /angsh.music/p/DFGDLGYpaV5/
+                - 'img "Gracias totales a @trotamundo.life otra experiencia increíble llena de la mejor música, amigos, ambiente! Y nuevos amigos ! Que bonito saber que existe gente que lleva la misma pasión y todos metidos ahí en una sola conección 🖤🙌🏼🖤 Que más se puede pedir gracias! a @lostbeachkami @un_mute y a todos los q hacen posible que se pueda vivir tan grande festival ! Pd: mi cel no aguanto tanto voltage que se dañó y pues perdí todos mis videos y fotos ahí si encuentran fotos robadas disculpen! 🖤🖤🖤 VIVA LA MUSICA!! Y BAILAR!!" [ref=f45e548]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f45e550]:
+              - link [ref=f45e552] [cursor=pointer]:
+                - /url: /angsh.music/p/DCJeM1rRC9D/
+                - img "1 Life 1 style Life 🤘🏻😑" [ref=f45e555]
+              - link [ref=f45e558] [cursor=pointer]:
+                - /url: /angsh.music/p/C5EL21griUa/
+                - img "LEEHA💚" [ref=f45e561]
+              - link [ref=f45e564] [cursor=pointer]:
+                - /url: /angsh.music/reel/C4101O6Nq1L/
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+      - contentinfo [ref=f45e314]:
+        - generic [ref=f45e315]:
+          - generic [ref=f45e317]:
+            - link "Meta" [ref=f45e319] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f45e322] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f45e325] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f45e328] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f45e331] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f45e334] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f45e337] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f45e340] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f45e343] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f45e346] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f45e349] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f45e352] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f45e355] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f45e358] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f45e361] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f45e364] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f45e366]:
+            - generic [ref=f45e367] [cursor=pointer]:
+              - generic [ref=f45e368]:
+                - generic [ref=f45e369]: English
+                - img "Down chevron icon" [ref=f45e372]
+              - combobox "Switch Display Language" [ref=f45e374]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f45e375]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f45e378] [cursor=pointer]:
+              - generic "Messages - 8 new notifications" [ref=f45e379]:
+                - generic [ref=f45e380]:
+                  - generic [ref=f45e382]:
+                    - img "Messages" [ref=f45e383]
+                    - generic "Direct messaging - 8 new notifications link" [ref=f45e386]: "8"
+                  - generic [ref=f45e389]: Messages
+                - generic [ref=f45e569]:
+                  - button [ref=f45e570]:
+                    - img "8 unread chats" [ref=f45e572]
+                  - button "User avatar ..." [ref=f45e577]:
+                    - img "User avatar" [ref=f45e580]
+                  - button "User avatar David Márquez" [ref=f45e582]:
+                    - img "User avatar" [ref=f45e585]
+                  - button "User avatar Limberg Steven Garcia Alava" [ref=f45e587]:
+                    - img "User avatar" [ref=f45e590]
+            - generic [ref=f45e591]:
+              - generic [ref=f45e592]:
+                - generic [ref=f45e593]:
+                  - generic [ref=f45e595]:
+                    - status "Loading..." [ref=f45e597]
+                    - status "Loading..." [ref=f45e599]
+                  - button [active] [ref=f45e601] [cursor=pointer]:
+                    - img "Close" [ref=f45e603]
+                - separator [ref=f45e606]
+              - generic [ref=f45e607]:
+                - generic [ref=f45e608]:
+                  - status "Loading..." [ref=f45e610]
+                  - status "Loading..." [ref=f45e612]
+                - status "Loading..." [ref=f45e615]
+                - generic [ref=f45e616]:
+                  - status "Loading..." [ref=f45e618]
+                  - status "Loading..." [ref=f45e620]
+                - generic [ref=f45e621]:
+                  - status "Loading..." [ref=f45e623]
+                  - status "Loading..." [ref=f45e625]
+                - status "Loading..." [ref=f45e628]
+                - generic [ref=f45e629]:
+                  - status "Loading..." [ref=f45e631]
+                  - status "Loading..." [ref=f45e633]
+                - status "Loading..." [ref=f45e635]

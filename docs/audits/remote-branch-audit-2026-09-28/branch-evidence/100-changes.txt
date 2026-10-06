@@ -1,0 +1,26 @@
+ .github/workflows/event-operations-formal.yml      |  2 +
+ docs/event-operations/README.md                    |  2 +
+ docs/event-operations/command-privacy-contract.md  | 57 ++++++++++++++
+ docs/event-operations/delivery-plan.md             |  7 ++
+ .../event-operations/http-verification-contract.md |  4 +
+ .../implementation-report-2026-09-14.md            |  6 ++
+ docs/event-operations/pr-07-http-verification.md   |  3 +
+ docs/event-operations/pr-08-command-privacy.md     | 89 ++++++++++++++++++++++
+ docs/event-operations/receipt-replay-contract.md   |  6 +-
+ docs/event-operations/threat-model.md              | 18 +++--
+ docs/event-operations/traceability-matrix.md       |  1 +
+ formal/event-operations/CommandPrivacy.cfg         |  4 +
+ formal/event-operations/CommandPrivacy.tla         | 56 ++++++++++++++
+ .../CommandPrivacyExistenceLeak.cfg                |  4 +
+ .../event-operations/CommandPrivacyReceiptLeak.cfg |  4 +
+ formal/event-operations/README.md                  | 12 +++
+ scripts/test-event-operations-api-migration.sh     | 12 ++-
+ scripts/verify-event-operations-formal.sh          |  3 +
+ tdf-hq-ui/src/api/generated/types.ts               |  6 +-
+ tdf-hq/docs/openapi/api.yaml                       |  8 +-
+ tdf-hq/sql/2026-09-14_event_operations_api.sql     |  6 +-
+ tdf-hq/test/EventOperationsHttpMain.hs             | 53 ++++++++++++-
+ ...event_operations_command_privacy_assertions.sql | 71 +++++++++++++++++
+ .../integration/event_operations_http_fixture.sql  |  8 +-
+ .../event_operations_replay_assertions.sql         | 18 ++---
+ 25 files changed, 425 insertions(+), 35 deletions(-)

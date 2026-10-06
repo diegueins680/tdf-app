@@ -1,0 +1,16 @@
+[
+  [
+    {
+      "sha": "5d069b7d0679362ba9e8ea4363a1f1a986f46aa4",
+      "filename": "package-lock.json",
+      "status": "modified",
+      "additions": 3,
+      "deletions": 3,
+      "changes": 6,
+      "blob_url": "https://github.com/diegueins680/tdf-app/blob/d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92/package-lock.json",
+      "raw_url": "https://github.com/diegueins680/tdf-app/raw/d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92/package-lock.json",
+      "contents_url": "https://api.github.com/repos/diegueins680/tdf-app/contents/package-lock.json?ref=d1f1affcd3fbd7e4fde78f2dce25ef0993c34b92",
+      "patch": "@@ -12312,9 +12312,9 @@\n       \"license\": \"MIT\"\n     },\n     \"node_modules/ip-address\": {\n-      \"version\": \"10.3.1\",\n-      \"resolved\": \"https://registry.npmjs.org/ip-address/-/ip-address-10.3.1.tgz\",\n-      \"integrity\": \"sha512-1e9d3kb97NHJTIJDZW9rKqW2h6+dFa50Dy0fpPSMQp2ADje5gvKsXmdiK6dwY5t76TaTt5+P5N1Y/LoToIxP6g==\",\n+      \"version\": \"10.7.2\",\n+      \"resolved\": \"https://registry.npmjs.org/ip-address/-/ip-address-10.7.2.tgz\",\n+      \"integrity\": \"sha512-7H/2gFSIitxc0hG3nOI1glS8QLo/EHBFFLk8vEUjXY/xu0AdL8jZ9U1IzO2PUm0d2D/ofQcAifb0g6OBkt8U7w==\",\n       \"license\": \"MIT\",\n       \"engines\": {\n         \"node\": \">= 12\""
+    }
+  ]
+]

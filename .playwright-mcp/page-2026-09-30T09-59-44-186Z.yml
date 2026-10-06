@@ -1,0 +1,259 @@
+- generic [ref=f6e4]:
+  - generic [ref=f6e9]:
+    - generic [ref=f6e12]:
+      - link [ref=f6e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f6e22]
+      - generic [ref=f6e25]:
+        - link [ref=f6e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f6e35]
+        - link [ref=f6e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f6e45]
+        - link [ref=f6e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - generic [ref=f6e55]:
+            - img "Messages" [ref=f6e57]
+            - generic "Direct messaging - 10 new notifications link" [ref=f6e60]: 9+
+        - link [ref=f6e66] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f6e71]
+        - link [ref=f6e78] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f6e83]
+        - link [ref=f6e89] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f6e94]
+        - link [ref=f6e99] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f6e104]
+        - link [ref=f6e111] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f6e116]:
+            - img "tdf.records.label's profile picture" [ref=f6e117]
+      - generic [ref=f6e118]:
+        - link [ref=f6e121] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f6e126]
+        - link [ref=f6e129] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f6e134]
+    - generic [ref=f6e137]:
+      - main [ref=f6e138]:
+        - generic [ref=f6e140]:
+          - generic [ref=f6e141]:
+            - generic [ref=f6e142]:
+              - button [ref=f6e147] [cursor=pointer]:
+                - link [ref=f6e149]:
+                  - img "enrikecruz.music's profile picture" [ref=f6e150]
+              - generic [ref=f6e151]:
+                - generic [ref=f6e152]:
+                  - generic [ref=f6e153]:
+                    - link [ref=f6e155] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "enrikecruz.music" [level=2] [ref=f6e156]
+                    - button [ref=f6e158] [cursor=pointer]:
+                      - img "Options" [ref=f6e160]
+                  - generic [ref=f6e164]: Enrike Cruz
+                  - generic [ref=f6e166]:
+                    - generic [ref=f6e168]:
+                      - generic [ref=f6e169]: "24"
+                      - text: posts
+                    - link "1,188 followers" [ref=f6e171] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f6e172]:
+                        - generic "1,188" [ref=f6e173]
+                        - text: followers
+                    - link "2,514 following" [ref=f6e175] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f6e176]:
+                        - generic [ref=f6e177]: 2,514
+                        - text: following
+                - generic [ref=f6e178]:
+                  - generic [ref=f6e179]:
+                    - generic [ref=f6e180]:
+                      - button [ref=f6e181] [cursor=pointer]:
+                        - generic [ref=f6e182]:
+                          - text: Minimal • Rominimal • MicrohouseVinyl RitualistCo-founder @tortoise.labelHost
+                          - link "@tortoise.vinylcoffee" [ref=f6e183]:
+                            - /url: /tortoise.vinylcoffee/
+                          - text: Based in Ecuador
+                      - generic [ref=f6e184]:
+                        - text: ...
+                        - button "more" [ref=f6e185] [cursor=pointer]
+                    - generic [ref=f6e187]:
+                      - generic [ref=f6e188]:
+                        - img "Link icon" [ref=f6e190]
+                        - link "climbing-krill-22b.notion.site/Enrike-Cruz-36573f526c05470fb5034882b3c6f852?pvs=74" [ref=f6e194] [cursor=pointer]:
+                          - /url: https://l.instagram.com/?u=https%3A%2F%2Fclimbing-krill-22b.notion.site%2FEnrike-Cruz-36573f526c05470fb5034882b3c6f852%3Fpvs%3D74%26utm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio%26fbclid%3DPAZXh0bgNhZW0CMTEAcGRvZgJzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAafMDs0gX_Luc2iCWCYVSGpP2Jctjx0fEdEAYyBmuBQQ9Vs4yViEhuEL4KkHWg_aem_OaWwTy_UJpFf7D66DovuGg&e=AUDtBzb9VDnVxgZ7FkZRkFYosF0o5dg3wExZmXnMrwJc7vPCUaqXVoNeN2qrHxwxmMImSpe5zKKnBBWBlOTMjKDAsqrojQi2RLeeHu5RhzdbhUdhV8xx8QQU7-8tsbXHBGtrJsso-pwZ
+                      - link "Threads enrikecruz.music" [ref=f6e197] [cursor=pointer]:
+                        - /url: https://www.threads.com/@enrikecruz.music?xmt=AQG0of1g4UNpqcyAUcUgxXfbadINLaJFfVN_WzRRpgS-RLs
+                        - img "Threads" [ref=f6e199]
+                        - generic [ref=f6e201]: enrikecruz.music
+                  - link "Followed by cohema.music, julieth__thenoirkult + 2 more" [ref=f6e203] [cursor=pointer]:
+                    - /url: /enrikecruz.music/followers/mutualOnly
+                    - generic [ref=f6e205]:
+                      - generic [ref=f6e207]:
+                        - button [ref=f6e208]:
+                          - link [ref=f6e209]
+                        - button [ref=f6e210]:
+                          - link [ref=f6e211]
+                        - button [ref=f6e212]:
+                          - link [ref=f6e213]
+                      - generic [ref=f6e214]: Followed by cohema.music, julieth__thenoirkult + 2 more
+            - generic [ref=f6e219]:
+              - button "Follow Back" [ref=f6e221] [cursor=pointer]
+              - button [ref=f6e225] [cursor=pointer]:
+                - img "Similar accounts" [ref=f6e227]
+            - menu [ref=f6e231]:
+              - generic [ref=f6e233]:
+                - generic [ref=f6e235]:
+                  - status "Loading..." [ref=f6e237]
+                  - status "Loading..." [ref=f6e239]
+                - generic [ref=f6e241]:
+                  - status "Loading..." [ref=f6e243]
+                  - status "Loading..." [ref=f6e245]
+                - generic [ref=f6e247]:
+                  - status "Loading..." [ref=f6e249]
+                  - status "Loading..." [ref=f6e251]
+                - generic [ref=f6e253]:
+                  - status "Loading..." [ref=f6e255]
+                  - status "Loading..." [ref=f6e257]
+                - generic [ref=f6e259]:
+                  - status "Loading..." [ref=f6e261]
+                  - status "Loading..." [ref=f6e263]
+                - generic [ref=f6e265]:
+                  - status "Loading..." [ref=f6e267]
+                  - status "Loading..." [ref=f6e269]
+                - generic [ref=f6e271]:
+                  - status "Loading..." [ref=f6e273]
+                  - status "Loading..." [ref=f6e275]
+          - generic [ref=f6e276]:
+            - tablist [ref=f6e277]:
+              - link [ref=f6e279] [cursor=pointer]:
+                - /url: /enrikecruz.music/
+                - img "Posts" [ref=f6e281]
+              - link [ref=f6e292] [cursor=pointer]:
+                - /url: /enrikecruz.music/reels/
+                - img "Reels" [ref=f6e294]
+              - link [ref=f6e297] [cursor=pointer]:
+                - /url: /enrikecruz.music/reposts/
+                - img "Reposts" [ref=f6e299]
+              - link [ref=f6e302] [cursor=pointer]:
+                - /url: /enrikecruz.music/tagged/
+                - img "Tagged" [ref=f6e304]
+            - tabpanel
+          - progressbar [ref=f6e308]:
+            - img "Loading..." [ref=f6e309]
+      - contentinfo [ref=f6e322]:
+        - generic [ref=f6e323]:
+          - generic [ref=f6e325]:
+            - link "Meta" [ref=f6e327] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f6e330] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f6e333] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f6e336] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f6e339] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f6e342] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f6e345] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f6e348] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f6e351] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f6e354] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f6e357] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f6e360] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f6e363] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f6e366] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f6e369] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f6e372] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f6e374]:
+            - generic [ref=f6e375] [cursor=pointer]:
+              - generic [ref=f6e376]:
+                - generic [ref=f6e377]: English
+                - img "Down chevron icon" [ref=f6e380]
+              - combobox "Switch Display Language" [ref=f6e382]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f6e383]: © 2026 Instagram from Meta
+  - button [ref=f6e386] [cursor=pointer]:
+    - generic "Messages - 10 new notifications" [ref=f6e387]:
+      - generic [ref=f6e388]:
+        - generic [ref=f6e390]:
+          - img "Messages" [ref=f6e391]
+          - generic "Direct messaging - 10 new notifications link" [ref=f6e394]: 9+
+        - generic [ref=f6e397]: Messages
+      - generic [ref=f6e398]:
+        - button [ref=f6e399]:
+          - img "10 unread chats" [ref=f6e401]
+        - button "User avatar David Márquez" [ref=f6e406]:
+          - img "User avatar" [ref=f6e409]
+        - button "User avatar Andrés Martín Arauz" [ref=f6e411]:
+          - img "User avatar" [ref=f6e414]
+        - button "User avatar Limberg Steven Garcia Alava" [ref=f6e416]:
+          - img "User avatar" [ref=f6e419]

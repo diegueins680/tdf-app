@@ -1,0 +1,297 @@
+- generic [ref=f132e1]:
+  - generic:
+    - generic:
+      - generic:
+        - generic [ref=f132e18]:
+          - generic [ref=f132e21]:
+            - link [ref=f132e630] [cursor=pointer]:
+              - /url: /
+            - generic [ref=f132e34]:
+              - link [ref=f132e632] [cursor=pointer]:
+                - /url: /
+              - link [ref=f132e634] [cursor=pointer]:
+                - /url: /reels/
+              - link [ref=f132e636] [cursor=pointer]:
+                - /url: /direct/inbox/
+                - generic [ref=f132e62]: "8"
+              - link [ref=f132e639] [cursor=pointer]:
+                - /url: /explore/
+              - link [ref=f132e641] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f132e643] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f132e645] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f132e647] [cursor=pointer]:
+                - /url: /tdf.records.label/
+                - link [ref=f132e648]
+            - generic [ref=f132e127]:
+              - link [ref=f132e650] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f132e652] [cursor=pointer]:
+                - /url: "#"
+          - generic [ref=f132e146]:
+            - main [ref=f132e147]:
+              - generic [ref=f132e149]:
+                - generic [ref=f132e150]:
+                  - generic [ref=f132e151]:
+                    - button [ref=f132e654] [cursor=pointer]:
+                      - link [ref=f132e655]
+                    - generic [ref=f132e160]:
+                      - generic [ref=f132e161]:
+                        - generic [ref=f132e162]:
+                          - link [ref=f132e657] [cursor=pointer]:
+                            - /url: "#"
+                            - heading [level=2] [ref=f132e658]:
+                              - generic [ref=f132e166]: raulmolina
+                          - button [ref=f132e659] [cursor=pointer]
+                        - generic [ref=f132e173]: Raúl Molina
+                        - generic [ref=f132e175]:
+                          - generic [ref=f132e177]:
+                            - generic [ref=f132e178]: "447"
+                            - text: posts
+                          - link [ref=f132e661] [cursor=pointer]:
+                            - /url: "#"
+                            - generic [ref=f132e181]:
+                              - generic [ref=f132e662]: 5,876
+                              - text: followers
+                          - link [ref=f132e663] [cursor=pointer]:
+                            - /url: "#"
+                            - generic [ref=f132e185]:
+                              - generic [ref=f132e186]: 1,757
+                              - text: following
+                      - generic [ref=f132e187]:
+                        - generic [ref=f132e188]:
+                          - generic [ref=f132e189]: Artist
+                          - button [ref=f132e664] [cursor=pointer]:
+                            - generic [ref=f132e193]: Músico 📍Ecuador
+                          - generic [ref=f132e194]:
+                            - button [ref=f132e665] [cursor=pointer]:
+                              - generic [ref=f132e196]: music.apple.com/ec/album/guayaquil-ep/6786860463 and 3 more
+                            - link [ref=f132e667] [cursor=pointer]:
+                              - /url: https://www.threads.com/@raulmolina?xmt=AQG0yUyr5ALuZGJV3OTgywJNGBdqakAYpbRzPicKBtBgAO0
+                              - generic [ref=f132e207]: raulmolina
+                        - link [ref=f132e669] [cursor=pointer]:
+                          - /url: /raulmolina/followers/mutualOnly
+                          - generic [ref=f132e211]:
+                            - generic [ref=f132e213]:
+                              - button [ref=f132e214]:
+                                - link [ref=f132e215]
+                              - button [ref=f132e216]:
+                                - link [ref=f132e217]
+                              - button [ref=f132e218]:
+                                - link [ref=f132e219]
+                            - generic [ref=f132e220]: Followed by victorandrade.a, green.house_music + 95 more
+                  - generic [ref=f132e225]:
+                    - button [ref=f132e670] [cursor=pointer]:
+                      - generic [ref=f132e228]: Following
+                    - button [ref=f132e672] [cursor=pointer]: Message
+                    - button [ref=f132e673] [cursor=pointer]
+                  - menu [ref=f132e243]:
+                    - generic [ref=f132e245]:
+                      - list [ref=f132e247]:
+                        - listitem [ref=f132e248]
+                        - listitem [ref=f132e249]
+                        - listitem [ref=f132e250]:
+                          - link [ref=f132e675] [cursor=pointer]:
+                            - /url: /stories/highlights/17935502894520526/
+                            - button [ref=f132e676]:
+                              - button [ref=f132e677]
+                              - generic [ref=f132e259]: Piano
+                        - listitem [ref=f132e262]:
+                          - link [ref=f132e679] [cursor=pointer]:
+                            - /url: /stories/highlights/18063587590995426/
+                            - button [ref=f132e680]:
+                              - button [ref=f132e681]
+                              - generic [ref=f132e271]: Shows 2
+                        - listitem [ref=f132e274]:
+                          - link [ref=f132e683] [cursor=pointer]:
+                            - /url: /stories/highlights/18004122722566381/
+                            - button [ref=f132e684]:
+                              - button [ref=f132e685]
+                              - generic [ref=f132e283]: Sin querer
+                        - listitem [ref=f132e286]:
+                          - link [ref=f132e687] [cursor=pointer]:
+                            - /url: /stories/highlights/17945638510025318/
+                            - button [ref=f132e688]:
+                              - button [ref=f132e689]
+                              - generic [ref=f132e295]: Shows
+                        - listitem [ref=f132e298]:
+                          - link [ref=f132e691] [cursor=pointer]:
+                            - /url: /stories/highlights/17943969143722796/
+                            - button [ref=f132e692]:
+                              - button [ref=f132e693]
+                              - generic [ref=f132e307]: E.L.I.
+                        - listitem [ref=f132e310]:
+                          - link [ref=f132e695] [cursor=pointer]:
+                            - /url: /stories/highlights/17847354546239103/
+                            - button [ref=f132e696]:
+                              - button [ref=f132e697]
+                              - generic [ref=f132e319]: IMCCW
+                        - listitem [ref=f132e322]:
+                          - link [ref=f132e699] [cursor=pointer]:
+                            - /url: /stories/highlights/17881127410500539/
+                            - button [ref=f132e700]:
+                              - button [ref=f132e701]
+                              - generic [ref=f132e331]: Tags
+                        - listitem [ref=f132e334]:
+                          - link [ref=f132e703] [cursor=pointer]:
+                            - /url: /stories/highlights/17894714752201705/
+                            - button [ref=f132e704]:
+                              - button [ref=f132e705]
+                              - generic [ref=f132e343]: Estudio
+                        - listitem [ref=f132e346]:
+                          - link [ref=f132e707] [cursor=pointer]:
+                            - /url: /stories/highlights/18209239567221835/
+                            - button [ref=f132e708]:
+                              - button [ref=f132e709]
+                              - generic [ref=f132e355]: Recomendaciones
+                        - listitem [ref=f132e358]:
+                          - link [ref=f132e711] [cursor=pointer]:
+                            - /url: /stories/highlights/17976863086246574/
+                            - button [ref=f132e712]:
+                              - button [ref=f132e713]
+                              - generic [ref=f132e367]: Jama
+                        - listitem [ref=f132e370]:
+                          - link [ref=f132e715] [cursor=pointer]:
+                            - /url: /stories/highlights/17967045067228750/
+                            - button [ref=f132e716]:
+                              - button [ref=f132e717]
+                              - generic [ref=f132e379]: Textos
+                        - listitem [ref=f132e382]:
+                          - link [ref=f132e719] [cursor=pointer]:
+                            - /url: /stories/highlights/18043989619456931/
+                            - button [ref=f132e720]:
+                              - button [ref=f132e721]
+                              - generic [ref=f132e391]: Highlights
+                        - listitem [ref=f132e394]:
+                          - link [ref=f132e723] [cursor=pointer]:
+                            - /url: /stories/highlights/17986152466075222/
+                            - button [ref=f132e724]:
+                              - button [ref=f132e725]
+                              - generic [ref=f132e403]: Viajes
+                        - listitem [ref=f132e406]:
+                          - link [ref=f132e727] [cursor=pointer]:
+                            - /url: /stories/highlights/17946023332044999/
+                            - button [ref=f132e728]:
+                              - button [ref=f132e729]
+                              - generic [ref=f132e415]: Beats
+                      - button [ref=f132e731] [cursor=pointer]
+                - tablist [ref=f132e421]:
+                  - link [ref=f132e732] [cursor=pointer]:
+                    - /url: /raulmolina/
+                  - link [ref=f132e734] [cursor=pointer]:
+                    - /url: /raulmolina/reels/
+                  - link [ref=f132e736] [cursor=pointer]:
+                    - /url: /raulmolina/reposts/
+                  - link [ref=f132e738] [cursor=pointer]:
+                    - /url: /raulmolina/tagged/
+                - generic [ref=f132e455]:
+                  - generic [ref=f132e456]:
+                    - link [ref=f132e740] [cursor=pointer]:
+                      - /url: /ramiroolaguitarist/p/Dda_pWvCJWC/
+                    - link [ref=f132e742] [cursor=pointer]:
+                      - /url: /ramiroolaguitarist/p/Dc_ImQKCECC/
+                    - link [ref=f132e744] [cursor=pointer]:
+                      - /url: /raulmolina/reel/Dc9ztDQMB-u/
+                  - generic [ref=f132e475]:
+                    - link [ref=f132e746] [cursor=pointer]:
+                      - /url: /raulmolina/reel/Dcok6IPM5yp/
+                    - link [ref=f132e748] [cursor=pointer]:
+                      - /url: /raulmolina/reel/DckFoNhsmpf/
+                    - link [ref=f132e750] [cursor=pointer]:
+                      - /url: /raulmolina/reel/DcUO8g5sjYz/
+                  - generic [ref=f132e494]:
+                    - link [ref=f132e752] [cursor=pointer]:
+                      - /url: /raulmolina/reel/DcHywZBsJFi/
+                    - link [ref=f132e754] [cursor=pointer]:
+                      - /url: /raulmolina/reel/Dbo15-asxXk/
+                    - link [ref=f132e756] [cursor=pointer]:
+                      - /url: /raulmolina/reel/DbZXR_0MJTU/
+                  - generic [ref=f132e513]:
+                    - link [ref=f132e758] [cursor=pointer]:
+                      - /url: /juanjocritico/p/DbW0xTdjiW_/
+                    - link [ref=f132e760] [cursor=pointer]:
+                      - /url: /raulmolina/p/DbRjmAWlSSQ/
+                    - link [ref=f132e762] [cursor=pointer]:
+                      - /url: /raulmolina/p/DbHb5gXFZrF/
+            - contentinfo [ref=f132e532]:
+              - generic [ref=f132e533]:
+                - generic [ref=f132e535]:
+                  - link [ref=f132e764] [cursor=pointer]:
+                    - /url: https://about.meta.com/
+                    - generic [ref=f132e538]: Meta
+                  - link [ref=f132e765] [cursor=pointer]:
+                    - /url: https://about.instagram.com/
+                    - generic [ref=f132e541]: About
+                  - link [ref=f132e766] [cursor=pointer]:
+                    - /url: https://about.instagram.com/blog/
+                    - generic [ref=f132e544]: Blog
+                  - link [ref=f132e767] [cursor=pointer]:
+                    - /url: https://about.instagram.com/about-us/careers
+                    - generic [ref=f132e547]: Jobs
+                  - link [ref=f132e768] [cursor=pointer]:
+                    - /url: https://help.instagram.com/
+                    - generic [ref=f132e550]: Help
+                  - link [ref=f132e769] [cursor=pointer]:
+                    - /url: https://developers.facebook.com/docs/instagram
+                    - generic [ref=f132e553]: API
+                  - link [ref=f132e770] [cursor=pointer]:
+                    - /url: /legal/privacy/
+                    - generic [ref=f132e556]: Privacy
+                  - link [ref=f132e771] [cursor=pointer]:
+                    - /url: /legal/terms/
+                    - generic [ref=f132e559]: Terms
+                  - link [ref=f132e772] [cursor=pointer]:
+                    - /url: /explore/locations/
+                    - generic [ref=f132e562]: Locations
+                  - link [ref=f132e773] [cursor=pointer]:
+                    - /url: /popular/
+                    - generic [ref=f132e565]: Popular
+                  - link [ref=f132e774] [cursor=pointer]:
+                    - /url: /web/lite/
+                    - generic [ref=f132e568]: Instagram Lite
+                  - link [ref=f132e775] [cursor=pointer]:
+                    - /url: https://www.meta.ai/?utm_source=foa_web_footer
+                    - generic [ref=f132e571]: Meta AI
+                  - link [ref=f132e776] [cursor=pointer]:
+                    - /url: https://muse.ai/
+                    - generic [ref=f132e574]: Muse
+                  - link [ref=f132e777] [cursor=pointer]:
+                    - /url: https://www.threads.com/
+                    - generic [ref=f132e577]: Threads
+                  - link [ref=f132e778] [cursor=pointer]:
+                    - /url: https://www.facebook.com/help/instagram/261704639352628
+                    - generic [ref=f132e580]: Contact Uploading & Non-Users
+                  - link [ref=f132e779] [cursor=pointer]:
+                    - /url: /accounts/meta_verified/?entrypoint=web_footer
+                    - generic [ref=f132e583]: Meta Verified
+                - generic [ref=f132e584]:
+                  - generic [ref=f132e585] [cursor=pointer]:
+                    - generic [ref=f132e586]: English
+                    - combobox [ref=f132e781]
+                  - generic [ref=f132e593]: © 2026 Instagram from Meta
+        - button [ref=f132e596] [cursor=pointer]:
+          - generic "Messages - 8 new notifications" [ref=f132e597]:
+            - generic [ref=f132e598]:
+              - generic [ref=f132e600]:
+                - img "Messages" [ref=f132e601]
+                - generic "Direct messaging - 8 new notifications link" [ref=f132e604]: "8"
+              - generic [ref=f132e607]: Messages
+            - generic [ref=f132e608]:
+              - button [ref=f132e609]:
+                - img "8 unread chats" [ref=f132e611]
+              - button "User avatar ..." [ref=f132e616]:
+                - img "User avatar" [ref=f132e619]
+              - button "User avatar David Márquez" [ref=f132e621]:
+                - img "User avatar" [ref=f132e624]
+              - button "User avatar Limberg Steven Garcia Alava" [ref=f132e626]:
+                - img "User avatar" [ref=f132e629]
+  - dialog [ref=f132e788]:
+    - generic [ref=f132e793]:
+      - generic [ref=f132e794]:
+        - heading "Messaging raulmolina" [active] [level=3] [ref=f132e797]
+        - generic [ref=f132e798]: Partnership messages are more likely to get a response because they have a dedicated place in raulmolina's inbox.
+      - generic [ref=f132e800]:
+        - button "Send prioritized message" [ref=f132e801] [cursor=pointer]
+        - button "Send message request" [ref=f132e802] [cursor=pointer]

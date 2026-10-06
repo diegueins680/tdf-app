@@ -1,0 +1,8 @@
+A	docs/adr/0124-closed-checkout-approval-evidence.md
+A	docs/payments/closed-checkout-approval-2026-09-15.md
+M	docs/payments/ecuador-payment-platform-audit-2026-09-11.md
+M	docs/payments/operator-runbooks.md
+M	tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx
+M	tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs
+M	tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs
+M	tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs

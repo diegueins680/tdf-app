@@ -1,0 +1,992 @@
+[
+  [
+    "PR465 merged main b07f67c3",
+    "normal post-merge backend, runtime and schema validation",
+    "PASS \u20143589 Hspec examples,1141 social HTTP examples,110 event HTTP examples; all prescribed job steps succeeded",
+    "events-main-backend-b07f67c3.log"
+  ],
+  [
+    "PR468 atce1a71fe2",
+    "live new provenance and installed monitor",
+    "PASS \u2014configured PostgreSQL digest/volume verified;777 catalog records/652 tables, bound public checks repeated after SQL; installed unchanged monitor command reads8 aggregate reports withzero errors; no mail/data writes/deployment",
+    "cutover-provenance-live-verified.json"
+  ],
+  [
+    "PR465 atee58bd13",
+    "complete current-head hosted backend/runtime/schema suites",
+    "PASS \u20143589 Hspec examples/0 failures;6 separately exercised cases,1141 social HTTP and110 event HTTP examples; every prescribed job step succeeds",
+    "events-hosted-backend-ee58bd13.log"
+  ],
+  [
+    "PR465 atee58bd13",
+    "prescribed hosted event model verification",
+    "PASS \u2014bounded-model-checks-passed with pinned TLA+/Alloy tool hashes and archived solver evidence; no local Java rerun claimed",
+    "events-ee58-bounded-models.log"
+  ],
+  [
+    "PR465 atee58bd13",
+    "prescribed hosted task completion PostgreSQL16 test",
+    "PASS \u201432 decision cases,12 isolation races,four expiry waits,revocation orders and rollback/reapply; the earlier opaque CI failure is retained separately",
+    "events-ee58-task-completion.log"
+  ],
+  [
+    "PR465 at154f968aa",
+    "complete hosted backend and prescribed isolated suites",
+    "PASS \u20143589 Hspec examples/0 failures;6 pending cases exercised by separate runners,1141 social HTTP and110 event HTTP examples; all job steps success. Subsequent ee58 changes only reviewed main documentation/hash.",
+    "events-hosted-backend-154f968aa.log"
+  ],
+  [
+    "PR468 atce1a71fe2",
+    "provenance access/catalog/mail suites",
+    "PASS \u201411 Python access tests,6 Node catalog tests,6 mail tests;15 old-code rejection failures and missing-postcheck negative control reproduced",
+    "cutover-provenance-local-validation.json"
+  ],
+  [
+    "PR468 atce1a71fe2",
+    "strict catalog and generated inventory checks",
+    "PASS \u20141162 reviewed candidates after pinned submodule initialization; earlier missing dependency and missing-mobile failures retained",
+    "cutover-provenance-catalog-final.json"
+  ],
+  [
+    "PR468 atce1a71fe2",
+    "current authenticated live provenance",
+    "INITIAL ATTEMPT BLOCKED \u2014SSH timeout; the later authenticated metadata/catalog/mail and installed-helper runs pass, recorded separately",
+    "cutover-current-connectivity.json"
+  ],
+  [
+    "PR465 integration with mainc4d479c7",
+    "merge composition and inventory",
+    "PASS \u2014only reviewed notification document/hash added; exact document match, inventory gate and independently computed merge tree match; normal reconciliation subsequently pushed at ee58bd13; current-head CI/review separately required",
+    "events-notification-merge-validation.json"
+  ],
+  [
+    "PR465 lifecycle repair34ca75d",
+    "native PostgreSQL negative control and real authenticated HTTP harness",
+    "PASS \u2014old flag race reproduced; both disable/command orders pass at RC/RR/Serializable;110 compiled Hspec/HTTP examples with eight corrupt-receipt rollback injections;160 registered SQL migrations unchanged",
+    "events-lifecycle-native.log"
+  ],
+  [
+    "PR476 documentation rescue",
+    "source text/provenance/diff checks",
+    "PASS \u2014exact historical source addition preserved; mobile pin unchanged; initial stale document hash regenerated and inventory check then passed",
+    "notification-rescue-validation.json"
+  ],
+  [
+    "PR465 at08acdfa",
+    "normal main/editorial reconciliation and retained catalog decisions",
+    "PASS \u20145 unchanged catalog regression tests,1171 strict reviewed candidates,83 release tests,32 CI tests, repository/formal/inventory gates; historical mapping and exact main manifest preservation verified",
+    "events-editorial-decision-preservation.json"
+  ],
+  [
+    "PR464 local replacement",
+    "npm run quality:repo",
+    "PASS \u2014 retry after isolated UI dependency symlink restored missing React resolution; original failure retained",
+    "editorial-repo-quality-final-20261003.log"
+  ],
+  [
+    "PR464 local replacement",
+    "npm run verify:formal",
+    "PASS \u2014 repository formal gate; existing warning-level findings retained",
+    "editorial-formal-20261003.log"
+  ],
+  [
+    "PR464 local replacement",
+    "specification inventory tests",
+    "PASS \u2014 3 Python tests and generated inventory check",
+    "editorial-spec-tests-20261003-retry.log"
+  ],
+  [
+    "PR464 local replacement",
+    "catalog regression tests",
+    "PASS \u2014 2 unchanged tests",
+    "editorial-catalog-regression-20261003.log"
+  ],
+  [
+    "PR475 / source464",
+    "source-derived PostgreSQL visibility predicate",
+    "PASS \u2014 10 cases, actual isolated native PostgreSQL16; the separate compiled handler test also passed",
+    "editorial-predicate-native-20261003.log"
+  ],
+  [
+    "PR475 / source464",
+    "initial cold local Stack build",
+    "FAILED \u2014 preprocessed earlier handler lacked the qualified import; committed9ec contains it and hosted build passed. Current-source local rerun remains separate.",
+    "editorial-build-20261003.log"
+  ],
+  [
+    "PR465 at154f968aa",
+    "complete native PostgreSQL task-completion regression",
+    "PASS \u201432 decision cases,12 isolation races,four expiry waits,revocation orders and rollback/reapply; baseline also passes on this slower client, not a reproduced hosted failure",
+    "task-completion-native-fixed.log"
+  ],
+  [
+    "PR465 at34ca75d",
+    "hosted task-completion job",
+    "FAILED \u2014 opaque exit1;15-second expiry fixture had100x0.1second polling budget; corrected at154f968aa without removing assertions, fresh hosted CI remains authoritative",
+    "events-lifecycle-completion-failure.log"
+  ],
+  [
+    "PR475 at4100a04c",
+    "current-head hosted full backend and all CI",
+    "PASS \u20143553 examples/0 failures/6 separately exercised runtime cases; compiled PostgreSQL predicate1, invitations15, event-relations1,1141 social HTTP examples and full runtime/automatic production migration stages; all applicable checks pass",
+    "editorial-hosted-backend-4100a04c.log"
+  ],
+  [
+    "PR475 at9ecac924a",
+    "hosted full backend, compiled PostgreSQL predicate and runtime/schema stages",
+    "PASS \u20143553 examples/0 failures/6 separately exercised runner cases;1 actual compiled predicate case,15 invitation examples,1141 social HTTP examples; all job stages passed",
+    "editorial-hosted-backend-9ecac924a-run-view.log"
+  ],
+  [
+    "PR475 forward migration",
+    "native PostgreSQL16 directory metadata boundary",
+    "PASS \u2014 reproduced historical defect;16 cases after both apply and reapply",
+    "editorial-migration-native-20261003.log"
+  ],
+  [
+    "PR475 forward migration",
+    "native PostgreSQL16 complete production-shaped schema",
+    "PASS \u2014160 migrations apply/reapply; schema gate; both historical privacy orders; valid ownership plus private/malformed/suppressed event/venue/search projections",
+    "editorial-production-schema-20261003.log"
+  ],
+  [
+    "PR475 forward migration",
+    "npm run test:production-release",
+    "PASS \u201482 tests",
+    "editorial-production-release-tests.log"
+  ],
+  [
+    "PR475 forward migration",
+    "npm run test:ci-pipeline",
+    "PASS \u201427 tests",
+    "editorial-ci-pipeline-tests.log"
+  ],
+  [
+    "PR475 forward migration",
+    "formal and strict catalog gates",
+    "PASS \u2014 formal verification and1162 reviewed candidates;159 earlier migration entries and SQL bytes unchanged",
+    "editorial-catalog-migration-final.json"
+  ],
+  [
+    "PR475 current source",
+    "targeted local Stack build/test command",
+    "FAILED at packaging after successfully linking test executable: app executable was not built by targeted invocation; not counted as a successful Stack command",
+    "editorial-backend-current-tests-20261003.log"
+  ],
+  [
+    "PR475 current source",
+    "full Stack-built local Hspec executable",
+    "PASS \u20143553 examples/0 failures/6 separate-runner cases; those six were exercised successfully in hosted9ec runtime stages and Haskell source is unchanged",
+    "editorial-full-hspec-20261003.log"
+  ],
+  [
+    "PR475 at4100a04c",
+    "all registered migration introduction ancestry checks and GitHub proposed normal merge",
+    "PASS \u2014160 introductions are ancestors of actual head; GitHub confirms new introduction retained in proposed normal merge; review evidence reply and resolution verified",
+    "editorial-review-ancestry-verified.json"
+  ],
+  [
+    "PR475 current source",
+    "compiled native PostgreSQL ownership and invitation suites",
+    "PASS \u20141 predicate example covering10cases and15 invitation examples; isolated PostgreSQL16 stopped afterwards",
+    "editorial-compiled-postgres-20261003.log"
+  ],
+  [
+    "PR465 follow-up source gates",
+    "UI typecheck, zero-warning lint, full catalog gate, specification inventory",
+    "PASS \u2014 verified process exit0 for each command",
+    "events-review-command-results.json"
+  ],
+  [
+    "PR465 current main integration",
+    "Stack build --test --no-run-tests --jobs 2",
+    "PASS \u2014 complete app and test compilation, exit0; compiler warnings retained",
+    "events-current-main-backend-build.log"
+  ],
+  [
+    "PR465 current main backend",
+    "freshly Stack-built Hspec executable",
+    "PASS \u20143576 examples, zero failures, six existing pending separately exercised runner cases",
+    "events-current-main-backend-tests.log"
+  ],
+  [
+    "PR465 current main UI",
+    "full Jest suite",
+    "PASS \u2014241 suites,2648 tests",
+    "events-current-main-ui-tests-2.log"
+  ],
+  [
+    "PR465 current main web build",
+    "npm run build --workspace=tdf-hq-ui",
+    "PASS \u2014 typecheck, Vite build and initial bundle budget; chunk-size warning retained",
+    "events-current-main-ui-build.log"
+  ],
+  [
+    "PR465 actual HTTP/authentication",
+    "unchanged harness/fixtures against isolated native PostgreSQL16",
+    "PASS \u2014107 examples; owned database removed after verification; not a Docker result",
+    "events-current-main-http-native.log"
+  ],
+  [
+    "PR465 current main catalog",
+    "unchanged hosted regression suite before mapping repair",
+    "FAILED \u2014three stale historical-successor mappings; retained original log",
+    "events-current-main-hosted-catalog-failure.log"
+  ],
+  [
+    "PR465 catalog reconciliation repair",
+    "npm run test:catalog-list-audit",
+    "PASS \u2014all five unchanged regressions; historical hashes and stale-decision negative controls retained",
+    "events-current-main-catalog-regression-repair.log"
+  ],
+  [
+    "PR465 late mutation review repair",
+    "ArtistPublicPage and PartyRelationshipMigration tests",
+    "PASS \u201427 tests including new follow/unfollow completion after navigation and existing callback suppression tests",
+    "events-current-main-review-ui.log"
+  ],
+  [
+    "PR465 current main release safety",
+    "release script tests",
+    "PASS \u201483 tests",
+    "events-current-main-release-tests.log"
+  ],
+  [
+    "PR465 current main CI wiring",
+    "CI contract tests",
+    "PASS \u201432 tests",
+    "events-current-main-ci-tests.log"
+  ],
+  [
+    "PR465 current main dependency security",
+    "unchanged audit-ci policy",
+    "PASS \u2014 existing allowances retained; not zero vulnerability",
+    "events-current-main-security.log"
+  ],
+  [
+    "PR465 local Docker schema rehearsal",
+    "production schema rehearsal",
+    "BLOCKED \u2014local Docker unresponsive; only the owned command stopped, no daemon/container modifications. Hosted complete-schema check passed on23ff8f588",
+    "events-current-main-schema-rehearsal.log"
+  ],
+  [
+    "PR468 authoritative volume",
+    "actual read-only inventory with exact named PostgreSQL volume",
+    "PASS \u2014777 records/652 tables",
+    "cutover-live-volume-verified.json"
+  ],
+  [
+    "PR468 installed monitor volume check",
+    "exact installed daily scheduled command",
+    "PASS \u2014mailbox read true,8 reports,errors[]; no email sent",
+    "cutover-live-mail-volume-verified.json"
+  ],
+  [
+    "PR468 initial scheduled monitor attempt",
+    "unchanged command before retry",
+    "FAILED \u2014transient public DNS failure; mailbox read succeeded; preserved initial result",
+    "cutover-volume-mail-initial-dns-failure.json"
+  ],
+  [
+    "PR468 browser acceptance",
+    "visible-browser login tab attempt",
+    "BLOCKED \u2014transport closed; actual Google login/upload not claimed",
+    "cutover-browser-gate-limitation.json"
+  ],
+  [
+    "Installed mail monitor final verification",
+    "exact scheduled Python command against current production configuration",
+    "PASS \u2014 mailboxReadSucceeded=true, 8 aggregate reports, errors=[], no email sent; installed shared helper verified by SHA256",
+    "cutover-live-mail-final.json"
+  ],
+  [
+    "PR468 required verify-token guard",
+    "both literal webhook repair commands reject absent/empty credentials before curl",
+    "PASS \u2014 95 token-workflow tests including supported aliases and no-provider-call/no-secret-output controls",
+    "cutover-verify-token-tests.log"
+  ],
+  [
+    "PR468 public origin binding",
+    "actual HTTPS peer/DNS vs authenticated SSH origin; same-SHA foreign-host and mixed-DNS controls",
+    "PASS \u2014 5 catalog regressions; strict TLS validation remains enabled",
+    "cutover-origin-tests.log"
+  ],
+  [
+    "PR468 origin metadata",
+    "authenticated SSH metadata and existing access controls",
+    "PASS \u2014 9 tests",
+    "cutover-origin-access-tests.log"
+  ],
+  [
+    "PR468 origin follow-up mail regression",
+    "read-only mailbox/credential controls",
+    "PASS \u2014 6 tests",
+    "cutover-origin-mail-tests.log"
+  ],
+  [
+    "PR468 live current deployment",
+    "actual restricted inventory after concurrent release",
+    "PASS \u2014 777 records/652 tables; TLS peer/SSH host, current image/database and read-only transaction verified. Initial coverage failures retained in evidence",
+    "cutover-live-catalog-origin-verified.json"
+  ],
+  [
+    "Operational catalog reader follow-up",
+    "reviewed SELECT grants on 29 newly deployed tables",
+    "PASS \u2014 652 readable/0 writable tables, no schema CREATE; transaction guards exact deployment/coverage/role attributes",
+    "catalog-reviewed-tables-grant-result.json"
+  ],
+  [
+    "PR468 read-only replacement guidance",
+    "both retired helper commands require --check",
+    "PASS \u2014 4 subprocess regressions, no credential/provider changes",
+    "cutover-readonly-command-tests.log"
+  ],
+  [
+    "PR468 remaining stored-token/callback paths 9a8357065",
+    "retired helper regressions and specification gates",
+    "PASS \u2014 4 retirement regressions including private stored-token fixture, 3 inventory and 9 evidence cases; callback origins corrected without changing paths/events",
+    "cutover-final-token-audit-tests.log"
+  ],
+  [
+    "PR468 normal current-main merge 9bbd7d88f",
+    "access/mail/catalog/retirement and inventory validation",
+    "PASS \u2014 8 access + 6 mail + 3 catalog + 3 retired-helper tests; operational files unchanged from live-tested source, dependency manifests equal verified main",
+    "cutover-current-main-tests.log"
+  ],
+  [
+    "Final main 76c2c05c",
+    "all normal workflows/checks and protected target verification before source closure",
+    "PASS \u2014 all observed final-head workflows/checks completed successfully; initial de76 security failure retained historically",
+    "discovery-closure-main-ci.json"
+  ],
+  [
+    "PR472 merge 76c2c05c",
+    "fresh head/reviews/checks and normal merge target verification",
+    "PASS \u2014 approved exact head merged normally, branch retained, resulting tree identical to tested lockfile fix",
+    "merge472-target-verification.json"
+  ],
+  [
+    "PR468 final hardening f528eee8c",
+    "registry provenance, approved-query/role and retired-diagnostic controls",
+    "PASS \u2014 8 access, 6 mail, 3 catalog, 3 retired-helper, 3 inventory and 9 evidence/escrow tests",
+    "cutover-access-hardening-tests.log"
+  ],
+  [
+    "PR468 database-enforced reader",
+    "real role grants and explicit read-write negative control",
+    "PASS \u2014 623 readable tables, zero writable tables, no schema CREATE/superuser; zero-row UPDATE denied even after overriding read-only defaults",
+    "catalog-reader-provisioned.json"
+  ],
+  [
+    "PR468 hardened live inventory",
+    "full approved inventory with dedicated reader",
+    "PASS \u2014 766 records, current API/image/database identity verified, no application-data mutation",
+    "cutover-live-catalog-hardened.json"
+  ],
+  [
+    "PR468 hardened installed monitor",
+    "exact scheduled command after provenance correction",
+    "PASS \u2014 mailbox read succeeded, 8 aggregate reports, zero errors, no mail sent",
+    "cutover-live-mail-hardened.json"
+  ],
+  [
+    "PR469 merge de76dc7df",
+    "fresh exact-head checks/reviews, normal merge and target verification",
+    "PASS \u2014 merged state/commit verified; target tree identical to tested cda2c5f, source ancestry retained",
+    "merge469-target-verification.json"
+  ],
+  [
+    "PR469 post-merge security audit",
+    "unchanged hosted audit-ci",
+    "FAILED \u2014 newly cataloged ip-address advisories in existing 10.3.1; focused tested repair published as PR472, no threshold/allowlist change",
+    "merge469-initial-ci-failure.log"
+  ],
+  [
+    "PR472 security repair d1f1affcd",
+    "exact repository audit-ci configuration",
+    "PASS \u2014 compatible lock entry updated to 10.7.2; existing allowlist and thresholds unchanged",
+    "security-audit-ci.log"
+  ],
+  [
+    "PR472 security repair",
+    "four old/new address classification cases and two public controls",
+    "PASS \u2014 both advisory behaviors reproduced before and corrected after; public controls retained",
+    "security-classifier-check.json"
+  ],
+  [
+    "Mobile115 current-main merge ede1f2a",
+    "complete mobile Jest suite",
+    "PASS \u2014 87 suites / 553 tests, no new skips",
+    "mobile-main-tests.log"
+  ],
+  [
+    "Mobile115 current-main merge ede1f2a",
+    "release assets, lint, typecheck and public Expo config",
+    "PASS \u2014 newer signing/runtime/association/API gates preserved; no native publication",
+    "mobile-main-release.log"
+  ],
+  [
+    "Mobile115 current-main merge ede1f2a",
+    "Python signing/artifact regression suite",
+    "PASS \u2014 12 tests",
+    "mobile-main-python.log"
+  ],
+  [
+    "PR468 remaining retired writer 4d40ae58c",
+    "manual/auto refresher refusal and credential-redaction regressions",
+    "PASS \u2014 2 tests; exits before exchange, secret output or service restart",
+    "cutover-retired-refresher-tests.log"
+  ],
+  [
+    "PR468 remaining retired writer",
+    "generated inventory and evidence gates",
+    "PASS \u2014 three inventory and nine evidence/escrow cases",
+    "cutover-retirement-spec-tests.log"
+  ],
+  [
+    "PR468 current access 102662f13",
+    "SSH binding, redaction, read-only catalog and mail regressions",
+    "PASS \u2014 6 access + 6 mail + 3 catalog tests; strict host identity, mismatched targets/versions, unsafe secret permissions and mailbox error redaction tested",
+    "cutover-current-access-tests.log"
+  ],
+  [
+    "PR468 current access 102662f13",
+    "final access suite including unsafe credential permissions",
+    "PASS \u2014 6 tests",
+    "cutover-current-access-final-tests.log"
+  ],
+  [
+    "PR468 live catalog",
+    "actual bounded read-only inventory against verified current Hetzner deployment",
+    "PASS \u2014 766 records / 623 tables, tdf_hq, read-only on; matching current public API commit/image, no remote writes",
+    "cutover-live-catalog-validation.json"
+  ],
+  [
+    "PR468 installed mail monitor",
+    "exact installed scheduled command, read-only DNS/IMAP",
+    "PASS \u2014 mailboxReadSucceeded=true, 8 aggregate reports, zero errors; original LaunchAgent unchanged; no mail sent",
+    "cutover-live-mail-validation.json"
+  ],
+  [
+    "PR468 retired deployment guide 4031ed4a2",
+    "specification inventory and evidence gates",
+    "PASS \u2014 generated guide fingerprint checked, three Python and nine Node regressions; documentation-only change",
+    "cutover-guide-spec-tests.log"
+  ],
+  [
+    "PR468 managed-image host 7f1d2d748",
+    "helper/token/enrichment/import suites and managed-host regression",
+    "PASS \u2014 122 tests; canonical/legacy hosts accepted, lookalikes/unrelated/malformed hosts rejected; inventory and diff checks pass",
+    "cutover-managed-image-tests.log"
+  ],
+  [
+    "PR468 remaining cutover paths 36aff567c",
+    "helper/token/enrichment/import regression suites",
+    "PASS \u2014 121 tests, zero failures/skips; importer/default/override, aliases, callback states and readiness false-success controls; all network calls mocked",
+    "cutover-remaining-path-tests.log"
+  ],
+  [
+    "PR468 remaining cutover paths",
+    "CI/evidence/escrow and specification regression gates",
+    "PASS \u2014 34 Node tests and 3 Python tests; regenerated document hashes and shell syntax checks pass",
+    "cutover-remaining-spec-ci.log"
+  ],
+  [
+    "Mobile115 canonical API c921f5d",
+    "full mobile Jest suite",
+    "PASS \u2014 85 suites / 510 tests; no skips or native publication",
+    "mobile-cutover-tests.log"
+  ],
+  [
+    "Mobile115 canonical API c921f5d",
+    "release asset/lint/typecheck/public-config checks",
+    "PASS \u2014 no native build or deployment",
+    "mobile-cutover-release.log"
+  ],
+  [
+    "Mobile115 canonical API",
+    "release-tool Python tests",
+    "PASS \u2014 7 tests; signing/identity constraints retained",
+    "mobile-cutover-python.log"
+  ],
+  [
+    "Mobile115 canonical API",
+    "five actual Expo profile and override configurations",
+    "PASS \u2014 production fallback, preview/production injection, development and explicit override",
+    "mobile-cutover-config.json"
+  ],
+  [
+    "Mobile115 native inputs cb742625",
+    "two actual Expo configurations from Android/iOS workflow inputs",
+    "PASS \u2014 only API/upload values changed; no workflow dispatch; application files identical to tested c921f5d",
+    "mobile-cutover-workflow-config.json"
+  ],
+  [
+    "Root465 mobile pin 86d4b9bb4",
+    "catalog --fail-on-unreviewed and specification inventory",
+    "PASS \u2014 only gitlink changed; prior web/backend validation remains historical; fresh current-head CI/review required",
+    "events-mobile-cutover-catalog.json"
+  ],
+  [
+    "PR468 webhook-health follow-up e762f67b2",
+    "messaging/enrichment and webhook state/token regressions",
+    "PASS \u2014 115 tests, zero failures/skips; inventory check remains current",
+    "cutover-diagnostic-tests.log"
+  ],
+  [
+    "PR468 operator follow-up",
+    "messaging/enrichment including manual API routing and diagnostic secret-output regressions",
+    "PASS \u2014 113 tests, zero failures/skips; all three routing variants and both webhook callback paths tested without network writes",
+    "cutover-operator-tests-2.log"
+  ],
+  [
+    "PR468 operator follow-up",
+    "specification inventory and evidence gate",
+    "PASS \u2014 regenerated two operator-guide hashes; inventory check, 3 Python and 9 Node regressions pass",
+    "cutover-operator-spec.log"
+  ],
+  [
+    "PR468 operator-test setup",
+    "initial new test execution",
+    "FAILED \u2014 duplicate test import corrected and mock response aligned to the existing text-response API; all assertions retained in subsequent passing run",
+    "cutover-operator-tests.log"
+  ],
+  [
+    "PR468 earlier follow-up 68558f540",
+    "YAML, diff, regression and hosted specification evidence at that head",
+    "PASS for listed local checks and hosted specification gate; other hosted status is recorded in the snapshot, Datadog was failed at that historical head; later unchanged reruns passed",
+    "cutover-followup-validation-summary.json"
+  ],
+  [
+    "PR468 earlier hosted Datadog",
+    "API synthetic on commit 5486b4914",
+    "FAILED \u2014 exact final failure log retained; monitor was external at that historical failure; another actor later corrected its endpoint and unchanged reruns passed",
+    "cutover-final-datadog-failure.log"
+  ],
+  [
+    "PR468 generated specification",
+    "exact specification-contracts gate",
+    "PASS \u2014 inventory check, 3 Python regressions and 9 Node evidence/escrow tests; one course-document hash regenerated",
+    "cutover-spec-tests.log"
+  ],
+  [
+    "PR468 original hosted specification",
+    "specification inventory check before generated correction",
+    "FAILED \u2014 stale course-document SHA256; corrected in 68558f5409f9a976c0a4a9bd742e627f75f089cf without changing any check",
+    "cutover-spec-failure.log"
+  ],
+  [
+    "PR468 cutover maintenance",
+    "messaging and artist enrichment regression suites",
+    "PASS \u2014 111 tests, zero failures, zero skips; readonly invalid/expiry failures retained",
+    "cutover-targeted-tests.log"
+  ],
+  [
+    "PR468 cutover maintenance",
+    "CI change-scope and pipeline contracts",
+    "PASS \u2014 25 tests, zero failures, zero skips",
+    "cutover-ci-tests.log"
+  ],
+  [
+    "PR468 course publisher",
+    "three mocked production-default and override requests",
+    "PASS \u2014 default current API, course override precedence and legacy VITE override; no network or production writes",
+    "cutover-course-checks.json"
+  ],
+  [
+    "PR469 hosted operational check",
+    "Datadog production API health contract",
+    "FAILED \u2014 configured Fly health endpoint timed out after concurrent cutover; web check passed. Check remains enabled; subsequent external correction and unchanged successful rerun are recorded separately",
+    "discovery-hosted-build-failure.log"
+  ],
+  [
+    "PR469 standalone integration",
+    "Stack build --test --no-run-tests",
+    "STOPPED (exit130) after equivalent exact-head hosted build/full-suite/schema validation passed; no local full-build pass claimed",
+    "discovery-backend-build.log"
+  ],
+  [
+    "PR469 hosted full validation",
+    "backend build, full suite, all runtime runners and automatic production-schema rehearsal",
+    "PASS \u2014 3,542 full-suite examples / 0 failures / 6 separately run cases, 1,141 social HTTP examples, every runtime and schema step succeeded; only executable upload skipped for this PR",
+    "discovery-hosted-backend.log"
+  ],
+  [
+    "PR469 hosted social rerun",
+    "one unchanged failed-job rerun",
+    "PASS \u2014 social-client attempt2; no code, assertions, timeouts or deployment changes",
+    "discovery-social-rerun-jobs.json"
+  ],
+  [
+    "PR469 local social preview",
+    "unchanged keyboard/mobile/axe assertions, one diagnostic rerun",
+    "PASS on rerun; initial correctly configured run detected transient ripple contrast. Both outcomes retained; no assertion or timeout changes",
+    "discovery-social-browser-recheck.log"
+  ],
+  [
+    "PR469 hosted social preview",
+    "unchanged synthetic browser journey",
+    "FAILED \u2014 initial expected heading timed out at 120 seconds; investigated without assertion/timeout changes",
+    "discovery-hosted-social-failure.log"
+  ],
+  [
+    "PR469 standalone integration",
+    "focused discovery suite on current-main integration",
+    "PASS \u2014 28 examples, zero failures",
+    "discovery-focused-tests.log"
+  ],
+  [
+    "PR469 standalone integration",
+    "PostgreSQL source completion and shared boundary suite",
+    "PASS \u2014 disabled empty response, atomic rollback, mixed capacity, concurrent writer, authority, revocation and rollback/reapply",
+    "discovery-boundary-db.log"
+  ],
+  [
+    "PR469 standalone integration",
+    "production release tooling",
+    "PASS \u2014 82 tests; all 116 introduction commits separately verified as ancestors",
+    "discovery-release-tests.log"
+  ],
+  [
+    "PR469 standalone integration",
+    "catalog and specification gates",
+    "PASS \u2014 only the reviewed 116-entry migration-registry fingerprint changed; both source CI/schema gates retained",
+    "discovery-catalog-final.json"
+  ],
+  [
+    "PR463 final source repair",
+    "actual Cron and dependency typecheck",
+    "PASS \u2014 corrected executable autogen path, verified process exit 0; existing warnings retained",
+    "pr463-cron-typecheck-final.log"
+  ],
+  [
+    "PR460 (merge blocked by native-stack history constraint)",
+    "Stack/GHC -Wall EventDiscovery suite on current-main integration",
+    "PASS \u2014 26 examples, zero failures; no merge performed",
+    "pr460-discovery-tests.log"
+  ],
+  [
+    "PR463 repair",
+    "Stack/GHC -Wall EventDiscovery suite",
+    "PASS \u2014 28 examples, zero failures",
+    "pr463-discovery-tests.log"
+  ],
+  [
+    "PR463 repair",
+    "real PostgreSQL shared count, mixed-entry race, authority/revocation and rollback/reapply",
+    "PASS, including actual production count helper (20 \u2192 20 \u2192 19 \u2192 20)",
+    "pr463-shared-count-db.log"
+  ],
+  [
+    "PR463 repair",
+    "Stack/GHC -Wall actual EventResearch handler and dependencies",
+    "PASS \u2014 all 24 compilation units; existing warnings retained",
+    "pr463-handler-typecheck.log"
+  ],
+  [
+    "PR463 source completion",
+    "real PostgreSQL source authority and atomic completion",
+    "PASS \u2014 disabled empty feed rejected, failed final success write rolls back run completion, enabled source commits both success records; original boundary suite still passes",
+    "pr463-source-completion-db-3.log"
+  ],
+  [
+    "PR463 source completion",
+    "focused discovery suite",
+    "PASS \u2014 28 examples, zero failures",
+    "pr463-discovery-tests-3.log"
+  ],
+  [
+    "PR463 source completion",
+    "initial database fixture attempt",
+    "FAILED \u2014 temporary fixture table disappeared after intentional SQL failure discarded its pooled connection; corrected to a table in the existing disposable test database",
+    "pr463-source-completion-db.log"
+  ],
+  [
+    "PR463 source completion",
+    "initial direct Cron compile",
+    "FAILED \u2014 omitted Stack generated Paths_tdf_hq include directory; command corrected without a source workaround",
+    "pr463-cron-typecheck.log"
+  ],
+  [
+    "PR463 source completion",
+    "catalog gate with pinned mobile checkout",
+    "PASS \u2014 first attempt reported stale fingerprints because the new worktree lacked its pinned mobile checkout; exact parent gitlink restored with no catalog-decision changes",
+    "pr463-catalog-2.json"
+  ],
+  [
+    "PR463 repair",
+    "production release tooling",
+    "PASS \u2014 82 tests; all 115 introduction commits separately verified as ancestors",
+    "pr463-release-tests.log"
+  ],
+  [
+    "PR465 final browser repair",
+    "UI typecheck and zero-warning lint",
+    "PASS; final lint process completed with exit zero",
+    "events-ui-lint-final.log"
+  ],
+  [
+    "PR465 browser repair",
+    "targeted Playwright persona tests across configured Chromium/Firefox/WebKit projects",
+    "PASS \u2014 19 passed, 8 pre-existing project-specific skips; no new skips or relaxed timeouts",
+    "events-persona-targeted.log"
+  ],
+  [
+    "PR465 browser repair",
+    "ArtistPublicPage component and intent suites",
+    "PASS \u2014 40 tests / 2 suites, including preserved query/hash regression",
+    "events-follow-component-3.log"
+  ],
+  [
+    "PR462 (concurrent merge; tested by audit)",
+    "npm run test:production-release",
+    "PASS \u2014 82 tests",
+    "test-462-release.log"
+  ],
+  [
+    "PR462",
+    "focused records UI tests",
+    "PASS \u2014 5 tests / 2 suites",
+    "test-462-ui.log"
+  ],
+  [
+    "PR462",
+    "npm run typecheck:ui",
+    "PASS",
+    "test-462-types.log"
+  ],
+  [
+    "PR462",
+    "scripts/test-records-youtube-catalog-migration.sh",
+    "PASS on escalated disposable native PostgreSQL; first sandbox attempt blocked shared-memory creation",
+    "test-462-migration-escalated.log"
+  ],
+  [
+    "PR465 combined candidate",
+    "Stack build --test --no-run-tests",
+    "PASS",
+    "events-backend-build-escalated.log"
+  ],
+  [
+    "PR465",
+    "stack test",
+    "PASS \u2014 3,573 examples, zero failures, six explicit separate-runner pending cases",
+    "events-backend-tests.log"
+  ],
+  [
+    "PR465",
+    "event formal verification",
+    "PASS finite-bound TLA+/Alloy checks, liveness and negative controls",
+    "events-formal.log"
+  ],
+  [
+    "PR465",
+    "npm run quality:repo",
+    "PASS, formal audit zero critical/errors; warnings retained",
+    "events-quality-repo.log"
+  ],
+  [
+    "PR465",
+    "UI focused tests",
+    "PASS \u2014 338 tests / 9 suites",
+    "events-ui-targeted-2.log"
+  ],
+  [
+    "PR465",
+    "UI full test run",
+    "FAILED \u2014 7 suites / 29 tests; 227 suites / 2,537 tests passed",
+    "events-ui-full.log"
+  ],
+  [
+    "PR465",
+    "same 7 failing UI suites, unchanged assertions/timeouts",
+    "PASS \u2014 179 tests / 7 suites; hosted published-head ui-quality also passed",
+    "events-ui-failure-recheck.log"
+  ],
+  [
+    "PR465",
+    "UI typecheck and lint",
+    "PASS after unused-import repair",
+    "events-lint-ui-2.log"
+  ],
+  [
+    "PR465",
+    "UI production build/bundle guard",
+    "PASS \u2014 5 preloads, 358,456 bytes gzip initial JS; limits unchanged",
+    "events-ui-build.log"
+  ],
+  [
+    "PR465",
+    "event tooling tests",
+    "PASS \u2014 54 tests",
+    "events-node-targeted-2.log"
+  ],
+  [
+    "PR465 follow-up",
+    "runner isolation/wiring tests",
+    "PASS \u2014 16 tests",
+    "events-followup-runner-tests.log"
+  ],
+  [
+    "PR465",
+    "catalog retirement and stale-fingerprint negative tests",
+    "PASS \u2014 5 tests",
+    "events-catalog-final-tests.log"
+  ],
+  [
+    "PR465",
+    "catalog gate",
+    "PASS \u2014 zero unreviewed or stale active decisions",
+    "events-catalog-final.log"
+  ],
+  [
+    "PR465",
+    "specification inventory check / generator tests",
+    "PASS \u2014 generated index checked; 3 generator tests",
+    "events-spec-tests.log"
+  ],
+  [
+    "PR465",
+    "foundation SQL regression",
+    "PASS",
+    "events-operations-foundation-db.log"
+  ],
+  [
+    "PR465",
+    "API SQL regression",
+    "PASS",
+    "events-operations-api-db.log"
+  ],
+  [
+    "PR465",
+    "task commit + rollback integrity",
+    "PASS including new stale graph and deletion regressions",
+    "events-task-commit-db-2.log"
+  ],
+  [
+    "PR465",
+    "task read",
+    "PASS after transactional fixture and rejection controls",
+    "events-task-read-db-2.log"
+  ],
+  [
+    "PR465",
+    "task revision",
+    "PASS",
+    "events-task-revision-db-2.log"
+  ],
+  [
+    "PR465",
+    "revisioned task read",
+    "PASS after valid optional assignment mutation; original fixture failed current mandatory RACI guard",
+    "events-task-revisioned-read-db-3.log"
+  ],
+  [
+    "PR465",
+    "RACI reassignment",
+    "PASS",
+    "events-raci-db.log"
+  ],
+  [
+    "PR465",
+    "RACI editor context",
+    "PASS after valid readiness transition; original fixture failed mandatory RACI guard",
+    "events-raci-editor-context-db-2.log"
+  ],
+  [
+    "PR465",
+    "task completion",
+    "PASS \u2014 32 decisions, 12 isolation races, four expiry waits, revocation orders, aborted-first recovery",
+    "events-task-completion-db-3.log"
+  ],
+  [
+    "PR465",
+    "complete-schema migration rehearsal",
+    "PASS; production manifest unchanged",
+    "events-schema-rehearsal.log"
+  ],
+  [
+    "Mobile115",
+    "locked npm ci",
+    "PASS using audit-owned cache; initial shared install lacked expo-clipboard and default cache had root-owned residue",
+    "events-mobile-install-2.log"
+  ],
+  [
+    "Mobile115",
+    "typecheck/lint/full test suite",
+    "PASS \u2014 85 suites / 510 tests",
+    "events-mobile-tests.log"
+  ],
+  [
+    "Mobile115",
+    "npm run release:check",
+    "PASS (no build publication/deployment)",
+    "events-mobile-release-check.log"
+  ],
+  [
+    "Mobile115",
+    "npm audit --json",
+    "34 pre-existing findings: 1 low, 27 moderate, 6 high; manifests unchanged; no audit-fix or threshold bypass",
+    "events-mobile-security-audit.json"
+  ],
+  [
+    "PR465",
+    "isolated invitation-update-concurrency",
+    "PASS \u2014 15 examples, 0 failures",
+    "events-runtime-invitation-update-concurrency.log"
+  ],
+  [
+    "PR465",
+    "isolated event-relations-runtime",
+    "PASS \u2014 1 example, 0 failures",
+    "events-runtime-event-relations-runtime.log"
+  ],
+  [
+    "PR465",
+    "isolated artist-self-service",
+    "PASS \u2014 9 examples, 0 failures",
+    "events-runtime-artist-self-service.log"
+  ],
+  [
+    "PR465",
+    "isolated provider-identity",
+    "PASS \u2014 8 examples, 0 failures",
+    "events-runtime-provider-identity.log"
+  ],
+  [
+    "PR465",
+    "isolated trial-identity",
+    "PASS \u2014 9 examples, 0 failures",
+    "events-runtime-trial-identity.log"
+  ],
+  [
+    "PR465",
+    "isolated live-intake-identity",
+    "PASS \u2014 11 examples, 0 failures",
+    "events-runtime-live-intake-identity.log"
+  ],
+  [
+    "PR465",
+    "isolated course-identity",
+    "PASS \u2014 11 examples, 0 failures",
+    "events-runtime-course-identity.log"
+  ],
+  [
+    "PR465",
+    "isolated marketplace-contact-identity",
+    "PASS \u2014 4 examples, 0 failures",
+    "events-runtime-marketplace-contact-identity.log"
+  ],
+  [
+    "PR465",
+    "event production-auth HTTP harness \u2014 107 examples",
+    "PASS",
+    "events-http-3.log"
+  ],
+  [
+    "PR465",
+    "real RACI browser/API/PostgreSQL",
+    "PASS",
+    "events-browser.log"
+  ]
+]

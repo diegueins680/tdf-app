@@ -1,0 +1,10 @@
+{
+  "time": "2026-10-03T23:48:03.389465+00:00",
+  "result": "PASS",
+  "original_decisions": 1170,
+  "merged_decisions": 1171,
+  "retained_event_decisions_except_reviewed_migration_successor": true,
+  "new_migration_and_ownership_decisions_exact_main": true,
+  "both_prior_migration_mappings_preserved_verbatim": true,
+  "production_manifest_exact_main": true
+}

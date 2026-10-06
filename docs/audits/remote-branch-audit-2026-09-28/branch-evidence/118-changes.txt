@@ -1,0 +1,4 @@
+ docs/automatic-production-migrations.md            |  6 ++++
+ scripts/lib/production-release.mjs                 |  7 +++--
+ .../test-automatic-migrations-production-schema.sh | 35 ++++++++++++++++++++++
+ 3 files changed, 46 insertions(+), 2 deletions(-)

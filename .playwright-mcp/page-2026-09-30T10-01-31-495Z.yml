@@ -1,0 +1,388 @@
+- generic [ref=f15e4]:
+  - generic [ref=f15e18]:
+    - generic [ref=f15e21]:
+      - link [ref=f15e26] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f15e31]
+      - generic [ref=f15e34]:
+        - link [ref=f15e39] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f15e44]
+        - link [ref=f15e49] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f15e54]
+        - link [ref=f15e61] [cursor=pointer]:
+          - /url: /direct/t/116189779777793
+          - generic [ref=f15e64]:
+            - img "Messages" [ref=f15e66]
+            - generic "Direct messaging - 10 new notifications link" [ref=f15e69]: 9+
+        - link [ref=f15e75] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f15e80]
+        - link [ref=f15e87] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f15e92]
+        - link [ref=f15e98] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f15e103]
+        - link [ref=f15e108] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f15e113]
+        - link [ref=f15e120] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f15e125]:
+            - img "tdf.records.label's profile picture" [ref=f15e126]
+      - generic [ref=f15e127]:
+        - link [ref=f15e130] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f15e135]
+        - link [ref=f15e138] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f15e143]
+    - generic [ref=f15e146]:
+      - main [ref=f15e147]:
+        - generic [ref=f15e149]:
+          - generic [ref=f15e150]:
+            - generic [ref=f15e151]:
+              - generic [ref=f15e155]:
+                - button "necesito río" [ref=f15e158] [cursor=pointer]
+                - button [ref=f15e169] [cursor=pointer]:
+                  - link [ref=f15e171]:
+                    - img "rojelioelrojorojas's profile picture" [ref=f15e172]
+              - generic [ref=f15e173]:
+                - generic [ref=f15e174]:
+                  - generic [ref=f15e175]:
+                    - link [ref=f15e177] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "rojelioelrojorojas" [level=2] [ref=f15e178]
+                    - button [ref=f15e180] [cursor=pointer]:
+                      - img "Options" [ref=f15e182]
+                  - generic [ref=f15e186]: Andrés Martín Arauz
+                  - generic [ref=f15e188]:
+                    - generic [ref=f15e190]:
+                      - generic [ref=f15e191]: "151"
+                      - text: posts
+                    - link "2,304 followers" [ref=f15e193] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f15e194]:
+                        - generic "2,304" [ref=f15e195]
+                        - text: followers
+                    - link "3,535 following" [ref=f15e197] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f15e198]:
+                        - generic [ref=f15e199]: 3,535
+                        - text: following
+                - generic [ref=f15e200]:
+                  - generic [ref=f15e201]:
+                    - generic [ref=f15e202]:
+                      - button [ref=f15e203] [cursor=pointer]:
+                        - generic [ref=f15e204]:
+                          - text: capitán del equipo rojo.letras y música en
+                          - link "@rojo.uio" [ref=f15e205]:
+                            - /url: /rojo.uio/
+                          - text: ☯️🎏♋
+                      - generic [ref=f15e206]:
+                        - text: ...
+                        - button "more" [ref=f15e207] [cursor=pointer]
+                    - button "Link icon open.spotify.com/artist/0zXTOxrKwcZXYJBENPRUFE?si=lQ1wUWsrRESB_gD1RwO_XQ and 4 more" [ref=f15e210] [cursor=pointer]:
+                      - generic [ref=f15e211]:
+                        - img "Link icon" [ref=f15e213]
+                        - generic [ref=f15e216]: open.spotify.com/artist/0zXTOxrKwcZXYJBENPRUFE?si=lQ1wUWsrRESB_gD1RwO_XQ and 4 more
+                  - link "Followed by dospina21, estebanacosta + 65 more" [ref=f15e217] [cursor=pointer]:
+                    - /url: /rojelioelrojorojas/followers/mutualOnly
+                    - generic [ref=f15e219]:
+                      - generic [ref=f15e221]:
+                        - button [ref=f15e222]:
+                          - link [ref=f15e223]
+                        - button [ref=f15e224]:
+                          - link [ref=f15e225]
+                        - button [ref=f15e226]:
+                          - link [ref=f15e227]
+                      - generic [ref=f15e228]: Followed by dospina21, estebanacosta + 65 more
+            - generic [ref=f15e233]:
+              - button "Following Down chevron icon" [ref=f15e235] [cursor=pointer]:
+                - generic [ref=f15e236]:
+                  - generic [ref=f15e237]: Following
+                  - img "Down chevron icon" [ref=f15e240]
+              - button "Message" [ref=f15e243] [cursor=pointer]
+              - button [ref=f15e245] [cursor=pointer]:
+                - img "Similar accounts" [ref=f15e247]
+            - menu [ref=f15e251]:
+              - list [ref=f15e255]:
+                - listitem [ref=f15e256]
+                - listitem [ref=f15e257]
+                - listitem [ref=f15e258]:
+                  - link "View 🐱 highlight" [ref=f15e261] [cursor=pointer]:
+                    - /url: /stories/highlights/18451719133075164/
+                    - button "rojelioelrojorojas's highlight story picture 🐱" [ref=f15e262]:
+                      - button [ref=f15e263]:
+                        - img "rojelioelrojorojas's highlight story picture" [ref=f15e266]
+                      - generic [ref=f15e267]: 🐱
+                - listitem [ref=f15e270]:
+                  - link "View pianitos highlight" [ref=f15e273] [cursor=pointer]:
+                    - /url: /stories/highlights/17923962811221441/
+                    - button "rojelioelrojorojas's highlight story picture pianitos" [ref=f15e274]:
+                      - button [ref=f15e275]:
+                        - img "rojelioelrojorojas's highlight story picture" [ref=f15e278]
+                      - generic [ref=f15e279]: pianitos
+                - listitem [ref=f15e282]:
+                  - link "View dibujito highlight" [ref=f15e285] [cursor=pointer]:
+                    - /url: /stories/highlights/17993993473115088/
+                    - button "rojelioelrojorojas's highlight story picture dibujito" [ref=f15e286]:
+                      - button [ref=f15e287]:
+                        - img "rojelioelrojorojas's highlight story picture" [ref=f15e290]
+                      - generic [ref=f15e291]: dibujito
+                - listitem [ref=f15e294]:
+                  - link "View Destacada highlight" [ref=f15e297] [cursor=pointer]:
+                    - /url: /stories/highlights/17947856311062380/
+                    - button "rojelioelrojorojas's highlight story picture Destacada" [ref=f15e298]:
+                      - button [ref=f15e299]:
+                        - img "rojelioelrojorojas's highlight story picture" [ref=f15e302]
+                      - generic [ref=f15e303]: Destacada
+                - listitem [ref=f15e306]:
+                  - link "View Fuego highlight" [ref=f15e309] [cursor=pointer]:
+                    - /url: /stories/highlights/17905026190155454/
+                    - button "rojelioelrojorojas's highlight story picture Fuego" [ref=f15e310]:
+                      - button [ref=f15e311]:
+                        - img "rojelioelrojorojas's highlight story picture" [ref=f15e314]
+                      - generic [ref=f15e315]: Fuego
+                - listitem [ref=f15e318]:
+                  - link "View por highlight" [ref=f15e321] [cursor=pointer]:
+                    - /url: /stories/highlights/17900077096183663/
+                    - button "rojelioelrojorojas's highlight story picture por" [ref=f15e322]:
+                      - button [ref=f15e323]:
+                        - img "rojelioelrojorojas's highlight story picture" [ref=f15e326]
+                      - generic [ref=f15e327]: por
+          - generic [ref=f15e330]:
+            - tablist [ref=f15e331]:
+              - link [ref=f15e333] [cursor=pointer]:
+                - /url: /rojelioelrojorojas/
+                - img "Posts" [ref=f15e335]
+              - link [ref=f15e346] [cursor=pointer]:
+                - /url: /rojelioelrojorojas/reels/
+                - img "Reels" [ref=f15e348]
+              - link [ref=f15e351] [cursor=pointer]:
+                - /url: /rojelioelrojorojas/reposts/
+                - img "Reposts" [ref=f15e353]
+              - link [ref=f15e356] [cursor=pointer]:
+                - /url: /rojelioelrojorojas/tagged/
+                - img "Tagged" [ref=f15e358]
+            - tabpanel
+          - generic [ref=f15e365]:
+            - generic [ref=f15e366]:
+              - link [ref=f15e368] [cursor=pointer]:
+                - /url: /rojelioelrojorojas/reel/Dd2sEaWirv2/
+                - 'img "En febrero del 2025 grabamos una sesión en vivo en @tdf.records.label de 4 temas con @rojo.uio con una alineación increíble 🙌 @victor.capuli @joelduenasc y Jofiel Icaza. Como la autogestión y la falta de presupuesto es así, recién la van a poder ver el lunes 19 de Octubre. Aquí un pedacito épico del primer tema. #livesession #alternative #andes" [ref=f15e371]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f15e374] [cursor=pointer]:
+                - /url: /rojelioelrojorojas/reel/Ddm-dMLtUQX/
+                - img "Un pedacito de huellas, otro tema que va a salir en nuestra sesión en vivo 🚀" [ref=f15e377]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f15e380] [cursor=pointer]:
+                - /url: /rojelioelrojorojas/reel/DdXcSVbt9x-/
+                - img "Fragmento de CAÍDA, un tema que está por estrenarse en una sesión en vivo muy locochona 😼" [ref=f15e383]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f15e385]:
+              - link [ref=f15e387] [cursor=pointer]:
+                - /url: /casa.absurda/p/Dcmc2LojpqQ/
+                - 'img "ROJO + AVE Y PEZ Sábado 5 de septiembre 8:00 p. m. Casa Absurda Desde Quito llega Rojo en formato solo, presentando su música. También se presenta Ave y Pez, ensamble imbabureño: Kibbe Vega · Nairi Cachimuel · Andrés Viteri · Hjlmar Varela · Kevin de la Torre Entrada: $5 Incluye un hervido o una bebida caliente. Aforo limitado. Reserva tu entrada con anticipación. Para reservar: Banco Pichincha Cuenta de ahorro transaccional 2203801309 A nombre de Andrés Viteri Envía la captura de la transferencia al 096 781 3748." [ref=f15e390]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f15e393] [cursor=pointer]:
+                - /url: /jabieralaviajera/p/DbCPkTNG4TK/
+                - img "El impulso. Recuerdos del Pilfest, en la cervecería del negro, recuerdos de cantarle a la Pili desde Quito para que llegue a Guayaquil, para que llegue a su corazón. Recuerdo mi primera vez cantando el impulso el impulso de estar en el escenario el impulso de mi voz en el micrófono el impulso del ritmo temblando en mis manos y en mi boca, mi boca y manos temblando, recuerdo que me gusta. El arte es un camino labrado con el cuerpo con el corazón, seguimos insistiendo y tallando cada esquina hacia donde nos transporte. con el brillo único de mi alma." [ref=f15e396]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f15e399] [cursor=pointer]:
+                - /url: /rojelioelrojorojas/p/Da3Jk04ERRM/
+                - img "Mañana vamos a tocar un lindo repertorio con nuestra música y un par de covers bonitos a duo con @felipe.cornejo.bermeo en @florestapizza 🍕🔥✨ Ven! 💯 7:30pm $6" [ref=f15e402]
+            - generic [ref=f15e404]:
+              - link [ref=f15e406] [cursor=pointer]:
+                - /url: /rojelioelrojorojas/reel/DYzqQn_xjkC/
+                - 'img "Red - Yambala fragmento del finde en el @quitojazzclub @franlaurito 🔥 @samteeuwen.nl @raulmolina @felipe.cornejo.bermeo @flautatraviesa #red #yambala #modernjazz #contemporaryjazz #lavida" [ref=f15e409]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f15e412] [cursor=pointer]:
+                - /url: /rojelioelrojorojas/p/DXSuV2ZjUWr/
+                - img "Este martes 21 de abril volvemos a presentar mis composiciones en quinteto en @florestapizza 😼 a las 7 pm. Cover $7 Red quintet @raulmolina @franlaurito @flautatraviesa @felipe.cornejo.bermeo" [ref=f15e415]
+              - link [ref=f15e418] [cursor=pointer]:
+                - /url: /elvacio.uio/p/DW4oQADD3xy/
+                - 'img "⚫️ #elvacío #analogphotos #bnw #tbw 📸 @abrilivanas" [ref=f15e421]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f15e423]:
+              - link [ref=f15e425] [cursor=pointer]:
+                - /url: /rojelioelrojorojas/p/DW1sfZAkYIR/
+                - 'img "Este viernes 10 de abril presentamos mi música en quinteto en el @ananke3microclimas de la floresta a las 8:30 pm. Cover $8. Red quintet @raulmolina @franlaurito @flautatraviesa @felipe.cornejo.bermeo Foto: @paffier" [ref=f15e428]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f15e431] [cursor=pointer]:
+                - /url: /elvacio.uio/p/DU8uvk8jwfQ/
+                - 'img "Gracias por venir este pasado sábado al @inspirartefest, la pasamos increíble! Nos vemos pronto! #elvacío #cyasoon" [ref=f15e434]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f15e437] [cursor=pointer]:
+                - /url: /elvacio.uio/p/DUviwY2EZp1/
+                - img "El Vacío en el @inspirartefest 📸 @nicolerobayo" [ref=f15e440]
+      - contentinfo [ref=f15e442]:
+        - generic [ref=f15e443]:
+          - generic [ref=f15e445]:
+            - link "Meta" [ref=f15e447] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f15e450] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f15e453] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f15e456] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f15e459] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f15e462] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f15e465] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f15e468] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f15e471] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f15e474] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f15e477] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f15e480] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f15e483] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f15e486] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f15e489] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f15e492] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f15e494]:
+            - generic [ref=f15e495] [cursor=pointer]:
+              - generic [ref=f15e496]:
+                - generic [ref=f15e497]: English
+                - img "Down chevron icon" [ref=f15e500]
+              - combobox "Switch Display Language" [ref=f15e502]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f15e503]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f15e506] [cursor=pointer]:
+              - generic "Messages - 10 new notifications" [ref=f15e507]:
+                - generic [ref=f15e508]:
+                  - generic [ref=f15e510]:
+                    - img "Messages" [ref=f15e511]
+                    - generic "Direct messaging - 10 new notifications link" [ref=f15e514]: 9+
+                  - generic [ref=f15e517]: Messages
+                - generic [ref=f15e518]:
+                  - button [ref=f15e519]:
+                    - img "10 unread chats" [ref=f15e521]
+                  - button "User avatar David Márquez" [ref=f15e526]:
+                    - img "User avatar" [ref=f15e529]
+                  - button "User avatar Andrés Martín Arauz" [ref=f15e531]:
+                    - img "User avatar" [ref=f15e534]
+                  - button "User avatar Limberg Steven Garcia Alava" [ref=f15e536]:
+                    - img "User avatar" [ref=f15e539]
+            - generic [ref=f15e540]:
+              - generic [ref=f15e541]:
+                - generic [ref=f15e542]:
+                  - generic [ref=f15e544]:
+                    - status "Loading..." [ref=f15e546]
+                    - status "Loading..." [ref=f15e548]
+                  - button [active] [ref=f15e550] [cursor=pointer]:
+                    - img "Close" [ref=f15e552]
+                - separator [ref=f15e555]
+              - generic [ref=f15e556]:
+                - generic [ref=f15e557]:
+                  - status "Loading..." [ref=f15e559]
+                  - status "Loading..." [ref=f15e561]
+                - status "Loading..." [ref=f15e564]
+                - generic [ref=f15e565]:
+                  - status "Loading..." [ref=f15e567]
+                  - status "Loading..." [ref=f15e569]
+                - generic [ref=f15e570]:
+                  - status "Loading..." [ref=f15e572]
+                  - status "Loading..." [ref=f15e574]
+                - status "Loading..." [ref=f15e577]
+                - generic [ref=f15e578]:
+                  - status "Loading..." [ref=f15e580]
+                  - status "Loading..." [ref=f15e582]
+                - status "Loading..." [ref=f15e584]

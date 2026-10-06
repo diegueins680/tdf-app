@@ -2075,7 +2075,7 @@ resolveAssetsRootDir Nothing = do
 defaultAppBase :: Text
 defaultAppBase = "https://tdf-app.pages.dev"
 defaultAssetsBase :: Text
-defaultAssetsBase = "https://tdf-hq.fly.dev/assets/serve"
+defaultAssetsBase = "https://api.tdfrecords.net/assets/serve"
 
 sanitizeBaseUrl :: Text -> Text
 sanitizeBaseUrl base =

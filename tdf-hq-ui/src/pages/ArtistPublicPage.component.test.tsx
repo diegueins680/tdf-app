@@ -38,6 +38,7 @@ jest.unstable_mockModule('../api/fans', () => ({
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
   useSession: () => ({ session: sessionMock }),
+  getStoredSessionToken: () => null,
 }));
 
 jest.unstable_mockModule('../analytics/posthog', () => ({
@@ -51,6 +52,7 @@ jest.unstable_mockModule('../analytics/onboardingProgress', () => ({
 jest.unstable_mockModule('../hooks/useMetaTags', () => ({ useMetaTags: jest.fn() }));
 jest.unstable_mockModule('../components/ArtistFansList', () => ({ default: () => null }));
 jest.unstable_mockModule('../components/LazyPaginatedList', () => ({ default: () => null }));
+jest.unstable_mockModule('../components/merch/MerchReputationSummary', () => ({ ArtistMerchStores: () => null }));
 jest.unstable_mockModule('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, options?: { artist?: string }) => ({

@@ -1,0 +1,10 @@
+365561aecff57e76d38cb0e98217a34f1d642ff4 2026-09-16T12:46:25-05:00 continuous-improvement-loop[bot] docs(payments): record final suites and approved CI assertion repair
+8480d19c61d7630022f809d73437a574e776d209 2026-09-16T12:45:03-05:00 continuous-improvement-loop[bot] test(admin): use built-in DOM disabled assertion in Jest setup
+7aa641ccb6ec08fa74b95a7311bba55564324633 2026-09-16T12:43:00-05:00 continuous-improvement-loop[bot] test(admin): assert disabled refund input without redundant cast
+74a8e6b1e303540fc3daea576ba1b36a6b32014d 2026-09-16T12:36:33-05:00 continuous-improvement-loop[bot] docs(payments): refresh strict catalog review inventories
+8f0fb5edc38f9dcbccfc437683d1b86104cd896e 2026-09-16T12:17:51-05:00 continuous-improvement-loop[bot] docs(payments): record held-refund recovery design and qualification gates
+12439478e8e53e6ecc64b1ce063c9357530bf29c 2026-09-16T12:14:45-05:00 continuous-improvement-loop[bot] test(payments): verify protected recovery contract and catalog decisions
+7729b00fcb5af3fae982fbe6b283bd8ca0b38998 2026-09-16T12:02:18-05:00 continuous-improvement-loop[bot] feat(admin): expose explicit held-refund checks with exact generated money contracts
+eb25affdab761bcc15abdc46f2df385279dcda34 2026-09-16T12:01:29-05:00 continuous-improvement-loop[bot] fix(payments): bind refund lookup to persisted attempt and bound admin access
+81ed3fd7464b9863ee7dea95d9421831e365ce35 2026-09-16T11:43:41-05:00 continuous-improvement-loop[bot] test(payments): keep query diagnostics redacted during verification
+b783a9ade082c59b364fe2f7b02f89cba6b40691 2026-09-16T11:42:25-05:00 continuous-improvement-loop[bot] feat(payments): query held PayPal refunds with fenced accounting

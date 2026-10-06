@@ -1,0 +1,63 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 443,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "1d4143f7809f416317d858ad4161580c1dd125e1",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6jtNZP",
+                "isResolved": true,
+                "isOutdated": true,
+                "path": "tdf-hq/src/TDF/Server.hs",
+                "line": null,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Keep batched terms tied to the listings already selected**\n\nWhen a sale reaches `delivered`, the existing fulfillment trigger deactivates every marketplace listing for that asset (`tdf-hq/sql/2026-08-15_marketplace_sale_checkout_runtime.sql:165-179`). If this happens after `listMarketplace` selects its active rows but before this query runs, PostgreSQL's default READ COMMITTED isolation lets `l.active` observe the deactivation even though the earlier listing remains in `rows`. A rental listing for the same asset is therefore still returned but loses its approved daily price and terms, falling back to the base listing price. Query terms by the IDs selected earlier, or fetch listings, assets, and terms from one statement/snapshot.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/443#discussion_r4045914878",
+                      "createdAt": "2026-09-18T10:28:55Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Fixed in 1d4143f7809f416317d858ad4161580c1dd125e1. The batched approved/active rental-term query is now bound to the IDs selected by the first listing read, so a subsequent listing deactivation cannot strip those terms. A real HTTP/PostgreSQL test interleaves deactivation between the listing and term reads: the previous implementation returned base price 10001 instead of daily price 2001; the successor preserves 2001 and excludes the inactive row on the next request. The final Stack build, runtime contract suite and pinned TLC/Alloy suite passed. MarketplaceCatalogRead includes the failing old-behavior negative control; evidence and assumptions are versioned in the audit record.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/443#discussion_r4046607706",
+                      "createdAt": "2026-09-18T12:13:39Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxMjoxMzozOVrO8TJVWg=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxMDoyODo1NVrOo7TWTw=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

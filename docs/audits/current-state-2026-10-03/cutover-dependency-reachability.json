@@ -1,0 +1,45 @@
+{
+  "checkedAt": "2026-10-05T05:40:44.147503+00:00",
+  "revision": "7c6a21b0181d52eee753ff8839320c6b0efd745e",
+  "auditExit": 1,
+  "auditMetadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 4,
+      "critical": 0,
+      "total": 4
+    },
+    "dependencies": {
+      "prod": 335,
+      "dev": 1219,
+      "optional": 81,
+      "peer": 0,
+      "peerOptional": 0,
+      "total": 1567
+    }
+  },
+  "advisory": "https://github.com/advisories/GHSA-2p57-rm9w-gvfp",
+  "dependencyChain": [
+    "webtorrent@2.8.5",
+    "torrent-discovery@11.0.21",
+    "bittorrent-tracker@11.2.3",
+    "ip@2.0.1"
+  ],
+  "runtimeEntry": "tdf-hq-ui/src/utils/torrentAudio.ts imports webtorrent/dist/webtorrent.min.js?url; WebTorrent root import is type-only",
+  "bundleSources": 99,
+  "ipOrServerSources": [],
+  "isPublicSources": [],
+  "sourceBundleSha256": "98f65d27e64f5872427544e53566bba011ace28af867ac44fc8fc08c2f92bcae",
+  "emittedBundles": {
+    "tdf-hq-ui/dist/assets/webtorrent.min-D2uPbeRD.js": "98f65d27e64f5872427544e53566bba011ace28af867ac44fc8fc08c2f92bcae"
+  },
+  "assessment": "Pre-existing nonzero dependency audit. Advisory concerns ip.isPublic in Node, absent from the exact emitted browser bundle. Tracker server-only ip usage calls toString, not isPublic. Haskell production backend does not run WebTorrent. No claim of globally clean dependency audit. Retain dependency maintenance debt; do not blindly downgrade to npm suggested webtorrent 0.7.3.",
+  "repositoryPolicyResult": {
+    "command": "audit-ci --config audit-ci.jsonc",
+    "exit": 0,
+    "existingIpExceptionExpires": "2026-10-31",
+    "allowlistChanged": false
+  }
+}

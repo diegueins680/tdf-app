@@ -1,0 +1,355 @@
+- generic [ref=f9e4]:
+  - generic [ref=f9e255]:
+    - generic [ref=f9e258]:
+      - link [ref=f9e263] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f9e268]
+      - generic [ref=f9e271]:
+        - link [ref=f9e276] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f9e281]
+        - link [ref=f9e286] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f9e291]
+        - link [ref=f9e298] [cursor=pointer]:
+          - /url: /direct/t/111882310210843
+          - generic [ref=f9e301]:
+            - img "Messages" [ref=f9e303]
+            - generic "Direct messaging - 2 new notifications link" [ref=f9e306]: "2"
+        - link [ref=f9e312] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f9e317]
+        - link [ref=f9e324] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f9e329]
+        - link [ref=f9e335] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f9e340]
+        - link [ref=f9e345] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f9e350]
+        - link [ref=f9e357] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f9e362]:
+            - img "tdf.records.label's profile picture" [ref=f9e363]
+      - generic [ref=f9e364]:
+        - link [ref=f9e367] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f9e372]
+        - link [ref=f9e375] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f9e380]
+    - generic [ref=f9e383]:
+      - main [ref=f9e18]:
+        - generic [ref=f9e20]:
+          - generic [ref=f9e21]:
+            - generic [ref=f9e22]:
+              - link [ref=f9e28] [cursor=pointer]:
+                - /url: /lysergicman_music/
+                - img "lysergicman_music's profile picture" [ref=f9e29]
+              - generic [ref=f9e30]:
+                - generic [ref=f9e31]:
+                  - generic [ref=f9e32]:
+                    - link [ref=f9e34] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "lysergicman_music" [level=2] [ref=f9e35]
+                    - button [ref=f9e37] [cursor=pointer]:
+                      - img "Options" [ref=f9e39]
+                  - generic [ref=f9e43]: Lysergicman(official)
+                  - generic [ref=f9e45]:
+                    - generic [ref=f9e47]:
+                      - generic [ref=f9e48]: "249"
+                      - text: posts
+                    - link "1,430 followers" [ref=f9e50] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f9e51]:
+                        - generic "1,430" [ref=f9e52]
+                        - text: followers
+                    - link "1,092 following" [ref=f9e54] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f9e55]:
+                        - generic [ref=f9e56]: 1,092
+                        - text: following
+                - generic [ref=f9e57]:
+                  - generic [ref=f9e58]:
+                    - generic [ref=f9e59]: DJ
+                    - button "🎧🎶" [ref=f9e62] [cursor=pointer]
+                    - generic [ref=f9e63]:
+                      - button "Link icon linktr.ee/lysergicman and 1 more" [ref=f9e64] [cursor=pointer]:
+                        - generic [ref=f9e65]:
+                          - img "Link icon" [ref=f9e67]
+                          - generic [ref=f9e70]: linktr.ee/lysergicman and 1 more
+                      - link "Threads lysergicman_music" [ref=f9e72] [cursor=pointer]:
+                        - /url: https://www.threads.com/@lysergicman_music?xmt=AQG0On4OhIDQdYog3xTseHGolLEW8cqbjfP4ovZuedfBRjI
+                        - img "Threads" [ref=f9e74]
+                        - generic [ref=f9e76]: lysergicman_music
+                  - link "Followed by gabmeza.png, lareservauio + 28 more" [ref=f9e78] [cursor=pointer]:
+                    - /url: /lysergicman_music/followers/mutualOnly
+                    - generic [ref=f9e80]:
+                      - generic [ref=f9e82]:
+                        - button [ref=f9e83]:
+                          - link [ref=f9e84]
+                        - button [ref=f9e85]:
+                          - link [ref=f9e86]
+                        - button [ref=f9e87]:
+                          - link [ref=f9e88]
+                      - generic [ref=f9e89]: Followed by gabmeza.png, lareservauio + 28 more
+            - generic [ref=f9e94]:
+              - button "Following Down chevron icon" [ref=f9e96] [cursor=pointer]:
+                - generic [ref=f9e97]:
+                  - generic [ref=f9e98]: Following
+                  - img "Down chevron icon" [ref=f9e101]
+              - button "Message" [ref=f9e104] [cursor=pointer]
+              - button [ref=f9e106] [cursor=pointer]:
+                - img "Similar accounts" [ref=f9e108]
+            - menu [ref=f9e112]:
+              - list [ref=f9e116]:
+                - listitem [ref=f9e117]
+                - listitem [ref=f9e118]
+                - listitem [ref=f9e119]:
+                  - link "View 🎧 highlight" [ref=f9e122] [cursor=pointer]:
+                    - /url: /stories/highlights/17857740202284612/
+                    - button "lysergicman_music's highlight story picture 🎧" [ref=f9e123]:
+                      - button [ref=f9e124]:
+                        - img "lysergicman_music's highlight story picture" [ref=f9e127]
+                      - generic [ref=f9e128]: 🎧
+                - listitem [ref=f9e131]:
+                  - link "View DjBooth highlight" [ref=f9e134] [cursor=pointer]:
+                    - /url: /stories/highlights/17883487102360755/
+                    - button "lysergicman_music's highlight story picture DjBooth" [ref=f9e135]:
+                      - button [ref=f9e136]:
+                        - img "lysergicman_music's highlight story picture" [ref=f9e139]
+                      - generic [ref=f9e140]: DjBooth
+          - generic [ref=f9e143]:
+            - tablist [ref=f9e144]:
+              - link [ref=f9e146] [cursor=pointer]:
+                - /url: /lysergicman_music/
+                - img "Posts" [ref=f9e148]
+              - link [ref=f9e159] [cursor=pointer]:
+                - /url: /lysergicman_music/reels/
+                - img "Reels" [ref=f9e161]
+              - link [ref=f9e164] [cursor=pointer]:
+                - /url: /lysergicman_music/reposts/
+                - img "Reposts" [ref=f9e166]
+              - link [ref=f9e169] [cursor=pointer]:
+                - /url: /lysergicman_music/tagged/
+                - img "Tagged" [ref=f9e171]
+            - tabpanel
+          - generic [ref=f9e178]:
+            - generic [ref=f9e179]:
+              - link [ref=f9e181] [cursor=pointer]:
+                - /url: /lysergicman_music/p/DdaWKuKESYE/
+                - img "🎧🎶🚀🕺" [ref=f9e184]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f9e187] [cursor=pointer]:
+                - /url: /lacuadra.uio/p/DccZ75WOjKs/
+                - 'img "𝐍𝐎𝐂𝐓𝐔𝐑𝐍𝐀 · 𝐋𝐀 𝐂𝐔𝐀𝐃𝐑𝐀 𝐇𝐎𝐔𝐒𝐄 𝐄𝐃𝐈𝐓𝐈𝐎𝐍 Una noche, 2 STAGES y una sola misión: bailar hasta que se apague la ciudad. Este viernes 04 de septiembre, La Cuadra se transforma para una nueva edición de NOCTURNA, con dos espacios, dos atmósferas y un line up cargado de energía. 🔊 S̶T̶A̶G̶E̶ 0̶1̶ BERNY BURNZ / @bernyburnz JG KING / @jgking___ LEX / @lexdj UNKNOWN / @hidalgo_unknown 🔊 S̶T̶A̶G̶E̶ 0̶2̶ MOMO / @momo.estevez LOPEZ / @el_donlopez VANLOT B2B MR. B / @vanlot.vibes . @mr.b.uio LYSERGICMAN / @lysergicman_music THE FIERROS BROTHERS PROJECT / @thefierrosbrothersproject LA CUADRA · HOUSE EDITION Viernes 04 SEPT 2026 20:30 RESERVA: $5 PUERTA: $10 Dos stages. Un solo lugar. NOCTURNA. .. #LaCuadra #Nocturna #HouseEdition #QuitoRave #quitounderground" [ref=f9e190]'
+              - link [ref=f9e193] [cursor=pointer]:
+                - /url: /lysergicman_music/p/DcAHg82Eel7/
+                - img "Ethereal Festival Aniversario de @raves.ecuador gracias a todos fue una Noche increíble en la Selva 🐒🐍🎶🎧" [ref=f9e196]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f9e198]:
+              - link [ref=f9e200] [cursor=pointer]:
+                - /url: /raves.ecuador/p/DamRDyZjbie/
+                - 'img "Lysergicman invitado al ETHEREAL FESTIVAL DJ y Productor de la escena underground quiteña desde el año 2009 fundador del mítico Acapulco Lounge que se caracteriza por su sonido particular melódico y rítmico mezclando géneros cómo el House, Deep House, Tech House y Deeptech creando una atmósfera hipnótica en el dance floor #RaveEnLaSelva #junglerave #RavesEcuador" [ref=f9e203]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f9e206] [cursor=pointer]:
+                - /url: /lysergicman_music/p/DZ6Qe7WFTeZ/
+                - img "Noche de Remixes en @lacuadra.uio 🎶🎧🚀🕺" [ref=f9e209]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f9e212] [cursor=pointer]:
+                - /url: /lacuadra.uio/p/DZo4vkpO4lc/
+                - 'img "𝐋𝐀 𝐂𝐔𝐀𝐃𝐑𝐀 | 𝐍𝐎𝐂𝐓𝐔𝐑𝐍𝐀 𝟏𝟗.𝐉𝐔𝐍.𝟐𝟎𝟐𝟔 Una noche donde el ritmo toma el control en el corazón del Centro Histórico. 🎧 LINE UP • Lysergicman / @lysergicman_music • KatyKXT • Lucki / @lucki_oficial_ • Nati Q / @natiqdati • Vanlot / @vanlot.vibes La Cuadra | Centro Histórico 19 de junio 2025 Hora: 20:30 🎟️ RESERVA Reserva: 5 USD Puerta: 7 USD Activa el modo nocturno, reúne a tu gente y nos vemos en la pista. … #Nocturna #LaCuadra #CentroHistorico #ElectronicNight #LineUp" [ref=f9e215]'
+            - generic [ref=f9e217]:
+              - link [ref=f9e219] [cursor=pointer]:
+                - /url: /lysergicman_music/p/DZTxIlfFfa1/
+                - 'img "HOUSE IN Da HOUSE at @lacuadra.uio #lastweekend #housemusic #greatgig #underground #party" [ref=f9e222]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f9e225] [cursor=pointer]:
+                - /url: /rhythm.ec/p/DYNL0bbFTZs/
+                - 'img "House In Da House 🎧🎶🌝 Line Up: @diegofierro28 @julio_diaz72 @lysergicman_music @_natiquintero_ @milagaet_dj @jourivas444 @gusahme Secret Location 📍 05/06/2026 Cover: $10 Preventa: 2x1 hasta el 31/05" [ref=f9e228]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f9e231] [cursor=pointer]:
+                - /url: /lysergicman_music/p/DXYBziPFXaO/
+                - img "Vinyl Set at @sugarlab86 🎧🎶" [ref=f9e234]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+            - generic [ref=f9e236]:
+              - link [ref=f9e238] [cursor=pointer]:
+                - /url: /lysergicman_music/p/DUb2G9BEQri/
+                - 'img "Cumpleaños Parte #2 🔝 #latepostvideo" [ref=f9e241]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f9e244] [cursor=pointer]:
+                - /url: /lysergicman_music/p/DUR5zKHFTQe/
+                - 'img "Gracias a todos por un Cumpleaños inolvidable 🎶🎧🎂😁 #birthdayparty #housemusic #friends #undergrondmusic" [ref=f9e247]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f9e250] [cursor=pointer]:
+                - /url: /lacuadra.uio/p/DT0kerDDqS-/
+                - 'img "NOCTURNA | 31.ENE.2026 Este 31 de enero, La Cuadra abre el portal en el corazón del Centro Histórico de la capital. Ritmo constante y una pista intensa. Esta edición se enciende con LYSERGICMAN BDAY, rodeado de un line up de altura. LINE UP. Lysergicman (BDAY) / @lysergicman_music Lopez b2b Nico Jervis / @el_donlopez . @nicojervistatuajes Fabro / @planet_303 Mr. B / @mr.b.uio La Clau b2b Rolling Disco / @la.clau__ . @rollingdiscoofficial .. 📍La Cuadra – Centro Histórico Viernes 31 de enero 21h00 Reserva: $5 USD ++ La Cuadra es el spot." [ref=f9e253]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+      - contentinfo [ref=f9e384]:
+        - generic [ref=f9e385]:
+          - generic [ref=f9e387]:
+            - link "Meta" [ref=f9e389] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f9e392] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f9e395] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f9e398] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f9e401] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f9e404] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f9e407] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f9e410] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f9e413] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f9e416] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f9e419] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f9e422] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f9e425] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f9e428] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f9e431] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f9e434] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f9e436]:
+            - generic [ref=f9e437] [cursor=pointer]:
+              - generic [ref=f9e438]:
+                - generic [ref=f9e439]: English
+                - img "Down chevron icon" [ref=f9e442]
+              - combobox "Switch Display Language" [ref=f9e444]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f9e445]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f9e448] [cursor=pointer]:
+              - generic "Messages - 2 new notifications" [ref=f9e449]:
+                - generic [ref=f9e450]:
+                  - generic [ref=f9e452]:
+                    - img "Messages" [ref=f9e453]
+                    - generic "Direct messaging - 2 new notifications link" [ref=f9e456]: "2"
+                  - generic [ref=f9e459]: Messages
+                - generic [ref=f9e460]:
+                  - button "User avatar Juren" [ref=f9e462]:
+                    - img "User avatar" [ref=f9e465]
+                  - button "User avatar Eduardo ED" [ref=f9e467]:
+                    - img "User avatar" [ref=f9e470]
+            - generic [ref=f9e471]:
+              - generic [ref=f9e472]:
+                - generic [ref=f9e473]:
+                  - generic [ref=f9e475]:
+                    - status "Loading..." [ref=f9e477]
+                    - status "Loading..." [ref=f9e479]
+                  - button [active] [ref=f9e481] [cursor=pointer]:
+                    - img "Close" [ref=f9e483]
+                - separator [ref=f9e486]
+              - generic [ref=f9e487]:
+                - generic [ref=f9e488]:
+                  - status "Loading..." [ref=f9e490]
+                  - status "Loading..." [ref=f9e492]
+                - status "Loading..." [ref=f9e495]
+                - generic [ref=f9e496]:
+                  - status "Loading..." [ref=f9e498]
+                  - status "Loading..." [ref=f9e500]
+                - generic [ref=f9e501]:
+                  - status "Loading..." [ref=f9e503]
+                  - status "Loading..." [ref=f9e505]
+                - status "Loading..." [ref=f9e508]
+                - generic [ref=f9e509]:
+                  - status "Loading..." [ref=f9e511]
+                  - status "Loading..." [ref=f9e513]
+                - status "Loading..." [ref=f9e515]

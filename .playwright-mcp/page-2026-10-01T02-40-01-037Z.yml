@@ -1,0 +1,353 @@
+- generic [ref=f27e4]:
+  - generic [ref=f27e287]:
+    - generic [ref=f27e290]:
+      - link [ref=f27e295] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f27e300]
+      - generic [ref=f27e303]:
+        - link [ref=f27e308] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f27e313]
+        - link [ref=f27e318] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f27e323]
+        - link [ref=f27e330] [cursor=pointer]:
+          - /url: /direct/t/108272193904975
+          - generic [ref=f27e333]:
+            - img "Messages" [ref=f27e335]
+            - generic "Direct messaging - 8 new notifications link" [ref=f27e338]: "8"
+        - link [ref=f27e344] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f27e349]
+        - link [ref=f27e357] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f27e362]
+        - link [ref=f27e370] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f27e375]
+        - link [ref=f27e380] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f27e385]
+        - link [ref=f27e392] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f27e397]:
+            - img "tdf.records.label's profile picture" [ref=f27e398]
+      - generic [ref=f27e399]:
+        - link [ref=f27e402] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f27e407]
+        - link [ref=f27e410] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f27e415]
+    - generic [ref=f27e418]:
+      - main [ref=f27e18]:
+        - generic [ref=f27e20]:
+          - generic [ref=f27e21]:
+            - generic [ref=f27e22]:
+              - button [ref=f27e27] [cursor=pointer]:
+                - link [ref=f27e29]:
+                  - img "quitoskasociety's profile picture" [ref=f27e30]
+              - generic [ref=f27e31]:
+                - generic [ref=f27e32]:
+                  - generic [ref=f27e33]:
+                    - link [ref=f27e35] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "quitoskasociety" [level=2] [ref=f27e36]
+                    - button [ref=f27e38] [cursor=pointer]:
+                      - img "Options" [ref=f27e40]
+                  - generic [ref=f27e44]: "| QUITO SKA SOCIETY |"
+                  - generic [ref=f27e46]:
+                    - generic [ref=f27e48]:
+                      - generic [ref=f27e49]: "559"
+                      - text: posts
+                    - link "3,888 followers" [ref=f27e51] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f27e52]:
+                        - generic "3,888" [ref=f27e53]
+                        - text: followers
+                    - link "722 following" [ref=f27e55] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f27e56]:
+                        - generic [ref=f27e57]: "722"
+                        - text: following
+                - generic [ref=f27e58]:
+                  - generic [ref=f27e59]:
+                    - generic [ref=f27e60]: Community
+                    - button [ref=f27e63] [cursor=pointer]:
+                      - generic [ref=f27e64]: 📍UIO 🇪🇨 + 🇯🇲Ska-Ba-Boom 2026🕴🏼🏁Sábado, 24 de octubre
+                    - heading [level=1]
+                    - generic [ref=f27e66]:
+                      - img "Link icon" [ref=f27e68]
+                      - link "bit.ly/SkaDeAkaCanal" [ref=f27e72] [cursor=pointer]:
+                        - /url: https://l.instagram.com/?u=https%3A%2F%2Fbit.ly%2FSkaDeAkaCanal%3Futm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio%26fbclid%3DPAZXh0bgNhZW0CMTEAcGRvZgJzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAadgsYtEZex0fjxhp5m6VAGtCUJvD9BEpfwMuVFFnuFKzEcvZZz4NXaOaFxpGw_aem_V5MsXSq5bsCfSRXNJKOT2w&e=AUC1H_PmfE41rJMFCvRjWplDf_vbyiHT8tCpd1t3pR5jQmN1PzWUPcPiJRcsRE23u9NzwQe5zCxDs9U3fvA1DL0esapHFxI5w5oIBFMensvSFR3RX2sSJuBLgvKb0dPJ80UxCG3d3KZv
+                  - link "Followed by eridanlozanova, losargonautas.ec + 44 more" [ref=f27e74] [cursor=pointer]:
+                    - /url: /quitoskasociety/followers/mutualOnly
+                    - generic [ref=f27e76]:
+                      - generic [ref=f27e78]:
+                        - button [ref=f27e79]:
+                          - link [ref=f27e80]
+                        - button [ref=f27e81]:
+                          - link [ref=f27e82]
+                        - button [ref=f27e83]:
+                          - link [ref=f27e84]
+                      - generic [ref=f27e85]: Followed by eridanlozanova, losargonautas.ec + 44 more
+            - generic [ref=f27e90]:
+              - button "Following Down chevron icon" [ref=f27e92] [cursor=pointer]:
+                - generic [ref=f27e93]:
+                  - generic [ref=f27e94]: Following
+                  - img "Down chevron icon" [ref=f27e97]
+              - button "Message" [ref=f27e100] [cursor=pointer]
+              - button [ref=f27e102] [cursor=pointer]:
+                - img "Similar accounts" [ref=f27e104]
+            - menu [ref=f27e108]:
+              - list [ref=f27e112]:
+                - listitem [ref=f27e113]
+                - listitem [ref=f27e114]
+                - listitem [ref=f27e115]:
+                  - link "View SKBBM 021 highlight" [ref=f27e118] [cursor=pointer]:
+                    - /url: /stories/highlights/18012861874445474/
+                    - button "quitoskasociety's highlight story picture SKBBM 021" [ref=f27e119]:
+                      - button [ref=f27e120]:
+                        - img "quitoskasociety's highlight story picture" [ref=f27e123]
+                      - generic [ref=f27e124]: SKBBM 021
+                - listitem [ref=f27e127]:
+                  - link "View SBBM 022 highlight" [ref=f27e130] [cursor=pointer]:
+                    - /url: /stories/highlights/18179817664215703/
+                    - button "quitoskasociety's highlight story picture SBBM 022" [ref=f27e131]:
+                      - button [ref=f27e132]:
+                        - img "quitoskasociety's highlight story picture" [ref=f27e135]
+                      - generic [ref=f27e136]: SBBM 022
+                - listitem [ref=f27e139]:
+                  - link "View RECOMENDACIÓN 🎶 highlight" [ref=f27e142] [cursor=pointer]:
+                    - /url: /stories/highlights/17844282164353617/
+                    - button "quitoskasociety's highlight story picture RECOMENDACIÓN 🎶" [ref=f27e143]:
+                      - button [ref=f27e144]:
+                        - img "quitoskasociety's highlight story picture" [ref=f27e147]
+                      - generic [ref=f27e148]: RECOMENDACIÓN 🎶
+                - listitem [ref=f27e151]:
+                  - link "View JAMAICANS QUEENS highlight" [ref=f27e154] [cursor=pointer]:
+                    - /url: /stories/highlights/17852276371348068/
+                    - button "quitoskasociety's highlight story picture JAMAICANS QUEENS" [ref=f27e155]:
+                      - button [ref=f27e156]:
+                        - img "quitoskasociety's highlight story picture" [ref=f27e159]
+                      - generic [ref=f27e160]: JAMAICANS QUEENS
+                - listitem [ref=f27e163]:
+                  - link "View Merch highlight" [ref=f27e166] [cursor=pointer]:
+                    - /url: /stories/highlights/18053446147029787/
+                    - button "quitoskasociety's highlight story picture Merch" [ref=f27e167]:
+                      - button [ref=f27e168]:
+                        - img "quitoskasociety's highlight story picture" [ref=f27e171]
+                      - generic [ref=f27e172]: Merch
+          - generic [ref=f27e175]:
+            - tablist [ref=f27e176]:
+              - link [ref=f27e178] [cursor=pointer]:
+                - /url: /quitoskasociety/
+                - img "Posts" [ref=f27e180]
+              - link [ref=f27e191] [cursor=pointer]:
+                - /url: /quitoskasociety/reels/
+                - img "Reels" [ref=f27e193]
+              - link [ref=f27e196] [cursor=pointer]:
+                - /url: /quitoskasociety/reposts/
+                - img "Reposts" [ref=f27e198]
+              - link [ref=f27e201] [cursor=pointer]:
+                - /url: /quitoskasociety/tagged/
+                - img "Tagged" [ref=f27e203]
+            - tabpanel
+          - generic [ref=f27e210]:
+            - generic [ref=f27e211]:
+              - link [ref=f27e213] [cursor=pointer]:
+                - /url: /quitoskasociety/p/DdzoOGTxeUD/
+                - img "¡Queremos que tu marca sea parte de la décima edición del Festival Ska del Ecuador! 😎🇪🇨 Si estás interesado en participar en la Feria de Emprendimientos del Ska Ba Boom, escríbenos." [ref=f27e216]
+              - link [ref=f27e219] [cursor=pointer]:
+                - /url: /quitoskasociety/p/Ddr2F5yxiD1/
+                - 'img "🎺🔥 ¡10 AÑOS DEL SKA BA BOOM! 🔥🎺 El festival ska del Ecuador celebra su DÉCIMA EDICIÓN y llega con una noche cargada de ska, reggae, two tone y sonidos que harán vibrar la ciudad. 🇪🇨🇦🇷 📅 Sábado 24 de octubre ⏰ 18:00 📍 La Base — Francisco Salazar y Tamayo, Quito 🎟️ Entrada: $10 🎶 En el escenario: 🇦🇷 Mariano Goldenstein (Argentina) junto a The Rude Monkey Bones 🎷 Quito Ska Jazz 🔥 Los Barrelshots 💥 Los Malandronians 🎺 Los Mozos de Mariangula (MDMA) 🎧 Musicalizando la noche desde Argentina: 🇦🇷 Una Isla Club Records Una década de historias, música, baile y cultura alrededor del ska. Cumplimos 10 ediciones y queremos celebrarlo contigo. 🕴️ Ponte tus botas, prepara los pasos y ven a bailar. #SkaBaBoom #Ska #Quito #SkaEcuador #SkaMusic Rocksteady TwoTone LaBase" [ref=f27e222]'
+              - link [ref=f27e225] [cursor=pointer]:
+                - /url: /quitoskasociety/reel/DdaJhHrx67d/
+                - 'img "¡Nos vemos el 24 de octubre junto a @marrian_ska_goldenstein en el #SkaBaBoom2026! Atentos al cartel oficial que saldrá en los próximos días. 😎 Gracias al apoyo de @soylabase." [ref=f27e228]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+            - generic [ref=f27e230]:
+              - link [ref=f27e232] [cursor=pointer]:
+                - /url: /quitoskasociety/p/DcuSzjKxl9b/
+                - img "¡Celebraremos 10 años del festival Ska del Ecuador, junto a @marrian_ska_goldenstein, de Sombrero Club desde Argentina, junto a @rudemonkeybones cómo backing band. 🇦🇷🏁 Queremos agradecer a @soylabase por hacer posible este décimo aniversario del festival Ska del Ecuador. Nos vemos el 24 de octubre en nuestra 10ª edición." [ref=f27e235]
+              - link [ref=f27e238] [cursor=pointer]:
+                - /url: /quitoskasociety/p/DckPpFOkQnb/
+                - 'img "Cerramos agosto muy agradecidos con @elysium_uio, por permitirnos ambientar las noches dé miércoles en la ciudad. ¡Gracias a la y los selectores que se dieron cita! Nos vemos en el #SkaBaBoom2026 🏁" [ref=f27e241]'
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+              - link [ref=f27e244] [cursor=pointer]:
+                - /url: /quitoskasociety/p/DcZyfHkxREi/
+                - 'img "Nos vemos este miércoles 26 de agosto en el @elysium_uio para cerrar este ciclo de pinchadas en este fabuloso bar de la ciudad. Esta ocasión con éxitos del Dancehall y Reggae. Esta vez en las tornas tendremos a @drg14a, @hmrrbld aka #HacheDC, @rudie_by_design y @chafalandepollo aka El Guapo selector. Nos vemos el miércoles caigan y apoyen los eventos pro #SkaBaBoom." [ref=f27e247]'
+            - generic [ref=f27e249]:
+              - link [ref=f27e251] [cursor=pointer]:
+                - /url: /quitoskasociety/p/DcKbTwMRHPt/
+                - img "¡Nos vemos este miércoles 19 de agosto en @elysium_uio para disfrutar de éxitos del dancehall y reggae! En las tornas tendremos a @hangover_selector, Kosako selector y @rudie_by_design. Nos vemos a partir de las 19:00, recuerda es entrada libre." [ref=f27e254]
+              - link [ref=f27e257] [cursor=pointer]:
+                - /url: /quitoskasociety/p/Db6BbG5RH0-/
+                - img "¡Nos vemos mañana en @elysium_uio para bailar con clásicos del Dancehall! En las tornas @aggro_lady, @hangover_selector, @fippao277 y Kosako Selector. ¡Entrada libre como te gusta!" [ref=f27e260]
+              - link [ref=f27e263] [cursor=pointer]:
+                - /url: /elysium_uio/p/Dbjwi4jTt9X/
+                - 'img "🎶 Los miércoles tienen un nuevo ritual. 🎶 El sonido del vinilo vuelve a cobrar vida en ELYSIUM GastroPub. 📀✨ Durante todo agosto, disfruta una selección de Ska, Reggae, Cumbia y Dancehall en una noche donde la música se escucha como fue creada: con alma, historia y mucho groove. 🔥 Este miércoles: 🎧 Sound Bwoy Selektor 🆚 Hangover Selector Ven a compartir con buena música, coctelería de autor, gastronomía y el ambiente único que solo ELYSIUM puede ofrecer. 📍 Whymper N27-81 y Av. Orellana 🕖 Desde las 19:00 Las mejores noches no se reproducen… se viven. Nos vemos en ELYSIUM. 🍸🎵 #ElysiumGastroPub #MiércolesDeVinilos #VinylNight #Quito" [ref=f27e266]'
+            - generic [ref=f27e268]:
+              - link [ref=f27e270] [cursor=pointer]:
+                - /url: /quitoskasociety/p/DbjrO38Rczl/
+                - 'img "¡Nos vemos el 24 de octubre en la 10ma edición del festival Ska del Ecuador! #SkaBaBoom2026 🏁" [ref=f27e273]'
+              - link [ref=f27e276] [cursor=pointer]:
+                - /url: /cosas_que_hacen__bum/reel/DbPQfkIsQCF/
+                - img "Los @losargonautas.ec en @viajeroquito" [ref=f27e279]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Clip"
+              - link [ref=f27e282] [cursor=pointer]:
+                - /url: /losargonautas.ec/p/DbMYa1KlJ9e/
+                - img [ref=f27e285]
+                - generic:
+                  - generic:
+                    - generic:
+                      - img "Carousel"
+      - contentinfo [ref=f27e419]:
+        - generic [ref=f27e420]:
+          - generic [ref=f27e422]:
+            - link "Meta" [ref=f27e424] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f27e427] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f27e430] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f27e433] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f27e436] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f27e439] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f27e442] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f27e445] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f27e448] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f27e451] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f27e454] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f27e457] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f27e460] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f27e463] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f27e466] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f27e469] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f27e471]:
+            - generic [ref=f27e472] [cursor=pointer]:
+              - generic [ref=f27e473]:
+                - generic [ref=f27e474]: English
+                - img "Down chevron icon" [ref=f27e477]
+              - combobox "Switch Display Language" [ref=f27e479]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f27e480]: © 2026 Instagram from Meta
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button [ref=f27e483] [cursor=pointer]:
+              - generic "Messages - 8 new notifications" [ref=f27e484]:
+                - generic [ref=f27e485]:
+                  - generic [ref=f27e487]:
+                    - img "Messages" [ref=f27e488]
+                    - generic "Direct messaging - 8 new notifications link" [ref=f27e491]: "8"
+                  - generic [ref=f27e494]: Messages
+                - generic [ref=f27e495]:
+                  - button [ref=f27e496]:
+                    - img "8 unread chats" [ref=f27e498]
+                  - button "User avatar Maribel Tipán" [ref=f27e503]:
+                    - img "User avatar" [ref=f27e506]
+                  - button "User avatar Crackero🦇" [ref=f27e508]:
+                    - img "User avatar" [ref=f27e511]
+                  - button "User avatar Neil Armas 🎙️" [ref=f27e513]:
+                    - img "User avatar" [ref=f27e516]
+            - generic [ref=f27e517]:
+              - generic [ref=f27e518]:
+                - generic [ref=f27e519]:
+                  - generic [ref=f27e521]:
+                    - status "Loading..." [ref=f27e523]
+                    - status "Loading..." [ref=f27e525]
+                  - button [active] [ref=f27e527] [cursor=pointer]:
+                    - img "Close" [ref=f27e529]
+                - separator [ref=f27e532]
+              - generic [ref=f27e533]:
+                - generic [ref=f27e534]:
+                  - status "Loading..." [ref=f27e536]
+                  - status "Loading..." [ref=f27e538]
+                - status "Loading..." [ref=f27e541]
+                - generic [ref=f27e542]:
+                  - status "Loading..." [ref=f27e544]
+                  - status "Loading..." [ref=f27e546]
+                - generic [ref=f27e547]:
+                  - status "Loading..." [ref=f27e549]
+                  - status "Loading..." [ref=f27e551]
+                - status "Loading..." [ref=f27e554]
+                - generic [ref=f27e555]:
+                  - status "Loading..." [ref=f27e557]
+                  - status "Loading..." [ref=f27e559]
+                - status "Loading..." [ref=f27e561]

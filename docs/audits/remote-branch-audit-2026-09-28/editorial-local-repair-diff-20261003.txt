@@ -1,0 +1,1066 @@
+diff --git a/docs/Event_Discovery_Cron.md b/docs/Event_Discovery_Cron.md
+index 278b54dc2..07f2df8ad 100644
+--- a/docs/Event_Discovery_Cron.md
++++ b/docs/Event_Discovery_Cron.md
+@@ -242,3 +242,27 @@ retaining imported records, pilot decisions and publication approval history.
+ Re-enable only after verifying the deployed code's controls. The regression script
+ `scripts/test-event-ingestion-boundaries.sh` covers shared-cap races, duplicate
+ canonical links, discard semantics, separate approval, revocation and reapplication.
++
++### Editorial ownership on refresh
++
++Newly imported event fields retain the last source value in the existing event
++metadata. Refresh compares that value with the current canonical value, preserves
++editorial changes and unrelated metadata, and permanently relinquishes an edited
++field so later coincidental agreement does not reclaim it. Legacy events without
++ownership evidence stay protected; their source references still refresh.
++Venue and artist profile ownership is a separate remaining limitation. A failure
++to persist an event now fails its source run before absence reconciliation, rather
++than logging the error and reporting a successful run.
++
++Buen Plan's ten-page request budget now fails incomplete inventories explicitly.
++A truncated prefix cannot mark unseen events missing or count as a successful
++reconciliation. Continuing beyond that cap still requires the pending resumable
++provider-page implementation and verified source permission.
++
++### Ownership compatibility and reconciliation
++
++`_discoveryOwned` is an internal stored-data object. The stored event decoder recognizes that object before applying the unchanged public-field allowlist; malformed ownership objects, unknown public fields and duplicate top-level keys still fail closed. Public requests cannot supply the namespace, and event responses do not expose it.
++
++Editorial updates and image uploads compare against the row locked for that write. Changed fields permanently lose ingestion ownership; unchanged fields retain their prior source evidence. Metadata edits and lineup replacement commit with the event update. A concurrent ownership, suppression or explicit workflow change is rechecked before writing.
++
++Both provider and subscription reconciliation retain editorial visibility, ticket URLs and workflow choices. Source expiry or disappearance can still hide an event, but returning source data cannot claim an editor-owned or unproven legacy publication flag. Reconciliation advances the snapshot only for fields it still owns. No migration, feature activation or production rollout is introduced.
+diff --git a/docs/catalog-persistence/catalog-list-decisions.json b/docs/catalog-persistence/catalog-list-decisions.json
+index d5a1f5209..0d366325e 100644
+--- a/docs/catalog-persistence/catalog-list-decisions.json
++++ b/docs/catalog-persistence/catalog-list-decisions.json
+@@ -14287,6 +14287,24 @@
+         "line": 10
+       },
+       "reviewBatch": "universal-interactions-2026-09-30"
++    },
++    {
++      "id": "d880b17bae6c922ecfce",
++      "classification": "genuine-technical-constant",
++      "disposition": "retain-in-code",
++      "specializedModel": "technical_constant_allowlist",
++      "priority": "P3-retain",
++      "risk": "Claiming a manually edited event field as provider-owned can erase editorial changes.",
++      "justification": "These nine keys are serialized field-ownership identifiers mapped directly to typed SocialEvent updates. They describe the persistence protocol for comparing provider snapshots, not administrator-selectable business catalog values. Keep the keys versioned with the importer and preservation tests.",
++      "reviewed": true,
++      "reviewMethod": "manual-source-review",
++      "reviewBatch": "event-editorial-2026-09-28",
++      "evidence": {
++        "file": "tdf-hq/src/TDF/Services/EventDiscovery.hs",
++        "kind": "haskell-list",
++        "name": "ownedEventUpdates",
++        "valueCount": 9
++      }
+     }
+   ]
+ }
+diff --git a/formal/system/inventory.json b/formal/system/inventory.json
+index 8e9cc1bd3..91541a865 100644
+--- a/formal/system/inventory.json
++++ b/formal/system/inventory.json
+@@ -2002,7 +2002,7 @@
+     },
+     {
+       "path": "docs/Event_Discovery_Cron.md",
+-      "sha256": "a52b4a493cf1ec62fd8cc69a19f775a32d73378151a1897117e88e90d804749b",
++      "sha256": "2d208d18b0d93a97b50c5ad61ffcf3abc52d58c5841d61a96adadb31ff2ddfb2",
+       "authority": "inferred",
+       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+       "kind": "requirement-candidate"
+diff --git a/scripts/test-invitation-update-concurrency.sh b/scripts/test-invitation-update-concurrency.sh
+index bd98b0f4a..235dbed70 100755
+--- a/scripts/test-invitation-update-concurrency.sh
++++ b/scripts/test-invitation-update-concurrency.sh
+@@ -6,5 +6,8 @@ tdf_test_db_init tdf_invitation_test
+ cd "$repo_root/tdf-hq"
+ test_binary="$(stack path --dist-dir)/build/tdf-hq-test/tdf-hq-test"
+ test -x "$test_binary"
++# This predicate also protects imported event visibility before invitation access.
++TDF_INVITATION_TEST_DATABASE_URL="$TDF_TEST_DATABASE_URL" \
++ "$test_binary" --match="actual PostgreSQL visibility predicate" --fail-on=empty
+ TDF_INVITATION_TEST_DATABASE_URL="$TDF_TEST_DATABASE_URL" \
+  "$test_binary" --match=invitation --fail-on=empty
+diff --git a/tdf-hq/src/TDF/Server/SocialEventsHandlers.hs b/tdf-hq/src/TDF/Server/SocialEventsHandlers.hs
+index b92d011c9..a25b05d9d 100644
+--- a/tdf-hq/src/TDF/Server/SocialEventsHandlers.hs
++++ b/tdf-hq/src/TDF/Server/SocialEventsHandlers.hs
+@@ -36,6 +36,8 @@ module TDF.Server.SocialEventsHandlers (
+     sendTicketConfirmationForOrder,
+     sendTicketConfirmationForOrderIO,
+     normalizeTicketStatus,
++    EventMetadataDTO (..),
++    decodeStoredEventMetadata,
+     validateEventMetadataUpdate,
+     validateEventMetadataUrlField,
+     validateBudgetLineTypeInput,
+@@ -130,6 +132,7 @@ import Control.Monad.IO.Class (MonadIO, liftIO)
+ import Control.Monad.Reader (ReaderT, ask)
+ import qualified TDF.Interactions.Legacy as Interactions
+ import qualified TDF.Interactions.Server as Interactions
++import qualified TDF.Services.EventDiscovery as EventDiscoveryOwnership
+ import qualified Data.Aeson as Aeson
+ import qualified Data.Aeson.Key as AesonKey
+ import qualified Data.Aeson.KeyMap as AesonKeyMap
+@@ -2721,33 +2724,7 @@ socialEventsServer user =
+         mVenueKey <- case eventVenueId dto of
+             Nothing -> pure Nothing
+             Just txt -> Just <$> either throwError pure (parseVenueIdEither txt)
+-        liftIO $
+-            runSqlPool
+-                ( update
+-                    eventKey
+-                    [ SocialEventTitle =. titleVal
+-                    , SocialEventDescription =. eventDescription dto
+-                    , SocialEventVenueId =. mVenueKey
+-                    , SocialEventTimezone =. timezoneVal
+-                    , SocialEventStartTime =. eventStart dto
+-                    , SocialEventEndTime =. eventEnd dto
+-                    , SocialEventPriceCents =. eventPriceCents dto
+-                    , SocialEventCapacity =. eventCapacity dto
+-                    , SocialEventEventTypeId =. Just eventTypeUuid
+-                    , SocialEventWorkflowStateId =. Just workflowStateId
+-                    , SocialEventMetadata =. encodeEventMetadata mergedMetadata
+-                    , SocialEventUpdatedAt =. now
+-                    ]
+-                )
+-                envPool
+-        liftIO $ runSqlPool (deleteWhere [EventArtistEventId ==. eventKey]) envPool
+-        liftIO $
+-            runSqlPool
+-                ( forM_ artistKeys $ \artistKey ->
+-                    insert_ (EventArtist eventKey artistKey Nothing)
+-                )
+-                envPool
+-        let updatedEvent =
++        let proposedEvent =
+                 managedEvent
+                     { socialEventTitle = titleVal
+                     , socialEventDescription = eventDescription dto
+@@ -2762,6 +2739,52 @@ socialEventsServer user =
+                     , socialEventMetadata = encodeEventMetadata mergedMetadata
+                     , socialEventUpdatedAt = now
+                     }
++        updatedEvent <- liftIO (runSqlPool (do
++            locked <- lockSocialEventForMutation eventKey
++            case locked of
++                Nothing -> pure (Left err404{errBody = "Event not found"})
++                Just (Entity _ currentEvent)
++                    | cleanMaybeText (socialEventOrganizerPartyId currentEvent) /= Just currentPartyId ->
++                        pure (Left err403{errBody = "Only the event organizer can manage this event"})
++                    | socialEventWorkflowStateId currentEvent /= socialEventWorkflowStateId managedEvent
++                        && (case eudWorkflowStateIdUpdate of FieldMissing -> False; _ -> True) ->
++                        pure (Left err409{errBody = "Event workflow changed; reload before updating"})
++                    | otherwise -> do
++                        currentRefs <- selectList [ExternalEventRefEventId ==. eventKey] []
++                        if any (externalEventRefIsSuppressed . entityVal) currentRefs
++                            then pure (Left err404{errBody = "Event not found"})
++                            else
++                                case decodeStoredEventMetadata (socialEventMetadata currentEvent) of
++                                    Left message -> pure (Left (storedEventMetadataServerError message))
++                                    Right currentMetadata -> do
++                                        let nextWorkflow = case eudWorkflowStateIdUpdate of
++                                                FieldMissing -> socialEventWorkflowStateId currentEvent
++                                                _ -> Just workflowStateId
++                                            proposed = proposedEvent
++                                                { socialEventWorkflowStateId = nextWorkflow
++                                                , socialEventMetadata = encodeEventMetadata
++                                                    (applyEventMetadataUpdate validatedMetadataUpdate currentMetadata)
++                                                }
++                                            updated = proposed{socialEventMetadata =
++                                                EventDiscoveryOwnership.preserveEventOwnership currentEvent proposed}
++                                        update eventKey
++                                            [ SocialEventTitle =. socialEventTitle updated
++                                            , SocialEventDescription =. socialEventDescription updated
++                                            , SocialEventVenueId =. socialEventVenueId updated
++                                            , SocialEventTimezone =. socialEventTimezone updated
++                                            , SocialEventStartTime =. socialEventStartTime updated
++                                            , SocialEventEndTime =. socialEventEndTime updated
++                                            , SocialEventPriceCents =. socialEventPriceCents updated
++                                            , SocialEventCapacity =. socialEventCapacity updated
++                                            , SocialEventEventTypeId =. socialEventEventTypeId updated
++                                            , SocialEventWorkflowStateId =. socialEventWorkflowStateId updated
++                                            , SocialEventMetadata =. socialEventMetadata updated
++                                            , SocialEventUpdatedAt =. now
++                                            ]
++                                        deleteWhere [EventArtistEventId ==. eventKey]
++                                        forM_ artistKeys $ \artistKey -> insert_ (EventArtist eventKey artistKey Nothing)
++                                        pure (Right updated)
++            ) envPool) >>= either throwError pure
+         liftIO (runSqlPool (eventEntityToDTO (defaultCurrency envConfig) eventKey updatedEvent (eventArtists dto)) envPool)
+             >>= either throwError pure
+ 
+@@ -2829,8 +2852,9 @@ socialEventsServer user =
+                                                     update
+                                                         eventKey
+                                                         [ SocialEventMetadata =.
+-                                                            encodeEventMetadata
+-                                                                existingMeta{emImageUrl = Just publicUrl}
++                                                            EventDiscoveryOwnership.preserveEventOwnership eventRow
++                                                                eventRow{socialEventMetadata = encodeEventMetadata
++                                                                    existingMeta{emImageUrl = Just publicUrl}}
+                                                         , SocialEventUpdatedAt =. now
+                                                         ]
+                                                     pure (Right ())
+@@ -8744,7 +8768,7 @@ decodeStoredEventMetadata Nothing = Right emptyEventMetadata
+ decodeStoredEventMetadata (Just raw)
+     | T.null (T.strip raw) = Right emptyEventMetadata
+     | otherwise =
+-        case Aeson.eitherDecodeStrict' (TE.encodeUtf8 raw) of
++        case decodeStoredEventMetadataValue raw of
+             Right metadata ->
+                 case duplicateTopLevelJsonKeys raw of
+                     [] -> Right metadata
+@@ -8755,6 +8779,21 @@ decodeStoredEventMetadata (Just raw)
+                             )
+             Left err -> Left (storedEventMetadataDecodeError err)
+ 
++-- Only this stored-data decoder recognizes ingestion's private namespace. Public
++-- request DTOs keep their strict allowlists, and output projections never expose it.
++decodeStoredEventMetadataValue :: T.Text -> Either String EventMetadataDTO
++decodeStoredEventMetadataValue raw = do
++    value <- Aeson.eitherDecodeStrict' (TE.encodeUtf8 raw)
++    publicValue <- case value of
++        Aeson.Object fields -> case AesonKeyMap.lookup "_discoveryOwned" fields of
++            Nothing -> Right value
++            Just (Aeson.Object _) -> Right (Aeson.Object (AesonKeyMap.delete "_discoveryOwned" fields))
++            Just _ -> Left "Stored event ownership evidence must be an object"
++        _ -> Right value
++    case Aeson.fromJSON publicValue of
++        Aeson.Success metadata -> Right metadata
++        Aeson.Error message -> Left message
++
+ duplicateTopLevelJsonKeys :: T.Text -> [T.Text]
+ duplicateTopLevelJsonKeys raw =
+     nub
+@@ -9730,12 +9769,17 @@ sqliteVisibleImportedMetadataClause metadataColumn =
+         <> " AND NOT EXISTS (SELECT 1 FROM json_each("
+         <> metadataColumn
+         <> ") AS metadata_field WHERE metadata_field.key"
+-        <> " NOT IN ('ticketUrl','imageUrl','isPublic','currency','budgetCents'))"
++        <> " NOT IN ('ticketUrl','imageUrl','isPublic','currency','budgetCents','_discoveryOwned'))"
+         <> " AND (SELECT count(*) FROM json_each("
+         <> metadataColumn
+         <> "))=(SELECT count(DISTINCT metadata_field.key) FROM json_each("
+         <> metadataColumn
+         <> ") AS metadata_field)"
++        <> " AND (json_type("
++        <> metadataColumn
++        <> ",'$._discoveryOwned') IS NULL OR json_type("
++        <> metadataColumn
++        <> ",'$._discoveryOwned')='object')"
+         <> sqliteOptionalMetadataType metadataColumn "ticketUrl" "text"
+         <> sqliteOptionalMetadataType metadataColumn "imageUrl" "text"
+         <> sqliteOptionalMetadataType metadataColumn "currency" "text"
+@@ -9829,7 +9873,12 @@ postgresVisibleImportedMetadataClause metadataColumn =
+         <> " AND NOT EXISTS (SELECT 1 FROM jsonb_object_keys("
+         <> jsonMetadata
+         <> ") AS metadata_key WHERE metadata_key"
+-        <> " NOT IN ('ticketUrl','imageUrl','isPublic','currency','budgetCents'))"
++        <> " NOT IN ('ticketUrl','imageUrl','isPublic','currency','budgetCents','_discoveryOwned'))"
++        <> " AND (jsonb_typeof("
++        <> jsonMetadata
++        <> "->'_discoveryOwned') IS NULL OR jsonb_typeof("
++        <> jsonMetadata
++        <> "->'_discoveryOwned')='object')"
+         <> postgresOptionalMetadataType jsonMetadata "ticketUrl" "string"
+         <> postgresOptionalMetadataType jsonMetadata "imageUrl" "string"
+         <> postgresOptionalMetadataType jsonMetadata "currency" "string"
+diff --git a/tdf-hq/src/TDF/Services/EventDiscovery.hs b/tdf-hq/src/TDF/Services/EventDiscovery.hs
+index 5b77514a0..bf14d0657 100644
+--- a/tdf-hq/src/TDF/Services/EventDiscovery.hs
++++ b/tdf-hq/src/TDF/Services/EventDiscovery.hs
+@@ -11,6 +11,7 @@ module TDF.Services.EventDiscovery
+   , eventDiscoveryDailySlot
+   , eventDiscoveryFullReconciliation
+   , ticketmasterNextPage
++  , buenPlanNextPage
+   , beginEventDiscoveryRun
+   , buildTicketmasterRequestUrl
+   , fetchBuenPlanEvents
+@@ -36,6 +37,7 @@ module TDF.Services.EventDiscovery
+   , discoveredEventPublicationReady
+   , syncDiscoveredEvent
+   , syncDiscoveredEventDraft
++  , preserveEventOwnership
+   ) where
+ 
+ import Control.Applicative ((<|>))
+@@ -46,6 +48,7 @@ import Control.Concurrent (threadDelay)
+ import Data.Aeson
+   ( FromJSON(..)
+   , Value(..)
++  , ToJSON(toJSON)
+   , decodeStrict'
+   , encode
+   , eitherDecode
+@@ -58,6 +61,7 @@ import Data.Aeson
+   )
+ import Data.Int (Int64)
+ import Data.Aeson.Types (parseMaybe)
++import Data.Aeson.Key (Key)
+ import qualified Data.ByteString.Lazy as BL
+ import qualified Data.ByteString.Char8 as BS8
+ import qualified Data.Aeson.KeyMap as AesonKeyMap
+@@ -82,6 +86,7 @@ import Data.UUID (UUID)
+ import Database.Persist
+   ( Entity(..)
+   , PersistValue
++  , Update
+   , SelectOpt(Asc)
+   , deleteWhere
+   , get
+@@ -647,7 +652,7 @@ fetchBuenPlanEvents cfg cities now
+         (fromIntegral (eventDiscoveryLookaheadDays cfg * 86400))
+         now
+     fetchPage pageNumber collected
+-      | pageNumber > 10 = pure (Right collected)
++      | pageNumber > 10 = pure (Left "Buen Plan pagination budget exhausted; inventory incomplete")
+       | otherwise = do
+           requestResult <-
+             try (parseRequest (buildBuenPlanRequestUrl pageNumber)) ::
+@@ -687,9 +692,10 @@ fetchBuenPlanEvents cfg cities now
+                                   Left err -> pure (Left err)
+                                   Right (pageCount, normalized) -> do
+                                     let nextCollected = collected ++ normalized
+-                                    if pageNumber >= pageCount
+-                                      then pure (Right nextCollected)
+-                                      else fetchPage (pageNumber + 1) nextCollected
++                                    case buenPlanNextPage pageNumber pageCount of
++                                      Left err -> pure (Left err)
++                                      Right Nothing -> pure (Right nextCollected)
++                                      Right (Just nextPage) -> fetchPage nextPage nextCollected
+ 
+     buildBuenPlanRequestUrl pageNumber =
+       T.unpack
+@@ -1328,10 +1334,19 @@ eventDiscoveryFullReconciliation slot =
+ -- | A budget stop is not a complete upstream inventory. Never reconcile
+ -- omissions using the prefix returned before a pagination limit or outage.
+ ticketmasterNextPage :: Int -> Int -> Int -> Either Text (Maybe Int)
+-ticketmasterNextPage pageBudget currentPage totalPages
+-  | pageBudget < 1 || currentPage < 0 || totalPages < 0 = Left "Invalid Ticketmaster pagination metadata"
++ticketmasterNextPage = providerNextPage "Ticketmaster"
++
++-- Buen Plan uses one-based pages. Exhausting its request budget while another
++-- page exists is an incomplete inventory, never a successful empty/missing set.
++buenPlanNextPage :: Int -> Int -> Either Text (Maybe Int)
++buenPlanNextPage currentPage totalPages =
++  fmap (fmap (+ 1)) (providerNextPage "Buen Plan" 10 (currentPage - 1) totalPages)
++
++providerNextPage :: Text -> Int -> Int -> Int -> Either Text (Maybe Int)
++providerNextPage provider pageBudget currentPage totalPages
++  | pageBudget < 1 || currentPage < 0 || totalPages < 0 = Left ("Invalid " <> provider <> " pagination metadata")
+   | currentPage + 1 >= totalPages = Right Nothing
+-  | currentPage + 1 >= pageBudget = Left "Ticketmaster pagination budget exhausted; inventory incomplete"
++  | currentPage + 1 >= pageBudget = Left (provider <> " pagination budget exhausted; inventory incomplete")
+   | otherwise = Right (Just (currentPage + 1))
+ 
+ fetchTicketmasterEventsForCity ::
+@@ -1868,13 +1883,7 @@ reconcileImportedEvents pool now activeCities =
+         resolveAllowedImportedUpdateStateId
+           (Social.socialEventWorkflowStateId eventRow)
+           desiredWorkflowStateId
+-      update
+-        eventKey
+-        [ Social.SocialEventWorkflowStateId =. Just workflowStateId
+-        , Social.SocialEventMetadata =.
+-            updateImportedEventMetadata isPublic (Social.socialEventMetadata eventRow)
+-        , Social.SocialEventUpdatedAt =. now
+-        ]
++      update eventKey (reconciledEventUpdates now workflowStateId isPublic Nothing eventRow)
+ 
+ -- | Mark provider records that disappeared from a successful full run. A
+ -- record remains usable for one missed run to absorb transient upstream
+@@ -1965,36 +1974,39 @@ reconcileProviderEventsDb now provider targetCities seenExternalIds = reconcile
+         )
+         targetCities
+ 
+-updateImportedEventMetadata :: Bool -> Maybe Text -> Maybe Text
+-updateImportedEventMetadata isPublic rawMetadata =
+-  updateImportedEventMetadataWithTicket isPublic Nothing rawMetadata
+-
+ updateImportedEventMetadataWithTicket ::
+   Bool ->
+   Maybe Text ->
+   Maybe Text ->
+   Maybe Text
+ updateImportedEventMetadataWithTicket isPublic replacementTicketUrl rawMetadata =
+-  Just . TE.decodeUtf8 . BL.toStrict . encode $
+-    Object
+-      ( AesonKeyMap.insert "ticketUrl" ticketUrlValue
+-          . AesonKeyMap.insert "isPublic" (Bool isPublic)
+-          . AesonKeyMap.delete "eventStatus"
+-          $ originalObject
+-      )
++  Just . encodeMetadata $ AesonKeyMap.insert "_discoveryOwned" (Object nextOwned) effective
+   where
+-    originalObject =
+-      case rawMetadata >>= decodeStrict' . TE.encodeUtf8 of
+-        Just (Object value) -> value
+-        _ -> AesonKeyMap.empty
+-    ticketUrlValue =
+-      if isPublic
+-        then
+-          maybe
+-            (fromMaybe Null (AesonKeyMap.lookup "ticketUrl" originalObject))
+-            String
+-            replacementTicketUrl
+-        else Null
++    original = AesonKeyMap.delete "eventStatus" (metadataObject rawMetadata)
++    previous = case AesonKeyMap.lookup "_discoveryOwned" original of
++      Just (Object snapshot) -> snapshot
++      _ -> AesonKeyMap.empty
++    stillOwned key = AesonKeyMap.member key previous
++      && AesonKeyMap.lookup key previous == AesonKeyMap.lookup key original
++    incoming = AesonKeyMap.fromList
++      [ ("isPublic", Bool isPublic)
++      , ("ticketUrl", if isPublic then maybe
++          (fromMaybe Null (AesonKeyMap.lookup "ticketUrl" original)) String replacementTicketUrl
++          else Null)
++      ]
++    apply acc key
++      | stillOwned key = maybe acc (\v -> AesonKeyMap.insert key v acc)
++          (AesonKeyMap.lookup key incoming)
++      | otherwise = acc
++    merged = foldl apply original ["isPublic", "ticketUrl"]
++    -- Source disappearance/expiry can hide any imported event, but can never
++    -- publish an editorially hidden or legacy event by claiming ownership.
++    effective = if isPublic then merged else AesonKeyMap.insert "isPublic" (Bool False) merged
++    nextOwned = foldl advance previous ["isPublic", "ticketUrl"]
++    advance acc key
++      | stillOwned key = maybe acc (\v -> AesonKeyMap.insert key v acc)
++          (AesonKeyMap.lookup key effective)
++      | otherwise = AesonKeyMap.delete key acc
+ 
+ refreshCanonicalVisibility ::
+   UTCTime ->
+@@ -2046,16 +2058,34 @@ refreshCanonicalVisibility now eventKey = do
+         resolveAllowedImportedUpdateStateId
+           (Social.socialEventWorkflowStateId eventRow)
+           desiredWorkflowStateId
+-      update
+-        eventKey
+-        [ Social.SocialEventWorkflowStateId =. Just workflowStateId
+-        , Social.SocialEventMetadata =.
+-            updateImportedEventMetadataWithTicket
+-              isPublic
+-              ticketUrl
+-              (Social.socialEventMetadata eventRow)
+-        , Social.SocialEventUpdatedAt =. now
+-        ]
++      update eventKey (reconciledEventUpdates now workflowStateId isPublic ticketUrl eventRow)
++
++-- Reconciliation shares the import ownership boundary; it must not silently
++-- reclaim a workflow field changed by an editor or an unproven legacy writer.
++reconciledEventUpdates :: UTCTime -> UUID -> Bool -> Maybe Text
++  -> Social.SocialEvent -> [Update Social.SocialEvent]
++reconciledEventUpdates now desiredState isPublic ticketUrl current =
++  [ Social.SocialEventWorkflowStateId =. nextState
++  , Social.SocialEventMetadata =. Just (encodeMetadata finalMetadata)
++  , Social.SocialEventUpdatedAt =. now
++  ]
++  where
++    original = metadataObject (Social.socialEventMetadata current)
++    previous = case AesonKeyMap.lookup "_discoveryOwned" original of
++      Just (Object snapshot) -> snapshot
++      _ -> AesonKeyMap.empty
++    ownsState = AesonKeyMap.lookup "workflowStateId" previous
++      == Just (toJSON (Social.socialEventWorkflowStateId current))
++    nextState = if ownsState then Just desiredState else Social.socialEventWorkflowStateId current
++    updatedMetadata = metadataObject (updateImportedEventMetadataWithTicket
++      isPublic ticketUrl (Social.socialEventMetadata current))
++    updatedOwned = case AesonKeyMap.lookup "_discoveryOwned" updatedMetadata of
++      Just (Object snapshot) -> snapshot
++      _ -> AesonKeyMap.empty
++    nextOwned = if ownsState
++      then AesonKeyMap.insert "workflowStateId" (toJSON nextState) updatedOwned
++      else AesonKeyMap.delete "workflowStateId" updatedOwned
++    finalMetadata = AesonKeyMap.insert "_discoveryOwned" (Object nextOwned) updatedMetadata
+ 
+ sourceRefIsActive :: Social.ExternalEventRef -> Bool
+ sourceRefIsActive ref =
+@@ -2300,20 +2330,9 @@ syncUnsuppressedDiscoveredEventDb
+               resolveAllowedImportedUpdateStateId
+                 (existingEvent >>= Social.socialEventWorkflowStateId)
+                 desiredWorkflowStateId
+-            update
+-              existingEventKey
+-              [ Social.SocialEventTitle =. discoveredEventTitle
+-              , Social.SocialEventDescription =. discoveredEventDescription
+-              , Social.SocialEventVenueId =. Just venueKey
+-              , Social.SocialEventTimezone =. importedEventTimeZone discoveredEventVenue
+-              , Social.SocialEventStartTime =. discoveredEventStart
+-              , Social.SocialEventEndTime =. discoveredEventEnd
+-              , Social.SocialEventPriceCents =. discoveredEventPriceCents
+-              , Social.SocialEventEventTypeId =. Just eventTypeUuid
+-              , Social.SocialEventWorkflowStateId =. Just workflowStateId
+-              , Social.SocialEventMetadata =. metadata
+-              , Social.SocialEventUpdatedAt =. now
+-              ]
++            forM_ existingEvent $ \current ->
++              update existingEventKey (ownedEventUpdates current now DiscoveredEvent{..}
++                venueKey eventTypeUuid workflowStateId metadata)
+           else pure ()
+         update
+           refKey
+@@ -2343,20 +2362,9 @@ syncUnsuppressedDiscoveredEventDb
+                     resolveAllowedImportedUpdateStateId
+                       (candidateEvent >>= Social.socialEventWorkflowStateId)
+                       desiredWorkflowStateId
+-                  update
+-                    candidateKey
+-                    [ Social.SocialEventTitle =. discoveredEventTitle
+-                    , Social.SocialEventDescription =. discoveredEventDescription
+-                    , Social.SocialEventVenueId =. Just venueKey
+-                    , Social.SocialEventTimezone =. importedEventTimeZone discoveredEventVenue
+-                    , Social.SocialEventStartTime =. discoveredEventStart
+-                    , Social.SocialEventEndTime =. discoveredEventEnd
+-                    , Social.SocialEventPriceCents =. discoveredEventPriceCents
+-                    , Social.SocialEventEventTypeId =. Just eventTypeUuid
+-                    , Social.SocialEventWorkflowStateId =. Just workflowStateId
+-                    , Social.SocialEventMetadata =. metadata
+-                    , Social.SocialEventUpdatedAt =. now
+-                    ]
++                  forM_ candidateEvent $ \current ->
++                    update candidateKey (ownedEventUpdates current now DiscoveredEvent{..}
++                      venueKey eventTypeUuid workflowStateId metadata)
+                 else pure ()
+               pure (candidateKey, False)
+             Nothing -> do
+@@ -2375,7 +2383,8 @@ syncUnsuppressedDiscoveredEventDb
+                     , Social.socialEventPriceCents = discoveredEventPriceCents
+                     , Social.socialEventCurrencyId = Nothing
+                     , Social.socialEventCapacity = Nothing
+-                    , Social.socialEventMetadata = metadata
++                    , Social.socialEventMetadata = initialOwnedEventMetadata DiscoveredEvent{..}
++                        venueKey eventTypeUuid desiredWorkflowStateId metadata
+                     , Social.socialEventCreatedAt = now
+                     , Social.socialEventUpdatedAt = now
+                     }
+@@ -2410,6 +2419,101 @@ syncUnsuppressedDiscoveredEventDb
+       , discoveryArtistsCreated = artistsCreated
+       }
+ 
++-- Compare each canonical field with the last value actually supplied by ingestion.
++-- A differing field belongs to the editor. Keep unrelated metadata, and retain the
++-- newest source evidence even when its canonical field is protected. Legacy rows
++-- without ownership evidence are conservative: their canonical fields are not adopted.
++ownedEventUpdates :: Social.SocialEvent -> UTCTime -> DiscoveredEvent -> Social.VenueId
++  -> UUID -> UUID -> Maybe Text -> [Update Social.SocialEvent]
++ownedEventUpdates current now event@DiscoveredEvent{..} venueKey typeId stateId metadata =
++  [ Social.SocialEventTitle =. keep "title" (Social.socialEventTitle current) discoveredEventTitle
++  , Social.SocialEventDescription =. keep "description" (Social.socialEventDescription current) discoveredEventDescription
++  , Social.SocialEventVenueId =. keep "venueId" (Social.socialEventVenueId current) (Just venueKey)
++  , Social.SocialEventTimezone =. keep "timezone" (Social.socialEventTimezone current) (importedEventTimeZone discoveredEventVenue)
++  , Social.SocialEventStartTime =. keep "startTime" (Social.socialEventStartTime current) discoveredEventStart
++  , Social.SocialEventEndTime =. keep "endTime" (Social.socialEventEndTime current) discoveredEventEnd
++  , Social.SocialEventPriceCents =. keep "priceCents" (Social.socialEventPriceCents current) discoveredEventPriceCents
++  , Social.SocialEventEventTypeId =. keep "eventTypeId" (Social.socialEventEventTypeId current) (Just typeId)
++  , Social.SocialEventWorkflowStateId =. keep "workflowStateId" (Social.socialEventWorkflowStateId current) (Just stateId)
++  , Social.SocialEventMetadata =. Just (encodeMetadata mergedMetadata)
++  , Social.SocialEventUpdatedAt =. now
++  ]
++  where
++    oldMetadata = metadataObject (Social.socialEventMetadata current)
++    previous = case AesonKeyMap.lookup "_discoveryOwned" oldMetadata of
++      Just (Object snapshot) -> snapshot
++      _ -> AesonKeyMap.empty
++    next = ownedEventSnapshot event venueKey typeId stateId metadata
++    -- Only previously owned keys remain owned; a missing legacy snapshot is not
++    -- permission to claim values that may have been written by an administrator.
++    nextOwned = AesonKeyMap.filterWithKey
++      (\key _ -> AesonKeyMap.member key previous
++        && AesonKeyMap.lookup key previous == AesonKeyMap.lookup key actualSnapshot) next
++    actualSnapshot = currentEventSnapshot current
++    keep :: ToJSON a => Key -> a -> a -> a
++    keep key actual incoming =
++      if AesonKeyMap.lookup key previous == Just (toJSON actual) then incoming else actual
++    mergeMetadata acc key =
++      let actual = AesonKeyMap.lookup key oldMetadata
++       in if actual == AesonKeyMap.lookup key previous && AesonKeyMap.member key previous
++          then maybe acc (\value -> AesonKeyMap.insert key value acc) (AesonKeyMap.lookup key next)
++          else acc
++    mergedMetadata = AesonKeyMap.insert "_discoveryOwned" (Object nextOwned)
++      (foldl mergeMetadata oldMetadata ["ticketUrl", "imageUrl", "currency", "isPublic"])
++
++initialOwnedEventMetadata :: DiscoveredEvent -> Social.VenueId -> UUID -> UUID -> Maybe Text -> Maybe Text
++initialOwnedEventMetadata event venueKey typeId stateId metadata = Just . encodeMetadata $
++  AesonKeyMap.insert "_discoveryOwned" (Object (ownedEventSnapshot event venueKey typeId stateId metadata))
++    (metadataObject metadata)
++
++ownedEventSnapshot :: DiscoveredEvent -> Social.VenueId -> UUID -> UUID -> Maybe Text -> AesonKeyMap.KeyMap Value
++ownedEventSnapshot DiscoveredEvent{..} venueKey typeId stateId metadata = AesonKeyMap.fromList
++  [ ("title", toJSON discoveredEventTitle)
++  , ("description", toJSON discoveredEventDescription)
++  , ("venueId", toJSON (Just venueKey))
++  , ("timezone", toJSON (importedEventTimeZone discoveredEventVenue))
++  , ("startTime", toJSON discoveredEventStart)
++  , ("endTime", toJSON discoveredEventEnd)
++  , ("priceCents", toJSON discoveredEventPriceCents)
++  , ("eventTypeId", toJSON (Just typeId))
++  , ("workflowStateId", toJSON (Just stateId))
++  ] <> metadataObject metadata
++
++-- Stored ingestion evidence is internal. An editorial writer carries it forward
++-- only for fields whose canonical values it did not change, under the event lock.
++preserveEventOwnership :: Social.SocialEvent -> Social.SocialEvent -> Maybe Text
++preserveEventOwnership current proposed =
++  case AesonKeyMap.lookup "_discoveryOwned" (metadataObject (Social.socialEventMetadata current)) of
++    Just (Object previous) -> Just . encodeMetadata $
++      AesonKeyMap.insert "_discoveryOwned" (Object remaining)
++        (metadataObject (Social.socialEventMetadata proposed))
++      where
++        remaining = AesonKeyMap.filterWithKey
++          (\key _ -> AesonKeyMap.lookup key (currentEventSnapshot current)
++            == AesonKeyMap.lookup key (currentEventSnapshot proposed)) previous
++    _ -> Social.socialEventMetadata proposed
++
++currentEventSnapshot :: Social.SocialEvent -> AesonKeyMap.KeyMap Value
++currentEventSnapshot current = AesonKeyMap.fromList
++  [ ("title", toJSON (Social.socialEventTitle current))
++  , ("description", toJSON (Social.socialEventDescription current))
++  , ("venueId", toJSON (Social.socialEventVenueId current))
++  , ("timezone", toJSON (Social.socialEventTimezone current))
++  , ("startTime", toJSON (Social.socialEventStartTime current))
++  , ("endTime", toJSON (Social.socialEventEndTime current))
++  , ("priceCents", toJSON (Social.socialEventPriceCents current))
++  , ("eventTypeId", toJSON (Social.socialEventEventTypeId current))
++  , ("workflowStateId", toJSON (Social.socialEventWorkflowStateId current))
++  ] <> metadataObject (Social.socialEventMetadata current)
++
++metadataObject :: Maybe Text -> AesonKeyMap.KeyMap Value
++metadataObject value = case value >>= decodeStrict' . TE.encodeUtf8 of
++  Just (Object fields) -> fields
++  _ -> AesonKeyMap.empty
++
++encodeMetadata :: AesonKeyMap.KeyMap Value -> Text
++encodeMetadata = TE.decodeUtf8 . BL.toStrict . encode . Object
++
+ eventHasSuppressedReference ::
+   Social.SocialEventId ->
+   SqlPersistT IO Bool
+diff --git a/tdf-hq/test/Spec.hs b/tdf-hq/test/Spec.hs
+index 988e2a3ea..753586dba 100644
+--- a/tdf-hq/test/Spec.hs
++++ b/tdf-hq/test/Spec.hs
+@@ -126,6 +126,7 @@ import qualified TDF.Commerce.CheckoutStore as CheckoutStore
+ import qualified TDF.Commerce.CourseCheckout as CourseCheckout
+ import qualified TDF.Commerce.DomoQuotes as DomoQuotes
+ import qualified TDF.Commerce.EventTickets as EventTickets
++import qualified TDF.Server.SocialEventsHandlers as EventMetadataServer
+ import qualified TDF.Server.EventTicketCheckout as EventTicketCheckoutServer
+ import qualified TDF.Commerce.MarketplaceSales as MarketplaceSales
+ import qualified TDF.Commerce.MarketplaceRentals as MarketplaceRentals
+@@ -10898,6 +10899,10 @@ main = hspec $ do
+                 Right parsed ->
+                     expectationFailure ("Expected unexpected event update keys to be rejected, got " <> show parsed)
+ 
++        it "rejects attempts to supply the private ingestion ownership namespace in public updates" $
++            (eitherDecode "{\"eventTitle\":\"Test\",\"eventStart\":\"2026-01-01T00:00:00Z\",\"eventEnd\":\"2026-01-01T01:00:00Z\",\"eventArtists\":[],\"_discoveryOwned\":{\"isPublic\":true}}"
++                :: Either String EventUpdateDTO) `shouldSatisfy` isLeft
++
+         it "captures venue contact nulls and invitation message nulls in update payloads" $ do
+             let venuePayload = "{\"venueName\":\"Sala Uno\",\"venuePhone\":null}"
+                 invitationPayload = "{\"invitationToPartyId\":\"12\",\"invitationMessage\":null}"
+@@ -11956,6 +11961,35 @@ main = hspec $ do
+                     BL.unpack (errBody err) `shouldContain` "server-verified checkout"
+                 Right () -> expectationFailure "Expected direct paid issuance to be rejected"
+ 
++    describe "stored discovery ownership metadata boundary" $ do
++        it "accepts internal evidence without exposing it through the public projection" $ do
++            let raw = "{\"isPublic\":true,\"ticketUrl\":\"https://tickets.example/event\",\"_discoveryOwned\":{\"isPublic\":true}}"
++            case EventMetadataServer.decodeStoredEventMetadata (Just raw) of
++                Left err -> expectationFailure (show err)
++                Right metadata -> do
++                    EventMetadataServer.emIsPublic metadata `shouldBe` Just True
++                    EventMetadataServer.emTicketUrl metadata `shouldBe` Just "https://tickets.example/event"
++                    BL.unpack (A.encode metadata) `shouldSatisfy` (not . isInfixOf "_discoveryOwned")
++            validateTicketPurchaseEventEligibility (Just raw) True `shouldSatisfy` isRight
++
++        it "keeps ownership evidence out of public projections for arbitrary stored titles and visibility" $
++            QC.property $ \title public ->
++                let raw = TE.decodeUtf8 . BL.toStrict . A.encode $ A.object
++                        [ "isPublic" .= (public :: Bool)
++                        , "_discoveryOwned" .= A.object ["title" .= (title :: String), "isPublic" .= public]
++                        ]
++                 in case EventMetadataServer.decodeStoredEventMetadata (Just raw) of
++                        Left _ -> False
++                        Right metadata -> EventMetadataServer.emIsPublic metadata == Just public
++                            && not ("_discoveryOwned" `isInfixOf` BL.unpack (A.encode metadata))
++
++        it "retains strict validation for unknown fields, malformed evidence and duplicate namespaces" $ do
++            forM_
++                [ "{\"isPublic\":true,\"rogue\":1,\"_discoveryOwned\":{}}"
++                , "{\"isPublic\":true,\"_discoveryOwned\":true}"
++                , "{\"isPublic\":true,\"_discoveryOwned\":{},\"_discoveryOwned\":{}}"
++                ] $ \raw -> (EventMetadataServer.emIsPublic <$> EventMetadataServer.decodeStoredEventMetadata (Just raw)) `shouldSatisfy` isLeft
++
+     describe "ticket purchase event eligibility" $ do
+         it "allows only public events in buyer-facing sale states" $ do
+             case validateTicketPurchaseEventEligibility (Just "{\"isPublic\":true}") True of
+diff --git a/tdf-hq/test/TDF/Services/EventDiscoverySpec.hs b/tdf-hq/test/TDF/Services/EventDiscoverySpec.hs
+index a236e6d03..9afc5772f 100644
+--- a/tdf-hq/test/TDF/Services/EventDiscoverySpec.hs
++++ b/tdf-hq/test/TDF/Services/EventDiscoverySpec.hs
+@@ -2,8 +2,12 @@
+ 
+ module TDF.Services.EventDiscoverySpec (spec) where
+ 
+-import Data.Aeson (eitherDecode)
++import Data.Aeson (Value(..), eitherDecode, encode, decodeStrict')
++import qualified Data.Aeson.KeyMap as KM
++import qualified Data.Text.Encoding as TE
++import qualified Data.ByteString.Lazy as BL
+ import qualified Data.ByteString.Lazy.Char8 as BL8
++import Control.Monad (forM_)
+ import Control.Monad.Logger (runNoLoggingT)
+ import Data.Pool (destroyAllResources)
+ import Data.Time (UTCTime(..), addUTCTime, fromGregorian, secondsToDiffTime, utctDay)
+@@ -14,7 +18,7 @@ import Test.Hspec
+ import System.IO (hClose)
+ import System.IO.Temp (withSystemTempFile)
+ import Data.Maybe (isJust, isNothing)
+-import Test.QuickCheck (property, forAll, chooseInt)
++import Test.QuickCheck (property, forAll, chooseInt, quickCheckResult, isSuccess)
+ import qualified Data.Text as T
+ import qualified Data.UUID as UUID
+ 
+@@ -27,6 +31,7 @@ import TDF.Services.EventDiscovery
+   , eventDiscoveryDailySlot
+   , eventDiscoveryFullReconciliation
+   , ticketmasterNextPage
++  , buenPlanNextPage
+   , beginEventDiscoveryRun
+   , buildTicketmasterRequestUrl
+   , countImportedDiscoveryEvents
+@@ -41,6 +46,7 @@ import TDF.Services.EventDiscovery
+   , isDiscoveredEventKnown
+   , reconcileImportedEvents
+   , reconcileProviderEvents
++  , preserveEventOwnership
+   , discoveredEventPublicationReady
+   , syncDiscoveredEvent
+   , syncDiscoveredEventDraft
+@@ -68,6 +74,11 @@ spec = do
+       ticketmasterNextPage 5 4 6 `shouldBe` Left "Ticketmaster pagination budget exhausted; inventory incomplete"
+       ticketmasterNextPage 5 4 5 `shouldBe` Right Nothing
+       ticketmasterNextPage 5 0 5 `shouldBe` Right (Just 1)
++    it "distinguishes a complete Buen Plan tenth page from a truncated inventory" $ do
++      buenPlanNextPage 10 10 `shouldBe` Right Nothing
++      buenPlanNextPage 9 11 `shouldBe` Right (Just 10)
++      buenPlanNextPage 10 11 `shouldBe` Left "Buen Plan pagination budget exhausted; inventory incomplete"
++      buenPlanNextPage 0 1 `shouldBe` Left "Invalid Buen Plan pagination metadata"
+     it "never accepts incomplete inventories at the configured budget" $ property $
+       forAll (chooseInt (1, 10)) $ \budget ->
+       forAll (chooseInt (1, 500)) $ \remaining ->
+@@ -386,6 +397,173 @@ spec = do
+       (UUID.toText <$> (Social.socialEventWorkflowStateId =<< importedEventAfterReconcile))
+         `shouldBe` Just "00000000-0000-4000-8000-000000000237"
+ 
++    it "preserves edited event fields and metadata across repeated source refreshes" $ do
++      event <- case eitherDecode ticketmasterFixture of
++        Left err -> fail err
++        Right response -> case normalizeTicketmasterResponse "USD" "Quito" (fixtureTime 10 0) response of
++          [normalized] -> pure normalized
++          _ -> fail "Expected one fixture event"
++      pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
++      runSqlPool initializeEventDiscoverySchema pool
++      _ <- syncDiscoveredEventDraft pool (fixtureTime 10 5) event
++      Just (Entity _ ref) <- runSqlPool (getBy (Social.UniqueExternalEventRef "ticketmaster" "tm-event-1")) pool
++      let eventKey = Social.externalEventRefEventId ref
++      Just original <- runSqlPool (get eventKey) pool
++      let decodeMetadata row = Social.socialEventMetadata row >>= decodeStrict' . TE.encodeUtf8
++          editedMetadata = case decodeMetadata original of
++            Just (Object fields) -> Just . TE.decodeUtf8 . BL.toStrict . encode . Object $
++              KM.insert "editorNote" (String "Confirmed by venue") $
++              KM.insert "imageUrl" (String "https://editor.example/approved.jpg") fields
++            _ -> Nothing
++      runSqlPool (update eventKey
++        [ Social.SocialEventTitle =. "Editorial title"
++        , Social.SocialEventPriceCents =. Just 7777
++        , Social.SocialEventMetadata =. editedMetadata
++        , Social.SocialEventUpdatedAt =. fixtureTime 10 6
++        ]) pool
++      let refreshed = event
++            { discoveredEventTitle = "Provider title changed"
++            , discoveredEventPriceCents = Just 1200
++            , discoveredEventStart = addUTCTime 86400 (discoveredEventStart event)
++            , discoveredEventDescription = Just "Verified new description"
++            , discoveredEventImageUrl = Just "https://provider.example/new.jpg"
++            }
++      _ <- syncDiscoveredEventDraft pool (fixtureTime 10 10) refreshed
++      -- Coincidental agreement with the editorial value must not let the source
++      -- claim ownership again on its next change.
++      _ <- syncDiscoveredEventDraft pool (fixtureTime 10 12) refreshed
++        {discoveredEventTitle = "Editorial title", discoveredEventPriceCents = Just 7777}
++      _ <- syncDiscoveredEventDraft pool (fixtureTime 10 15) refreshed
++        {discoveredEventDescription = Just "Verified subsequent description"}
++      Just final <- runSqlPool (get eventKey) pool
++      Social.socialEventTitle final `shouldBe` "Editorial title"
++      Social.socialEventPriceCents final `shouldBe` Just 7777
++      Social.socialEventStartTime final `shouldBe` discoveredEventStart refreshed
++      Social.socialEventDescription final `shouldBe` Just "Verified subsequent description"
++      case decodeMetadata final of
++        Just (Object fields) -> do
++          KM.lookup "editorNote" fields `shouldBe` Just (String "Confirmed by venue")
++          KM.lookup "imageUrl" fields `shouldBe` Just (String "https://editor.example/approved.jpg")
++          KM.lookup "isPublic" fields `shouldBe` Just (Bool False)
++        _ -> expectationFailure "Expected retained metadata"
++      runSqlPool (count ([] :: [Filter Social.SocialEvent])) pool `shouldReturn` 1
++      destroyAllResources pool
++
++    forM_ [False, True] $ \legacy ->
++      it ("keeps editorial visibility and ticket URLs through full provider reconciliation; legacy=" <> show legacy) $ do
++        event <- case eitherDecode ticketmasterFixture of
++          Left err -> fail err
++          Right response -> case normalizeTicketmasterResponse "USD" "Quito" (fixtureTime 10 0) response of
++            [normalized] -> pure normalized
++            _ -> fail "Expected one fixture event"
++        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
++        runSqlPool initializeEventDiscoverySchema pool
++        _ <- syncDiscoveredEvent pool (fixtureTime 10 5) event
++        Just (Entity _ ref) <- runSqlPool (getBy (Social.UniqueExternalEventRef "ticketmaster" "tm-event-1")) pool
++        let eventKey = Social.externalEventRefEventId ref
++        Just original <- runSqlPool (get eventKey) pool
++        let editedMetadata = case Social.socialEventMetadata original >>= decodeStrict' . TE.encodeUtf8 of
++              Just (Object fields) -> Just . TE.decodeUtf8 . BL.toStrict . encode . Object $
++                (if legacy then KM.delete "_discoveryOwned" else id) $
++                KM.insert "isPublic" (Bool False) $
++                KM.insert "ticketUrl" (String "https://editor.example/tickets") fields
++              _ -> Nothing
++        let editorialState = UUID.fromString "00000000-0000-4000-8000-000000000231"
++        runSqlPool (update eventKey
++          [Social.SocialEventMetadata =. editedMetadata, Social.SocialEventWorkflowStateId =. editorialState]) pool
++        forM_ [10, 12, 15] $ \minute -> do
++          _ <- syncDiscoveredEvent pool (fixtureTime 10 minute) event
++          _ <- reconcileProviderEvents pool (fixtureTime 10 minute) "ticketmaster"
++            [EventDiscoveryCity "Quito" "EC" (Just "America/Guayaquil")] ["tm-event-1"]
++          _ <- reconcileImportedEvents pool (fixtureTime 10 minute)
++            [EventDiscoveryCity "Quito" "EC" (Just "America/Guayaquil")]
++          Just stored <- runSqlPool (get eventKey) pool
++          Social.socialEventWorkflowStateId stored `shouldBe` editorialState
++          case Social.socialEventMetadata stored >>= decodeStrict' . TE.encodeUtf8 of
++            Just (Object fields) -> do
++              KM.lookup "isPublic" fields `shouldBe` Just (Bool False)
++              KM.lookup "ticketUrl" fields `shouldBe` Just (String "https://editor.example/tickets")
++              case KM.lookup "_discoveryOwned" fields of
++                Just (Object owned) -> do
++                  KM.lookup "isPublic" owned `shouldBe` Nothing
++                  KM.lookup "ticketUrl" owned `shouldBe` Nothing
++                  KM.lookup "workflowStateId" owned `shouldBe` Nothing
++                _ -> expectationFailure "Expected explicit non-adoption evidence"
++            _ -> expectationFailure "Expected metadata"
++        destroyAllResources pool
++
++    it "relinquishes only changed fields at the editorial write, before provider values can coincide" $ do
++      event <- case eitherDecode ticketmasterFixture of
++        Left err -> fail err
++        Right response -> case normalizeTicketmasterResponse "USD" "Quito" (fixtureTime 10 0) response of
++          [normalized] -> pure normalized
++          _ -> fail "Expected one fixture event"
++      pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
++      runSqlPool initializeEventDiscoverySchema pool
++      _ <- syncDiscoveredEventDraft pool (fixtureTime 10 5) event
++      Just (Entity _ ref) <- runSqlPool (getBy (Social.UniqueExternalEventRef "ticketmaster" "tm-event-1")) pool
++      let eventKey = Social.externalEventRefEventId ref
++      Just original <- runSqlPool (get eventKey) pool
++      let proposed = original{Social.socialEventTitle = "Editorial title"}
++          metadata = preserveEventOwnership original proposed
++      runSqlPool (update eventKey [Social.SocialEventTitle =. "Editorial title", Social.SocialEventMetadata =. metadata]) pool
++      _ <- syncDiscoveredEventDraft pool (fixtureTime 10 10) event{discoveredEventTitle = "Editorial title"}
++      _ <- syncDiscoveredEventDraft pool (fixtureTime 10 15) event
++        {discoveredEventTitle = "Provider changed again", discoveredEventDescription = Just "Fresh provider description"}
++      Just final <- runSqlPool (get eventKey) pool
++      Social.socialEventTitle final `shouldBe` "Editorial title"
++      Social.socialEventDescription final `shouldBe` Just "Fresh provider description"
++      destroyAllResources pool
++
++    it "keeps editorial ownership removal monotone and idempotent for arbitrary edits" $ do
++      event <- case eitherDecode ticketmasterFixture of
++        Left err -> fail err
++        Right response -> case normalizeTicketmasterResponse "USD" "Quito" (fixtureTime 10 0) response of
++          [normalized] -> pure normalized
++          _ -> fail "Expected one fixture event"
++      pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
++      runSqlPool initializeEventDiscoverySchema pool
++      _ <- syncDiscoveredEventDraft pool (fixtureTime 10 5) event
++      Just (Entity _ ref) <- runSqlPool (getBy (Social.UniqueExternalEventRef "ticketmaster" "tm-event-1")) pool
++      Just original <- runSqlPool (get (Social.externalEventRefEventId ref)) pool
++      result <- quickCheckResult $ property $ \title ->
++        let proposed = original{Social.socialEventTitle = T.pack title}
++            first = proposed{Social.socialEventMetadata = preserveEventOwnership original proposed}
++            repeated = preserveEventOwnership first first
++            reverted = first{Social.socialEventTitle = Social.socialEventTitle original}
++            final = preserveEventOwnership first reverted
++            ownedTitle raw = case raw >>= decodeStrict' . TE.encodeUtf8 of
++              Just (Object fields) -> case KM.lookup "_discoveryOwned" fields of
++                Just (Object owned) -> KM.lookup "title" owned
++                _ -> Nothing
++              _ -> Nothing
++         in repeated == Social.socialEventMetadata first
++            && (T.pack title == Social.socialEventTitle original || ownedTitle final == Nothing)
++      result `shouldSatisfy` isSuccess
++      destroyAllResources pool
++
++    it "does not claim legacy event fields without provider ownership evidence" $ do
++      event <- case eitherDecode ticketmasterFixture of
++        Left err -> fail err
++        Right response -> case normalizeTicketmasterResponse "USD" "Quito" (fixtureTime 10 0) response of
++          [normalized] -> pure normalized
++          _ -> fail "Expected one fixture event"
++      pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
++      runSqlPool initializeEventDiscoverySchema pool
++      _ <- syncDiscoveredEventDraft pool (fixtureTime 10 5) event
++      Just (Entity _ ref) <- runSqlPool (getBy (Social.UniqueExternalEventRef "ticketmaster" "tm-event-1")) pool
++      let eventKey = Social.externalEventRefEventId ref
++      runSqlPool (update eventKey
++        [ Social.SocialEventTitle =. "Legacy editorial title"
++        , Social.SocialEventMetadata =. Just "{\"isPublic\":false,\"editorNote\":\"Keep\"}"
++        ]) pool
++      _ <- syncDiscoveredEventDraft pool (fixtureTime 10 10) event
++      _ <- syncDiscoveredEventDraft pool (fixtureTime 10 15) event
++      final <- runSqlPool (get eventKey) pool
++      Social.socialEventTitle <$> final `shouldBe` Just "Legacy editorial title"
++      (Social.socialEventMetadata =<< final) `shouldSatisfy` maybe False (T.isInfixOf "Keep")
++      destroyAllResources pool
++
+     it "preserves an administrator suppression marker across provider refreshes" $ do
+       event <- case eitherDecode ticketmasterFixture of
+         Left err -> expectationFailure ("Fixture did not decode: " <> err) >> fail "invalid fixture"
+diff --git a/tdf-hq/test/TDF/Social/FollowHandlerSpec.hs b/tdf-hq/test/TDF/Social/FollowHandlerSpec.hs
+index 700536122..7869aa7a8 100644
+--- a/tdf-hq/test/TDF/Social/FollowHandlerSpec.hs
++++ b/tdf-hq/test/TDF/Social/FollowHandlerSpec.hs
+@@ -13,6 +13,8 @@ import Control.Monad.IO.Class (liftIO)
+ import Control.Monad.Logger (runNoLoggingT, runStdoutLoggingT)
+ import Control.Monad.Trans.Reader (ReaderT, runReaderT)
+ import qualified Data.ByteString.Lazy.Char8 as BL8
++import qualified Data.Aeson as Aeson
++import qualified Data.Aeson.KeyMap as AesonKeyMap
+ import Data.Char (chr)
+ import Data.Int (Int64)
+ import Data.List (sort)
+@@ -73,7 +75,8 @@ import TDF.DB (Env (..))
+ import TDF.Models (Party (..), RoleEnum (Admin, Fan))
+ import TDF.Models.SocialEventsModels
+ import TDF.Server.SocialEventsHandlers
+-    ( decodeStoredPromoCodeTierIds
++    ( postgresVisibleImportedMetadataClause
++    , decodeStoredPromoCodeTierIds
+     , followArtistDb
+     , removeSocialEventAssets
+     , resolveExistingPartyIdText
+@@ -307,7 +310,8 @@ spec = describe "social event handler helpers" $ do
+             writeFile uploadSource "png"
+             _ <- runSqlPool
+                 ( do
+-                    insertKey visibleEventKey (seedSocialEvent "3" "Visible event" now)
++                    insertKey visibleEventKey ((seedSocialEvent "3" "Visible event" now)
++                        { socialEventMetadata = Just "{\"isPublic\":true,\"imageUrl\":null,\"_discoveryOwned\":{\"title\":\"Visible event\",\"imageUrl\":null,\"isPublic\":true}}" })
+                     insertKey
+                         suppressedEventKey
+                         (seedSocialEvent "3" "Suppressed event" now)
+@@ -341,6 +345,13 @@ spec = describe "social event handler helpers" $ do
+                 Right response ->
+                     doesFileExist (assetsRoot </> T.unpack (eiuPath response)) `shouldReturn` True
+ 
++            storedAfterUpload <- runSqlPool (get visibleEventKey) pool
++            case storedAfterUpload >>= socialEventMetadata >>= Aeson.decode . BL8.pack . T.unpack of
++                Just (Aeson.Object fields) ->
++                    AesonKeyMap.lookup "_discoveryOwned" fields `shouldBe`
++                        Just (Aeson.object ["title" Aeson..= ("Visible event" :: T.Text), "isPublic" Aeson..= True])
++                _ -> expectationFailure "Upload lost canonical ownership metadata"
++
+             rejected <-
+                 runHandler $
+                     runReaderT
+@@ -715,6 +726,22 @@ spec = describe "social event handler helpers" $ do
+                 _ <- insert (sourceRef "ticketmaster" "maximum-budget-21" maximumBudgetEventKey "on_sale" "https://tickets.example.com/maximum-budget")
+                 _ <- insert (sourceRef "ticketmaster" "minimum-budget-22" minimumBudgetEventKey "on_sale" "https://tickets.example.com/minimum-budget")
+                 _ <- insert (sourceRef "ticketmaster" "duplicate-visibility-23" duplicateVisibilityEventKey "on_sale" "https://tickets.example.com/duplicate-visibility")
++                forM_
++                    [ (24, "{\"isPublic\":true,\"_discoveryOwned\":{\"title\":\"Provider title\",\"isPublic\":true}}")
++                    , (25, "{\"isPublic\":true,\"_discoveryOwned\":null}")
++                    , (26, "{\"isPublic\":true,\"_discoveryOwned\":false}")
++                    , (27, "{\"isPublic\":true,\"_discoveryOwned\":{},\"unexpected\":1}")
++                    , (28, "{\"isPublic\":true,\"_discoveryOwned\":{},\"_discoveryOwned\":{}}")
++                    ]
++                    $ \(rawKey, metadata) -> do
++                        let eventKey = toSqlKey rawKey
++                        insertKey eventKey
++                            ((seedSocialEvent "system:event-discovery" "Ownership boundary" now)
++                                { socialEventMetadata = Just metadata
++                                , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
++                                })
++                        _ <- insert (sourceRef "ticketmaster" ("ownership-" <> T.pack (show rawKey)) eventKey "on_sale" "https://tickets.example.com/ownership")
++                        pure ()
+                 insertKey hiddenTierKey (ticketTier hiddenEventKey "hidden-tier" "Hidden tier")
+                 insertKey publicTierKey (ticketTier publicEventKey "public-tier" "Public tier")
+                 insertKey
+@@ -790,7 +817,7 @@ spec = describe "social event handler helpers" $ do
+         case listResult of
+             Right events -> do
+                 map eventId events
+-                    `shouldMatchList` [Just "14", Just "17", Just "18", Just "21", Just "22"]
++                    `shouldMatchList` [Just "14", Just "17", Just "18", Just "21", Just "22", Just "24"]
+                 case filter ((== Just "14") . eventId) events of
+                     [publicEvent] ->
+                         map eventSourceProvider (maybe [] id (eventSources publicEvent))
+@@ -822,7 +849,7 @@ spec = describe "social event handler helpers" $ do
+                     env
+         case paginatedListResult of
+             Right [event] ->
+-                eventId event `shouldSatisfy` (`elem` [Just "14", Just "17", Just "18", Just "21", Just "22"])
++                eventId event `shouldSatisfy` (`elem` [Just "14", Just "17", Just "18", Just "21", Just "22", Just "24"])
+             Right events ->
+                 expectationFailure
+                     ("Expected filtered and paginated list to contain only the public canonical event, got: " <> show events)
+@@ -854,6 +881,16 @@ spec = describe "social event handler helpers" $ do
+                 expectationFailure
+                     ("Expected the canonical event with an active public source to remain visible, got: " <> show err)
+ 
++        ownershipGetResult <- runHandler $ runReaderT (socialEventGetHandlerFor ordinaryUser "24") env
++        case ownershipGetResult of
++            Right event -> do
++                eventId event `shouldBe` Just "24"
++                BL8.unpack (Aeson.encode event) `shouldNotContain` "_discoveryOwned"
++            Left err -> expectationFailure ("Expected private ownership evidence to permit a public projection: " <> show err)
++        forM_ ["25", "26", "27", "28"] $ \rawKey -> do
++            result <- runHandler $ runReaderT (socialEventGetHandlerFor ordinaryUser rawKey) env
++            assertHiddenEventRoute "invalid internal ownership metadata" result
++
+         malformedGetResult <-
+             runHandler $
+                 runReaderT
+@@ -1627,6 +1664,27 @@ spec = describe "social event handler helpers" $ do
+                     ("Expected non-organizer invitation creation to fail, got: " <> show value)
+ 
+     invitationDatabaseUrl <- runIO (lookupEnv "TDF_INVITATION_TEST_DATABASE_URL")
++    forM_ invitationDatabaseUrl $ \databaseUrl ->
++        it "validates internal ownership in the actual PostgreSQL visibility predicate" $ do
++            pool <- runNoLoggingT $ createPostgresqlPool (BS8.pack databaseUrl) 1
++            forM_
++                [ ("{\"isPublic\":true,\"_discoveryOwned\":{\"title\":\"Source\",\"isPublic\":true}}", True)
++                , ("{\"isPublic\":true,\"_discoveryOwned\":{}}", True)
++                , ("{\"isPublic\":false,\"_discoveryOwned\":{}}", False)
++                , ("{\"isPublic\":true,\"_discoveryOwned\":null}", False)
++                , ("{\"isPublic\":true,\"_discoveryOwned\":false}", False)
++                , ("{\"isPublic\":true,\"_discoveryOwned\":[]}", False)
++                , ("{\"isPublic\":true,\"_discoveryOwned\":{},\"unexpected\":1}", False)
++                , ("{\"isPublic\":true,\"_discoveryOwned\":{},\"_discoveryOwned\":{}}", False)
++                , ("{\"isPublic\":true,\"budgetCents\":1.5,\"_discoveryOwned\":{}}", False)
++                , ("{\"isPublic\":true,\"budgetCents\":9223372036854775807.0,\"_discoveryOwned\":{}}", True)
++                ]
++                $ \(metadata, expected) -> do
++                    rows <- runSqlPool
++                        (rawSql ("SELECT " <> postgresVisibleImportedMetadataClause "metadata"
++                            <> " FROM (VALUES (?::text)) AS candidate(metadata)")
++                            [toPersistValue (metadata :: T.Text)] :: SqlPersistT IO [Single Bool]) pool
++                    map unSingle rows `shouldBe` [expected]
+     case invitationDatabaseUrl of
+         Nothing -> pure ()
+         Just databaseUrl -> it "serializes a stale invitation response behind an organizer transfer in PostgreSQL" $ do

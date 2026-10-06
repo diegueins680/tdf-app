@@ -1,0 +1,23 @@
+ed064a7549f93bdd9239c5781706400c6fad5aa7 2026-09-15T22:52:59-05:00 continuous-improvement-loop[bot] docs(payments): link verified worker safety draft delivery
+5e83368cc9248d310a29d7c8e013bd3835cb9acb 2026-09-15T22:50:11-05:00 continuous-improvement-loop[bot] docs(payments): record worker logging verification and operational limits
+0c795b1b6c97e1267eb6363b8be495249e0136b6 2026-09-15T22:49:16-05:00 continuous-improvement-loop[bot] docs(catalog): refresh verified worker diagnostic inventory
+90156e57c36e034ec97b26d7b88cf4023a9d6284 2026-09-15T22:48:20-05:00 continuous-improvement-loop[bot] merge(payments): preserve webhook example redaction from PR 392
+9e28364fa3d24d6d91fa5d7405723b39ba69c32c 2026-09-15T22:43:04-05:00 continuous-improvement-loop[bot] style(payments): wrap fixed worker diagnostic literals
+2455951713967642de9b429c5a790ceec6cb1fa2 2026-09-15T22:40:50-05:00 diegueins680 docs: replace exposed webhook signing secret with placeholder
+e19de03981b4d91fcd7f017aef14dfef93f16edf 2026-09-15T22:35:14-05:00 continuous-improvement-loop[bot] fix(payments): isolate worker diagnostics from sensitive exceptions
+925b42932a05c980a5d3d46641d20f8ce63cc4cc 2026-09-15T22:21:27-05:00 continuous-improvement-loop[bot] test(payments): expose worker diagnostic failure regressions
+da81213085db2a98dc0fce89bff18ee9280e1b84 2026-09-15T22:04:44-05:00 continuous-improvement-loop[bot] merge(payments): preserve latest main before worker hardening
+3763a407146874a09095e26303a999f5a348afd1 2026-09-15T21:48:37-05:00 Diego Saa Merge pull request #355 from diegueins680/feat/social-formal-audit-20260914
+0cb8d2e15ac024682933485ed122c34826f2ba6f 2026-09-15T12:23:33-05:00 diegueins680 Refresh social catalog evidence after main integration
+5e9887b811885a8719becf031fc0ce372ba23242 2026-09-15T12:13:27-05:00 diegueins680 Merge current main into social formal foundation
+6d5c25c20927f45c7ce80e90d0d5d58b33b206a6 2026-09-15T10:17:00-05:00 diegueins680 fix(formal): independently verify delivery and relationship ownership
+dd18f37c22321a5849e65f3e09f5e3b8e7bd1c37 2026-09-15T09:46:47-05:00 diegueins680 merge: preserve concurrent social preview configuration
+125df16b7fd8c30c2a9fbc255232f880a62ecfa7 2026-09-15T09:45:11-05:00 diegueins680 fix(formal): reject tombstoned targets and stale relationship commands
+45aa887ff6d2a3ec877ce3e75469fc7252b316d3 2026-09-15T09:38:32-05:00 continuous-improvement-loop[bot] [CF-Pages-Skip] chore: keep social review branches out of provider previews
+3151106f2fb183b05e761ee803b2060e5d916ee6 2026-09-15T09:28:47-05:00 diegueins680 fix(formal): require live actors for block commands
+dabe03ca145ab97d253b61f3c5d8e9ce44fab056 2026-09-15T09:17:27-05:00 diegueins680 fix(formal): verify social read authority and replay parameters
+3434d0fd529eb6c2a6ae1ced3244a732ce73e114 2026-09-15T01:33:01-05:00 diegueins680 docs(social): separate historical and repaired model evidence
+59def2b71ada073f4e784ed14af3bc3aa0b2a1a0 2026-09-15T01:25:29-05:00 diegueins680 fix(social): preserve consent ownership and request identity in models
+6e303db394944f1762ebfa6ff00f2fcf6469664c 2026-09-14T23:59:14-05:00 diegueins680 docs(social): distinguish model evidence from pending SQL refinement
+2ef8e81bf156117b93d0b00ee52c29fa34068e82 2026-09-14T23:46:35-05:00 diegueins680 Merge verified CI baseline into social specification branch
+f0311b932a2bee38f452090c0f6459b615b7909b 2026-09-14T22:30:58-05:00 continuous-improvement-loop[bot] docs(social): audit consent boundaries and check executable models

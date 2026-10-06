@@ -1,0 +1,55 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 456,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "f4223a98d82bebfd5b15147795379a6c8cf58fb6",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6kN3Se",
+                "isResolved": false,
+                "isOutdated": false,
+                "path": "tdf-hq/src/TDF/Cron.hs",
+                "line": 331,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Retry open circuits before the following daily slot**\n\nWhen a source reaches three consecutive failures, `markSourceFailure` timestamps it at the end of the failed run and `sourceCircuitOpen` suppresses attempts for 24 hours. Because this change schedules the next attempt exactly 24 hours after the previous slot began, that attempt normally occurs slightly less than 24 hours after the failure timestamp and is skipped; the source is then not retried until the following daily slot, nearly 48 hours after failure. A provider that recovers during the intended 24-hour cooldown therefore remains stale for an extra day; schedule the retry relative to the failure time or otherwise account for the daily cadence.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/456#discussion_r4058822235",
+                      "createdAt": "2026-09-21T01:58:43Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yMVQwMTo1ODo0M1rO8ey2Ww=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0yMVQwMTo1ODo0M1rOpDd0ng=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

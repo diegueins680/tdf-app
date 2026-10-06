@@ -1,0 +1,13 @@
+- generic [ref=e2]:
+  - link "Apple.com" [ref=e4] [cursor=pointer]:
+    - /url: http://www.apple.com
+  - contentinfo [ref=e6]:
+    - navigation "footer" [ref=e7]:
+      - generic [ref=e8]:
+        - text: Copyright ©
+        - generic [ref=e9]: "2026"
+        - text: Apple Inc. All rights reserved.
+      - link "Terms of Service" [ref=e10] [cursor=pointer]:
+        - /url: https://appstoreconnect.apple.com/olympus/v1/terms/ASC
+      - link "Privacy Policy" [ref=e11] [cursor=pointer]:
+        - /url: https://www.apple.com/legal/privacy/

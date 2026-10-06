@@ -1,0 +1,642 @@
+- generic [active] [ref=e1]:
+  - link "Saltar al contenido principal" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e4]:
+    - link "Saltar al contenido principal" [ref=e5] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=e6]:
+      - generic [ref=e8]:
+        - generic [ref=e9]:
+          - link "Ir a TDF" [ref=e10] [cursor=pointer]:
+            - /url: /tdf
+            - img "TDF Records logo"
+          - navigation "Navegación principal" [ref=e11]:
+            - link "Buscar" [ref=e12] [cursor=pointer]:
+              - /url: /buscar
+            - link "TDF" [ref=e13] [cursor=pointer]:
+              - /url: /tdf
+            - link "Servicios" [ref=e14] [cursor=pointer]:
+              - /url: /comercio
+            - link "Comunidad" [ref=e15] [cursor=pointer]:
+              - /url: /fans
+            - link "Tienda" [ref=e16] [cursor=pointer]:
+              - /url: /marketplace
+            - link "Domo" [ref=e17] [cursor=pointer]:
+              - /url: /domo-del-pululahua
+            - link "Reservar" [ref=e18] [cursor=pointer]:
+              - /url: /reservar
+            - link "DJ Booth" [ref=e19] [cursor=pointer]:
+              - /url: /dj-booth
+            - link "Lanzamientos" [ref=e20] [cursor=pointer]:
+              - /url: /records
+        - generic [ref=e21]:
+          - button "Abrir menú de sesión" [ref=e22] [cursor=pointer]:
+            - generic [ref=e23]: D
+          - button "Más opciones" [ref=e24] [cursor=pointer]
+    - main [ref=e27]:
+      - generic [ref=e28]:
+        - generic [ref=e30]:
+          - link "TDF Records wordmark Lanzamientos · Estudio · Sesiones TDF Records · Estudio · Lanzamientos · Sesiones" [ref=e32] [cursor=pointer]:
+            - /url: /records
+            - generic [ref=e33]:
+              - generic [ref=e34]:
+                - img "TDF Records wordmark" [ref=e35]
+                - generic [ref=e36]: Lanzamientos · Estudio · Sesiones
+              - paragraph [ref=e38]: TDF Records · Estudio · Lanzamientos · Sesiones
+          - generic [ref=e39]:
+            - generic [ref=e40]: TDF Records · Estudio y lanzamientos
+            - link "Ir a CRUD de lanzamientos" [ref=e43] [cursor=pointer]:
+              - /url: /label/releases
+              - text: Gestionar lanzamientos
+            - heading "Historias desde el estudio, lanzamientos y sesiones en vivo de TDF en un solo lugar." [level=2] [ref=e44]
+            - 'heading "Descubre lo que suena y se graba en TDF: sesiones recientes, lanzamientos oficiales y videos en vivo desde un solo lugar." [level=6] [ref=e45]'
+            - generic [ref=e46]:
+              - generic [ref=e47]:
+                - link "Reservar sesión" [ref=e48] [cursor=pointer]:
+                  - /url: /reservar
+                - link "Ver lanzamientos" [ref=e49] [cursor=pointer]:
+                  - /url: "#releases"
+                - link "Comunidad" [ref=e50] [cursor=pointer]:
+                  - /url: /fans
+              - paragraph [ref=e51]: Cuéntanos qué quieres grabar mediante el formulario público seguro. El equipo confirmará disponibilidad antes de cualquier pago.
+          - generic [ref=e52]:
+            - generic [ref=e53]:
+              - heading "Videos recientes" [level=6] [ref=e55]
+              - paragraph [ref=e57]: Explora sesiones, DJ sets y momentos del canal TDF Records sin repetir videos ya destacados.
+              - generic [ref=e143]:
+                - img "Miniatura no disponible" [ref=e146]:
+                  - generic [ref=e147]: —
+                - img "Miniatura no disponible" [ref=e150]:
+                  - generic [ref=e151]: —
+                - img "Federico Molinari @ TDF Electro Sessions" [ref=e154]
+            - generic [ref=e58]:
+              - heading "Sesiones en vivo TDF" [level=6] [ref=e60]
+              - generic [ref=e155]:
+                - generic [ref=e156]:
+                  - generic [ref=e157]: Sesión
+                  - paragraph [ref=e159]:
+                    - link "Holger Quiñonez - TDF Live Sessions E05" [ref=e160] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=9387ent0ELc&list=PLORPSiW9rnkjSYKaBSAX-QqoVf_9b29EP
+                - generic [ref=e161]:
+                  - generic [ref=e162]: Sesión
+                  - paragraph [ref=e164]:
+                    - link "Categal - TDF Live Sessions E04" [ref=e165] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=5SpnEELSNqw&list=PLORPSiW9rnkjSYKaBSAX-QqoVf_9b29EP
+            - generic [ref=e61]:
+              - generic [ref=e62]:
+                - heading "Lanzamientos" [level=6] [ref=e63]
+                - link "Ir al CRUD de lanzamientos" [ref=e65] [cursor=pointer]:
+                  - /url: /label/releases
+              - generic [ref=e68]:
+                - paragraph [ref=e166]:
+                  - link "You Dont Know" [ref=e167] [cursor=pointer]:
+                    - /url: https://open.spotify.com/track/30952jHviNHyvoK3eEorNL
+                  - text: · Rizlo
+                - paragraph [ref=e168]:
+                  - link "MYLOBA" [ref=e169] [cursor=pointer]:
+                    - /url: https://open.spotify.com/track/0i0iq0pUAh121udqZqPBwV
+                  - text: · JOSSEFINA, Machaka
+                - paragraph [ref=e170]:
+                  - link "Chapa Urbano" [ref=e171] [cursor=pointer]:
+                    - /url: https://open.spotify.com/track/7DItzZJ9WybzqIogJlFEEZ
+                  - text: · Quimika Soul, Skankafe
+                - paragraph [ref=e172]:
+                  - link "Akuba" [ref=e173] [cursor=pointer]:
+                    - /url: https://open.spotify.com/track/5hIOAt1SfyBdg6FEyH76fQ
+                  - text: · Skankafe, Ali G T Kadjal
+        - generic [ref=e70]:
+          - generic [ref=e71]:
+            - generic [ref=e73]:
+              - generic [ref=e74]: Estudio
+              - heading "Grabaciones recientes" [level=4] [ref=e76]
+            - paragraph [ref=e78]: Videos recientes del canal TDF Records que muestran el ambiente, el sonido y la energía del estudio.
+            - generic [ref=e174]:
+              - generic [ref=e175]:
+                - generic [ref=e177]:
+                  - link "Reproducir Llama Este Pez @ Sereno Moreno Live Set Pt 1" [ref=e178] [cursor=pointer]:
+                    - /url: https://www.youtube.com/watch?v=ooPsIHsikYU
+                    - img "Miniatura no disponible" [ref=e180]:
+                      - paragraph [ref=e181]: Miniatura no disponible
+                  - generic [ref=e182]:
+                    - generic [ref=e183]:
+                      - generic [ref=e184]: Video
+                      - generic [ref=e186]: 12:36
+                    - heading [level=6] [ref=e187]:
+                      - link "Llama Este Pez @ Sereno Moreno Live Set Pt 1" [ref=e188] [cursor=pointer]:
+                        - /url: https://www.youtube.com/watch?v=ooPsIHsikYU
+                    - heading "Llama Este Pez" [level=6] [ref=e189]
+                    - paragraph [ref=e190]: Live set publicado en el canal TDF Records.
+                    - link [ref=e192] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=ooPsIHsikYU
+                - generic [ref=e197]:
+                  - link "Reproducir Llama Este Pez @ Sereno Moreno Live Set Pt 2" [ref=e198] [cursor=pointer]:
+                    - /url: https://www.youtube.com/watch?v=Cb7VGZJ6apo
+                    - img "Miniatura no disponible" [ref=e200]:
+                      - paragraph [ref=e201]: Miniatura no disponible
+                  - generic [ref=e202]:
+                    - generic [ref=e203]:
+                      - generic [ref=e204]: Video
+                      - generic [ref=e206]: 4:54
+                    - heading [level=6] [ref=e207]:
+                      - link "Llama Este Pez @ Sereno Moreno Live Set Pt 2" [ref=e208] [cursor=pointer]:
+                        - /url: https://www.youtube.com/watch?v=Cb7VGZJ6apo
+                    - heading "Llama Este Pez" [level=6] [ref=e209]
+                    - paragraph [ref=e210]: Live set publicado en el canal TDF Records.
+                    - link [ref=e212] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=Cb7VGZJ6apo
+                - generic [ref=e217]:
+                  - link "Reproducir Federico Molinari @ TDF Electro Sessions" [ref=e218] [cursor=pointer]:
+                    - /url: https://www.youtube.com/watch?v=f2BabxM1Pjc
+                    - img "Federico Molinari @ TDF Electro Sessions" [ref=e220]
+                  - generic [ref=e221]:
+                    - generic [ref=e222]:
+                      - generic [ref=e223]: Video
+                      - generic [ref=e225]: 44:15
+                    - heading [level=6] [ref=e226]:
+                      - link "Federico Molinari @ TDF Electro Sessions" [ref=e227] [cursor=pointer]:
+                        - /url: https://www.youtube.com/watch?v=f2BabxM1Pjc
+                    - heading "Federico Molinari" [level=6] [ref=e228]
+                    - paragraph [ref=e229]: DJ set publicado en el canal TDF Records.
+                    - link [ref=e231] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=f2BabxM1Pjc
+                - generic [ref=e236]:
+                  - link "Reproducir Just One Nite @ TDF Electro Sessions" [ref=e237] [cursor=pointer]:
+                    - /url: https://www.youtube.com/watch?v=rRkAeNB0R14
+                    - img "Just One Nite @ TDF Electro Sessions" [ref=e239]
+                  - generic [ref=e240]:
+                    - generic [ref=e241]:
+                      - generic [ref=e242]: Video
+                      - generic [ref=e244]: 56:22
+                    - heading [level=6] [ref=e245]:
+                      - link "Just One Nite @ TDF Electro Sessions" [ref=e246] [cursor=pointer]:
+                        - /url: https://www.youtube.com/watch?v=rRkAeNB0R14
+                    - heading "Just One Nite" [level=6] [ref=e247]
+                    - paragraph [ref=e248]: DJ set publicado en el canal TDF Records.
+                    - link [ref=e250] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=rRkAeNB0R14
+                - generic [ref=e255]:
+                  - link "Reproducir Morex DJ Set @ TDF Electro Sessions" [ref=e256] [cursor=pointer]:
+                    - /url: https://www.youtube.com/watch?v=wZQAlIqllQY
+                    - img "Morex DJ Set @ TDF Electro Sessions" [ref=e258]
+                  - generic [ref=e259]:
+                    - generic [ref=e260]:
+                      - generic [ref=e261]: Video
+                      - generic [ref=e263]: 1:02:22
+                    - heading [level=6] [ref=e264]:
+                      - link "Morex DJ Set @ TDF Electro Sessions" [ref=e265] [cursor=pointer]:
+                        - /url: https://www.youtube.com/watch?v=wZQAlIqllQY
+                    - heading "Morex" [level=6] [ref=e266]
+                    - paragraph [ref=e267]: DJ set publicado en el canal TDF Records.
+                    - link [ref=e269] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=wZQAlIqllQY
+                - generic [ref=e274]:
+                  - 'link "Reproducir Diego Saá Live Set @ Rio Hostel Buritaca | 2h30 Electro/Minimal House | TDF Sessions #spacetrip" [ref=e275] [cursor=pointer]':
+                    - /url: https://www.youtube.com/watch?v=Re3lL-myniY
+                    - 'img "Diego Saá Live Set @ Rio Hostel Buritaca | 2h30 Electro/Minimal House | TDF Sessions #spacetrip" [ref=e277]'
+                  - generic [ref=e278]:
+                    - generic [ref=e279]:
+                      - generic [ref=e280]: Video
+                      - generic [ref=e282]: 2:31:02
+                    - heading [level=6] [ref=e283]:
+                      - 'link "Diego Saá Live Set @ Rio Hostel Buritaca | 2h30 Electro/Minimal House | TDF Sessions #spacetrip" [ref=e284] [cursor=pointer]':
+                        - /url: https://www.youtube.com/watch?v=Re3lL-myniY
+                    - heading "Diego Saá" [level=6] [ref=e285]
+                    - paragraph [ref=e286]: Live set publicado en el canal TDF Records.
+                    - link [ref=e288] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=Re3lL-myniY
+                - generic [ref=e293]:
+                  - link "Reproducir Diego Saá Live @ Domo Pululahua | Electro-Micro-Minimal House – 44 min Impro Set" [ref=e294] [cursor=pointer]:
+                    - /url: https://www.youtube.com/watch?v=YXBDWshbw18
+                    - generic [ref=e295]:
+                      - generic "Cargando miniatura" [ref=e296]
+                      - img "Diego Saá Live @ Domo Pululahua | Electro-Micro-Minimal House – 44 min Impro Set" [ref=e297]
+                  - generic [ref=e298]:
+                    - generic [ref=e299]:
+                      - generic [ref=e300]: Video
+                      - generic [ref=e302]: 44:24
+                    - heading [level=6] [ref=e303]:
+                      - link "Diego Saá Live @ Domo Pululahua | Electro-Micro-Minimal House – 44 min Impro Set" [ref=e304] [cursor=pointer]:
+                        - /url: https://www.youtube.com/watch?v=YXBDWshbw18
+                    - heading "Diego Saá" [level=6] [ref=e305]
+                    - paragraph [ref=e306]: Live set publicado en el canal TDF Records.
+                    - link [ref=e308] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=YXBDWshbw18
+                - generic [ref=e313]:
+                  - link "Reproducir Diego Saá @ TDF Electro Sessions" [ref=e314] [cursor=pointer]:
+                    - /url: https://www.youtube.com/watch?v=YDODXZ4lyRk
+                    - generic [ref=e315]:
+                      - generic "Cargando miniatura" [ref=e316]
+                      - img "Diego Saá @ TDF Electro Sessions" [ref=e317]
+                  - generic [ref=e318]:
+                    - generic [ref=e319]:
+                      - generic [ref=e320]: Video
+                      - generic [ref=e322]: 48:09
+                    - heading [level=6] [ref=e323]:
+                      - link "Diego Saá @ TDF Electro Sessions" [ref=e324] [cursor=pointer]:
+                        - /url: https://www.youtube.com/watch?v=YDODXZ4lyRk
+                    - heading "Diego Saá" [level=6] [ref=e325]
+                    - paragraph [ref=e326]: Live set publicado en el canal TDF Records.
+                    - link [ref=e328] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=YDODXZ4lyRk
+                - generic [ref=e333]:
+                  - link "Reproducir Everaldo Vasco @ TDF Sessions" [ref=e334] [cursor=pointer]:
+                    - /url: https://www.youtube.com/watch?v=1hKWOram3aw
+                    - generic [ref=e335]:
+                      - generic "Cargando miniatura" [ref=e336]
+                      - img "Everaldo Vasco @ TDF Sessions" [ref=e337]
+                  - generic [ref=e338]:
+                    - generic [ref=e339]:
+                      - generic [ref=e340]: Video
+                      - generic [ref=e342]: 1:26:19
+                    - heading [level=6] [ref=e343]:
+                      - link "Everaldo Vasco @ TDF Sessions" [ref=e344] [cursor=pointer]:
+                        - /url: https://www.youtube.com/watch?v=1hKWOram3aw
+                    - heading "Everaldo Vasco" [level=6] [ref=e345]
+                    - paragraph [ref=e346]: Sesión publicada en el canal TDF Records.
+                    - link [ref=e348] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=1hKWOram3aw
+                - generic [ref=e353]:
+                  - link "Reproducir COHEMA @ TDF Sessions" [ref=e354] [cursor=pointer]:
+                    - /url: https://www.youtube.com/watch?v=xqeey8SrH8M
+                    - generic [ref=e355]:
+                      - generic "Cargando miniatura" [ref=e356]
+                      - img "COHEMA @ TDF Sessions" [ref=e357]
+                  - generic [ref=e358]:
+                    - generic [ref=e359]:
+                      - generic [ref=e360]: Video
+                      - generic [ref=e362]: 1:00:00
+                    - heading [level=6] [ref=e363]:
+                      - link "COHEMA @ TDF Sessions" [ref=e364] [cursor=pointer]:
+                        - /url: https://www.youtube.com/watch?v=xqeey8SrH8M
+                    - heading "COHEMA" [level=6] [ref=e365]
+                    - paragraph [ref=e366]: Sesión publicada en el canal TDF Records.
+                    - link [ref=e368] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=xqeey8SrH8M
+              - generic [ref=e374]:
+                - paragraph [ref=e375]: Por página
+                - generic [ref=e376]:
+                  - combobox "Por página 10" [ref=e377] [cursor=pointer]: "10"
+                  - textbox: "10"
+                - paragraph [ref=e378]: 1–10 de 33 grabaciones
+                - generic [ref=e379]:
+                  - button "Ir a la página anterior" [disabled]
+                  - button "Ir a la página siguiente" [ref=e380] [cursor=pointer]
+          - generic [ref=e84]:
+            - generic [ref=e85]:
+              - generic [ref=e86]:
+                - generic [ref=e87]: Sello
+                - heading "Lanzamientos TDF Records" [level=4] [ref=e89]
+              - link "Gestionar lanzamientos" [ref=e92] [cursor=pointer]:
+                - /url: /label/releases
+            - paragraph [ref=e94]: Escucha canciones del playlist RELEASES by TDF y salta directo a Spotify.
+            - generic [ref=e383]:
+              - generic [ref=e384]:
+                - generic [ref=e388]:
+                  - generic [ref=e389]:
+                    - generic [ref=e390]: Canción
+                    - generic [ref=e392]: 2:27
+                  - heading [level=6] [ref=e393]:
+                    - link "You Dont Know" [ref=e394] [cursor=pointer]:
+                      - /url: https://open.spotify.com/track/30952jHviNHyvoK3eEorNL
+                  - heading "Rizlo" [level=6] [ref=e395]
+                  - link "Spotify" [ref=e397] [cursor=pointer]:
+                    - /url: https://open.spotify.com/track/30952jHviNHyvoK3eEorNL
+                - generic [ref=e401]:
+                  - generic [ref=e402]:
+                    - generic [ref=e403]: Canción
+                    - generic [ref=e405]: 3:46
+                  - heading [level=6] [ref=e406]:
+                    - link "MYLOBA" [ref=e407] [cursor=pointer]:
+                      - /url: https://open.spotify.com/track/0i0iq0pUAh121udqZqPBwV
+                  - heading "JOSSEFINA, Machaka" [level=6] [ref=e408]
+                  - link "Spotify" [ref=e410] [cursor=pointer]:
+                    - /url: https://open.spotify.com/track/0i0iq0pUAh121udqZqPBwV
+                - generic [ref=e414]:
+                  - generic [ref=e415]:
+                    - generic [ref=e416]: Canción
+                    - generic [ref=e418]: 3:54
+                  - heading [level=6] [ref=e419]:
+                    - link "Chapa Urbano" [ref=e420] [cursor=pointer]:
+                      - /url: https://open.spotify.com/track/7DItzZJ9WybzqIogJlFEEZ
+                  - heading "Quimika Soul, Skankafe" [level=6] [ref=e421]
+                  - link "Spotify" [ref=e423] [cursor=pointer]:
+                    - /url: https://open.spotify.com/track/7DItzZJ9WybzqIogJlFEEZ
+                - generic [ref=e427]:
+                  - generic [ref=e428]:
+                    - generic [ref=e429]: Canción
+                    - generic [ref=e431]: 4:00
+                  - heading [level=6] [ref=e432]:
+                    - link "Akuba" [ref=e433] [cursor=pointer]:
+                      - /url: https://open.spotify.com/track/5hIOAt1SfyBdg6FEyH76fQ
+                  - heading "Skankafe, Ali G T Kadjal" [level=6] [ref=e434]
+                  - link "Spotify" [ref=e436] [cursor=pointer]:
+                    - /url: https://open.spotify.com/track/5hIOAt1SfyBdg6FEyH76fQ
+                - generic [ref=e440]:
+                  - generic [ref=e441]:
+                    - generic [ref=e442]: Canción
+                    - generic [ref=e444]: 2:54
+                  - heading [level=6] [ref=e445]:
+                    - link "Shadowboxing" [ref=e446] [cursor=pointer]:
+                      - /url: https://open.spotify.com/track/2wyXTmJfLY9wQW6epTbl9c
+                  - heading "HNO" [level=6] [ref=e447]
+                  - link "Spotify" [ref=e449] [cursor=pointer]:
+                    - /url: https://open.spotify.com/track/2wyXTmJfLY9wQW6epTbl9c
+                - generic [ref=e453]:
+                  - generic [ref=e454]:
+                    - generic [ref=e455]: Canción
+                    - generic [ref=e457]: 4:23
+                  - heading [level=6] [ref=e458]:
+                    - link "Parverso" [ref=e459] [cursor=pointer]:
+                      - /url: https://open.spotify.com/track/13enVmpdDijFCOhhQ1dDj7
+                  - heading "HNO" [level=6] [ref=e460]
+                  - link "Spotify" [ref=e462] [cursor=pointer]:
+                    - /url: https://open.spotify.com/track/13enVmpdDijFCOhhQ1dDj7
+                - generic [ref=e466]:
+                  - generic [ref=e467]:
+                    - generic [ref=e468]: Canción
+                    - generic [ref=e470]: 4:05
+                  - heading [level=6] [ref=e471]:
+                    - link "DMT" [ref=e472] [cursor=pointer]:
+                      - /url: https://open.spotify.com/track/1CZYNHMlrxZg1Cxp8mlYDJ
+                  - heading "Skankafe" [level=6] [ref=e473]
+                  - link "Spotify" [ref=e475] [cursor=pointer]:
+                    - /url: https://open.spotify.com/track/1CZYNHMlrxZg1Cxp8mlYDJ
+                - generic [ref=e479]:
+                  - generic [ref=e480]:
+                    - generic [ref=e481]: Canción
+                    - generic [ref=e483]: 3:46
+                  - heading [level=6] [ref=e484]:
+                    - link "Dubkuba - Akuba Dub" [ref=e485] [cursor=pointer]:
+                      - /url: https://open.spotify.com/track/7xay41OfiKO1H5zuRbSVYe
+                  - heading "Skankafe" [level=6] [ref=e486]
+                  - link "Spotify" [ref=e488] [cursor=pointer]:
+                    - /url: https://open.spotify.com/track/7xay41OfiKO1H5zuRbSVYe
+                - generic [ref=e492]:
+                  - generic [ref=e493]:
+                    - generic [ref=e494]: Canción
+                    - generic [ref=e496]: 3:14
+                  - heading [level=6] [ref=e497]:
+                    - link "Soltar" [ref=e498] [cursor=pointer]:
+                      - /url: https://open.spotify.com/track/0vAzXcWC5Ydovb922U3VI2
+                  - heading "Quimika Soul, Paula García" [level=6] [ref=e499]
+                  - link "Spotify" [ref=e501] [cursor=pointer]:
+                    - /url: https://open.spotify.com/track/0vAzXcWC5Ydovb922U3VI2
+                - generic [ref=e505]:
+                  - generic [ref=e506]:
+                    - generic [ref=e507]: Canción
+                    - generic [ref=e509]: 3:11
+                  - heading [level=6] [ref=e510]:
+                    - link "Escamas de Plasma" [ref=e511] [cursor=pointer]:
+                      - /url: https://open.spotify.com/track/70BHut1QVhq82Cd4BJRUjv
+                  - heading "Llama Este Pez" [level=6] [ref=e512]
+                  - link "Spotify" [ref=e514] [cursor=pointer]:
+                    - /url: https://open.spotify.com/track/70BHut1QVhq82Cd4BJRUjv
+              - generic [ref=e517]:
+                - paragraph [ref=e518]: Por página
+                - generic [ref=e519]:
+                  - combobox "Por página 10" [ref=e520] [cursor=pointer]: "10"
+                  - textbox: "10"
+                - paragraph [ref=e521]: 1–10 de 67 releases
+                - generic [ref=e522]:
+                  - button "Ir a la página anterior" [disabled]
+                  - button "Ir a la página siguiente" [ref=e523] [cursor=pointer]
+          - generic [ref=e100]:
+            - generic [ref=e102]:
+              - generic [ref=e103]: YouTube
+              - heading "Sesiones en vivo TDF" [level=4] [ref=e105]
+            - paragraph [ref=e107]: Sesiones en vivo, tomas especiales y performances para descubrir el catálogo en movimiento.
+            - generic [ref=e527]:
+              - generic [ref=e529]:
+                - iframe [ref=e531]:
+                  - generic [ref=f3e1]:
+                    - generic "Reproductor de video de YouTube" [ref=f3e3]
+                    - generic [ref=f3e5]:
+                      - generic:
+                        - generic:
+                          - generic [ref=f3e6] [cursor=pointer]
+                          - button "Reproducir video" [ref=f3e10] [cursor=pointer]
+                          - button "Ocultar controles del reproductor" [ref=f3e12] [cursor=pointer]
+                          - generic [ref=f3e14]:
+                            - generic [ref=f3e19]:
+                              - generic [ref=f3e20]:
+                                - link "Holger Quiñonez - TDF Live Sessions E05" [ref=f3e21] [cursor=pointer]:
+                                  - /url: https://www.youtube.com/watch?v=9387ent0ELc
+                                - link "TDF Records" [ref=f3e22] [cursor=pointer]:
+                                  - /url: /channel/UCx9Jpaw_XDrMtIdzWYlU51g
+                              - generic [ref=f3e24]:
+                                - button [ref=f3e25] [cursor=pointer]
+                                - generic [ref=f3e27]:
+                                  - generic: TDF Records
+                                  - generic: 1.42 K suscriptores
+                            - generic [ref=f3e28]:
+                              - generic [ref=f3e29]:
+                                - button "Compartir" [ref=f3e31] [cursor=pointer]
+                                - button "Ver más tarde" [ref=f3e40] [cursor=pointer]
+                              - link "Mirar en YouTube" [ref=f3e51] [cursor=pointer]:
+                                - /url: https://www.youtube.com/watch?v=9387ent0ELc
+                                - generic [ref=f3e52]: Mirar en
+                - generic [ref=e532]:
+                  - generic [ref=e533]:
+                    - generic [ref=e534]: Sesión en vivo
+                    - generic [ref=e536]: 5:56
+                  - heading [level=6] [ref=e537]:
+                    - link "Holger Quiñonez - TDF Live Sessions E05" [ref=e538] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=9387ent0ELc&list=PLORPSiW9rnkjSYKaBSAX-QqoVf_9b29EP
+                  - heading "Holger Quiñonez" [level=6] [ref=e539]
+                  - paragraph [ref=e540]: Sesión en vivo de Holger Quiñonez para TDF Live Sessions.
+              - generic [ref=e542]:
+                - iframe [ref=e544]:
+                  - generic [ref=f4e1]:
+                    - generic "Reproductor de video de YouTube" [ref=f4e3]
+                    - generic [ref=f4e5]:
+                      - generic:
+                        - generic:
+                          - generic [ref=f4e6] [cursor=pointer]
+                          - button "Reproducir video" [ref=f4e10] [cursor=pointer]
+                          - button "Ocultar controles del reproductor" [ref=f4e12] [cursor=pointer]
+                          - generic [ref=f4e14]:
+                            - generic [ref=f4e19]:
+                              - generic [ref=f4e20]:
+                                - link "Categal - TDF Live Sessions E04" [ref=f4e21] [cursor=pointer]:
+                                  - /url: https://www.youtube.com/watch?v=5SpnEELSNqw
+                                - link "TDF Records" [ref=f4e22] [cursor=pointer]:
+                                  - /url: /channel/UCx9Jpaw_XDrMtIdzWYlU51g
+                              - generic [ref=f4e24]:
+                                - button [ref=f4e25] [cursor=pointer]
+                                - generic [ref=f4e27]:
+                                  - generic: TDF Records
+                                  - generic: 1.42 K suscriptores
+                            - generic [ref=f4e28]:
+                              - generic [ref=f4e29]:
+                                - button "Compartir" [ref=f4e31] [cursor=pointer]
+                                - button "Ver más tarde" [ref=f4e40] [cursor=pointer]
+                              - link "Mirar en YouTube" [ref=f4e51] [cursor=pointer]:
+                                - /url: https://www.youtube.com/watch?v=5SpnEELSNqw
+                                - generic [ref=f4e52]: Mirar en
+                - generic [ref=e545]:
+                  - generic [ref=e546]:
+                    - generic [ref=e547]: Sesión en vivo
+                    - generic [ref=e549]: 18:47
+                  - heading [level=6] [ref=e550]:
+                    - link "Categal - TDF Live Sessions E04" [ref=e551] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=5SpnEELSNqw&list=PLORPSiW9rnkjSYKaBSAX-QqoVf_9b29EP
+                  - heading "Categal" [level=6] [ref=e552]
+                  - paragraph [ref=e553]: Sesión en vivo de Categal para TDF Live Sessions.
+              - generic [ref=e555]:
+                - iframe [ref=e557]:
+                  - generic [ref=f5e1]:
+                    - generic "Reproductor de video de YouTube" [ref=f5e3]
+                    - generic [ref=f5e5]:
+                      - generic:
+                        - generic:
+                          - generic [ref=f5e6] [cursor=pointer]
+                          - button "Reproducir video" [ref=f5e10] [cursor=pointer]
+                          - button "Ocultar controles del reproductor" [ref=f5e12] [cursor=pointer]
+                          - generic [ref=f5e14]:
+                            - generic [ref=f5e19]:
+                              - generic [ref=f5e20]:
+                                - link "Los Morrison - TDF Live Sessions E03" [ref=f5e21] [cursor=pointer]:
+                                  - /url: https://www.youtube.com/watch?v=97PnHRn8IGs
+                                - link "TDF Records" [ref=f5e22] [cursor=pointer]:
+                                  - /url: /channel/UCx9Jpaw_XDrMtIdzWYlU51g
+                              - generic [ref=f5e24]:
+                                - button [ref=f5e25] [cursor=pointer]
+                                - generic [ref=f5e27]:
+                                  - generic: TDF Records
+                                  - generic: 1.42 K suscriptores
+                            - generic [ref=f5e28]:
+                              - generic [ref=f5e29]:
+                                - button "Compartir" [ref=f5e31] [cursor=pointer]
+                                - button "Ver más tarde" [ref=f5e40] [cursor=pointer]
+                              - link "Mirar en YouTube" [ref=f5e51] [cursor=pointer]:
+                                - /url: https://www.youtube.com/watch?v=97PnHRn8IGs
+                                - generic [ref=f5e52]: Mirar en
+                - generic [ref=e558]:
+                  - generic [ref=e559]:
+                    - generic [ref=e560]: Sesión en vivo
+                    - generic [ref=e562]: 33:19
+                  - heading [level=6] [ref=e563]:
+                    - link "Los Morrison - TDF Live Sessions E03" [ref=e564] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=97PnHRn8IGs&list=PLORPSiW9rnkjSYKaBSAX-QqoVf_9b29EP
+                  - heading "Los Morrison" [level=6] [ref=e565]
+                  - paragraph [ref=e566]: Sesión en vivo de Los Morrison para TDF Live Sessions.
+              - generic [ref=e568]:
+                - iframe [ref=e570]:
+                  - generic [ref=f6e1]:
+                    - generic "Reproductor de video de YouTube" [ref=f6e3]
+                    - generic [ref=f6e5]:
+                      - generic:
+                        - generic:
+                          - generic [ref=f6e6] [cursor=pointer]
+                          - button "Reproducir video" [ref=f6e10] [cursor=pointer]
+                          - button "Ocultar controles del reproductor" [ref=f6e12] [cursor=pointer]
+                          - generic [ref=f6e14]:
+                            - generic [ref=f6e19]:
+                              - generic [ref=f6e20]:
+                                - link "Barrelshots - TDF Live Sessions E02" [ref=f6e21] [cursor=pointer]:
+                                  - /url: https://www.youtube.com/watch?v=e24-id_Ix8s
+                                - link "TDF Records" [ref=f6e22] [cursor=pointer]:
+                                  - /url: /channel/UCx9Jpaw_XDrMtIdzWYlU51g
+                              - generic [ref=f6e24]:
+                                - button [ref=f6e25] [cursor=pointer]
+                                - generic [ref=f6e27]:
+                                  - generic: TDF Records
+                                  - generic: 1.42 K suscriptores
+                            - generic [ref=f6e28]:
+                              - generic [ref=f6e29]:
+                                - button "Compartir" [ref=f6e31] [cursor=pointer]
+                                - button "Ver más tarde" [ref=f6e40] [cursor=pointer]
+                              - link "Mirar en YouTube" [ref=f6e51] [cursor=pointer]:
+                                - /url: https://www.youtube.com/watch?v=e24-id_Ix8s
+                                - generic [ref=f6e52]: Mirar en
+                - generic [ref=e571]:
+                  - generic [ref=e572]:
+                    - generic [ref=e573]: Sesión en vivo
+                    - generic [ref=e575]: 11:36
+                  - heading [level=6] [ref=e576]:
+                    - link "Barrelshots - TDF Live Sessions E02" [ref=e577] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=e24-id_Ix8s&list=PLORPSiW9rnkjSYKaBSAX-QqoVf_9b29EP
+                  - heading "Barrelshots" [level=6] [ref=e578]
+                  - paragraph [ref=e579]: Sesión en vivo de Barrelshots para TDF Live Sessions.
+              - generic [ref=e581]:
+                - iframe [ref=e583]:
+                  - generic [ref=f7e1]:
+                    - generic "Reproductor de video de YouTube" [ref=f7e3]
+                    - generic [ref=f7e5]:
+                      - generic:
+                        - generic:
+                          - generic [ref=f7e6] [cursor=pointer]
+                          - button "Reproducir video" [ref=f7e10] [cursor=pointer]
+                          - button "Ocultar controles del reproductor" [ref=f7e12] [cursor=pointer]
+                          - generic [ref=f7e14]:
+                            - generic [ref=f7e19]:
+                              - generic [ref=f7e20]:
+                                - link "Machaka - TDF Live Sessions E01" [ref=f7e21] [cursor=pointer]:
+                                  - /url: https://www.youtube.com/watch?v=z7RpdrL4P4A
+                                - link "TDF Records" [ref=f7e22] [cursor=pointer]:
+                                  - /url: /channel/UCx9Jpaw_XDrMtIdzWYlU51g
+                              - generic [ref=f7e24]:
+                                - button [ref=f7e25] [cursor=pointer]
+                                - generic [ref=f7e27]:
+                                  - generic: TDF Records
+                                  - generic: 1.42 K suscriptores
+                            - generic [ref=f7e28]:
+                              - generic [ref=f7e29]:
+                                - button "Compartir" [ref=f7e31] [cursor=pointer]
+                                - button "Ver más tarde" [ref=f7e40] [cursor=pointer]
+                              - link "Mirar en YouTube" [ref=f7e51] [cursor=pointer]:
+                                - /url: https://www.youtube.com/watch?v=z7RpdrL4P4A
+                                - generic [ref=f7e52]: Mirar en
+                - generic [ref=e584]:
+                  - generic [ref=e585]:
+                    - generic [ref=e586]: Sesión en vivo
+                    - generic [ref=e588]: 14:58
+                  - heading [level=6] [ref=e589]:
+                    - link "Machaka - TDF Live Sessions E01" [ref=e590] [cursor=pointer]:
+                      - /url: https://www.youtube.com/watch?v=z7RpdrL4P4A&list=PLORPSiW9rnkjSYKaBSAX-QqoVf_9b29EP
+                  - heading "Machaka" [level=6] [ref=e591]
+                  - paragraph [ref=e592]: Sesión en vivo de Machaka para TDF Live Sessions.
+    - contentinfo [ref=e113]:
+      - generic [ref=e115]:
+        - generic [ref=e116]:
+          - heading "TDF Records" [level=6] [ref=e117]
+          - paragraph [ref=e118]: Si te atoras, te dejamos una salida clara desde esta página para que sigas avanzando.
+          - generic [ref=e119]:
+            - link "Reservar estudio" [ref=e120] [cursor=pointer]:
+              - /url: /reservar
+            - link "Abrir comunidad" [ref=e121] [cursor=pointer]:
+              - /url: /fans
+        - navigation "Explorar TDF" [ref=e122]:
+          - generic [ref=e123]: Explorar
+          - generic [ref=e124]:
+            - link "Buscar" [ref=e125] [cursor=pointer]:
+              - /url: /buscar
+            - link "TDF" [ref=e126] [cursor=pointer]:
+              - /url: /tdf
+            - link "Servicios" [ref=e127] [cursor=pointer]:
+              - /url: /comercio
+            - link "Comunidad" [ref=e128] [cursor=pointer]:
+              - /url: /fans
+            - link "Tienda" [ref=e129] [cursor=pointer]:
+              - /url: /marketplace
+            - link "Domo" [ref=e130] [cursor=pointer]:
+              - /url: /domo-del-pululahua
+            - link "Reservar" [ref=e131] [cursor=pointer]:
+              - /url: /reservar
+            - link "DJ Booth" [ref=e132] [cursor=pointer]:
+              - /url: /dj-booth
+            - link "Lanzamientos" [ref=e133] [cursor=pointer]:
+              - /url: /records
+            - link "Sugerencias" [ref=e134] [cursor=pointer]:
+              - /url: /feedback
+            - link "Donar" [ref=e135] [cursor=pointer]:
+              - /url: /donar
+        - generic [ref=e136]:
+          - generic [ref=e137]: Gestión de mensajes
+          - generic [ref=e138]:
+            - link "Consentimiento WhatsApp" [ref=e139] [cursor=pointer]:
+              - /url: /whatsapp/consentimiento
+            - link "Confirmación WhatsApp" [ref=e140] [cursor=pointer]:
+              - /url: /whatsapp/ok
+        - link "Ir a login" [ref=e142] [cursor=pointer]:
+          - /url: /login?redirect=%2Frecords%23releases

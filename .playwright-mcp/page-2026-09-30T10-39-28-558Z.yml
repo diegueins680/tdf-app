@@ -1,0 +1,336 @@
+- generic [ref=f153e835]:
+  - generic [ref=f153e838]:
+    - link [ref=f153e843] [cursor=pointer]:
+      - /url: /
+      - img "Instagram" [ref=f153e848]
+    - generic [ref=f153e851]:
+      - link [ref=f153e856] [cursor=pointer]:
+        - /url: /
+        - img "Home" [ref=f153e861]
+      - link [ref=f153e866] [cursor=pointer]:
+        - /url: /reels/
+        - img "Reels" [ref=f153e871]
+      - link [ref=f153e878] [cursor=pointer]:
+        - /url: /direct/t/116189779777793
+        - generic [ref=f153e881]:
+          - img "Messages" [ref=f153e883]
+          - generic "Direct messaging - 8 new notifications link" [ref=f153e885]: "8"
+      - link [ref=f153e891] [cursor=pointer]:
+        - /url: /explore/
+        - img "Search" [ref=f153e896]
+      - link [ref=f153e903] [cursor=pointer]:
+        - /url: "#"
+        - img "Notifications" [ref=f153e908]
+      - link [ref=f153e914] [cursor=pointer]:
+        - /url: "#"
+        - img "New post" [ref=f153e919]
+      - link [ref=f153e924] [cursor=pointer]:
+        - /url: "#"
+        - img "Professional dashboard" [ref=f153e929]
+      - link [ref=f153e936] [cursor=pointer]:
+        - /url: /tdf.records.label/
+        - link [ref=f153e941]:
+          - img "tdf.records.label's profile picture" [ref=f153e942]
+    - generic [ref=f153e943]:
+      - link [ref=f153e946] [cursor=pointer]:
+        - /url: "#"
+        - img "Settings" [ref=f153e951]
+      - link [ref=f153e954] [cursor=pointer]:
+        - /url: "#"
+        - img "Also from Meta" [ref=f153e959]
+  - main [ref=f153e963]:
+    - generic [ref=f153e968]:
+      - navigation "Thread list" [ref=f153e969]:
+        - generic [ref=f153e970]:
+          - generic [ref=f153e971]:
+            - button [ref=f153e972] [cursor=pointer]:
+              - heading "tdf.records.label" [level=2] [ref=f153e974]
+              - img "Verified" [ref=f153e977]
+              - img "Down chevron icon" [ref=f153e980]
+            - generic [ref=f153e983]:
+              - button [ref=f153e984] [cursor=pointer]:
+                - img "More options" [ref=f153e986]
+              - button [ref=f153e990] [cursor=pointer]:
+                - img "New message" [ref=f153e992]
+          - tablist [ref=f153e997]:
+            - tab "Primary" [selected] [ref=f153e998] [cursor=pointer]
+            - tab "General" [ref=f153e1001] [cursor=pointer]
+            - tab "From ads" [ref=f153e1004] [cursor=pointer]
+            - tab "Request (1)" [ref=f153e1008] [cursor=pointer]
+          - generic [ref=f153e1014]:
+            - img "Search" [ref=f153e1016]
+            - textbox "Search" [ref=f153e1019]
+          - generic [ref=f153e1020]:
+            - generic [ref=f153e1022]:
+              - list [ref=f153e1024]:
+                - listitem [ref=f153e1025]
+                - listitem [ref=f153e1026]:
+                  - button "Current obsession... Your note" [ref=f153e1028] [cursor=pointer]:
+                    - generic [ref=f153e1029]:
+                      - generic [ref=f153e1030]: Current obsession...
+                      - generic [ref=f153e1036]:
+                        - link [ref=f153e1038]
+                        - generic [ref=f153e1039]: Your note
+                - listitem [ref=f153e1041]:
+                  - button "No me vuelvan a dejar sola con tijeras agamycreamy's profile picture Dany Cadena" [ref=f153e1044] [cursor=pointer]:
+                    - generic [ref=f153e1045]:
+                      - generic [ref=f153e1046]: No me vuelvan a dejar sola con tijeras
+                      - generic [ref=f153e1053]:
+                        - link [ref=f153e1055]:
+                          - img "agamycreamy's profile picture" [ref=f153e1056]
+                        - generic [ref=f153e1057]: Dany Cadena
+                - listitem [ref=f153e1060]:
+                  - button "Quien a la cacería del zorro? jay_mie_ramos's profile picture Jamie Ramos" [ref=f153e1063] [cursor=pointer]:
+                    - generic [ref=f153e1064]:
+                      - generic [ref=f153e1065]: Quien a la cacería del zorro?
+                      - generic [ref=f153e1072]:
+                        - link [ref=f153e1074]:
+                          - img "jay_mie_ramos's profile picture" [ref=f153e1075]
+                        - generic [ref=f153e1076]: Jamie Ramos
+                - listitem [ref=f153e1079]:
+                  - button "necesito río rojelioelrojorojas's profile picture Andrés Martín Arauz" [ref=f153e1082] [cursor=pointer]:
+                    - generic [ref=f153e1083]:
+                      - generic [ref=f153e1084]: necesito río
+                      - generic [ref=f153e1091]:
+                        - link [ref=f153e1093]:
+                          - img "rojelioelrojorojas's profile picture" [ref=f153e1094]
+                        - generic [ref=f153e1095]: Andrés Martín Arauz
+                - listitem [ref=f153e1098]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Te Voy A Tomar Vico C giann__fer's profile picture Gian" [ref=f153e1101] [cursor=pointer]:
+                    - generic [ref=f153e1102]:
+                      - generic [ref=f153e1108]:
+                        - generic [ref=f153e1109]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f153e1111]
+                          - generic [ref=f153e1115]: Te Voy A Tomar
+                        - generic [ref=f153e1116]: Vico C
+                      - generic [ref=f153e1117]:
+                        - link [ref=f153e1119]:
+                          - img "giann__fer's profile picture" [ref=f153e1120]
+                        - generic [ref=f153e1121]: Gian
+                - listitem [ref=f153e1124]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Ven a mi Spiritual 🫠 soley.fino's profile picture Soley Fino" [ref=f153e1127] [cursor=pointer]:
+                    - generic [ref=f153e1128]:
+                      - generic [ref=f153e1134]:
+                        - generic [ref=f153e1135]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f153e1137]
+                          - generic [ref=f153e1141]: Ven a mi
+                        - generic [ref=f153e1142]: Spiritual
+                        - generic [ref=f153e1143]: 🫠
+                      - generic [ref=f153e1144]:
+                        - link [ref=f153e1146]:
+                          - img "soley.fino's profile picture" [ref=f153e1147]
+                        - generic [ref=f153e1148]: Soley Fino
+                - listitem [ref=f153e1151]:
+                  - button "nunca vi a los flix en vivo😭 roma.mpeg's profile picture roma ☆" [ref=f153e1154] [cursor=pointer]:
+                    - generic [ref=f153e1155]:
+                      - generic [ref=f153e1156]: nunca vi a los flix en vivo😭
+                      - generic [ref=f153e1163]:
+                        - link [ref=f153e1165]:
+                          - img "roma.mpeg's profile picture" [ref=f153e1166]
+                        - generic [ref=f153e1167]: roma ☆
+                - listitem [ref=f153e1170]:
+                  - button "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner Bla Bla Bla Miranda Santizo dannygallardo9643's profile picture Daniela Gallardo" [ref=f153e1173] [cursor=pointer]:
+                    - generic [ref=f153e1174]:
+                      - generic [ref=f153e1180]:
+                        - generic [ref=f153e1181]:
+                          - img "Icon depicting sound waves with three vertical bars changing in height in a pulsating manner" [ref=f153e1183]
+                          - generic [ref=f153e1187]: Bla Bla Bla
+                        - generic [ref=f153e1188]: Miranda Santizo
+                      - generic [ref=f153e1189]:
+                        - link [ref=f153e1191]:
+                          - img "dannygallardo9643's profile picture" [ref=f153e1192]
+                        - generic [ref=f153e1193]: Daniela Gallardo
+                - listitem [ref=f153e1196]:
+                  - button "Guayaquil, nos vemos en nada 🔥 green.house_music's profile picture Green House Music | Sello Discográfico" [ref=f153e1199] [cursor=pointer]:
+                    - generic [ref=f153e1200]:
+                      - generic [ref=f153e1201]: Guayaquil, nos vemos en nada 🔥
+                      - generic [ref=f153e1208]:
+                        - link [ref=f153e1210]:
+                          - img "green.house_music's profile picture" [ref=f153e1211]
+                        - generic [ref=f153e1212]: Green House Music | Sello Discográfico
+              - button "Next" [ref=f153e1215] [cursor=pointer]
+            - generic [ref=f153e1220]:
+              - button "user-profile-picture Limberg Steven Garcia Alava Limberg Steven Garcia Alava replied to an ad. View ad(https://www.instagram.com/p/DL58rbRgiys/) 8 hours ago Unread" [ref=f153e1224] [cursor=pointer]:
+                - generic [ref=f153e1226]:
+                  - img "user-profile-picture" [ref=f153e1230]
+                  - generic [ref=f153e1233]:
+                    - generic [ref=f153e1234]: Limberg Steven Garcia Alava
+                    - generic [ref=f153e1240]:
+                      - generic [ref=f153e1241]: Limberg Steven Garcia Alava replied to an ad. View ad(https://www.instagram.com/p/DL58rbRgiys/)
+                      - generic [ref=f153e1243]:
+                        - generic [ref=f153e1244]: ·
+                        - generic "8 hours ago" [ref=f153e1249]: 8h
+                  - generic [ref=f153e1250]: Unread
+              - button "user-profile-picture Andrés Martín Arauz Andrés sent an attachment. a day ago" [pressed] [ref=f153e1257] [cursor=pointer]:
+                - generic [ref=f153e1259]:
+                  - img "user-profile-picture" [ref=f153e1263]
+                  - generic [ref=f153e1266]:
+                    - generic [ref=f153e1267]: Andrés Martín Arauz
+                    - generic [ref=f153e1273]:
+                      - generic [ref=f153e1274]: Andrés sent an attachment.
+                      - generic [ref=f153e1276]:
+                        - generic [ref=f153e1277]: ·
+                        - generic "a day ago" [ref=f153e1282]: 1d
+              - button "user-profile-picture David Márquez David Márquez replied to an ad. View ad(https://www.instagram.com/p/DL58rbRgiys/) a day ago Unread" [ref=f153e1286] [cursor=pointer]:
+                - generic [ref=f153e1288]:
+                  - img "user-profile-picture" [ref=f153e1292]
+                  - generic [ref=f153e1295]:
+                    - generic [ref=f153e1296]: David Márquez
+                    - generic [ref=f153e1302]:
+                      - generic [ref=f153e1303]: David Márquez replied to an ad. View ad(https://www.instagram.com/p/DL58rbRgiys/)
+                      - generic [ref=f153e1305]:
+                        - generic [ref=f153e1306]: ·
+                        - generic "a day ago" [ref=f153e1311]: 1d
+                  - generic [ref=f153e1312]: Unread
+              - button "user-profile-picture Juaco Davalos Juaco Davalos replied to an ad. View ad(https://www.instagram.com/p/DL57XEtgmwh/) a day ago" [ref=f153e1319] [cursor=pointer]:
+                - generic [ref=f153e1321]:
+                  - img "user-profile-picture" [ref=f153e1325]
+                  - generic [ref=f153e1328]:
+                    - generic [ref=f153e1329]: Juaco Davalos
+                    - generic [ref=f153e1335]:
+                      - generic [ref=f153e1336]: Juaco Davalos replied to an ad. View ad(https://www.instagram.com/p/DL57XEtgmwh/)
+                      - generic [ref=f153e1338]:
+                        - generic [ref=f153e1339]: ·
+                        - generic "a day ago" [ref=f153e1344]: 1d
+              - button "user-profile-picture ... ... replied to an ad. View ad(https://www.instagram.com/p/DL57XEtgmwh/) a day ago Unread" [ref=f153e1348] [cursor=pointer]:
+                - generic [ref=f153e1350]:
+                  - img "user-profile-picture" [ref=f153e1354]
+                  - generic [ref=f153e1357]:
+                    - generic [ref=f153e1358]: ...
+                    - generic [ref=f153e1364]:
+                      - generic [ref=f153e1365]: ... replied to an ad. View ad(https://www.instagram.com/p/DL57XEtgmwh/)
+                      - generic [ref=f153e1367]:
+                        - generic [ref=f153e1368]: ·
+                        - generic "a day ago" [ref=f153e1373]: 1d
+                  - generic [ref=f153e1374]: Unread
+              - button "user-profile-picture Marco Alban Info 2 days ago Unread" [ref=f153e1381] [cursor=pointer]:
+                - generic [ref=f153e1383]:
+                  - img "user-profile-picture" [ref=f153e1387]
+                  - generic [ref=f153e1390]:
+                    - generic [ref=f153e1391]: Marco Alban
+                    - generic [ref=f153e1397]:
+                      - generic [ref=f153e1398]: Info
+                      - generic [ref=f153e1400]:
+                        - generic [ref=f153e1401]: ·
+                        - generic "2 days ago" [ref=f153e1406]: 2d
+                  - generic [ref=f153e1407]: Unread
+              - button [ref=f153e1439] [cursor=pointer]:
+                - generic [ref=f153e1441]:
+                  - status "Loading..." [ref=f153e1444]
+                  - generic [ref=f153e1447]:
+                    - status "Loading..." [ref=f153e1449]
+                    - status "Loading..." [ref=f153e1451]
+      - generic [ref=f153e1455]:
+        - generic [ref=f153e1459]:
+          - link "Open the profile page of rojelioelrojorojas" [ref=f153e1460] [cursor=pointer]:
+            - /url: /rojelioelrojorojas/
+            - generic [ref=f153e1461]:
+              - img "user-profile-picture" [ref=f153e1465]
+              - generic [ref=f153e1466]:
+                - heading "Andrés Martín Arauz" [level=2] [ref=f153e1468]
+                - generic [ref=f153e1470]: rojelioelrojorojas
+          - generic [ref=f153e1474]:
+            - button [ref=f153e1475] [cursor=pointer]:
+              - img "Audio call" [ref=f153e1477]
+            - button [ref=f153e1479] [cursor=pointer]:
+              - img "Video call" [ref=f153e1481]
+            - button [ref=f153e1484] [cursor=pointer]:
+              - img "Conversation information" [ref=f153e1486]
+            - button [ref=f153e1490] [cursor=pointer]:
+              - img "Go back" [ref=f153e1492]
+        - generic [ref=f153e1494]:
+          - generic [ref=f153e1499]:
+            - progressbar [ref=f153e1502]:
+              - img "Loading..." [ref=f153e1503]
+            - group [ref=f153e1549]:
+              - generic [ref=f153e1550]:
+                - generic [ref=f153e1551]: Mentioned you in their story
+                - generic [ref=f153e1555]:
+                  - article [ref=f153e1556]:
+                    - link [ref=f153e1561] [cursor=pointer]:
+                      - /url: /stories/tdf.records.label/3987842990706079685?reel_id=archiveDay%3A17948235021270254&reel_owner_id=45696040941
+                  - generic [ref=f153e1564]:
+                    - group "Message actions":
+                      - generic:
+                        - generic:
+                          - generic:
+                            - button "React to message from tdf.records.label":
+                              - generic:
+                                - img "React to message from tdf.records.label"
+                        - generic:
+                          - generic:
+                            - button "Reply to message from tdf.records.label":
+                              - generic:
+                                - img "Reply to message from tdf.records.label"
+                        - generic:
+                          - generic:
+                            - button "See more options for message from tdf.records.label":
+                              - generic:
+                                - img "See more options for message from tdf.records.label"
+            - generic [ref=f153e1567]:
+              - generic [ref=f153e1568]: Tue 4:31 AM
+              - group [ref=f153e1571]:
+                - generic [ref=f153e1573]:
+                  - link "Open the profile page of rojelioelrojorojas" [ref=f153e1576] [cursor=pointer]:
+                    - /url: /rojelioelrojorojas
+                    - img "user-profile-picture" [ref=f153e1579]
+                  - generic [ref=f153e1581]:
+                    - article [ref=f153e1582]:
+                      - button [ref=f153e1584] [cursor=pointer]:
+                        - link "rojelioelrojorojas" [ref=f153e1588]:
+                          - /url: /rojelioelrojorojas/
+                        - img "Clip" [ref=f153e1593]
+                    - generic [ref=f153e1595]:
+                      - group "Message actions":
+                        - generic:
+                          - generic:
+                            - generic:
+                              - button "React to message from rojelioelrojorojas":
+                                - generic:
+                                  - img "React to message from rojelioelrojorojas"
+                          - generic:
+                            - generic:
+                              - button "Reply to message from rojelioelrojorojas":
+                                - generic:
+                                  - img "Reply to message from rojelioelrojorojas"
+                          - generic:
+                            - generic:
+                              - button "See more options for message from rojelioelrojorojas":
+                                - generic:
+                                  - img "See more options for message from rojelioelrojorojas"
+            - group [ref=f153e1599]:
+              - generic [ref=f153e1600]:
+                - generic [ref=f153e1601]: Mentioned you in their story
+                - generic [ref=f153e1605]:
+                  - link "Open the profile page of rojelioelrojorojas" [ref=f153e1608] [cursor=pointer]:
+                    - /url: /rojelioelrojorojas
+                    - img "user-profile-picture" [ref=f153e1611]
+                  - generic [ref=f153e1613]:
+                    - article "Story unavailable" [ref=f153e1614]
+                    - generic [ref=f153e1619]:
+                      - group "Message actions":
+                        - generic:
+                          - generic:
+                            - generic:
+                              - button "React to message from rojelioelrojorojas":
+                                - generic:
+                                  - img "React to message from rojelioelrojorojas"
+                          - generic:
+                            - generic:
+                              - button "Reply to message from rojelioelrojorojas":
+                                - generic:
+                                  - img "Reply to message from rojelioelrojorojas"
+          - generic [ref=f153e1629]:
+            - button [ref=f153e1632] [cursor=pointer]:
+              - img "Choose an emoji" [ref=f153e1634]
+            - generic [ref=f153e1636]:
+              - textbox [active] [ref=f153e1637]:
+                - paragraph [ref=f153e1638]
+              - generic: Message...
+            - generic [ref=f153e1639]:
+              - button [ref=f153e1640] [cursor=pointer]:
+                - img "Voice Clip" [ref=f153e1642]
+              - button [ref=f153e1645] [cursor=pointer]:
+                - img "Add Photo or Video" [ref=f153e1647]
+              - button [ref=f153e1652] [cursor=pointer]:
+                - img "Choose a GIF or sticker" [ref=f153e1654]

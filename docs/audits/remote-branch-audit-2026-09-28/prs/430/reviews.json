@@ -1,0 +1,484 @@
+[
+  [
+    {
+      "id": 5244561788,
+      "node_id": "PRR_kwDOQPdUrM8AAAABOJmpfA",
+      "user": {
+        "login": "tdfrecords",
+        "id": 314478663,
+        "node_id": "U_kgDOEr6QRw",
+        "avatar_url": "https://avatars.githubusercontent.com/u/314478663?u=0f8c0d60e8df4bb7f18f34246a2e26f736b1ca74&v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/tdfrecords",
+        "html_url": "https://github.com/tdfrecords",
+        "followers_url": "https://api.github.com/users/tdfrecords/followers",
+        "following_url": "https://api.github.com/users/tdfrecords/following{/other_user}",
+        "gists_url": "https://api.github.com/users/tdfrecords/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/tdfrecords/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/tdfrecords/subscriptions",
+        "organizations_url": "https://api.github.com/users/tdfrecords/orgs",
+        "repos_url": "https://api.github.com/users/tdfrecords/repos",
+        "events_url": "https://api.github.com/users/tdfrecords/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/tdfrecords/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "",
+      "state": "DISMISSED",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/430#pullrequestreview-5244561788",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430",
+      "author_association": "COLLABORATOR",
+      "_links": {
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/430#pullrequestreview-5244561788"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430"
+        }
+      },
+      "submitted_at": "2026-09-18T05:31:54Z",
+      "commit_id": "2e2e85e118a92aa9fece47cf88574a3232de64ba"
+    },
+    {
+      "id": 5244565432,
+      "node_id": "PRR_kwDOQPdUrM8AAAABOJm3uA",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "\n### \ud83d\udca1 Codex Review\n\nHere are some automated review suggestions for this pull request.\n\n**Reviewed commit:** `2e2e85e118`\n    \n\n<details> <summary>\u2139\ufe0f About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\".\n\nIf Codex has suggestions, it will comment; otherwise it will react with \ud83d\udc4d.\n\n\n\n\nCodex can also answer questions or update the PR. Try commenting \"@codex address that feedback\".\n            \n</details>",
+      "state": "COMMENTED",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/430#pullrequestreview-5244565432",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430",
+      "author_association": "NONE",
+      "_links": {
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/430#pullrequestreview-5244565432"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430"
+        }
+      },
+      "submitted_at": "2026-09-18T05:32:41Z",
+      "commit_id": "2e2e85e118a92aa9fece47cf88574a3232de64ba"
+    },
+    {
+      "id": 5244619813,
+      "node_id": "PRR_kwDOQPdUrM8AAAABOJqMJQ",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "\n### \ud83d\udca1 Codex Review\n\nHere are some automated review suggestions for this pull request.\n\n**Reviewed commit:** `07f175d0e4`\n    \n\n<details> <summary>\u2139\ufe0f About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\".\n\nIf Codex has suggestions, it will comment; otherwise it will react with \ud83d\udc4d.\n\n\n\n\nCodex can also answer questions or update the PR. Try commenting \"@codex address that feedback\".\n            \n</details>",
+      "state": "COMMENTED",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/430#pullrequestreview-5244619813",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430",
+      "author_association": "NONE",
+      "_links": {
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/430#pullrequestreview-5244619813"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430"
+        }
+      },
+      "submitted_at": "2026-09-18T05:43:34Z",
+      "commit_id": "07f175d0e435fdeead6f578861bb34fe02ca0314"
+    },
+    {
+      "id": 5244686220,
+      "node_id": "PRR_kwDOQPdUrM8AAAABOJuPjA",
+      "user": {
+        "login": "tdfrecords",
+        "id": 314478663,
+        "node_id": "U_kgDOEr6QRw",
+        "avatar_url": "https://avatars.githubusercontent.com/u/314478663?u=0f8c0d60e8df4bb7f18f34246a2e26f736b1ca74&v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/tdfrecords",
+        "html_url": "https://github.com/tdfrecords",
+        "followers_url": "https://api.github.com/users/tdfrecords/followers",
+        "following_url": "https://api.github.com/users/tdfrecords/following{/other_user}",
+        "gists_url": "https://api.github.com/users/tdfrecords/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/tdfrecords/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/tdfrecords/subscriptions",
+        "organizations_url": "https://api.github.com/users/tdfrecords/orgs",
+        "repos_url": "https://api.github.com/users/tdfrecords/repos",
+        "events_url": "https://api.github.com/users/tdfrecords/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/tdfrecords/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "",
+      "state": "DISMISSED",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/430#pullrequestreview-5244686220",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430",
+      "author_association": "COLLABORATOR",
+      "_links": {
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/430#pullrequestreview-5244686220"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430"
+        }
+      },
+      "submitted_at": "2026-09-18T05:55:40Z",
+      "commit_id": "07f175d0e435fdeead6f578861bb34fe02ca0314"
+    },
+    {
+      "id": 5244700361,
+      "node_id": "PRR_kwDOQPdUrM8AAAABOJvGyQ",
+      "user": {
+        "login": "tdfrecords",
+        "id": 314478663,
+        "node_id": "U_kgDOEr6QRw",
+        "avatar_url": "https://avatars.githubusercontent.com/u/314478663?u=0f8c0d60e8df4bb7f18f34246a2e26f736b1ca74&v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/tdfrecords",
+        "html_url": "https://github.com/tdfrecords",
+        "followers_url": "https://api.github.com/users/tdfrecords/followers",
+        "following_url": "https://api.github.com/users/tdfrecords/following{/other_user}",
+        "gists_url": "https://api.github.com/users/tdfrecords/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/tdfrecords/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/tdfrecords/subscriptions",
+        "organizations_url": "https://api.github.com/users/tdfrecords/orgs",
+        "repos_url": "https://api.github.com/users/tdfrecords/repos",
+        "events_url": "https://api.github.com/users/tdfrecords/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/tdfrecords/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "",
+      "state": "DISMISSED",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/430#pullrequestreview-5244700361",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430",
+      "author_association": "COLLABORATOR",
+      "_links": {
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/430#pullrequestreview-5244700361"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430"
+        }
+      },
+      "submitted_at": "2026-09-18T05:58:21Z",
+      "commit_id": "7b5dc2ec3d0b618a9c74314e1c9746005f8baf67"
+    },
+    {
+      "id": 5244737079,
+      "node_id": "PRR_kwDOQPdUrM8AAAABOJxWNw",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "\n### \ud83d\udca1 Codex Review\n\nhttps://github.com/diegueins680/tdf-app/blob/1216fe4ffe3b78d5579c77d6b5090320c9a30e1d/tdf-hq/src/TDF/ServerAuth.hs#L1721-L1724\n**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Require an explicit new-account signal before creating**\n\nWhen a legacy Google user signs in through an older mobile build or a cached pre-change web bundle, the subject has no binding, and that client handles the consent error by retrying with the accepted terms version. This branch interprets that existing payload as authorization to create a new Party, so the user lands in a duplicate empty account while their roles and data remain attached to the legacy credential. Require a creation-intent field that legacy clients cannot send, or otherwise distinguish this case before inserting the Party.\n    \n\n<details> <summary>\u2139\ufe0f About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\".\n\nIf Codex has suggestions, it will comment; otherwise it will react with \ud83d\udc4d.\n\n\n\n\nCodex can also answer questions or update the PR. Try commenting \"@codex address that feedback\".\n            \n</details>",
+      "state": "COMMENTED",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/430#pullrequestreview-5244737079",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430",
+      "author_association": "NONE",
+      "_links": {
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/430#pullrequestreview-5244737079"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430"
+        }
+      },
+      "submitted_at": "2026-09-18T06:04:32Z",
+      "commit_id": "1216fe4ffe3b78d5579c77d6b5090320c9a30e1d"
+    },
+    {
+      "id": 5244785790,
+      "node_id": "PRR_kwDOQPdUrM8AAAABOJ0Ufg",
+      "user": {
+        "login": "tdfrecords",
+        "id": 314478663,
+        "node_id": "U_kgDOEr6QRw",
+        "avatar_url": "https://avatars.githubusercontent.com/u/314478663?u=0f8c0d60e8df4bb7f18f34246a2e26f736b1ca74&v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/tdfrecords",
+        "html_url": "https://github.com/tdfrecords",
+        "followers_url": "https://api.github.com/users/tdfrecords/followers",
+        "following_url": "https://api.github.com/users/tdfrecords/following{/other_user}",
+        "gists_url": "https://api.github.com/users/tdfrecords/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/tdfrecords/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/tdfrecords/subscriptions",
+        "organizations_url": "https://api.github.com/users/tdfrecords/orgs",
+        "repos_url": "https://api.github.com/users/tdfrecords/repos",
+        "events_url": "https://api.github.com/users/tdfrecords/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/tdfrecords/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "",
+      "state": "DISMISSED",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/430#pullrequestreview-5244785790",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430",
+      "author_association": "COLLABORATOR",
+      "_links": {
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/430#pullrequestreview-5244785790"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430"
+        }
+      },
+      "submitted_at": "2026-09-18T06:12:31Z",
+      "commit_id": "1216fe4ffe3b78d5579c77d6b5090320c9a30e1d"
+    },
+    {
+      "id": 5244841331,
+      "node_id": "PRR_kwDOQPdUrM8AAAABOJ3tcw",
+      "user": {
+        "login": "tdfrecords",
+        "id": 314478663,
+        "node_id": "U_kgDOEr6QRw",
+        "avatar_url": "https://avatars.githubusercontent.com/u/314478663?u=0f8c0d60e8df4bb7f18f34246a2e26f736b1ca74&v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/tdfrecords",
+        "html_url": "https://github.com/tdfrecords",
+        "followers_url": "https://api.github.com/users/tdfrecords/followers",
+        "following_url": "https://api.github.com/users/tdfrecords/following{/other_user}",
+        "gists_url": "https://api.github.com/users/tdfrecords/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/tdfrecords/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/tdfrecords/subscriptions",
+        "organizations_url": "https://api.github.com/users/tdfrecords/orgs",
+        "repos_url": "https://api.github.com/users/tdfrecords/repos",
+        "events_url": "https://api.github.com/users/tdfrecords/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/tdfrecords/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "",
+      "state": "DISMISSED",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/430#pullrequestreview-5244841331",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430",
+      "author_association": "COLLABORATOR",
+      "_links": {
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/430#pullrequestreview-5244841331"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430"
+        }
+      },
+      "submitted_at": "2026-09-18T06:22:21Z",
+      "commit_id": "c53b33e7ef868fb7b64f876199ed66be0f617efc"
+    },
+    {
+      "id": 5244863844,
+      "node_id": "PRR_kwDOQPdUrM8AAAABOJ5FZA",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "\n### \ud83d\udca1 Codex Review\n\nHere are some automated review suggestions for this pull request.\n\n**Reviewed commit:** `c53b33e7ef`\n    \n\n<details> <summary>\u2139\ufe0f About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\".\n\nIf Codex has suggestions, it will comment; otherwise it will react with \ud83d\udc4d.\n\n\n\n\nCodex can also answer questions or update the PR. Try commenting \"@codex address that feedback\".\n            \n</details>",
+      "state": "COMMENTED",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/430#pullrequestreview-5244863844",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430",
+      "author_association": "NONE",
+      "_links": {
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/430#pullrequestreview-5244863844"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430"
+        }
+      },
+      "submitted_at": "2026-09-18T06:25:46Z",
+      "commit_id": "c53b33e7ef868fb7b64f876199ed66be0f617efc"
+    },
+    {
+      "id": 5245088119,
+      "node_id": "PRR_kwDOQPdUrM8AAAABOKGxdw",
+      "user": {
+        "login": "tdfrecords",
+        "id": 314478663,
+        "node_id": "U_kgDOEr6QRw",
+        "avatar_url": "https://avatars.githubusercontent.com/u/314478663?u=0f8c0d60e8df4bb7f18f34246a2e26f736b1ca74&v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/tdfrecords",
+        "html_url": "https://github.com/tdfrecords",
+        "followers_url": "https://api.github.com/users/tdfrecords/followers",
+        "following_url": "https://api.github.com/users/tdfrecords/following{/other_user}",
+        "gists_url": "https://api.github.com/users/tdfrecords/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/tdfrecords/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/tdfrecords/subscriptions",
+        "organizations_url": "https://api.github.com/users/tdfrecords/orgs",
+        "repos_url": "https://api.github.com/users/tdfrecords/repos",
+        "events_url": "https://api.github.com/users/tdfrecords/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/tdfrecords/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "",
+      "state": "DISMISSED",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/430#pullrequestreview-5245088119",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430",
+      "author_association": "COLLABORATOR",
+      "_links": {
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/430#pullrequestreview-5245088119"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430"
+        }
+      },
+      "submitted_at": "2026-09-18T06:57:22Z",
+      "commit_id": "a0fefba55b122722f8ad02d446b8fc37cb5bb7ba"
+    },
+    {
+      "id": 5245318808,
+      "node_id": "PRR_kwDOQPdUrM8AAAABOKU2mA",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?u=058d15bcdf6c33046b69396933149839528a8a0b&v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "",
+      "state": "COMMENTED",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/430#pullrequestreview-5245318808",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430",
+      "author_association": "OWNER",
+      "_links": {
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/430#pullrequestreview-5245318808"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430"
+        }
+      },
+      "submitted_at": "2026-09-18T07:28:23Z",
+      "commit_id": "18b7994a1e782d20749fe09f2ba7b9e65ca64cc0"
+    },
+    {
+      "id": 5245447807,
+      "node_id": "PRR_kwDOQPdUrM8AAAABOKcufw",
+      "user": {
+        "login": "tdfrecords",
+        "id": 314478663,
+        "node_id": "U_kgDOEr6QRw",
+        "avatar_url": "https://avatars.githubusercontent.com/u/314478663?u=0f8c0d60e8df4bb7f18f34246a2e26f736b1ca74&v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/tdfrecords",
+        "html_url": "https://github.com/tdfrecords",
+        "followers_url": "https://api.github.com/users/tdfrecords/followers",
+        "following_url": "https://api.github.com/users/tdfrecords/following{/other_user}",
+        "gists_url": "https://api.github.com/users/tdfrecords/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/tdfrecords/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/tdfrecords/subscriptions",
+        "organizations_url": "https://api.github.com/users/tdfrecords/orgs",
+        "repos_url": "https://api.github.com/users/tdfrecords/repos",
+        "events_url": "https://api.github.com/users/tdfrecords/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/tdfrecords/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "",
+      "state": "APPROVED",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/430#pullrequestreview-5245447807",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430",
+      "author_association": "COLLABORATOR",
+      "_links": {
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/430#pullrequestreview-5245447807"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/430"
+        }
+      },
+      "submitted_at": "2026-09-18T07:45:13Z",
+      "commit_id": "da0b02d90b57c4f78ce8f20df0bb9345edf824a1"
+    }
+  ]
+]

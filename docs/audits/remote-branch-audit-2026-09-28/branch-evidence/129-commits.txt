@@ -1,0 +1,1 @@
+cf591e1faa975b8023c6c06892fb50a51ba06dff 2026-09-14T20:50:18-05:00 continuous-improvement-loop[bot] test(events): expose full-schema migration blockers

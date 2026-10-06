@@ -1,0 +1,1255 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044532247",
+      "pull_request_review_id": 5245114612,
+      "id": 4044532247,
+      "node_id": "PRRC_kwDOQPdUrM7xEqoX",
+      "diff_hunk": "@@ -560,6 +560,11 @@\n       \"id\": \"2026-09-18_provider_subject_identity\",\n       \"path\": \"tdf-hq/sql/2026-09-18_provider_subject_identity.sql\",\n       \"introducedBy\": \"b0779951f9010263fcda9c9165d3ec14ba6f9e55\"\n+    },\n+    {\n+      \"id\": \"2026-09-18_live_intake_idempotency\",\n+      \"path\": \"tdf-hq/sql/2026-09-18_live_intake_idempotency.sql\",\n+      \"introducedBy\": \"062143d3cb98befb6a52a987c7d42980f70313f3\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "4b029f2c92714dffb4f24e2d5e665d49a5e18491",
+      "original_commit_id": "e92a0948488c37842816ae8246299c3d0b749c8b",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Point migration provenance at an ancestor**\n\nThe recorded introduction commit is not an ancestor of the reviewed SHA: `git merge-base --is-ancestor 062143d3cb98befb6a52a987c7d42980f70313f3 882918d942e68a801d07302234a22165e044c7e5` exits 1. The guarded release path in `scripts/production-release.mjs` explicitly rejects that condition, so any production release containing this manifest will stop before assembling migrations. Record a commit that is actually in this change's ancestry.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T07:01:05Z",
+      "updated_at": "2026-09-18T07:01:05Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044532247",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044532247"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044532247"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044532247/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 565,
+      "original_start_line": 565,
+      "start_side": "RIGHT",
+      "line": 567,
+      "original_line": 567,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 8,
+      "position": 8,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044532265",
+      "pull_request_review_id": 5245114612,
+      "id": 4044532265,
+      "node_id": "PRRC_kwDOQPdUrM7xEqop",
+      "diff_hunk": "@@ -9343,33 +9343,16 @@ listParties user mLimit mOffset = do\n createParty :: AuthedUser -> Maybe Text -> PartyCreate -> AppM PartyDTO\n createParty user requestKey req = do\n   requireModule user ModuleCRM\n+  when (isNothing requestKey) $\n+    throwError err400 { errBody = \"Update the app or refresh the contact form before creating a contact so retries can be saved safely.\" }",
+      "path": "tdf-hq/src/TDF/Server.hs",
+      "commit_id": "4b029f2c92714dffb4f24e2d5e665d49a5e18491",
+      "original_commit_id": "e92a0948488c37842816ae8246299c3d0b749c8b",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Update the bundled artist importer to send retry keys**\n\nRequiring this header makes the repository's `tdf-hq/scripts/create_artists_from_list.sh` unusable: its `create_party` request at lines 52\u201355 still posts to `/parties` without `Idempotency-Key`, so every artist receives this 400 response and no profiles are created. Add a stable per-artist operation key to that caller as part of making the endpoint mandatory.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T07:01:05Z",
+      "updated_at": "2026-09-18T07:01:05Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044532265",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044532265"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044532265"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044532265/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 9346,
+      "original_start_line": 9346,
+      "start_side": "RIGHT",
+      "line": 9347,
+      "original_line": 9347,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 5,
+      "position": 5,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044532276",
+      "pull_request_review_id": 5245114612,
+      "id": 4044532276,
+      "node_id": "PRRC_kwDOQPdUrM7xEqo0",
+      "diff_hunk": "@@ -115,9 +115,7 @@ liveSessionsServer user = intakeHandler\n       musicianInstruments <- mapM (traverse resolvePublishedInstrument . lsmInstrumentId) (lsiMusicians payload)",
+      "path": "tdf-hq/src/TDF/ServerLiveSessions.hs",
+      "commit_id": "e92a0948488c37842816ae8246299c3d0b749c8b",
+      "original_commit_id": "e92a0948488c37842816ae8246299c3d0b749c8b",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Check accepted retries before mutable catalog validation**\n\nIf an accepted intake references a genre or instrument that is later unpublished or deactivated, a retry after a lost response now fails here with 400 before the request receipt is consulted. The intake has already been committed, but the client is told the retry failed instead of receiving the stored success promised by the idempotency contract; perform the receipt comparison before revalidating mutable catalog state for a new submission.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T07:01:05Z",
+      "updated_at": "2026-09-18T07:01:05Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044532276",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044532276"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044532276"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044532276/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 115,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 58,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044532294",
+      "pull_request_review_id": 5245114612,
+      "id": 4044532294,
+      "node_id": "PRRC_kwDOQPdUrM7xEqpG",
+      "diff_hunk": "@@ -129,7 +127,33 @@ liveSessionsServer user = intakeHandler\n           pure\n           (resolveLiveSessionSetlistSortOrders (lsiSetlist payload))\n \n-      intakeId <- withPool $ insert ME.LiveSessionIntake\n+      pool <- asks envPool\n+      result <- liftIO $ try $ catch (runSqlPool (do\n+        _ <- rawSql \"SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended(?,0))\"\n+          [PersistText (\"live-intake:\" <> T.pack (show (fromSqlKey (auPartyId user))) <> \":\" <> key)] :: SqlPersistT IO [Single Int64]\n+        riderDigest <- traverse (digestBytes . snd) rider\n+        let body = TE.decodeUtf8 (BL.toStrict (encode (liveSessionRequestPayload payload (fst <$> rider) riderDigest)))\n+        previous <- rawSql \"SELECT request_payload = ?::jsonb FROM identity_live_intake_request WHERE actor_party_id=? AND request_key=?\"\n+          [PersistText body, toPersistValue (auPartyId user), PersistText key]\n+        case previous of\n+          [Single True] -> pure NoContent\n+          [Single False] -> liftIO $ throwIO err409 { errBody = \"This submission changed after an earlier send. Review the saved intake before starting another submission.\" }",
+      "path": "tdf-hq/src/TDF/ServerLiveSessions.hs",
+      "commit_id": "e92a0948488c37842816ae8246299c3d0b749c8b",
+      "original_commit_id": "e92a0948488c37842816ae8246299c3d0b749c8b",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Verify rider storage on accepted retries**\n\nFor an exact retry with a rider, this branch returns success immediately and never calls `storeRiderFile`, where the stored bytes are actually checked. If the saved file is missing or corrupted\u2014or the retry reaches an application node without the local file\u2014the API reports success while the persisted intake still points at unavailable or incorrect storage, contrary to the documented retry verification behavior.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T07:01:05Z",
+      "updated_at": "2026-09-18T07:01:05Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044532294",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044532294"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044532294"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044532294/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 138,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 140,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 83,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044699976",
+      "pull_request_review_id": 5245319359,
+      "id": 4044699976,
+      "node_id": "PRRC_kwDOQPdUrM7xFTlI",
+      "diff_hunk": "@@ -560,6 +560,11 @@\n       \"id\": \"2026-09-18_provider_subject_identity\",\n       \"path\": \"tdf-hq/sql/2026-09-18_provider_subject_identity.sql\",\n       \"introducedBy\": \"b0779951f9010263fcda9c9165d3ec14ba6f9e55\"\n+    },\n+    {\n+      \"id\": \"2026-09-18_live_intake_idempotency\",\n+      \"path\": \"tdf-hq/sql/2026-09-18_live_intake_idempotency.sql\",\n+      \"introducedBy\": \"062143d3cb98befb6a52a987c7d42980f70313f3\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "4b029f2c92714dffb4f24e2d5e665d49a5e18491",
+      "original_commit_id": "e92a0948488c37842816ae8246299c3d0b749c8b",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Verified the actual pushed PR head 1344f0f266529446c52c97eca9fca842e3d58637: git merge-base --is-ancestor 062143d3cb98befb6a52a987c7d42980f70313f3 HEAD exits 0. The cited 882918d commit is not this PR head. The introduction was preserved by normal merges; all 109 migrations and schema replay passed against the isolated restored production schema. No migration provenance was rewritten.",
+      "created_at": "2026-09-18T07:28:25Z",
+      "updated_at": "2026-09-18T07:28:25Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044699976",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044699976"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044699976"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044699976/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 565,
+      "original_start_line": 565,
+      "start_side": "RIGHT",
+      "line": 567,
+      "original_line": 567,
+      "side": "RIGHT",
+      "in_reply_to_id": 4044532247,
+      "author_association": "OWNER",
+      "original_position": 8,
+      "position": 8,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044700238",
+      "pull_request_review_id": 5245319782,
+      "id": 4044700238,
+      "node_id": "PRRC_kwDOQPdUrM7xFTpO",
+      "diff_hunk": "@@ -9343,33 +9343,16 @@ listParties user mLimit mOffset = do\n createParty :: AuthedUser -> Maybe Text -> PartyCreate -> AppM PartyDTO\n createParty user requestKey req = do\n   requireModule user ModuleCRM\n+  when (isNothing requestKey) $\n+    throwError err400 { errBody = \"Update the app or refresh the contact form before creating a contact so retries can be saved safely.\" }",
+      "path": "tdf-hq/src/TDF/Server.hs",
+      "commit_id": "4b029f2c92714dffb4f24e2d5e665d49a5e18491",
+      "original_commit_id": "e92a0948488c37842816ae8246299c3d0b749c8b",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 497286e82 (included in 1344f0f2). The importer sends stable source-operation/row keys, requires explicitly reviewed person/band/org classifications, and stops on HTTP failures. Three executable importer regressions passed. It deliberately leaves artist profile creation to the existing administrative directory: the legacy profile upsert could erase later edits on retries, so the batch no longer calls it. No import was executed against production.",
+      "created_at": "2026-09-18T07:28:28Z",
+      "updated_at": "2026-09-18T07:28:28Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044700238",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044700238"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044700238"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044700238/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 9346,
+      "original_start_line": 9346,
+      "start_side": "RIGHT",
+      "line": 9347,
+      "original_line": 9347,
+      "side": "RIGHT",
+      "in_reply_to_id": 4044532265,
+      "author_association": "OWNER",
+      "original_position": 5,
+      "position": 5,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044700582",
+      "pull_request_review_id": 5245320187,
+      "id": 4044700582,
+      "node_id": "PRRC_kwDOQPdUrM7xFTum",
+      "diff_hunk": "@@ -115,9 +115,7 @@ liveSessionsServer user = intakeHandler\n       musicianInstruments <- mapM (traverse resolvePublishedInstrument . lsmInstrumentId) (lsiMusicians payload)",
+      "path": "tdf-hq/src/TDF/ServerLiveSessions.hs",
+      "commit_id": "e92a0948488c37842816ae8246299c3d0b749c8b",
+      "original_commit_id": "e92a0948488c37842816ae8246299c3d0b749c8b",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 497286e82. Accepted payload receipts are checked under the request transaction lock before mutable genre/instrument validation. The PostgreSQL regression seeds an accepted catalog selection whose source is no longer available and verifies replay success with unchanged row counts. All 11 integration examples passed.",
+      "created_at": "2026-09-18T07:28:30Z",
+      "updated_at": "2026-09-18T07:28:31Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044700582",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044700582"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044700582"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044700582/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 115,
+      "side": "RIGHT",
+      "in_reply_to_id": 4044532276,
+      "author_association": "OWNER",
+      "original_position": 58,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044700985",
+      "pull_request_review_id": 5245320623,
+      "id": 4044700985,
+      "node_id": "PRRC_kwDOQPdUrM7xFT05",
+      "diff_hunk": "@@ -129,7 +127,33 @@ liveSessionsServer user = intakeHandler\n           pure\n           (resolveLiveSessionSetlistSortOrders (lsiSetlist payload))\n \n-      intakeId <- withPool $ insert ME.LiveSessionIntake\n+      pool <- asks envPool\n+      result <- liftIO $ try $ catch (runSqlPool (do\n+        _ <- rawSql \"SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended(?,0))\"\n+          [PersistText (\"live-intake:\" <> T.pack (show (fromSqlKey (auPartyId user))) <> \":\" <> key)] :: SqlPersistT IO [Single Int64]\n+        riderDigest <- traverse (digestBytes . snd) rider\n+        let body = TE.decodeUtf8 (BL.toStrict (encode (liveSessionRequestPayload payload (fst <$> rider) riderDigest)))\n+        previous <- rawSql \"SELECT request_payload = ?::jsonb FROM identity_live_intake_request WHERE actor_party_id=? AND request_key=?\"\n+          [PersistText body, toPersistValue (auPartyId user), PersistText key]\n+        case previous of\n+          [Single True] -> pure NoContent\n+          [Single False] -> liftIO $ throwIO err409 { errBody = \"This submission changed after an earlier send. Review the saved intake before starting another submission.\" }",
+      "path": "tdf-hq/src/TDF/ServerLiveSessions.hs",
+      "commit_id": "e92a0948488c37842816ae8246299c3d0b749c8b",
+      "original_commit_id": "e92a0948488c37842816ae8246299c3d0b749c8b",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 497286e82. An accepted retry verifies rider storage and its saved path, restores missing bytes only from identical accepted content, and returns 409 for conflicting bytes without overwriting them. The PostgreSQL test covers missing-file restoration and corruption with unchanged database counts; all 11 examples passed.",
+      "created_at": "2026-09-18T07:28:33Z",
+      "updated_at": "2026-09-18T07:28:33Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044700985",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044700985"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044700985"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044700985/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 138,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 140,
+      "side": "RIGHT",
+      "in_reply_to_id": 4044532294,
+      "author_association": "OWNER",
+      "original_position": 83,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044734413",
+      "pull_request_review_id": 5245361484,
+      "id": 4044734413,
+      "node_id": "PRRC_kwDOQPdUrM7xFb_N",
+      "diff_hunk": "@@ -94,26 +95,20 @@ type CreatePartyFormData = z.infer<typeof createPartySchema>;\n function CreatePartyDialog({ open, onClose }: CreatePartyDialogProps) {\n   const qc = useQueryClient();\n   const [isOrg, setIsOrg] = useState(false);\n-  const creationRequest = useRef<{ body: string; key: string } | null>(null);\n+  const contactCreation = useContactCreation();\n+  useEffect(() => {\n+    if (!open) contactCreation.reset();",
+      "path": "tdf-hq-ui/src/pages/PartiesPage.tsx",
+      "commit_id": "4b029f2c92714dffb4f24e2d5e665d49a5e18491",
+      "original_commit_id": "703088aa8c8bab6ca577a3838efe3b208e4c079b",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Preserve the retry key while contact creation is pending**\n\nIf the user closes this dialog via Cancel, Escape, or the backdrop while the create mutation is pending, this effect immediately discards the request key because those close paths remain enabled. When the server accepted the request but the client later observes a timeout or lost response, reopening and retrying uses a new key and creates a duplicate contact instead of replaying the first result. Prevent closing while the mutation is pending, or defer resetting the key until the request has definitively settled.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T07:33:53Z",
+      "updated_at": "2026-09-18T07:33:54Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044734413",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044734413"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4044734413"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4044734413/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 102,
+      "original_line": 100,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 14,
+      "position": 18,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045005283",
+      "pull_request_review_id": 5245691519,
+      "id": 4045005283,
+      "node_id": "PRRC_kwDOQPdUrM7xGeHj",
+      "diff_hunk": "@@ -560,6 +560,11 @@\n       \"id\": \"2026-09-18_provider_subject_identity\",\n       \"path\": \"tdf-hq/sql/2026-09-18_provider_subject_identity.sql\",\n       \"introducedBy\": \"b0779951f9010263fcda9c9165d3ec14ba6f9e55\"\n+    },\n+    {\n+      \"id\": \"2026-09-18_live_intake_idempotency\",\n+      \"path\": \"tdf-hq/sql/2026-09-18_live_intake_idempotency.sql\",\n+      \"introducedBy\": \"062143d3cb98befb6a52a987c7d42980f70313f3\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "4b029f2c92714dffb4f24e2d5e665d49a5e18491",
+      "original_commit_id": "688575d8cb20adad83956b47914f941370ee55d9",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Point migration provenance at an ancestor**\n\nFresh evidence for this review target: `git merge-base --is-ancestor 062143d3cb98befb6a52a987c7d42980f70313f3 75965844a0cbb868e06563bd6720d0a8f10be752` exits 1. The guarded release path in `scripts/production-release.mjs` rejects any `introducedBy` commit that is not an ancestor of the release SHA, so production releases of this commit stop while resolving the migration manifest. Record a commit in this target's ancestry.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T08:16:04Z",
+      "updated_at": "2026-09-18T08:16:05Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045005283",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045005283"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045005283"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045005283/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 567,
+      "original_line": 567,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 8,
+      "position": 8,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045005357",
+      "pull_request_review_id": 5245691519,
+      "id": 4045005357,
+      "node_id": "PRRC_kwDOQPdUrM7xGeIt",
+      "diff_hunk": "@@ -181,79 +203,67 @@ liveSessionsServer user = intakeHandler\n             , ME.liveSessionSongSortOrder = sortOrder\n             }\n \n+      rawExecute \"INSERT INTO identity_live_intake_request(actor_party_id,request_key,request_payload,intake_id) VALUES (?,?,?::jsonb,?)\"\n+        [toPersistValue (auPartyId user), PersistText key, PersistText body, toPersistValue intakeId]\n       pure NoContent\n \n+    storeRequestRider key rider riderDigest =\n+      case (rider, riderDigest) of\n+        (Just (safeName, bytes), Just contentHash) -> do\n+          pathHash <- digestBytes (BL.fromStrict (TE.encodeUtf8 (T.pack (show (fromSqlKey (auPartyId user))) <> \":\" <> key <> \":\" <> contentHash)))\n+          Just <$> liftIO (storeRiderFile pathHash safeName bytes)\n+        _ -> pure Nothing\n+\n     ensureMusician\n       :: UTCTime\n       -> Maybe (Catalog.InstrumentId, Text)\n       -> LiveSessionMusicianPayload\n-      -> m (Key Party, Maybe Text, Maybe Catalog.InstrumentId)\n+      -> SqlPersistT IO (Key Party, Maybe Text, Maybe Catalog.InstrumentId)\n     ensureMusician now instrumentRef LiveSessionMusicianPayload{..} = do\n-      mEmail <-\n-        either throwError pure $\n-          validateLiveSessionOptionalEmail \"musicians.email\" lsmEmail\n+      mEmail <- either (liftIO . throwIO) pure $\n+        validateLiveSessionOptionalEmail \"musicians.email\" lsmEmail\n       let trimmedName = T.strip lsmName\n-      (partyKey, accountEmail) <- case lsmPartyId of\n+      partyKey <- case lsmPartyId of\n         Just pidInt -> do\n           let key = toSqlKey (fromIntegral pidInt)\n-          existingParty <- withPool $ get key\n-          case existingParty of\n-            Nothing -> throwError err400 { errBody = \"Referenced party not found\" }\n+          unless (key == auPartyId user || hasModuleAccess ModuleCRM user) $\n+            liftIO $ throwIO err403 { errBody = \"You cannot select this contact\" }",
+      "path": "tdf-hq/src/TDF/ServerLiveSessions.hs",
+      "commit_id": "4b029f2c92714dffb4f24e2d5e665d49a5e18491",
+      "original_commit_id": "688575d8cb20adad83956b47914f941370ee55d9",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Hide CRM-only contact reuse from Scheduling-only users**\n\nFor Scheduling-only roles such as Engineer, Teacher, Artist, or Student, the Live Sessions feature and its `live_session` party selector are both authorized through `ModuleScheduling`, so the form lets these users search for and select an existing contact. This new check then rejects that selected contact with 403 because those roles lack `ModuleCRM`, making an offered workflow fail only at final submission; hide the selector for users without CRM access or align its authorization with this restriction.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T08:16:05Z",
+      "updated_at": "2026-09-18T08:16:05Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045005357",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045005357"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045005357"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045005357/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 229,
+      "original_start_line": 229,
+      "start_side": "RIGHT",
+      "line": 230,
+      "original_line": 230,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 166,
+      "position": 166,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045005378",
+      "pull_request_review_id": 5245691519,
+      "id": 4045005378,
+      "node_id": "PRRC_kwDOQPdUrM7xGeJC",
+      "diff_hunk": "@@ -181,79 +203,67 @@ liveSessionsServer user = intakeHandler\n             , ME.liveSessionSongSortOrder = sortOrder\n             }\n \n+      rawExecute \"INSERT INTO identity_live_intake_request(actor_party_id,request_key,request_payload,intake_id) VALUES (?,?,?::jsonb,?)\"\n+        [toPersistValue (auPartyId user), PersistText key, PersistText body, toPersistValue intakeId]\n       pure NoContent\n \n+    storeRequestRider key rider riderDigest =\n+      case (rider, riderDigest) of\n+        (Just (safeName, bytes), Just contentHash) -> do\n+          pathHash <- digestBytes (BL.fromStrict (TE.encodeUtf8 (T.pack (show (fromSqlKey (auPartyId user))) <> \":\" <> key <> \":\" <> contentHash)))\n+          Just <$> liftIO (storeRiderFile pathHash safeName bytes)\n+        _ -> pure Nothing\n+\n     ensureMusician\n       :: UTCTime\n       -> Maybe (Catalog.InstrumentId, Text)\n       -> LiveSessionMusicianPayload\n-      -> m (Key Party, Maybe Text, Maybe Catalog.InstrumentId)\n+      -> SqlPersistT IO (Key Party, Maybe Text, Maybe Catalog.InstrumentId)\n     ensureMusician now instrumentRef LiveSessionMusicianPayload{..} = do\n-      mEmail <-\n-        either throwError pure $\n-          validateLiveSessionOptionalEmail \"musicians.email\" lsmEmail\n+      mEmail <- either (liftIO . throwIO) pure $\n+        validateLiveSessionOptionalEmail \"musicians.email\" lsmEmail\n       let trimmedName = T.strip lsmName\n-      (partyKey, accountEmail) <- case lsmPartyId of\n+      partyKey <- case lsmPartyId of\n         Just pidInt -> do\n           let key = toSqlKey (fromIntegral pidInt)\n-          existingParty <- withPool $ get key\n-          case existingParty of\n-            Nothing -> throwError err400 { errBody = \"Referenced party not found\" }\n+          unless (key == auPartyId user || hasModuleAccess ModuleCRM user) $\n+            liftIO $ throwIO err403 { errBody = \"You cannot select this contact\" }\n+          -- Do not expose contact information before checking access. The archive\n+          -- guard also revalidates this reference when the musician is inserted.\n+          existing <- get key\n+          case existing of\n+            Nothing -> liftIO $ throwIO err400 { errBody = \"Referenced contact is unavailable\" }\n             Just party -> do\n-              referencedPartyEmail <-\n-                either throwError pure $\n-                  validateLiveSessionReferencedPartyEmail\n-                    (M.partyPrimaryEmail party)\n-                    mEmail\n-              pure (key, referencedPartyEmail)\n-        Nothing -> do\n-          found <- case resolveLiveSessionMusicianLookup mEmail of\n-            LookupLiveSessionMusicianByEmail email -> do\n-              matches <-\n-                withPool $\n-                  selectList [M.PartyPrimaryEmail ==. Just email] [LimitTo 2]\n-              either throwError pure (selectUniqueLiveSessionMusicianByEmail matches)\n-            CreateLiveSessionMusician ->\n-              pure Nothing\n-          case found of\n-            Just ent ->\n-              pure (entityKey ent, M.partyPrimaryEmail (entityVal ent))\n-            Nothing -> withPool $ do\n-              key <- insert Party\n-                { partyLegalName        = Nothing\n-                , partyDisplayName      =\n-                    if T.null trimmedName\n-                      then \"M\u00fasico Live Session\"\n-                      else trimmedName\n-                , partyIsOrg            = False\n-                , partyTaxId            = Nothing\n-                , partyPrimaryEmail     = mEmail\n-                , partyPrimaryPhone     = Nothing\n-                , partyWhatsapp         = Nothing\n-                , partyInstagram        = Nothing\n-                , partyEmergencyContact = Nothing\n-                , partyNotes            = liveSessionMusicianPartyNotes (snd <$> instrumentRef)\n-                , partyStripeCustomerId = Nothing\n-                , partyCountryCode       = Nothing\n-                , partyCountryId         = Nothing\n-                , partyCreatedAt        = now\n-                }\n-              pure (key, mEmail)\n-\n-      when (partyKey == toSqlKey 0) $\n-        throwError err400 { errBody = \"Invalid party reference\" }\n-      withPool $ ensureArtistRole now partyKey\n-      withPool $ ensureUserAccount partyKey accountEmail\n+              _ <- either (liftIO . throwIO) pure $\n+                validateLiveSessionReferencedPartyEmail (M.partyPrimaryEmail party) mEmail\n+              pure key\n+        Nothing -> insert Party\n+          { partyLegalName = Nothing\n+          , partyDisplayName = if T.null trimmedName then \"M\u00fasico Live Session\" else trimmedName\n+          , partyIsOrg = False\n+          , partyTaxId = Nothing\n+          , partyPrimaryEmail = mEmail\n+          , partyPrimaryPhone = Nothing\n+          , partyWhatsapp = Nothing\n+          , partyInstagram = Nothing\n+          , partyEmergencyContact = Nothing\n+          , partyNotes = liveSessionMusicianPartyNotes (snd <$> instrumentRef)\n+          , partyStripeCustomerId = Nothing\n+          , partyCountryCode = Nothing\n+          , partyCountryId = Nothing\n+          , partyCreatedAt = now\n+          }\n+      -- Intake registers a contact, not authentication, privileges, or consent.\n       pure (partyKey, mEmail, fst <$> instrumentRef)",
+      "path": "tdf-hq/src/TDF/ServerLiveSessions.hs",
+      "commit_id": "4b029f2c92714dffb4f24e2d5e665d49a5e18491",
+      "original_commit_id": "688575d8cb20adad83956b47914f941370ee55d9",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Stop promising login creation for new musicians**\n\nFor every musician without a `partyId`, this path now deliberately creates only a contact and no credentials, but `LiveSessionIntakePage.tsx` still displays \u201cSe crear\u00e1 usuario y contacto autom\u00e1ticamente\u201d for that same case. Users can therefore finish intake believing a login was provisioned when none exists; update the form messaging to describe contact-only creation.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T08:16:05Z",
+      "updated_at": "2026-09-18T08:16:05Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045005378",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045005378"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045005378"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045005378/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 256,
+      "original_start_line": 256,
+      "start_side": "RIGHT",
+      "line": 257,
+      "original_line": 257,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 237,
+      "position": 237,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045020673",
+      "pull_request_review_id": 5245710558,
+      "id": 4045020673,
+      "node_id": "PRRC_kwDOQPdUrM7xGh4B",
+      "diff_hunk": "@@ -94,26 +95,20 @@ type CreatePartyFormData = z.infer<typeof createPartySchema>;\n function CreatePartyDialog({ open, onClose }: CreatePartyDialogProps) {\n   const qc = useQueryClient();\n   const [isOrg, setIsOrg] = useState(false);\n-  const creationRequest = useRef<{ body: string; key: string } | null>(null);\n+  const contactCreation = useContactCreation();\n+  useEffect(() => {\n+    if (!open) contactCreation.reset();",
+      "path": "tdf-hq-ui/src/pages/PartiesPage.tsx",
+      "commit_id": "4b029f2c92714dffb4f24e2d5e665d49a5e18491",
+      "original_commit_id": "703088aa8c8bab6ca577a3838efe3b208e4c079b",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 688575d8c: the contact dialog now guards submission synchronously and blocks Cancel, Escape, and backdrop dismissal until settlement. The actual contact, company, and lead dialogs passed all three pending-dismissal tests; TypeScript and focused lint also passed.",
+      "created_at": "2026-09-18T08:18:04Z",
+      "updated_at": "2026-09-18T08:18:04Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045020673",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045020673"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045020673"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045020673/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 102,
+      "original_line": 100,
+      "side": "RIGHT",
+      "in_reply_to_id": 4044734413,
+      "author_association": "OWNER",
+      "original_position": 14,
+      "position": 18,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045444423",
+      "pull_request_review_id": 5246227873,
+      "id": 4045444423,
+      "node_id": "PRRC_kwDOQPdUrM7xIJVH",
+      "diff_hunk": "@@ -560,6 +560,11 @@\n       \"id\": \"2026-09-18_provider_subject_identity\",\n       \"path\": \"tdf-hq/sql/2026-09-18_provider_subject_identity.sql\",\n       \"introducedBy\": \"b0779951f9010263fcda9c9165d3ec14ba6f9e55\"\n+    },\n+    {\n+      \"id\": \"2026-09-18_live_intake_idempotency\",\n+      \"path\": \"tdf-hq/sql/2026-09-18_live_intake_idempotency.sql\",\n+      \"introducedBy\": \"062143d3cb98befb6a52a987c7d42980f70313f3\"",
+      "path": "scripts/production-migrations.json",
+      "commit_id": "4b029f2c92714dffb4f24e2d5e665d49a5e18491",
+      "original_commit_id": "688575d8cb20adad83956b47914f941370ee55d9",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Verified against actual branch head 4b029f2c9: git merge-base --is-ancestor 062143d3cb98befb6a52a987c7d42980f70313f3 HEAD exits 0. The earlier dc2398353 head also passed production-migrations CI. The cited 75965844 target is not this branch head. The introduction commit is preserved because this migration has already been applied and replayed in staging.",
+      "created_at": "2026-09-18T09:20:20Z",
+      "updated_at": "2026-09-18T09:20:20Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045444423",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045444423"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045444423"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045444423/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": 567,
+      "original_line": 567,
+      "side": "RIGHT",
+      "in_reply_to_id": 4045005283,
+      "author_association": "OWNER",
+      "original_position": 8,
+      "position": 8,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045444551",
+      "pull_request_review_id": 5246228025,
+      "id": 4045444551,
+      "node_id": "PRRC_kwDOQPdUrM7xIJXH",
+      "diff_hunk": "@@ -181,79 +203,67 @@ liveSessionsServer user = intakeHandler\n             , ME.liveSessionSongSortOrder = sortOrder\n             }\n \n+      rawExecute \"INSERT INTO identity_live_intake_request(actor_party_id,request_key,request_payload,intake_id) VALUES (?,?,?::jsonb,?)\"\n+        [toPersistValue (auPartyId user), PersistText key, PersistText body, toPersistValue intakeId]\n       pure NoContent\n \n+    storeRequestRider key rider riderDigest =\n+      case (rider, riderDigest) of\n+        (Just (safeName, bytes), Just contentHash) -> do\n+          pathHash <- digestBytes (BL.fromStrict (TE.encodeUtf8 (T.pack (show (fromSqlKey (auPartyId user))) <> \":\" <> key <> \":\" <> contentHash)))\n+          Just <$> liftIO (storeRiderFile pathHash safeName bytes)\n+        _ -> pure Nothing\n+\n     ensureMusician\n       :: UTCTime\n       -> Maybe (Catalog.InstrumentId, Text)\n       -> LiveSessionMusicianPayload\n-      -> m (Key Party, Maybe Text, Maybe Catalog.InstrumentId)\n+      -> SqlPersistT IO (Key Party, Maybe Text, Maybe Catalog.InstrumentId)\n     ensureMusician now instrumentRef LiveSessionMusicianPayload{..} = do\n-      mEmail <-\n-        either throwError pure $\n-          validateLiveSessionOptionalEmail \"musicians.email\" lsmEmail\n+      mEmail <- either (liftIO . throwIO) pure $\n+        validateLiveSessionOptionalEmail \"musicians.email\" lsmEmail\n       let trimmedName = T.strip lsmName\n-      (partyKey, accountEmail) <- case lsmPartyId of\n+      partyKey <- case lsmPartyId of\n         Just pidInt -> do\n           let key = toSqlKey (fromIntegral pidInt)\n-          existingParty <- withPool $ get key\n-          case existingParty of\n-            Nothing -> throwError err400 { errBody = \"Referenced party not found\" }\n+          unless (key == auPartyId user || hasModuleAccess ModuleCRM user) $\n+            liftIO $ throwIO err403 { errBody = \"You cannot select this contact\" }",
+      "path": "tdf-hq/src/TDF/ServerLiveSessions.hs",
+      "commit_id": "4b029f2c92714dffb4f24e2d5e665d49a5e18491",
+      "original_commit_id": "688575d8cb20adad83956b47914f941370ee55d9",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 4b029f2c9: existing-contact selection is shown only when the session grants CRM, and the submission omits existing IDs without that authority. Both permission variants are covered in the rendered form tests. Seven intake tests, TypeScript, and focused lint passed.",
+      "created_at": "2026-09-18T09:20:21Z",
+      "updated_at": "2026-09-18T09:20:21Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045444551",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045444551"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045444551"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045444551/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 229,
+      "original_start_line": 229,
+      "start_side": "RIGHT",
+      "line": 230,
+      "original_line": 230,
+      "side": "RIGHT",
+      "in_reply_to_id": 4045005357,
+      "author_association": "OWNER",
+      "original_position": 166,
+      "position": 166,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045444612",
+      "pull_request_review_id": 5246228108,
+      "id": 4045444612,
+      "node_id": "PRRC_kwDOQPdUrM7xIJYE",
+      "diff_hunk": "@@ -181,79 +203,67 @@ liveSessionsServer user = intakeHandler\n             , ME.liveSessionSongSortOrder = sortOrder\n             }\n \n+      rawExecute \"INSERT INTO identity_live_intake_request(actor_party_id,request_key,request_payload,intake_id) VALUES (?,?,?::jsonb,?)\"\n+        [toPersistValue (auPartyId user), PersistText key, PersistText body, toPersistValue intakeId]\n       pure NoContent\n \n+    storeRequestRider key rider riderDigest =\n+      case (rider, riderDigest) of\n+        (Just (safeName, bytes), Just contentHash) -> do\n+          pathHash <- digestBytes (BL.fromStrict (TE.encodeUtf8 (T.pack (show (fromSqlKey (auPartyId user))) <> \":\" <> key <> \":\" <> contentHash)))\n+          Just <$> liftIO (storeRiderFile pathHash safeName bytes)\n+        _ -> pure Nothing\n+\n     ensureMusician\n       :: UTCTime\n       -> Maybe (Catalog.InstrumentId, Text)\n       -> LiveSessionMusicianPayload\n-      -> m (Key Party, Maybe Text, Maybe Catalog.InstrumentId)\n+      -> SqlPersistT IO (Key Party, Maybe Text, Maybe Catalog.InstrumentId)\n     ensureMusician now instrumentRef LiveSessionMusicianPayload{..} = do\n-      mEmail <-\n-        either throwError pure $\n-          validateLiveSessionOptionalEmail \"musicians.email\" lsmEmail\n+      mEmail <- either (liftIO . throwIO) pure $\n+        validateLiveSessionOptionalEmail \"musicians.email\" lsmEmail\n       let trimmedName = T.strip lsmName\n-      (partyKey, accountEmail) <- case lsmPartyId of\n+      partyKey <- case lsmPartyId of\n         Just pidInt -> do\n           let key = toSqlKey (fromIntegral pidInt)\n-          existingParty <- withPool $ get key\n-          case existingParty of\n-            Nothing -> throwError err400 { errBody = \"Referenced party not found\" }\n+          unless (key == auPartyId user || hasModuleAccess ModuleCRM user) $\n+            liftIO $ throwIO err403 { errBody = \"You cannot select this contact\" }\n+          -- Do not expose contact information before checking access. The archive\n+          -- guard also revalidates this reference when the musician is inserted.\n+          existing <- get key\n+          case existing of\n+            Nothing -> liftIO $ throwIO err400 { errBody = \"Referenced contact is unavailable\" }\n             Just party -> do\n-              referencedPartyEmail <-\n-                either throwError pure $\n-                  validateLiveSessionReferencedPartyEmail\n-                    (M.partyPrimaryEmail party)\n-                    mEmail\n-              pure (key, referencedPartyEmail)\n-        Nothing -> do\n-          found <- case resolveLiveSessionMusicianLookup mEmail of\n-            LookupLiveSessionMusicianByEmail email -> do\n-              matches <-\n-                withPool $\n-                  selectList [M.PartyPrimaryEmail ==. Just email] [LimitTo 2]\n-              either throwError pure (selectUniqueLiveSessionMusicianByEmail matches)\n-            CreateLiveSessionMusician ->\n-              pure Nothing\n-          case found of\n-            Just ent ->\n-              pure (entityKey ent, M.partyPrimaryEmail (entityVal ent))\n-            Nothing -> withPool $ do\n-              key <- insert Party\n-                { partyLegalName        = Nothing\n-                , partyDisplayName      =\n-                    if T.null trimmedName\n-                      then \"M\u00fasico Live Session\"\n-                      else trimmedName\n-                , partyIsOrg            = False\n-                , partyTaxId            = Nothing\n-                , partyPrimaryEmail     = mEmail\n-                , partyPrimaryPhone     = Nothing\n-                , partyWhatsapp         = Nothing\n-                , partyInstagram        = Nothing\n-                , partyEmergencyContact = Nothing\n-                , partyNotes            = liveSessionMusicianPartyNotes (snd <$> instrumentRef)\n-                , partyStripeCustomerId = Nothing\n-                , partyCountryCode       = Nothing\n-                , partyCountryId         = Nothing\n-                , partyCreatedAt        = now\n-                }\n-              pure (key, mEmail)\n-\n-      when (partyKey == toSqlKey 0) $\n-        throwError err400 { errBody = \"Invalid party reference\" }\n-      withPool $ ensureArtistRole now partyKey\n-      withPool $ ensureUserAccount partyKey accountEmail\n+              _ <- either (liftIO . throwIO) pure $\n+                validateLiveSessionReferencedPartyEmail (M.partyPrimaryEmail party) mEmail\n+              pure key\n+        Nothing -> insert Party\n+          { partyLegalName = Nothing\n+          , partyDisplayName = if T.null trimmedName then \"M\u00fasico Live Session\" else trimmedName\n+          , partyIsOrg = False\n+          , partyTaxId = Nothing\n+          , partyPrimaryEmail = mEmail\n+          , partyPrimaryPhone = Nothing\n+          , partyWhatsapp = Nothing\n+          , partyInstagram = Nothing\n+          , partyEmergencyContact = Nothing\n+          , partyNotes = liveSessionMusicianPartyNotes (snd <$> instrumentRef)\n+          , partyStripeCustomerId = Nothing\n+          , partyCountryCode = Nothing\n+          , partyCountryId = Nothing\n+          , partyCreatedAt = now\n+          }\n+      -- Intake registers a contact, not authentication, privileges, or consent.\n       pure (partyKey, mEmail, fst <$> instrumentRef)",
+      "path": "tdf-hq/src/TDF/ServerLiveSessions.hs",
+      "commit_id": "4b029f2c92714dffb4f24e2d5e665d49a5e18491",
+      "original_commit_id": "688575d8cb20adad83956b47914f941370ee55d9",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 4b029f2c9: the form now says it creates a contact for this session and no longer promises login creation. Both permission variants assert this copy; seven intake tests, TypeScript, and focused lint passed.",
+      "created_at": "2026-09-18T09:20:21Z",
+      "updated_at": "2026-09-18T09:20:21Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045444612",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045444612"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045444612"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045444612/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 256,
+      "original_start_line": 256,
+      "start_side": "RIGHT",
+      "line": 257,
+      "original_line": 257,
+      "side": "RIGHT",
+      "in_reply_to_id": 4045005378,
+      "author_association": "OWNER",
+      "original_position": 237,
+      "position": 237,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045471032",
+      "pull_request_review_id": 5246261306,
+      "id": 4045471032,
+      "node_id": "PRRC_kwDOQPdUrM7xIP04",
+      "diff_hunk": "@@ -160,6 +165,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO\n   useEffect(() => {\n     if (typeof window === 'undefined' || !draftKey) return;\n     const payload = {\n+      submissionKey,\n       bandName,",
+      "path": "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
+      "commit_id": "4b029f2c92714dffb4f24e2d5e665d49a5e18491",
+      "original_commit_id": "4b029f2c92714dffb4f24e2d5e665d49a5e18491",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Reset the retry key when abandoning the intake**\n\nPersisting `submissionKey` makes the owner reuse it indefinitely because the form's Cancel action only navigates back and never clears the draft or rotates the key. If the server accepted a request but its response was lost, then the user changes the form or can no longer reattach the same rider, the retry returns 409; pressing Cancel and reopening restores this same key, so every new submission remains blocked. Add an explicit abandonment path that clears the persisted draft or starts a fresh key.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T09:24:17Z",
+      "updated_at": "2026-09-18T09:24:17Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045471032",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045471032"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045471032"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045471032/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 167,
+      "original_start_line": 167,
+      "start_side": "RIGHT",
+      "line": 169,
+      "original_line": 169,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 53,
+      "position": 53,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045554378",
+      "pull_request_review_id": 5246371570,
+      "id": 4045554378,
+      "node_id": "PRRC_kwDOQPdUrM7xIkLK",
+      "diff_hunk": "@@ -160,6 +165,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO\n   useEffect(() => {\n     if (typeof window === 'undefined' || !draftKey) return;\n     const payload = {\n+      submissionKey,\n       bandName,",
+      "path": "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
+      "commit_id": "4b029f2c92714dffb4f24e2d5e665d49a5e18491",
+      "original_commit_id": "4b029f2c92714dffb4f24e2d5e665d49a5e18491",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Added an explicit discard confirmation: Cancel now explains that an uncertain send may already be saved, offers continued editing, and clears the owned draft/rotates the key only after explicit discard. Pending sends cannot be dismissed. The rendered abandonment/reopen regression and seven other intake tests pass, as do TypeScript and focused lint.",
+      "created_at": "2026-09-18T09:35:00Z",
+      "updated_at": "2026-09-18T09:35:00Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045554378",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045554378"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/434#discussion_r4045554378"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/434"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4045554378/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": 167,
+      "original_start_line": 167,
+      "start_side": "RIGHT",
+      "line": 169,
+      "original_line": 169,
+      "side": "RIGHT",
+      "in_reply_to_id": 4045471032,
+      "author_association": "OWNER",
+      "original_position": 53,
+      "position": 53,
+      "subject_type": "line"
+    }
+  ]
+]

@@ -1,0 +1,15 @@
+{
+  "captured_at": "2026-10-04T00:48:21.795479+00:00",
+  "reviewed_remote_head": "154f968aa99780723e1d365c827010d8d85220a3",
+  "base": "c4d479c7f3da659368e5bc60464a1a43c99d9b7a",
+  "local_candidate": "ee58bd13ebef6f56cfdafcd4ab45ac6ecc6bec4b",
+  "expected_merge_tree": "4ab8a7cf02da94e464d649791f9702995ba6d150",
+  "only_base_additions": [
+    "docs/notifications/navigation-2026-09-17.md",
+    "formal/system/inventory.json"
+  ],
+  "document_exactly_matches_reviewed_main": true,
+  "inventory_check": "PASS",
+  "local_only_not_pushed": false,
+  "published_at": "2026-10-04T00:53:41.988484+00:00"
+}

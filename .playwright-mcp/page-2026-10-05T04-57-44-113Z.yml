@@ -1,0 +1,31 @@
+- generic [ref=f5e3]:
+  - generic [ref=f5e4]:
+    - generic [ref=f5e6]:
+      - generic [ref=f5e7]: Loading
+      - progressbar [ref=f5e8]
+    - main [ref=f5e15]:
+      - generic [ref=f5e16]:
+        - generic [ref=f5e17]: Sign in with Google
+        - generic [ref=f5e22]:
+          - heading [level=1]
+      - generic [ref=f5e30]:
+        - generic [ref=f5e31]:
+          - generic [ref=f5e32]: Loading
+          - progressbar [ref=f5e33]
+        - generic [ref=f5e49]: One moment please…
+  - contentinfo [ref=f5e53]:
+    - combobox "Change language English (United States)" [ref=f5e57] [cursor=pointer]:
+      - generic: English (United States)
+    - list [ref=f5e59]:
+      - listitem [ref=f5e60]:
+        - link "Open Google Account Help Center (external, opens in a new window)" [ref=f5e61] [cursor=pointer]:
+          - /url: https://support.google.com/accounts?hl=en&p=account_iph
+          - text: Help
+      - listitem [ref=f5e62]:
+        - link "Privacy Policy (external, opens in a new window)" [ref=f5e63] [cursor=pointer]:
+          - /url: https://accounts.google.com/TOS?loc=EC&hl=en&privacy=true
+          - text: Privacy
+      - listitem [ref=f5e64]:
+        - link "Google Terms of Service (external, opens in a new window)" [ref=f5e65] [cursor=pointer]:
+          - /url: https://accounts.google.com/TOS?loc=EC&hl=en
+          - text: Terms

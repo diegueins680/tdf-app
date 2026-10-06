@@ -1,0 +1,11 @@
+ docs/social/evidence/postgres-benchmark.txt     |  12 +-
+ docs/social/evidence/postgres-foundation.txt    |   8 +-
+ docs/social/evidence/postgres-percentiles.txt   | 242 ++++++++++++++++++++++++
+ docs/social/operations.md                       |  12 ++
+ docs/social/performance.md                      |  33 ++++
+ scripts/social/benchmark.sql                    |  16 ++
+ scripts/social/read-model-tests.sql             |   5 +
+ scripts/social/test-postgres.sh                 |   7 +
+ tdf-hq/sql/2026-09-14_social_v2_foundation.sql  |  11 +-
+ tdf-hq/sql/2026-09-14_social_v2_read_models.sql |  21 +-
+ 10 files changed, 345 insertions(+), 22 deletions(-)

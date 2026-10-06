@@ -1,0 +1,18 @@
+{
+  "captured_at": "2026-10-04T00:45:21.664398+00:00",
+  "access_tests": 11,
+  "catalog_tests": 6,
+  "mail_tests": 6,
+  "catalog_gate": "PASS",
+  "catalog_candidates": 1162,
+  "inventory": "PASS",
+  "whitespace": "PASS",
+  "before_negative_controls": "Old access code fails15 digest rejection cases; no-post-query-check mutation fails the orchestration regression",
+  "live": "PASS: existing SSH connection recovered; metadata/digest/volume,777 catalog records/652 tables and installed read-only mail command verified",
+  "earlier_gate_failures": [
+    "missing typescript dependency before audit-owned cache symlink",
+    "100 stale mobile decisions when scanner started before submodule checkout completed; current pinned checkout scan passes with decisions unchanged"
+  ],
+  "live_evidence": "cutover-provenance-live-verified.json",
+  "initial_timeouts_retained": true
+}

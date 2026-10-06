@@ -1,0 +1,4 @@
+2be39150f626dcd5181951532a8ebe25a3ce3fa4 2026-09-15T23:50:14-05:00 diegueins680 fix(social): preserve session catalog policy during parent reconciliation
+80cd4a1a4b928d6cb4252bfabc30a404be7b937b 2026-09-15T14:04:30-05:00 continuous-improvement-loop[bot] [CF-Pages-Skip] docs(social): classify internal session locking modes
+da541b58a5f8845e02009b8d0a3ccd25c73e7435 2026-09-15T12:21:56-05:00 continuous-improvement-loop[bot] [CF-Pages-Skip] docs(social): record completed session backend build
+a68f235ca8a7d1987fd94defdba078228f77cd1c 2026-09-15T12:13:43-05:00 continuous-improvement-loop[bot] [CF-Pages-Skip] fix(social): revalidate sessions through protected transactions

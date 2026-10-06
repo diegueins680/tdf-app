@@ -1,0 +1,215 @@
+- generic [ref=f9e1]:
+  - generic:
+    - generic:
+      - generic:
+        - generic [ref=f9e241]:
+          - generic [ref=f9e244]:
+            - link [ref=f9e249] [cursor=pointer]:
+              - /url: /
+            - generic [ref=f9e257]:
+              - link [ref=f9e262] [cursor=pointer]:
+                - /url: /
+              - link [ref=f9e272] [cursor=pointer]:
+                - /url: /reels/
+              - link [ref=f9e284] [cursor=pointer]:
+                - /url: /direct/inbox/
+                - generic [ref=f9e285]: "6"
+              - link [ref=f9e298] [cursor=pointer]:
+                - /url: /explore/
+              - link [ref=f9e310] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f9e321] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f9e331] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f9e343] [cursor=pointer]:
+                - /url: /tdf.records.label/
+                - link [ref=f9e348]
+            - generic [ref=f9e350]:
+              - link [ref=f9e353] [cursor=pointer]:
+                - /url: "#"
+              - link [ref=f9e361] [cursor=pointer]:
+                - /url: "#"
+          - generic [ref=f9e369]:
+            - main [ref=f9e18]:
+              - generic [ref=f9e20]:
+                - generic [ref=f9e21]:
+                  - generic [ref=f9e22]:
+                    - link [ref=f9e370] [cursor=pointer]:
+                      - /url: /franlaurito/
+                    - generic [ref=f9e30]:
+                      - generic [ref=f9e31]:
+                        - generic [ref=f9e32]:
+                          - link [ref=f9e372] [cursor=pointer]:
+                            - /url: "#"
+                            - heading [level=2] [ref=f9e373]:
+                              - generic [ref=f9e36]: franlaurito
+                          - button [ref=f9e374] [cursor=pointer]
+                        - generic [ref=f9e43]: Ciscú Mastó
+                        - generic [ref=f9e45]:
+                          - generic [ref=f9e47]:
+                            - generic [ref=f9e48]: "42"
+                            - text: posts
+                          - link [ref=f9e376] [cursor=pointer]:
+                            - /url: "#"
+                            - generic [ref=f9e51]:
+                              - generic [ref=f9e377]: 2,105
+                              - text: followers
+                          - link [ref=f9e378] [cursor=pointer]:
+                            - /url: "#"
+                            - generic [ref=f9e55]:
+                              - generic [ref=f9e56]: 1,914
+                              - text: following
+                      - generic [ref=f9e57]:
+                        - generic [ref=f9e58]:
+                          - generic [ref=f9e59]: Guitarist
+                          - generic [ref=f9e61]:
+                            - button [ref=f9e379] [cursor=pointer]:
+                              - generic [ref=f9e63]: open.spotify.com/playlist/4taXYkcMYajCF3nuhP02TT?si=3zAz4Tm9QnGwm3yoT13AEQ&pi=A7SpJGCnTxi6Y and 1 more
+                            - link [ref=f9e381] [cursor=pointer]:
+                              - /url: https://www.threads.com/@franlaurito?xmt=AQG0U1rTF9pKPVzshLVb0QntZHdVp45egj6PCR_WzSWyXFg
+                              - generic [ref=f9e74]: franlaurito
+                        - link [ref=f9e383] [cursor=pointer]:
+                          - /url: /franlaurito/followers/mutualOnly
+                          - generic [ref=f9e78]:
+                            - generic [ref=f9e80]:
+                              - button [ref=f9e81]:
+                                - link [ref=f9e82]
+                              - button [ref=f9e83]:
+                                - link [ref=f9e84]
+                              - button [ref=f9e85]:
+                                - link [ref=f9e86]
+                            - generic [ref=f9e87]: Followed by pifrecuency, anajusegovia + 37 more
+                  - generic [ref=f9e92]:
+                    - button [ref=f9e384] [cursor=pointer]:
+                      - generic [ref=f9e95]: Following
+                    - button [ref=f9e386] [cursor=pointer]: Message
+                    - button [ref=f9e387] [cursor=pointer]
+                  - menu [ref=f9e110]:
+                    - list [ref=f9e114]:
+                      - listitem [ref=f9e115]
+                      - listitem [ref=f9e116]
+                      - listitem [ref=f9e117]:
+                        - link [ref=f9e389] [cursor=pointer]:
+                          - /url: /stories/highlights/17985627694458520/
+                          - button [ref=f9e390]:
+                            - button [ref=f9e391]
+                            - generic [ref=f9e126]: Music Stuff
+                - tablist [ref=f9e130]:
+                  - link [ref=f9e393] [cursor=pointer]:
+                    - /url: /franlaurito/
+                  - link [ref=f9e395] [cursor=pointer]:
+                    - /url: /franlaurito/reels/
+                  - link [ref=f9e397] [cursor=pointer]:
+                    - /url: /franlaurito/reposts/
+                  - link [ref=f9e399] [cursor=pointer]:
+                    - /url: /franlaurito/tagged/
+                - generic [ref=f9e164]:
+                  - generic [ref=f9e165]:
+                    - link [ref=f9e401] [cursor=pointer]:
+                      - /url: /franlaurito/p/DO6H6GyjT0j/
+                    - link [ref=f9e403] [cursor=pointer]:
+                      - /url: /franlaurito/reel/Dc7ISxfC6Ru/
+                    - link [ref=f9e405] [cursor=pointer]:
+                      - /url: /franlaurito/reel/Dcm5_Ats0SX/
+                  - generic [ref=f9e184]:
+                    - link [ref=f9e407] [cursor=pointer]:
+                      - /url: /franlaurito/p/DdPEjv_FvUK/
+                    - link [ref=f9e409] [cursor=pointer]:
+                      - /url: /franlaurito/p/Dcyi-lTFkQr/
+                    - link [ref=f9e411] [cursor=pointer]:
+                      - /url: /franlaurito/reel/DcthFSfCYaj/
+                  - generic [ref=f9e203]:
+                    - link [ref=f9e413] [cursor=pointer]:
+                      - /url: /franlaurito/reel/DUiwhRbDEM-/
+                    - link [ref=f9e415] [cursor=pointer]:
+                      - /url: /franlaurito/reel/DZNxNO-C5KJ/
+                    - link [ref=f9e417] [cursor=pointer]:
+                      - /url: /franlaurito/reel/DbTZKn3i4jw/
+                  - generic [ref=f9e222]:
+                    - link [ref=f9e419] [cursor=pointer]:
+                      - /url: /sounds.brussels/p/DSc2VUPDdRX/
+                    - link [ref=f9e421] [cursor=pointer]:
+                      - /url: /franlaurito/reel/DVjCX_FDlJX/
+                    - link [ref=f9e423] [cursor=pointer]:
+                      - /url: /franlaurito/reel/DTYWls3jGsD/
+            - contentinfo [ref=f9e425]:
+              - generic [ref=f9e426]:
+                - generic [ref=f9e428]:
+                  - link [ref=f9e430] [cursor=pointer]:
+                    - /url: https://about.meta.com/
+                    - generic [ref=f9e431]: Meta
+                  - link [ref=f9e433] [cursor=pointer]:
+                    - /url: https://about.instagram.com/
+                    - generic [ref=f9e434]: About
+                  - link [ref=f9e436] [cursor=pointer]:
+                    - /url: https://about.instagram.com/blog/
+                    - generic [ref=f9e437]: Blog
+                  - link [ref=f9e439] [cursor=pointer]:
+                    - /url: https://about.instagram.com/about-us/careers
+                    - generic [ref=f9e440]: Jobs
+                  - link [ref=f9e442] [cursor=pointer]:
+                    - /url: https://help.instagram.com/
+                    - generic [ref=f9e443]: Help
+                  - link [ref=f9e445] [cursor=pointer]:
+                    - /url: https://developers.facebook.com/docs/instagram
+                    - generic [ref=f9e446]: API
+                  - link [ref=f9e448] [cursor=pointer]:
+                    - /url: /legal/privacy/
+                    - generic [ref=f9e449]: Privacy
+                  - link [ref=f9e451] [cursor=pointer]:
+                    - /url: /legal/terms/
+                    - generic [ref=f9e452]: Terms
+                  - link [ref=f9e454] [cursor=pointer]:
+                    - /url: /explore/locations/
+                    - generic [ref=f9e455]: Locations
+                  - link [ref=f9e457] [cursor=pointer]:
+                    - /url: /popular/
+                    - generic [ref=f9e458]: Popular
+                  - link [ref=f9e460] [cursor=pointer]:
+                    - /url: /web/lite/
+                    - generic [ref=f9e461]: Instagram Lite
+                  - link [ref=f9e463] [cursor=pointer]:
+                    - /url: https://www.meta.ai/?utm_source=foa_web_footer
+                    - generic [ref=f9e464]: Meta AI
+                  - link [ref=f9e466] [cursor=pointer]:
+                    - /url: https://muse.ai/
+                    - generic [ref=f9e467]: Muse
+                  - link [ref=f9e469] [cursor=pointer]:
+                    - /url: https://www.threads.com/
+                    - generic [ref=f9e470]: Threads
+                  - link [ref=f9e472] [cursor=pointer]:
+                    - /url: https://www.facebook.com/help/instagram/261704639352628
+                    - generic [ref=f9e473]: Contact Uploading & Non-Users
+                  - link [ref=f9e475] [cursor=pointer]:
+                    - /url: /accounts/meta_verified/?entrypoint=web_footer
+                    - generic [ref=f9e476]: Meta Verified
+                - generic [ref=f9e477]:
+                  - generic [ref=f9e478] [cursor=pointer]:
+                    - generic [ref=f9e479]: English
+                    - combobox [ref=f9e485]
+                  - generic [ref=f9e486]: © 2026 Instagram from Meta
+        - button [ref=f9e489] [cursor=pointer]:
+          - generic "Messages - 6 new notifications" [ref=f9e490]:
+            - generic [ref=f9e491]:
+              - generic [ref=f9e493]:
+                - img "Messages" [ref=f9e494]
+                - generic "Direct messaging - 6 new notifications link" [ref=f9e497]: "6"
+              - generic [ref=f9e500]: Messages
+            - generic [ref=f9e501]:
+              - button [ref=f9e502]:
+                - img "6 unread chats" [ref=f9e504]
+              - button "User avatar Jonathan Campoverde" [ref=f9e509]:
+                - img "User avatar" [ref=f9e512]
+              - button "User avatar Fundación Kunayan" [ref=f9e514]:
+                - img "User avatar" [ref=f9e517]
+              - button "User avatar Isaac" [ref=f9e519]:
+                - img "User avatar" [ref=f9e522]
+  - dialog [ref=f9e529]:
+    - generic [ref=f9e534]:
+      - generic [ref=f9e535]:
+        - heading "Messaging franlaurito" [active] [level=3] [ref=f9e538]
+        - generic [ref=f9e539]: Partnership messages are more likely to get a response because they have a dedicated place in franlaurito's inbox.
+      - generic [ref=f9e541]:
+        - button "Send prioritized message" [ref=f9e542] [cursor=pointer]
+        - button "Send message request" [ref=f9e543] [cursor=pointer]

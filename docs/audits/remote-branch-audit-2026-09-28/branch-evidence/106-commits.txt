@@ -1,0 +1,1 @@
+3cd978045aa406c55512a6673c2ba5f2983ebc7c 2026-09-14T20:14:57-05:00 continuous-improvement-loop[bot] fix(events): fence event transactions with authenticated sessions

@@ -1,0 +1,32 @@
+[
+  {
+    "case": "production fallback",
+    "api": "https://api.tdfrecords.net",
+    "upload": "https://api.tdfrecords.net/drive/upload",
+    "exit_code": 0
+  },
+  {
+    "case": "preview EAS",
+    "api": "https://api.tdfrecords.net",
+    "upload": "https://api.tdfrecords.net/drive/upload",
+    "exit_code": 0
+  },
+  {
+    "case": "production EAS",
+    "api": "https://api.tdfrecords.net",
+    "upload": "https://api.tdfrecords.net/drive/upload",
+    "exit_code": 0
+  },
+  {
+    "case": "development",
+    "api": "http://localhost:8080",
+    "upload": "http://localhost:8080/drive/upload",
+    "exit_code": 0
+  },
+  {
+    "case": "explicit isolated override",
+    "api": "https://isolated.invalid",
+    "upload": "https://isolated.invalid/drive/upload",
+    "exit_code": 0
+  }
+]

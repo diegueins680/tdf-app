@@ -1,0 +1,233 @@
+- generic [ref=f6e4]:
+  - generic [ref=f6e9]:
+    - generic [ref=f6e12]:
+      - link [ref=f6e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f6e22]
+      - generic [ref=f6e25]:
+        - link [ref=f6e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f6e35]
+        - link [ref=f6e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f6e45]
+        - link [ref=f6e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - img "Messages" [ref=f6e57]
+        - link [ref=f6e63] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f6e68]
+        - link [ref=f6e75] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f6e80]
+        - link [ref=f6e86] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f6e91]
+        - link [ref=f6e96] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f6e101]
+        - link [ref=f6e108] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f6e113]:
+            - img "tdf.records.label's profile picture" [ref=f6e114]
+      - generic [ref=f6e115]:
+        - link [ref=f6e118] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f6e123]
+        - link [ref=f6e126] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f6e131]
+    - generic [ref=f6e134]:
+      - main [ref=f6e135]:
+        - generic [ref=f6e137]:
+          - generic [ref=f6e138]:
+            - generic [ref=f6e139]:
+              - button [ref=f6e144] [cursor=pointer]:
+                - link [ref=f6e146]:
+                  - img "quitoskasociety's profile picture" [ref=f6e147]
+              - generic [ref=f6e148]:
+                - generic [ref=f6e149]:
+                  - generic [ref=f6e150]:
+                    - link [ref=f6e152] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "quitoskasociety" [level=2] [ref=f6e153]
+                    - button [ref=f6e155] [cursor=pointer]:
+                      - img "Options" [ref=f6e157]
+                  - generic [ref=f6e161]: "| QUITO SKA SOCIETY |"
+                  - generic [ref=f6e163]:
+                    - generic [ref=f6e165]:
+                      - generic [ref=f6e166]: "561"
+                      - text: posts
+                    - link "3,893 followers" [ref=f6e168] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f6e169]:
+                        - generic "3,893" [ref=f6e170]
+                        - text: followers
+                    - link "722 following" [ref=f6e172] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f6e173]:
+                        - generic [ref=f6e174]: "722"
+                        - text: following
+                - generic [ref=f6e175]:
+                  - generic [ref=f6e176]:
+                    - generic [ref=f6e177]: Community
+                    - button [ref=f6e180] [cursor=pointer]:
+                      - generic [ref=f6e181]: 📍UIO 🇪🇨 + 🇯🇲Ska-Ba-Boom 2026🕴🏼🏁Sábado, 24 de octubre
+                    - heading [level=1]
+                    - generic [ref=f6e183]:
+                      - img "Link icon" [ref=f6e185]
+                      - link "bit.ly/SkaDeAkaCanal" [ref=f6e189] [cursor=pointer]:
+                        - /url: https://l.instagram.com/?u=https%3A%2F%2Fbit.ly%2FSkaDeAkaCanal%3Futm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio%26fbclid%3DPAZXh0bgNhZW0CMTEAcGRvZgJzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAaedc-8-MgYVElytYNVZ7PMav2HJZFH2RsioqOlTML6jeLsDbky8CsqWji7hIQ_aem_ZFBQZDiAPrRKLtOufo2oYw&e=AUAi1BUMf0W-Aj2T1rGmZhzNnTMLfczE4Ragy1drxil437cdDaXU_QpzjHgNRyMF-DNN9VDNslwp0OCCp2cWuOaHA7jk3he_s8r24xsPz2MY6A5Bcg7n_T6iESwmOsWVqRcy_Tuv3hZX
+                  - link "Followed by iavq.ec, losargonautas.ec + 44 more" [ref=f6e191] [cursor=pointer]:
+                    - /url: /quitoskasociety/followers/mutualOnly
+                    - generic [ref=f6e193]:
+                      - generic [ref=f6e195]:
+                        - button [ref=f6e196]:
+                          - link [ref=f6e197]
+                        - button [ref=f6e198]:
+                          - link [ref=f6e199]
+                        - button [ref=f6e200]:
+                          - link [ref=f6e201]
+                      - generic [ref=f6e202]: Followed by iavq.ec, losargonautas.ec + 44 more
+            - generic [ref=f6e207]:
+              - status "Loading..." [ref=f6e209]
+              - status "Loading..." [ref=f6e211]
+            - menu [ref=f6e213]:
+              - generic [ref=f6e215]:
+                - generic [ref=f6e217]:
+                  - status "Loading..." [ref=f6e219]
+                  - status "Loading..." [ref=f6e221]
+                - generic [ref=f6e223]:
+                  - status "Loading..." [ref=f6e225]
+                  - status "Loading..." [ref=f6e227]
+                - generic [ref=f6e229]:
+                  - status "Loading..." [ref=f6e231]
+                  - status "Loading..." [ref=f6e233]
+                - generic [ref=f6e235]:
+                  - status "Loading..." [ref=f6e237]
+                  - status "Loading..." [ref=f6e239]
+                - generic [ref=f6e241]:
+                  - status "Loading..." [ref=f6e243]
+                  - status "Loading..." [ref=f6e245]
+                - generic [ref=f6e247]:
+                  - status "Loading..." [ref=f6e249]
+                  - status "Loading..." [ref=f6e251]
+                - generic [ref=f6e253]:
+                  - status "Loading..." [ref=f6e255]
+                  - status "Loading..." [ref=f6e257]
+          - generic [ref=f6e258]:
+            - tablist [ref=f6e259]:
+              - link [ref=f6e261] [cursor=pointer]:
+                - /url: /quitoskasociety/
+                - img "Posts" [ref=f6e263]
+              - link [ref=f6e274] [cursor=pointer]:
+                - /url: /quitoskasociety/reels/
+                - img "Reels" [ref=f6e276]
+              - link [ref=f6e279] [cursor=pointer]:
+                - /url: /quitoskasociety/reposts/
+                - img "Reposts" [ref=f6e281]
+              - link [ref=f6e284] [cursor=pointer]:
+                - /url: /quitoskasociety/tagged/
+                - img "Tagged" [ref=f6e286]
+            - tabpanel
+          - progressbar [ref=f6e290]:
+            - img "Loading..." [ref=f6e291]
+      - contentinfo [ref=f6e304]:
+        - generic [ref=f6e305]:
+          - generic [ref=f6e307]:
+            - link "Meta" [ref=f6e309] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f6e312] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f6e315] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f6e318] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f6e321] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f6e324] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f6e327] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f6e330] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f6e333] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f6e336] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f6e339] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f6e342] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f6e345] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f6e348] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f6e351] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f6e354] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f6e356]:
+            - generic [ref=f6e357] [cursor=pointer]:
+              - generic [ref=f6e358]:
+                - generic [ref=f6e359]: English
+                - img "Down chevron icon" [ref=f6e362]
+              - combobox "Switch Display Language" [ref=f6e364]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f6e365]: © 2026 Instagram from Meta
+  - button "Messages Messages" [ref=f6e368] [cursor=pointer]:
+    - generic [ref=f6e370]:
+      - img "Messages" [ref=f6e372]
+      - generic [ref=f6e375]: Messages

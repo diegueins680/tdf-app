@@ -1,0 +1,71 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 453,
+          "reviewDecision": "REVIEW_REQUIRED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "261bfdfbbdab0520b35725a72b776f160b608dd3",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6j09sm",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-release.mjs",
+                "line": 713,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Allow the final checkout to release the pinned target**\n\nWhen the documented release runs with `--sha 98a561a9...` from this final commit (or its protected-main merge), execution stops before preflight: `assertReleaseCheckout` compares that SHA to HEAD and permits only changes to `scripts/production-release.mjs` or `memory/`, but this commit also changes three identity docs and `scripts/__tests__/provider-rollback.test.mjs`. Consequently the new recovery policy cannot execute from the reviewed final checkout; either those known non-application paths must be allowed or the release target/checkpoint must be arranged so the checkout assertion passes.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/453#discussion_r4048980349",
+                      "createdAt": "2026-09-18T17:13:37Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Addressed in 7d49563ec: the runbook now pins clean runner-only checkout 9fd718923895f331b505ea8850a0b525be4b8039 after protected-main inclusion, with application target 98a561a9446a1c51e627f6ad5a48737fe5122d85. Its only target-to-HEAD change is scripts/production-release.mjs, satisfying the existing guard. The final docs/test checkout is explicitly unsupported for this pinned target. The guard is not weakened.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/453#discussion_r4049646355",
+                      "createdAt": "2026-09-18T18:39:40Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Final arrangement: candidate 261bfdfbbdab0520b35725a72b776f160b608dd3 includes the runner, current main and reviewed dialog fix. It has its own full Build Image run35382946062. Production will run from a clean checkout of that exact SHA after protected-main incorporation, using verified recovery98a561a9. No older-target checkout exception is now needed. Actual261/recovery98 plan passes all113 migration ancestry and expanded-SQL checks.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/453#discussion_r4049846846",
+                      "createdAt": "2026-09-18T19:05:25Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxOTowNToyNVrO8WPCPg=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xOFQxNzoxMzozN1rOo9PbJg=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

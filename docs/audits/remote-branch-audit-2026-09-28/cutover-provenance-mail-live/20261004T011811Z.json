@@ -1,0 +1,66 @@
+{
+  "observedAt": "2026-10-04T01:17:56.367908+00:00",
+  "dns": {
+    "ns1.openprovider.nl/tdfrecords.net/TXT": "tdfrecords.net.\t\t3600\tIN\tTXT\t\"v=spf1 include:_spf.webador.com ~all\"",
+    "ns1.openprovider.nl/_dmarc.tdfrecords.net/TXT": "_dmarc.tdfrecords.net.\t3600\tIN\tTXT\t\"v=DMARC1; p=none; rua=mailto:info@tdfrecords.net\"",
+    "ns1.openprovider.nl/jouwweb._domainkey.tdfrecords.net/TXT": "jouwweb._domainkey.tdfrecords.net. 3600\tIN CNAME website-rendering._domainkey.jouwweb.nl.\nwebsite-rendering._domainkey.jouwweb.nl. 900 IN\tTXT \"v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqyvrS9nAUs2NnB74yQq2P/s2uva4E3G9wbvjV7fxzBOeSjpEPYklLIa55tDsCCiuUeauiquKLPA+VX3qCQZRX3RM1K7bZ7aGcSQW4rW9aSH4xFmQnMKBbkANjW0qHiNCFHOWRdvDx0MX4n4swtoFRZLfV8oUdwoRGyl9eZ3sM2kOsY5u4rQf0iGE4+EtkiS0T\" \"nPQdcZpymyHvrJTvbBslXyM3++NcdOLw76izSoCGVwc76pO1vNe3t0ujhZhSXbGruR6wfJfH/2L0HOxq6iab6QFOmubx6txdnFyluI0K3ZKwvc5UTkzDXnKHaflVRHDw1/yEa0oqRf2/z2zKWTdhwIDAQAB\"",
+    "ns1.openprovider.nl/tdfrecords.net/MX": "tdfrecords.net.\t\t3600\tIN\tMX\t0 mail.webador.com.",
+    "ns2.openprovider.be/tdfrecords.net/TXT": "tdfrecords.net.\t\t3600\tIN\tTXT\t\"v=spf1 include:_spf.webador.com ~all\"",
+    "ns2.openprovider.be/_dmarc.tdfrecords.net/TXT": "_dmarc.tdfrecords.net.\t3600\tIN\tTXT\t\"v=DMARC1; p=none; rua=mailto:info@tdfrecords.net\"",
+    "ns2.openprovider.be/jouwweb._domainkey.tdfrecords.net/TXT": "jouwweb._domainkey.tdfrecords.net. 3600\tIN CNAME website-rendering._domainkey.jouwweb.nl.\nwebsite-rendering._domainkey.jouwweb.nl. 900 IN\tTXT \"v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqyvrS9nAUs2NnB74yQq2P/s2uva4E3G9wbvjV7fxzBOeSjpEPYklLIa55tDsCCiuUeauiquKLPA+VX3qCQZRX3RM1K7bZ7aGcSQW4rW9aSH4xFmQnMKBbkANjW0qHiNCFHOWRdvDx0MX4n4swtoFRZLfV8oUdwoRGyl9eZ3sM2kOsY5u4rQf0iGE4+EtkiS0T\" \"nPQdcZpymyHvrJTvbBslXyM3++NcdOLw76izSoCGVwc76pO1vNe3t0ujhZhSXbGruR6wfJfH/2L0HOxq6iab6QFOmubx6txdnFyluI0K3ZKwvc5UTkzDXnKHaflVRHDw1/yEa0oqRf2/z2zKWTdhwIDAQAB\"",
+    "ns2.openprovider.be/tdfrecords.net/MX": "tdfrecords.net.\t\t3600\tIN\tMX\t0 mail.webador.com.",
+    "ns3.openprovider.eu/tdfrecords.net/TXT": "tdfrecords.net.\t\t3600\tIN\tTXT\t\"v=spf1 include:_spf.webador.com ~all\"",
+    "ns3.openprovider.eu/_dmarc.tdfrecords.net/TXT": "_dmarc.tdfrecords.net.\t3600\tIN\tTXT\t\"v=DMARC1; p=none; rua=mailto:info@tdfrecords.net\"",
+    "ns3.openprovider.eu/jouwweb._domainkey.tdfrecords.net/TXT": "jouwweb._domainkey.tdfrecords.net. 3600\tIN CNAME website-rendering._domainkey.jouwweb.nl.\nwebsite-rendering._domainkey.jouwweb.nl. 900 IN\tTXT \"v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqyvrS9nAUs2NnB74yQq2P/s2uva4E3G9wbvjV7fxzBOeSjpEPYklLIa55tDsCCiuUeauiquKLPA+VX3qCQZRX3RM1K7bZ7aGcSQW4rW9aSH4xFmQnMKBbkANjW0qHiNCFHOWRdvDx0MX4n4swtoFRZLfV8oUdwoRGyl9eZ3sM2kOsY5u4rQf0iGE4+EtkiS0T\" \"nPQdcZpymyHvrJTvbBslXyM3++NcdOLw76izSoCGVwc76pO1vNe3t0ujhZhSXbGruR6wfJfH/2L0HOxq6iab6QFOmubx6txdnFyluI0K3ZKwvc5UTkzDXnKHaflVRHDw1/yEa0oqRf2/z2zKWTdhwIDAQAB\"",
+    "ns3.openprovider.eu/tdfrecords.net/MX": "tdfrecords.net.\t\t3600\tIN\tMX\t0 mail.webador.com.",
+    "1.1.1.1/tdfrecords.net/TXT": "tdfrecords.net.\t\t3600\tIN\tTXT\t\"v=spf1 include:_spf.webador.com ~all\"",
+    "1.1.1.1/_dmarc.tdfrecords.net/TXT": "_dmarc.tdfrecords.net.\t3600\tIN\tTXT\t\"v=DMARC1; p=none; rua=mailto:info@tdfrecords.net\"",
+    "1.1.1.1/jouwweb._domainkey.tdfrecords.net/TXT": "jouwweb._domainkey.tdfrecords.net. 3600\tIN CNAME website-rendering._domainkey.jouwweb.nl.\nwebsite-rendering._domainkey.jouwweb.nl. 10800 IN TXT \"v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqyvrS9nAUs2NnB74yQq2P/s2uva4E3G9wbvjV7fxzBOeSjpEPYklLIa55tDsCCiuUeauiquKLPA+VX3qCQZRX3RM1K7bZ7aGcSQW4rW9aSH4xFmQnMKBbkANjW0qHiNCFHOWRdvDx0MX4n4swtoFRZLfV8oUdwoRGyl9eZ3sM2kOsY5u4rQf0iGE4+EtkiS0T\" \"nPQdcZpymyHvrJTvbBslXyM3++NcdOLw76izSoCGVwc76pO1vNe3t0ujhZhSXbGruR6wfJfH/2L0HOxq6iab6QFOmubx6txdnFyluI0K3ZKwvc5UTkzDXnKHaflVRHDw1/yEa0oqRf2/z2zKWTdhwIDAQAB\"",
+    "1.1.1.1/tdfrecords.net/MX": "tdfrecords.net.\t\t3600\tIN\tMX\t0 mail.webador.com.",
+    "8.8.8.8/tdfrecords.net/TXT": "tdfrecords.net.\t\t3600\tIN\tTXT\t\"v=spf1 include:_spf.webador.com ~all\"",
+    "8.8.8.8/_dmarc.tdfrecords.net/TXT": "_dmarc.tdfrecords.net.\t3600\tIN\tTXT\t\"v=DMARC1; p=none; rua=mailto:info@tdfrecords.net\"",
+    "8.8.8.8/jouwweb._domainkey.tdfrecords.net/TXT": "jouwweb._domainkey.tdfrecords.net. 3600\tIN CNAME website-rendering._domainkey.jouwweb.nl.\nwebsite-rendering._domainkey.jouwweb.nl. 10800 IN TXT \"v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqyvrS9nAUs2NnB74yQq2P/s2uva4E3G9wbvjV7fxzBOeSjpEPYklLIa55tDsCCiuUeauiquKLPA+VX3qCQZRX3RM1K7bZ7aGcSQW4rW9aSH4xFmQnMKBbkANjW0qHiNCFHOWRdvDx0MX4n4swtoFRZLfV8oUdwoRGyl9eZ3sM2kOsY5u4rQf0iGE4+EtkiS0T\" \"nPQdcZpymyHvrJTvbBslXyM3++NcdOLw76izSoCGVwc76pO1vNe3t0ujhZhSXbGruR6wfJfH/2L0HOxq6iab6QFOmubx6txdnFyluI0K3ZKwvc5UTkzDXnKHaflVRHDw1/yEa0oqRf2/z2zKWTdhwIDAQAB\"",
+    "8.8.8.8/tdfrecords.net/MX": "tdfrecords.net.\t\t3600\tIN\tMX\t0 mail.webador.com."
+  },
+  "dsnStatuses": {
+    "failed:5.4.1": 1,
+    "failed:5.1.1": 1
+  },
+  "aggregateReports": [
+    {
+      "messages": 1,
+      "aligned": 1
+    },
+    {
+      "messages": 1,
+      "aligned": 1
+    },
+    {
+      "messages": 1,
+      "aligned": 1
+    },
+    {
+      "messages": 1,
+      "aligned": 1
+    },
+    {
+      "messages": 1,
+      "aligned": 1
+    },
+    {
+      "messages": 1,
+      "aligned": 1
+    },
+    {
+      "messages": 1,
+      "aligned": 1
+    },
+    {
+      "messages": 1,
+      "aligned": 1
+    }
+  ],
+  "errors": [],
+  "limitation": "Last 14 days, INBOX/Junk, max 200 recent messages per folder; no spam complaint feed or inbox-placement inference. Reports are untrusted observations.",
+  "mailboxReadSucceeded": true
+}

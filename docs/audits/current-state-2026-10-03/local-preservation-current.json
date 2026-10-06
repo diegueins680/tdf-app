@@ -1,0 +1,50 @@
+{
+  "checkedAt": "2026-10-05T06:47:01.349599+00:00",
+  "main": "259148d2af3b511dd7d011534e024014c90dfb15",
+  "evidence": {
+    "artwork": {
+      "tdf-hq-ui/src/features/releases/ReleaseArtwork.tsx": true,
+      "tdf-hq-ui/src/features/releases/ReleaseArtwork.test.tsx": true,
+      "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts": true,
+      "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts": true,
+      "tdf-hq-ui/src/pages/LabelReleasesPage.tsx": true
+    },
+    "providerRecovery": {
+      "approvedSuccessor": "35172083af75f9c7530624173d82819252e25d1a",
+      "successorAncestorOfMain": true,
+      "sourceToolExactlyMatchesReviewedSuccessor": true,
+      "currentIdentityFloorPreserved": true,
+      "currentDisabledEscrowGatePresent": true
+    },
+    "notifications": {
+      "allHistoricalContentLinesRetained": true,
+      "sourcePinAncestorOfCurrentRootPin": true
+    },
+    "records": {
+      "docs/records-ingestion/youtube-provider.md": true,
+      "tdf-hq/src/TDF/Services/YouTube.hs": true,
+      "tdf-hq/test/TDF/Services/YouTubeSpec.hs": true,
+      "moduleAndTestRegistered": true
+    },
+    "workerDiagnostics": {
+      "allHistoricalTestCasesRetained": true,
+      "historicalTestCaseCount": 10,
+      "reviewedSquashAncestor": true,
+      "merchWorkerByteIdentical": true
+    },
+    "requesterName": {
+      "approvedSuccessorAncestor": true,
+      "nullableDTOFieldPresent": true,
+      "normalizedAuthoritativePartyNamePresent": true,
+      "namedReviewerNotificationPresent": true
+    },
+    "localMobileCheckpoint": {
+      "source": "859d7d66a4df5e74850f23dd58dbf94bc9fe44d2",
+      "uniqueChangedPaths": [
+        ":-"
+      ],
+      "parentContainedInCurrentMobileMain": true,
+      "disposition": "retain occupied local main and checkpoint artifact; no release requirement established by this accidental :- file"
+    }
+  }
+}

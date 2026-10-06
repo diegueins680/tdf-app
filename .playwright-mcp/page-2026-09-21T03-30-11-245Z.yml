@@ -1,0 +1,14 @@
+- generic [active] [ref=f13e1]:
+  - generic "Reproductor de video de YouTube" [ref=f13e5]:
+    - button "Reproducir" [ref=f13e9] [cursor=pointer]
+  - banner [ref=f13e33]:
+    - generic [ref=f13e35]:
+      - generic [ref=f13e36]:
+        - button "Guía" [ref=f13e38] [cursor=pointer]
+        - generic [ref=f13e40]:
+          - link:
+            - /url: /
+      - search [ref=f13e42]:
+        - generic [ref=f13e44]:
+          - combobox [expanded] [ref=f13e47]
+          - button "Search" [ref=f13e48] [cursor=pointer]

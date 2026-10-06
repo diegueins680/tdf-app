@@ -1,0 +1,8 @@
+{
+  "time": "2026-10-01T01:37:50.439192+00:00",
+  "action": "updated_installed_mail_helper_with_current_shared_source",
+  "path": "/Users/diegosaa/GitHub/tdf-app/tmp/mail-deliverability/production_access.py",
+  "before_sha256": "e5c9d751e8590f544d9a7777b37a02d3b7d20e0c8a78910fa44760e2d5b03586",
+  "sha256": "e4f78cafc6b6d56f590f3d6d3988510a12edb63b06b89766af469a1c42a154a4",
+  "launchagent_unchanged": true
+}

@@ -1,0 +1,6 @@
+M	docs/catalog-persistence/catalog-list-decisions.json
+M	docs/event-operations/README.md
+A	docs/event-operations/catalog-review-contract.md
+M	docs/event-operations/pr-34-raci-review-paint.md
+A	docs/event-operations/pr-35-event-catalog-review.md
+M	docs/event-operations/traceability-matrix.md

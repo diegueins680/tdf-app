@@ -1,0 +1,224 @@
+- generic [ref=e4]:
+  - generic [ref=e7]:
+    - generic [ref=e9]:
+      - generic [ref=e12]:
+        - link [ref=e17] [cursor=pointer]:
+          - /url: /
+          - img "Instagram" [ref=e22]
+        - generic [ref=e25]:
+          - link [ref=e30] [cursor=pointer]:
+            - /url: /
+            - img "Home" [ref=e35]
+          - link [ref=e40] [cursor=pointer]:
+            - /url: /reels/
+            - img "Reels" [ref=e45]
+          - link [ref=e52] [cursor=pointer]:
+            - /url: /direct/inbox/
+            - generic [ref=e55]:
+              - img "Messages" [ref=e57]
+              - generic "Direct messaging - 2 new notifications link" [ref=e60]: "2"
+          - link [ref=e66] [cursor=pointer]:
+            - /url: /explore/
+            - img "Search" [ref=e71]
+          - link [ref=e79] [cursor=pointer]:
+            - /url: "#"
+            - img "Notifications" [ref=e84]
+          - link [ref=e92] [cursor=pointer]:
+            - /url: "#"
+            - img "New post" [ref=e97]
+          - link [ref=e102] [cursor=pointer]:
+            - /url: "#"
+            - img "Professional dashboard" [ref=e107]
+          - link [ref=e114] [cursor=pointer]:
+            - /url: /tdf.records.label/
+            - link [ref=e119]:
+              - img "tdf.records.label's profile picture" [ref=e120]
+        - generic [ref=e121]:
+          - link [ref=e124] [cursor=pointer]:
+            - /url: "#"
+            - img "Settings" [ref=e129]
+          - link [ref=e132] [cursor=pointer]:
+            - /url: "#"
+            - img "Also from Meta" [ref=e137]
+      - generic [ref=e140]:
+        - main [ref=e141]:
+          - generic [ref=e144]:
+            - generic [ref=e156]:
+              - list [ref=e158]:
+                - listitem [ref=e159]
+                - listitem [ref=e160]
+                - listitem [ref=e169]
+              - button "Next" [ref=e178] [cursor=pointer]
+            - generic [ref=e181]:
+              - generic [ref=e183]:
+                - button [disabled] [ref=e188]:
+                  - link [disabled] [ref=e190] [cursor=pointer]:
+                    - img "alexcast140's profile picture" [ref=e191]
+                - generic [ref=e194]:
+                  - generic [ref=e195]:
+                    - link "alexcast140" [ref=e203] [cursor=pointer]:
+                      - /url: /alexcast140/
+                    - link "Long Island - New York" [ref=e210] [cursor=pointer]:
+                      - /url: /explore/locations/190464955180444/long-island-new-york/
+                  - button "Follow" [ref=e212] [cursor=pointer]
+                - button [ref=e215] [cursor=pointer]:
+                  - img "More options" [ref=e218]
+              - separator [ref=e222]
+              - generic [ref=e224]:
+                - generic [ref=e226]:
+                  - link [ref=e231] [cursor=pointer]:
+                    - /url: /alexcast140/
+                    - img "alexcast140's profile picture" [ref=e232]
+                  - link "alexcast140" [ref=e241] [cursor=pointer]:
+                    - /url: /alexcast140/
+                - generic [ref=e247]:
+                  - heading "No comments yet." [level=2] [ref=e249]
+                  - generic [ref=e250]: Start the conversation.
+              - generic [ref=e252]:
+                - generic [ref=e253]:
+                  - generic [ref=e254]:
+                    - button [ref=e257] [cursor=pointer]:
+                      - img "Like" [ref=e260]
+                    - button "114" [ref=e262] [cursor=pointer]
+                    - button [ref=e264] [cursor=pointer]:
+                      - img "Comment" [ref=e266]
+                    - button [ref=e268] [cursor=pointer]:
+                      - img "Repost" [ref=e269]
+                    - button [ref=e271] [cursor=pointer]:
+                      - img "Share" [ref=e272]
+                  - button [ref=e277] [cursor=pointer]:
+                    - button [ref=e278]:
+                      - img "Save" [ref=e280]
+                - generic [ref=e283]:
+                  - link [ref=e285] [cursor=pointer]:
+                    - /url: /p/DBZ2RqvPSVS/liked_by/
+                    - button [ref=e288]:
+                      - link [ref=e289]
+                  - generic [ref=e291]:
+                    - text: Liked by
+                    - link "agni.______" [ref=e292] [cursor=pointer]:
+                      - /url: /agni.______/
+                    - text: and
+                    - link "113 others" [ref=e293] [cursor=pointer]:
+                      - /url: /p/DBZ2RqvPSVS/liked_by/
+                - link [ref=e297] [cursor=pointer]:
+                  - /url: /alexcast140/p/DBZ2RqvPSVS/
+                  - time [ref=e299]: October 21, 2024
+              - generic [ref=e302]:
+                - link [ref=e303]
+                - generic [ref=e305]:
+                  - button [ref=e307] [cursor=pointer]:
+                    - img "Emoji" [ref=e309]
+                  - textbox "Add a comment…" [ref=e311]
+        - contentinfo [ref=e312]:
+          - generic [ref=e313]:
+            - generic [ref=e315]:
+              - link "Meta" [ref=e317] [cursor=pointer]:
+                - /url: https://about.meta.com/
+              - link "About" [ref=e320] [cursor=pointer]:
+                - /url: https://about.instagram.com/
+              - link "Blog" [ref=e323] [cursor=pointer]:
+                - /url: https://about.instagram.com/blog/
+              - link "Jobs" [ref=e326] [cursor=pointer]:
+                - /url: https://about.instagram.com/about-us/careers
+              - link "Help" [ref=e329] [cursor=pointer]:
+                - /url: https://help.instagram.com/
+              - link "API" [ref=e332] [cursor=pointer]:
+                - /url: https://developers.facebook.com/docs/instagram
+              - link "Privacy" [ref=e335] [cursor=pointer]:
+                - /url: /legal/privacy/
+              - link "Terms" [ref=e338] [cursor=pointer]:
+                - /url: /legal/terms/
+              - link "Locations" [ref=e341] [cursor=pointer]:
+                - /url: /explore/locations/
+              - link "Popular" [ref=e344] [cursor=pointer]:
+                - /url: /popular/
+              - link "Instagram Lite" [ref=e347] [cursor=pointer]:
+                - /url: /web/lite/
+              - link "Meta AI" [ref=e350] [cursor=pointer]:
+                - /url: https://www.meta.ai/?utm_source=foa_web_footer
+              - link "Muse" [ref=e353] [cursor=pointer]:
+                - /url: https://muse.ai/
+              - link "Threads" [ref=e356] [cursor=pointer]:
+                - /url: https://www.threads.com/
+              - link "Contact Uploading & Non-Users" [ref=e359] [cursor=pointer]:
+                - /url: https://www.facebook.com/help/instagram/261704639352628
+              - link "Meta Verified" [ref=e362] [cursor=pointer]:
+                - /url: /accounts/meta_verified/?entrypoint=web_footer
+            - generic [ref=e364]:
+              - generic [ref=e365] [cursor=pointer]:
+                - generic [ref=e366]:
+                  - generic [ref=e367]: English
+                  - img "Down chevron icon" [ref=e370]
+                - combobox "Switch Display Language" [ref=e372]:
+                  - option "Afrikaans"
+                  - option "العربية"
+                  - option "Čeština"
+                  - option "Dansk"
+                  - option "Deutsch"
+                  - option "Ελληνικά"
+                  - option "English" [selected]
+                  - option "English (UK)"
+                  - option "Español (España)"
+                  - option "Español"
+                  - option "فارسی"
+                  - option "Suomi"
+                  - option "Français"
+                  - option "עברית"
+                  - option "Bahasa Indonesia"
+                  - option "Italiano"
+                  - option "日本語"
+                  - option "한국어"
+                  - option "Bahasa Melayu"
+                  - option "Norsk"
+                  - option "Nederlands"
+                  - option "Polski"
+                  - option "Português (Brasil)"
+                  - option "Português (Portugal)"
+                  - option "Русский"
+                  - option "Svenska"
+                  - option "ภาษาไทย"
+                  - option "Filipino"
+                  - option "Türkçe"
+                  - option "中文(简体)"
+                  - option "中文(台灣)"
+                  - option "বাংলা"
+                  - option "ગુજરાતી"
+                  - option "हिन्दी"
+                  - option "Hrvatski"
+                  - option "Magyar"
+                  - option "ಕನ್ನಡ"
+                  - option "മലയാളം"
+                  - option "मराठी"
+                  - option "नेपाली"
+                  - option "ਪੰਜਾਬੀ"
+                  - option "සිංහල"
+                  - option "Slovenčina"
+                  - option "தமிழ்"
+                  - option "తెలుగు"
+                  - option "اردو"
+                  - option "Tiếng Việt"
+                  - option "中文(香港)"
+                  - option "Български"
+                  - option "Français (Canada)"
+                  - option "Română"
+                  - option "Српски"
+                  - option "Українська"
+              - generic [ref=e373]: © 2026 Instagram from Meta
+    - button [ref=e376] [cursor=pointer]:
+      - tooltip "Like 1" [ref=e378]:
+        - generic [ref=e381]:
+          - generic "Like" [ref=e382]
+          - generic [ref=e383]: "1"
+  - button [ref=e387] [cursor=pointer]:
+    - generic "Messages - 2 new notifications" [ref=e388]:
+      - generic [ref=e389]:
+        - generic [ref=e391]:
+          - img "Messages" [ref=e392]
+          - generic "Direct messaging - 2 new notifications link" [ref=e395]: "2"
+        - generic [ref=e398]: Messages
+      - generic [ref=e399]:
+        - button "User avatar Andrés Martín Arauz" [ref=e401]:
+          - img "User avatar" [ref=e404]
+        - button "User avatar Llama Este Pez" [ref=e406]:
+          - img "User avatar" [ref=e409]

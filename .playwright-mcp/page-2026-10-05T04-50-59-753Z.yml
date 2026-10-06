@@ -1,0 +1,454 @@
+- generic [ref=f1e1]:
+  - link "Skip to main content" [ref=f1e2] [cursor=pointer]:
+    - /url: /organization-settings/api-keys#single-page-app_layout_page__main-content
+  - generic [ref=f1e4]:
+    - generic [ref=f1e5]:
+      - generic [ref=f1e6]:
+        - generic [ref=f1e7]: Welcome, Diego!
+        - generic [ref=f1e9]:
+          - generic [ref=f1e10]: Your trial period has expired!
+          - link [ref=f1e622] [cursor=pointer]:
+            - /url: /billing/plan/subscribe
+            - text: Upgrade
+      - generic [ref=f1e13]:
+        - button [ref=f1e623] [cursor=pointer]:
+          - text: Search Datadog
+          - generic [ref=f1e17]:
+            - generic [ref=f1e624]: ⌘
+            - generic [ref=f1e625]: k
+        - button [ref=f1e626] [cursor=pointer]:
+          - generic [ref=f1e26]: Ask Bits
+      - navigation [ref=f1e627]:
+        - group [ref=f1e628]:
+          - generic [ref=f1e29]:
+            - link [ref=f1e629] [cursor=pointer]:
+              - /url: /help/quick_start
+            - button [ref=f1e630] [cursor=pointer]
+            - button [ref=f1e631] [cursor=pointer]
+        - generic [ref=f1e41]:
+          - list [ref=f1e632]:
+            - listitem [ref=f1e44]:
+              - link [ref=f1e633] [cursor=pointer]:
+                - /url: /ask
+                - generic [ref=f1e47]: Bits AI
+            - listitem [ref=f1e52]:
+              - link [ref=f1e634] [cursor=pointer]:
+                - /url: /dashboard/lists
+                - generic [ref=f1e55]: Dashboards
+            - listitem [ref=f1e60]:
+              - link [ref=f1e635] [cursor=pointer]:
+                - /url: /monitors/manage
+                - generic [ref=f1e63]: Monitoring
+            - listitem [ref=f1e68]:
+              - link [ref=f1e636] [cursor=pointer]:
+                - /url: /idp/home
+                - generic [ref=f1e71]: Developer Portal
+            - listitem [ref=f1e76]:
+              - link [ref=f1e637] [cursor=pointer]:
+                - /url: /incidents
+                - generic [ref=f1e79]: Incident Response
+            - listitem [ref=f1e84]:
+              - link [ref=f1e638] [cursor=pointer]:
+                - /url: /actions
+                - generic [ref=f1e87]: Automation
+            - listitem [ref=f1e92]:
+              - link [ref=f1e639] [cursor=pointer]:
+                - /url: /infrastructure
+                - generic [ref=f1e95]: Infrastructure
+            - listitem [ref=f1e100]:
+              - link [ref=f1e640] [cursor=pointer]:
+                - /url: /cost/onboarding
+                - generic [ref=f1e103]: Cloud Cost
+            - listitem [ref=f1e108]:
+              - link [ref=f1e641] [cursor=pointer]:
+                - /url: /apm/home
+                - generic [ref=f1e111]: APM
+            - listitem [ref=f1e116]:
+              - link [ref=f1e642] [cursor=pointer]:
+                - /url: /synthetics/tests
+                - generic [ref=f1e119]: Digital Experience
+            - listitem [ref=f1e124]:
+              - link [ref=f1e643] [cursor=pointer]:
+                - /url: /ci
+                - generic [ref=f1e127]: Software Delivery
+            - listitem [ref=f1e132]:
+              - link [ref=f1e644] [cursor=pointer]:
+                - /url: /security/getting-started
+                - generic [ref=f1e135]: Security
+            - listitem [ref=f1e140]:
+              - link [ref=f1e645] [cursor=pointer]:
+                - /url: /data-obs
+                - generic [ref=f1e143]: Data Observability
+            - listitem [ref=f1e148]:
+              - link [ref=f1e646] [cursor=pointer]:
+                - /url: /llm
+                - generic [ref=f1e151]: AI Observability
+            - listitem [ref=f1e156]:
+              - link [ref=f1e647] [cursor=pointer]:
+                - /url: /error-tracking
+                - generic [ref=f1e159]: Errors
+            - listitem [ref=f1e164]:
+              - link [ref=f1e648] [cursor=pointer]:
+                - /url: /metric/overview
+                - generic [ref=f1e167]: Metrics
+            - listitem [ref=f1e172]:
+              - link [ref=f1e649] [cursor=pointer]:
+                - /url: /logs
+                - generic [ref=f1e175]: Logs
+          - button [ref=f1e180] [cursor=pointer]
+          - generic [ref=f1e181]:
+            - list [ref=f1e650]:
+              - listitem [ref=f1e183]:
+                - link [ref=f1e651] [cursor=pointer]:
+                  - /url: /integrations
+                  - generic [ref=f1e186]: Integrations
+              - listitem [ref=f1e191]:
+                - link [ref=f1e652] [cursor=pointer]:
+                  - /url: /personal-settings
+                  - generic [ref=f1e199]:
+                    - generic [ref=f1e201]:
+                      - generic [ref=f1e202]: cuco.saa@gmail.com
+                      - generic [ref=f1e205]: cuco.saa@gmail.com
+                    - generic [ref=f1e207]:
+                      - text: TDF Records
+                      - generic [ref=f1e208]: TDF Records
+            - generic [ref=f1e210]:
+              - link [disabled] [ref=f1e653] [cursor=pointer]:
+                - /url: /organization-settings/users/invite
+                - generic [ref=f1e213]: Invite
+              - button [disabled] [ref=f1e654] [cursor=pointer]:
+                - generic [ref=f1e219]: Support
+              - link [ref=f1e655] [cursor=pointer]:
+                - /url: /help
+                - generic [ref=f1e225]:
+                  - generic [ref=f1e226]: NEW
+                  - generic [ref=f1e232]: Help
+    - generic [ref=f1e234]:
+      - banner [ref=f1e235]:
+        - banner [ref=f1e236]:
+          - button [ref=f1e656] [cursor=pointer]:
+            - heading [level=2] [ref=f1e657]: Organization Settings
+          - generic [ref=f1e247]:
+            - generic [ref=f1e248]: "Organization: TDF Records"
+            - generic [ref=f1e250]: "Site: datadoghq.com"
+            - button [ref=f1e658] [cursor=pointer]: Log Out
+      - generic [ref=f1e255]:
+        - button [ref=f1e659] [cursor=pointer]
+        - generic [ref=f1e262]:
+          - heading [level=1] [ref=f1e660]: Set up Security Contacts
+          - text: new
+          - list [ref=f1e264]:
+            - listitem [ref=f1e265]: Receive timely alerts for vital security events
+            - listitem [ref=f1e266]: Swiftly address and mitigate potential security risks
+            - listitem [ref=f1e267]:
+              - link [ref=f1e661] [cursor=pointer]:
+                - /url: /organization-settings/preferences#security-contacts
+                - text: Set Up Security Contacts
+              - link [ref=f1e662] [cursor=pointer]:
+                - /url: https://www.datadoghq.com/trust/#security-contacts
+                - text: Learn More
+      - generic [ref=f1e272]:
+        - complementary [ref=f1e273]:
+          - generic [ref=f1e274]:
+            - generic [ref=f1e283]:
+              - generic [ref=f1e284]: Search
+              - textbox [ref=f1e285]
+            - generic [ref=f1e286]:
+              - generic [ref=f1e287]: Identity & Accounts
+              - link [ref=f1e663] [cursor=pointer]:
+                - /url: /organization-settings/users
+                - generic [ref=f1e289]: Users
+              - link [ref=f1e664] [cursor=pointer]:
+                - /url: /organization-settings/teams
+                - generic [ref=f1e292]: Teams
+              - link [ref=f1e665] [cursor=pointer]:
+                - /url: /organization-settings/service-accounts
+                - generic [ref=f1e297]: Service Accounts
+              - generic [ref=f1e299]: Authentication
+              - link [ref=f1e666] [cursor=pointer]:
+                - /url: /organization-settings/login-methods
+                - generic [ref=f1e301]: Login Methods
+              - link [ref=f1e667] [cursor=pointer]:
+                - /url: /organization-settings/mappings
+                - generic [ref=f1e304]: SAML Group Mappings
+              - link [ref=f1e668] [cursor=pointer]:
+                - /url: /organization-settings/oauth-applications
+                - generic [ref=f1e307]: Mobile and Third-Party Access
+              - link [ref=f1e669] [cursor=pointer]:
+                - /url: /organization-settings/cross-app-access
+                - generic [ref=f1e311]:
+                  - text: Cross-App Access
+                  - generic [ref=f1e312]: new
+              - link [ref=f1e670] [cursor=pointer]:
+                - /url: /organization-settings/workload-identity-federation
+                - generic [ref=f1e315]:
+                  - text: Workload Identity Federation
+                  - generic [ref=f1e316]: new
+              - generic [ref=f1e317]: Access
+              - generic [ref=f1e318]: API Keys
+              - link [ref=f1e671] [cursor=pointer]:
+                - /url: /organization-settings/application-keys
+                - generic [ref=f1e322]: Application Keys
+              - link [ref=f1e672] [cursor=pointer]:
+                - /url: /organization-settings/access-tokens
+                - generic [ref=f1e326]:
+                  - text: Access Tokens
+                  - generic [ref=f1e327]: new
+              - link [ref=f1e673] [cursor=pointer]:
+                - /url: /organization-settings/roles
+                - generic [ref=f1e329]: Roles
+              - link [ref=f1e674] [cursor=pointer]:
+                - /url: /organization-settings/data-access-controls
+                - generic [ref=f1e332]: Data Access Control
+              - link [ref=f1e675] [cursor=pointer]:
+                - /url: /organization-settings/client-tokens
+                - generic [ref=f1e335]: Client Tokens
+              - link [ref=f1e676] [cursor=pointer]:
+                - /url: /organization-settings/events-api-emails
+                - generic [ref=f1e338]: Events API Emails
+              - link [ref=f1e677] [cursor=pointer]:
+                - /url: /organization-settings/cross-org-visibility
+                - generic [ref=f1e341]: Cross-Org Visibility
+              - link [ref=f1e678] [cursor=pointer]:
+                - /url: /organization-settings/mcp
+                - generic [ref=f1e345]:
+                  - text: MCP Server
+                  - generic [ref=f1e346]: new
+              - generic [ref=f1e347]: Security
+              - link [ref=f1e679] [cursor=pointer]:
+                - /url: /organization-settings/safety-center
+                - generic [ref=f1e350]:
+                  - text: Safety Center
+                  - generic [ref=f1e351]: new
+              - link [ref=f1e680] [cursor=pointer]:
+                - /url: /organization-settings/public-sharing
+                - generic [ref=f1e353]: Public Sharing
+              - link [ref=f1e681] [cursor=pointer]:
+                - /url: /organization-settings/remote-config
+                - generic [ref=f1e356]: Remote Configuration
+              - link [ref=f1e682] [cursor=pointer]:
+                - /url: /organization-settings/smtp-configuration
+                - generic [ref=f1e359]: SMTP Configuration
+              - generic [ref=f1e361]: Compliance
+              - link [ref=f1e683] [cursor=pointer]:
+                - /url: /audit-trail
+                - generic [ref=f1e363]: Audit Trail
+              - link [ref=f1e684] [cursor=pointer]:
+                - /url: /organization-settings/audit-trail-settings
+                - generic [ref=f1e366]: Audit Trail Settings
+              - link [ref=f1e685] [cursor=pointer]:
+                - /url: /sensitive-data-scanner?source=org-settings
+                - generic [ref=f1e369]: Sensitive Data Scanner
+              - generic [ref=f1e371]: General
+              - link [ref=f1e686] [cursor=pointer]:
+                - /url: /organization-settings/preferences
+                - generic [ref=f1e373]: Preferences
+              - generic [ref=f1e375]: Products
+              - link [ref=f1e687] [cursor=pointer]:
+                - /url: /ci/settings/visibility
+                - generic [ref=f1e377]: CI
+              - link [ref=f1e688] [cursor=pointer]:
+                - /url: /event/settings
+                - generic [ref=f1e380]: Event Management
+              - link [ref=f1e689] [cursor=pointer]:
+                - /url: /incidents/settings
+                - generic [ref=f1e383]: Incidents
+              - link [ref=f1e690] [cursor=pointer]:
+                - /url: /integrations
+                - generic [ref=f1e386]: Integrations
+              - link [ref=f1e691] [cursor=pointer]:
+                - /url: /logs/pipelines
+                - generic [ref=f1e389]: Logs
+              - link [ref=f1e692] [cursor=pointer]:
+                - /url: /monitors/settings
+                - generic [ref=f1e392]: Monitors
+              - link [ref=f1e693] [cursor=pointer]:
+                - /url: /on-call/settings
+                - generic [ref=f1e395]: On-Call
+              - link [ref=f1e694] [cursor=pointer]:
+                - /url: /process/metrics
+                - generic [ref=f1e398]: Processes
+              - link [ref=f1e695] [cursor=pointer]:
+                - /url: /rum/list
+                - generic [ref=f1e401]: RUM
+              - link [ref=f1e696] [cursor=pointer]:
+                - /url: /services/settings/get-started
+                - generic [ref=f1e404]: Software Catalog
+              - link [ref=f1e697] [cursor=pointer]:
+                - /url: /synthetics/settings
+                - generic [ref=f1e407]: Synthetic Tests
+        - main [ref=f1e409]:
+          - button [ref=f1e698] [cursor=pointer]
+          - generic [ref=f1e415]:
+            - generic [ref=f1e435]:
+              - heading [level=1] [ref=f1e699]: API Keys
+              - button [ref=f1e700] [cursor=pointer]: New Key
+            - generic [ref=f1e440]: Your API Keys are unique to your organization. An API key is required by the Datadog Agent to submit metrics and events to Datadog.
+            - generic [ref=f1e441]:
+              - group [ref=f1e444]:
+                - button [ref=f1e701]
+                - region [ref=f1e702]:
+                  - button [expanded] [ref=f1e703] [cursor=pointer]:
+                    - generic [ref=f1e450]: Status
+                  - generic [ref=f1e459]:
+                    - generic [ref=f1e460]:
+                      - generic [ref=f1e461]:
+                        - checkbox [checked] [ref=f1e704]
+                        - generic [ref=f1e463] [cursor=pointer]
+                      - button [ref=f1e705] [cursor=pointer]:
+                        - generic [ref=f1e467]:
+                          - generic [ref=f1e468]: Active
+                          - generic [ref=f1e470]: Active
+                    - generic [ref=f1e475]:
+                      - generic [ref=f1e476]:
+                        - checkbox [ref=f1e706]
+                        - generic [ref=f1e478] [cursor=pointer]
+                      - button [ref=f1e707] [cursor=pointer]:
+                        - generic [ref=f1e482]:
+                          - generic [ref=f1e483]: Revoked
+                          - generic [ref=f1e485]: Revoked
+                - button [ref=f1e708]
+              - generic [ref=f1e491]:
+                - textbox [ref=f1e710]:
+                  - /placeholder: Filter by name, id, or owner
+                - generic [ref=f1e500]:
+                  - generic [ref=f1e502]:
+                    - text: Showing
+                    - generic [ref=f1e503]: 1 – 2
+                    - text: of
+                    - generic [ref=f1e504]: "2"
+                    - text: API Keys
+                  - table [ref=f1e508]:
+                    - rowgroup [ref=f1e509]:
+                      - row [ref=f1e711]:
+                        - columnheader [ref=f1e712] [cursor=pointer]:
+                          - button [ref=f1e713]
+                          - status [ref=f1e513]
+                          - generic [ref=f1e515]:
+                            - generic [ref=f1e516]: Name
+                            - generic [ref=f1e522]: Name
+                        - columnheader [ref=f1e715]:
+                          - generic [ref=f1e528]: Status
+                          - separator [ref=f1e532]
+                        - columnheader [ref=f1e716]:
+                          - generic [ref=f1e534]: Key Id
+                          - separator [ref=f1e538]
+                        - columnheader [ref=f1e717]:
+                          - generic [ref=f1e540]: Key
+                          - separator [ref=f1e544]
+                        - columnheader [ref=f1e718] [cursor=pointer]:
+                          - button [ref=f1e719]
+                          - status [ref=f1e547]
+                          - generic [ref=f1e549]:
+                            - generic [ref=f1e550]: Created On
+                            - generic [ref=f1e553]: Created On
+                          - separator [ref=f1e554]
+                        - columnheader [ref=f1e720]:
+                          - generic [ref=f1e557]:
+                            - generic [ref=f1e558]: Last Used
+                            - generic [ref=f1e561]: Last Used
+                          - separator [ref=f1e562]
+                    - rowgroup [ref=f1e563]:
+                      - row [ref=f1e721]:
+                        - cell [ref=f1e722]:
+                          - button [ref=f1e723]
+                        - cell [ref=f1e724] [cursor=pointer]:
+                          - generic [ref=f1e569]:
+                            - generic [ref=f1e570]: API Key created by cuco.saa@gmail.com on 2026-09-14
+                            - generic [ref=f1e571]: RC
+                        - cell [ref=f1e725] [cursor=pointer]:
+                          - generic [ref=f1e575]: Active
+                        - cell [ref=f1e726] [cursor=pointer]:
+                          - generic [ref=f1e579]: 2d0666a9-8d8b-44bb-9fe3-2b4251dd2b59
+                        - cell [ref=f1e727] [cursor=pointer]:
+                          - generic [ref=f1e581]: ••••••••••••83ac
+                        - cell [ref=f1e728] [cursor=pointer]:
+                          - generic [ref=f1e584]: Sep 14, 2026, 4:37 pm
+                        - cell [ref=f1e729] [cursor=pointer]:
+                          - generic [ref=f1e586]: No recent usage
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - button
+                            - generic:
+                              - generic:
+                                - button
+                      - row [ref=f1e730]:
+                        - cell [ref=f1e731]:
+                          - button [ref=f1e732]
+                        - cell [ref=f1e733] [cursor=pointer]:
+                          - generic [ref=f1e592]:
+                            - generic [ref=f1e593]: tdf-app GitHub Actions Synthetics
+                            - generic [ref=f1e594]: RC
+                        - cell [ref=f1e734] [cursor=pointer]:
+                          - generic [ref=f1e598]: Active
+                        - cell [ref=f1e735] [cursor=pointer]:
+                          - generic [ref=f1e602]: 00bdffba-8e4d-492d-b5b7-e5dd43f5996d
+                        - cell [ref=f1e736] [cursor=pointer]:
+                          - generic [ref=f1e604]: ••••••••••••c439
+                        - cell [ref=f1e737] [cursor=pointer]:
+                          - generic [ref=f1e607]: Sep 14, 2026, 5:02 pm
+                        - cell [ref=f1e738] [cursor=pointer]:
+                          - generic [ref=f1e609]: In the past hour
+                        - generic:
+                          - generic:
+                            - generic:
+                              - generic:
+                                - button
+                            - generic:
+                              - generic:
+                                - button
+                  - generic [ref=f1e612]:
+                    - generic [ref=f1e613]: "Results per page:"
+                    - button [ref=f1e739]:
+                      - option [selected] [ref=f1e740] [cursor=pointer]: "50"
+    - contentinfo [ref=f1e741]:
+      - list [ref=f1e418]:
+        - listitem [ref=f1e419]: Copyright Datadog, Inc. 2026
+        - listitem [ref=f1e420]:
+          - generic [ref=f1e421]: "Version:"
+          - text: "35.142257761"
+        - listitem [ref=f1e422]:
+          - link [ref=f1e742] [cursor=pointer]:
+            - /url: https://www.datadoghq.com/legal/msa/
+            - text: Master Subscription Agreement
+        - listitem [ref=f1e424]:
+          - link [ref=f1e743] [cursor=pointer]:
+            - /url: https://www.datadoghq.com/legal/privacy/
+            - text: Privacy Policy
+        - listitem [ref=f1e426]:
+          - link [ref=f1e744] [cursor=pointer]:
+            - /url: https://www.datadoghq.com/legal/cookies/
+            - text: Cookie Policy
+        - listitem [ref=f1e428]:
+          - generic [ref=f1e429]:
+            - link [ref=f1e745] [cursor=pointer]:
+              - /url: https://status.datadoghq.com
+              - text: Datadog Status →
+              - generic [ref=f1e431]: ": All Systems Operational"
+            - generic [ref=f1e434]: All Systems Operational
+  - generic:
+    - dialog "New API Key" [ref=f1e747]:
+      - generic [ref=f1e748]:
+        - heading "New API Key" [level=2] [ref=f1e749]
+        - button "Close" [ref=f1e750] [cursor=pointer]
+      - generic [ref=f1e753]:
+        - generic [ref=f1e754]: Name
+        - textbox "Name" [active] [ref=f1e761]:
+          - /placeholder: e.g. UX Monitoring Key
+      - generic [ref=f1e762]:
+        - button "Cancel" [ref=f1e763] [cursor=pointer]
+        - button "Create Key" [disabled] [ref=f1e764]
+    - generic: Sorted ascending. Activate to sort descending.
+    - generic: Not sorted. Activate to sort ascending.
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - option "50" [selected]
+            - combobox
+  - iframe [ref=f1e767]:
+    

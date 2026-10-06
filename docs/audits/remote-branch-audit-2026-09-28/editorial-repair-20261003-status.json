@@ -1,0 +1,52 @@
+{
+  "time": "2026-10-04T00:02:01.935488+00:00",
+  "pr": 475,
+  "classification": "ALREADY_MERGED",
+  "status": "PR475 independently approved and normally merged; target CI passed; original464 closed with evidence; both branches retained",
+  "reason": "Existing PR acceptance reliably specifies private ownership, permanent editorial overrides and legacy non-adoption, without schema changes. Storage decoder can recognize only the private object while strict public DTOs remain unchanged; current locked edit/upload writers preserve ownership for unchanged fields, and both reconciliation paths share ownership rules. No new product choice or schema required.",
+  "original_head": "fdfcd7e4a78273c0e010f5515c061ee4086d26b7",
+  "worktree": "/private/tmp/tdf-branch-audit-20260928/editorial-repair-20261003",
+  "main_integrated": "49f1f0ec087067d17f62d91df1b616eb053eb894",
+  "remote_mutations": [
+    "normal push new branch audit/editorial-ownership-repair-20261003",
+    "create standalone draft PR475 targeting main; stack null",
+    "normal pushes6e7b87 and4100a04c verified",
+    "marked PR475 ready after passing checks",
+    "replied/resolved ancestry thread with actual-head/proposed-merge proof"
+  ],
+  "verified_gates": [
+    "quality:repo retry",
+    "verify:formal",
+    "specification inventory/check and 3 Python tests",
+    "2 catalog regression tests",
+    "strict catalog 1162 candidates after SQL edits",
+    "10 source-extracted actual PostgreSQL16 predicate cases",
+    "9ecac924a hosted backend-quality success:3553 Hspec/zero failures, six separately exercised runtime cases, compiled PostgreSQL predicate,1141 socialHTTP, fullruntime/schema stages",
+    "160-migration native PostgreSQL16 production-shaped schema/apply/reapply/schema gate/bothhistoricalprivacyorders/directoryownership suppression regressions",
+    "16 directory function cases reproduce olddefect thenpass afterapply/reapply",
+    "82 productionrelease and27CItests",
+    "formal rerun andstrictcatalog1162with sole migrationprotocol successor reviewed",
+    "Current-source Stack-built local Hspec executable:3553 examples/0 failures/6 separate runner cases",
+    "Compiled native PostgreSQL ownership predicate1example andinvitation15examples:0failures",
+    "Current4100 hosted fullbackend3553 examples0failures, allsix opt-inrunners, compiled PostgreSQL andallruntime/schema stages; allapplicablechecks pass",
+    "Ready-for-review state and unchangedhead verified afterfreshchecks/reviews/threads",
+    "Review ancestry concern verified against actual head/proposed normal merge:160 introductions retained; evidence reply and resolution directly verified"
+  ],
+  "pending": [],
+  "limitations": [
+    "Existing old audit checkout Git metadata missing; all dirs retained, fresh full-history clone used",
+    "Docker daemon info unresponsive; only owned read-only client terminated; native PostgreSQL16 available",
+    "Browser profile busy; production Google login/upload still not verified"
+  ],
+  "replacement_pr": 475,
+  "url": "https://github.com/diegueins680/tdf-app/pull/475",
+  "head": "4100a04c0de9496e7bf9cd6d656602dee1d8e277",
+  "migration_introduction": "6e7b87d8ad3a4c56b033484fe7174dceacec5961",
+  "local_build_limitations": [
+    "Initial coldbuild read earlier preprocessed handler import and failed",
+    "Current targeted Stack build linked test executable then failed Cabal copy because app executable was not built; direct compiledtestexecution passed; full hostedapplicationbuild at9ecpassed and current4100pipelinepassed"
+  ],
+  "source_pr": 464,
+  "merge_commit": "f8925e339447cb593f7cce5d86403d1396aaf5a5",
+  "source_pr_closed": true
+}

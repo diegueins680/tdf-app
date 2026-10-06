@@ -1,0 +1,9 @@
+{
+  "checkedAt": "2026-10-05T05:46:12.284695+00:00",
+  "archive": "/opt/tdf/backups/tdf-hq-20261005T023423Z.pgdump",
+  "bytes": 10895255,
+  "sha256": "da2de09a590997a7f448f37ba505192a792fcf35de1444b6cb93d7eb4a7ff7c9",
+  "checksumMatches": true,
+  "pgRestoreListExit": 0,
+  "scope": "read-only archive validation; not a full restore or coordinated asset backup"
+}

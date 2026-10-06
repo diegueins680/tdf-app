@@ -1,0 +1,10 @@
+M	docs/social/evidence/postgres-benchmark.txt
+M	docs/social/evidence/postgres-foundation.txt
+A	docs/social/evidence/postgres-percentiles.txt
+M	docs/social/operations.md
+A	docs/social/performance.md
+M	scripts/social/benchmark.sql
+M	scripts/social/read-model-tests.sql
+M	scripts/social/test-postgres.sh
+M	tdf-hq/sql/2026-09-14_social_v2_foundation.sql
+M	tdf-hq/sql/2026-09-14_social_v2_read_models.sql

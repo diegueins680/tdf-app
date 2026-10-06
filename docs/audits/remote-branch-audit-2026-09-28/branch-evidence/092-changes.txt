@@ -1,0 +1,6 @@
+ docs/automatic-production-migrations.md            |  6 ++++
+ scripts/lib/production-release.mjs                 |  7 +++--
+ .../test-automatic-migrations-production-schema.sh | 35 ++++++++++++++++++++++
+ tdf-hq/src/TDF/DTO.hs                              |  1 +
+ tdf-hq/src/TDF/Server.hs                           |  8 ++++-
+ 5 files changed, 54 insertions(+), 3 deletions(-)

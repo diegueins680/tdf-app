@@ -1,0 +1,3 @@
+e03ce193c2e9c6788fad5f1360aef1088006616f 2026-09-16T10:05:38-05:00 diegueins680 fix(social): reconcile DM safeguards with current session parent
+50131ef4489e980846a7d524f27475828aeef7cd 2026-09-15T15:29:29-05:00 continuous-improvement-loop[bot] [CF-Pages-Skip] docs(social): record successful session and DM CI
+efc827f7628afe084db173be627d0d7f71d0142a 2026-09-15T14:08:05-05:00 continuous-improvement-loop[bot] [CF-Pages-Skip] fix(social): fence legacy DM writes against revocation

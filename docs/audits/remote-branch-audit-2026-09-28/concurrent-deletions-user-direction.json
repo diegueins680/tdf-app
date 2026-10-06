@@ -1,0 +1,6 @@
+{
+  "timestamp": "2026-10-04T00:45:09.935453+00:00",
+  "user_instruction": "Keep the concurrent deletions; retain recovery evidence",
+  "action": "No restoration. Retain73 heads, verified bundle and recovery commands.",
+  "audit_branch_deletions": 0
+}

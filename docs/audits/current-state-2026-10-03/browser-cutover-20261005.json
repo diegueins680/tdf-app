@@ -1,0 +1,39 @@
+{
+  "timestamp": "2026-10-05T05:03:28.256130+00:00",
+  "googleInteractiveLogin": "PASS: real Google chooser returned to authenticated protected page; /session 200 with non-null partyId",
+  "unmodifiedProductionUpload": "FAIL HTTP401: XMLHttpRequest omits cookie credentials",
+  "singleRequestCandidateFix": "PASS HTTP200 after withCredentials=true in existing production UI tab; this is not a deployed fix",
+  "retrieval": {
+    "status": 200,
+    "bytes": 99,
+    "sha256": "56d68744198d24e94ed47dc334f6ae2c18992d6c1c6ca9bc9a162b0d0af28983",
+    "url": "https://api.tdfrecords.net/assets/serve/inventory/a4e5875d-3276-4179-a542-1d013ade058e-tdf-upload-smoke-20261005.png"
+  },
+  "inventoryRead": "HTTP400 pageSize=200; independent issue to diagnose",
+  "assetRecordCreated": false,
+  "productionFileCreated": true,
+  "authenticatedReadSmoke": {
+    "checkedAt": "2026-10-05T05:25:05.186174+00:00",
+    "session": {
+      "status": 200,
+      "authenticated": true
+    },
+    "inventoryPage100": {
+      "status": 200,
+      "items": 61,
+      "total": 61
+    },
+    "socialV2Me": {
+      "status": 404,
+      "processFlag": "SOCIAL_V2_ENABLED unset/default disabled",
+      "interpretation": "expected closed rollout gate; flag unchanged"
+    },
+    "eventList": 200,
+    "paymentCapabilities": 200,
+    "health": {
+      "status": 200,
+      "db": "ok"
+    },
+    "apiCommit": "645f56fcc44f81609fbfd0e03d683b40376ce77a"
+  }
+}

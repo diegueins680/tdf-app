@@ -1,0 +1,59 @@
+[
+  {
+    "command": [
+      "python3",
+      "scripts/specification-inventory.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/specification-inventory.py",
+      "--check"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/test-specification-inventory.py"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "node",
+      "--test",
+      "scripts/__tests__/verification-evidence.test.mjs",
+      "scripts/__tests__/legacy-escrow-contract.test.mjs",
+      "scripts/__tests__/ci-change-scope.test.mjs",
+      "scripts/__tests__/ci-pipeline.test.mjs"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "bash",
+      "-n",
+      "scripts/quality-repo.sh"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "bash",
+      "-n",
+      "scripts/test-stripe-integration.sh"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "bash",
+      "-n",
+      "tdf-hq/scripts/create_artists_from_list.sh"
+    ],
+    "exit_code": 0
+  }
+]

@@ -1,0 +1,4 @@
+a5ba14f0be4e4f6da1df666b31dd6ae343afedab 2026-09-14T23:03:20-05:00 continuous-improvement-loop[bot] docs(payments): record atomic reconciliation evidence and recovery gates
+bb54a2232bad46344b58a4dd91103d84431fcb85 2026-09-14T22:53:32-05:00 continuous-improvement-loop[bot] test(payments): exercise reconciliation with capture ledger dependencies
+874e45b1f59c9ce2b2562d845313b9d1d16a0620 2026-09-14T22:40:08-05:00 continuous-improvement-loop[bot] test(payments): clarify reconciliation fixtures without new warnings
+9294566721236e9ee5b644213db24c2ba2a5ca75 2026-09-14T22:36:01-05:00 continuous-improvement-loop[bot] fix(payments): keep reconciliation inside caller transaction

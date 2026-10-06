@@ -1,0 +1,14 @@
+[
+  {
+    "type": "deletion",
+    "ruleset_source_type": "Repository",
+    "ruleset_source": "diegueins680/tdf-app",
+    "ruleset_id": 9478019
+  },
+  {
+    "type": "non_fast_forward",
+    "ruleset_source_type": "Repository",
+    "ruleset_source": "diegueins680/tdf-app",
+    "ruleset_id": 9478019
+  }
+]

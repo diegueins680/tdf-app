@@ -1,0 +1,158 @@
+- generic [ref=f1e1]:
+  - generic:
+    - generic:
+      - progressbar
+      - generic: Loading Google Play Console
+  - generic [ref=f1e3]:
+    - banner [ref=f1e4]:
+      - generic [ref=f1e6]:
+        - link [ref=f1e7] [cursor=pointer]:
+          - /url: /console/u/0/developers/7746420275596660022/app-list
+          - button "Google Play Console logo" [ref=f1e8]
+        - generic [ref=f1e9]:
+          - button "Notifications Open notification center" [ref=f1e15]:
+            - img [ref=f1e19]: notifications
+            - generic [ref=f1e20]: Notifications
+          - generic [ref=f1e22]:
+            - button "TDF" [ref=f1e352] [cursor=pointer]
+            - button [ref=f1e26] [cursor=pointer]:
+              - img "Switch developer accounts" [ref=f1e28]
+    - navigation [ref=f1e34]:
+      - link "All apps" [ref=f1e364] [cursor=pointer]:
+        - /url: /console/u/0/developers/7746420275596660022/app-list
+        - img [ref=f1e366]: keyboard_backspace
+      - list [ref=f1e35]:
+        - listitem "Dashboard" [ref=f1e370]:
+          - button "Dashboard" [ref=f1e371] [cursor=pointer]:
+            - img [ref=f1e374]: dashboard
+        - listitem "Statistics" [ref=f1e378]:
+          - button "Statistics" [ref=f1e379] [cursor=pointer]:
+            - img [ref=f1e382]: bar_chart
+        - listitem "Publishing overview" [ref=f1e386]:
+          - button "Publishing overview" [ref=f1e387] [cursor=pointer]:
+            - img [ref=f1e390]: overview
+        - listitem "Protected with Play" [ref=f1e394]:
+          - button "Protected with Play" [ref=f1e395] [cursor=pointer]:
+            - img [ref=f1e398]: shield
+        - listitem "Test and release" [ref=f1e402]:
+          - button "Test and release" [active] [ref=f1e403] [cursor=pointer]:
+            - img [ref=f1e406]: rocket_launch
+          - list [ref=f1e594]:
+            - generic [ref=f1e596]:
+              - listitem "Latest releases and bundles" [ref=f1e598]:
+                - button "Latest releases and bundles" [ref=f1e599] [cursor=pointer]
+              - listitem "Production" [ref=f1e602]:
+                - button "Production" [ref=f1e603] [cursor=pointer]
+              - listitem "Testing" [ref=f1e606]:
+                - button "Testing" [ref=f1e607] [cursor=pointer]:
+                  - img [ref=f1e610]: expand_more
+              - listitem "Pre-registration" [ref=f1e612]:
+                - button "Pre-registration" [ref=f1e613] [cursor=pointer]
+              - listitem "App integrity" [ref=f1e616]:
+                - button "App integrity" [ref=f1e617] [cursor=pointer]
+              - listitem "Advanced settings" [ref=f1e620]:
+                - button "Advanced settings" [ref=f1e621] [cursor=pointer]
+        - listitem "Monitor and improve" [ref=f1e410]:
+          - button "Monitor and improve" [ref=f1e411] [cursor=pointer]:
+            - img [ref=f1e414]: vital_signs
+        - listitem "Grow users" [ref=f1e418]:
+          - button "Grow users" [ref=f1e419] [cursor=pointer]:
+            - img [ref=f1e422]: finance_mode
+        - listitem "Monetize with Play" [ref=f1e426]:
+          - button "Monetize with Play" [ref=f1e427] [cursor=pointer]:
+            - img [ref=f1e430]: sell
+    - generic [ref=f1e119]:
+      - generic [ref=f1e625]:
+        - generic [ref=f1e633]:
+          - heading "Test and release" [level=1] [ref=f1e638]
+          - button "Select form factors. Phones, Tablets, Desktop (Googlebook OS, ChromeOS), Android XR" [ref=f1e647] [cursor=pointer]:
+            - generic [ref=f1e648]:
+              - img [ref=f1e652]: phonelink
+              - generic [ref=f1e653]: Phones, Tablets, Desktop (Googlebook OS, ChromeOS), Android XR
+            - img [ref=f1e655]: arrow_drop_down
+        - generic [ref=f1e662]:
+          - generic [ref=f1e663]:
+            - img [ref=f1e666]: overview
+            - generic [ref=f1e667]: Publishing overview
+          - generic [ref=f1e668]: You have no unpublished changes
+          - link "Go to publishing page" [ref=f1e671] [cursor=pointer]:
+            - /url: /console/u/0/developers/7746420275596660022/app/4972917875418703141/publishing
+            - img [ref=f1e674]: arrow_right_alt
+        - generic [ref=f1e681]:
+          - generic [ref=f1e682]:
+            - generic [ref=f1e684]:
+              - generic [ref=f1e687]:
+                - generic [ref=f1e694]:
+                  - img [ref=f1e698]: slow_motion_video
+                  - heading "Open testing" [level=2] [ref=f1e700]
+                - link "Get started with Open testing" [ref=f1e702] [cursor=pointer]:
+                  - /url: /console/u/0/developers/7746420275596660022/app/4972917875418703141/tracks/open-testing?releaseType=defaultReleases
+                  - generic [ref=f1e705]: Get started
+                  - img [ref=f1e707]: arrow_right_alt
+              - generic [ref=f1e708]: Let anyone sign up to test your app publicly on Play to gather early feedback from a large number of users, and monitor key metrics before you launch
+            - generic [ref=f1e711]:
+              - generic [ref=f1e714]:
+                - generic [ref=f1e721]:
+                  - img [ref=f1e725]: sound_sampler
+                  - heading "Closed testing" [level=2] [ref=f1e727]
+                - link "View all tracks (1)" [ref=f1e729] [cursor=pointer]:
+                  - /url: /console/u/0/developers/7746420275596660022/app/4972917875418703141/closed-testing?releaseType=defaultReleases
+                  - img [ref=f1e734]: arrow_right_alt
+              - generic [ref=f1e735]:
+                - generic [ref=f1e737]:
+                  - heading "alpha" [level=3] [ref=f1e746]
+                  - link "Go to alpha" [ref=f1e748] [cursor=pointer]:
+                    - /url: /console/u/0/developers/7746420275596660022/app/4972917875418703141/tracks/4698209251292369898
+                    - img [ref=f1e751]: arrow_right_alt
+                - generic [ref=f1e752]:
+                  - generic [ref=f1e753]:
+                    - img [ref=f1e756]: draft
+                    - 'generic "Release name: 1.0.1 (17) - TDF accesibilidad y seguimiento" [ref=f1e757]': 1.0.1 (17) - TDF accesibilidad y seguimiento
+                  - generic [ref=f1e758]:
+                    - img [ref=f1e761]: calendar_month
+                    - 'generic "Serving time: Sep 21 6:51 AM" [ref=f1e762]': Sep 21 6:51 AM
+          - generic [ref=f1e763]:
+            - generic [ref=f1e765]:
+              - generic [ref=f1e768]:
+                - generic [ref=f1e775]:
+                  - img [ref=f1e779]: motion_play
+                  - heading "Internal testing" [level=2] [ref=f1e781]
+                - link "Go to Internal testing page" [ref=f1e783] [cursor=pointer]:
+                  - /url: /console/u/0/developers/7746420275596660022/app/4972917875418703141/tracks/internal-testing?releaseType=defaultReleases
+                  - img [ref=f1e786]: arrow_right_alt
+              - generic [ref=f1e788]:
+                - generic [ref=f1e789]:
+                  - img [ref=f1e792]: draft
+                  - 'generic "Release name: 1.0.1 (11) - Notification navigation" [ref=f1e793]': 1.0.1 (11) - Notification navigation
+                - generic [ref=f1e794]:
+                  - img [ref=f1e797]: calendar_month
+                  - 'generic "Serving time: Sep 21 7:17 PM" [ref=f1e798]': Sep 21 7:17 PM
+            - generic [ref=f1e800]:
+              - generic [ref=f1e803]:
+                - generic [ref=f1e810]:
+                  - img [ref=f1e814]: send_to_mobile
+                  - heading "Internal app sharing" [level=2] [ref=f1e816]
+                - link "Get started with Internal app sharing" [ref=f1e818] [cursor=pointer]:
+                  - /url: /console/u/0/developers/7746420275596660022/app/4972917875418703141/releases/internal-app-sharing
+                  - generic [ref=f1e821]: Get started
+                  - img [ref=f1e823]: arrow_right_alt
+              - generic [ref=f1e824]: Easily share app bundles with your internal team using a link, to iterate on early versions of your app
+        - generic [ref=f1e837]:
+          - img [ref=f1e841]: playlist_add_check
+          - heading "For your next release" [level=2] [ref=f1e843]
+      - generic [ref=f1e334]:
+        - generic [ref=f1e850]:
+          - link "Product updates" [ref=f1e851] [cursor=pointer]:
+            - /url: https://play.google.com/console/about/whats-new/
+          - link "Status dashboard" [ref=f1e852] [cursor=pointer]:
+            - /url: https://status.play.google.com/
+          - link "Help" [ref=f1e853] [cursor=pointer]:
+            - /url: /console/u/0/developers/7746420275596660022/help-and-support?app=4972917875418703141
+        - generic [ref=f1e854]:
+          - generic [ref=f1e855]: © 2026 Google
+          - link "Privacy" [ref=f1e856] [cursor=pointer]:
+            - /url: https://www.google.com/policies/privacy/
+          - link "Developer Distribution Agreement" [ref=f1e857] [cursor=pointer]:
+            - /url: https://play.google.com/about/developer-distribution-agreement.html
+          - link "Terms of Service" [ref=f1e858] [cursor=pointer]:
+            - /url: https://play.google.com/about/console/terms-of-service/

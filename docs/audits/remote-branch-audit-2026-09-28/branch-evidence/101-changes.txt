@@ -1,0 +1,20 @@
+ .github/workflows/event-operations-formal.yml      |   2 +
+ docs/event-operations/README.md                    |   2 +
+ docs/event-operations/delivery-plan.md             |   7 ++
+ .../event-operations/github-delivery-2026-09-14.md |  14 ++-
+ .../implementation-report-2026-09-14.md            |   9 ++
+ docs/event-operations/pr-02-api-foundation.md      |   4 +
+ .../event-operations/pr-05-replay-authorization.md |  73 ++++++++++++
+ docs/event-operations/receipt-replay-contract.md   |  40 +++++++
+ docs/event-operations/traceability-matrix.md       |  10 +-
+ formal/event-operations/README.md                  |  11 ++
+ formal/event-operations/ReceiptReplay.cfg          |   4 +
+ formal/event-operations/ReceiptReplay.tla          |  47 ++++++++
+ formal/event-operations/ReceiptReplayBypass.cfg    |   4 +
+ .../event-operations/ReceiptReplayStaleClock.cfg   |   4 +
+ .../ReceiptReplayStaleSnapshot.cfg                 |   4 +
+ scripts/test-event-operations-api-migration.sh     |  84 +++++++++++++-
+ scripts/verify-event-operations-formal.sh          |   8 +-
+ tdf-hq/sql/2026-09-14_event_operations_api.sql     |  91 +++++++++++++--
+ .../event_operations_replay_assertions.sql         | 129 +++++++++++++++++++++
+ 19 files changed, 526 insertions(+), 21 deletions(-)

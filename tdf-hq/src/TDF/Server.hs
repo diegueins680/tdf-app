@@ -12,7 +12,7 @@
 module TDF.Server where
 
 import           Control.Applicative ((<|>))
-import           Control.Exception (SomeAsyncException, SomeException, displayException, fromException, throwIO, try)
+import           Control.Exception (Exception, SomeAsyncException, SomeException, displayException, fromException, throwIO, try)
 import           Control.Concurrent (forkIO)
 import           Control.Monad (foldM, forM, forM_, void, when, unless, (>=>), join)
 import           Control.Monad.Except (catchError)
@@ -106,6 +106,7 @@ import           TDF.Catalog.Security
   ( applySecurityRoleAssignmentPolicy
   , hasCanonicalPartyRole
   , loadCanonicalPartyRoles
+  , provisionReviewedSecurityRole
   , selectCanonicalPartyIdsByRole
   )
 import qualified TDF.Courses.Production as ProductionCourse
@@ -133,6 +134,7 @@ import qualified TDF.Models.SocialEventsModels as Social
 import           TDF.FeatureRegistry
   ( RegistryFeature(..)
   , findRegistryFeature
+  , registryFeatureAccessGrantRole
   , registryFeatureAllows
   , registryFeatureRequestable
   , registryReviewerCanDecide
@@ -192,6 +194,7 @@ import qualified TDF.Commerce.MarketplaceOperations as MarketplaceOperations
 import qualified TDF.Commerce.ServiceBookings as ServiceBookings
 import qualified TDF.Server.Directory as DirectoryServer
 import qualified TDF.Server.Merch as MerchServer
+import qualified TDF.Server.MusicRelease as MusicReleaseServer
 import qualified TDF.Server.Reviews as ReviewsServer
 import           TDF.ServerFeedback (feedbackServer, internalFeedbackServer)
 import qualified TDF.Contracts.Server as Contracts
@@ -744,6 +747,7 @@ server env =
   :<|> publicUpcomingEventsServer
   :<|> ReviewsServer.reviewsPublicServer
   :<|> PaymentCapabilitiesServer.paymentCapabilitiesServer
+  :<|> MusicReleaseServer.musicReleasePublicServer
   :<|> protectedServer
   :<|> marketplacePublicServer
   :<|> radioPresencePublicServer
@@ -3804,6 +3808,7 @@ protectedServer user =
   :<|> OperationsServer.operationsServer user
   :<|> CommerceOperationsServer.commerceOperationsServer user
   :<|> ReviewsServer.reviewsProtectedServer user
+  :<|> MusicReleaseServer.musicReleaseProtectedServer user
 
 navigationPreferencesServer :: AuthedUser -> ServerT NavigationPreferencesAPI AppM
 navigationPreferencesServer user =
@@ -4024,35 +4029,97 @@ accessRequestsServer user =
       unless (registryReviewerCanDecide user feature (ME.featureAccessRequestAction requestValue)) $
         throwError err403 { errBody = "Reviewer is not authorized to grant the requested feature action" }
       now <- liftIO getCurrentTime
-      changed <- runDB $ updateWhereCount
-        [ ME.FeatureAccessRequestId ==. requestKey
-        , ME.FeatureAccessRequestStatus ==. "pending"
-        ]
-        [ ME.FeatureAccessRequestStatus =. decisionValue
-        , ME.FeatureAccessRequestReviewerPartyId =. Just (auPartyId user)
-        , ME.FeatureAccessRequestReviewerNotes =. notesValue
-        , ME.FeatureAccessRequestUpdatedAt =. now
-        , ME.FeatureAccessRequestDecidedAt =. Just now
-        ]
-      when (changed /= 1) $
-        throwError err409 { errBody = "Access request is no longer pending" }
-      updated <- runDB $ do
-        insert_ (featureAccessRequestHistoryRecord requestKey (Just (auPartyId user)) decisionValue (Just "pending") decisionValue notesValue now)
+      let requestNumber = T.pack (show requestIdValue)
+          roleToProvision =
+            if decisionValue == "approved"
+              then registryFeatureAccessGrantRole
+                feature
+                (ME.featureAccessRequestAction requestValue)
+              else Nothing
+          generatedReviewNotes = fromMaybe
+            ("Approved feature access request #" <> requestNumber)
+            notesValue
+          provisioningReason =
+            "Approved feature access request #" <> requestNumber
+              <> " for " <> ME.featureAccessRequestFeatureId requestValue
+              <> ":" <> ME.featureAccessRequestAction requestValue
+          provisioningCorrelation = "feature-access-request:" <> requestNumber
+      Env{envPool} <- ask
+      transactionResult <- liftIO $ try $ flip runSqlPool envPool $ do
+        changed <- updateWhereCount
+          [ ME.FeatureAccessRequestId ==. requestKey
+          , ME.FeatureAccessRequestStatus ==. "pending"
+          ]
+          [ ME.FeatureAccessRequestStatus =. decisionValue
+          , ME.FeatureAccessRequestReviewerPartyId =. Just (auPartyId user)
+          , ME.FeatureAccessRequestReviewerNotes =. notesValue
+          , ME.FeatureAccessRequestUpdatedAt =. now
+          , ME.FeatureAccessRequestDecidedAt =. Just now
+          ]
+        when (changed /= 1) $
+          liftIO (throwIO AccessRequestDecisionConflict)
+        provisionedRole <- case roleToProvision of
+          Nothing -> pure Nothing
+          Just roleCode -> do
+            result <- provisionReviewedSecurityRole
+              (ME.featureAccessRequestRequesterPartyId requestValue)
+              (auPartyId user)
+              roleCode
+              (ME.featureAccessRequestRequestedAt requestValue)
+              now
+              generatedReviewNotes
+              provisioningReason
+              provisioningCorrelation
+            case result of
+              Left message -> liftIO (throwIO (AccessRequestProvisioningFailure message))
+              Right _ -> pure (Just roleCode)
+        insert_ (featureAccessRequestHistoryRecord
+          requestKey
+          (Just (auPartyId user))
+          decisionValue
+          (Just "pending")
+          decisionValue
+          notesValue
+          now)
         insert_ Notification
           { notificationRecipientPartyId = ME.featureAccessRequestRequesterPartyId requestValue
           , notificationNotifType = "access_request_decided"
-          , notificationTitle = if decisionValue == "approved" then "Solicitud de acceso aprobada" else "Solicitud de acceso rechazada"
-          , notificationBody = if decisionValue == "approved"
-              then "La solicitud fue aprobada para provisión. El acceso efectivo no cambia hasta que se aplique un permiso compatible."
-              else "La solicitud fue revisada. Consulta las notas del revisor para más información."
+          , notificationTitle = if decisionValue == "approved"
+              then "Solicitud de acceso aprobada"
+              else "Solicitud de acceso rechazada"
+          , notificationBody = case provisionedRole of
+              Just roleCode ->
+                "La solicitud fue aprobada y el rol " <> roleToText roleCode
+                  <> " ya fue otorgado mediante una revisión auditable. "
+                  <> "Recarga tu sesión para verlo en la navegación."
+              Nothing | decisionValue == "approved" ->
+                "La solicitud fue aprobada para provisión manual mediante un permiso "
+                  <> "compatible y auditable."
+              Nothing ->
+                "La solicitud fue revisada. Consulta las notas del revisor "
+                  <> "para más información."
           , notificationTargetType = Just "feature_access_request"
           , notificationTargetId = Just (fromIntegral requestIdValue)
           , notificationIsRead = False
           , notificationCreatedAt = now
           }
-        writeFeatureAccessRequestAudit (Just (auPartyId user)) requestKey ("access_request_" <> decisionValue)
-          (ME.featureAccessRequestFeatureId requestValue) (ME.featureAccessRequestAction requestValue) decisionValue now
+        writeFeatureAccessRequestAudit
+          (Just (auPartyId user))
+          requestKey
+          ("access_request_" <> decisionValue)
+          (ME.featureAccessRequestFeatureId requestValue)
+          (ME.featureAccessRequestAction requestValue)
+          decisionValue
+          now
         getJustEntity requestKey
+      updated <- case transactionResult of
+        Right value -> pure value
+        Left exception -> case fromException exception of
+          Just AccessRequestDecisionConflict ->
+            throwError err409 { errBody = "Access request is no longer pending" }
+          Just (AccessRequestProvisioningFailure message) ->
+            throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+          Nothing -> liftIO (throwIO (exception :: SomeException))
       loadFeatureAccessRequestDTO updated
 
     cancelRequest requestIdValue (FeatureAccessRequestCancel requestedNote) = do
@@ -4082,12 +4149,14 @@ accessRequestsServer user =
 
 loadFeatureAccessRequestDTO :: Entity ME.FeatureAccessRequest -> AppM FeatureAccessRequestDTO
 loadFeatureAccessRequestDTO (Entity requestId requestValue) = do
+  requester <- runDB $ get (ME.featureAccessRequestRequesterPartyId requestValue)
   historyRows <- runDB $ selectList
     [ME.FeatureAccessRequestHistoryRequestId ==. requestId]
     [Asc ME.FeatureAccessRequestHistoryCreatedAt]
   pure FeatureAccessRequestDTO
     { farId = fromSqlKey requestId
     , farRequesterPartyId = fromSqlKey (ME.featureAccessRequestRequesterPartyId requestValue)
+    , farRequesterName = normalizeOptionalInput (M.partyDisplayName <$> requester)
     , farFeatureId = ME.featureAccessRequestFeatureId requestValue
     , farAction = ME.featureAccessRequestAction requestValue
     , farRoleContext = decodeAccessContext (ME.featureAccessRequestRoleContext requestValue)
@@ -4176,6 +4245,13 @@ isFeatureAccessReviewer AuthedUser{..} =
   any (`elem` auRoles) [Admin, Manager, StudioManager]
     && auModules == modulesForRoles auRoles
 
+data AccessRequestDecisionFailure
+  = AccessRequestDecisionConflict
+  | AccessRequestProvisioningFailure Text
+  deriving (Show)
+
+instance Exception AccessRequestDecisionFailure
+
 isFeatureAccessRequestDuplicateConflict :: SomeException -> Bool
 isFeatureAccessRequestDuplicateConflict exception =
   case fromException exception of
@@ -4247,6 +4323,9 @@ notifyEligibleFeatureReviewers
   -> UTCTime
   -> SqlPersistT IO ()
 notifyEligibleFeatureReviewers requester feature actionName requestId now = do
+  requesterParty <- get (auPartyId requester)
+  let requesterName = fromMaybe "Un usuario sin nombre"
+        (normalizeOptionalInput (M.partyDisplayName <$> requesterParty))
   reviewerPartyIds <- Set.toList . Set.fromList . concat <$>
     traverse selectCanonicalPartyIdsByRole [Admin, Manager, StudioManager]
   forM_ reviewerPartyIds $ \reviewerPartyId -> when (reviewerPartyId /= auPartyId requester) $ do
@@ -4258,7 +4337,8 @@ notifyEligibleFeatureReviewers requester feature actionName requestId now = do
         { notificationRecipientPartyId = reviewerPartyId
         , notificationNotifType = "access_request_review"
         , notificationTitle = "Nueva solicitud de acceso"
-        , notificationBody = "Hay una solicitud compatible con tu ámbito de revisión."
+        , notificationBody = requesterName
+            <> " solicitó acceso. La solicitud está disponible para revisión."
         , notificationTargetType = Just "feature_access_request"
         , notificationTargetId = Just (fromIntegral (fromSqlKey requestId))
         , notificationIsRead = False
@@ -5255,7 +5335,7 @@ monthSlugToNumber _ = Nothing
 
 nextSaturdayOnOrAfterDay :: Day -> Day
 nextSaturdayOnOrAfterDay day =
-  head
+  fromMaybe day . listToMaybe $
     [ candidate
     | offset <- [0..6]
     , let candidate = addDays offset day

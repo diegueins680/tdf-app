@@ -1,0 +1,26 @@
+{
+  "checkedAt": "2026-10-05T05:52:13.144807+00:00",
+  "expectedCommit": "259148d2af3b511dd7d011534e024014c90dfb15",
+  "cloudflareDeployment": "842ce7f8-3226-468d-aec4-862eedd79ec4",
+  "results": [
+    {
+      "origin": "https://www.tdfrecords.net",
+      "status": 200,
+      "entry": "/assets/index-4uK0ybek.js",
+      "entrySHA256": "bf8b831cb6bc62272123c5209ba1cdd8f76fceb8ac40ce3824ec0e487b41c5a7",
+      "manifestStatus": 200,
+      "manifestSHA256": "edebce0b337da6b5d37e8a468d126f060c7701c1d3bfb048cf7709cd9303cd91"
+    },
+    {
+      "origin": "https://842ce7f8.tdf-app.pages.dev",
+      "status": 200,
+      "entry": "/assets/index-4uK0ybek.js",
+      "entrySHA256": "bf8b831cb6bc62272123c5209ba1cdd8f76fceb8ac40ce3824ec0e487b41c5a7",
+      "manifestStatus": 200,
+      "manifestSHA256": "edebce0b337da6b5d37e8a468d126f060c7701c1d3bfb048cf7709cd9303cd91"
+    }
+  ],
+  "entryMatches": true,
+  "manifestMatches": true,
+  "scope": "public web and distribution manifest only; automatic deployment following another writer merge"
+}

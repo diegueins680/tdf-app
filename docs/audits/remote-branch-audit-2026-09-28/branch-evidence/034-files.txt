@@ -1,0 +1,6 @@
+A	docs/adr/0116-minimized-provider-notification-evidence.md
+A	docs/payments/notification-minimization-2026-09-14.md
+M	docs/payments/operator-runbooks.md
+M	tdf-hq/src/TDF/Commerce/ProviderEventStore.hs
+M	tdf-hq/src/TDF/Server/ServiceStorefront.hs
+M	tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs

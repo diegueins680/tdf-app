@@ -1,0 +1,234 @@
+- generic [ref=f141e4]:
+  - generic [ref=f141e9]:
+    - generic [ref=f141e12]:
+      - link [ref=f141e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f141e22]
+      - generic [ref=f141e25]:
+        - link [ref=f141e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f141e35]
+        - link [ref=f141e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f141e45]
+        - link [ref=f141e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - generic [ref=f141e55]:
+            - img "Messages" [ref=f141e57]
+            - generic "Direct messaging - 8 new notifications link" [ref=f141e60]: "8"
+        - link [ref=f141e66] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f141e71]
+        - link [ref=f141e78] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f141e83]
+        - link [ref=f141e89] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f141e94]
+        - link [ref=f141e99] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f141e104]
+        - link [ref=f141e111] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f141e116]:
+            - img "tdf.records.label's profile picture" [ref=f141e117]
+      - generic [ref=f141e118]:
+        - link [ref=f141e121] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f141e126]
+        - link [ref=f141e129] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f141e134]
+    - generic [ref=f141e137]:
+      - main [ref=f141e138]:
+        - generic [ref=f141e140]:
+          - generic [ref=f141e141]:
+            - generic [ref=f141e142]:
+              - link [ref=f141e148] [cursor=pointer]:
+                - /url: /peoplelabquito/
+                - img "peoplelabquito's profile picture" [ref=f141e149]
+              - generic [ref=f141e150]:
+                - generic [ref=f141e151]:
+                  - generic [ref=f141e152]:
+                    - link [ref=f141e154] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "peoplelabquito" [level=2] [ref=f141e155]
+                    - button [ref=f141e157] [cursor=pointer]:
+                      - img "Options" [ref=f141e159]
+                  - generic [ref=f141e163]: People LAB Quito | UIO
+                  - generic [ref=f141e165]:
+                    - generic [ref=f141e167]:
+                      - generic [ref=f141e168]: "166"
+                      - text: posts
+                    - link "978 followers" [ref=f141e170] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f141e171]:
+                        - generic "978" [ref=f141e172]
+                        - text: followers
+                    - link "1,261 following" [ref=f141e174] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f141e175]:
+                        - generic [ref=f141e176]: 1,261
+                        - text: following
+                - generic [ref=f141e177]:
+                  - generic [ref=f141e178]:
+                    - generic [ref=f141e179]: Entrepreneur
+                    - generic [ref=f141e181]:
+                      - button [ref=f141e182] [cursor=pointer]:
+                        - generic [ref=f141e183]: ✨️A SPACE FOR LIMITLESS IDEAS ✨️Productora cultural y audiovisual 🎬🚀Organización de Eventos ⏰️Gestoras de espacios 🏤
+                      - generic [ref=f141e184]:
+                        - text: ...
+                        - button "more" [ref=f141e185] [cursor=pointer]
+                    - heading "170122" [level=1] [ref=f141e187]
+                  - link "Followed by tgthr.djs, davidramirez5053 + 3 more" [ref=f141e188] [cursor=pointer]:
+                    - /url: /peoplelabquito/followers/mutualOnly
+                    - generic [ref=f141e190]:
+                      - generic [ref=f141e192]:
+                        - button [ref=f141e193]:
+                          - link [ref=f141e194]
+                        - button [ref=f141e195]:
+                          - link [ref=f141e196]
+                        - button [ref=f141e197]:
+                          - link [ref=f141e198]
+                      - generic [ref=f141e199]: Followed by tgthr.djs, davidramirez5053 + 3 more
+            - generic [ref=f141e204]:
+              - button "Follow Back" [ref=f141e206] [cursor=pointer]
+              - button "Message" [ref=f141e210] [cursor=pointer]
+              - button [ref=f141e212] [cursor=pointer]:
+                - img "Similar accounts" [ref=f141e214]
+            - menu [ref=f141e218]:
+              - generic [ref=f141e220]:
+                - generic [ref=f141e222]:
+                  - status "Loading..." [ref=f141e224]
+                  - status "Loading..." [ref=f141e226]
+                - generic [ref=f141e228]:
+                  - status "Loading..." [ref=f141e230]
+                  - status "Loading..." [ref=f141e232]
+                - generic [ref=f141e234]:
+                  - status "Loading..." [ref=f141e236]
+                  - status "Loading..." [ref=f141e238]
+                - generic [ref=f141e240]:
+                  - status "Loading..." [ref=f141e242]
+                  - status "Loading..." [ref=f141e244]
+                - generic [ref=f141e246]:
+                  - status "Loading..." [ref=f141e248]
+                  - status "Loading..." [ref=f141e250]
+                - generic [ref=f141e252]:
+                  - status "Loading..." [ref=f141e254]
+                  - status "Loading..." [ref=f141e256]
+                - generic [ref=f141e258]:
+                  - status "Loading..." [ref=f141e260]
+                  - status "Loading..." [ref=f141e262]
+          - generic [ref=f141e263]:
+            - tablist [ref=f141e264]:
+              - link [ref=f141e266] [cursor=pointer]:
+                - /url: /peoplelabquito/
+                - img "Posts" [ref=f141e268]
+              - link [ref=f141e279] [cursor=pointer]:
+                - /url: /peoplelabquito/reels/
+                - img "Reels" [ref=f141e281]
+              - link [ref=f141e284] [cursor=pointer]:
+                - /url: /peoplelabquito/tagged/
+                - img "Tagged" [ref=f141e286]
+            - tabpanel
+          - progressbar [ref=f141e290]:
+            - img "Loading..." [ref=f141e291]
+      - contentinfo [ref=f141e304]:
+        - generic [ref=f141e305]:
+          - generic [ref=f141e307]:
+            - link "Meta" [ref=f141e309] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f141e312] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f141e315] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f141e318] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f141e321] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f141e324] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f141e327] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f141e330] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f141e333] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f141e336] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f141e339] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f141e342] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f141e345] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f141e348] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f141e351] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f141e354] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f141e356]:
+            - generic [ref=f141e357] [cursor=pointer]:
+              - generic [ref=f141e358]:
+                - generic [ref=f141e359]: English
+                - img "Down chevron icon" [ref=f141e362]
+              - combobox "Switch Display Language" [ref=f141e364]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f141e365]: © 2026 Instagram from Meta
+  - button "Messages Messages" [ref=f141e368] [cursor=pointer]:
+    - generic [ref=f141e370]:
+      - img "Messages" [ref=f141e372]
+      - generic [ref=f141e375]: Messages

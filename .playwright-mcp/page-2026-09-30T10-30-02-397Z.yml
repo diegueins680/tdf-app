@@ -1,0 +1,227 @@
+- generic [ref=f108e4]:
+  - generic [ref=f108e9]:
+    - generic [ref=f108e12]:
+      - link [ref=f108e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f108e22]
+      - generic [ref=f108e25]:
+        - link [ref=f108e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f108e35]
+        - link [ref=f108e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f108e45]
+        - link [ref=f108e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - generic [ref=f108e55]:
+            - img "Messages" [ref=f108e57]
+            - generic "Direct messaging - 8 new notifications link" [ref=f108e60]: "8"
+        - link [ref=f108e66] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f108e71]
+        - link [ref=f108e78] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f108e83]
+        - link [ref=f108e89] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f108e94]
+        - link [ref=f108e99] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f108e104]
+        - link [ref=f108e111] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f108e116]:
+            - img "tdf.records.label's profile picture" [ref=f108e117]
+      - generic [ref=f108e118]:
+        - link [ref=f108e121] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f108e126]
+        - link [ref=f108e129] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f108e134]
+    - generic [ref=f108e137]:
+      - main [ref=f108e138]:
+        - generic [ref=f108e140]:
+          - generic [ref=f108e141]:
+            - generic [ref=f108e142]:
+              - button [ref=f108e147] [cursor=pointer]:
+                - link [ref=f108e149]:
+                  - img "joelduenasc's profile picture" [ref=f108e150]
+              - generic [ref=f108e151]:
+                - generic [ref=f108e152]:
+                  - generic [ref=f108e153]:
+                    - link [ref=f108e155] [cursor=pointer]:
+                      - /url: "#"
+                      - heading "joelduenasc" [level=2] [ref=f108e156]
+                    - button [ref=f108e158] [cursor=pointer]:
+                      - img "Options" [ref=f108e160]
+                  - generic [ref=f108e164]: Joel Dueñas
+                  - generic [ref=f108e166]:
+                    - generic [ref=f108e168]:
+                      - generic [ref=f108e169]: "7"
+                      - text: posts
+                    - link "1,135 followers" [ref=f108e171] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f108e172]:
+                        - generic "1,135" [ref=f108e173]
+                        - text: followers
+                    - link "1,261 following" [ref=f108e175] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f108e176]:
+                        - generic [ref=f108e177]: 1,261
+                        - text: following
+                - generic [ref=f108e178]:
+                  - generic [ref=f108e179]:
+                    - generic [ref=f108e180]: Artist
+                    - button [ref=f108e183] [cursor=pointer]:
+                      - generic [ref=f108e184]:
+                        - text: 🎛️
+                        - link "#sounddesigner" [ref=f108e185]:
+                          - /url: /explore/tags/sounddesigner/
+                        - link "#producer" [ref=f108e186]:
+                          - /url: /explore/tags/producer/
+                        - text: . 🎼
+                        - link "#composer" [ref=f108e187]:
+                          - /url: /explore/tags/composer/
+                        - link "#drummer" [ref=f108e188]:
+                          - /url: /explore/tags/drummer/
+                  - link "Followed by benawidinson, ganeshajacf + 14 more" [ref=f108e189] [cursor=pointer]:
+                    - /url: /joelduenasc/followers/mutualOnly
+                    - generic [ref=f108e191]:
+                      - generic [ref=f108e193]:
+                        - button [ref=f108e194]:
+                          - link [ref=f108e195]
+                        - button [ref=f108e196]:
+                          - link [ref=f108e197]
+                        - button [ref=f108e198]:
+                          - link [ref=f108e199]
+                      - generic [ref=f108e200]: Followed by benawidinson, ganeshajacf + 14 more
+            - generic [ref=f108e205]:
+              - button "Following Down chevron icon" [ref=f108e207] [cursor=pointer]:
+                - generic [ref=f108e208]:
+                  - generic [ref=f108e209]: Following
+                  - img "Down chevron icon" [ref=f108e212]
+              - button "Message" [ref=f108e215] [cursor=pointer]
+              - button [ref=f108e217] [cursor=pointer]:
+                - img "Similar accounts" [ref=f108e219]
+            - generic:
+              - menu
+          - generic [ref=f108e222]:
+            - tablist [ref=f108e223]:
+              - link [ref=f108e225] [cursor=pointer]:
+                - /url: /joelduenasc/
+                - img "Posts" [ref=f108e227]
+              - link [ref=f108e238] [cursor=pointer]:
+                - /url: /joelduenasc/reels/
+                - img "Reels" [ref=f108e240]
+              - link [ref=f108e243] [cursor=pointer]:
+                - /url: /joelduenasc/reposts/
+                - img "Reposts" [ref=f108e245]
+              - link [ref=f108e248] [cursor=pointer]:
+                - /url: /joelduenasc/tagged/
+                - img "Tagged" [ref=f108e250]
+            - tabpanel
+          - progressbar [ref=f108e254]:
+            - img "Loading..." [ref=f108e255]
+      - contentinfo [ref=f108e268]:
+        - generic [ref=f108e269]:
+          - generic [ref=f108e271]:
+            - link "Meta" [ref=f108e273] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f108e276] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f108e279] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f108e282] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f108e285] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f108e288] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f108e291] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f108e294] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f108e297] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f108e300] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f108e303] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f108e306] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f108e309] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f108e312] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f108e315] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f108e318] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f108e320]:
+            - generic [ref=f108e321] [cursor=pointer]:
+              - generic [ref=f108e322]:
+                - generic [ref=f108e323]: English
+                - img "Down chevron icon" [ref=f108e326]
+              - combobox "Switch Display Language" [ref=f108e328]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f108e329]: © 2026 Instagram from Meta
+  - button [ref=f108e332] [cursor=pointer]:
+    - generic "Messages - 8 new notifications" [ref=f108e333]:
+      - generic [ref=f108e334]:
+        - generic [ref=f108e336]:
+          - img "Messages" [ref=f108e337]
+          - generic "Direct messaging - 8 new notifications link" [ref=f108e340]: "8"
+        - generic [ref=f108e343]: Messages

@@ -1,0 +1,467 @@
+- generic [ref=e1]:
+  - link [ref=e673] [cursor=pointer]:
+    - /url: "#main-content"
+    - text: Saltar al contenido principal
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - link [ref=e674] [cursor=pointer]:
+        - /url: "#main-content"
+        - text: Saltar al contenido principal
+      - navigation [ref=e675]:
+        - generic [ref=e7]:
+          - generic [ref=e8]: MENÚ
+          - generic [ref=e10]:
+            - textbox [ref=e676]:
+              - /placeholder: Buscar sección (/)
+            - group
+        - list [ref=e15]:
+          - listitem [ref=e16]:
+            - generic [ref=e17]:
+              - generic [ref=e18]: CREAR
+              - button [ref=e677] [cursor=pointer]
+          - listitem [ref=e26]:
+            - generic [ref=e27]:
+              - generic [ref=e28]: GENTE
+              - button [ref=e678] [cursor=pointer]
+          - listitem [ref=e36]:
+            - generic [ref=e37]:
+              - generic [ref=e38]: SELLO
+              - button [ref=e679] [cursor=pointer]
+          - listitem [ref=e46]:
+            - generic [ref=e47]:
+              - generic [ref=e48]: OPERAR
+              - button [ref=e680] [cursor=pointer]
+          - listitem [ref=e57]:
+            - generic [ref=e58]:
+              - generic [ref=e59]: ADMIN
+              - button [expanded] [ref=e681] [cursor=pointer]
+            - list [ref=e73]:
+              - listitem [ref=e74]:
+                - link [ref=e682] [cursor=pointer]:
+                  - /url: /configuracion/inscripciones-curso
+                  - generic [ref=e78]: Inscripciones de cursos
+              - listitem [ref=e80]:
+                - link [ref=e683] [cursor=pointer]:
+                  - /url: /configuracion/cursos
+                  - generic [ref=e84]: Cursos
+              - listitem [ref=e86]:
+                - link [ref=e684] [cursor=pointer]:
+                  - /url: /configuracion/actividad
+                  - generic [ref=e90]: Actividad
+              - listitem [ref=e92]:
+                - link [ref=e685] [cursor=pointer]:
+                  - /url: /configuracion/logs
+                  - generic [ref=e96]: Logs
+              - listitem [ref=e98]:
+                - link [ref=e686] [cursor=pointer]:
+                  - /url: /configuracion/estado
+                  - generic [ref=e102]: Estado sistema
+              - listitem [ref=e104]:
+                - link [ref=e687] [cursor=pointer]:
+                  - /url: /admin/diagnosticos
+                  - generic [ref=e108]: Diagnósticos
+              - listitem [ref=e110]:
+                - link [ref=e688] [cursor=pointer]:
+                  - /url: /admin/commerce/provider-events
+                  - generic [ref=e114]: Eventos de pago
+              - listitem [ref=e116]:
+                - link [ref=e689] [cursor=pointer]:
+                  - /url: /configuracion/brain
+                  - generic [ref=e120]: Brain y RAG
+              - listitem [ref=e122]:
+                - link [ref=e690] [cursor=pointer]:
+                  - /url: /configuracion/usuarios-admin
+                  - generic [ref=e126]: Usuarios admin
+              - listitem [ref=e128]:
+                - link [ref=e691] [cursor=pointer]:
+                  - /url: /configuracion/catalogos
+                  - generic [ref=e132]: Catálogos
+              - listitem [ref=e134]:
+                - link [ref=e692] [cursor=pointer]:
+                  - /url: /configuracion/roles-permisos
+                  - generic [ref=e138]: Roles y permisos
+              - listitem [ref=e140]:
+                - link [ref=e693] [cursor=pointer]:
+                  - /url: /configuracion/integraciones/calendario
+                  - generic [ref=e144]: Calendario Google
+              - listitem [ref=e146]:
+                - link [ref=e694] [cursor=pointer]:
+                  - /url: /configuracion/cms
+                  - generic [ref=e150]: CMS
+              - listitem [ref=e152]:
+                - link [ref=e695] [cursor=pointer]:
+                  - /url: /configuracion/campanas-automaticas
+                  - generic [ref=e156]: Campañas automáticas
+              - listitem [ref=e158]:
+                - link [ref=e696] [cursor=pointer]:
+                  - /url: /configuracion/fuentes-videos
+                  - generic [ref=e162]: Fuentes de videos
+              - listitem [ref=e164]:
+                - link [ref=e697] [cursor=pointer]:
+                  - /url: /configuracion/whatsapp-consentimiento
+                  - generic [ref=e168]: WhatsApp consentimiento
+              - listitem [ref=e170]:
+                - link [ref=e698] [cursor=pointer]:
+                  - /url: /configuracion/opciones-ux
+                  - generic [ref=e174]: Opciones UX
+              - listitem [ref=e176]:
+                - link [ref=e699] [cursor=pointer]:
+                  - /url: /configuracion/preferencias
+                  - generic [ref=e180]: Preferencias
+          - listitem [ref=e182]:
+            - generic [ref=e183]:
+              - generic [ref=e184]: HERRAMIENTAS
+              - button [ref=e700] [cursor=pointer]
+          - listitem [ref=e192]:
+            - generic [ref=e193]:
+              - generic [ref=e194]: AYUDA
+              - button [ref=e701] [cursor=pointer]
+      - generic [ref=e202]:
+        - banner [ref=e203]:
+          - generic [ref=e204]:
+            - button [ref=e702] [cursor=pointer]
+            - link [ref=e703] [cursor=pointer]:
+              - /url: /inicio
+            - button [ref=e704] [cursor=pointer]:
+              - generic [ref=e214]: Buscar sección
+              - generic [ref=e215]: ⌘K
+            - generic [ref=e216]:
+              - button [ref=e705] [cursor=pointer]:
+                - generic [ref=e221]: Crear
+              - button [ref=e706] [cursor=pointer]
+              - button [ref=e707] [cursor=pointer]:
+                - generic [ref=e227]: D
+        - status [ref=e228]
+        - main [ref=e231]:
+          - generic [ref=e232]:
+            - navigation [ref=e708]:
+              - list [ref=e234]:
+                - listitem [ref=e235]:
+                  - link [ref=e709] [cursor=pointer]:
+                    - /url: /configuracion/usuarios-admin
+                    - text: Usuarios admin
+                - listitem [ref=e237]: /
+                - listitem [ref=e238]:
+                  - paragraph [ref=e239]: Roles y permisos
+            - generic [ref=e241]:
+              - generic [ref=e242]:
+                - heading [level=5] [ref=e710]: Roles y permisos
+                - paragraph [ref=e244]: "Vista compacta: estado aparecerá cuando aporte contexto."
+              - generic [ref=e245]:
+                - table [ref=e247]:
+                  - rowgroup [ref=e248]:
+                    - row [ref=e711]:
+                      - columnheader [ref=e712]: Usuario
+                      - columnheader [ref=e713]: Contacto
+                      - columnheader [ref=e714]: Roles editables
+                  - rowgroup [ref=e253]:
+                    - row [ref=e715]:
+                      - cell [ref=e716]:
+                        - generic [ref=e256]:
+                          - paragraph [ref=e257]: Diego Saa
+                          - generic [ref=e258]: ID 1
+                      - cell [ref=e717]:
+                        - paragraph [ref=e260]: info@tdfrecords.net
+                      - cell [ref=e718]:
+                        - button [ref=e719] [cursor=pointer]:
+                          - generic [ref=e264]:
+                            - generic [ref=e265]: Administrador
+                            - generic [ref=e267]: Cliente
+                            - generic [ref=e269]: Fan
+                    - row [ref=e720]:
+                      - cell [ref=e721]:
+                        - paragraph [ref=e274]: Front Desk Manager
+                      - cell [ref=e722]:
+                        - paragraph [ref=e276]: Sin email ni teléfono
+                      - cell [ref=e723]:
+                        - button [ref=e724] [cursor=pointer]:
+                          - generic [ref=e279]: Gerente
+                    - row [ref=e725]:
+                      - cell [ref=e726]:
+                        - paragraph [ref=e286]: Reception
+                      - cell [ref=e727]:
+                        - paragraph [ref=e288]: Sin email ni teléfono
+                      - cell [ref=e728]:
+                        - button [ref=e729] [cursor=pointer]:
+                          - generic [ref=e291]: Recepción
+                    - row [ref=e730]:
+                      - cell [ref=e731]:
+                        - paragraph [ref=e298]: Accounting
+                      - cell [ref=e732]:
+                        - paragraph [ref=e300]: Sin email ni teléfono
+                      - cell [ref=e733]:
+                        - button [ref=e734] [cursor=pointer]:
+                          - generic [ref=e303]: Contabilidad
+                    - row [ref=e735]:
+                      - cell [ref=e736]:
+                        - paragraph [ref=e310]: Scheduling
+                      - cell [ref=e737]:
+                        - paragraph [ref=e312]: Sin email ni teléfono
+                      - cell [ref=e738]:
+                        - button [ref=e739] [cursor=pointer]:
+                          - generic [ref=e315]: Ingeniero
+                    - row [ref=e740]:
+                      - cell [ref=e741]:
+                        - paragraph [ref=e322]: Packages
+                      - cell [ref=e742]:
+                        - paragraph [ref=e324]: Sin email ni teléfono
+                      - cell [ref=e743]:
+                        - button [ref=e744] [cursor=pointer]:
+                          - generic [ref=e327]: Cliente
+                    - row [ref=e745]:
+                      - cell [ref=e746]:
+                        - paragraph [ref=e334]: Carlos De smedt
+                      - cell [ref=e747]:
+                        - paragraph [ref=e336]: wikicarlos@gmail.com · 0993946996
+                      - cell [ref=e748]:
+                        - button [ref=e749] [cursor=pointer]:
+                          - generic [ref=e340]:
+                            - generic [ref=e341]: Cliente
+                            - generic [ref=e343]: Fan
+                    - row [ref=e750]:
+                      - cell [ref=e751]:
+                        - generic [ref=e347]:
+                          - paragraph [ref=e348]: Julián Saa
+                          - generic [ref=e349]: ID 8
+                      - cell [ref=e752]:
+                        - paragraph [ref=e351]: diego.saa@fcaq.k12.ec · Nefi1966
+                      - cell [ref=e753]:
+                        - button [ref=e754] [cursor=pointer]:
+                          - generic [ref=e355]:
+                            - generic [ref=e356]: Cliente
+                            - generic [ref=e358]: Fan
+                    - row [ref=e755]:
+                      - cell [ref=e756]:
+                        - generic [ref=e362]:
+                          - paragraph [ref=e363]: Julián Saa
+                          - generic [ref=e364]: ID 9
+                      - cell [ref=e757]:
+                        - paragraph [ref=e366]: diego.saa@tdf.com · Nefi1966
+                      - cell [ref=e758]:
+                        - button [ref=e759] [cursor=pointer]:
+                          - generic [ref=e370]:
+                            - generic [ref=e371]: Cliente
+                            - generic [ref=e373]: Fan
+                    - row [ref=e760]:
+                      - cell [ref=e761]:
+                        - generic [ref=e377]:
+                          - paragraph [ref=e378]: Diego Saa
+                          - generic [ref=e379]: ID 10
+                      - cell [ref=e762]:
+                        - paragraph [ref=e381]: diego@tdfrecords.net
+                      - cell [ref=e763]:
+                        - button [ref=e764] [cursor=pointer]:
+                          - generic [ref=e385]:
+                            - generic [ref=e386]: Cliente
+                            - generic [ref=e388]: Ingeniero
+                            - generic [ref=e390]: Fan
+                    - row [ref=e765]:
+                      - cell [ref=e766]:
+                        - paragraph [ref=e395]: Luis Alejandro Freire Díaz
+                      - cell [ref=e767]:
+                        - paragraph [ref=e397]: lfrocker94@gmail.com · +0995451310
+                      - cell [ref=e768]:
+                        - button [ref=e769] [cursor=pointer]:
+                          - generic [ref=e401]:
+                            - generic [ref=e402]: Cliente
+                            - generic [ref=e404]: Fan
+                            - generic [ref=e406]: Estudiante
+                    - row [ref=e770]:
+                      - cell [ref=e771]:
+                        - paragraph [ref=e411]: Otro man
+                      - cell [ref=e772]:
+                        - paragraph [ref=e413]: cuco.saa@gmail.com · +0984755301
+                      - cell [ref=e773]:
+                        - button [ref=e774] [cursor=pointer]:
+                          - generic [ref=e417]:
+                            - generic [ref=e418]: Artista
+                            - generic [ref=e420]: Cliente
+                            - generic [ref=e422]: Fan
+                            - generic [ref=e424]: +1 rol
+                    - row [ref=e775]:
+                      - cell [ref=e776]:
+                        - paragraph [ref=e429]: Karla Daniela Medranda Jimenez
+                      - cell [ref=e777]:
+                        - paragraph [ref=e431]: danielakarla121@gmail.com · +593939949759
+                      - cell [ref=e778]:
+                        - button [ref=e779] [cursor=pointer]:
+                          - generic [ref=e435]:
+                            - generic [ref=e436]: Cliente
+                            - generic [ref=e438]: Fan
+                    - row [ref=e780]:
+                      - cell [ref=e781]:
+                        - paragraph [ref=e443]: Fernando Conrado
+                      - cell [ref=e782]:
+                        - paragraph [ref=e445]: kruzkuadrada@gmail.com
+                      - cell [ref=e783]:
+                        - button [ref=e784] [cursor=pointer]:
+                          - generic [ref=e449]:
+                            - generic [ref=e450]: Cliente
+                            - generic [ref=e452]: Fan
+                            - generic [ref=e454]: Estudiante
+                    - row [ref=e785]:
+                      - cell [ref=e786]:
+                        - paragraph [ref=e459]: Zahid Rodríguez
+                      - cell [ref=e787]:
+                        - paragraph [ref=e461]: estebanzahid0@gmail.com · +0960239333
+                      - cell [ref=e788]:
+                        - button [ref=e789] [cursor=pointer]:
+                          - generic [ref=e465]:
+                            - generic [ref=e466]: Cliente
+                            - generic [ref=e468]: Fan
+                    - row [ref=e790]:
+                      - cell [ref=e791]:
+                        - paragraph [ref=e473]: Luis Pomagualli
+                      - cell [ref=e792]:
+                        - paragraph [ref=e475]: luispomaguallipolicia@gmail.com · +0960848496
+                      - cell [ref=e793]:
+                        - button [ref=e794] [cursor=pointer]:
+                          - generic [ref=e479]:
+                            - generic [ref=e480]: Cliente
+                            - generic [ref=e482]: Fan
+                    - row [ref=e795]:
+                      - cell [ref=e796]:
+                        - generic [ref=e486]:
+                          - paragraph [ref=e487]: Claudia Palma
+                          - generic [ref=e488]: ID 17
+                      - cell [ref=e797]:
+                        - paragraph [ref=e490]: unaclaudiapalma@gmail.com · +593984505231
+                      - cell [ref=e798]:
+                        - button [ref=e799] [cursor=pointer]:
+                          - generic [ref=e494]:
+                            - generic [ref=e495]: A&R
+                            - generic [ref=e497]: Cliente
+                            - generic [ref=e499]: Fan
+                            - generic [ref=e501]: +3 roles
+                    - row [ref=e800]:
+                      - cell [ref=e801]:
+                        - generic [ref=e505]:
+                          - paragraph [ref=e506]: Claudia Palma
+                          - generic [ref=e507]: ID 18
+                      - cell [ref=e802]:
+                        - paragraph [ref=e509]: unaclaudiapalma@gmail.com · +593984505231
+                      - cell [ref=e803]:
+                        - button [ref=e804] [cursor=pointer]:
+                          - generic [ref=e513]:
+                            - generic [ref=e514]: A&R
+                            - generic [ref=e516]: Cliente
+                            - generic [ref=e518]: Fan
+                            - generic [ref=e520]: +3 roles
+                    - row [ref=e805]:
+                      - cell [ref=e806]:
+                        - generic [ref=e524]:
+                          - paragraph [ref=e525]: Emanuele Pilo-Pais
+                          - generic [ref=e526]: ID 19
+                      - cell [ref=e807]:
+                        - paragraph [ref=e528]: interfacerandom@gmail.com · +593988384849
+                      - cell [ref=e808]:
+                        - button [ref=e809] [cursor=pointer]:
+                          - generic [ref=e532]:
+                            - generic [ref=e533]: A&R
+                            - generic [ref=e535]: Artista
+                            - generic [ref=e537]: Artista (histórico)
+                            - generic [ref=e539]: +5 roles
+                    - row [ref=e810]:
+                      - cell [ref=e811]:
+                        - generic [ref=e543]:
+                          - paragraph [ref=e544]: Juan Ledesma
+                          - generic [ref=e545]: ID 20
+                      - cell [ref=e812]:
+                        - paragraph [ref=e547]: juan.ledesma@tdfrecords.com
+                      - cell [ref=e813]:
+                        - button [ref=e814] [cursor=pointer]:
+                          - generic [ref=e551]:
+                            - generic [ref=e552]: Administrador
+                            - generic [ref=e554]: Artista
+                            - generic [ref=e556]: Artista (histórico)
+                            - generic [ref=e558]: +5 roles
+                    - row [ref=e815]:
+                      - cell [ref=e816]:
+                        - generic [ref=e562]:
+                          - paragraph [ref=e563]: Emanuele Pilo-Pais
+                          - generic [ref=e564]: ID 21
+                      - cell [ref=e817]:
+                        - paragraph [ref=e566]: interfacerandom@gmail.com · +593988384849
+                      - cell [ref=e818]:
+                        - button [ref=e819] [cursor=pointer]:
+                          - generic [ref=e570]:
+                            - generic [ref=e571]: A&R
+                            - generic [ref=e573]: Artista
+                            - generic [ref=e575]: Artista (histórico)
+                            - generic [ref=e577]: +5 roles
+                    - row [ref=e820]:
+                      - cell [ref=e821]:
+                        - generic [ref=e581]:
+                          - paragraph [ref=e582]: Esteban Muñoz
+                          - generic [ref=e583]: ID 22
+                      - cell [ref=e822]:
+                        - paragraph [ref=e585]: mixandlivesound@gmail.com
+                      - cell [ref=e823]:
+                        - button [ref=e824] [cursor=pointer]:
+                          - generic [ref=e589]:
+                            - generic [ref=e590]: Contabilidad
+                            - generic [ref=e592]: Cliente
+                            - generic [ref=e594]: Ingeniero
+                            - generic [ref=e596]: +4 roles
+                    - row [ref=e825]:
+                      - cell [ref=e826]:
+                        - generic [ref=e600]:
+                          - paragraph [ref=e601]: Fabricio Alomía
+                          - generic [ref=e602]: ID 23
+                      - cell [ref=e827]:
+                        - paragraph [ref=e604]: fabro.sounds@gmail.com
+                      - cell [ref=e828]:
+                        - button [ref=e829] [cursor=pointer]:
+                          - generic [ref=e608]:
+                            - generic [ref=e609]: Artista
+                            - generic [ref=e611]: Artista (histórico)
+                            - generic [ref=e613]: Cliente
+                            - generic [ref=e615]: +4 roles
+                    - row [ref=e830]:
+                      - cell [ref=e831]:
+                        - paragraph [ref=e620]: Domo Pululahua
+                      - cell [ref=e832]:
+                        - paragraph [ref=e622]: domopululahua@gmail.com
+                      - cell [ref=e833]:
+                        - button [ref=e834] [cursor=pointer]:
+                          - generic [ref=e626]:
+                            - generic [ref=e627]: Cliente
+                            - generic [ref=e629]: Fan
+                    - row [ref=e835]:
+                      - cell [ref=e836]:
+                        - paragraph [ref=e634]: Esteban Coba
+                      - cell [ref=e837]:
+                        - paragraph [ref=e636]: estebancoba.c@gmail.com
+                      - cell [ref=e838]:
+                        - button [ref=e839] [cursor=pointer]:
+                          - generic [ref=e640]:
+                            - generic [ref=e641]: Cliente
+                            - generic [ref=e643]: Fan
+                - generic [ref=e647]:
+                  - paragraph [ref=e648]: Por página
+                  - generic [ref=e649]:
+                    - combobox [ref=e840] [cursor=pointer]: "25"
+                    - textbox: "25"
+                  - paragraph [ref=e651]: 1–25 de 120 usuarios
+                  - generic [ref=e652]:
+                    - button [disabled]
+                    - button [ref=e841] [cursor=pointer]
+    - generic [ref=e656]:
+      - button [ref=e842] [cursor=pointer]
+      - button [ref=e844] [cursor=pointer]
+      - button [ref=e848] [cursor=pointer]
+      - button [ref=e851] [cursor=pointer]
+      - button [ref=e852] [cursor=pointer]
+      - button [ref=e853] [cursor=pointer]
+      - generic [ref=e671]:
+        - generic [ref=e672]: "En pausa: stream.rcast.net"
+        - text: Live
+  - menu "Menú de sesión" [ref=e856]:
+    - menuitem "Diego Saa admin, customer, fan" [disabled]:
+      - generic:
+        - heading "Diego Saa" [level=6]
+        - paragraph: admin, customer, fan
+    - separator [ref=e857]
+    - menuitem "TDF Mobile / Testers" [active] [ref=e858] [cursor=pointer]
+    - menuitem [ref=e859] [cursor=pointer]:
+      - paragraph [ref=e863]: Cerrar sesión

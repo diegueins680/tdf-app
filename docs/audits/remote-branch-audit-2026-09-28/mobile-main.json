@@ -1,0 +1,104 @@
+{
+  "name": "main",
+  "commit": {
+    "sha": "2a0e5a99535d9ef199a3e3464a660192f882f72b",
+    "node_id": "C_kwDOQJNSJNoAKDJhMGU1YTk5NTM1ZDllZjE5OWEzZTM0NjRhNjYwMTkyZjg4MmY3MmI",
+    "commit": {
+      "author": {
+        "name": "Diego Saa",
+        "email": "cuco.saa@gmail.com",
+        "date": "2026-09-18T18:23:25Z"
+      },
+      "committer": {
+        "name": "GitHub",
+        "email": "noreply@github.com",
+        "date": "2026-09-18T18:23:25Z"
+      },
+      "message": "Merge pull request #114 from diegueins680/audit/github-release-defaults-20260918\n\nfix(release): make standard GitHub builds the default commands",
+      "tree": {
+        "sha": "c683f69c5d1cba444a037e7873db74dc347ec70f",
+        "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/trees/c683f69c5d1cba444a037e7873db74dc347ec70f"
+      },
+      "url": "https://api.github.com/repos/diegueins680/TDF-mobile/git/commits/2a0e5a99535d9ef199a3e3464a660192f882f72b",
+      "comment_count": 0,
+      "verification": {
+        "verified": true,
+        "reason": "valid",
+        "signature": "-----BEGIN PGP SIGNATURE-----\n\nwsFcBAABCAAQBQJqrYGdCRC1aQ7uu5UhlAAADZ8QAKzPiMAiv/8VFvSdMBo1urtU\nRqpcpXNIq6NKk9/R1pZCDjaLN9I/6/aBMWDZAyuTbWkY8xLH+36D8FnkiW0QH3k+\nuE/uOARkKitgHlMNyVZQenpMyfxQUEijGfwR8iEFWCj/rfVCpgK57sC8ChJsSvy7\nTO3rKCiyPJ5IDu6ZnJFdfdJLhlf9gwil4dfKb4TaBWqmW7NsbFN2A9vpsKaIT2HA\nzaztY5YBPrqEzBX0M2Yv/KFMIiGjJf4pbR3SPg4PLxp4WQVU/kO2FRsMiguvTAHb\nl7DlENYOM1LWJEfkLaSFCgBk5+IFfDH5n0TfTR7ViDWPwNEyTUe6AmYdTYHbGCB6\nSn6XcN9RcA5tRiDe/Cod/A9uV6PsVOhJQI8V6IOJAmvXhOhBDKk3DIhhlirWlZiG\nFLLmqL3V800+EXTtkcHjR7pC2mY8+I2F3wSWMvikIexbIA4/2P35IiA2yJOY5xC8\nS8m8xrBqw+JXxSQR0VuaF+/8hDBVxTqghGfXhbEa66ml6Zo44yNfkPv/yvCTxiKq\nfNZ1tQSJ0fBLnoZ6EemRb9eQyPhA0mdFZFNrqp2J7SiqdjOQ/bAPRMaxkTWORsNZ\nH7hYyRhWv9WKYL5isz4ZohA6+e73Q4UhoZTXvIfbIwrucO6P+osO9u5LVbyn39qr\neh8MXmCu+9wCfNTolczg\n=B1EQ\n-----END PGP SIGNATURE-----\n",
+        "payload": "tree c683f69c5d1cba444a037e7873db74dc347ec70f\nparent c2a4cb289dbc9bc52de98c6eac8a6ca81c0cfeae\nparent 30a3a7ac56c850b2c2e289629088a31bd1ddb38c\nauthor Diego Saa <cuco.saa@gmail.com> 1789755805 -0500\ncommitter GitHub <noreply@github.com> 1789755805 -0500\n\nMerge pull request #114 from diegueins680/audit/github-release-defaults-20260918\n\nfix(release): make standard GitHub builds the default commands",
+        "verified_at": "2026-09-18T18:23:26Z"
+      }
+    },
+    "url": "https://api.github.com/repos/diegueins680/TDF-mobile/commits/2a0e5a99535d9ef199a3e3464a660192f882f72b",
+    "html_url": "https://github.com/diegueins680/TDF-mobile/commit/2a0e5a99535d9ef199a3e3464a660192f882f72b",
+    "comments_url": "https://api.github.com/repos/diegueins680/TDF-mobile/commits/2a0e5a99535d9ef199a3e3464a660192f882f72b/comments",
+    "author": {
+      "login": "diegueins680",
+      "id": 2753581,
+      "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+      "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/diegueins680",
+      "html_url": "https://github.com/diegueins680",
+      "followers_url": "https://api.github.com/users/diegueins680/followers",
+      "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+      "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+      "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+      "repos_url": "https://api.github.com/users/diegueins680/repos",
+      "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "committer": {
+      "login": "web-flow",
+      "id": 19864447,
+      "node_id": "MDQ6VXNlcjE5ODY0NDQ3",
+      "avatar_url": "https://avatars.githubusercontent.com/u/19864447?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/web-flow",
+      "html_url": "https://github.com/web-flow",
+      "followers_url": "https://api.github.com/users/web-flow/followers",
+      "following_url": "https://api.github.com/users/web-flow/following{/other_user}",
+      "gists_url": "https://api.github.com/users/web-flow/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/web-flow/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/web-flow/subscriptions",
+      "organizations_url": "https://api.github.com/users/web-flow/orgs",
+      "repos_url": "https://api.github.com/users/web-flow/repos",
+      "events_url": "https://api.github.com/users/web-flow/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/web-flow/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "parents": [
+      {
+        "sha": "c2a4cb289dbc9bc52de98c6eac8a6ca81c0cfeae",
+        "url": "https://api.github.com/repos/diegueins680/TDF-mobile/commits/c2a4cb289dbc9bc52de98c6eac8a6ca81c0cfeae",
+        "html_url": "https://github.com/diegueins680/TDF-mobile/commit/c2a4cb289dbc9bc52de98c6eac8a6ca81c0cfeae"
+      },
+      {
+        "sha": "30a3a7ac56c850b2c2e289629088a31bd1ddb38c",
+        "url": "https://api.github.com/repos/diegueins680/TDF-mobile/commits/30a3a7ac56c850b2c2e289629088a31bd1ddb38c",
+        "html_url": "https://github.com/diegueins680/TDF-mobile/commit/30a3a7ac56c850b2c2e289629088a31bd1ddb38c"
+      }
+    ]
+  },
+  "_links": {
+    "self": "https://api.github.com/repos/diegueins680/TDF-mobile/branches/main",
+    "html": "https://github.com/diegueins680/TDF-mobile/tree/main"
+  },
+  "protected": false,
+  "protection": {
+    "enabled": false,
+    "required_status_checks": {
+      "enforcement_level": "off",
+      "contexts": [],
+      "checks": []
+    }
+  },
+  "protection_url": "https://api.github.com/repos/diegueins680/TDF-mobile/branches/main/protection"
+}

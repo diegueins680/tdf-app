@@ -1,0 +1,8 @@
+ .github/workflows/ci.yml                           |  41 +++++
+ .../catalog-list-decisions.json                    |  20 +++
+ docs/payments/operator-runbooks.md                 |   2 +
+ docs/payments/staging-access-2026-09-14.md         | 182 ++++++++++++++++++++
+ .../staging-access-report-2026-09-15T004740Z.json  |  52 ++++++
+ .../__tests__/payment-staging-inspection.test.mjs  | 100 +++++++++++
+ scripts/inspect-payment-staging.mjs                | 185 +++++++++++++++++++++
+ 7 files changed, 582 insertions(+)

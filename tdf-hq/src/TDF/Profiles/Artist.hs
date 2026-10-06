@@ -27,7 +27,6 @@ import           Data.Char                 ( GeneralCategory (Format, LineSepara
                                            )
 import qualified Data.Map.Strict           as Map
 import qualified Data.Set                  as Set
-import           Data.List                 (foldl')
 import           Data.Maybe                (listToMaybe)
 import           Data.Text                 (Text)
 import qualified Data.Text                 as T

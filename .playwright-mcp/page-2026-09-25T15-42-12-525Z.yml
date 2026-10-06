@@ -1,0 +1,32 @@
+- generic [ref=f13e2]:
+  - banner [ref=f13e4]:
+    - generic [ref=f13e6]:
+      - generic [ref=f13e7]:
+        - button "Guía" [ref=f13e9] [cursor=pointer]
+        - generic [ref=f13e13]:
+          - link "Página principal de YouTube" [ref=f13e14] [cursor=pointer]:
+            - /url: /
+          - generic [ref=f13e20]: ES
+        - button "Omitir navegación" [ref=f13e24] [cursor=pointer]
+      - generic [ref=f13e28]:
+        - search [ref=f13e29]:
+          - generic [ref=f13e31]:
+            - combobox "Buscar" [expanded] [ref=f13e34]
+            - button "Search" [ref=f13e35] [cursor=pointer]
+        - generic [ref=f13e40]:
+          - button "Realiza búsquedas con la voz" [ref=f13e42] [cursor=pointer]
+          - tooltip "tooltip"
+      - generic [ref=f13e47]:
+        - button "Crear" [ref=f13e50] [cursor=pointer]
+        - generic [ref=f13e54]:
+          - button "Notificaciones" [ref=f13e56] [cursor=pointer]
+          - tooltip "tooltip"
+        - button "Menú de la cuenta" [ref=f13e62]:
+          - img "Imagen de avatar" [ref=f13e64] [cursor=pointer]
+  - main [ref=f13e66]:
+    - generic [ref=f13e70]:
+      - generic [ref=f13e72]:
+        - generic [ref=f13e73]: Video no disponible
+        - generic [ref=f13e74]: La persona que subió el video lo quitó.
+      - link "VOLVER A LA PÁGINA PRINCIPAL" [ref=f13e78] [cursor=pointer]:
+        - /url: /

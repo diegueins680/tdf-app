@@ -1,0 +1,6 @@
+536964de601c5e031835781b3af07ff797cd249e 2026-09-15T09:29:30-05:00 diegueins680 merge: integrate validated payment foundation into provider execution
+47c584b5dd999a2861b14dc3ffca0bffa3e62fe9 2026-09-14T10:15:48-05:00 continuous-improvement-loop[bot] docs(payments): record provider account verification
+cca7280e6984c1c8c623d0630fe1f4e5bf6bc281 2026-09-14T10:15:01-05:00 continuous-improvement-loop[bot] fix(payments): govern provider execution accounts
+f940abe14078731f4de0d57d0e861dcddf2750f0 2026-09-14T09:47:43-05:00 continuous-improvement-loop[bot] docs(payments): record provider execution verification
+a03527fd452f49d7e70be2373545921d019f83e5 2026-09-14T09:47:04-05:00 continuous-improvement-loop[bot] chore(db): register provider execution migration
+6d81ee1296e4dfc9d5b3207904c4b3fde7f3f5e5 2026-09-14T09:31:11-05:00 continuous-improvement-loop[bot] feat(payments): execute hosted provider sessions safely

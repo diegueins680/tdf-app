@@ -1,0 +1,263 @@
+- generic [ref=f1e1]:
+  - generic:
+    - generic:
+      - progressbar
+      - generic: Loading Google Play Console
+  - generic [ref=f1e3]:
+    - banner [ref=f1e4]:
+      - generic [ref=f1e6]:
+        - link [ref=f1e7] [cursor=pointer]:
+          - /url: /console/u/0/developers/7746420275596660022/app-list
+          - button "Google Play Console logo" [ref=f1e8]
+        - generic [ref=f1e9]:
+          - button "Notifications Open notification center" [ref=f1e15]:
+            - img [ref=f1e19]: notifications
+            - generic [ref=f1e20]: Notifications
+          - generic [ref=f1e22]:
+            - button "TDF" [ref=f1e352] [cursor=pointer]
+            - button [ref=f1e26] [cursor=pointer]:
+              - img "Switch developer accounts" [ref=f1e28]
+    - navigation [ref=f1e34]:
+      - link "All apps" [ref=f1e364] [cursor=pointer]:
+        - /url: /console/u/0/developers/7746420275596660022/app-list
+        - img [ref=f1e366]: keyboard_backspace
+      - list [ref=f1e35]:
+        - listitem "Dashboard" [ref=f1e370]:
+          - button "Dashboard" [ref=f1e371] [cursor=pointer]:
+            - img [ref=f1e374]: dashboard
+        - listitem "Statistics" [ref=f1e378]:
+          - button "Statistics" [ref=f1e379] [cursor=pointer]:
+            - img [ref=f1e382]: bar_chart
+        - listitem "Publishing overview" [ref=f1e386]:
+          - button "Publishing overview" [ref=f1e387] [cursor=pointer]:
+            - img [ref=f1e390]: overview
+        - listitem "Protected with Play" [ref=f1e394]:
+          - button "Protected with Play" [ref=f1e395] [cursor=pointer]:
+            - img [ref=f1e398]: shield
+        - listitem "Test and release" [ref=f1e402]:
+          - button "Test and release" [ref=f1e403] [cursor=pointer]:
+            - img [ref=f1e406]: rocket_launch
+        - listitem "Monitor and improve" [ref=f1e410]:
+          - button "Monitor and improve" [ref=f1e411] [cursor=pointer]:
+            - img [ref=f1e414]: vital_signs
+        - listitem "Grow users" [ref=f1e418]:
+          - button "Grow users" [ref=f1e419] [cursor=pointer]:
+            - img [ref=f1e422]: finance_mode
+        - listitem "Monetize with Play" [ref=f1e426]:
+          - button "Monetize with Play" [ref=f1e427] [cursor=pointer]:
+            - img [ref=f1e430]: sell
+    - generic [ref=f1e119]:
+      - generic [ref=f1e933]:
+        - generic [ref=f1e940]:
+          - heading "Protected with Play" [level=1] [ref=f1e946]
+          - generic [ref=f1e951]:
+            - text: Protect your app and your users.
+            - button "Show more details about Protected with Play" [ref=f1e952] [cursor=pointer]: Show more
+        - generic [ref=f1e955]:
+          - generic [ref=f1e957]:
+            - generic [ref=f1e960]:
+              - heading "TDF" [level=2] [ref=f1e961]
+              - generic [ref=f1e962]: com.tdf.records
+            - generic "Increased protection against unauthorized redistribution and modification" [ref=f1e965]:
+              - button "Good protection" [ref=f1e971]
+          - generic [ref=f1e973]:
+            - generic [ref=f1e977]:
+              - generic [ref=f1e978]:
+                - img [ref=f1e980]: shield_locked
+                - generic [ref=f1e981]:
+                  - heading "Automatic protection" [level=3] [ref=f1e990]
+                  - generic [ref=f1e991]:
+                    - text: Prevent unofficial installs.
+                    - link "Learn more about automatic protection, Opens in a new tab" [ref=f1e993] [cursor=pointer]:
+                      - /url: https://support.google.com/googleplay/android-developer/answer/10183279
+                      - text: Learn more
+              - generic [ref=f1e994]:
+                - generic [ref=f1e995]: 1 of 1 service active
+                - progressbar "active progress" [ref=f1e997]
+              - generic [ref=f1e999]:
+                - button "Manage automatic protection settings" [ref=f1e1001]:
+                  - generic [ref=f1e1004]: Manage
+                  - img [ref=f1e1006]: arrow_right_alt
+                - button "Show details" [ref=f1e1008] [cursor=pointer]:
+                  - img [ref=f1e1011]: expand_more
+            - generic [ref=f1e1015]:
+              - generic [ref=f1e1016]:
+                - img [ref=f1e1018]: shield_radar
+                - generic [ref=f1e1019]:
+                  - heading "Play Integrity API" [level=3] [ref=f1e1028]
+                  - generic [ref=f1e1029]:
+                    - text: Detect security threats and risky devices.
+                    - link "Learn more about Play Integrity API, Opens in a new tab" [ref=f1e1031] [cursor=pointer]:
+                      - /url: https://developer.android.com/google/play/integrity/overview
+                      - text: Learn more
+              - generic [ref=f1e1032]:
+                - generic [ref=f1e1033]: 0 of 7 services active
+                - progressbar "active progress" [ref=f1e1035]
+              - generic [ref=f1e1036]:
+                - button "Get started with the Play Integrity API" [ref=f1e1038]:
+                  - generic [ref=f1e1041]: Get started
+                  - img [ref=f1e1043]: arrow_right_alt
+                - button "Show details" [ref=f1e1045] [cursor=pointer]:
+                  - img [ref=f1e1048]: expand_more
+            - generic [ref=f1e1051]:
+              - generic [ref=f1e1052]:
+                - generic [ref=f1e1053]:
+                  - img [ref=f1e1055]: shield_play_prism
+                  - generic [ref=f1e1056]:
+                    - heading "Play Store protection" [level=3] [ref=f1e1065]
+                    - generic [ref=f1e1066]: Distribute safe apps and protect your store presence
+                - generic [ref=f1e1067]:
+                  - generic [ref=f1e1068]: 6 of 7 services active
+                  - progressbar "active progress" [ref=f1e1070]
+                - button "Hide details" [expanded] [active] [ref=f1e1288] [cursor=pointer]:
+                  - img [ref=f1e1077]: expand_less
+              - generic [ref=f1e1291]:
+                - generic [ref=f1e1292]:
+                  - generic [ref=f1e1293]: Protect app signing key
+                  - generic [ref=f1e1295]:
+                    - img [ref=f1e1299]: check
+                    - generic [ref=f1e1300]: Releases signed by Play
+                  - generic [ref=f1e1301]:
+                    - link "Learn more about how to use Play app signing, Opens in a new tab" [ref=f1e1303] [cursor=pointer]:
+                      - /url: https://support.google.com/googleplay/android-developer/answer/9842756
+                      - generic [ref=f1e1306]: Learn more
+                      - img [ref=f1e1308]: open_in_new
+                    - button "Manage Play app signing" [ref=f1e1310]
+                - generic [ref=f1e1314]:
+                  - generic [ref=f1e1315]: Prevent installs on risky devices
+                  - generic [ref=f1e1317]:
+                    - img [ref=f1e1321]: close
+                    - generic [ref=f1e1322]: Store listing device checks off
+                  - generic [ref=f1e1323]:
+                    - link "Learn more about how to use store listing device checks, Opens in a new tab" [ref=f1e1325] [cursor=pointer]:
+                      - /url: https://support.google.com/googleplay/android-developer/answer/13857328#zippy=%2Cstore-listing-device-checks
+                      - generic [ref=f1e1328]: Learn more
+                      - img [ref=f1e1330]: open_in_new
+                    - button "Manage checks" [ref=f1e1332]
+                - generic [ref=f1e1336]:
+                  - generic [ref=f1e1337]: Detect known security issues
+                  - generic [ref=f1e1339]:
+                    - img [ref=f1e1343]: lock
+                    - generic [ref=f1e1344]: Play Protect scanning always on
+                  - link "Learn more about cloud-based protections, Opens in a new tab" [ref=f1e1347] [cursor=pointer]:
+                    - /url: https://developers.google.com/android/play-protect/cloud-based-protections
+                    - generic [ref=f1e1350]: Learn more
+                    - img [ref=f1e1352]: open_in_new
+                - generic [ref=f1e1353]:
+                  - generic [ref=f1e1354]: Detect known SDK issues
+                  - generic [ref=f1e1356]:
+                    - img [ref=f1e1360]: lock
+                    - generic [ref=f1e1361]: Play SDK scanning always on
+                  - link "Learn more about using third-party SDKs in your app, Opens in a new tab" [ref=f1e1364] [cursor=pointer]:
+                    - /url: https://support.google.com/googleplay/android-developer/answer/10358880
+                    - generic [ref=f1e1367]: Learn more
+                    - img [ref=f1e1369]: open_in_new
+                - generic [ref=f1e1370]:
+                  - generic [ref=f1e1371]: Prevent spam reviews
+                  - generic [ref=f1e1373]:
+                    - img [ref=f1e1377]: lock
+                    - generic [ref=f1e1378]: Spam protection always on
+                - generic [ref=f1e1379]:
+                  - generic [ref=f1e1380]: Prevent rating and review bombing
+                  - generic [ref=f1e1382]:
+                    - img [ref=f1e1386]: lock
+                    - generic [ref=f1e1387]: Anomaly protection always on
+                - generic [ref=f1e1388]:
+                  - generic [ref=f1e1389]: Prevent discovery manipulation
+                  - generic [ref=f1e1391]:
+                    - img [ref=f1e1395]: lock
+                    - generic [ref=f1e1396]: Fairness protection always on
+            - generic [ref=f1e1081]:
+              - generic [ref=f1e1082]:
+                - img [ref=f1e1084]: shield_card
+                - generic [ref=f1e1085]:
+                  - heading "Play Billing protection" [level=3] [ref=f1e1094]
+                  - generic [ref=f1e1095]:
+                    - text: Protect your business from fraud and abuse.
+                    - link "Learn more about Play Billing protection, Opens in a new tab" [ref=f1e1097] [cursor=pointer]:
+                      - /url: https://developer.android.com/google/play/billing/security
+                      - text: Learn more
+              - generic [ref=f1e1098]:
+                - generic [ref=f1e1099]: 0 of 4 services active
+                - progressbar "active progress" [ref=f1e1101]
+              - generic [ref=f1e1102]:
+                - button "Get started with Monetize with Play" [ref=f1e1104]:
+                  - generic [ref=f1e1107]: Get started
+                  - img [ref=f1e1109]: arrow_right_alt
+                - button "Show details" [ref=f1e1111] [cursor=pointer]:
+                  - img [ref=f1e1114]: expand_more
+          - generic [ref=f1e1116]:
+            - generic [ref=f1e1118]:
+              - generic [ref=f1e1122]:
+                - heading "Monitor automatic protection" [level=3] [ref=f1e1127]
+                - generic [ref=f1e1129]:
+                  - generic [ref=f1e1130]:
+                    - img [ref=f1e1133]: calendar_today
+                    - generic [ref=f1e1134]: Last 30 days
+                  - link "View automatic protection report" [ref=f1e1136] [cursor=pointer]:
+                    - /url: /console/u/0/developers/7746420275596660022/app/4972917875418703141/app-integrity/automatic-protection-report
+                    - img [ref=f1e1139]: arrow_right_alt
+              - generic [ref=f1e1140]:
+                - generic [ref=f1e1143]:
+                  - button "Play installs" [ref=f1e1147]
+                  - generic [ref=f1e1148]: 100.0%
+                - generic [ref=f1e1153]:
+                  - button "Unknown redistribution" [ref=f1e1157]
+                  - generic [ref=f1e1158]: "-"
+              - generic [ref=f1e1164]:
+                - img "Chart Use left and right keys to navigate through domain values." [ref=f1e1166]
+                - generic [ref=f1e1173]:
+                  - generic [ref=f1e1174]: Play installs
+                  - generic [ref=f1e1180]: Unknown redistribution
+            - generic [ref=f1e1188]:
+              - img [ref=f1e1191]: bar_chart
+              - generic [ref=f1e1192]:
+                - heading "Play Integrity API is not integrated" [level=3] [ref=f1e1193]
+                - paragraph [ref=f1e1194]: When Play Integrity API is integrated, you can monitor threat detection signals here
+              - generic [ref=f1e1195]:
+                - link "Learn more about Play Integrity API, Opens in a new tab" [ref=f1e1197] [cursor=pointer]:
+                  - /url: https://developer.android.com/google/play/integrity/overview
+                  - generic [ref=f1e1200]: Learn more
+                  - img [ref=f1e1202]: open_in_new
+                - button "Get started with Play Integrity API" [ref=f1e1204]:
+                  - generic [ref=f1e1207]: Get started
+                  - img [ref=f1e1209]: arrow_forward
+          - generic [ref=f1e1211]:
+            - generic [ref=f1e1213]:
+              - button "Previous" [disabled] [ref=f1e1215]:
+                - img [ref=f1e1218]: keyboard_arrow_left
+              - button "Next" [ref=f1e1220] [cursor=pointer]:
+                - img [ref=f1e1223]: keyboard_arrow_right
+            - generic [ref=f1e1226]:
+              - generic [ref=f1e1231]:
+                - generic [ref=f1e1232]:
+                  - heading "Build for security" [level=3] [ref=f1e1241]
+                  - generic [ref=f1e1242]: Browse a list of core features critical to building secure apps
+                - link "View security tips checklist, opens in a new tab" [ref=f1e1247] [cursor=pointer]:
+                  - /url: https://developer.android.com/privacy-and-security/security-tips
+                  - generic [ref=f1e1250]: View checklist
+                  - img [ref=f1e1252]: open_in_new
+              - generic [ref=f1e1257]:
+                - generic [ref=f1e1258]:
+                  - heading "Build for privacy" [level=3] [ref=f1e1267]
+                  - generic [ref=f1e1268]: Review a list of common guidelines and tools to help ensure your users' privacy
+                - link "View privacy tips checklist, opens in a new tab" [ref=f1e1273] [cursor=pointer]:
+                  - /url: https://developer.android.com/privacy-and-security/about
+                  - generic [ref=f1e1276]: View checklist
+                  - img [ref=f1e1278]: open_in_new
+      - generic [ref=f1e334]:
+        - generic [ref=f1e1279]:
+          - link "Product updates" [ref=f1e1280] [cursor=pointer]:
+            - /url: https://play.google.com/console/about/whats-new/
+          - link "Status dashboard" [ref=f1e1281] [cursor=pointer]:
+            - /url: https://status.play.google.com/
+          - link "Help" [ref=f1e1282] [cursor=pointer]:
+            - /url: /console/u/0/developers/7746420275596660022/help-and-support?app=4972917875418703141
+        - generic [ref=f1e1283]:
+          - generic [ref=f1e1284]: © 2026 Google
+          - link "Privacy" [ref=f1e1285] [cursor=pointer]:
+            - /url: https://www.google.com/policies/privacy/
+          - link "Developer Distribution Agreement" [ref=f1e1286] [cursor=pointer]:
+            - /url: https://play.google.com/about/developer-distribution-agreement.html
+          - link "Terms of Service" [ref=f1e1287] [cursor=pointer]:
+            - /url: https://play.google.com/about/console/terms-of-service/

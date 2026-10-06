@@ -1,0 +1,63 @@
+[
+  {
+    "data": {
+      "repository": {
+        "pullRequest": {
+          "number": 419,
+          "reviewDecision": "APPROVED",
+          "mergeStateStatus": "UNKNOWN",
+          "mergeable": "UNKNOWN",
+          "headRefOid": "c7643f0ba07f330995415c4848194938536d51ae",
+          "baseRefName": "main",
+          "isDraft": false,
+          "closingIssuesReferences": {
+            "nodes": [],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": null
+            }
+          },
+          "reviewThreads": {
+            "nodes": [
+              {
+                "id": "PRRT_kwDOQPdUrM6jaAam",
+                "isResolved": true,
+                "isOutdated": false,
+                "path": "scripts/production-migrations.json",
+                "line": 527,
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "chatgpt-codex-connector"
+                      },
+                      "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Anchor migration provenance in this commit's ancestry**\n\nReleasing this exact revision is blocked because `9ddd014b...` and `e95e066a...` are sibling commits with the same parent, not an ancestor/descendant pair. The production release loader explicitly runs `git merge-base --is-ancestor introducedBy <release SHA>` for every manifest entry and refuses the release when it fails, so this critical privacy migration cannot be deployed from the reviewed commit. Preserve `9ddd014b...` through an actual merge or anchor this entry to a commit that is in the release ancestry.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/419#discussion_r4038175981",
+                      "createdAt": "2026-09-17T14:45:22Z"
+                    },
+                    {
+                      "author": {
+                        "login": "diegueins680"
+                      },
+                      "body": "Verified the actual reviewed revision locally and through the GitHub commit API: c7643f0ba07f330995415c4848194938536d51ae -> 8b22aad2b36042b35944ed6a6327da4d7113f965 -> 9ddd014b9d6a897d15608d9d23f4445c4c7118eb -> 6f77a7eec93d96de36840a13235adff9ad13c917. git merge-base --is-ancestor 9ddd014b9d6a897d15608d9d23f4445c4c7118eb c7643f0ba07f330995415c4848194938536d51ae exits 0, and the real production-release.mjs plan succeeds for this exact head with all 103 migration ancestry checks. The cited e95e066a is not present in the PR history (GitHub commit lookup returns 422). This PR will use a merge commit, as its description already requires, preserving the introduction commit. Resolving this finding based on verified ancestry; the required new approval remains outstanding and will not be bypassed.",
+                      "url": "https://github.com/diegueins680/tdf-app/pull/419#discussion_r4038429877",
+                      "createdAt": "2026-09-17T15:10:00Z"
+                    }
+                  ],
+                  "pageInfo": {
+                    "hasNextPage": false,
+                    "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xN1QxNToxMDowMFrO8LWMtQ=="
+                  }
+                }
+              }
+            ],
+            "pageInfo": {
+              "hasNextPage": false,
+              "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xN1QxNDo0NToyMlrOo2gGpg=="
+            }
+          }
+        }
+      }
+    }
+  }
+]

@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-10-05T06:14:16.213150+00:00",
+  "head": "ffc29d5a658d8874c89b77fa8118719a4005a50e",
+  "base": "29c6fba0d36ef81242e5ce15f5252136004e5de9",
+  "node": "20.19.4",
+  "npmCi": "exit0,1407packages",
+  "metro": "npm run start -- --port8098 --localhost; /status=packager-status:running; owned process stopped",
+  "hostedValidate": 37270918158,
+  "hostedDatadog": 37270918121,
+  "testSuites": 90,
+  "tests": 560,
+  "expoDoctor": "17/17",
+  "synthetics": {
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "criticalErrors": 0
+  },
+  "changedFiles": [
+    ".github/workflows/datadog-synthetics.yml",
+    ".github/workflows/mobile-validate.yml"
+  ],
+  "appNativeContractsDependencyDiff": "empty",
+  "review": "pending"
+}

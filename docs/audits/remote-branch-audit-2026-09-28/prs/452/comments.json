@@ -1,0 +1,282 @@
+[
+  [
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048789818",
+      "pull_request_review_id": 5250335435,
+      "id": 4048789818,
+      "node_id": "PRRC_kwDOQPdUrM7xU6E6",
+      "diff_hunk": "@@ -0,0 +1,167 @@\n+#!/usr/bin/env python3\n+\"\"\"Read-only DNS and Webador mailbox monitor; no sending or automatic suppression.\n+\n+Credentials are read from the existing Fly app into memory only. Reports contain\n+aggregate counts, never message bodies, recipient addresses, or SMTP credentials.\n+\"\"\"\n+import argparse\n+import collections\n+import datetime\n+import email\n+import email.policy\n+import gzip\n+import imaplib\n+import io\n+import json\n+import os\n+import pathlib\n+import shlex\n+import ssl\n+import subprocess\n+import zipfile\n+import xml.etree.ElementTree as ET\n+\n+DOMAIN = 'tdfrecords.net'\n+LIMIT = 2 * 1024 * 1024\n+\n+\n+def aggregate_xml(payload):\n+    if len(payload) > LIMIT or b'<!DOCTYPE' in payload.upper() or b'<!ENTITY' in payload.upper():\n+        raise ValueError('Unsafe or oversized aggregate XML')\n+    root = ET.fromstring(payload)\n+    domain = root.findtext('policy_published/domain', '').lower()\n+    if domain != DOMAIN and not domain.endswith('.' + DOMAIN):\n+        return None\n+    counts = collections.Counter()\n+    for record in root.findall('record'):\n+        count = int(record.findtext('row/count', '0'))\n+        if count < 0:\n+            raise ValueError('Invalid aggregate count')\n+        counts['messages'] += count\n+        aligned = any(record.findtext('row/policy_evaluated/' + method) == 'pass'\n+                      for method in ('spf', 'dkim'))\n+        counts['aligned' if aligned else 'unaligned'] += count\n+    return dict(counts)\n+\n+\n+def attachment_reports(message):\n+    reports = []\n+    for part in message.walk():\n+        name = (part.get_filename() or '').lower()\n+        if not name.endswith(('.xml', '.xml.gz', '.zip', '.gz')):\n+            continue\n+        payload = part.get_payload(decode=True) or b''\n+        if len(payload) > LIMIT:\n+            raise ValueError('Oversized attachment')\n+        docs = []\n+        if name.endswith('.zip'):\n+            with zipfile.ZipFile(io.BytesIO(payload)) as archive:\n+                if len(archive.infolist()) > 20:\n+                    raise ValueError('Too many archive entries')\n+                for member in archive.infolist():\n+                    if member.filename.lower().endswith('.xml'):\n+                        if member.file_size > LIMIT:\n+                            raise ValueError('Oversized XML')\n+                        with archive.open(member) as source:\n+                            docs.append(source.read(LIMIT + 1))\n+        elif name.endswith('.gz'):\n+            with gzip.GzipFile(fileobj=io.BytesIO(payload)) as source:\n+                docs.append(source.read(LIMIT + 1))\n+        else:\n+            docs.append(payload)\n+        for doc in docs:\n+            result = aggregate_xml(doc)\n+            if result is not None:\n+                reports.append(result)\n+    return reports\n+\n+\n+def summarize_message(raw):\n+    message = email.message_from_bytes(raw, policy=email.policy.default)\n+    statuses = collections.Counter()\n+    for part in message.walk():\n+        if part.get_content_type() == 'message/delivery-status':\n+            for block in part.get_payload():\n+                status = str(block.get('Status', '')).strip()\n+                action = str(block.get('Action', '')).strip()\n+                if status and action:\n+                    statuses[action + ':' + status] += 1\n+    return dict(statuses), attachment_reports(message)\n+\n+\n+def collect(output):\n+    os.umask(0o077)\n+    output.mkdir(parents=True, exist_ok=True)\n+    report = {'observedAt': datetime.datetime.now(datetime.timezone.utc).isoformat(),\n+              'dns': {}, 'dsnStatuses': {}, 'aggregateReports': [], 'errors': [],\n+              'limitation': 'Last 14 days, INBOX/Junk, max 200 recent messages per folder; '\n+                            'no spam complaint feed or inbox-placement inference. Reports are untrusted observations.'}\n+    for server in ['ns1.openprovider.nl', 'ns2.openprovider.be', 'ns3.openprovider.eu', '1.1.1.1', '8.8.8.8']:\n+        for name, kind in [(DOMAIN, 'TXT'), ('_dmarc.' + DOMAIN, 'TXT'),\n+                           ('jouwweb._domainkey.' + DOMAIN, 'TXT'), (DOMAIN, 'MX')]:\n+            try:\n+                result = subprocess.run(['dig', '+time=3', '+tries=1', '+noall', '+answer',\n+                                         '@' + server, name, kind], capture_output=True, text=True, timeout=8)\n+                report['dns'][server + '/' + name + '/' + kind] = result.stdout.strip()\n+                if result.returncode or not result.stdout.strip():\n+                    report['errors'].append('dns_query_failed:' + server + '/' + name)\n+            except (OSError, subprocess.TimeoutExpired):\n+                report['errors'].append('dns_query_failed:' + server + '/' + name)\n+    keys = ['SMTP_USERNAME', 'SMTP_PASSWORD']\n+    command = 'for k in ' + ' '.join(keys) + '; do printf \"%s=\" \"$k\"; printenv \"$k\"; done'\n+    try:\n+        result = subprocess.run(['flyctl', 'ssh', 'console', '-a', 'tdf-hq', '--machine',\n+                                 '0807ee9cd34668', '-q', '-C', 'sh -lc ' + shlex.quote(command)],",
+      "path": "scripts/mail-deliverability-monitor.py",
+      "commit_id": "be6d9a0845a4bd8bccfbe25561da3788509434bb",
+      "original_commit_id": "be6d9a0845a4bd8bccfbe25561da3788509434bb",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Resolve a live Fly machine instead of pinning its ID**\n\nWhen Machine `0807ee9cd34668` is replaced or removed during a future rollout, the daily monitor will fail before reading the mailbox and report only `mailbox_read_failed:RuntimeError`, even if another healthy `tdf-hq` Machine is available. The inspected release flow in `scripts/production-release.mjs` discovers the current Machine set dynamically and explicitly handles targets disappearing, so this long-lived monitor should likewise let `flyctl ssh console` select a live Machine or resolve one from `flyctl machines list` rather than embedding a deployment-specific ID.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T16:53:00Z",
+      "updated_at": "2026-09-18T16:53:00Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/452#discussion_r4048789818",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/452",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048789818"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/452#discussion_r4048789818"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/452"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048789818/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 113,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 114,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 114,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048843799",
+      "pull_request_review_id": 5250399151,
+      "id": 4048843799,
+      "node_id": "PRRC_kwDOQPdUrM7xVHQX",
+      "diff_hunk": "@@ -0,0 +1,167 @@\n+#!/usr/bin/env python3\n+\"\"\"Read-only DNS and Webador mailbox monitor; no sending or automatic suppression.\n+\n+Credentials are read from the existing Fly app into memory only. Reports contain\n+aggregate counts, never message bodies, recipient addresses, or SMTP credentials.\n+\"\"\"\n+import argparse\n+import collections\n+import datetime\n+import email\n+import email.policy\n+import gzip\n+import imaplib\n+import io\n+import json\n+import os\n+import pathlib\n+import shlex\n+import ssl\n+import subprocess\n+import zipfile\n+import xml.etree.ElementTree as ET\n+\n+DOMAIN = 'tdfrecords.net'\n+LIMIT = 2 * 1024 * 1024\n+\n+\n+def aggregate_xml(payload):\n+    if len(payload) > LIMIT or b'<!DOCTYPE' in payload.upper() or b'<!ENTITY' in payload.upper():\n+        raise ValueError('Unsafe or oversized aggregate XML')\n+    root = ET.fromstring(payload)\n+    domain = root.findtext('policy_published/domain', '').lower()\n+    if domain != DOMAIN and not domain.endswith('.' + DOMAIN):\n+        return None\n+    counts = collections.Counter()\n+    for record in root.findall('record'):\n+        count = int(record.findtext('row/count', '0'))\n+        if count < 0:\n+            raise ValueError('Invalid aggregate count')\n+        counts['messages'] += count\n+        aligned = any(record.findtext('row/policy_evaluated/' + method) == 'pass'\n+                      for method in ('spf', 'dkim'))\n+        counts['aligned' if aligned else 'unaligned'] += count\n+    return dict(counts)\n+\n+\n+def attachment_reports(message):\n+    reports = []\n+    for part in message.walk():\n+        name = (part.get_filename() or '').lower()\n+        if not name.endswith(('.xml', '.xml.gz', '.zip', '.gz')):\n+            continue\n+        payload = part.get_payload(decode=True) or b''\n+        if len(payload) > LIMIT:\n+            raise ValueError('Oversized attachment')\n+        docs = []\n+        if name.endswith('.zip'):\n+            with zipfile.ZipFile(io.BytesIO(payload)) as archive:\n+                if len(archive.infolist()) > 20:\n+                    raise ValueError('Too many archive entries')\n+                for member in archive.infolist():\n+                    if member.filename.lower().endswith('.xml'):\n+                        if member.file_size > LIMIT:\n+                            raise ValueError('Oversized XML')\n+                        with archive.open(member) as source:\n+                            docs.append(source.read(LIMIT + 1))\n+        elif name.endswith('.gz'):\n+            with gzip.GzipFile(fileobj=io.BytesIO(payload)) as source:\n+                docs.append(source.read(LIMIT + 1))\n+        else:\n+            docs.append(payload)\n+        for doc in docs:\n+            result = aggregate_xml(doc)\n+            if result is not None:\n+                reports.append(result)\n+    return reports\n+\n+\n+def summarize_message(raw):\n+    message = email.message_from_bytes(raw, policy=email.policy.default)\n+    statuses = collections.Counter()\n+    for part in message.walk():\n+        if part.get_content_type() == 'message/delivery-status':\n+            for block in part.get_payload():\n+                status = str(block.get('Status', '')).strip()\n+                action = str(block.get('Action', '')).strip()\n+                if status and action:\n+                    statuses[action + ':' + status] += 1\n+    return dict(statuses), attachment_reports(message)\n+\n+\n+def collect(output):\n+    os.umask(0o077)\n+    output.mkdir(parents=True, exist_ok=True)\n+    report = {'observedAt': datetime.datetime.now(datetime.timezone.utc).isoformat(),\n+              'dns': {}, 'dsnStatuses': {}, 'aggregateReports': [], 'errors': [],\n+              'limitation': 'Last 14 days, INBOX/Junk, max 200 recent messages per folder; '\n+                            'no spam complaint feed or inbox-placement inference. Reports are untrusted observations.'}\n+    for server in ['ns1.openprovider.nl', 'ns2.openprovider.be', 'ns3.openprovider.eu', '1.1.1.1', '8.8.8.8']:\n+        for name, kind in [(DOMAIN, 'TXT'), ('_dmarc.' + DOMAIN, 'TXT'),\n+                           ('jouwweb._domainkey.' + DOMAIN, 'TXT'), (DOMAIN, 'MX')]:\n+            try:\n+                result = subprocess.run(['dig', '+time=3', '+tries=1', '+noall', '+answer',\n+                                         '@' + server, name, kind], capture_output=True, text=True, timeout=8)\n+                report['dns'][server + '/' + name + '/' + kind] = result.stdout.strip()\n+                if result.returncode or not result.stdout.strip():\n+                    report['errors'].append('dns_query_failed:' + server + '/' + name)\n+            except (OSError, subprocess.TimeoutExpired):\n+                report['errors'].append('dns_query_failed:' + server + '/' + name)\n+    keys = ['SMTP_USERNAME', 'SMTP_PASSWORD']\n+    command = 'for k in ' + ' '.join(keys) + '; do printf \"%s=\" \"$k\"; printenv \"$k\"; done'\n+    try:\n+        result = subprocess.run(['flyctl', 'ssh', 'console', '-a', 'tdf-hq', '--machine',\n+                                 '0807ee9cd34668', '-q', '-C', 'sh -lc ' + shlex.quote(command)],",
+      "path": "scripts/mail-deliverability-monitor.py",
+      "commit_id": "be6d9a0845a4bd8bccfbe25561da3788509434bb",
+      "original_commit_id": "be6d9a0845a4bd8bccfbe25561da3788509434bb",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in 1148a8657: the monitor discovers the current started, healthy app Machine through flyctl status on every run. A test covers replacement, stopped/unhealthy machines and non-app processes. The installed local monitor was updated as well.",
+      "created_at": "2026-09-18T16:58:57Z",
+      "updated_at": "2026-09-18T16:58:57Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/452#discussion_r4048843799",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/452",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048843799"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/452#discussion_r4048843799"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/452"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048843799/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": 113,
+      "start_side": "RIGHT",
+      "line": null,
+      "original_line": 114,
+      "side": "RIGHT",
+      "in_reply_to_id": 4048789818,
+      "author_association": "OWNER",
+      "original_position": 114,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048869058",
+      "pull_request_review_id": 5250426310,
+      "id": 4048869058,
+      "node_id": "PRRC_kwDOQPdUrM7xVNbC",
+      "diff_hunk": "@@ -0,0 +1,184 @@\n+#!/usr/bin/env python3\n+\"\"\"Read-only DNS and Webador mailbox monitor; no sending or automatic suppression.\n+\n+Credentials are read from the existing Fly app into memory only. Reports contain\n+aggregate counts, never message bodies, recipient addresses, or SMTP credentials.\n+\"\"\"\n+import argparse\n+import collections\n+import datetime\n+import email\n+import email.policy\n+import gzip\n+import imaplib\n+import io\n+import json\n+import os\n+import pathlib\n+import re\n+import shlex\n+import ssl\n+import subprocess\n+import zipfile\n+import xml.etree.ElementTree as ET\n+\n+DOMAIN = 'tdfrecords.net'\n+LIMIT = 2 * 1024 * 1024\n+\n+\n+def select_live_machine(status):\n+    eligible = [machine['id'] for machine in status.get('Machines', [])\n+                if machine.get('state') == 'started'\n+                and re.fullmatch(r'[0-9a-f]+', machine.get('id', ''))\n+                and machine.get('config', {}).get('metadata', {}).get('fly_process_group', 'app') == 'app'\n+                and all(check.get('status') == 'passing' for check in machine.get('checks', []))]\n+    if not eligible:\n+        raise RuntimeError('No healthy application Machine available')\n+    return sorted(eligible)[0]\n+\n+\n+def aggregate_xml(payload):\n+    if len(payload) > LIMIT or b'<!DOCTYPE' in payload.upper() or b'<!ENTITY' in payload.upper():\n+        raise ValueError('Unsafe or oversized aggregate XML')\n+    root = ET.fromstring(payload)\n+    domain = root.findtext('policy_published/domain', '').lower()\n+    if domain != DOMAIN and not domain.endswith('.' + DOMAIN):\n+        return None\n+    counts = collections.Counter()\n+    for record in root.findall('record'):\n+        count = int(record.findtext('row/count', '0'))\n+        if count < 0:\n+            raise ValueError('Invalid aggregate count')\n+        counts['messages'] += count\n+        aligned = any(record.findtext('row/policy_evaluated/' + method) == 'pass'\n+                      for method in ('spf', 'dkim'))\n+        counts['aligned' if aligned else 'unaligned'] += count\n+    return dict(counts)\n+\n+\n+def attachment_reports(message):\n+    reports = []\n+    for part in message.walk():\n+        name = (part.get_filename() or '').lower()\n+        if not name.endswith(('.xml', '.xml.gz', '.zip', '.gz')):\n+            continue\n+        payload = part.get_payload(decode=True) or b''\n+        if len(payload) > LIMIT:\n+            raise ValueError('Oversized attachment')\n+        docs = []\n+        if name.endswith('.zip'):\n+            with zipfile.ZipFile(io.BytesIO(payload)) as archive:\n+                if len(archive.infolist()) > 20:\n+                    raise ValueError('Too many archive entries')\n+                for member in archive.infolist():\n+                    if member.filename.lower().endswith('.xml'):\n+                        if member.file_size > LIMIT:\n+                            raise ValueError('Oversized XML')\n+                        with archive.open(member) as source:\n+                            docs.append(source.read(LIMIT + 1))\n+        elif name.endswith('.gz'):\n+            with gzip.GzipFile(fileobj=io.BytesIO(payload)) as source:\n+                docs.append(source.read(LIMIT + 1))\n+        else:\n+            docs.append(payload)\n+        for doc in docs:\n+            result = aggregate_xml(doc)\n+            if result is not None:\n+                reports.append(result)\n+    return reports\n+\n+\n+def summarize_message(raw):\n+    message = email.message_from_bytes(raw, policy=email.policy.default)\n+    statuses = collections.Counter()\n+    for part in message.walk():\n+        if part.get_content_type() == 'message/delivery-status':\n+            for block in part.get_payload():\n+                status = str(block.get('Status', '')).strip()\n+                action = str(block.get('Action', '')).strip()\n+                if status and action:\n+                    statuses[action + ':' + status] += 1\n+    return dict(statuses), attachment_reports(message)\n+\n+\n+def collect(output):\n+    os.umask(0o077)\n+    output.mkdir(parents=True, exist_ok=True)\n+    report = {'observedAt': datetime.datetime.now(datetime.timezone.utc).isoformat(),\n+              'dns': {}, 'dsnStatuses': {}, 'aggregateReports': [], 'errors': [],\n+              'limitation': 'Last 14 days, INBOX/Junk, max 200 recent messages per folder; '\n+                            'no spam complaint feed or inbox-placement inference. Reports are untrusted observations.'}\n+    for server in ['ns1.openprovider.nl', 'ns2.openprovider.be', 'ns3.openprovider.eu', '1.1.1.1', '8.8.8.8']:\n+        for name, kind in [(DOMAIN, 'TXT'), ('_dmarc.' + DOMAIN, 'TXT'),\n+                           ('jouwweb._domainkey.' + DOMAIN, 'TXT'), (DOMAIN, 'MX')]:\n+            try:\n+                result = subprocess.run(['dig', '+time=3', '+tries=1', '+noall', '+answer',\n+                                         '@' + server, name, kind], capture_output=True, text=True, timeout=8)\n+                report['dns'][server + '/' + name + '/' + kind] = result.stdout.strip()\n+                if result.returncode or not result.stdout.strip():\n+                    report['errors'].append('dns_query_failed:' + server + '/' + name)\n+            except (OSError, subprocess.TimeoutExpired):\n+                report['errors'].append('dns_query_failed:' + server + '/' + name)\n+    keys = ['SMTP_USERNAME', 'SMTP_PASSWORD']\n+    command = 'for k in ' + ' '.join(keys) + '; do printf \"%s=\" \"$k\"; printenv \"$k\"; done'\n+    try:\n+        status = subprocess.run(['flyctl', 'status', '-a', 'tdf-hq', '--json'],\n+                                capture_output=True, text=True, timeout=20)\n+        if status.returncode:\n+            raise RuntimeError('Fly status unavailable')\n+        machine = select_live_machine(json.loads(status.stdout))\n+        result = subprocess.run(['flyctl', 'ssh', 'console', '-a', 'tdf-hq', '--machine',\n+                                 machine, '-q', '-C', 'sh -lc ' + shlex.quote(command)],\n+                                capture_output=True, text=True, timeout=50)\n+        if result.returncode:\n+            raise RuntimeError('Fly configuration unavailable')\n+        config = dict(line.split('=', 1) for line in result.stdout.splitlines()\n+                      if '=' in line and line.split('=', 1)[0] in keys)\n+        since = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=14)).strftime('%d-%b-%Y')\n+        statuses = collections.Counter()\n+        with imaplib.IMAP4_SSL('mail.webador.com', 993, ssl_context=ssl.create_default_context(), timeout=20) as mailbox:\n+            mailbox.login(config['SMTP_USERNAME'], config['SMTP_PASSWORD'])\n+            for folder in ['INBOX', 'Junk']:\n+                status, _ = mailbox.select(folder, readonly=True)\n+                if status != 'OK':\n+                    report['errors'].append('folder_unavailable:' + folder)\n+                    continue\n+                status, found = mailbox.uid('search', None, 'SINCE', since)\n+                if status != 'OK':\n+                    raise RuntimeError('Mailbox search failed')\n+                ids = found[0].split()\n+                if len(ids) > 200:\n+                    report['errors'].append('scan_truncated:' + folder)\n+                for uid in ids[-200:]:\n+                    status, data = mailbox.uid('fetch', uid, '(BODY.PEEK[]<0.2097153>)')\n+                    raw = next((x[1] for x in data if isinstance(x, tuple)), b'')\n+                    if status != 'OK' or len(raw) > LIMIT:\n+                        report['errors'].append('message_unavailable_or_oversized:' + folder)\n+                        continue\n+                    try:\n+                        failures, aggregates = summarize_message(raw)\n+                        statuses.update(failures)\n+                        report['aggregateReports'].extend(aggregates)\n+                    except (ValueError, ET.ParseError, zipfile.BadZipFile, OSError):",
+      "path": "scripts/mail-deliverability-monitor.py",
+      "commit_id": "1148a86575cf9811970b767a169ac9fcf5e3a489",
+      "original_commit_id": "1148a86575cf9811970b767a169ac9fcf5e3a489",
+      "user": {
+        "login": "chatgpt-codex-connector[bot]",
+        "id": 199175422,
+        "node_id": "BOT_kgDOC98s_g",
+        "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+        "html_url": "https://github.com/apps/chatgpt-codex-connector",
+        "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+        "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+        "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+        "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+        "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+        "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+        "type": "Bot",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Continue after unsupported ZIP attachments**\n\nWhen any message in INBOX or Junk contains an encrypted (or otherwise unsupported) `.zip` with an XML member, `archive.open(member)` raises `RuntimeError`/`NotImplementedError`, neither of which is caught here. The exception reaches the outer mailbox handler, sets `mailboxReadSucceeded` to false, and stops scanning all subsequent messages on every daily run until that attachment leaves the 14-day window. Handle archive extraction failures at this per-message boundary so one untrusted attachment is reported as unparseable without suppressing the remaining DSN/DMARC observations.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+      "created_at": "2026-09-18T17:01:34Z",
+      "updated_at": "2026-09-18T17:01:34Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/452#discussion_r4048869058",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/452",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048869058"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/452#discussion_r4048869058"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/452"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048869058/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 162,
+      "side": "RIGHT",
+      "author_association": "NONE",
+      "original_position": 162,
+      "position": 1,
+      "subject_type": "line"
+    },
+    {
+      "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048934180",
+      "pull_request_review_id": 5250502442,
+      "id": 4048934180,
+      "node_id": "PRRC_kwDOQPdUrM7xVdUk",
+      "diff_hunk": "@@ -0,0 +1,184 @@\n+#!/usr/bin/env python3\n+\"\"\"Read-only DNS and Webador mailbox monitor; no sending or automatic suppression.\n+\n+Credentials are read from the existing Fly app into memory only. Reports contain\n+aggregate counts, never message bodies, recipient addresses, or SMTP credentials.\n+\"\"\"\n+import argparse\n+import collections\n+import datetime\n+import email\n+import email.policy\n+import gzip\n+import imaplib\n+import io\n+import json\n+import os\n+import pathlib\n+import re\n+import shlex\n+import ssl\n+import subprocess\n+import zipfile\n+import xml.etree.ElementTree as ET\n+\n+DOMAIN = 'tdfrecords.net'\n+LIMIT = 2 * 1024 * 1024\n+\n+\n+def select_live_machine(status):\n+    eligible = [machine['id'] for machine in status.get('Machines', [])\n+                if machine.get('state') == 'started'\n+                and re.fullmatch(r'[0-9a-f]+', machine.get('id', ''))\n+                and machine.get('config', {}).get('metadata', {}).get('fly_process_group', 'app') == 'app'\n+                and all(check.get('status') == 'passing' for check in machine.get('checks', []))]\n+    if not eligible:\n+        raise RuntimeError('No healthy application Machine available')\n+    return sorted(eligible)[0]\n+\n+\n+def aggregate_xml(payload):\n+    if len(payload) > LIMIT or b'<!DOCTYPE' in payload.upper() or b'<!ENTITY' in payload.upper():\n+        raise ValueError('Unsafe or oversized aggregate XML')\n+    root = ET.fromstring(payload)\n+    domain = root.findtext('policy_published/domain', '').lower()\n+    if domain != DOMAIN and not domain.endswith('.' + DOMAIN):\n+        return None\n+    counts = collections.Counter()\n+    for record in root.findall('record'):\n+        count = int(record.findtext('row/count', '0'))\n+        if count < 0:\n+            raise ValueError('Invalid aggregate count')\n+        counts['messages'] += count\n+        aligned = any(record.findtext('row/policy_evaluated/' + method) == 'pass'\n+                      for method in ('spf', 'dkim'))\n+        counts['aligned' if aligned else 'unaligned'] += count\n+    return dict(counts)\n+\n+\n+def attachment_reports(message):\n+    reports = []\n+    for part in message.walk():\n+        name = (part.get_filename() or '').lower()\n+        if not name.endswith(('.xml', '.xml.gz', '.zip', '.gz')):\n+            continue\n+        payload = part.get_payload(decode=True) or b''\n+        if len(payload) > LIMIT:\n+            raise ValueError('Oversized attachment')\n+        docs = []\n+        if name.endswith('.zip'):\n+            with zipfile.ZipFile(io.BytesIO(payload)) as archive:\n+                if len(archive.infolist()) > 20:\n+                    raise ValueError('Too many archive entries')\n+                for member in archive.infolist():\n+                    if member.filename.lower().endswith('.xml'):\n+                        if member.file_size > LIMIT:\n+                            raise ValueError('Oversized XML')\n+                        with archive.open(member) as source:\n+                            docs.append(source.read(LIMIT + 1))\n+        elif name.endswith('.gz'):\n+            with gzip.GzipFile(fileobj=io.BytesIO(payload)) as source:\n+                docs.append(source.read(LIMIT + 1))\n+        else:\n+            docs.append(payload)\n+        for doc in docs:\n+            result = aggregate_xml(doc)\n+            if result is not None:\n+                reports.append(result)\n+    return reports\n+\n+\n+def summarize_message(raw):\n+    message = email.message_from_bytes(raw, policy=email.policy.default)\n+    statuses = collections.Counter()\n+    for part in message.walk():\n+        if part.get_content_type() == 'message/delivery-status':\n+            for block in part.get_payload():\n+                status = str(block.get('Status', '')).strip()\n+                action = str(block.get('Action', '')).strip()\n+                if status and action:\n+                    statuses[action + ':' + status] += 1\n+    return dict(statuses), attachment_reports(message)\n+\n+\n+def collect(output):\n+    os.umask(0o077)\n+    output.mkdir(parents=True, exist_ok=True)\n+    report = {'observedAt': datetime.datetime.now(datetime.timezone.utc).isoformat(),\n+              'dns': {}, 'dsnStatuses': {}, 'aggregateReports': [], 'errors': [],\n+              'limitation': 'Last 14 days, INBOX/Junk, max 200 recent messages per folder; '\n+                            'no spam complaint feed or inbox-placement inference. Reports are untrusted observations.'}\n+    for server in ['ns1.openprovider.nl', 'ns2.openprovider.be', 'ns3.openprovider.eu', '1.1.1.1', '8.8.8.8']:\n+        for name, kind in [(DOMAIN, 'TXT'), ('_dmarc.' + DOMAIN, 'TXT'),\n+                           ('jouwweb._domainkey.' + DOMAIN, 'TXT'), (DOMAIN, 'MX')]:\n+            try:\n+                result = subprocess.run(['dig', '+time=3', '+tries=1', '+noall', '+answer',\n+                                         '@' + server, name, kind], capture_output=True, text=True, timeout=8)\n+                report['dns'][server + '/' + name + '/' + kind] = result.stdout.strip()\n+                if result.returncode or not result.stdout.strip():\n+                    report['errors'].append('dns_query_failed:' + server + '/' + name)\n+            except (OSError, subprocess.TimeoutExpired):\n+                report['errors'].append('dns_query_failed:' + server + '/' + name)\n+    keys = ['SMTP_USERNAME', 'SMTP_PASSWORD']\n+    command = 'for k in ' + ' '.join(keys) + '; do printf \"%s=\" \"$k\"; printenv \"$k\"; done'\n+    try:\n+        status = subprocess.run(['flyctl', 'status', '-a', 'tdf-hq', '--json'],\n+                                capture_output=True, text=True, timeout=20)\n+        if status.returncode:\n+            raise RuntimeError('Fly status unavailable')\n+        machine = select_live_machine(json.loads(status.stdout))\n+        result = subprocess.run(['flyctl', 'ssh', 'console', '-a', 'tdf-hq', '--machine',\n+                                 machine, '-q', '-C', 'sh -lc ' + shlex.quote(command)],\n+                                capture_output=True, text=True, timeout=50)\n+        if result.returncode:\n+            raise RuntimeError('Fly configuration unavailable')\n+        config = dict(line.split('=', 1) for line in result.stdout.splitlines()\n+                      if '=' in line and line.split('=', 1)[0] in keys)\n+        since = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=14)).strftime('%d-%b-%Y')\n+        statuses = collections.Counter()\n+        with imaplib.IMAP4_SSL('mail.webador.com', 993, ssl_context=ssl.create_default_context(), timeout=20) as mailbox:\n+            mailbox.login(config['SMTP_USERNAME'], config['SMTP_PASSWORD'])\n+            for folder in ['INBOX', 'Junk']:\n+                status, _ = mailbox.select(folder, readonly=True)\n+                if status != 'OK':\n+                    report['errors'].append('folder_unavailable:' + folder)\n+                    continue\n+                status, found = mailbox.uid('search', None, 'SINCE', since)\n+                if status != 'OK':\n+                    raise RuntimeError('Mailbox search failed')\n+                ids = found[0].split()\n+                if len(ids) > 200:\n+                    report['errors'].append('scan_truncated:' + folder)\n+                for uid in ids[-200:]:\n+                    status, data = mailbox.uid('fetch', uid, '(BODY.PEEK[]<0.2097153>)')\n+                    raw = next((x[1] for x in data if isinstance(x, tuple)), b'')\n+                    if status != 'OK' or len(raw) > LIMIT:\n+                        report['errors'].append('message_unavailable_or_oversized:' + folder)\n+                        continue\n+                    try:\n+                        failures, aggregates = summarize_message(raw)\n+                        statuses.update(failures)\n+                        report['aggregateReports'].extend(aggregates)\n+                    except (ValueError, ET.ParseError, zipfile.BadZipFile, OSError):",
+      "path": "scripts/mail-deliverability-monitor.py",
+      "commit_id": "1148a86575cf9811970b767a169ac9fcf5e3a489",
+      "original_commit_id": "1148a86575cf9811970b767a169ac9fcf5e3a489",
+      "user": {
+        "login": "diegueins680",
+        "id": 2753581,
+        "node_id": "MDQ6VXNlcjI3NTM1ODE=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/2753581?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/diegueins680",
+        "html_url": "https://github.com/diegueins680",
+        "followers_url": "https://api.github.com/users/diegueins680/followers",
+        "following_url": "https://api.github.com/users/diegueins680/following{/other_user}",
+        "gists_url": "https://api.github.com/users/diegueins680/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/diegueins680/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/diegueins680/subscriptions",
+        "organizations_url": "https://api.github.com/users/diegueins680/orgs",
+        "repos_url": "https://api.github.com/users/diegueins680/repos",
+        "events_url": "https://api.github.com/users/diegueins680/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/diegueins680/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "body": "Fixed in ab9bbacc9. Per-message handling now catches archive RuntimeError (including NotImplementedError), records unparseable_report and continues. A regression test constructs actual encrypted and unsupported-compression ZIPs followed by a valid XML report, executes the mailbox collection loop and verifies the later report is counted and mailboxReadSucceeded remains true. All six monitor tests pass; the installed monitor is updated.",
+      "created_at": "2026-09-18T17:08:33Z",
+      "updated_at": "2026-09-18T17:08:33Z",
+      "html_url": "https://github.com/diegueins680/tdf-app/pull/452#discussion_r4048934180",
+      "pull_request_url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/452",
+      "_links": {
+        "self": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048934180"
+        },
+        "html": {
+          "href": "https://github.com/diegueins680/tdf-app/pull/452#discussion_r4048934180"
+        },
+        "pull_request": {
+          "href": "https://api.github.com/repos/diegueins680/tdf-app/pulls/452"
+        }
+      },
+      "reactions": {
+        "url": "https://api.github.com/repos/diegueins680/tdf-app/pulls/comments/4048934180/reactions",
+        "total_count": 0,
+        "+1": 0,
+        "-1": 0,
+        "laugh": 0,
+        "hooray": 0,
+        "confused": 0,
+        "heart": 0,
+        "rocket": 0,
+        "eyes": 0
+      },
+      "start_line": null,
+      "original_start_line": null,
+      "start_side": null,
+      "line": null,
+      "original_line": 162,
+      "side": "RIGHT",
+      "in_reply_to_id": 4048869058,
+      "author_association": "OWNER",
+      "original_position": 162,
+      "position": 1,
+      "subject_type": "line"
+    }
+  ]
+]

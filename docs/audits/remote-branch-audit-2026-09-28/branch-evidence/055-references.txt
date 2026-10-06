@@ -1,0 +1,2 @@
+origin/main:docs/event-operations/assumptions-and-constraints.md:41:  branch `feat/event-operations-formal-foundation` in
+origin/main:docs/event-operations/implementation-report-2026-09-14.md:11:Work is isolated on local branch `feat/event-operations-formal-foundation` at

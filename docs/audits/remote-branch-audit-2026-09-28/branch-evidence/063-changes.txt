@@ -1,0 +1,20 @@
+ .github/workflows/event-operations-formal.yml      |   7 ++
+ docs/event-operations/README.md                    |   2 +
+ docs/event-operations/delivery-plan.md             |   7 ++
+ docs/event-operations/gap-matrix.md                |   8 ++
+ .../pr-33-task-completion-client.md                | 102 ++++++++++++++++
+ .../task-completion-client-contract.md             |  65 ++++++++++
+ docs/event-operations/traceability-matrix.md       |   1 +
+ formal/event-operations/README.md                  |   9 ++
+ formal/event-operations/TaskCompletionClient.cfg   |   4 +
+ formal/event-operations/TaskCompletionClient.tla   |  30 +++++
+ .../TaskCompletionClientBinding.cfg                |   4 +
+ .../TaskCompletionClientCapture.cfg                |   4 +
+ .../event-operations/TaskCompletionClientRetry.cfg |   4 +
+ .../event-operations/TaskCompletionClientShape.cfg |   4 +
+ .../event-task-completion-client.test.mjs          |  21 ++++
+ scripts/verify-event-operations-formal.sh          |   5 +
+ tdf-hq-ui/src/api/eventOperations.ts               |  33 +++++
+ tdf-hq-ui/src/api/eventTaskCompletion.test.ts      | 133 +++++++++++++++++++++
+ .../src/api/eventTaskCompletion.transport.test.ts  |  82 +++++++++++++
+ 19 files changed, 525 insertions(+)

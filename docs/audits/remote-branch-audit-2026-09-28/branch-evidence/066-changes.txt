@@ -1,0 +1,22 @@
+ docs/event-operations/README.md                    |   2 +
+ docs/event-operations/delivery-plan.md             |   8 ++
+ docs/event-operations/pr-14-task-read-api.md       | 139 +++++++++++++++++++++
+ docs/event-operations/task-read-api-contract.md    |  51 ++++++++
+ docs/event-operations/traceability-matrix.md       |   1 +
+ .../event-operations-http-runner.test.mjs          |  11 ++
+ scripts/test-event-operations-http-ci.sh           |   2 +
+ scripts/test-event-operations-http.sh              |   2 +
+ tdf-hq-ui/src/api/eventOperations.test.ts          |  89 +++++++++++++
+ tdf-hq-ui/src/api/eventOperations.ts               |  44 +++++++
+ tdf-hq-ui/src/api/generated/types.ts               | 108 ++++++++++++++++
+ tdf-hq/docs/openapi/api.yaml                       |  89 +++++++++++++
+ tdf-hq/src/TDF/EventOperations/API.hs              |   3 +
+ tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs |  31 ++++-
+ tdf-hq/src/TDF/EventOperations/Server.hs           |  16 ++-
+ tdf-hq/src/TDF/EventOperations/Types.hs            |  81 ++++++++++++
+ tdf-hq/test/EventOperationsHttpMain.hs             |  72 ++++++++++-
+ .../TDF/EventOperations/DatabaseBoundarySpec.hs    |  62 ++++++++-
+ .../test/TDF/EventOperations/SessionFenceSpec.hs   |  34 +++--
+ tdf-hq/test/TDF/EventOperations/TypesSpec.hs       |  10 ++
+ .../integration/event_operations_http_fixture.sql  |  15 +++
+ 21 files changed, 856 insertions(+), 14 deletions(-)

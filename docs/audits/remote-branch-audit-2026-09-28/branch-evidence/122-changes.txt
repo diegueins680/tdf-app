@@ -1,0 +1,7 @@
+ .../catalog-list-decisions.json                    | 44 ++++++++++++++++
+ .../src/features/releases/ReleaseArtwork.test.tsx  | 33 ++++++++++++
+ tdf-hq-ui/src/features/releases/ReleaseArtwork.tsx | 39 ++++++++++++++
+ .../releases/resolveReleaseArtwork.test.ts         | 61 ++++++++++++++++++++++
+ .../src/features/releases/resolveReleaseArtwork.ts | 43 +++++++++++++++
+ tdf-hq-ui/src/pages/LabelReleasesPage.tsx          | 38 +++++---------
+ 6 files changed, 232 insertions(+), 26 deletions(-)

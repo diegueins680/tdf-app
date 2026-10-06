@@ -1,0 +1,45 @@
+648f2d6dc69080d4438ae2a25309497012ded2d1 2026-09-21T01:55:40-05:00 continuous-improvement-loop[bot] Merge remote-tracking branch 'origin/main' into fix/event-confirmed-end-20260920
+66dae5b8ec22f3f0fe819dfcd9bae5ed727c6b48 2026-09-21T01:55:03-05:00 Diego Saa Merge pull request #461 from diegueins680/fix/disable-unverified-service-escrow-20260920
+989d0663cc249bcee74331604561628d3435c961 2026-09-21T00:20:00-05:00 continuous-improvement-loop[bot] fix(release): verify financial route bindings before recovery
+3e5563a2dd1c01d1c7b6f73ac3153681a9290a12 2026-09-20T23:58:09-05:00 continuous-improvement-loop[bot] fix(release): close recovery dialogs reliably and classify verification constants
+b18f26e80a742b84e10bc5cea2ee623cb9beb435 2026-09-20T23:46:36-05:00 continuous-improvement-loop[bot] Merge remote-tracking branch 'origin/main' into fix/disable-unverified-service-escrow-20260920
+5b29fcf68768fce18acbc2424b733459909856d7 2026-09-20T23:38:32-05:00 Diego Saa Merge pull request #459 from diegueins680/feat/records-youtube-provider-20260918
+7314245c17a1413df3d86ff5c0cf6dc78185ac78 2026-09-20T23:37:52-05:00 continuous-improvement-loop[bot] fix(release): verify escrow recovery source across integration histories
+79eb0cda5707d9cfa880b9b3a65e5e03430ad6bb 2026-09-20T23:36:27-05:00 continuous-improvement-loop[bot] Merge remote-tracking branch 'origin/main' into fix/disable-unverified-service-escrow-20260920
+3dd26e0fa8cab6405bc3105078a4ee651d43bbca 2026-09-20T22:35:53-05:00 Diego Saa Merge pull request #456 from diegueins680/fix/event-discovery-schedule-20260918
+0c34b2c0abe5d2db557ad8ae57db34cddcbfbde7 2026-09-20T22:35:36-05:00 continuous-improvement-loop[bot] fix(release): preserve escrow write disablement during recovery
+33083d469727da73e73ea4a2c2be5aaec130b137 2026-09-20T22:33:21-05:00 continuous-improvement-loop[bot] fix(payments): disable unverified legacy escrow writes
+d517d6ed12a0f9ed3929df124507c7f4b025d16d 2026-09-20T21:46:24-05:00 Diego Saa Merge pull request #455 from diegueins680/audit/formal-system-20260918
+6fbae058e23c989599116c629a80fe216505c1e4 2026-09-20T21:13:53-05:00 continuous-improvement-loop[bot] docs(formal): keep conflict summary aligned with expanded inventory
+9f66d7d7dcd0eb4a2569ab43d8d3f57e0faa86de 2026-09-20T21:13:36-05:00 continuous-improvement-loop[bot] fix(events): preserve unconfirmed end times during ingestion
+c3779558503802a9db574e0ed2ad2e84fab78c46 2026-09-20T21:13:23-05:00 continuous-improvement-loop[bot] fix(formal): include component specifications in canonical discovery
+073c78886a11a240b8dd33bc647c832a7d31c920 2026-09-20T20:54:49-05:00 continuous-improvement-loop[bot] docs(formal): retain fresh proof receipts and integrated release boundary
+de39163806d2af443c5a83a61e128bd43ecaa32f 2026-09-20T20:54:27-05:00 continuous-improvement-loop[bot] Merge remote-tracking branch 'origin/main' into audit/formal-system-20260920
+c79041b10e86872c0a4ea3c7d16e6eab53e7a877 2026-09-20T20:48:32-05:00 continuous-improvement-loop[bot] Merge remote-tracking branch 'origin/main' into records/provider-continuation-20260920
+633f9f906e7cb9d9a0911887fc057ca7ff68906c 2026-09-20T20:43:33-05:00 continuous-improvement-loop[bot] test(formal): run payment arithmetic oracle in standard Hspec suite
+97c4e36514c1277cca4084db016f53cd5c76ab15 2026-09-20T20:37:40-05:00 continuous-improvement-loop[bot] Merge remote-tracking branch 'origin/main' into audit/formal-system-20260920
+2d6856dfc3e8e75f7e122e12b96a73f26921ebed 2026-09-18T14:34:19-05:00 continuous-improvement-loop[bot] merge: reuse canonical identity recovery and protected-main dialog fix
+824cda34b6353eac0d9a7b33d5f203e5cdfbda5c 2026-09-18T14:32:31-05:00 continuous-improvement-loop[bot] Merge commit 'e9a8105554ba2f79515f82828f1c9e02e70c1888' into audit/formal-system-20260918
+2ae6198b46805ecfef6c46eb1ff6114aa4ddbe7d 2026-09-18T14:12:03-05:00 continuous-improvement-loop[bot] docs(records): review provider protocol result types
+b966595e267c6365830fa5e60abd3e707838ad59 2026-09-18T14:02:48-05:00 continuous-improvement-loop[bot] docs: retain identity recovery counterexample and regression evidence
+abf74af0141ed5a7c08eeef463ba6c3422e035c0 2026-09-18T14:01:52-05:00 continuous-improvement-loop[bot] fix: preserve contact identity contracts during release recovery
+f9da5da1359e284631be80f6668e264d3424e281 2026-09-18T13:58:04-05:00 continuous-improvement-loop[bot] docs(records): record server credential and provider verification
+261bfdfbbdab0520b35725a72b776f160b608dd3 2026-09-18T13:54:41-05:00 continuous-improvement-loop[bot] docs(identity): require the final tested application checkout
+aeedcac3717a6a0df48edb1e719a6a8adb0dfe94 2026-09-18T13:54:28-05:00 continuous-improvement-loop[bot] Merge commit '65cc350a68bf293720bed21afb771d75ab8fbea7' into fix/identity-request-recovery-20260918
+f2b4165a46db0d8f7c7d12cfc22ec43f7f11a734 2026-09-18T13:48:05-05:00 continuous-improvement-loop[bot] feat(records): validate bounded public YouTube metadata
+af9309c2892ac84b377999143cd47a41dc2ed90d 2026-09-18T13:47:30-05:00 continuous-improvement-loop[bot] docs: cite direct approved authority for cumulative payment bounds
+347ff097a327e828d781d37c12b9909d81716c60 2026-09-18T13:45:48-05:00 continuous-improvement-loop[bot] fix: refresh specifications against merged identity and mail changes
+8045e2a6a70754da2dd319b28864594c8472308a 2026-09-18T13:44:20-05:00 continuous-improvement-loop[bot] Merge commit '7635a5f325b9f08e129498317fecd606dfd36dc6' into audit/formal-system-20260918
+5f23ac124d07149295054f422231d232850e5334 2026-09-18T13:43:07-05:00 continuous-improvement-loop[bot] docs(identity): preserve current main and use verified recovery artifact
+4052f32d98920012ace393d4b0b4fe770a842b63 2026-09-18T13:42:30-05:00 continuous-improvement-loop[bot] Merge commit 'a72374b94a082320ac68737cdd21936fef90bd9a' into fix/identity-request-recovery-20260918
+a72374b94a082320ac68737cdd21936fef90bd9a 2026-09-18T11:56:49-05:00 continuous-improvement-loop[bot] fix(release): preserve identity request writers during recovery
+2235a4f2ac88272df5257241ad093ddf02dec0ea 2026-09-18T13:40:59-05:00 continuous-improvement-loop[bot] Merge remote-tracking branch 'origin/main' into fix/identity-request-recovery-20260918
+7d49563ec2b4d6b82332d570cf10519c3d8228c9 2026-09-18T13:39:04-05:00 continuous-improvement-loop[bot] docs(identity): pin the supported release runner checkout
+41a68a605c12e603b098a28e172f35e200da7280 2026-09-18T13:37:14-05:00 continuous-improvement-loop[bot] docs: record normalization of PostgreSQL evidence output
+4449d34ce9e310282f9dbf1941c28ee88ece0c41 2026-09-18T13:36:08-05:00 continuous-improvement-loop[bot] fix: revalidate social contracts and retain scoped verification receipts
+1cfd1ba8c4a7e501487e006877a17101c7adb341 2026-09-18T12:09:24-05:00 continuous-improvement-loop[bot] chore: refresh specification inventory against integrated main
+bd229d4683a202efc2549069d97f2c44709ead66 2026-09-18T12:08:42-05:00 continuous-improvement-loop[bot] Merge remote-tracking branch 'origin/main' into audit/formal-system-20260918
+b907055c608f62b84b9140ad0f1a23f533269256 2026-09-18T12:08:35-05:00 continuous-improvement-loop[bot] fix: prevent payment overflow and bind formal evidence to source
+9e4e6f27665f42a26ef987082be39aa87f9f482e 2026-09-18T12:07:07-05:00 continuous-improvement-loop[bot] docs(identity): explain confirmation delivery recovery limits
+0fe1f9141b24dc6390ba40332358743a26615b33 2026-09-18T12:03:01-05:00 continuous-improvement-loop[bot] test(release): verify receipt-preserving recovery and document rollout
+9fd718923895f331b505ea8850a0b525be4b8039 2026-09-18T11:56:49-05:00 continuous-improvement-loop[bot] fix(release): preserve identity request writers during recovery

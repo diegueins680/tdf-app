@@ -1,0 +1,5 @@
+9d0d84dbb4e5afafbfda7f0074421246926fd98d 2026-09-15T11:45:01-05:00 continuous-improvement-loop[bot] docs(payments): document closed-approval holds and verification limits
+88e75b536d5dc0401c6e722e23f6beaf626dff38 2026-09-15T11:33:48-05:00 continuous-improvement-loop[bot] test(payments): cover held approval recovery in API and checkout
+2168852ea106b9b0e33f71a869455fb45bac4761 2026-09-15T11:27:36-05:00 continuous-improvement-loop[bot] fix(payments): retain and hold verified approvals on closed checkouts
+3d6044762d2c6468268a0577d60c63ebe9b28e64 2026-09-15T11:24:13-05:00 continuous-improvement-loop[bot] test(payments): disambiguate review financial snapshot row
+3032a4d4e1c0efd6468c999436838e4ffa3693ab 2026-09-15T11:12:21-05:00 continuous-improvement-loop[bot] test(payments): expose lost late-approval evidence on closed checkouts

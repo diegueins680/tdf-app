@@ -1,0 +1,43 @@
+{
+  "timestamp": "2026-09-28T16:31:26.365563+00:00",
+  "pr": 468,
+  "head": "68558f5409f9a976c0a4a9bd742e627f75f089cf",
+  "changes_commit": "7def35976f62dd153127d25217e22d3f0d19f3aa",
+  "targeted_tests": {
+    "pass": 111,
+    "fail": 0,
+    "skip": 0,
+    "log": "cutover-targeted-tests.log"
+  },
+  "ci_tests": {
+    "pass": 25,
+    "fail": 0,
+    "skip": 0,
+    "log": "cutover-ci-tests.log"
+  },
+  "course_requests": {
+    "pass": 3,
+    "network": "mocked",
+    "evidence": "cutover-course-checks.json"
+  },
+  "yaml_parse": {
+    "tool": "PyYAML safe_load",
+    "passed": [
+      ".github/workflows/artist-enrichment-daily.yml",
+      ".github/workflows/check-messaging-token.yml"
+    ]
+  },
+  "diff_check": "passed before commits",
+  "specification_gate": {
+    "inventory_check": "passed",
+    "python_regressions": 3,
+    "node_regressions": 9,
+    "log": "cutover-spec-tests.log",
+    "hosted_check": "SUCCESS https://github.com/diegueins680/tdf-app/actions/runs/36450999874/job/109025422495"
+  },
+  "original_specification_failure_retained": "cutover-spec-failure.log",
+  "current_datadog_failure": "cutover-current-datadog-failure.log",
+  "resolved_threads": 3,
+  "remaining_thread": "PRRT_kwDOQPdUrM6mvT6B \u2014 Google interactive login and authenticated upload gates not performed",
+  "deployment": "none"
+}

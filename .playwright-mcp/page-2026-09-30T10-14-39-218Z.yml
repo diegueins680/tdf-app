@@ -1,0 +1,246 @@
+- generic [ref=f48e4]:
+  - generic [ref=f48e9]:
+    - generic [ref=f48e12]:
+      - link [ref=f48e17] [cursor=pointer]:
+        - /url: /
+        - img "Instagram" [ref=f48e22]
+      - generic [ref=f48e25]:
+        - link [ref=f48e30] [cursor=pointer]:
+          - /url: /
+          - img "Home" [ref=f48e35]
+        - link [ref=f48e40] [cursor=pointer]:
+          - /url: /reels/
+          - img "Reels" [ref=f48e45]
+        - link [ref=f48e52] [cursor=pointer]:
+          - /url: /direct/inbox/
+          - img "Messages" [ref=f48e57]
+        - link [ref=f48e63] [cursor=pointer]:
+          - /url: /explore/
+          - img "Search" [ref=f48e68]
+        - link [ref=f48e75] [cursor=pointer]:
+          - /url: "#"
+          - img "Notifications" [ref=f48e80]
+        - link [ref=f48e86] [cursor=pointer]:
+          - /url: "#"
+          - img "New post" [ref=f48e91]
+        - link [ref=f48e96] [cursor=pointer]:
+          - /url: "#"
+          - img "Professional dashboard" [ref=f48e101]
+        - link [ref=f48e108] [cursor=pointer]:
+          - /url: /tdf.records.label/
+          - link [ref=f48e113]:
+            - img "tdf.records.label's profile picture" [ref=f48e114]
+      - generic [ref=f48e115]:
+        - link [ref=f48e118] [cursor=pointer]:
+          - /url: "#"
+          - img "Settings" [ref=f48e123]
+        - link [ref=f48e126] [cursor=pointer]:
+          - /url: "#"
+          - img "Also from Meta" [ref=f48e131]
+    - generic [ref=f48e134]:
+      - main [ref=f48e135]:
+        - generic [ref=f48e137]:
+          - generic [ref=f48e138]:
+            - generic [ref=f48e139]:
+              - link [ref=f48e145] [cursor=pointer]:
+                - /url: /gura.a.music/
+                - img "gura.a.music's profile picture" [ref=f48e146]
+              - generic [ref=f48e147]:
+                - generic [ref=f48e148]:
+                  - generic [ref=f48e149]:
+                    - generic [ref=f48e150]:
+                      - link [ref=f48e151] [cursor=pointer]:
+                        - /url: "#"
+                        - heading "gura.a.music" [level=2] [ref=f48e152]
+                      - img "Verified" [ref=f48e155]
+                    - button [ref=f48e157] [cursor=pointer]:
+                      - img "Options" [ref=f48e159]
+                  - generic [ref=f48e163]: Gura
+                  - generic [ref=f48e165]:
+                    - generic [ref=f48e167]:
+                      - generic [ref=f48e168]: "185"
+                      - text: posts
+                    - link "10.2K followers" [ref=f48e170] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f48e171]:
+                        - generic "10,215" [ref=f48e172]: 10.2K
+                        - text: followers
+                    - link "3,163 following" [ref=f48e174] [cursor=pointer]:
+                      - /url: "#"
+                      - generic [ref=f48e175]:
+                        - generic [ref=f48e176]: 3,163
+                        - text: following
+                - generic [ref=f48e177]:
+                  - generic [ref=f48e178]:
+                    - generic [ref=f48e179]: Artist
+                    - button [ref=f48e182] [cursor=pointer]:
+                      - generic [ref=f48e183]:
+                        - text: 🎶 Cantante👑 Top 10 Miss Universo Ecuador 2025
+                        - link "@cnbecuador" [ref=f48e184]:
+                          - /url: /cnbecuador/
+                        - text: 🎬 MA
+                        - link "@dynastymodelsinc" [ref=f48e185]:
+                          - /url: /dynastymodelsinc/
+                    - heading [level=1]
+                    - generic [ref=f48e186]:
+                      - generic [ref=f48e187]:
+                        - img "Link icon" [ref=f48e189]
+                        - link "open.spotify.com/artist/48SeGfczfKPXn98lFKEKu1?si=6_G1XitYRxaTnOk_nqBdkg" [ref=f48e193] [cursor=pointer]:
+                          - /url: https://l.instagram.com/?u=https%3A%2F%2Fopen.spotify.com%2Fartist%2F48SeGfczfKPXn98lFKEKu1%3Fsi%3D6_G1XitYRxaTnOk_nqBdkg%26utm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio%26fbclid%3DPAZXh0bgNhZW0CMTEAcGRvZgJzcnRjBmFwcF9pZA85MzY2MTk3NDMzOTI0NTkAAadb2gbWQ1OtljwcJVOG3jwYoY5EZvFMxJqMZ4n_jhRXPyczkLsi04OFhvAQ7A_aem_Z5P9swPfcyzWWQ67eco8ag&e=AUAJ1u5zjJiziyidpl67eQTDmgvgyW8mUacHVmnQz6VpKqDhxsyeaUFt6d3JVPfxfMjepMKFPlyb-UlS2wBbKyvOGNrVJaM95cl0dW2F62GjRPo9I1S49hC7Flfko8vr9857SEgkxd8e
+                      - link "Threads gura.a.music" [ref=f48e196] [cursor=pointer]:
+                        - /url: https://www.threads.com/@gura.a.music?xmt=AQG0zb4fYfStLBJAA7LE8vCu-egcFgus7h0VCRlzJbVfja8
+                        - img "Threads" [ref=f48e198]
+                        - generic [ref=f48e200]: gura.a.music
+                  - link "Followed by hakanstagram_, paulsancheztrumpet + 28 more" [ref=f48e202] [cursor=pointer]:
+                    - /url: /gura.a.music/followers/mutualOnly
+                    - generic [ref=f48e204]:
+                      - generic [ref=f48e206]:
+                        - button [ref=f48e207]:
+                          - link [ref=f48e208]
+                        - button [ref=f48e209]:
+                          - link [ref=f48e210]
+                        - button [ref=f48e211]:
+                          - link [ref=f48e212]
+                      - generic [ref=f48e213]: Followed by hakanstagram_, paulsancheztrumpet + 28 more
+            - generic [ref=f48e218]:
+              - status "Loading..." [ref=f48e220]
+              - status "Loading..." [ref=f48e222]
+            - menu [ref=f48e224]:
+              - generic [ref=f48e226]:
+                - generic [ref=f48e228]:
+                  - status "Loading..." [ref=f48e230]
+                  - status "Loading..." [ref=f48e232]
+                - generic [ref=f48e234]:
+                  - status "Loading..." [ref=f48e236]
+                  - status "Loading..." [ref=f48e238]
+                - generic [ref=f48e240]:
+                  - status "Loading..." [ref=f48e242]
+                  - status "Loading..." [ref=f48e244]
+                - generic [ref=f48e246]:
+                  - status "Loading..." [ref=f48e248]
+                  - status "Loading..." [ref=f48e250]
+                - generic [ref=f48e252]:
+                  - status "Loading..." [ref=f48e254]
+                  - status "Loading..." [ref=f48e256]
+                - generic [ref=f48e258]:
+                  - status "Loading..." [ref=f48e260]
+                  - status "Loading..." [ref=f48e262]
+                - generic [ref=f48e264]:
+                  - status "Loading..." [ref=f48e266]
+                  - status "Loading..." [ref=f48e268]
+          - generic [ref=f48e269]:
+            - tablist [ref=f48e270]:
+              - link [ref=f48e272] [cursor=pointer]:
+                - /url: /gura.a.music/
+                - img "Posts" [ref=f48e274]
+              - link [ref=f48e285] [cursor=pointer]:
+                - /url: /gura.a.music/reels/
+                - img "Reels" [ref=f48e287]
+              - link [ref=f48e290] [cursor=pointer]:
+                - /url: /gura.a.music/reposts/
+                - img "Reposts" [ref=f48e292]
+              - link [ref=f48e295] [cursor=pointer]:
+                - /url: /gura.a.music/tagged/
+                - img "Tagged" [ref=f48e297]
+            - tabpanel
+          - progressbar [ref=f48e301]:
+            - img "Loading..." [ref=f48e302]
+      - contentinfo [ref=f48e315]:
+        - generic [ref=f48e316]:
+          - generic [ref=f48e318]:
+            - link "Meta" [ref=f48e320] [cursor=pointer]:
+              - /url: https://about.meta.com/
+            - link "About" [ref=f48e323] [cursor=pointer]:
+              - /url: https://about.instagram.com/
+            - link "Blog" [ref=f48e326] [cursor=pointer]:
+              - /url: https://about.instagram.com/blog/
+            - link "Jobs" [ref=f48e329] [cursor=pointer]:
+              - /url: https://about.instagram.com/about-us/careers
+            - link "Help" [ref=f48e332] [cursor=pointer]:
+              - /url: https://help.instagram.com/
+            - link "API" [ref=f48e335] [cursor=pointer]:
+              - /url: https://developers.facebook.com/docs/instagram
+            - link "Privacy" [ref=f48e338] [cursor=pointer]:
+              - /url: /legal/privacy/
+            - link "Terms" [ref=f48e341] [cursor=pointer]:
+              - /url: /legal/terms/
+            - link "Locations" [ref=f48e344] [cursor=pointer]:
+              - /url: /explore/locations/
+            - link "Popular" [ref=f48e347] [cursor=pointer]:
+              - /url: /popular/
+            - link "Instagram Lite" [ref=f48e350] [cursor=pointer]:
+              - /url: /web/lite/
+            - link "Meta AI" [ref=f48e353] [cursor=pointer]:
+              - /url: https://www.meta.ai/?utm_source=foa_web_footer
+            - link "Muse" [ref=f48e356] [cursor=pointer]:
+              - /url: https://muse.ai/
+            - link "Threads" [ref=f48e359] [cursor=pointer]:
+              - /url: https://www.threads.com/
+            - link "Contact Uploading & Non-Users" [ref=f48e362] [cursor=pointer]:
+              - /url: https://www.facebook.com/help/instagram/261704639352628
+            - link "Meta Verified" [ref=f48e365] [cursor=pointer]:
+              - /url: /accounts/meta_verified/?entrypoint=web_footer
+          - generic [ref=f48e367]:
+            - generic [ref=f48e368] [cursor=pointer]:
+              - generic [ref=f48e369]:
+                - generic [ref=f48e370]: English
+                - img "Down chevron icon" [ref=f48e373]
+              - combobox "Switch Display Language" [ref=f48e375]:
+                - option "Afrikaans"
+                - option "العربية"
+                - option "Čeština"
+                - option "Dansk"
+                - option "Deutsch"
+                - option "Ελληνικά"
+                - option "English" [selected]
+                - option "English (UK)"
+                - option "Español (España)"
+                - option "Español"
+                - option "فارسی"
+                - option "Suomi"
+                - option "Français"
+                - option "עברית"
+                - option "Bahasa Indonesia"
+                - option "Italiano"
+                - option "日本語"
+                - option "한국어"
+                - option "Bahasa Melayu"
+                - option "Norsk"
+                - option "Nederlands"
+                - option "Polski"
+                - option "Português (Brasil)"
+                - option "Português (Portugal)"
+                - option "Русский"
+                - option "Svenska"
+                - option "ภาษาไทย"
+                - option "Filipino"
+                - option "Türkçe"
+                - option "中文(简体)"
+                - option "中文(台灣)"
+                - option "বাংলা"
+                - option "ગુજરાતી"
+                - option "हिन्दी"
+                - option "Hrvatski"
+                - option "Magyar"
+                - option "ಕನ್ನಡ"
+                - option "മലയാളം"
+                - option "मराठी"
+                - option "नेपाली"
+                - option "ਪੰਜਾਬੀ"
+                - option "සිංහල"
+                - option "Slovenčina"
+                - option "தமிழ்"
+                - option "తెలుగు"
+                - option "اردو"
+                - option "Tiếng Việt"
+                - option "中文(香港)"
+                - option "Български"
+                - option "Français (Canada)"
+                - option "Română"
+                - option "Српски"
+                - option "Українська"
+            - generic [ref=f48e376]: © 2026 Instagram from Meta
+  - button "Messages Messages" [ref=f48e379] [cursor=pointer]:
+    - generic [ref=f48e381]:
+      - img "Messages" [ref=f48e383]
+      - generic [ref=f48e386]: Messages

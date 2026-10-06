@@ -1,0 +1,14 @@
+{
+  "role": "tdf_catalog_inventory",
+  "superuser": false,
+  "schemaCreate": false,
+  "tableWrites": 0,
+  "tableReads": 623,
+  "verified_at": "2026-09-30T09:57:09.516840+00:00",
+  "sql_sha256": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
+  "write_probe": "permission denied after explicit read-write/default override; zero-row predicate",
+  "application_data_changed": false,
+  "password_provisioned": false,
+  "existing_role_capabilities_preserved": true,
+  "public_schema_create_hardened": true
+}

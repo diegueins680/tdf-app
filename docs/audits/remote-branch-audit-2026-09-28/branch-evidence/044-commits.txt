@@ -1,0 +1,22 @@
+824e1e9aeaa99d399c31bc5755c4967c03cb17fc 2026-09-15T21:52:41-05:00 continuous-improvement-loop[bot] docs(payments): link verified draft integration delivery
+7cb3876674e380c7efce9c69849d8090e1febdd1 2026-09-15T21:50:22-05:00 continuous-improvement-loop[bot] docs(payments): record integrated completion qualification evidence
+2670b7d21a45adf4912964b6c6e724066262c946 2026-09-15T21:50:02-05:00 continuous-improvement-loop[bot] docs(catalog): refresh inventories for integrated payment stack
+15831852417ea03e5d2db6204ffc463c3e4401e8 2026-09-15T15:30:58-05:00 continuous-improvement-loop[bot] fix(payments): qualify status lookup for every hosted checkout rail
+bfdf06d6bd15ec7ddb2c81fd8c07f94df1f02a7d 2026-09-15T15:28:15-05:00 continuous-improvement-loop[bot] test(payments): require verified status lookup for hosted methods
+3425905b0bc7ea270bb87e39bb9d702c7e1a82bd 2026-09-15T14:40:11-05:00 continuous-improvement-loop[bot] test(payments): verify completion gates against durable runtime
+8466e1f6e7b04947b1c3056759132e376f9fc7ff 2026-09-15T14:36:44-05:00 continuous-improvement-loop[bot] merge(payments): preserve latest main in the integrated payment stack
+f9ed87ed54beb2eb635fa3fe9ac1aa53b80d76e1 2026-09-15T14:36:24-05:00 continuous-improvement-loop[bot] merge(payments): integrate upstream completion-capability repair
+0784958ecb8916106ab21ae3121f50893b71aefc 2026-09-15T14:33:29-05:00 TDF Records Merge pull request #376 from diegueins680/fix/instagram-token-lifecycle-20260915
+a8d31238aaef8e919551c74010d6f8f820ac231a 2026-09-15T14:11:20-05:00 diegueins680 Refresh payment catalog evidence after main integration
+316e73fa92c741eb67e4c4eddb208e66846bd5fb 2026-09-15T14:04:28-05:00 diegueins680 Merge verified main changes into payment capability repair
+be010ac276c2809e55678d83cea917a141087b3b 2026-09-15T14:04:28-05:00 diegueins680 Fix provider capabilities required for checkout completion
+d8577d3af100ccbac7cf31702b877814e55546f8 2026-09-15T11:27:15-05:00 continuous-improvement-loop[bot] merge: preserve messaging validation while updating correction to main
+6f67081a73e66e422f331cb31c455a78977a400e 2026-09-15T10:59:38-05:00 Diego Saa Merge pull request #370 from diegueins680/fix/ci-messaging-readonly-20260915
+3733e16bd43cbb8f799daf890027c013746462bb 2026-09-15T10:57:45-05:00 continuous-improvement-loop[bot] fix: bind Instagram scoped and professional account identities
+ffbfbf44bac6c3160860c9c58e96cda16624f55a 2026-09-15T10:47:46-05:00 continuous-improvement-loop[bot] fix: preserve exact numeric Instagram account identifiers
+d44422fab83d337b0fb6c4701cda497230bd58f3 2026-09-15T10:19:21-05:00 continuous-improvement-loop[bot] fix: validate Instagram tokens through supported OAuth lifecycle
+75c096bea71dbf58f92852fca3ab140116e6697f 2026-09-15T09:43:07-05:00 continuous-improvement-loop[bot] docs(ci): record confirmed Instagram introspection limitation
+18a49f148fc80c6e3b38576bb45a2d2d9b821ed9 2026-09-15T09:40:27-05:00 continuous-improvement-loop[bot] Merge commit '52b32e4c17b3b0485c66e666137f85d44cc962d4' into fix/ci-messaging-readonly-20260915
+52b32e4c17b3b0485c66e666137f85d44cc962d4 2026-09-15T09:33:52-05:00 Diego Saa fix(releases): restore missing catalog artwork (#369)
+17c37ee72ff9924b3b153e2cb67bfd6c305b7101 2026-09-15T09:10:54-05:00 continuous-improvement-loop[bot] fix(ci): make manual messaging token checks read-only
+25416b43eb8a24b2a57a180fbb846d9db8addcb1 2026-09-15T01:30:14-05:00 continuous-improvement-loop[bot] test: guard migration ordering and dialog dismissal
