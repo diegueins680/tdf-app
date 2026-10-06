@@ -32,7 +32,7 @@ psql -X -v ON_ERROR_STOP=1 -d "$test_database" -f "$rollback"
 psql -X -v ON_ERROR_STOP=1 -d "$test_database" -f "$migration"
 export TDF_LIVE_INTAKE_TEST_DB="host=$PGHOST dbname=$test_database"
 cd "$repo_root/tdf-hq"
-stack test tdf-hq:test:tdf-hq-test --fast --ghc-options=-O0 --jobs 1 --test-arguments='--match live-intake-identity-postgresql'
+stack test tdf-hq:test:tdf-hq-test --jobs 1 --test-arguments='--match live-intake-identity-postgresql'
 # Populate a receipt to verify that schema rollback cannot destroy replay protection.
 psql -X -v ON_ERROR_STOP=1 -d "$test_database" <<'SQL'
 WITH intake AS (INSERT INTO live_session_intake(band_name,accepted_terms,created_by,created_at) VALUES ('rollback guard',true,1,now()) RETURNING id)

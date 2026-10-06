@@ -105,4 +105,4 @@ RUN_MIGRATIONS=false \
 RESET_DB=false \
 SEED_DB=false \
 MERCH_BANK_TRANSFER_INSTRUCTIONS="Synthetic runtime instructions; no funds or provider are involved." \
-  stack test --fast --test-arguments=--match=artist-merch-runtime
+  stack test --test-arguments=--match=artist-merch-runtime
