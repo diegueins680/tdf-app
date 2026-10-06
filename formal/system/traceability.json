@@ -6205,8 +6205,8 @@
     "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "3144381852a748f77c009fc398c513672cd908192bc390fb2aad499a5cb0a174",
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "9c4dac4a414d135a028b47da659f6937e060a69c8b4c8449abbedbed220d9f73",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
-    "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx": "f6dda00cc79e41263ea3e5b1f00c2bfe6ebcffd0b1e77048f9a35aa374a9dd2d",
-    "tdf-hq-ui/src/pages/LabelAssetsPage.tsx": "87d02dcb013acdda48ab2075528800fca99e9a00d1649adaf714bbf6869c39c7",
+    "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx": "75cfbd54aa2a556b3d7d09a1fcee2bd479a4b6c2ac1e18f3173e850e17e20ba9",
+    "tdf-hq-ui/src/pages/LabelAssetsPage.tsx": "31d563edf300f47afb98584246e0247b0845fccee7a7e515090a9772768a26d6",
     "tdf-hq-ui/src/pages/LoginPage.test.tsx": "173a82881bf1ee9764582a56a82ea72c9e6aede174eab68ffbfbc77f8bfb6db7",
     "tdf-hq-ui/src/pages/LoginPage.tsx": "a08e02310726ed8c9a9306b106fdb65419ecb93e27d8b35efa6da847bdabf049",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
@@ -17318,7 +17318,7 @@
     {
       "id": "SURFACE-e69a77d56fe70d3a",
       "path": "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx",
-      "sha256": "f6dda00cc79e41263ea3e5b1f00c2bfe6ebcffd0b1e77048f9a35aa374a9dd2d",
+      "sha256": "75cfbd54aa2a556b3d7d09a1fcee2bd479a4b6c2ac1e18f3173e850e17e20ba9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -17330,7 +17330,7 @@
     {
       "id": "SURFACE-44ac4b25200a0ba1",
       "path": "tdf-hq-ui/src/pages/LabelAssetsPage.tsx",
-      "sha256": "87d02dcb013acdda48ab2075528800fca99e9a00d1649adaf714bbf6869c39c7",
+      "sha256": "31d563edf300f47afb98584246e0247b0845fccee7a7e515090a9772768a26d6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

@@ -839,7 +839,7 @@ export default function LabelAssetsPage() {
                   {visibleStatusOptions.map((opt) => {
                     const count = opt.value === 'all' ? assetsMatchingSearchAndCategory.length : (visibleStatusCounts[opt.value] ?? 0);
                     const isActive = statusFilter === opt.value;
-                    const showCount = opt.value === 'all' || count > 0;
+                    const showCount = !assetsQuery.isError && !assetsQuery.isLoading && (opt.value === 'all' || count > 0);
                     return (
                       <Chip
                         key={opt.value}

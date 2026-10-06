@@ -306,6 +306,7 @@ describe('LabelAssetsPage', () => {
     const { cleanup } = await renderPage(container);
     try {
       await setInputValue(getInputByLabel(container, 'Buscar assets'), 'Sintetizador');
+      expect(container.textContent).not.toContain('Todos (0)');
       await act(async () => {
         rejectRequest(new Error('Request failed after filter input'));
         await flushPromises();
@@ -315,6 +316,7 @@ describe('LabelAssetsPage', () => {
         expect(container.textContent).not.toContain('No hay assets con los filtros actuales');
         expect(container.textContent).not.toContain('Todavía no hay assets.');
         expect(container.textContent).not.toContain('Mostrando 0 de 0 assets');
+        expect(getElementByAriaLabel(container, 'Filtrar assets por estado Todos').textContent).toBe('Todos');
         expect(getInputByLabel(container, 'Buscar assets').value).toBe('Sintetizador');
       });
       listAssetsMock.mockResolvedValue([buildAsset()]);
