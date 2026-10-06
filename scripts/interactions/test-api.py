@@ -292,13 +292,20 @@ assert not any(n.get('nTargetKey')==reply['id'] for n in request(actors[1],'/fan
 state=request(actors[0],f'/interactions/blocks/{actors[1]}')
 request(actors[0],f'/interactions/blocks/{actors[1]}',{'blockRequestKey':str(uuid.uuid4()),'blocked':False,'expectedVersion':state['version']},method='PUT')
 # Rejected moderation attempts must consume the same per-account write budget.
+# The real limiter uses fixed calendar-minute buckets. A burst crossing the
+# minute boundary can legitimately receive 90 denials in each of two buckets
+# before rate limiting. Bound the probe to two buckets, and still require the
+# exact persisted rejection threshold (91), rather than relaxing that threshold.
 limited=False
-for attempt in range(91):
+budget_probe_started=time.monotonic()
+for attempt in range(181):
     result=command(actors[1],{'operation':'comment.remove','commentId':reply['id'],'expectedVersion':1,'reason':'Synthetic unauthorized attempt'},status=(403,429))
     if result==429:
         limited=True
         break
+assert time.monotonic()-budget_probe_started < 60, 'HTTP abuse-budget probe exceeded its two-window bound'
 assert limited, 'Rejected requests escaped the HTTP abuse budget'
+assert sql(f"SELECT max(count) FROM directory_rate_limit WHERE scope='interaction:write' AND subject_hash=encode(digest('{actors[1]}','sha256'),'hex')") == '91', 'HTTP abuse budget did not reject at the exact per-window threshold'
 sql(f"UPDATE api_token SET active=false WHERE party_id={actors[1]};")
 command(actors[1],payload,key,status=401)
 # Moderation survives author blocks without reopening ordinary social access.

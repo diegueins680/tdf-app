@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "6297e3f137126350aa485690bf89de19e82d3c25",
+  "mobileRevision": "6f63aa4e825d261b3fdff2e7b9d2432e0176dddd",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -1542,6 +1542,8 @@
       "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_clock.sql",
       "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index.sql",
       "tdf-hq/sql/2026-10-05_ticket_confirmation_lease_index_rollback.sql",
+      "tdf-hq/sql/2026-10-05_ticket_inclusive_tax.sql",
+      "tdf-hq/sql/2026-10-05_ticket_inclusive_tax_rollback.sql",
       "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit.sql",
       "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit_rollback.sql",
       "tdf-hq/sql/2026-10-05_ticket_policy_lifecycle_history.sql",
@@ -1906,6 +1908,7 @@
       "tdf-hq/test/integration/ticket_admission_fixture.sql",
       "tdf-hq/test/integration/ticket_confirmation_delivery.sql",
       "tdf-hq/test/integration/ticket_confirmation_worker_fixture.sql",
+      "tdf-hq/test/integration/ticket_inclusive_tax.sql",
       "tdf-hq/test/integration/ticket_order_quantity_limit.sql",
       "tdf-hq/test/sql/event_ingestion_boundaries.sql",
       "tdf-hq/test/sql/identity_reconciliation.sql",
@@ -3435,7 +3438,7 @@
     {
       "id": "SURFACE-c6b247cfc6b5135b",
       "path": "scripts/interactions/test-api.py",
-      "sha256": "9559b8a8b498ada7f95d9c9a3401d2ba3981e46b2f0e110431f58cb9751c8879",
+      "sha256": "585bea6f29fe51db5f460d60ae24e5b91f625ddaf1c8aeb3c1a2e7f2ce064dd4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3729,7 +3732,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "0008d17cab3f6a2ddcafb61f47e795ea50c2abe9c4eeb75248643e091f1b77c7",
+      "sha256": "a149bc06cdf1baa3bb5a48430095964435958489648c24d982f17b0ab1cb6d5c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4629,7 +4632,7 @@
     {
       "id": "SURFACE-73f84c14f54480df",
       "path": "scripts/test-public-ticket-checkout-runtime-migration.sh",
-      "sha256": "ea9812c229d7c71aa7d866034e54eb25a225af9220440d5703daba14cbf6014b",
+      "sha256": "f3a79f43617c7114ea63e701fe8e81ce3814f3869a6d55f701da6510c5c2aa7e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5067,7 +5070,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "cb7030ef6c014862b24db70df7a4080c7d480fca431cf90c032d9cee91910ab2",
+      "sha256": "bd378d295dbdc85374fcb6da76dd04f152e5f7ac7e6873fd798074a59ecabe9f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5457,7 +5460,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "cc567cc305996039f30cba0b75d1cbec4ba4380b6cc2c1d79176121814e47869",
+      "sha256": "8668130e98a5b2cfee0fd6b08a9558d9a936f80cad9c9e4ef2c99b41b344ab50",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7995,7 +7998,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "1d09054a99ca7c87218fc60b08d49f7155aa269ff1e3eee91a54d430365699cb",
+      "sha256": "94c865bb3f84e0860f8f5ac6d2b8cae7ae498787a6c23eec76cfb336670d7d1b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9243,7 +9246,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "568ba2f5cf08b2f3112fa36a8b99cb732088b74cadf1f5789bd00ddccb7407ca",
+      "sha256": "1728de134f85d286c51e0ce3bbb859e8590b7e79fd3b87480beee05d1e0133bd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11377,6 +11380,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-49296170e9830bac",
+      "path": "tdf-hq/sql/2026-10-05_ticket_inclusive_tax.sql",
+      "sha256": "eccc639196a18cb0ff44e6c6f4867b96369d647be894c6b6105ac7f72498c89f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-1914e2efdb360ff7",
+      "path": "tdf-hq/sql/2026-10-05_ticket_inclusive_tax_rollback.sql",
+      "sha256": "9be07d297d95226b8eea04582eb92918320e2a6407748c5157e3bc687675169a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-ed48d78fa40594c9",
       "path": "tdf-hq/sql/2026-10-05_ticket_order_quantity_limit.sql",
       "sha256": "0d3a8a75abbf07f9dfa0f6744daa6137f2611e10822e66ef8afe9fa666386342",
@@ -11823,7 +11838,7 @@
     {
       "id": "SURFACE-d40b0e57ab95c791",
       "path": "tdf-hq/src/TDF/Commerce/EventTickets.hs",
-      "sha256": "ffb8068c625579175be191352cff922b94bbfd4b3bb01b2ecc6642385634ec76",
+      "sha256": "a8628f4ea097f15c10132b80f75ccc175453c31c12ab1e86e7dea3c45c2081e9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11997,7 +12012,7 @@
     {
       "id": "SURFACE-057525240b5b11f7",
       "path": "tdf-hq/src/TDF/Cors.hs",
-      "sha256": "94a8b2ffedfc793e6d8c44d62f0388dc853e3da95e75e23dfdb6fed76d7f88dd",
+      "sha256": "53b4f194ffdd118805585962fc6a2f9c9e9121a6c55d0990581dfe531ba9284f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12369,7 +12384,7 @@
     {
       "id": "SURFACE-a6d0775d20903e98",
       "path": "tdf-hq/src/TDF/Routes/EventTickets.hs",
-      "sha256": "3557aa7feb725075e3cbc97f69fdd34f0de1b9b59f6545f91df80850b80f3914",
+      "sha256": "862658d97d324eac0cfd3f0c1d853effbadc97379a0f8072b0462401497ed534",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12429,7 +12444,7 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "d0381a0680f1a697f7e3d556c1c2620dd24bdbefbc3f5139b9759881b13318b9",
+      "sha256": "d98a338197772c6e37ab69876027e46daab96f2e36bb7967d569e84c90865c7a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12831,7 +12846,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "4b8ae539be015513ebe752e84c73ac814a4b4832e46f59622dd2fed7b34e5a53",
+      "sha256": "60cb6cbe19131fdcf54e51567fa2192018580f2e9da9f3e48903f8fa79329096",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12909,7 +12924,7 @@
     {
       "id": "SURFACE-56829a36e8042830",
       "path": "tdf-hq/test/TDF/CorsSpec.hs",
-      "sha256": "ca283c34c7b4368f59ba7af790950482e527747e95574afbbd22c1ce0e6a4245",
+      "sha256": "8be7f01a94ab4c4141534db48843adc3e6db345770b2f0425f457b6100488694",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13558,6 +13573,12 @@
       "id": "SURFACE-c42c54b3727ace66",
       "path": "tdf-hq/test/integration/ticket_confirmation_worker_fixture.sql",
       "sha256": "e2579621708c05e80a699c2de280a033ca57ba0ba9767a037656d4a3857a7527",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4012c95ac2a6bee3",
+      "path": "tdf-hq/test/integration/ticket_inclusive_tax.sql",
+      "sha256": "dc597f4ee6c1f58e1ffb8436c7005921118a321f9c23eada0a660385d9461a93",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -14835,7 +14856,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "cc567cc305996039f30cba0b75d1cbec4ba4380b6cc2c1d79176121814e47869",
+      "sha256": "8668130e98a5b2cfee0fd6b08a9558d9a936f80cad9c9e4ef2c99b41b344ab50",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17182,7 +17203,14 @@
     },
     {
       "path": "docs/events/patch-culture-vol-1/README.md",
-      "sha256": "aa93466ba47f6b3911d39b8319fc3b2946837714ad16a4b001c984409e4346f5",
+      "sha256": "aec8c60a9077219efa2aec78483374879500259ac13d0b34952e0eba47406376",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/events/patch-culture-vol-1/activation-readiness-2026-10-05.md",
+      "sha256": "d306540956e02de758755008a62ab24ed061eb0d376dbf6fd54340bf5e6b2f99",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -17190,6 +17218,13 @@
     {
       "path": "docs/events/patch-culture-vol-1/propuesta-condiciones.md",
       "sha256": "1dadff3dab423326520ce51df7da31bc9eaed61f5f07b8094124a7fd3284811d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/events/ticket-inclusive-tax.md",
+      "sha256": "5ef7228783b9522e9c3a42093329dea018ccc736e73ff4fa84373b5806a2ba54",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -20878,7 +20913,7 @@
     },
     {
       "path": "formal/interactions/README.md",
-      "sha256": "83021b52a334e912e0a32f19e05697b3fd7f5b95a65faa56d5492341d1e79cda",
+      "sha256": "9608db1c42268b2cc12b5d126aa4b0dbd20d4977d42036eccc52bcd00f03e39d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21347,7 +21382,7 @@
     },
     {
       "path": "formal/system/cors-boundary.md",
-      "sha256": "5190d7e68ecce0b9244f63101c9bac923c177ccaf2f0c64a769a8d41028b7f2c",
+      "sha256": "7ef3c77469631cde749bed3041c22462efa4c0d441c377b0e43b580a9f6d67bf",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21508,7 +21543,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "dce38695656a235c40f67049475458e26c9ebac921fbbd4b6213936bf46b980d",
+      "sha256": "036f97b6e93af48a280922205e4a3d23437299e8495639961b2e3e109090b22a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -21816,7 +21851,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "568ba2f5cf08b2f3112fa36a8b99cb732088b74cadf1f5789bd00ddccb7407ca",
+      "sha256": "1728de134f85d286c51e0ce3bbb859e8590b7e79fd3b87480beee05d1e0133bd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"

@@ -349,4 +349,17 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(container.querySelector('canvas')).toBeNull();
   });
 
+  it('labels included tax without adding it again to the server total', async () => {
+    getCheckoutMock.mockResolvedValue(checkoutFixture({
+      quote: { ...checkoutFixture().quote, quantity: 4, grossFaceValueMinor: 8000,
+        netFaceValueMinor: 8000, buyerPlatformFeeMinor: 0, organizerPlatformFeeMinor: 0,
+        taxIncluded: true, taxMinor: 1043, checkoutTotalMinor: 8000,
+        organizerPayableMinor: 6957, platformFeeMinor: 0 },
+    }));
+    await renderTracking('/eventos/41/orden/92');
+    await waitForExpectation(() => expect(container.textContent).toContain('Impuesto incluido'));
+    expect(container.textContent).toMatch(/80[,.]00/);
+    expect(container.textContent).not.toMatch(/90[,.]43/);
+  });
+
 });
