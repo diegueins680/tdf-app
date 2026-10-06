@@ -4273,7 +4273,7 @@
     {
       "id": "SURFACE-1185f571edd4c1d3",
       "path": "scripts/test-account-deletion-api.mjs",
-      "sha256": "43786b19e1cffce3ec53fda0df7927fbd0e099c40b8e5fec28d0ffb8b87b9abd",
+      "sha256": "d68ef989158ba20b7559b52a9df5befef50fd926c6859146654ea696fd4879d9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12631,7 +12631,7 @@
     {
       "id": "SURFACE-4e1ca7d206cc436f",
       "path": "tdf-hq/src/TDF/ServerFeedback.hs",
-      "sha256": "4eb1e45809eb9627c582f316925adc6652fa3402a0db866c0a3a9169f1b9a36a",
+      "sha256": "1a941f08a34bb86bfb37957f0edcb0feb735c89be7142445ce464dc3096e1d5b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17770,7 +17770,7 @@
     },
     {
       "path": "docs/mobile-program/account-deletion-operations.md",
-      "sha256": "f1d8610cfd38cf0b2ba0d1e9d8e10fa6d68847101b2ce6d22270cd462e853eea",
+      "sha256": "d5dba2e5fba53f885d45aa59a6e59ace2e8612a86b7578b3d0b1977250fbcb8b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21739,7 +21739,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "e9d0e7c62904ea9647d99f2c7d8417e4e1994d0bf033d8b0c19efd7dd8a6a737",
+      "sha256": "6bc0e14f3a622284a27af86016dbf1ce49c079a127034cd0f4a33a6c512f05e3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

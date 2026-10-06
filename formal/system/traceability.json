@@ -5970,7 +5970,7 @@
       "authorization": "Cookie identity is reloaded before submission; server withCurrentAuthSession lock spans insertion. Required non-simple header and trusted Origin guard precede general CORS. Administrator capability and current session protect resolution.",
       "privacy": "No diagnostics, attachments or analytics on the deletion form. Identity and request content remain in authenticated queues/private evidence; no public tester/account list. Deletion notification audience is exclusively the confirmed info@tdfrecords.net privacy inbox, independent of ordinary feedback recipients.",
       "concurrency": "Current-session lock serializes intake against revocation. PostgreSQL FOR UPDATE serializes terminal resolution; exactly one concurrent resolution succeeds and the loser returns409. Owner advisory lock spans pending receipt lookup/insertion; different owners have separate keys. Resolution acquires the same owner advisory lock before its feedback row lock; intake ordered after it waits for commit and receives a fresh pending receipt. Lock order is session, owner, feedback; createdBy is immutable after insertion.",
-      "idempotency": "Owner-scoped transaction advisory lock serializes pending receipt lookup and insertion across sessions. Ambiguous retries reuse the oldest pending receipt and original timestamp/content without duplicate notification. After terminal resolution a new request is allowed; no permanent client-key deduplication is claimed. Only candidates passing accountDeletionOwnerMatches can be reused; batches of100 skip missing/duplicated/mismatched legacy claims without hiding later valid receipts. Existing legacy duplicates require operator reconciliation.",
+      "idempotency": "Owner-scoped transaction advisory lock serializes pending receipt lookup and insertion across sessions. Ambiguous retries reuse the oldest pending receipt and original timestamp/content without duplicate notification. After terminal resolution a new request is allowed; no permanent client-key deduplication is claimed. Only candidates passing accountDeletionOwnerMatches can be reused; batches of100 skip missing/duplicated/mismatched legacy claims without hiding later valid receipts. Existing legacy duplicates require operator reconciliation. SQL marker prefilters accept LF and CR prefixes (including CRLF), and resolution normalizes line endings consistently without rewriting recorded content.",
       "failure": "Reject absent/mismatched receipt; lost authentication returns to sign-in with the deletion destination, while network errors permit retry. Preserve cached terminal receipt if refresh fails. Failed validation performs no insertion/notification. Operator execution failure remains unfinished under PRIV-DELETE-001.",
       "recovery": "Reload authenticated receipt and private evidence; never infer erasure from a queue flag. Preserve earliest receipt/deadline in the existing operator ledger.",
       "observability": "Scoped unit/browser tests and unmodified FormData/HTTP tests with disposable PostgreSQL cover identity, CSRF, spoofing, pagination, audit and concurrent200/409. No real deletion or extra notification is used for QA.",
@@ -6031,7 +6031,7 @@
         "formal/event-operations/AccountDeletionResolution.cfg",
         "formal/event-operations/AccountDeletionResolutionNoOwnerLock.cfg"
       ],
-      "verification": "QuickCheck exercises actual identity/outcome/recipient validators and normalization. Disposable PostgreSQL/HTTP controls cover CSRF, eight concurrent cookie/bearer intakes, ambiguous receipt reuse, preserved timestamps and concurrent resolution. AccountDeletionIntake adds one-owner/three-attempt bounded checking plus an abstract invalid legacy receipt and four named negative controls; no refinement, crashes or delivery proof. AccountDeletionResolution separately bounds one existing receipt, one intake and one resolution, with an omitted-resolution-lock counterexample; actual HTTP uses an observed PostgreSQL row/advisory barrier and the previous binary as a failing control. Actual Servant CORS tests include trailing-slash aliases. Actual Servant handler tests deny queue reads and both terminal outcomes for each administrator role without the internships module before any database access. AccountDeletionOperator bounds eight grant combinations and four private operations, with role-only and module-only counterexamples; concurrent grant revocation is outside this abstraction.",
+      "verification": "QuickCheck exercises actual identity/outcome/recipient validators and normalization. Disposable PostgreSQL/HTTP controls cover CSRF, eight concurrent cookie/bearer intakes, ambiguous receipt reuse, preserved timestamps and concurrent resolution. AccountDeletionIntake adds one-owner/three-attempt bounded checking plus an abstract invalid legacy receipt and four named negative controls; no refinement, crashes or delivery proof. AccountDeletionResolution separately bounds one existing receipt, one intake and one resolution, with an omitted-resolution-lock counterexample; actual HTTP uses an observed PostgreSQL row/advisory barrier and the previous binary as a failing control. Actual Servant CORS tests include trailing-slash aliases. Actual Servant handler tests deny queue reads and both terminal outcomes for each administrator role without the internships module before any database access. AccountDeletionOperator bounds eight grant combinations and four private operations, with role-only and module-only counterexamples; concurrent grant revocation is outside this abstraction. Actual HTTP/PostgreSQL regressions cover CRLF and bare-CR legacy visibility, eight-way receipt reuse, successful immutable resolution, and preserved description/timestamp.",
       "evidence": "Exact revision, command, binary and disposable HTTP/browser receipts retained separately; predecessor passes do not qualify the combined main merge.",
       "status": "specified and implemented",
       "critical": true,
@@ -6287,7 +6287,7 @@
     "scripts/social/test-dm-writes.sh": "2f216b4a6d7537959a0ddc6aa4da52afc5a11828d852dc6a3c5d469702e9122a",
     "scripts/specification-conformance.py": "27fc7959ad752d8d76c025cd2cbadc978dcad3cc763b26b4efb5f63cfb94343e",
     "scripts/specification-inventory.py": "5d84634a34efe3e9f619063656e2f63a0cae7d71dfacbb4fd8ea035ca5008502",
-    "scripts/test-account-deletion-api.mjs": "43786b19e1cffce3ec53fda0df7927fbd0e099c40b8e5fec28d0ffb8b87b9abd",
+    "scripts/test-account-deletion-api.mjs": "d68ef989158ba20b7559b52a9df5befef50fd926c6859146654ea696fd4879d9",
     "scripts/test-artist-merch-runtime.sh": "2e776c5d24ad1239cb792c0c3d4cad33a0e71229d6b1262d49118d3251cf028d",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
     "scripts/test-booking-conformance.py": "982521d7e19285665d480aa2c4f4e037052aec2a1b6a45e01b171cc646aa8b33",
@@ -6481,7 +6481,7 @@
     "tdf-hq/src/TDF/ServerAdmin.hs": "f33bb349b10f1c386c0620e805f517ed7fd7fece575b6bcf825933c131487496",
     "tdf-hq/src/TDF/ServerAuth.hs": "4b53165a764b1d6dd083f193ad1f0d752b42d10ef48bcab2ac9337fb791288e7",
     "tdf-hq/src/TDF/ServerExtra.hs": "458d0b1c8390232020691cb1c4ebfd1578c4e4c163e7c45b43a95733fe6457ee",
-    "tdf-hq/src/TDF/ServerFeedback.hs": "4eb1e45809eb9627c582f316925adc6652fa3402a0db866c0a3a9169f1b9a36a",
+    "tdf-hq/src/TDF/ServerFeedback.hs": "1a941f08a34bb86bfb37957f0edcb0feb735c89be7142445ce464dc3096e1d5b",
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
     "tdf-hq/src/TDF/ServerRadio.hs": "964189f5f5c8b06bbbbfca51d5ed4329e29d81d4f71012ad672343d1f6e7b319",
     "tdf-hq/src/TDF/Social/Chat.hs": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd",
@@ -13331,7 +13331,7 @@
     {
       "id": "SURFACE-1185f571edd4c1d3",
       "path": "scripts/test-account-deletion-api.mjs",
-      "sha256": "43786b19e1cffce3ec53fda0df7927fbd0e099c40b8e5fec28d0ffb8b87b9abd",
+      "sha256": "d68ef989158ba20b7559b52a9df5befef50fd926c6859146654ea696fd4879d9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -24434,7 +24434,7 @@
     {
       "id": "SURFACE-4e1ca7d206cc436f",
       "path": "tdf-hq/src/TDF/ServerFeedback.hs",
-      "sha256": "4eb1e45809eb9627c582f316925adc6652fa3402a0db866c0a3a9169f1b9a36a",
+      "sha256": "1a941f08a34bb86bfb37957f0edcb0feb735c89be7142445ce464dc3096e1d5b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

@@ -325,11 +325,13 @@ internalFeedbackServer user =
       let requestedOffset = fromMaybe 0 offset
       when (requestedOffset < 0) (throwError err400 { errBody = "offset must be non-negative" })
       -- Filter before pagination: newer ordinary feedback must never evict a
-      -- privacy request. The stable tie-breaker makes equal timestamps safe.
+      -- privacy request. LF and CR prefixes include LF, CRLF and bare-CR legacy
+      -- encodings without rewriting their recorded content. The stable tie-breaker
+      -- makes equal timestamps safe.
       rows <- withPool $ if deletionOnly == Just True
         then rawSql
-          "SELECT ?? FROM feedback WHERE left(description, 25) = ? ORDER BY created_at DESC, id DESC LIMIT 20 OFFSET ?"
-          [PersistText "account_deletion_request\n", PersistInt64 (fromIntegral requestedOffset)]
+          "SELECT ?? FROM feedback WHERE left(description, 25) IN (?, ?) ORDER BY created_at DESC, id DESC LIMIT 20 OFFSET ?"
+          [PersistText "account_deletion_request\n", PersistText "account_deletion_request\r", PersistInt64 (fromIntegral requestedOffset)]
         else selectList [] [Desc ME.FeedbackCreatedAt, Desc ME.FeedbackId, LimitTo 1000, OffsetBy requestedOffset]
       fmap catMaybes $ forM rows $ \(Entity feedbackKey feedback) -> do
         history <- if deletionOnly == Just True then withPool $ accountDeletionHistory feedbackKey else pure []
@@ -365,7 +367,7 @@ internalFeedbackServer user =
         forM_ (candidate >>= feedbackCreatedBy) lockAccountDeletionOwner
         rows <- rawSql "SELECT ?? FROM feedback WHERE id = ? FOR UPDATE" [toPersistValue feedbackKey]
         case rows of
-          [Entity _ feedback] | "account_deletion_request\n" `T.isPrefixOf` feedbackDescription feedback -> do
+          [Entity _ feedback] | "account_deletion_request\n" `T.isPrefixOf` normalizeAccountDeletionDescription (feedbackDescription feedback) -> do
             previous <- accountDeletionHistory feedbackKey
             let ownerMatches = maybe False (\owner -> accountDeletionOwnerMatches (fromSqlKey owner) (feedbackDescription feedback)) (feedbackCreatedBy feedback)
             case validateAccountDeletionOutcome (not (null previous)) ownerMatches adrOutcome of
@@ -1795,8 +1797,8 @@ reuseActiveAccountDeletion owner insertRequest = do
     findPending :: Int64 -> SqlPersistT IO (ME.FeedbackId, Bool)
     findPending offset = do
       rows <- (rawSql
-        "SELECT ?? FROM feedback WHERE created_by = ? AND left(description, 25) = ? AND NOT EXISTS (SELECT 1 FROM audit_log a WHERE a.entity = 'account_deletion_request' AND a.entity_id = feedback.id::text AND a.action IN ('completed', 'rejected')) ORDER BY created_at ASC, id ASC LIMIT 100 OFFSET ?"
-        [toPersistValue owner, PersistText "account_deletion_request\n", PersistInt64 offset]
+        "SELECT ?? FROM feedback WHERE created_by = ? AND left(description, 25) IN (?, ?) AND NOT EXISTS (SELECT 1 FROM audit_log a WHERE a.entity = 'account_deletion_request' AND a.entity_id = feedback.id::text AND a.action IN ('completed', 'rejected')) ORDER BY created_at ASC, id ASC LIMIT 100 OFFSET ?"
+        [toPersistValue owner, PersistText "account_deletion_request\n", PersistText "account_deletion_request\r", PersistInt64 offset]
         :: SqlPersistT IO [Entity ME.Feedback])
       case [key | Entity key row <- rows,
                   accountDeletionOwnerMatches (fromSqlKey owner) (feedbackDescription row)] of

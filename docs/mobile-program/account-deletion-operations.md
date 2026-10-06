@@ -144,3 +144,10 @@ HTTP/PostgreSQL checks seed 105 older invalid rows (missing, duplicated and fore
 claims), accept a fresh valid request, and race eight retries that must reuse that
 valid receipt beyond the first page while preserving every legacy row. This does
 not automatically reconcile or erase historical records.
+
+Legacy marker lookups accept LF, CRLF and bare CR consistently in the operator
+queue, receipt reuse and terminal resolution. The SQL prefix admits both newline
+forms before the normalized owner validator runs; reading or resolving a record
+does not rewrite its original content or timestamp. Actual HTTP checks convert
+synthetic existing records to each legacy encoding, verify visibility, race eight
+retries against the same receipt and record exactly one terminal outcome.

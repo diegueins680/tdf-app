@@ -181,5 +181,29 @@ export async function verifyAccountDeletion({ request: rawRequest, requestStatus
   }
   console.log('Account deletion resolution/intake PostgreSQL lock ordering passed.');
 
+  // Pre-upgrade multipart bodies could persist CRLF (or bare CR). Exercise
+  // all three real handlers against the original bytes, not just the validator.
+  for (const [name, sqlEnding, marker] of [['CRLF', 'chr(13)||chr(10)', 'account_deletion_request\r\n'], ['CR', 'chr(13)', 'account_deletion_request\r']]) {
+    const legacy = await request(endpoint, { token: account.token, method: 'POST', body: form(25) });
+    assert.match(legacy.adrRequestId, /^[0-9a-f-]{36}$/i);
+    sql(`UPDATE feedback SET description=replace(description,chr(10),${sqlEnding}) WHERE id='${legacy.adrRequestId}'`);
+    const before = await request(queue, { token: admin.token });
+    const row = before.find(value => value.lfdId === legacy.adrRequestId);
+    assert.ok(row, `${name} legacy deletion must remain visible in the operator queue`);
+    assert.ok(row.lfdDescription.startsWith(marker), 'Reading legacy feedback must preserve its original recorded bytes');
+    const retries = await Promise.all(Array.from({ length: 8 }, () => request(endpoint, { token: account.token, method: 'POST', body: form(26) })));
+    assert.ok(retries.every(value => value.adrRequestId === legacy.adrRequestId), `${name} legacy deletion must be reused without a duplicate receipt`);
+    const path = `/feedback/internal/account-deletion/${legacy.adrRequestId}`;
+    const outcome = await request(path, { token: admin.token, method: 'POST', json: resolution });
+    assert.equal(outcome.adaOutcome, 'completed', `${name} owner-bound legacy deletion must resolve`);
+    await request(path, { token: admin.token, method: 'POST', json: resolution, expected: 409 });
+    const after = (await request(queue, { token: admin.token })).find(value => value.lfdId === legacy.adrRequestId);
+    assert.equal(after.lfdDeletionHistory.length, 1);
+    assert.equal(after.lfdDescription, row.lfdDescription);
+    assert.equal(after.lfdCreatedAt, row.lfdCreatedAt);
+  }
+  console.log('Legacy CRLF and CR deletion requests remain visible, reusable and immutably resolvable.');
+
+
 
 }
