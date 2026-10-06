@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "1ef157072e8bc5b59ed115d32ba438c08c47ed04",
+  "mobileRevision": "5a1984371320fb0bb8ee58eac3e8f52651764146",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -7182,6 +7182,98 @@
         "classification": "PARTIAL",
         "reason": "Mac helper checks pass on working bytes; final exact-candidate Linux/full-backend/integration/deployment evidence remains required."
       }
+    },
+    {
+      "id": "DATA-CONTRACT-001",
+      "title": "Persistent private contract evidence and honest delivery status",
+      "statement": "Successful creation requires complete immutable private contract bytes in persistent uploads/contracts. Preserve and validate legacy reads, fail on conflicting copies, forbid uncaptured legacy evidence at cutover, and never claim delivery without a delivery implementation.",
+      "domain": "DATA",
+      "authority": "inferred",
+      "source": "User specification/conformance repair instruction; AUTHORITY-047; mounted ContractsAPI and event finance references.",
+      "property": "No incomplete acknowledged document, no overwritten retained ID, no uncaptured legacy discard and no false delivery acknowledgement.",
+      "contract": "formal/system/contract-storage.md",
+      "actors": [
+        "Authenticated Operations actor",
+        "Backend contract store",
+        "Recovery operator"
+      ],
+      "preconditions": [
+        "Existing authenticated backend Operations authorization; canonical non-nil UUID and validated payload.",
+        "Stable trusted directory ancestors; production persistent uploads mount and supported exclusive rename/fsync."
+      ],
+      "inputs": [
+        "Validated arbitrary contract JSON with kind; server owns id and created_at.",
+        "Canonical UUID for reads and valid email-only body for unavailable delivery."
+      ],
+      "state": {
+        "initial": "Absent or retained immutable document",
+        "terminal": [
+          "New complete private document",
+          "Validated current or legacy document",
+          "Unavailable delivery",
+          "Rejected conflict or storage failure"
+        ]
+      },
+      "allowedTransitions": [
+        "Absent -> complete synchronized exclusive publication -> created acknowledgement",
+        "Current absent -> validate legacy bytes -> read without migration",
+        "Identical duplicate copies -> validate bytes -> read",
+        "Existing valid document + validated send request ->503 with no delivery",
+        "Stopped original root + empty or absent legacy store -> scoped capture admission"
+      ],
+      "forbiddenTransitions": [
+        "Overwrite or acknowledge a UUID collision",
+        "Silently choose between different copies or hide corrupt current data with legacy",
+        "Claim sent or queued without a provider effect",
+        "Treat an earlier live absence sample or persistent uploads mount as proof legacy contracts are absent",
+        "Discard uncaptured legacy contract data"
+      ],
+      "effects": [
+        "Private immutable JSON publication; generated PDFs depend on existing rendering toolchain.",
+        "No external delivery, automatic legacy migration or deletion."
+      ],
+      "authorization": "Existing backend hasOperationsAccess predicate applies before create, PDF and send. Static upload/document paths confer no read authority.",
+      "privacy": "Contract files private0600 under private0700 contracts directory. Neither document tree is a public static mount; legacy bytes remain protected by existing Operations boundary.",
+      "concurrency": "Exclusive rename selects one creator for a UUID. Trusted stable ancestors and no concurrent legacy writer are deployment assumptions. File and event-finance database reference are separate commits.",
+      "idempotency": "Create generates a new UUID per request and has no external replay key. A lost response can leave an unreferenced complete file; retry may create another document. Collision always fails.",
+      "failure": "Invalid request400, unauthenticated401, unauthorized403, absent404, corrupt/conflicting/storage failures500, valid send503. File synchronization failure is not success.",
+      "recovery": "Keep original files and references. Legacy fallback is read-only. Capture requires retained stopped-root absence inspection in both upload modes; populated legacy store requires a separately reviewed preservation/migration procedure. Persistent-upload sources without qualified root inspection fail closed.",
+      "observability": "Record exact source, commands, storage/HTTP/collision/negative-control results and scoped Linux capture evidence without customer contents.",
+      "implementation": [
+        "tdf-hq/src/TDF/Contracts/API.hs",
+        "tdf-hq/src/TDF/Contracts/Server.hs",
+        "tdf-hq/src/TDF/Contracts/Storage.hs",
+        "tdf-hq/src/TDF/Storage/AtomicPublication.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/docs/openapi/api.yaml",
+        "ops/hetzner/stopped-application-storage.py",
+        "ops/hetzner/coordinated-capture.py",
+        "scripts/quality-backend.sh"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ContractStorageSpec.hs",
+        "tdf-hq/test/ContractStorageMain.hs",
+        "scripts/verify-contract-storage.py",
+        "scripts/test-booking-conformance.py",
+        "scripts/test-stopped-application-storage.py",
+        "scripts/test-stopped-application-docker.py",
+        "scripts/test-coordinated-capture.py"
+      ],
+      "formalModels": [],
+      "verification": "Real filesystem concurrency and compiled source counterexamples, HTTP integration and retained Linux namespace tests. No whole-filesystem refinement proof.",
+      "evidence": "Exact source receipts required separately; working native tests do not establish Linux or deployed conformance.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Scoped implementation repaired; exact final backend, Linux, HTTP and deployment acceptance pending.",
+      "ambiguity": [
+        "No automated migration for nonempty legacy stores; source preservation must precede rollout.",
+        "Production recovery coordinator and retained-root inspection for persistent-upload source containers remain unfinished.",
+        "No contract delivery integration or cross-file/database transaction is claimed."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Repair and executable controls implemented; final exact candidate, Linux/HTTP gates and deployed acceptance remain required."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -7299,7 +7391,7 @@
     "formal/social/LegacyDm.tla": "82c7adae30ad9df72df8e288948b3fc7c3bae3bc16cc82766d32ccc665167e16",
     "formal/social/SessionBoundary.tla": "f52854a744652bc18f0d9f0fb4c3e6453447d26aff88267dff29ac03924e8ee6",
     "formal/system/api-availability.json": "67ebaf0974ad3c2cdf3949f44e834e6ce13ff4444cce7304e73aaabd1f48b25d",
-    "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
+    "formal/system/api-response-status.json": "1f184499efbf9b1e9713d7049830e9c95e120ec906585d0bcf8b1fee9ee3f133",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/compiled-api-surface.json": "c0e4699bc5fd5331c75b44c91e2542d7831d511ebd83eb166b732b2e599f0514",
     "functions/_shared/event-preview.mjs": "c82ec74b443c3767497b2fc8da2d832ffe9e07e583cf79da55fa842137eabf4e",
@@ -7311,7 +7403,7 @@
     "ops/hetzner/backup-postgres.sh": "71682273cf6e2efec4644369af577f3ee6c0ee015c5d45d5998c9a43ea3f23a7",
     "ops/hetzner/catalog-readonly-role.sql": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
     "ops/hetzner/compose.production.yaml": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
-    "ops/hetzner/coordinated-capture.py": "a658f4ba429e041b8711c2b047402f317bfbdf87805e0f7d64d5ef8b0aafe87b",
+    "ops/hetzner/coordinated-capture.py": "9359bf8d7dc9db757fa840ebce5530196220b9789edb54e99c757a1c72e548c3",
     "ops/hetzner/coordinated-encryption.py": "dc589ccd89a30f8b8d8b6f509f5c2ea92d474fbd547684dc72f9a74db3aa188d",
     "ops/hetzner/coordinated-recovery-bundle.py": "ea572234df275cf7d557cbac56f3410a9cb7ed8f560f63ffd6754f46d476fbff",
     "ops/hetzner/coordinated-retrieval.py": "a0ff27480779c58df171b76c4c88710e485694eb2f6a21e208ed77bf171e1368",
@@ -7340,7 +7432,7 @@
     "ops/hetzner/recovery-transfer.py": "feb2c02962e866089cc0d5c89e789a79940a2c6a28feec6db05b5f1e17b6081d",
     "ops/hetzner/rehearse-postgres-restore.py": "c08c7a075c444b882d56b5ebf90fc2903ad5cad8b03dc052783cfc8ef4c6c138",
     "ops/hetzner/release-journal.py": "547753e9ed121f040e545c48c35a4be6bad56ecc5fcfea25d0c240fe6b8ad373",
-    "ops/hetzner/stopped-application-storage.py": "5072c12f9d3c8584af02d3c54da8855713436205d64dad75465ff4c146bcc8ad",
+    "ops/hetzner/stopped-application-storage.py": "3fe853f246572fc639a7756613b718cf29fe6d6cc89e0930ce013c744e315d32",
     "ops/hetzner/tdf-postgres-backup.service": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
@@ -7422,7 +7514,7 @@
     "scripts/production-migrations.json": "fcb314237b1f09503c1be2a6d65b18da3c1863f6af9259543acc35d4f4cb41ce",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
-    "scripts/quality-backend.sh": "e67c6f3023ca125f7f28ff6c796761b0f9f8dba15b7e2baf25a226e1e690177e",
+    "scripts/quality-backend.sh": "cb2314fd0cabc999f38a5bbb0ce07e7fb48fa054c6dcc9e2306b8976f3f1a2ba",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
     "scripts/quality-repo.sh": "5d1cdf7311e49b2470e5a729ebaddb4af1fb44635830f78b6e18d17bb4d98f3f",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
@@ -7438,8 +7530,8 @@
     "scripts/test-account-deletion-api.mjs": "917c2ec0721f5b2d22d9d11fa7c68d2e84579350dabb87f329d9845d6da5d244",
     "scripts/test-artist-merch-runtime.sh": "305ac79674e3e7fe43685d8dbb844f5b6c7dbabbbd7c4f5c7cf32c193d1f417a",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
-    "scripts/test-booking-conformance.py": "30ca94cf5cdc286cdabd8511ad5b971b5c0b26fec14ab49973718ab51a5fd97d",
-    "scripts/test-coordinated-capture.py": "673b42c6f53262a3ccb7f0321c3fe59f35d839783a1b0fc5d02e9b4ad037324f",
+    "scripts/test-booking-conformance.py": "b3ba31f78fa10e86a14389b11768f8b91f950101db8a565a67e9515e12992361",
+    "scripts/test-coordinated-capture.py": "985533f688d3921709a02ca94ff6092c8e806de3633b4302fc135ec9cd34cc5e",
     "scripts/test-coordinated-encryption.py": "060b6962d1a584aaa7878be2fb97b599040098fabefc6367e1f247a5adfa0636",
     "scripts/test-coordinated-recovery-bundle.py": "eb95fc17e1487074d0cdbe1573c41078575a69ededa0e36d539156fe9be020b5",
     "scripts/test-coordinated-retrieval.py": "70d26c1b7d4b868d9d4ffaa478396132be3d278947145457c5b2709b01a20d3a",
@@ -7490,8 +7582,8 @@
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
-    "scripts/test-stopped-application-docker.py": "abaf791d2221077d8e05546d627df041409237d725d1b8a14f32dbeb6c87f167",
-    "scripts/test-stopped-application-storage.py": "516aa9e991be861e935b2cd1c5bf5e9ace3d8bb12ad2aaa095468bde23e398ff",
+    "scripts/test-stopped-application-docker.py": "4890b5ece9e4f68a210e6d53450e1f5198afa967817ddb5a76e745e6eb6dfc26",
+    "scripts/test-stopped-application-storage.py": "a3dd71b182518913328ffb58d87684b21a67779cf682fc37edd7b766d8af3b03",
     "scripts/test-stripe-integration.sh": "f3c057e5afea48b657a2eeb35763b49054979cfaf84ec2e48940617a2d64f8df",
     "scripts/test-studio-internship-audit-api-e2e.mjs": "e39e5b11879e92f148b4a704065c875c6c145aad41efbc923fdf6ea21478eff9",
     "scripts/test-studio-internship-audit-api-e2e.sh": "13c745c4dad1a5e11a5dba96c32c57da0d5b8b4b1bd8285670cd08d31f077d1b",
@@ -7506,6 +7598,7 @@
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
     "scripts/verify-atomic-publication.py": "58e6cc2e0458566671d587a464b7bff06f9e2e0e24a9bdfd7ff51d451cae9d9d",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
+    "scripts/verify-contract-storage.py": "ceae1810751a8311c9771a89b647054a75063c93ea413273a86f6ee6e6a8af07",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
     "scripts/verify-event-operations-formal.sh": "1b7b82c966f649adc69ebbb39964a0b88eed0e64eaefc36c33f6ff535c8cb0a4",
     "scripts/verify-event-operations-pluscal.mjs": "1273f3906c801ed0b867020b3fa1207fd998b6b4631422896dcfc066e1dafa3d",
@@ -7535,7 +7628,7 @@
     "tdf-hq-ui/src/api/client.ts": "3cbd9d209c184f0892451f4957721be0a55f65e922df33090c4a8b1e00ccfd13",
     "tdf-hq-ui/src/api/feedback.test.ts": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
     "tdf-hq-ui/src/api/feedback.ts": "b61ff8899d5bf312b70b434ee9de4f01f5ef075a3a020134da881815698811c2",
-    "tdf-hq-ui/src/api/generated/types.ts": "63e51be656f5a70d0460bdbfe19db99348b1c3bc7866c8c182f8fec1c4a68f32",
+    "tdf-hq-ui/src/api/generated/types.ts": "1c1bb39c67e90648fa8b3b895f04fe918b101f0a4a41e3d64b9f887350b152be",
     "tdf-hq-ui/src/api/internalFeedback.ts": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
     "tdf-hq-ui/src/api/inventory.ts": "7462c17a811a3e307b8ff551745b76cf7e2ea7691d1193c9076190c77545a07c",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "e6cba231df32be81d9abb7257b6d23fe12a1f394b1d578cadb1c910d16fee5f9",
@@ -7595,7 +7688,7 @@
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/assets/feature-registry.json": "c3b5ac5a02b11056d3f918c4d7577b426ad582e89a11431b937cd097d9377323",
     "tdf-hq/config/default.env.example": "5681d9b6ae87dd2bb3d6d3540675b10b39d0615de3380b45ef0f98a24a11f8f6",
-    "tdf-hq/docs/openapi/api.yaml": "e0aa89c967d4a6fcfa2bff3abb16523642cac3de98cc2f8bc285d3116efa65a8",
+    "tdf-hq/docs/openapi/api.yaml": "8b62fd7457ffb6d4bf94a3f7efa766c2963465539e3a3ffa774a8d298a9eba2f",
     "tdf-hq/docs/openapi/directory.yaml": "e95363009d2177b93d47a9d044fbab9fe66812bc099108d0a5bf5593968638e4",
     "tdf-hq/persistent-uploads.sh": "89c251d96be949d638941d45d4a8994f09c8157a04bea786ee93aefde90cbd44",
     "tdf-hq/production-entrypoint.sh": "9cf124a277a19e2d5c0d7769cfc8a2d16dc2d21f09e93406b3ebfa293e0416b4",
@@ -7652,6 +7745,9 @@
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "e40608b5bc2ce1429c61fbfc6131f4e6e134f599cbf734a62ddd505fab3264b6",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
     "tdf-hq/src/TDF/Config.hs": "154303c3f955437a9087e22b1e7198ac2d668b31137604cb3fd53835950903c8",
+    "tdf-hq/src/TDF/Contracts/API.hs": "5030fec3414c8afbc5fb71895609ad035be9bdbd0fa95d448f788fc50ac82540",
+    "tdf-hq/src/TDF/Contracts/Server.hs": "b73931ae26da32730b7b771b2be364ade88df7b2ef7896d1b37d01b74c66e7fb",
+    "tdf-hq/src/TDF/Contracts/Storage.hs": "cee15ae8a004784bb59a29e05174f378701c7a0470de454fefb097dda05a8692",
     "tdf-hq/src/TDF/Cors.hs": "8158b24d4ae4ed922e4ac26e0e72e35a382091a5ba8f549c2d90ac3ec121330b",
     "tdf-hq/src/TDF/Cron.hs": "8f13502d7c7f3d02f142cadbeb10d8a33f32592c5bff581f71150197476d7305",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
@@ -7699,9 +7795,10 @@
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "6cadc4abb62ddd09b3613339f3b775d202625e82e2185c3d07d535224e3b5b41",
+    "tdf-hq/tdf-hq.cabal": "dacbaa3d9dd926d4d9860b05cf24479bbec7b335f15b08530ee22ebd6430a3d4",
     "tdf-hq/test/AtomicPublicationMain.hs": "8b996b343e701dc9b9bdd1c357460755edcc79f6db69bd61e7883f6353b01bfa",
-    "tdf-hq/test/Spec.hs": "3074bcb6be4ea1aa9b726b51a5d54bc7e5fd3898b421eb7131c97037cccb2cfc",
+    "tdf-hq/test/ContractStorageMain.hs": "41b4e77398fb9409d8bd345987d3500d30c3e71098e745ceffc2730ee8fadf79",
+    "tdf-hq/test/Spec.hs": "092640954125eb5c74aee6ebba1fa2c015c9336accf3bb194ecd3ae558ea06d4",
     "tdf-hq/test/TDF/APITypesSpec.hs": "e031671786b71e7714c0d8cc4f1324707917eaa452bb74030a6d7f5a1eccd068",
     "tdf-hq/test/TDF/AtomicPublicationSpec.hs": "0b9ed0f1d318f7f042767d28ce240a3b8ce1c05f9d50d792dcb11f7a1927a844",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
@@ -7710,6 +7807,7 @@
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "6d6019cff6baa80c82fb421c02bddf5e609b88451ad73ef0b31fcd4fb35fe7f6",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "bc9e5e0920de51b7b8c16d764991911c9eabb087cd024f2405aeb98174c57563",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
+    "tdf-hq/test/TDF/ContractStorageSpec.hs": "9e7b8f09130c8dbe7c0f9423f863ee96ceff215fde83c67ec2e98c773900e587",
     "tdf-hq/test/TDF/CorsSpec.hs": "8663de653f6eb0ba12b8889b2645a537fc6ec0f6dad951cb340f674aa3838357",
     "tdf-hq/test/TDF/CourseIdentitySpec.hs": "dda271fddc5136622ea77685a08fc700286fc86c17a818a80cbb992a68840d9f",
     "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "e68face714495ad762b3ccb8eec7b38ce6047274c44fd6977dc44abfd56f9439",
@@ -7784,7 +7882,7 @@
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
     "tdf-mobile/src/api/events.ts": "a6014149f81240e56023471ea987fc8ac8245fc06d3034fb0382750e818d2b1e",
-    "tdf-mobile/src/api/generated/types.ts": "63e51be656f5a70d0460bdbfe19db99348b1c3bc7866c8c182f8fec1c4a68f32",
+    "tdf-mobile/src/api/generated/types.ts": "1c1bb39c67e90648fa8b3b895f04fe918b101f0a4a41e3d64b9f887350b152be",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/components/EventCard.tsx": "4eaba1e6a6ac76b67bbc7f5a6a8d24e0e14e81ebb0eb29041da70265dacd21a2",
@@ -8159,6 +8257,10 @@
       {
         "requirement": "DEPLOY-READINESS-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DATA-CONTRACT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/API.hs": [
@@ -8531,6 +8633,10 @@
       {
         "requirement": "PRIV-INTAKE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DATA-CONTRACT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": [
@@ -8774,6 +8880,10 @@
       },
       {
         "requirement": "MEDIA-RIDER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DATA-CONTRACT-001",
         "relationship": "implementation"
       }
     ],
@@ -9726,6 +9836,10 @@
       },
       {
         "requirement": "DEPLOY-READINESS-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DATA-CONTRACT-001",
         "relationship": "tests"
       }
     ],
@@ -11181,6 +11295,10 @@
       {
         "requirement": "DEPLOY-FILES-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DATA-CONTRACT-001",
+        "relationship": "implementation"
       }
     ],
     "ops/hetzner/coordinated-recovery-bundle.py": [
@@ -11209,11 +11327,19 @@
       {
         "requirement": "DEPLOY-FILES-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "DATA-CONTRACT-001",
+        "relationship": "tests"
       }
     ],
     "scripts/test-stopped-application-docker.py": [
       {
         "requirement": "DEPLOY-FILES-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DATA-CONTRACT-001",
         "relationship": "tests"
       }
     ],
@@ -11371,6 +11497,10 @@
       {
         "requirement": "DEPLOY-JOURNAL-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DATA-CONTRACT-001",
+        "relationship": "implementation"
       }
     ],
     "ops/hetzner/interrupted-release-recovery.py": [
@@ -11470,6 +11600,10 @@
     "scripts/test-coordinated-capture.py": [
       {
         "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DATA-CONTRACT-001",
         "relationship": "tests"
       }
     ],
@@ -12513,6 +12647,10 @@
       {
         "requirement": "MEDIA-RIDER-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "DATA-CONTRACT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/test/TDF/AtomicPublicationSpec.hs": [
@@ -12530,6 +12668,42 @@
     "scripts/verify-atomic-publication.py": [
       {
         "requirement": "MEDIA-RIDER-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/src/TDF/Contracts/API.hs": [
+      {
+        "requirement": "DATA-CONTRACT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Contracts/Server.hs": [
+      {
+        "requirement": "DATA-CONTRACT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Contracts/Storage.hs": [
+      {
+        "requirement": "DATA-CONTRACT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/ContractStorageSpec.hs": [
+      {
+        "requirement": "DATA-CONTRACT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/ContractStorageMain.hs": [
+      {
+        "requirement": "DATA-CONTRACT-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/verify-contract-storage.py": [
+      {
+        "requirement": "DATA-CONTRACT-001",
         "relationship": "tests"
       }
     ]
@@ -13059,11 +13233,15 @@
     {
       "id": "SURFACE-d681f7e5079bf17c",
       "path": "ops/hetzner/coordinated-capture.py",
-      "sha256": "a658f4ba429e041b8711c2b047402f317bfbdf87805e0f7d64d5ef8b0aafe87b",
+      "sha256": "9359bf8d7dc9db757fa840ebce5530196220b9789edb54e99c757a1c72e548c3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DATA-CONTRACT-001",
           "relationship": "implementation"
         }
       ]
@@ -13454,11 +13632,15 @@
     {
       "id": "SURFACE-798550e0b0ce7d31",
       "path": "ops/hetzner/stopped-application-storage.py",
-      "sha256": "5072c12f9d3c8584af02d3c54da8855713436205d64dad75465ff4c146bcc8ad",
+      "sha256": "3fe853f246572fc639a7756613b718cf29fe6d6cc89e0930ce013c744e315d32",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "DEPLOY-FILES-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DATA-CONTRACT-001",
           "relationship": "implementation"
         }
       ]
@@ -15391,7 +15573,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "e67c6f3023ca125f7f28ff6c796761b0f9f8dba15b7e2baf25a226e1e690177e",
+      "sha256": "cb2314fd0cabc999f38a5bbb0ce07e7fb48fa054c6dcc9e2306b8976f3f1a2ba",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15416,6 +15598,10 @@
         },
         {
           "requirement": "MEDIA-RIDER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DATA-CONTRACT-001",
           "relationship": "implementation"
         }
       ]
@@ -16184,7 +16370,7 @@
     {
       "id": "SURFACE-c86f69c773ab4140",
       "path": "scripts/test-booking-conformance.py",
-      "sha256": "30ca94cf5cdc286cdabd8511ad5b971b5c0b26fec14ab49973718ab51a5fd97d",
+      "sha256": "b3ba31f78fa10e86a14389b11768f8b91f950101db8a565a67e9515e12992361",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -16262,6 +16448,10 @@
         {
           "requirement": "DEPLOY-READINESS-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "DATA-CONTRACT-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -16296,11 +16486,15 @@
     {
       "id": "SURFACE-9b49263414d1aee1",
       "path": "scripts/test-coordinated-capture.py",
-      "sha256": "673b42c6f53262a3ccb7f0321c3fe59f35d839783a1b0fc5d02e9b4ad037324f",
+      "sha256": "985533f688d3921709a02ca94ff6092c8e806de3633b4302fc135ec9cd34cc5e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DATA-CONTRACT-001",
           "relationship": "tests"
         }
       ]
@@ -17310,11 +17504,15 @@
     {
       "id": "SURFACE-32e5ae2b331a85db",
       "path": "scripts/test-stopped-application-docker.py",
-      "sha256": "abaf791d2221077d8e05546d627df041409237d725d1b8a14f32dbeb6c87f167",
+      "sha256": "4890b5ece9e4f68a210e6d53450e1f5198afa967817ddb5a76e745e6eb6dfc26",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "DEPLOY-FILES-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DATA-CONTRACT-001",
           "relationship": "tests"
         }
       ]
@@ -17322,11 +17520,15 @@
     {
       "id": "SURFACE-79a26cbddfb526ad",
       "path": "scripts/test-stopped-application-storage.py",
-      "sha256": "516aa9e991be861e935b2cd1c5bf5e9ace3d8bb12ad2aaa095468bde23e398ff",
+      "sha256": "a3dd71b182518913328ffb58d87684b21a67779cf682fc37edd7b766d8af3b03",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "DEPLOY-FILES-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DATA-CONTRACT-001",
           "relationship": "tests"
         }
       ]
@@ -17559,6 +17761,18 @@
         },
         {
           "requirement": "PAY-CHECKOUT-003",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-cab6a792300109b3",
+      "path": "scripts/verify-contract-storage.py",
+      "sha256": "ceae1810751a8311c9771a89b647054a75063c93ea413273a86f6ee6e6a8af07",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DATA-CONTRACT-001",
           "relationship": "tests"
         }
       ]
@@ -18569,7 +18783,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "63e51be656f5a70d0460bdbfe19db99348b1c3bc7866c8c182f8fec1c4a68f32",
+      "sha256": "1c1bb39c67e90648fa8b3b895f04fe918b101f0a4a41e3d64b9f887350b152be",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23368,7 +23582,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "e0aa89c967d4a6fcfa2bff3abb16523642cac3de98cc2f8bc285d3116efa65a8",
+      "sha256": "8b62fd7457ffb6d4bf94a3f7efa766c2963465539e3a3ffa774a8d298a9eba2f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -23393,6 +23607,10 @@
         },
         {
           "requirement": "PRIV-INTAKE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DATA-CONTRACT-001",
           "relationship": "implementation"
         }
       ]
@@ -26993,14 +27211,36 @@
       "path": "tdf-hq/src/TDF/Contracts/API.hs",
       "sha256": "5030fec3414c8afbc5fb71895609ad035be9bdbd0fa95d448f788fc50ac82540",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DATA-CONTRACT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-de7641689e63ad01",
       "path": "tdf-hq/src/TDF/Contracts/Server.hs",
-      "sha256": "000e0da46d1d410af6798ed5ef07a13b69191128225587399990097bdac7638d",
+      "sha256": "b73931ae26da32730b7b771b2be364ade88df7b2ef7896d1b37d01b74c66e7fb",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "DATA-CONTRACT-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-5fca65f57087b3fe",
+      "path": "tdf-hq/src/TDF/Contracts/Storage.hs",
+      "sha256": "cee15ae8a004784bb59a29e05174f378701c7a0470de454fefb097dda05a8692",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DATA-CONTRACT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-2bac4bb831675dd6",
@@ -27652,6 +27892,10 @@
         {
           "requirement": "DEPLOY-READINESS-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "DATA-CONTRACT-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -28153,6 +28397,10 @@
         {
           "requirement": "MEDIA-RIDER-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "DATA-CONTRACT-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -28325,7 +28573,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "6cadc4abb62ddd09b3613339f3b775d202625e82e2185c3d07d535224e3b5b41",
+      "sha256": "dacbaa3d9dd926d4d9860b05cf24479bbec7b335f15b08530ee22ebd6430a3d4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28354,6 +28602,18 @@
       "requirements": [
         {
           "requirement": "MEDIA-RIDER-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-a1ae0b0fceed2bca",
+      "path": "tdf-hq/test/ContractStorageMain.hs",
+      "sha256": "41b4e77398fb9409d8bd345987d3500d30c3e71098e745ceffc2730ee8fadf79",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DATA-CONTRACT-001",
           "relationship": "tests"
         }
       ]
@@ -28403,7 +28663,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "3074bcb6be4ea1aa9b726b51a5d54bc7e5fd3898b421eb7131c97037cccb2cfc",
+      "sha256": "092640954125eb5c74aee6ebba1fa2c015c9336accf3bb194ecd3ae558ea06d4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28595,6 +28855,18 @@
       "requirements": [
         {
           "requirement": "OPS-WORKER-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-4ca88a90c7333c60",
+      "path": "tdf-hq/test/TDF/ContractStorageSpec.hs",
+      "sha256": "9e7b8f09130c8dbe7c0f9423f863ee96ceff215fde83c67ec2e98c773900e587",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DATA-CONTRACT-001",
           "relationship": "tests"
         }
       ]
@@ -31299,7 +31571,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "63e51be656f5a70d0460bdbfe19db99348b1c3bc7866c8c182f8fec1c4a68f32",
+      "sha256": "1c1bb39c67e90648fa8b3b895f04fe918b101f0a4a41e3d64b9f887350b152be",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -33843,8 +34115,6 @@
     "SURFACE-ec38793d0cc5b091",
     "SURFACE-b3ab13afc655164b",
     "SURFACE-e566657be7de3ed5",
-    "SURFACE-95011c3eb812e7fd",
-    "SURFACE-de7641689e63ad01",
     "SURFACE-2bac4bb831675dd6",
     "SURFACE-b5ed9df91b31bc61",
     "SURFACE-980d517db26f5cab",
@@ -34376,7 +34646,8 @@
     "MEDIA-INVENTORY-001",
     "OPS-INTEGRATION-001",
     "SOC-ABUSE-001",
-    "MEDIA-RIDER-001"
+    "MEDIA-RIDER-001",
+    "DATA-CONTRACT-001"
   ],
   "stateMachines": [
     {
@@ -35498,7 +35769,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6ea89c28851d29ae0616dc1680e353aa7233cb9cda2e5d0a0284112397ea44f3",
+      "sourceSha256": "cdb29f79f27b42eb919c2e12b00ca7f448403d0e06c97d2991c31add20399e3f",
       "definition": {
         "states": [
           "absent",
@@ -35527,6 +35798,62 @@
     }
   ],
   "apiOperations": [
+    {
+      "id": "POST /contracts",
+      "operationId": "createContract",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "500"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /contracts/{id}/pdf",
+      "operationId": "getContractPdf",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "404",
+        "500"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /contracts/{id}/send",
+      "operationId": "sendContract",
+      "source": "tdf-hq/docs/openapi/api.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "400",
+        "401",
+        "403",
+        "404",
+        "500",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
     {
       "id": "GET /invoices",
       "operationId": "listInvoices",
@@ -43646,6 +43973,16 @@
         "reason": "Native streaming lacks a verified publisher authorization binding; configuration cannot enable it.",
         "sources": [
           "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+        ]
+      },
+      {
+        "id": "POST /contracts/{}/send",
+        "requirement": "DATA-CONTRACT-001",
+        "compiledStatus": 200,
+        "unavailableStatus": 503,
+        "reason": "No contract delivery implementation exists; validated existing documents return unavailable without claiming delivery.",
+        "sources": [
+          "tdf-hq/src/TDF/Contracts/Server.hs"
         ]
       }
     ]
@@ -57404,7 +57741,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 90,
+    "PARTIAL": 91,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
