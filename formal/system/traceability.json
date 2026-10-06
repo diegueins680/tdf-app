@@ -7101,6 +7101,87 @@
       "property": "Clean completion implies joined initialization and drained HTTP; accepted stop forbids later publication and leaves no open late listener.",
       "evidence": "Bounded state model plus actual Haskell/HTTP/signal/source-mutation tests; no whole-program refinement or production shutdown claim.",
       "verification": "Actual Haskell supervisor and retry controls, held Warp request, five detected source mutations, four Unix-signal children, bounded state model and four model mutations; built-image gate requires clean Docker stop."
+    },
+    {
+      "id": "MEDIA-RIDER-001",
+      "title": "Complete exclusive rider publication and durable replay",
+      "statement": "Live Session rider publication must never expose a partially written final path or replace an existing final; identical replay must validate and synchronize retained bytes and the containing directory before success, while conflicting bytes remain preserved for review.",
+      "domain": "MEDIA",
+      "authority": "inferred",
+      "source": "User-requested storage/concurrency audit; tdf-hq/src/TDF/ServerLiveSessions.hs; formal/system/research.json",
+      "property": "Final absent or complete; existing final never overwritten; unsuccessful synchronization never reported as successful publication; accepted replay reestablishes file and directory synchronization.",
+      "contract": "formal/system/atomic-rider-publication.md",
+      "actors": [
+        "Authenticated Live Session intake actor",
+        "Backend file writer",
+        "Recovery operator"
+      ],
+      "preconditions": [
+        "Existing intake authorization, actor/key transaction fence and validated file name/size/content digest.",
+        "Trusted stable uploads directory/ancestors; production persistent mount independently admitted; Linux or Darwin filesystem supports exclusive rename and fsync."
+      ],
+      "inputs": [
+        "Actor/request/content-derived path",
+        "Validated rider bytes, at most the existing 10 MiB limit"
+      ],
+      "state": {
+        "initial": "Final absent or retained from prior attempt",
+        "terminal": [
+          "Complete final and synchronized acknowledgement",
+          "Existing differing final retained;409",
+          "Failure or lost acknowledgement; files retained as observed"
+        ]
+      },
+      "allowedTransitions": [
+        "Absent -> private staging -> complete synchronized staging -> exclusive final -> synchronized directory -> success",
+        "Existing identical final -> validate bytes -> synchronize file and directory -> replay success",
+        "Existing different final ->409 without replacement",
+        "Interruption before publication -> absent final and possible private staging orphan",
+        "Interruption after publication -> complete final with uncertain acknowledgement"
+      ],
+      "forbiddenTransitions": [
+        "Expose incomplete staging as final",
+        "Overwrite an existing final",
+        "Turn fsync/unsupported-rename failure into success",
+        "Infer database or provider rollback from transport failure",
+        "Automatically delete pre-existing partial finals or crash orphans"
+      ],
+      "effects": [
+        "Publish one complete private final or retain an existing name; normal cleanup only removes this attempt's staging name.",
+        "Caller preserves request-bound receipt semantics; database commit is a separate effect."
+      ],
+      "authorization": "Existing backend intake actor/module authorization and actor/request locking remain required; file helper alone grants no API authority.",
+      "privacy": "Staging files mode0600 inside the admitted upload tree; do not log rider bytes or treat staging as public content.",
+      "concurrency": "Atomic exclusive rename selects at most one winner for a final path; actor/request database fence additionally serializes intake. Privileged directory replacement is excluded.",
+      "idempotency": "Final path includes actor, request key and content hash. Compare retained bytes; identical retry synchronizes before acknowledgement and differing bytes require review.",
+      "failure": "Propagate IO/synchronization errors. Existing mismatching bytes produce409. SIGKILL may leave private single-link staging; acknowledgement can be lost after complete publication.",
+      "recovery": "Retain final and crash staging evidence. Identical replay validates and synchronizes. Legacy partial finals and complete unreferenced files require separate identity-bound operational review.",
+      "observability": "Record exact source, platform, commands, filesystem tests, process-kill outcome and runtime mutation counterexamples without uploading file payloads.",
+      "implementation": [
+        "tdf-hq/src/TDF/Storage/AtomicPublication.hs",
+        "tdf-hq/src/TDF/ServerLiveSessions.hs",
+        "scripts/quality-backend.sh"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/AtomicPublicationSpec.hs",
+        "tdf-hq/test/AtomicPublicationMain.hs",
+        "scripts/verify-atomic-publication.py",
+        "tdf-hq/test/TDF/LiveIntakeIdentitySpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Actual filesystem tests, compiled source mutations and owned-child SIGKILL; separate native and Linux execution required. No filesystem refinement proof.",
+      "evidence": "Exact candidate backend gate and atomic publication verifier receipts; earlier exploratory runs remain scoped to their recorded bytes.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for the scoped local publication sequence after platform verification; no whole-operation atomicity claim.",
+      "ambiguity": [
+        "No automatic reconciliation of legacy partial uploads or externally delivered notifications.",
+        "File/database commit and hardware power-loss guarantees remain outside this helper."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Mac helper checks pass on working bytes; final exact-candidate Linux/full-backend/integration/deployment evidence remains required."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -7341,7 +7422,7 @@
     "scripts/production-migrations.json": "fcb314237b1f09503c1be2a6d65b18da3c1863f6af9259543acc35d4f4cb41ce",
     "scripts/production-release.mjs": "ee6202650a295a47c09b4c058295fd5120368dc3ef4aed43d3786ec6ae0c5fa5",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
-    "scripts/quality-backend.sh": "db191009ce460ae5f9f8667659510d0810fab4acc07655ca28cab459aedc8e06",
+    "scripts/quality-backend.sh": "e67c6f3023ca125f7f28ff6c796761b0f9f8dba15b7e2baf25a226e1e690177e",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
     "scripts/quality-repo.sh": "5d1cdf7311e49b2470e5a729ebaddb4af1fb44635830f78b6e18d17bb4d98f3f",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
@@ -7423,6 +7504,7 @@
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
     "scripts/test_production_access.py": "1f367bac229bbc1b6c6ffff4f83a11bbd110ed73e582c760a6d239045d881874",
     "scripts/upsert-course.mjs": "1e35ce7c77f3a678e58b61beb53cc4386f5e9243c73814b77ac070d66a954d72",
+    "scripts/verify-atomic-publication.py": "58e6cc2e0458566671d587a464b7bff06f9e2e0e24a9bdfd7ff51d451cae9d9d",
     "scripts/verify-checkout-money.py": "41edaa54faeb05611ea4d28f9f13476ff77471d5c92ef655afbaa2b244994b22",
     "scripts/verify-cors-boundary.py": "459e52ba2376ccf8128d5426db96fbc2f3e5c0ede4b4319a99912e4bf2b22cd1",
     "scripts/verify-event-operations-formal.sh": "1b7b82c966f649adc69ebbb39964a0b88eed0e64eaefc36c33f6ff535c8cb0a4",
@@ -7604,10 +7686,11 @@
     "tdf-hq/src/TDF/ServerAuth.hs": "4b53165a764b1d6dd083f193ad1f0d752b42d10ef48bcab2ac9337fb791288e7",
     "tdf-hq/src/TDF/ServerExtra.hs": "458d0b1c8390232020691cb1c4ebfd1578c4e4c163e7c45b43a95733fe6457ee",
     "tdf-hq/src/TDF/ServerFeedback.hs": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
-    "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
+    "tdf-hq/src/TDF/ServerLiveSessions.hs": "1c94a8debdfac2ea16990a34f0a224514201ff4c240e1884d112ed4308ec6120",
     "tdf-hq/src/TDF/ServerRadio.hs": "964189f5f5c8b06bbbbfca51d5ed4329e29d81d4f71012ad672343d1f6e7b319",
     "tdf-hq/src/TDF/Social/Chat.hs": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd",
     "tdf-hq/src/TDF/Social/Session.hs": "f7a905c1302ede6168c0914b73261025bdaadfc3201ccf80304012d3d463e99f",
+    "tdf-hq/src/TDF/Storage/AtomicPublication.hs": "cf9be2f055402dc28fe16952c90032bd1fd9cccb4c85e8a309637771b390407a",
     "tdf-hq/src/TDF/Ticketing/Admission.hs": "3a2e44f10f39f35194479e31f642efe15830da0dbf371ddeabdf978a2e3dc2a5",
     "tdf-hq/src/TDF/Ticketing/Confirmation.hs": "5b3345a4fb48d85bdbbcca06a6965eb66349c1fe5bf73c3461e27edc7fbbba90",
     "tdf-hq/src/TDF/Ticketing/Inventory.hs": "4c4a50c689e0f9ff27afd95ece0e8e3b8bc29fe26c8b56bdccf9daedb922c1ab",
@@ -7616,9 +7699,11 @@
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
     "tdf-hq/src/TDF/Trials/Server.hs": "49ca34b2395e0c32beb67fc31164c51e51a05af1d8349c36e91b07e1d235edf7",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "6635f1761fb32733e606c2adf1c43ae9005fa166c7f5eeef951541b848e908e0",
-    "tdf-hq/test/Spec.hs": "3aa04800ff15170feaa6e02ef199fdd49748e61c2a73ac2e013151ea3d3acb2b",
+    "tdf-hq/tdf-hq.cabal": "6cadc4abb62ddd09b3613339f3b775d202625e82e2185c3d07d535224e3b5b41",
+    "tdf-hq/test/AtomicPublicationMain.hs": "8b996b343e701dc9b9bdd1c357460755edcc79f6db69bd61e7883f6353b01bfa",
+    "tdf-hq/test/Spec.hs": "3074bcb6be4ea1aa9b726b51a5d54bc7e5fd3898b421eb7131c97037cccb2cfc",
     "tdf-hq/test/TDF/APITypesSpec.hs": "e031671786b71e7714c0d8cc4f1324707917eaa452bb74030a6d7f5a1eccd068",
+    "tdf-hq/test/TDF/AtomicPublicationSpec.hs": "0b9ed0f1d318f7f042767d28ce240a3b8ce1c05f9d50d792dcb11f7a1927a844",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
     "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "90b0a50e1d7415dc82be95fdf4c985fbb825737d09e0c87d2d185414cb154fd2",
@@ -7797,6 +7882,10 @@
     "tdf-hq/test/TDF/LiveIntakeIdentitySpec.hs": [
       {
         "requirement": "SYS-RELEASE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-RIDER-001",
         "relationship": "tests"
       }
     ],
@@ -8682,6 +8771,10 @@
       {
         "requirement": "OPS-SHUTDOWN-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-RIDER-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/__tests__/build-trust.test.mjs": [
@@ -9703,6 +9796,10 @@
     "tdf-hq/src/TDF/ServerLiveSessions.hs": [
       {
         "requirement": "MEDIA-PERSIST-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-RIDER-001",
         "relationship": "implementation"
       }
     ],
@@ -12410,6 +12507,30 @@
       {
         "requirement": "OPS-SHUTDOWN-001",
         "relationship": "formalModels"
+      }
+    ],
+    "tdf-hq/src/TDF/Storage/AtomicPublication.hs": [
+      {
+        "requirement": "MEDIA-RIDER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/AtomicPublicationSpec.hs": [
+      {
+        "requirement": "MEDIA-RIDER-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/AtomicPublicationMain.hs": [
+      {
+        "requirement": "MEDIA-RIDER-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/verify-atomic-publication.py": [
+      {
+        "requirement": "MEDIA-RIDER-001",
+        "relationship": "tests"
       }
     ]
   },
@@ -15270,7 +15391,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "db191009ce460ae5f9f8667659510d0810fab4acc07655ca28cab459aedc8e06",
+      "sha256": "e67c6f3023ca125f7f28ff6c796761b0f9f8dba15b7e2baf25a226e1e690177e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -15292,6 +15413,10 @@
         {
           "requirement": "OPS-SHUTDOWN-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-RIDER-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -17409,6 +17534,18 @@
       "sha256": "2e0188a0da35648c977a692ebc35a58e01aac2c454ba3f7ee65b4ad7c166f528",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-2a55c0c4471e6ea6",
+      "path": "scripts/verify-atomic-publication.py",
+      "sha256": "58e6cc2e0458566671d587a464b7bff06f9e2e0e24a9bdfd7ff51d451cae9d9d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-RIDER-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-8b6766b7ee7590fd",
@@ -27827,11 +27964,15 @@
     {
       "id": "SURFACE-ddfc2dac302682ac",
       "path": "tdf-hq/src/TDF/ServerLiveSessions.hs",
-      "sha256": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
+      "sha256": "1c94a8debdfac2ea16990a34f0a224514201ff4c240e1884d112ed4308ec6120",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-PERSIST-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-RIDER-001",
           "relationship": "implementation"
         }
       ]
@@ -28004,6 +28145,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-594393c66ab06c86",
+      "path": "tdf-hq/src/TDF/Storage/AtomicPublication.hs",
+      "sha256": "cf9be2f055402dc28fe16952c90032bd1fd9cccb4c85e8a309637771b390407a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-RIDER-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-2ac52b8d1688de2a",
       "path": "tdf-hq/src/TDF/Ticketing/Admission.hs",
       "sha256": "3a2e44f10f39f35194479e31f642efe15830da0dbf371ddeabdf978a2e3dc2a5",
@@ -28172,7 +28325,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "6635f1761fb32733e606c2adf1c43ae9005fa166c7f5eeef951541b848e908e0",
+      "sha256": "6cadc4abb62ddd09b3613339f3b775d202625e82e2185c3d07d535224e3b5b41",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28190,6 +28343,18 @@
         {
           "requirement": "DEPLOY-READINESS-001",
           "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-d5fef1d3101f34c5",
+      "path": "tdf-hq/test/AtomicPublicationMain.hs",
+      "sha256": "8b996b343e701dc9b9bdd1c357460755edcc79f6db69bd61e7883f6353b01bfa",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-RIDER-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -28238,7 +28403,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "3aa04800ff15170feaa6e02ef199fdd49748e61c2a73ac2e013151ea3d3acb2b",
+      "sha256": "3074bcb6be4ea1aa9b726b51a5d54bc7e5fd3898b421eb7131c97037cccb2cfc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -28308,6 +28473,18 @@
       "sha256": "25a6ee8483bbc8b485f039b6d45cdfe417979ad3f93d3fba10f05e24a12ddd83",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-1a11b685eb546c57",
+      "path": "tdf-hq/test/TDF/AtomicPublicationSpec.hs",
+      "sha256": "0b9ed0f1d318f7f042767d28ce240a3b8ce1c05f9d50d792dcb11f7a1927a844",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-RIDER-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-bcc8793e04f6ed01",
@@ -28588,6 +28765,10 @@
       "requirements": [
         {
           "requirement": "SYS-RELEASE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-RIDER-001",
           "relationship": "tests"
         }
       ]
@@ -34194,7 +34375,8 @@
     "OPS-CLIENT-001",
     "MEDIA-INVENTORY-001",
     "OPS-INTEGRATION-001",
-    "SOC-ABUSE-001"
+    "SOC-ABUSE-001",
+    "MEDIA-RIDER-001"
   ],
   "stateMachines": [
     {
@@ -35316,7 +35498,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "4a821a04128939af327f86331ddf8032aa3477f9945718b5d22545c37dc9ae24",
+      "sourceSha256": "6ea89c28851d29ae0616dc1680e353aa7233cb9cda2e5d0a0284112397ea44f3",
       "definition": {
         "states": [
           "absent",
@@ -57222,7 +57404,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 89,
+    "PARTIAL": 90,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

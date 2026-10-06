@@ -615,6 +615,7 @@ import TDF.Seed
     , syntheticPersonaSeedingAllowed
     )
 import qualified TDF.ServerAuthSpec as ServerAuthSpec
+import qualified TDF.AtomicPublicationSpec as AtomicPublicationSpec
 import qualified TDF.TrialIdentitySpec as TrialIdentitySpec
 import qualified TDF.CourseIdentitySpec as CourseIdentitySpec
 import qualified TDF.MarketplaceIdentitySpec as MarketplaceIdentitySpec
@@ -17762,6 +17763,7 @@ main = hspec $ do
     ArtistSpec.spec
     ArtistActivationSpec.spec
     ServerAuthSpec.spec
+    AtomicPublicationSpec.spec
     ProviderIdentitySpec.spec
     CredentialLifecycleSpec.spec
     DriveReplaySpec.spec

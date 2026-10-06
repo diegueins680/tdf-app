@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 §9.2.2",
+      "title": "RFC 9110 \u00a79.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -736,6 +736,24 @@
       "applicability": "Owned logical restores, physical clones and isolated application canaries",
       "decision": "adopted",
       "rationale": "Create with explicit --restart=no, admit the full no/zero-retry policy and AutoRemove=false. Preserve uncertain resource identity for deliberate cleanup; a reboot must not silently resurrect a disposable. This does not establish post-crash cleanup authority."
+    },
+    {
+      "id": "RES-RIDER-LINUX-001",
+      "source": "https://man7.org/linux/man-pages/man2/rename.2.html",
+      "title": "Linux renameat2 exclusive publication",
+      "recommendation": "RENAME_NOREPLACE rejects an existing destination and requires filesystem support; ordinary rename can replace it.",
+      "applicability": "Complete local rider file publication on Linux",
+      "decision": "adopted",
+      "rationale": "Publish synchronized staging using exclusive rename. Unsupported operation fails closed; avoid both overwriting and a temporary multi-link state rejected by recovery."
+    },
+    {
+      "id": "RES-RIDER-DARWIN-001",
+      "source": "https://developer.apple.com/documentation/foundation/urlresourcevalues/volumesupportsexclusiverenaming",
+      "title": "Apple exclusive filesystem rename support",
+      "recommendation": "Exclusive renaming uses renamex_np with RENAME_EXCL where the volume supports it.",
+      "applicability": "Native macOS backend development and filesystem conformance tests",
+      "decision": "adopted",
+      "rationale": "Use the platform exclusive primitive and actual filesystem tests; do not emulate with an overwriting rename or infer Linux qualification from Mac results."
     }
   ]
 }

@@ -7,6 +7,8 @@ Historical green results are not current-candidate evidence.
 
 ## Canonical package
 
+- [atomic-rider-publication.md](atomic-rider-publication.md): exclusive complete file publication, crash evidence, replay durability and explicit transaction boundaries.
+
 - [application-shutdown.md](application-shutdown.md): supervised startup, explicit shutdown failure, HTTP drain and worker exclusions.
 
 - [physical-recovery.md](physical-recovery.md): verified cold PG17 copy startup, isolated configuration and explicit coordinated-recovery exclusions.

@@ -514,6 +514,7 @@
       "scripts/ui-static-audit.mjs",
       "scripts/upsert-course.mjs",
       "scripts/ux-audit-inventory.mjs",
+      "scripts/verify-atomic-publication.py",
       "scripts/verify-checkout-money.py",
       "scripts/verify-cors-boundary.py",
       "scripts/verify-event-operations-formal.sh",
@@ -1854,6 +1855,7 @@
       "tdf-hq/src/TDF/Social/Server.hs",
       "tdf-hq/src/TDF/Social/Session.hs",
       "tdf-hq/src/TDF/SocialEventLifecycle.hs",
+      "tdf-hq/src/TDF/Storage/AtomicPublication.hs",
       "tdf-hq/src/TDF/Ticketing/Admission.hs",
       "tdf-hq/src/TDF/Ticketing/Confirmation.hs",
       "tdf-hq/src/TDF/Ticketing/Inventory.hs",
@@ -1873,6 +1875,7 @@
       "tdf-hq/src/TDF/WhatsApp/Types.hs",
       "tdf-hq/stack.yaml",
       "tdf-hq/tdf-hq.cabal",
+      "tdf-hq/test/AtomicPublicationMain.hs",
       "tdf-hq/test/EventOperationsBoundaryMain.hs",
       "tdf-hq/test/EventOperationsHttpMain.hs",
       "tdf-hq/test/EventPilotCountMain.hs",
@@ -1883,6 +1886,7 @@
       "tdf-hq/test/TDF/APITypesSpec.hs",
       "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
       "tdf-hq/test/TDF/Artists/PromotionSpec.hs",
+      "tdf-hq/test/TDF/AtomicPublicationSpec.hs",
       "tdf-hq/test/TDF/Catalog/PipelineSpec.hs",
       "tdf-hq/test/TDF/Catalog/RecordsSpec.hs",
       "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
@@ -4056,7 +4060,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "db191009ce460ae5f9f8667659510d0810fab4acc07655ca28cab459aedc8e06",
+      "sha256": "e67c6f3023ca125f7f28ff6c796761b0f9f8dba15b7e2baf25a226e1e690177e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5341,6 +5345,12 @@
       "id": "SURFACE-7873643aff696047",
       "path": "scripts/ux-audit-inventory.mjs",
       "sha256": "2e0188a0da35648c977a692ebc35a58e01aac2c454ba3f7ee65b4ad7c166f528",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-2a55c0c4471e6ea6",
+      "path": "scripts/verify-atomic-publication.py",
+      "sha256": "58e6cc2e0458566671d587a464b7bff06f9e2e0e24a9bdfd7ff51d451cae9d9d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13224,7 +13234,7 @@
     {
       "id": "SURFACE-ddfc2dac302682ac",
       "path": "tdf-hq/src/TDF/ServerLiveSessions.hs",
-      "sha256": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
+      "sha256": "1c94a8debdfac2ea16990a34f0a224514201ff4c240e1884d112ed4308ec6120",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13348,6 +13358,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-594393c66ab06c86",
+      "path": "tdf-hq/src/TDF/Storage/AtomicPublication.hs",
+      "sha256": "cf9be2f055402dc28fe16952c90032bd1fd9cccb4c85e8a309637771b390407a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-2ac52b8d1688de2a",
       "path": "tdf-hq/src/TDF/Ticketing/Admission.hs",
       "sha256": "3a2e44f10f39f35194479e31f642efe15830da0dbf371ddeabdf978a2e3dc2a5",
@@ -13458,7 +13474,13 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "6635f1761fb32733e606c2adf1c43ae9005fa166c7f5eeef951541b848e908e0",
+      "sha256": "6cadc4abb62ddd09b3613339f3b775d202625e82e2185c3d07d535224e3b5b41",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d5fef1d3101f34c5",
+      "path": "tdf-hq/test/AtomicPublicationMain.hs",
+      "sha256": "8b996b343e701dc9b9bdd1c357460755edcc79f6db69bd61e7883f6353b01bfa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13500,7 +13522,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "3aa04800ff15170feaa6e02ef199fdd49748e61c2a73ac2e013151ea3d3acb2b",
+      "sha256": "3074bcb6be4ea1aa9b726b51a5d54bc7e5fd3898b421eb7131c97037cccb2cfc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13519,6 +13541,12 @@
       "id": "SURFACE-ca7f36927ef07d50",
       "path": "tdf-hq/test/TDF/Artists/PromotionSpec.hs",
       "sha256": "25a6ee8483bbc8b485f039b6d45cdfe417979ad3f93d3fba10f05e24a12ddd83",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-1a11b685eb546c57",
+      "path": "tdf-hq/test/TDF/AtomicPublicationSpec.hs",
+      "sha256": "0b9ed0f1d318f7f042767d28ce240a3b8ce1c05f9d50d792dcb11f7a1927a844",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22425,7 +22453,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "d2c14155645f68356dbfb4c252c25bfd1ebc4e8177a8671dfbb894c0c6704d2d",
+      "sha256": "b7ffe3ffda512eae844917899307bcdeb809d283c8ee6071aba8b9b36d636fc3",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-04. **System-wide",
       "kind": "requirement-candidate"
@@ -22433,6 +22461,13 @@
     {
       "path": "formal/system/application-shutdown.md",
       "sha256": "ffb66facae11489471b6d465d848eef42c14824660331e0198da4077e9e7436e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/atomic-rider-publication.md",
+      "sha256": "1a33d2e36f018befdf3add766a90eb3433506a86780e53de2c9d475979f3ca75",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22754,14 +22789,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "4a821a04128939af327f86331ddf8032aa3477f9945718b5d22545c37dc9ae24",
+      "sha256": "6ea89c28851d29ae0616dc1680e353aa7233cb9cda2e5d0a0284112397ea44f3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "f82b69d1e192616ad9e6524f9c53da95c97acb0b13b4fce8b6b232e723b60d5c",
+      "sha256": "930605bf7226d8479324bfa3b991770f08c67418ec886b26e8cfc6050e760e50",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

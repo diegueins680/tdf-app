@@ -57,6 +57,7 @@ import           TDF.Auth                   (AuthedUser, auPartyId, ModuleAccess
 import qualified TDF.Catalog.Models        as Catalog
 import           TDF.DB                     (Env(..))
 import           TDF.Models
+import           TDF.Storage.AtomicPublication (publishCompleteFile, synchroniseDirectory, synchroniseFile)
 import qualified TDF.Models                 as M
 import qualified TDF.ModelsExtra           as ME
 import           TDF.ServerAuth             (normalizeAuthEmailAddress)
@@ -313,18 +314,31 @@ liveSessionsServer user = intakeHandler
       either throwError pure (validateLiveSessionRiderFileSize (fromIntegral (BL.length bytes)))
       pure (safeName, bytes)
 
--- A retry uses the same path; a partial write is detected rather than overwritten.
+-- Publish complete bytes without replacing an existing path. Legacy partial
+-- files still require review; a disconnected caller cannot infer rollback.
 storeRiderFile :: Text -> Text -> BL.ByteString -> IO Text
 storeRiderFile pathHash safeName bytes = do
   let destDir = "uploads/live-sessions"
       destPath = destDir </> T.unpack pathHash <> "-" <> T.unpack safeName
+  -- Production independently requires a persistent uploads mount at startup.
+  -- Recursive creation retains direct-development/disposable-test behavior.
   createDirectoryIfMissing True destDir
+  synchroniseDirectory "uploads"
+  synchroniseDirectory "."
   exists <- doesFileExist destPath
   if exists
     then do
       stored <- BL.readFile destPath
       unless (stored == bytes) $ throwIO err409 { errBody = "The previous rider upload needs review before retrying" }
-    else BL.writeFile destPath bytes
+    else do
+      created <- publishCompleteFile destPath (`BL.hPut` bytes)
+      unless created $ do
+        stored <- BL.readFile destPath
+        unless (stored == bytes) $ throwIO err409 { errBody = "The previous rider upload needs review before retrying" }
+  -- Replays can follow a completed rename whose directory sync/acknowledgement
+  -- was interrupted. Validate bytes above, then establish durability anew.
+  synchroniseFile destPath
+  synchroniseDirectory destDir
   pure (T.pack destPath)
 
 digestBytes :: BL.ByteString -> SqlPersistT IO Text

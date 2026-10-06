@@ -7100,6 +7100,87 @@
       "property": "Clean completion implies joined initialization and drained HTTP; accepted stop forbids later publication and leaves no open late listener.",
       "evidence": "Bounded state model plus actual Haskell/HTTP/signal/source-mutation tests; no whole-program refinement or production shutdown claim.",
       "verification": "Actual Haskell supervisor and retry controls, held Warp request, five detected source mutations, four Unix-signal children, bounded state model and four model mutations; built-image gate requires clean Docker stop."
+    },
+    {
+      "id": "MEDIA-RIDER-001",
+      "title": "Complete exclusive rider publication and durable replay",
+      "statement": "Live Session rider publication must never expose a partially written final path or replace an existing final; identical replay must validate and synchronize retained bytes and the containing directory before success, while conflicting bytes remain preserved for review.",
+      "domain": "MEDIA",
+      "authority": "inferred",
+      "source": "User-requested storage/concurrency audit; tdf-hq/src/TDF/ServerLiveSessions.hs; formal/system/research.json",
+      "property": "Final absent or complete; existing final never overwritten; unsuccessful synchronization never reported as successful publication; accepted replay reestablishes file and directory synchronization.",
+      "contract": "formal/system/atomic-rider-publication.md",
+      "actors": [
+        "Authenticated Live Session intake actor",
+        "Backend file writer",
+        "Recovery operator"
+      ],
+      "preconditions": [
+        "Existing intake authorization, actor/key transaction fence and validated file name/size/content digest.",
+        "Trusted stable uploads directory/ancestors; production persistent mount independently admitted; Linux or Darwin filesystem supports exclusive rename and fsync."
+      ],
+      "inputs": [
+        "Actor/request/content-derived path",
+        "Validated rider bytes, at most the existing 10 MiB limit"
+      ],
+      "state": {
+        "initial": "Final absent or retained from prior attempt",
+        "terminal": [
+          "Complete final and synchronized acknowledgement",
+          "Existing differing final retained;409",
+          "Failure or lost acknowledgement; files retained as observed"
+        ]
+      },
+      "allowedTransitions": [
+        "Absent -> private staging -> complete synchronized staging -> exclusive final -> synchronized directory -> success",
+        "Existing identical final -> validate bytes -> synchronize file and directory -> replay success",
+        "Existing different final ->409 without replacement",
+        "Interruption before publication -> absent final and possible private staging orphan",
+        "Interruption after publication -> complete final with uncertain acknowledgement"
+      ],
+      "forbiddenTransitions": [
+        "Expose incomplete staging as final",
+        "Overwrite an existing final",
+        "Turn fsync/unsupported-rename failure into success",
+        "Infer database or provider rollback from transport failure",
+        "Automatically delete pre-existing partial finals or crash orphans"
+      ],
+      "effects": [
+        "Publish one complete private final or retain an existing name; normal cleanup only removes this attempt's staging name.",
+        "Caller preserves request-bound receipt semantics; database commit is a separate effect."
+      ],
+      "authorization": "Existing backend intake actor/module authorization and actor/request locking remain required; file helper alone grants no API authority.",
+      "privacy": "Staging files mode0600 inside the admitted upload tree; do not log rider bytes or treat staging as public content.",
+      "concurrency": "Atomic exclusive rename selects at most one winner for a final path; actor/request database fence additionally serializes intake. Privileged directory replacement is excluded.",
+      "idempotency": "Final path includes actor, request key and content hash. Compare retained bytes; identical retry synchronizes before acknowledgement and differing bytes require review.",
+      "failure": "Propagate IO/synchronization errors. Existing mismatching bytes produce409. SIGKILL may leave private single-link staging; acknowledgement can be lost after complete publication.",
+      "recovery": "Retain final and crash staging evidence. Identical replay validates and synchronizes. Legacy partial finals and complete unreferenced files require separate identity-bound operational review.",
+      "observability": "Record exact source, platform, commands, filesystem tests, process-kill outcome and runtime mutation counterexamples without uploading file payloads.",
+      "implementation": [
+        "tdf-hq/src/TDF/Storage/AtomicPublication.hs",
+        "tdf-hq/src/TDF/ServerLiveSessions.hs",
+        "scripts/quality-backend.sh"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/AtomicPublicationSpec.hs",
+        "tdf-hq/test/AtomicPublicationMain.hs",
+        "scripts/verify-atomic-publication.py",
+        "tdf-hq/test/TDF/LiveIntakeIdentitySpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Actual filesystem tests, compiled source mutations and owned-child SIGKILL; separate native and Linux execution required. No filesystem refinement proof.",
+      "evidence": "Exact candidate backend gate and atomic publication verifier receipts; earlier exploratory runs remain scoped to their recorded bytes.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for the scoped local publication sequence after platform verification; no whole-operation atomicity claim.",
+      "ambiguity": [
+        "No automatic reconciliation of legacy partial uploads or externally delivered notifications.",
+        "File/database commit and hardware power-loss guarantees remain outside this helper."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Mac helper checks pass on working bytes; final exact-candidate Linux/full-backend/integration/deployment evidence remains required."
+      }
     }
   ]
 }
